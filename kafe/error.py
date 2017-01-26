@@ -6,6 +6,11 @@ import abc
 import copy
 import numpy as np
 
+import logging
+
+logger = logging.getLogger(__name__)
+logging.basicConfig()
+
 
 def cov_mat_from_float(value, size, correlation=0.0):
     _val = float(value)
