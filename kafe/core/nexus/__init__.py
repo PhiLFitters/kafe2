@@ -9,22 +9,23 @@ import inspect
 from collections import OrderedDict
 from ast import parse
 
-import logging
-logging.basicConfig()
+#import logging
+#logging.basicConfig()
+#logger = logging.getLogger(__name__)
+#logger.setLevel(logging.INFO)
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+import syslog
 
 
-class ParameterException(Exception):
+class NodeException(Exception):
     pass
 
 
-class ParameterSpaceException(Exception):
+class NexusException(Exception):
     pass
 
 
-class ParameterBase(object):
+class NodeBase(object):
     """
     Abstract class. Defines the minimal interface required by all specializations.
     """
@@ -40,14 +41,14 @@ class ParameterBase(object):
 
     @staticmethod
     def _check_parameter_name_raise(parameter_name):
-        if parameter_name in Parameter.RESERVED_PARAMETER_NAMES:
-            raise ParameterException("Invalid parameter name: '%s' is a reserved keyword!"
-                                     % (parameter_name,))
+        if parameter_name in NodeValue.RESERVED_PARAMETER_NAMES:
+            raise NodeException("Invalid parameter name: '%s' is a reserved keyword!"
+                                % (parameter_name,))
         try:
             parse('dict(%s=0.123)' % (parameter_name,))
         except SyntaxError:
-            raise ParameterException("Invalid parameter name '%s'. Must be Python identifier!"
-                                     % (parameter_name,))
+            raise NodeException("Invalid parameter name '%s'. Must be Python identifier!"
+                                % (parameter_name,))
 
     @property
     def stale(self):
@@ -75,24 +76,25 @@ class ParameterBase(object):
         pass
 
     def mark_for_update(self):
-        logger.debug("Marking for update: %s" % (self,))
+        #logger.debug("Marking for update: %s", self)
         self._stale = True
 
     def notify_dependencies(self):
-        logger.debug("Notifying dependencies: %s" % (self,))
+        #logger.debug("Notifying dependencies: %s", self)
         if self.parameter_space:
             self.parameter_space.notify_dependencies(self)
 
     def __str__(self):
         return "ParameterBase('%s', parameter_space=%s) [%d]" % (self.name, self.parameter_space, id(self))
 
-class Parameter(ParameterBase):
+
+class NodeValue(NodeBase):
     def __init__(self, name, value, parent_parameter_space=None):
-        super(Parameter, self).__init__(name, parent_parameter_space=parent_parameter_space)
+        super(NodeValue, self).__init__(name, parent_parameter_space=parent_parameter_space)
         self._value = value
         self._stale = False
 
-        logger.debug("Created: %s" % (self,))
+        #logger.debug("Created: %s", self)
 
     @property
     def value(self):
@@ -116,47 +118,51 @@ class Parameter(ParameterBase):
         return "Parameter('%s', value='%s', parameter_space=%s) [%d]" % (self.name, self.value, self.parameter_space, id(self))
 
 
-class ParameterFunction(ParameterBase):
+class NodeFunction(NodeBase):
     """All keyword arguments of the function must be parameters registered in the parameter space."""
     def __init__(self, function_handle, parent_parameter_space=None):
-        super(ParameterFunction, self).__init__(function_handle.__name__, parent_parameter_space=parent_parameter_space)
+        super(NodeFunction, self).__init__(function_handle.__name__, parent_parameter_space=parent_parameter_space)
         self.func = function_handle
         self._value = 0.0
-        self._par_value_cache = dict()
+        #self._par_value_cache = dict()
+        self._par_value_cache = []
         self._stale = True
 
-        logger.debug("Created: %s" % (self,))
+        #logger.debug("Created: %s", self)
 
     def __call__(self):
-        return self._func(**self._par_value_cache)
+        #return self._func(**self._par_value_cache)
+        return self._func(*self._par_value_cache)
 
     @property
     def parameter_names(self):
         return self._func_varnames
 
     def _update(self):
-        logger.debug("Recalculating: %s" % (self,))
+        #logger.debug("Recalculating: %s", self)
         if self.parameter_space is None:
             return
 
-        self._par_value_cache = dict()
+        #self._par_value_cache = dict()
+        self._par_value_cache = []
         _pns = self._func_varnames
-        _ps = self.parameter_space.get(_pns)
+        _ps = self.parameter_space.get_by_name(_pns)
         for _pn, _p in zip(_pns, _ps):
-            logger.debug("Update: %s = %s (%s)" % (_pn, _p.value, _p))
-            self._par_value_cache[_pn] = _p.value
+            #logger.debug("Update: %s = %s (%s)", _pn, _p.value, _p)
+            #self._par_value_cache[_pn] = _p.value
+            self._par_value_cache.append(_p.value)
 
         self._value = self()
         self._stale = False
 
     @property
     def value(self):
-        logger.debug("Request function value: %s" % (self,))
-        logger.debug("Stale? %s" % (self.stale,))
+        #logger.debug("Request function value: %s", self)
+        #logger.debug("Stale? %s", self.stale)
         if self.stale:
-            logger.debug("Is stale -> recalculate!")
+            #logger.debug("Is stale -> recalculate!")
             self._update()
-        logger.debug("Value: %s" % (self._value,))
+        #logger.debug("Value: %s", self._value)
         return self._value
 
     @property
@@ -174,7 +180,7 @@ class ParameterFunction(ParameterBase):
         return "ParameterFunction('%s', function_handle=%s, parameter_space=%s) [%d]" % (self.name, self._func, self.parameter_space, id(self))
 
 
-class ParameterSpace(object):
+class Nexus(object):
     """Manages `Parameter` aliasing and constructing value vectors/error vectors/error matrices for arbitrary subsets
     of the parameter space."""
 
@@ -192,6 +198,9 @@ class ParameterSpace(object):
         self.__nexus_map_all_par_names_to_id = OrderedDict()  # 'name'->ID, use reverse lookup for par ID by name
         # dict(a1=0, b1=1, fa1=2, a2=0)
 
+        # "GetterCache": speed up parameter access
+        self.__getter_cache = dict()
+
         self.__nexus_stale = True  # need to rebuild nexus?
 
         self._dependency_graph = dict()
@@ -206,8 +215,8 @@ class ParameterSpace(object):
         try:
             parse('dict(%s=0.123)' % (parameter_name,))
         except SyntaxError:
-            raise ParameterException("Invalid parameter name '%s'. Must be Python identifier!"
-                                     % (parameter_name,))
+            raise NodeException("Invalid parameter name '%s'. Must be Python identifier!"
+                                % (parameter_name,))
 
     def _check_for_dependency_cycles_raise(self):
         """Check for dependency cycles. Recursive and expensive!"""
@@ -217,27 +226,8 @@ class ParameterSpace(object):
             for _dep in self._dependency_graph.get(v, tuple()):
                 if _dep in _seen or check_cycle_from_vertex(_dep):
                     _m = ' <- '.join(_seen)
-                    raise ParameterSpaceException("Cyclic parameter dependency detected: %s!" % (_m,))
+                    raise NexusException("Cyclic parameter dependency detected: %s!" % (_m,))
             _seen.remove(v)
-
-    # def _rebuild_nexus(self):
-    #     _seen = []
-    #     self.__nexus_list_real_par_names = []
-    #     self.__nexus_map_par_id_to_par_main_name = {}
-    #     _ids = {}
-    #     _dim = 0
-    #     for _pn, _p in self.__map_par_name_to_par_obj.iteritems():
-    #         if _p not in _seen:
-    #             _seen.append(_p)
-    #             if not isinstance(_p, ParameterFunction):
-    #                 self.__nexus_list_real_par_names.append(_p)
-    #                 self.__nexus_map_par_id_to_par_main_name[_dim] = _pn
-    #             _dim += 1
-    #         _ids[_pn] = _seen.index(_p)
-    #
-    #     self.__nexus_map_par_name_to_par_sequential_id = _ids
-    #     self.__nexus_dim = _dim
-    #     self.__nexus_stale = False
 
     def _rebuild_nexus(self):
 
@@ -259,7 +249,7 @@ class ParameterSpace(object):
         _main_id = 0
         for _pn, _p in self.__map_par_name_to_par_obj.iteritems():
             if _p not in _first_seen_par_obj_names_ids and _p not in _first_seen_par_function_obj_names_ids:
-                if isinstance(_p, ParameterFunction):
+                if isinstance(_p, NodeFunction):
                     _first_seen_par_function_obj_names_ids[_p] = (_pn, _main_id)
                 else:
                     _first_seen_par_obj_names_ids[_p] = (_pn, _main_id)
@@ -291,51 +281,44 @@ class ParameterSpace(object):
 
         self.__nexus_real_dim = _real_dim
         self.__nexus_stale = False
+        self.__getter_cache = dict()  # rebuilding nexus invalidates getter cache
 
-    def _get_par_obj(self, par_spec):
-        if self.__nexus_stale:
-            self._rebuild_nexus()
-        if isinstance(par_spec, ParameterBase):
-            # is param object
-            if par_spec not in self.__nexus_list_main_par_objects:
-                raise ParameterSpaceException("%s is not registered in this parameter space!" % (par_spec,))
-            return par_spec
-        try:
-            int(par_spec)
-            # is ID
-            if par_spec < 0 or par_spec > len(self.__nexus_list_main_par_names):
-                raise ParameterSpaceException("No parameter with ID '%d'!" % (par_spec,))
-            return self.__nexus_list_main_par_objects[par_spec]
-        except (TypeError, ValueError):
-            # is probably par name (str/unicode)
-            if par_spec not in self.__nexus_list_main_par_names:
-                raise ParameterSpaceException("No parameter with name '%s'!" % (par_spec,))
-            _id = self.__nexus_list_main_par_names.index(par_spec)
-            return self.__nexus_list_main_par_objects[_id]
-
-    def _get_par_main_name(self, par_spec):
-        if self.__nexus_stale:
-            self._rebuild_nexus()
-        try:
-            int(par_spec)
-            # is ID
-            if par_spec < 0 or par_spec > len(self.__nexus_list_main_par_names):
-                raise ParameterSpaceException("No parameter with ID '%d'!" % (par_spec,))
-            return self.__nexus_list_main_par_names[par_spec]
-        except (TypeError, ValueError):
-            if isinstance(par_spec, ParameterBase):
-                # is param object
-                if par_spec not in self.__nexus_list_main_par_objects:
-                    raise ParameterSpaceException("%s is not registered in this parameter space!" % (par_spec,))
-                _id = self.__nexus_list_main_par_objects.index(par_spec)
-                return self.__nexus_list_main_par_names[_id]
-            else:
-                # is probably par name (str/unicode)
-                if par_spec not in self.__nexus_list_main_par_names:
-                    raise ParameterSpaceException("No parameter with name '%s'!" % (par_spec,))
-                return par_spec
-
-    # def _get_par_main_name_and_aliases(self, par_spec):
+    # -- heuristic getters
+    #
+    # def _get_par_obj(self, par_spec):
+    #     if self.__nexus_stale:
+    #         self._rebuild_nexus()
+    #
+    #     # check the cache
+    #     _found_par = self.__getter_cache.get(par_spec, None)
+    #     if _found_par is not None:
+    #         return _found_par
+    #
+    #     # long lookup and fill cache
+    #     if isinstance(par_spec, ParameterBase):
+    #         # is param object
+    #         if par_spec not in self.__nexus_list_main_par_objects:
+    #             raise ParameterSpaceException("%s is not registered in this parameter space!" % (par_spec,))
+    #         self.__getter_cache[par_spec] = par_spec
+    #         return par_spec
+    #     try:
+    #         int(par_spec)
+    #         # is ID
+    #         if par_spec < 0 or par_spec > len(self.__nexus_list_main_par_names):
+    #             raise ParameterSpaceException("No parameter with ID '%d'!" % (par_spec,))
+    #         _found_par = self.__nexus_list_main_par_objects[par_spec]
+    #         self.__getter_cache[par_spec] = _found_par
+    #         return _found_par
+    #     except (TypeError, ValueError):
+    #         # is probably par name (str/unicode)
+    #         if par_spec not in self.__nexus_list_main_par_names:
+    #             raise ParameterSpaceException("No parameter with name '%s'!" % (par_spec,))
+    #         _id = self.__nexus_list_main_par_names.index(par_spec)
+    #         _found_par = self.__nexus_list_main_par_objects[_id]
+    #         self.__getter_cache[par_spec] = _found_par
+    #         return _found_par
+    #
+    # def _get_par_main_name(self, par_spec):
     #     if self.__nexus_stale:
     #         self._rebuild_nexus()
     #     try:
@@ -343,7 +326,7 @@ class ParameterSpace(object):
     #         # is ID
     #         if par_spec < 0 or par_spec > len(self.__nexus_list_main_par_names):
     #             raise ParameterSpaceException("No parameter with ID '%d'!" % (par_spec,))
-    #         return [_pn for _pn, _pid in self.__nexus_map_all_par_names_to_id if _pid == par_spec]
+    #         return self.__nexus_list_main_par_names[par_spec]
     #     except (TypeError, ValueError):
     #         if isinstance(par_spec, ParameterBase):
     #             # is param object
@@ -351,113 +334,168 @@ class ParameterSpace(object):
     #                 raise ParameterSpaceException("%s is not registered in this parameter space!" % (par_spec,))
     #             _id = self.__nexus_list_main_par_objects.index(par_spec)
     #             return self.__nexus_list_main_par_names[_id]
-    #             return [_pn for _pn, _pid in self.__nexus_map_all_par_names_to_id if _id == _pid]
     #         else:
     #             # is probably par name (str/unicode)
     #             if par_spec not in self.__nexus_list_main_par_names:
     #                 raise ParameterSpaceException("No parameter with name '%s'!" % (par_spec,))
-    #             _id = self.__nexus_list_main_par_names.index(par_spec)
-    #             return [_pn for _pn, _pid in self.__nexus_map_all_par_names_to_id if _id == _pid]
+    #             return par_spec
+    #
+    # def _get_par_id(self, par_spec):
+    #     if self.__nexus_stale:
+    #         self._rebuild_nexus()
+    #     try:
+    #         int(par_spec)
+    #         if par_spec < 0 or par_spec > len(self.__nexus_list_main_par_names):
+    #             raise ParameterSpaceException("No parameter with ID '%d'!" % (par_spec,))
+    #         # is ID
+    #         return par_spec
+    #     except (TypeError, ValueError):
+    #         if isinstance(par_spec, ParameterBase):
+    #             # is param object
+    #             if par_spec not in self.__nexus_list_main_par_objects:
+    #                 raise ParameterSpaceException("%s is not registered in this parameter space!" % (par_spec,))
+    #             return self.__nexus_list_main_par_objects.index(par_spec)
+    #         else:
+    #             # is probably par name (str/unicode)
+    #             if par_spec not in self.__nexus_list_main_par_names:
+    #                 raise ParameterSpaceException("No parameter with name '%s'!" % (par_spec,))
+    #             return self.__nexus_list_main_par_names.index(par_spec)
 
-    def _get_par_id(self, par_spec):
-        if self.__nexus_stale:
-            self._rebuild_nexus()
+
+    # -- helper methods
+
+    def _get_one_by_name(self, name, default):
+        return self.__map_par_name_to_par_obj.get(name, default)
+
+    def _new_one(self, name, value):
+        _p = self.__map_par_name_to_par_obj.get(name)
+        if _p is not None:
+            raise NexusException("Cannot create parameter '%s': exists!" % (name,))
+        else:
+            try:
+                self.__map_par_name_to_par_obj[name] = NodeValue(name, value, parent_parameter_space=self)
+            except NodeException as pe:
+                # re-raise ParameterException as ParameterSpaceException
+                raise NexusException(pe.message)
+            self.__nexus_stale = True
+
+    def _set_one(self, name, value):
+        _p = self._get_one_by_name(name, None)
+        if _p is None:
+            raise NexusException("Cannot set parameter '%s': no such parameter!" % (name,))
+        else:
+            _p.value = value
+
+    def _new_alias_one(self, alias, name):
+        _p = self.__map_par_name_to_par_obj.get(name)
+        if _p is None:
+            raise NexusException("Cannot create alias of non-existent parameter '%s'!" % (name,))
+
+        _pa = self.__map_par_name_to_par_obj.get(alias)
+        if _pa is not None:
+            raise NexusException("Cannot create alias '%s': exists!" % (alias,))
+
         try:
-            int(par_spec)
-            if par_spec < 0 or par_spec > len(self.__nexus_list_main_par_names):
-                raise ParameterSpaceException("No parameter with ID '%d'!" % (par_spec,))
-            # is ID
-            return par_spec
-        except (TypeError, ValueError):
-            if isinstance(par_spec, ParameterBase):
-                # is param object
-                if par_spec not in self.__nexus_list_main_par_objects:
-                    raise ParameterSpaceException("%s is not registered in this parameter space!" % (par_spec,))
-                return self.__nexus_list_main_par_objects.index(par_spec)
-            else:
-                # is probably par name (str/unicode)
-                if par_spec not in self.__nexus_list_main_par_names:
-                    raise ParameterSpaceException("No parameter with name '%s'!" % (par_spec,))
-                return self.__nexus_list_main_par_names.index(par_spec)
+            NodeValue._check_parameter_name_raise(alias)
+            self.__map_par_name_to_par_obj[alias] = _p
+        except NodeException as pe:
+            # re-raise ParameterException as ParameterSpaceException
+            raise NexusException(pe.message)
 
-    # # -- private "properties"
+        self.__nexus_stale = True
+
+    # def _get_dependent_parameter_objects(self, source_par_obj, default=tuple()):
+    #     if self._dependency_graph_stale:
+    #         self._check_for_dependency_cycles_raise()
+    #         self._dependency_graph_stale = False
+    #     return self._dependency_graph.get(source_par_obj, default)
     #
-    # @property
-    # def _name_id_map(self):
-    #     if self.__nexus_stale:
-    #         self._rebuild_nexus()
-    #     return self.__nexus_map_par_name_to_par_sequential_id
-    #
-    # @property
-    # def _real_pars(self):
-    #     if self.__nexus_stale:
-    #         self._rebuild_nexus()
-    #     return self.__nexus_list_real_par_names
-    #
-    # @property
-    # def _dim(self):
-    #     if self.__nexus_stale:
-    #         self._rebuild_nexus()
-    #     return self.__nexus_dim
+    # def _notify_dependent_parameter_objects(self, source_par_obj):
+    #     #logger.debug("Notifying targets for source: %s", source)
+    #     print "Notifying targets for source: %s" % (source_par_obj,)
+    #     for _target_par_obj in self._get_dependent_parameter_objects(source_par_obj, tuple()):
+    #         _target_par_obj.mark_for_update()
+    #         #logger.debug("Notifying target: %s", _target_par_obj)
+    #         print "Notifying target: %s" % (_target_par_obj,)
+    #         self._notify_dependent_parameter_objects(_target_par_obj)
 
     # -- public interface
 
-    # def parameter_main_name(self, parameter):
-    #     if isinstance(parameter, ParameterBase):
-    #         _id = self.__map_par_name_to_par_obj.index(parameter)
-    #     else:
-    #         _id = self._name_id_map.get(parameter)
-    #     return self.__nexus_map_par_id_to_par_main_name[_id]
+    # properties
 
-    def _get_one(self, name, default):
-        return self.__map_par_name_to_par_obj.get(name, default)
+    @property
+    def dimension(self):
+        if self.__nexus_stale:
+            self._rebuild_nexus()
+        return self.__nexus_real_dim
 
-    def get(self, name=None, default=None):
-        if name is None or name == "__all__":
+    @property
+    def parameter_values_dict(self):
+        if self.__nexus_stale:
+            self._rebuild_nexus()
+        _par_n_id_dict = self.__nexus_map_all_par_names_to_id
+        _par_n_par_dict = OrderedDict([(_pn, self._get_one_by_name(_pn, None)) for _pn in _par_n_id_dict])
+        _par_n_val_dict = OrderedDict([(_pn, _p.value) for _pn, _p in _par_n_par_dict.iteritems() if _p is not None])
+        return _par_n_val_dict
+
+    @property
+    def parameter_names(self):
+        if self.__nexus_stale:
+            self._rebuild_nexus()
+        return self.__nexus_map_all_par_names_to_id.keys()
+
+    # getters
+
+    def get(self, par_spec=None, default=None):
+        """
+        Note::
+            This is slow and not meant for use by internal interfaces or applications geared towards performance!
+            For these, use the dedicated getters #TODO#
+        """
+        if par_spec is None or par_spec == "__all__":
             # return all parameters
-            return [self._get_one(_n, default) for _n in self.__map_par_name_to_par_obj.keys()]
-        elif name == "__real__":
+            return [self._get_one_by_name(_n, default) for _n in self.__map_par_name_to_par_obj.keys()]
+        elif par_spec == "__real__":
             # return all parameters that are not aliases
             if self.__nexus_stale:
                 self._rebuild_nexus()
             return self.__nexus_list_main_par_objects[:self.__nexus_real_dim]
-        elif isinstance(name, str) or isinstance(name, unicode):
-            # return one parameter
-            return self._get_one(name, default)
         else:
-            # return a list of parameters
-            try:
-                iter(name)
-            except:
-                raise ParameterSpaceException("Getting parameter(s) with name '%r' failed: not string or iterable"
-                                              "of string!" % (name,))
-            else:
-                return [self.get(_n, default) for _n in name]
+            return self.get_by_name(par_spec, default)
 
     def get_values(self, name=None, default=None):
+        """
+        Note::
+            This is slow and not meant for use by internal interfaces or applications geared towards performance!
+            For these, use the dedicated getters #TODO#
+        """
         _l = self.get(name, default)
         if isinstance(_l, list):
             return [_p.value if _p is not None else None for _p in _l]
         else:
             return _l.value if _l is not None else None
 
-    def get_pars_name_value_dict(self):
-        _par_n_id_dict = self.__nexus_map_all_par_names_to_id
-        _par_n_par_dict = OrderedDict([(_pn, self._get_one(_pn, None)) for _pn in _par_n_id_dict])
-        _par_n_val_dict = OrderedDict([(_pn, _p.value) for _pn, _p in _par_n_par_dict.iteritems() if _p is not None])
-        return _par_n_val_dict
+    def get_by_name(self, name, default=None):
+        if self.__nexus_stale:
+            self._rebuild_nexus()
+        try:
+            iter(name)
+            if isinstance(name, str) or isinstance(name, unicode):
+                # return one parameter
+                return self._get_one_by_name(name, default)
+            else:
+                return [self.get_by_name(_n, default) for _n in name]
+        except TypeError:
+            return self._get_one_by_name(name, default)
 
-    def _new_one(self, name, value):
-        _p = self.__map_par_name_to_par_obj.get(name)
-        if _p is not None:
-            raise ParameterSpaceException("Cannot create parameter '%s': exists!" % (name,))
+    def get_values_by_name(self, name, default=None):
+        _l = self.get_by_name(name, default)
+        if isinstance(_l, list):
+            return [_p.value if _p is not None else None for _p in _l]
         else:
-            try:
-                self.__map_par_name_to_par_obj[name] = Parameter(name, value, parent_parameter_space=self)
-            except ParameterException as pe:
-                # re-raise ParameterException as ParameterSpaceException
-                raise ParameterSpaceException(pe.message)
-            self.__nexus_stale = True
+            return _l.value if _l is not None else None
+
+    # create new parameters
 
     def new(self, **kwargs):
         for k, v in kwargs.iteritems():
@@ -466,47 +504,26 @@ class ParameterSpace(object):
     def new_function(self, function_handle):
         _p = self.__map_par_name_to_par_obj.get(function_handle)
         if _p is not None:
-            raise ParameterSpaceException("Cannot create parameter '%s': exists!" % (function_handle,))
+            raise NexusException("Cannot create parameter '%s': exists!" % (function_handle,))
         else:
             try:
                 _fname = function_handle.__name__
-                _pf = self.__map_par_name_to_par_obj[_fname] = ParameterFunction(function_handle, parent_parameter_space=self)
+                _pf = self.__map_par_name_to_par_obj[_fname] = NodeFunction(function_handle, parent_parameter_space=self)
                 #self.add_dependency(target=_fname, sources=_pf.parameter_names)
                 for _pf_par_name in _pf.parameter_names:
                     self.add_dependency(source=_pf_par_name, target=_fname)
-            except ParameterException as pe:
+            except NodeException as pe:
                 # re-raise ParameterException as ParameterSpaceException
-                raise ParameterSpaceException(pe.message)
+                raise NexusException(pe.message)
             self.__nexus_stale = True
 
-    def _set_one(self, name, value):
-        _p = self.__map_par_name_to_par_obj.get(name)
-        if _p is None:
-            raise ParameterSpaceException("Cannot set parameter '%s': no such parameter!" % (name,))
-        else:
-            _p.value = value
+    # change parameter values
 
     def set(self, **kwargs):
         for k, v in kwargs.iteritems():
             self._set_one(k, v)
 
-    def _new_alias_one(self, alias, name):
-        _p = self.__map_par_name_to_par_obj.get(name)
-        if _p is None:
-            raise ParameterSpaceException("Cannot create alias of non-existent parameter '%s'!" % (name,))
-
-        _pa = self.__map_par_name_to_par_obj.get(alias)
-        if _pa is not None:
-            raise ParameterSpaceException("Cannot create alias '%s': exists!" % (alias,))
-
-        try:
-            Parameter._check_parameter_name_raise(alias)
-            self.__map_par_name_to_par_obj[alias] = _p
-        except ParameterException as pe:
-            # re-raise ParameterException as ParameterSpaceException
-            raise ParameterSpaceException(pe.message)
-
-        self.__nexus_stale = True
+    # parameter aliases
 
     def new_alias(self, **kwargs):
         for k, v in kwargs.iteritems():
@@ -530,45 +547,57 @@ class ParameterSpace(object):
         #         raise ParameterSpaceException("Cannot create parameter dependency: Source parameter '%s' does not exist!" % (_src_par_name,))
         #     self._dependency_graph[target].append(_src_par_name)
 
+    # handle parameter dependencies
+
     def add_dependency(self, source, target):
-        logger.debug("Adding Dependency: source=%s,  target=%s " % (source, target))
-        _src_par_obj = self._get_par_obj(source)
+        #logger.debug("Adding Dependency: source=%s,  target=%s ", source, target)
+        #print "Adding Dependency: source=%s,  target=%s " % (source, target)
+        _src_par_obj = self.get_by_name(source)
         if _src_par_obj is None:
-            raise ParameterSpaceException("Cannot create parameter dependency: Source parameter '%s' does not exist!" % (source,))
+            raise NexusException("Cannot create parameter dependency: Source parameter '%s' does not exist!" % (source,))
 
         if _src_par_obj not in self._dependency_graph:
             self._dependency_graph[_src_par_obj] = []
             self._dependency_graph_stale = True
 
-        _target_par_obj = self._get_par_obj(target)
+        _target_par_obj = self.get_by_name(target)
 
         if _target_par_obj is None:
-            raise ParameterSpaceException("Cannot create parameter dependency: Target parameter '%s' does not exist!" % (target,))
+            raise NexusException("Cannot create parameter dependency: Target parameter '%s' does not exist!" % (target,))
 
         self._dependency_graph[_src_par_obj].append(_target_par_obj)
         self._dependency_graph_stale = True
 
+    # def get_dependencies_OLD(self, source, default=tuple()):
+    #     _src_par_obj = self.get_by_name(source)
+    #     return self._get_dependent_parameter_objects(_src_par_obj)
+    #
+    # def notify_dependencies_OLD(self, source):
+    #     _src_par_obj = self.get_by_name(source)
+    #     print source, _src_par_obj
+    #     return self._notify_dependent_parameter_objects(_src_par_obj)
+
     def get_dependencies(self, source, default=tuple()):
         if self._dependency_graph_stale:
             self._check_for_dependency_cycles_raise()
-        _src_par_obj = self._get_par_obj(source)
-        return self._dependency_graph.get(_src_par_obj, default)
+            self._dependency_graph_stale = False
+        _deps = self._dependency_graph.get(source, None)
+        if _deps is None:
+            # if nothing found, try again assuming 'source' is a parameter name, not a parameter object...
+            _src_obj = self.get_by_name(source)
+            _deps = self._dependency_graph.get(_src_obj, default)
+            return _deps
+        return _deps
 
     def notify_dependencies(self, source):
-        _src_name = self._get_par_main_name(source)
-        logger.debug("Notifying targets for source: %s" % (source,))
-        logger.debug("Targets: %r" % (self.get_dependencies(source, tuple()),))
-        for _target_par_obj in self.get_dependencies(source, tuple()):
-            _target_par_obj.mark_for_update()
-            logger.debug("Notifying target: %s" % (_target_par_obj,))
-            self.notify_dependencies(_target_par_obj)
-
-    @property
-    def dimension(self):
-        if self.__nexus_stale:
-            self._rebuild_nexus()
-        return self.__nexus_real_dim
-
+        for _target in self.get_dependencies(source, tuple()):
+            try:
+                _target.mark_for_update()
+            except AttributeError:
+                _target = self.get_by_name(_target)
+                _target.mark_for_update()
+            finally:
+                self.notify_dependencies(_target)
 
 # class ParameterDependencyGraph(object):
 #     """Implements the observer model for `Parameter` objects in a `ParameterSpace`."""
@@ -585,9 +614,9 @@ class ParameterSpace(object):
 
 if __name__ == "__main__":
     import numpy as np
-    from tools import print_dict_recursive
+    from kafe.tools import print_dict_recursive
 
-    ps = ParameterSpace()
+    ps = Nexus()
     N_POINTS = 10
     ps.new(x_support=np.arange(N_POINTS ))
     ps.new(y_measured=np.arange(N_POINTS )+np.random.normal(0, 1, N_POINTS))
@@ -606,11 +635,11 @@ if __name__ == "__main__":
     ps.new_function(chi2)
 
     print
-    _vals = ps.get_pars_name_value_dict()
+    _vals = ps.parameter_values_dict
     print_dict_recursive(_vals)
 
     ps.set(a=2)
 
     print
-    _vals = ps.get_pars_name_value_dict()
+    _vals = ps.parameter_values_dict
     print_dict_recursive(_vals)

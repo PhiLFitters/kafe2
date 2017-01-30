@@ -571,12 +571,12 @@ class MatrixGaussianError(GaussianErrorBase):
 
     @staticmethod
     def _calculate_cov_mat_from_cov_rel(cov_mat_rel, reference):
-        print 'CR', cov_mat_rel
-        print 'RV', reference
+        #print 'CR', cov_mat_rel
+        #print 'RV', reference
         _ref = np.asarray(reference)
         _refmat = np.outer(_ref, _ref)
         _mat_rel = np.asarray(cov_mat_rel)
-        print 'CA',_mat_rel * _refmat
+        #print 'CA',_mat_rel * _refmat
         return CovMat(_mat_rel * _refmat)
 
     # -- public methods
