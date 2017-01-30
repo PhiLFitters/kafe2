@@ -14,7 +14,7 @@ from ast import parse
 #logger = logging.getLogger(__name__)
 #logger.setLevel(logging.INFO)
 
-import syslog
+__all__ = ['Nexus']
 
 
 class NodeException(Exception):
@@ -205,8 +205,6 @@ class Nexus(object):
 
         self._dependency_graph = dict()
         self._dependency_graph_stale = False
-
-        self._covariances = None  # this is to be populated by a `Fit` object
 
     # -- private methods
 

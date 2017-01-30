@@ -1,1 +1,1 @@
-__all__ = ['nexus', 'minimizers']
+__all__ = ['nexus']
