@@ -3,7 +3,11 @@ from scipy import optimize as opt
 
 import numpy as np
 
-from kafe.core.minimizers.root_tminuit_minimizer import MinimizerROOTTMinuit
+_cannot_import_ROOT = False
+try:
+    from kafe.core.minimizers.root_tminuit_minimizer import MinimizerROOTTMinuit
+except ImportError:
+    _cannot_import_ROOT = True
 
 
 def fcn_3(x, y, z):
@@ -12,6 +16,7 @@ def fcn_3(x, y, z):
 def fcn_1(x):
     return 42.*(x - 42.)**2 + 42.
 
+@unittest.skipIf(_cannot_import_ROOT, "Cannot import ROOT")
 class TestMinimizerIMinuit(unittest.TestCase):
 
     def setUp(self):
