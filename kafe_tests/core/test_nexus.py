@@ -1,7 +1,7 @@
 import unittest
 
-from kafe.core.nexus import NexusException, NodeException, Nexus
-
+from kafe.core.fitters import Nexus
+from kafe.core.fitters.nexus import NodeException, NexusException
 
 class TestParameterFunction(unittest.TestCase):
 
@@ -71,7 +71,7 @@ class TestPSpace(unittest.TestCase):
         self.ps = ps
 
     def test_parent_pspace_is_ref_pspace(self):
-        self.assertIs(self.ps.get('a1').parameter_space, self.ps)
+        self.assertIs(self.ps.get('a1').nexus, self.ps)
 
     def test_raise_set_invalid_parameter_name(self):
         with self.assertRaises(NodeException):

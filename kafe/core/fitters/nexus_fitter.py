@@ -1,7 +1,4 @@
-
-
 from collections import OrderedDict
-from scipy import optimize as opt
 
 from ..minimizers import MinimizerIMinuit
 
@@ -22,7 +19,7 @@ class NexusFitter(object):
         self.__cache_fit_parameters_name_value_dict = None
         self.__cache_parameter_to_minimize_value = None
 
-        _par_name_val_map = self.fit_parameter_values;
+        _par_name_val_map = self.fit_parameter_values
         self._minimizer = minimizer_class(parameters_to_fit,
                                           _par_name_val_map.values(),
                                           [0.1 if _v==0 else 0.1*_v for _v in _par_name_val_map.values()],

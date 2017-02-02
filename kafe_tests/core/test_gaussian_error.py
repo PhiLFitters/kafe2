@@ -1,7 +1,8 @@
 import unittest
+
 import numpy as np
 
-from kafe.error import SimpleGaussianError, MatrixGaussianError
+from kafe.core.error import MatrixGaussianError
 
 
 class TestMatrixGaussianError(unittest.TestCase):
@@ -137,35 +138,35 @@ class TestMatrixGaussianError(unittest.TestCase):
 
     def test_raise_cov_from_cov_rel_noref(self):
         with self.assertRaises(AttributeError):
-            self.ge_cov_rel_noref.cov_mat
+            _ = self.ge_cov_rel_noref.cov_mat
 
     def test_raise_cov_rel_from_cov_noref(self):
         with self.assertRaises(AttributeError):
-            self.ge_cov_noref.cov_mat_rel
+            _ = self.ge_cov_noref.cov_mat_rel
 
     def test_raise_cov_from_cor_rel_noref(self):
         with self.assertRaises(AttributeError):
-            self.ge_cor_rel_noref.cov_mat
+            _ = self.ge_cor_rel_noref.cov_mat
 
     def test_raise_cov_rel_from_cor_noref(self):
         with self.assertRaises(AttributeError):
-            self.ge_cor_noref.cov_mat_rel
+            _ = self.ge_cor_noref.cov_mat_rel
 
     def test_raise_error_from_cov_rel_noref(self):
         with self.assertRaises(AttributeError):
-            self.ge_cov_rel_noref.error
+            _ = self.ge_cov_rel_noref.error
 
     def test_raise_error_rel_from_cov_noref(self):
         with self.assertRaises(AttributeError):
-            self.ge_cov_noref.error_rel
+            _ = self.ge_cov_noref.error_rel
 
     def test_raise_error_from_cor_rel_noref(self):
         with self.assertRaises(AttributeError):
-            self.ge_cor_rel_noref.error
+            _ = self.ge_cor_rel_noref.error
 
     def test_raise_error_rel_from_cor_noref(self):
         with self.assertRaises(AttributeError):
-            self.ge_cor_noref.error_rel
+            _ = self.ge_cor_noref.error_rel
 
     def test_raise_build_from_wrong_cor_mat_diagonal_not_ones(self):
         with self.assertRaises(ValueError):

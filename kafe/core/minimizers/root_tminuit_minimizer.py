@@ -9,8 +9,10 @@ from array import array as arr  # array needed for TMinuit arguments
 
 import numpy as np
 
+
 class MinimizerROOTTMinuitException(Exception):
     pass
+
 
 class MinimizerROOTTMinuit(object):
     def __init__(self,
@@ -115,17 +117,17 @@ class MinimizerROOTTMinuit(object):
 
     def _minuit_fcn(self,
                     number_of_parameters, derivatives, f, parameters, internal_flag):
-        '''
+        """
         This is actually a function called in *ROOT* and acting as a C wrapper
         for our `FCN`, which is implemented in Python.
 
-        This function is called by `Minuit` several times during a fit. It
+        This function is called by `Minuit` several times during a fitters. It
         doesn't return anything but modifies one of its arguments (*f*).
         This is *ugly*, but it's how *ROOT*'s ``TMinuit`` works. Its argument
         structure is fixed and determined by `Minuit`:
 
         **number_of_parameters** : int
-            The number of parameters of the current fit
+            The number of parameters of the current fitters
 
         **derivatives** : C array
             If the user chooses to calculate the first derivative of the
@@ -143,7 +145,7 @@ class MinimizerROOTTMinuit(object):
             A flag allowing for different behaviour of the function.
             Can be any integer from 1 (initial run) to 4(normal run). See
             `Minuit`'s specification.
-        '''
+        """
 
         # Retrieve the parameters from the C side of ROOT and
         # store them in a Python list -- resource-intensive
@@ -156,11 +158,11 @@ class MinimizerROOTTMinuit(object):
         f[0] = self._func_handle(*parameter_list)
 
     def _insert_zeros_for_fixed(self, submatrix):
-        '''
+        """
         Takes the partial error matrix (submatrix) and adds
         rows and columns with 0.0 where the fixed
         parameters should go.
-        '''
+        """
         _mat = submatrix
 
         # reduce the matrix before inserting zeros
@@ -285,7 +287,7 @@ class MinimizerROOTTMinuit(object):
 
     def fix_several(self, parameter_names):
         for _pn in parameter_names:
-            self.fix(self, _pn)
+            self.fix(_pn)
 
     def release(self, parameter_name):
         # set local flag
@@ -302,7 +304,7 @@ class MinimizerROOTTMinuit(object):
 
     def release_several(self, parameter_names):
         for _pn in parameter_names:
-            self.release(self, _pn)
+            self.release(_pn)
 
     def limit(self, parameter_name, parameter_bounds):
         assert len(parameter_bounds) == 2
@@ -335,7 +337,7 @@ class MinimizerROOTTMinuit(object):
     def minimize(self, max_calls=6000):
         self._migrad(max_calls=max_calls)
 
-        # retrieve fit parameters
+        # retrieve fitters parameters
         self._par_val = []
         self._par_err = []
         _pv, _pe = Double(0), Double(0)

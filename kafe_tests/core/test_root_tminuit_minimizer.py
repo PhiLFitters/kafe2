@@ -1,10 +1,10 @@
 import unittest
-import numpy as np
-
 from scipy import optimize as opt
 
-from kafe.tools import print_dict_recursive
-from kafe.fit.minimizers.root_tminuit_minimizer import MinimizerROOTTMinuit
+import numpy as np
+
+from kafe.core.minimizers.root_tminuit_minimizer import MinimizerROOTTMinuit
+
 
 def fcn_3(x, y, z):
     return (x - 1.23)**2 + 0.5*(y - 4.32)**2 + 3*(z - 9.81)**2 - 5.23

@@ -437,7 +437,8 @@ class SimpleGaussianError(GaussianErrorBase):
             self._reference = None
         else:
             _ref = np.asarray(reference, dtype=float)
-            if np.any(np.isclose(_ref, 0.0, atol=1e-5)):
+            # check for zero-valued references if error is marked 'relative'
+            if self.relative and np.any(np.isclose(_ref, 0.0, atol=1e-5)):
                 # TODO: avoid hard-coded value
                 print ("WARNING: Error reference contains zero values! Replacing them "
                        "with default minimum '%g'" % (1e-2,))
@@ -650,7 +651,8 @@ class MatrixGaussianError(GaussianErrorBase):
             self._reference = None
         else:
             _ref = np.asarray(reference, dtype=float)
-            if np.any(np.isclose(_ref, 0.0, atol=1e-5)):
+            # check for zero-valued references if error is marked 'relative'
+            if self.relative and np.any(np.isclose(_ref, 0.0, atol=1e-5)):
                 # TODO: avoid hard-coded value
                 print ("WARNING: Error reference contains zero values! Replacing them "
                        "with default minimum '%g'" % (1e-2,))

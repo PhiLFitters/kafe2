@@ -1,29 +1,12 @@
-"""
-
-"""
-
 import abc
-import weakref
 import inspect
-
-from collections import OrderedDict
+import weakref
 from ast import parse
-
-#import logging
-#logging.basicConfig()
-#logger = logging.getLogger(__name__)
-#logger.setLevel(logging.INFO)
-
-__all__ = ['Nexus']
+from collections import OrderedDict
 
 
 class NodeException(Exception):
     pass
-
-
-class NexusException(Exception):
-    pass
-
 
 class NodeBase(object):
     """
@@ -33,14 +16,14 @@ class NodeBase(object):
 
     RESERVED_PARAMETER_NAMES = ('__all__', '__real__')
 
-    def __init__(self, name, parent_parameter_space=None):
+    def __init__(self, name, parent_nexus=None):
         self.name = name
-        self.parameter_space = parent_parameter_space
+        self.nexus = parent_nexus
 
         self._stale = False
 
     @staticmethod
-    def _check_parameter_name_raise(parameter_name):
+    def check_parameter_name_raise(parameter_name):
         if parameter_name in NodeValue.RESERVED_PARAMETER_NAMES:
             raise NodeException("Invalid parameter name: '%s' is a reserved keyword!"
                                 % (parameter_name,))
@@ -55,12 +38,12 @@ class NodeBase(object):
         return self._stale
 
     @property
-    def parameter_space(self):
-        return self._parameter_space_weak_ref()
+    def nexus(self):
+        return self._nexus_weak_ref()
 
-    @parameter_space.setter
-    def parameter_space(self, parameter_space_ref):
-        self._parameter_space_weak_ref = weakref.ref(parameter_space_ref)
+    @nexus.setter
+    def nexus(self, nexus_ref):
+        self._nexus_weak_ref = weakref.ref(nexus_ref)
 
     @property
     def name(self):
@@ -68,7 +51,7 @@ class NodeBase(object):
 
     @name.setter
     def name(self, name):
-        self._check_parameter_name_raise(name)
+        self.check_parameter_name_raise(name)
         self._name = name
 
     @abc.abstractproperty
@@ -81,16 +64,16 @@ class NodeBase(object):
 
     def notify_dependencies(self):
         #logger.debug("Notifying dependencies: %s", self)
-        if self.parameter_space:
-            self.parameter_space.notify_dependencies(self)
+        if self.nexus:
+            self.nexus.notify_dependencies(self)
 
     def __str__(self):
-        return "ParameterBase('%s', parameter_space=%s) [%d]" % (self.name, self.parameter_space, id(self))
+        return "ParameterBase('%s', nexus=%s) [%d]" % (self.name, self.nexus, id(self))
 
 
 class NodeValue(NodeBase):
-    def __init__(self, name, value, parent_parameter_space=None):
-        super(NodeValue, self).__init__(name, parent_parameter_space=parent_parameter_space)
+    def __init__(self, name, value, parent_nexus=None):
+        super(NodeValue, self).__init__(name, parent_nexus=parent_nexus)
         self._value = value
         self._stale = False
 
@@ -115,13 +98,13 @@ class NodeValue(NodeBase):
         return
 
     def __str__(self):
-        return "Parameter('%s', value='%s', parameter_space=%s) [%d]" % (self.name, self.value, self.parameter_space, id(self))
+        return "Parameter('%s', value='%s', nexus=%s) [%d]" % (self.name, self.value, self.nexus, id(self))
 
 
 class NodeFunction(NodeBase):
     """All keyword arguments of the function must be parameters registered in the parameter space."""
-    def __init__(self, function_handle, parent_parameter_space=None):
-        super(NodeFunction, self).__init__(function_handle.__name__, parent_parameter_space=parent_parameter_space)
+    def __init__(self, function_handle, parent_nexus=None):
+        super(NodeFunction, self).__init__(function_handle.__name__, parent_nexus=parent_nexus)
         self.func = function_handle
         self._value = 0.0
         #self._par_value_cache = dict()
@@ -140,13 +123,13 @@ class NodeFunction(NodeBase):
 
     def _update(self):
         #logger.debug("Recalculating: %s", self)
-        if self.parameter_space is None:
+        if self.nexus is None:
             return
 
         #self._par_value_cache = dict()
         self._par_value_cache = []
         _pns = self._func_varnames
-        _ps = self.parameter_space.get_by_name(_pns)
+        _ps = self.nexus.get_by_name(_pns)
         for _pn, _p in zip(_pns, _ps):
             #logger.debug("Update: %s = %s (%s)", _pn, _p.value, _p)
             #self._par_value_cache[_pn] = _p.value
@@ -177,8 +160,13 @@ class NodeFunction(NodeBase):
         self._func_varnames = inspect.getargspec(self._func)[0]
 
     def __str__(self):
-        return "ParameterFunction('%s', function_handle=%s, parameter_space=%s) [%d]" % (self.name, self._func, self.parameter_space, id(self))
+        return "ParameterFunction('%s', function_handle=%s, nexus=%s) [%d]" % (self.name, self._func, self.nexus, id(self))
 
+
+# ----------------------------------------------
+
+class NexusException(Exception):
+    pass
 
 class Nexus(object):
     """Manages `Parameter` aliasing and constructing value vectors/error vectors/error matrices for arbitrary subsets
@@ -371,7 +359,7 @@ class Nexus(object):
             raise NexusException("Cannot create parameter '%s': exists!" % (name,))
         else:
             try:
-                self.__map_par_name_to_par_obj[name] = NodeValue(name, value, parent_parameter_space=self)
+                self.__map_par_name_to_par_obj[name] = NodeValue(name, value, parent_nexus=self)
             except NodeException as pe:
                 # re-raise ParameterException as ParameterSpaceException
                 raise NexusException(pe.message)
@@ -394,7 +382,7 @@ class Nexus(object):
             raise NexusException("Cannot create alias '%s': exists!" % (alias,))
 
         try:
-            NodeValue._check_parameter_name_raise(alias)
+            NodeBase.check_parameter_name_raise(alias)
             self.__map_par_name_to_par_obj[alias] = _p
         except NodeException as pe:
             # re-raise ParameterException as ParameterSpaceException
@@ -506,7 +494,7 @@ class Nexus(object):
         else:
             try:
                 _fname = function_handle.__name__
-                _pf = self.__map_par_name_to_par_obj[_fname] = NodeFunction(function_handle, parent_parameter_space=self)
+                _pf = self.__map_par_name_to_par_obj[_fname] = NodeFunction(function_handle, parent_nexus=self)
                 #self.add_dependency(target=_fname, sources=_pf.parameter_names)
                 for _pf_par_name in _pf.parameter_names:
                     self.add_dependency(source=_pf_par_name, target=_fname)
@@ -597,47 +585,3 @@ class Nexus(object):
             finally:
                 self.notify_dependencies(_target)
 
-# class ParameterDependencyGraph(object):
-#     """Implements the observer model for `Parameter` objects in a `ParameterSpace`."""
-#     def __init__(self):
-#         self._graph = dict()
-#
-#     def add_dependency(self):
-#         pass
-#
-#     def has_cycle(self):
-#         """Check for cyclic dependencies and warn."""
-#         raise NotImplementedError
-
-
-if __name__ == "__main__":
-    import numpy as np
-    from kafe.tools import print_dict_recursive
-
-    ps = Nexus()
-    N_POINTS = 10
-    ps.new(x_support=np.arange(N_POINTS ))
-    ps.new(y_measured=np.arange(N_POINTS )+np.random.normal(0, 1, N_POINTS))
-    ps.new(y_errors=np.ones(N_POINTS) * 1.0)
-    ps.new(a=1)
-    ps.new(b=0)
-
-    def y_theory(x_support, a, b):
-        return a * x_support + b
-
-    def chi2(y_measured, y_theory, y_errors):
-        _p = y_measured - y_theory
-        return np.sum(_p/y_errors) ** 2
-
-    ps.new_function(y_theory)
-    ps.new_function(chi2)
-
-    print
-    _vals = ps.parameter_values_dict
-    print_dict_recursive(_vals)
-
-    ps.set(a=2)
-
-    print
-    _vals = ps.parameter_values_dict
-    print_dict_recursive(_vals)

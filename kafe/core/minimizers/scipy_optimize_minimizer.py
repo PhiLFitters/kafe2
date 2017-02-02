@@ -45,7 +45,7 @@ class MinimizerScipyOptimize(object):
 
     def _get_opt_result(self):
         if self._opt_result is None:
-            raise MinimizerScipyOptimizeException("Cannot get requested information: No fit performed!")
+            raise MinimizerScipyOptimizeException("Cannot get requested information: No fitters performed!")
         return self._opt_result
 
     # -- public properties
@@ -122,7 +122,7 @@ class MinimizerScipyOptimize(object):
 
     def fix_several(self, parameter_names):
         for _pn in parameter_names:
-            self.fix(self, _pn)
+            self.fix(_pn)
 
     def release(self, parameter_name):
         raise NotImplementedError
@@ -131,7 +131,7 @@ class MinimizerScipyOptimize(object):
 
     def release_several(self, parameter_names):
         for _pn in parameter_names:
-            self.release(self, _pn)
+            self.release(_pn)
 
     def limit(self, parameter_name, parameter_bounds):
         assert len(parameter_bounds) == 2

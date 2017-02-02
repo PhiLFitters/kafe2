@@ -64,11 +64,11 @@ class MinimizerIMinuit(object):
         return self.__iminuit
 
     def _fill_in_zeroes_for_fixed(self, submatrix):
-        '''
+        """
         Takes the partial error matrix (submatrix) and adds
         rows and columns with 0.0 where the fixed
         parameters should go.
-        '''
+        """
         _mat = submatrix
 
         _fparams = self._get_iminuit().list_of_fixed_param()
@@ -223,7 +223,7 @@ class MinimizerIMinuit(object):
 
     def fix_several(self, parameter_names):
         for _pn in parameter_names:
-            self.fix(self, _pn)
+            self.fix(_pn)
 
     def release(self, parameter_name):
         self.__iminuit = None  # delete curent iminuit instance
@@ -231,7 +231,7 @@ class MinimizerIMinuit(object):
 
     def release_several(self, parameter_names):
         for _pn in parameter_names:
-            self.release(self, _pn)
+            self.release(_pn)
 
     def limit(self, parameter_name, parameter_bounds):
         self.__iminuit = None  # delete curent iminuit instance

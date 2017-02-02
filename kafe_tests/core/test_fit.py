@@ -2,10 +2,8 @@ import unittest
 
 import numpy as np
 
-from kafe.core.nexus import Nexus
-from kafe.fit import NexusFitter
-
-from kafe.fit.minimizers.iminuit_minimizer import MinimizerIMinuit
+from kafe.core.minimizers import MinimizerIMinuit
+from kafe.core.fitters import Nexus, NexusFitter
 
 
 # class TestNexusFitter(unittest.TestCase):
