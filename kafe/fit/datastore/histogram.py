@@ -9,8 +9,8 @@ class HistContainerException(IndexedContainerException):
 
 
 class HistContainer(IndexedContainer):
-    def __init__(self, n_bins, bin_range, bin_edges=None, fill_data=None):
-        super(HistContainer, self).__init__(data=np.zeros(n_bins+2), dtype=int)  # underflow and overflow bins
+    def __init__(self, n_bins, bin_range, bin_edges=None, fill_data=None, dtype=int):
+        super(HistContainer, self).__init__(data=np.zeros(n_bins+2), dtype=dtype)  # underflow and overflow bins
         self._processed_entries = []
         self._unprocessed_entries = []
         # TODO: think of a way to implement weights
