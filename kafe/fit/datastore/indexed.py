@@ -1,7 +1,7 @@
 import abc
 import numpy as np
 
-from . import DataContainerBase, DataContainerException
+from . import DataContainerBase, DataContainerException, ParametricModelBaseMixin
 
 from ...core.error import SimpleGaussianError, MatrixGaussianError
 
@@ -93,6 +93,32 @@ class IndexedContainer(DataContainerBase):
         return self._total_error
 
 
-class IndexedParametricModel(IndexedContainer):
-    def __init__(self):
-        raise NotImplementedError
+class IndexedParametricModelException(IndexedContainerException):
+    pass
+
+
+class IndexedParametricModel(ParametricModelBaseMixin, IndexedContainer):
+    def __init__(self, model_func, model_parameters):
+        # print "IndexedParametricModel.__init__(model_func=%r, model_parameters=%r)" % (model_func, model_parameters)
+        _data = model_func(*model_parameters)
+        super(IndexedParametricModel, self).__init__(model_func, model_parameters, _data)
+
+    # -- private methods
+
+    def _recalculate(self):
+        # use parent class setter for 'data'
+        IndexedContainer.data.fset(self, self._model_function_handle(*self._model_parameters))
+        self._pm_calculation_stale = False
+
+
+    # -- public properties
+
+    @property
+    def data(self):
+        if self._pm_calculation_stale:
+            self._recalculate()
+        return super(IndexedParametricModel, self).data
+
+    @data.setter
+    def data(self, new_data):
+        raise IndexedParametricModelException("Parametric model data cannot be set!")

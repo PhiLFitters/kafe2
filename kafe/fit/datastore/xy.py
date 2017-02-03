@@ -1,8 +1,7 @@
-import abc
 import numpy as np
 
+from . import ParametricModelBaseMixin
 from .indexed import IndexedContainer, IndexedContainerException
-
 from ...core.error import SimpleGaussianError, MatrixGaussianError
 
 
@@ -146,7 +145,38 @@ class XYContainer(IndexedContainer):
         return self._xy_total_errors[_axis]
 
 
+class XYParametricModelException(XYContainerException):
+    pass
 
-class XYParametricModel(XYContainer):
-    def __init__(self):
-        raise NotImplementedError
+
+class XYParametricModel(ParametricModelBaseMixin, XYContainer):
+    def __init__(self, x_data, model_func, model_parameters):
+        # print "XYParametricModel.__init__(x_data=%r, model_func=%r, model_parameters=%r)" % (x_data, model_func, model_parameters)
+        _y_data = model_func(x_data, *model_parameters)
+        super(XYParametricModel, self).__init__(model_func, model_parameters, x_data, _y_data)
+
+    # -- private methods
+
+    def _recalculate(self):
+        # use parent class setter for 'y'
+        XYContainer.y.fset(self, self._model_function_handle(self.x, *self._model_parameters))
+        self._pm_calculation_stale = False
+
+
+    # -- public properties
+
+    @property
+    def data(self):
+        if self._pm_calculation_stale:
+            self._recalculate()
+        return super(XYParametricModel, self).data
+
+    @property
+    def y(self):
+        if self._pm_calculation_stale:
+            self._recalculate()
+        return super(XYParametricModel, self).y
+
+    @y.setter
+    def y(self, new_y):
+        raise XYParametricModelException("Parametric model data cannot be set!")
