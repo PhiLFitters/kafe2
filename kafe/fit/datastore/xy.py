@@ -64,6 +64,19 @@ class XYContainer(IndexedContainer):
     def data(self):
         return self._xy_data.copy()  # copy to ensure no modification by user
 
+    @data.setter
+    def data(self, new_data):
+        _new_data = np.asarray(new_data)
+        if _new_data.ndim != 2:
+            raise XYContainerException("XYContainer data must be 2-d array of floats! Got shape: %r..." % (_new_data.shape,))
+        if _new_data.shape[0] == 2:
+            self._xy_data = _new_data.copy()
+        elif _new_data.shape[1] == 2:
+            self._xy_data = _new_data.T.copy()
+        else:
+            raise XYContainerException(
+                "XYContainer data length must be 2 in at least one axis! Got shape: %r..." % (_new_data.shape,))
+
     @property
     def x(self):
         return self._get_data_for_axis(0)
@@ -170,6 +183,21 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
         if self._pm_calculation_stale:
             self._recalculate()
         return super(XYParametricModel, self).data
+
+    @data.setter
+    def data(self, new_data):
+        raise XYParametricModelException("Parametric model data cannot be set!")
+
+    @property
+    def x(self):
+        return super(XYParametricModel, self).x
+
+    @x.setter
+    def x(self, new_x):
+        # resetting 'x' -> must reset entire data array
+        self._xy_data = np.zeros((2, len(new_x)))
+        self._xy_data[0] = new_x
+        self._pm_calculation_stale = True
 
     @property
     def y(self):
