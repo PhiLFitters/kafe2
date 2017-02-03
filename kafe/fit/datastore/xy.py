@@ -63,7 +63,7 @@ class XYContainer(IndexedContainer):
 
     @property
     def data(self):
-        return self._xy_data  # TODO: copy?
+        return self._xy_data.copy()  # copy to ensure no modification by user
 
     @property
     def x(self):
@@ -72,8 +72,8 @@ class XYContainer(IndexedContainer):
     @x.setter
     def x(self, new_x):
         _new_x_data = np.squeeze(np.array(new_x))
-        if len(_new_x_data) > 1:
-            raise IndexedContainerException("XYContainer 'x' data must be 1-d array of floats! Got shape: %r..." % (_new_x_data.shape,))
+        if len(_new_x_data.shape) > 1:
+            raise XYContainerException("XYContainer 'x' data must be 1-d array of floats! Got shape: %r..." % (_new_x_data.shape,))
         self._xy_data[0,:] = new_x
         for _err_dict in self._error_dicts.values():
             if _err_dict['axis'] == 0:
@@ -92,8 +92,8 @@ class XYContainer(IndexedContainer):
     @y.setter
     def y(self, new_y):
         _new_y_data = np.squeeze(np.array(new_y))
-        if len(_new_y_data) > 1:
-            raise IndexedContainerException("XYContainer 'y' data must be 1-d array of floats! Got shape: %r..." % (_new_y_data.shape,))
+        if len(_new_y_data.shape) > 1:
+            raise XYContainerException("XYContainer 'y' data must be 1-d array of floats! Got shape: %r..." % (_new_y_data.shape,))
         self._xy_data[1,:] = new_y
         for _err_dict in self._error_dicts.values():
             if _err_dict['axis'] == 1:

@@ -37,14 +37,14 @@ class IndexedContainer(DataContainerBase):
 
     @property
     def data(self):
-        return self._idx_data  # TODO: copy?
+        return self._idx_data.copy()  # copy to ensure no modification by user
 
     @data.setter
     def data(self, data):
         _data = np.squeeze(np.array(data, dtype=float))
-        if len(_data) > 1:
+        if len(_data.shape) > 1:
             raise IndexedContainerException("IndexedContainer data must be 1-d array of floats! Got shape: %r..." % (_data.shape,))
-        self._idx_data = _data
+        self._idx_data[:] = _data
         # reset member error references to the new data values
         for _err_dict in self._error_dicts.values():
             _axis = _err_dict['axis']
