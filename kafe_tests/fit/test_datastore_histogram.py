@@ -1,7 +1,9 @@
 import unittest
 import numpy as np
+import scipy.stats as stats
 
-from kafe.fit.datastore.histogram import HistContainer, HistContainerException
+from kafe.fit.datastore.histogram import (HistContainer, HistContainerException,
+                                          HistParametricModel, HistParametricModelException)
 
 
 class TestDatastoreHistogram(unittest.TestCase):
@@ -114,3 +116,67 @@ class TestDatastoreHistogram(unittest.TestCase):
             _hc = HistContainer(self._ref_n_bins_manual, self._ref_n_bin_range,
                                 bin_edges=self._probe_bin_edges_variablespacing_unsorted)
 
+
+class TestDatastoreHistParametricModel(unittest.TestCase):
+    @staticmethod
+    def _ref_model_func(x, mu, sigma):
+        return stats.norm(mu, sigma).pdf(x)
+
+    @staticmethod
+    def _ref_model_func_antider(x, mu, sigma):
+        return stats.norm(mu, sigma).cdf(x)
+
+    def setUp(self):
+        self._ref_pm_support = np.linspace(-5, 5, 11)
+
+        self._ref_n_bins = 11
+        self._ref_n_bin_range = (-3, 25)
+        self._ref_bin_edges = np.linspace(self._ref_n_bin_range[0], self._ref_n_bin_range[1], self._ref_n_bins+1)
+
+        self._ref_params = (14., 3.)
+        self._ref_data = (self._ref_model_func_antider(self._ref_bin_edges[1:], *self._ref_params) -
+                          self._ref_model_func_antider(self._ref_bin_edges[:-1], *self._ref_params))
+
+        self.hist_param_model_no_antider = HistParametricModel(
+            n_bins=self._ref_n_bins,
+            bin_range=self._ref_n_bin_range,
+            model_func=self._ref_model_func, model_parameters=self._ref_params,
+            bin_edges=None, model_func_antiderivative=None)
+
+        self.hist_param_model_with_antider = HistParametricModel(
+            n_bins=self._ref_n_bins,
+            bin_range=self._ref_n_bin_range,
+            model_func=self._ref_model_func, model_parameters=self._ref_params,
+            bin_edges=None, model_func_antiderivative=self._ref_model_func_antider)
+
+        self.hist_param_model_only_antider = HistParametricModel(
+            n_bins=self._ref_n_bins,
+            bin_range=self._ref_n_bin_range,
+            model_func=None, model_parameters=self._ref_params,
+            bin_edges=None, model_func_antiderivative=self._ref_model_func_antider)
+
+        self._test_params = (20., 5.)
+        self._ref_test_data = (self._ref_model_func_antider(self._ref_bin_edges[1:], *self._test_params) -
+                          self._ref_model_func_antider(self._ref_bin_edges[:-1], *self._test_params))
+
+    def test_compare_hist_model_no_antider_ref_data(self):
+        self.assertTrue(np.allclose(self.hist_param_model_no_antider.data, self._ref_data))
+
+    def test_compare_hist_model_with_antider_ref_data(self):
+        self.assertTrue(np.allclose(self.hist_param_model_with_antider.data, self._ref_data))
+
+    def test_compare_hist_model_only_antider_ref_data(self):
+        self.assertTrue(np.allclose(self.hist_param_model_only_antider.data, self._ref_data))
+
+
+    def test_change_parameters_test_data(self):
+        self.hist_param_model_no_antider.parameters = self._test_params
+        self.assertTrue(np.allclose(self.hist_param_model_no_antider.data, self._ref_test_data))
+
+    def test_raise_set_data(self):
+        with self.assertRaises(HistParametricModelException):
+            self.hist_param_model_no_antider.data = self._ref_test_data
+
+    def test_raise_fill(self):
+        with self.assertRaises(HistParametricModelException):
+            self.hist_param_model_no_antider.fill([-1, 2, 700])

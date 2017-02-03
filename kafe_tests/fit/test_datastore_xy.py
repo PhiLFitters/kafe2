@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from kafe.fit.datastore.xy import XYContainer
+from kafe.fit.datastore.xy import XYContainer, XYParametricModel, XYParametricModelException
 from kafe.core.error import cov_mat_from_float_list
 
 
@@ -81,3 +81,52 @@ class TestDatastoreXY(unittest.TestCase):
         _err = self.data_xy.get_total_error(1)
         _mat = _err.cov_mat
         self.assertTrue(np.allclose(_mat, self._ref_y_cov_mat + self._ref_x_cov_mat, atol=1e-5))
+
+
+class TestDatastoreXYParametricModel(unittest.TestCase):
+    def _ref_model_func(self, x, slope, intercept):
+        return slope * x + intercept
+
+    def setUp(self):
+        self._ref_x = np.linspace(-5, 5, 11)
+        self._test_x = np.linspace(-3, 45, 20)
+
+        self._ref_params = (1.2, 3.3)
+        self._ref_data = self._ref_model_func(self._ref_x, *self._ref_params)
+
+        self.xy_param_model = XYParametricModel(x_data=self._ref_x, model_func=self._ref_model_func, model_parameters=self._ref_params)
+
+        self._test_params = (3.4, -5.23)
+        self._ref_data_ref_x_test_params =  self._ref_model_func(self._ref_x, *self._test_params)
+        self._ref_data_test_x_ref_params =  self._ref_model_func(self._test_x, *self._ref_params)
+        self._ref_data_test_x_test_params = self._ref_model_func(self._test_x, *self._test_params)
+
+    def test_compare_ref_data(self):
+        self.assertTrue(np.all(self.xy_param_model.y == self._ref_data))
+
+
+    def test_change_parameters_test_data(self):
+        self.xy_param_model.parameters = self._test_params
+        self.assertTrue(np.allclose(self.xy_param_model.y, self._ref_data_ref_x_test_params))
+
+    def test_change_x_test_data(self):
+        self.xy_param_model.x = self._test_x
+        self.assertTrue(np.allclose(self.xy_param_model.y, self._ref_data_test_x_ref_params))
+
+    def test_change_x_change_parameters_test_data(self):
+        self.xy_param_model.x = self._test_x
+        self.xy_param_model.parameters = self._test_params
+        self.assertTrue(np.allclose(self.xy_param_model.y, self._ref_data_test_x_test_params))
+
+    def test_change_parameters_change_x_test_data(self):
+        self.xy_param_model.parameters = self._test_params
+        self.xy_param_model.x = self._test_x
+        self.assertTrue(np.allclose(self.xy_param_model.y, self._ref_data_test_x_test_params))
+
+    def test_raise_set_data(self):
+        with self.assertRaises(XYParametricModelException):
+            self.xy_param_model.data = self._ref_data_ref_x_test_params
+
+    def test_raise_set_y(self):
+        with self.assertRaises(XYParametricModelException):
+            self.xy_param_model.y = self._ref_data_ref_x_test_params
