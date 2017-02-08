@@ -118,6 +118,10 @@ class FitBase(object):
     # def cost_function_value(self): pass
 
     @property
+    def data_size(self):
+        return self._data_container.size
+
+    @property
     def has_model_errors(self):
         return self._param_model.has_errors
 
