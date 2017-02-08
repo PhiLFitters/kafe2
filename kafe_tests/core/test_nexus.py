@@ -1,32 +1,34 @@
 import unittest
 
 from kafe.core.fitters import Nexus
-from kafe.core.fitters.nexus import NodeException, NexusException
+from kafe.core.fitters.nexus import NodeException, NexusException, NODE_VALUE_DEFAULT
 
 class TestParameterFunction(unittest.TestCase):
+    @staticmethod
+    def native_func_difference12(a1, a2):
+        return a1 - a2
+
+    @staticmethod
+    def native_func_difference13(a1, a3):
+        return a1 - a3
+
+    @staticmethod
+    def native_func_difference3_constant2(a3):
+        return a3 - 2
+
+    @staticmethod
+    def native_func_difference1_constant2(a1):
+        return a1 - 2
+
+    @staticmethod
+    def native_func_unknown_parameters(a1, zz_unknown_zz):
+        return a1 - zz_unknown_zz
 
     def setUp(self):
         self.ps = Nexus()
         self.ps.new(a1=62)
         self.ps.new(a2=42)
         self.ps.new_alias(a3='a1')
-
-        def native_func_difference12(a1, a2):
-            return a1 - a2
-
-        def native_func_difference13(a1, a3):
-            return a1 - a3
-
-        def native_func_difference3_constant2(a3):
-            return a3 - 2
-
-        def native_func_difference1_constant2(a1):
-            return a1 - 2
-
-        self.native_func_difference12 = native_func_difference12
-        self.native_func_difference13 = native_func_difference13
-        self.native_func_difference3_constant2 = native_func_difference3_constant2
-        self.native_func_difference1_constant2 = native_func_difference1_constant2
 
         self.ps.new_function(self.native_func_difference12)
         self.ps.new_function(self.native_func_difference13)
@@ -58,6 +60,18 @@ class TestParameterFunction(unittest.TestCase):
         self.ps.set(a3=42)
         # print '++ self.assertEqual(self.ps.get_values(\'native_func_difference3_constant2\'), 40) ++'
         self.assertEqual(self.ps.get_values('native_func_difference3_constant2'), 40)
+
+    def test_raise_register_func_with_unknown_parameters(self):
+        with self.assertRaises(NexusException):
+            self.ps.new_function(self.native_func_unknown_parameters)
+
+    def test_check_noraise_register_func_with_unknown_parameters(self):
+        self.ps.new_function(self.native_func_unknown_parameters, add_unknown_parameters=True)
+
+    def test_check_success_register_func_with_unknown_parameters(self):
+        self.ps.new_function(self.native_func_unknown_parameters, add_unknown_parameters=True)
+        self.assertEqual(self.ps.get_by_name('zz_unknown_zz').value, NODE_VALUE_DEFAULT)
+
 
 class TestPSpace(unittest.TestCase):
 

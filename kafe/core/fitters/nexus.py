@@ -5,6 +5,8 @@ from ast import parse
 from collections import OrderedDict
 
 
+NODE_VALUE_DEFAULT = 1.0
+
 class NodeException(Exception):
     pass
 
@@ -103,8 +105,9 @@ class NodeValue(NodeBase):
 
 class NodeFunction(NodeBase):
     """All keyword arguments of the function must be parameters registered in the parameter space."""
-    def __init__(self, function_handle, parent_nexus=None):
-        super(NodeFunction, self).__init__(function_handle.__name__, parent_nexus=parent_nexus)
+    def __init__(self, function_handle, function_name=None, parent_nexus=None):
+        _fname = function_name if function_name is not None else function_handle.__name__
+        super(NodeFunction, self).__init__(_fname, parent_nexus=parent_nexus)
         self.func = function_handle
         self._value = 0.0
         #self._par_value_cache = dict()
@@ -158,6 +161,7 @@ class NodeFunction(NodeBase):
         # do introspection
         self._func_varcount = self._func.func_code.co_argcount
         self._func_varnames = inspect.getargspec(self._func)[0]
+        self._stale = True
 
     def __str__(self):
         return "ParameterFunction('%s', function_handle=%s, nexus=%s) [%d]" % (self.name, self._func, self.nexus, id(self))
@@ -372,6 +376,13 @@ class Nexus(object):
         else:
             _p.value = value
 
+    def _set_function_one(self, name, function_handle):
+        _p = self._get_one_by_name(name, None)
+        if _p is None:
+            raise NexusException("Cannot set function parameter '%s': no such parameter!" % (name,))
+        else:
+            _p.func = function_handle
+
     def _new_alias_one(self, alias, name):
         _p = self.__map_par_name_to_par_obj.get(name)
         if _p is None:
@@ -487,19 +498,23 @@ class Nexus(object):
         for k, v in kwargs.iteritems():
             self._new_one(k, v)
 
-    def new_function(self, function_handle):
+    def new_function(self, function_handle, function_name=None, add_unknown_parameters=False):
         _p = self.__map_par_name_to_par_obj.get(function_handle)
         if _p is not None:
             raise NexusException("Cannot create parameter '%s': exists!" % (function_handle,))
         else:
             try:
-                _fname = function_handle.__name__
-                _pf = self.__map_par_name_to_par_obj[_fname] = NodeFunction(function_handle, parent_nexus=self)
+                _pf = NodeFunction(function_handle, function_name=function_name, parent_nexus=self)
+                self.__map_par_name_to_par_obj[_pf.name] = _pf
                 #self.add_dependency(target=_fname, sources=_pf.parameter_names)
                 for _pf_par_name in _pf.parameter_names:
-                    self.add_dependency(source=_pf_par_name, target=_fname)
+                    if add_unknown_parameters:
+                        _pf_par_obj = self.get_by_name(_pf_par_name)
+                        if _pf_par_obj is None:
+                            self.new(**{_pf_par_name: NODE_VALUE_DEFAULT})
+                    self.add_dependency(source=_pf_par_name, target=_pf.name)
             except NodeException as pe:
-                # re-raise ParameterException as ParameterSpaceException
+                # re-raise NodeException as NexusException
                 raise NexusException(pe.message)
             self.__nexus_stale = True
 
@@ -508,6 +523,10 @@ class Nexus(object):
     def set(self, **kwargs):
         for k, v in kwargs.iteritems():
             self._set_one(k, v)
+
+    def set_function(self, **kwargs):
+        for k, v in kwargs.iteritems():
+            self._set_function_one(k, v)
 
     # parameter aliases
 
