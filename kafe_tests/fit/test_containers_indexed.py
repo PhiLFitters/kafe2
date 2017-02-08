@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from kafe.fit.datastore.indexed import IndexedContainer, IndexedParametricModel, IndexedParametricModelException
+from kafe.fit.containers.indexed import IndexedContainer, IndexedParametricModel, IndexedParametricModelException
 from kafe.core.error import cov_mat_from_float_list
 
 
@@ -55,6 +55,9 @@ class TestDatastoreIndexedParametricModel(unittest.TestCase):
     def _ref_model_func(self, slope, intercept):
         return slope * self._ref_pm_support + intercept
 
+    def _ref_model_func_deriv_by_pars(self, slope, intercept):
+        return np.array([self._ref_pm_support, [1]*len(self._ref_pm_support)])
+
     def setUp(self):
         self._ref_pm_support = np.linspace(-5, 5, 11)
 
@@ -68,6 +71,14 @@ class TestDatastoreIndexedParametricModel(unittest.TestCase):
 
     def test_compare_ref_data(self):
         self.assertTrue(np.all(self.idx_param_model.data == self._ref_data))
+
+    def test_deriv_by_par(self):
+        self.assertTrue(
+            np.allclose(
+                self.idx_param_model.eval_model_function_derivative_by_parameters(),
+                self._ref_model_func_deriv_by_pars(*self._ref_params)
+            )
+        )
 
 
     def test_change_parameters_test_data(self):

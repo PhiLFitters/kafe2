@@ -10,6 +10,24 @@ class DataContainerBase(object):
     """
     __metaclass__ = abc.ABCMeta
 
+    @abc.abstractproperty
+    def size(self): pass
+
+    @abc.abstractproperty
+    def data(self): pass
+
+    @abc.abstractproperty
+    def err(self): pass
+
+    @abc.abstractproperty
+    def cov_mat(self): pass
+
+    @abc.abstractproperty
+    def cov_mat_inverse(self): pass
+
+    @property
+    def has_errors(self):
+        return True if self._error_dicts else False
 
 
 class ParametricModelBaseMixin(object):
@@ -32,7 +50,7 @@ class ParametricModelBaseMixin(object):
         self._pm_calculation_stale = True
 
 
-# public interface of submodule 'kafe.fit.datastore'
+# public interface of submodule 'kafe.fit.containers'
 
 from .indexed import IndexedContainer, IndexedParametricModel
 from .histogram import HistContainer, HistParametricModel

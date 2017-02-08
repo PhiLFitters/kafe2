@@ -2,8 +2,8 @@ import unittest
 import numpy as np
 import scipy.stats as stats
 
-from kafe.fit.datastore.histogram import (HistContainer, HistContainerException,
-                                          HistParametricModel, HistParametricModelException)
+from kafe.fit.containers.histogram import (HistContainer, HistContainerException,
+                                           HistParametricModel, HistParametricModelException)
 
 
 class TestDatastoreHistogram(unittest.TestCase):
@@ -140,20 +140,20 @@ class TestDatastoreHistParametricModel(unittest.TestCase):
         self.hist_param_model_no_antider = HistParametricModel(
             n_bins=self._ref_n_bins,
             bin_range=self._ref_n_bin_range,
-            model_func=self._ref_model_func, model_parameters=self._ref_params,
-            bin_edges=None, model_func_antiderivative=None)
+            model_density_func=self._ref_model_func, model_parameters=self._ref_params,
+            bin_edges=None, model_density_func_antiderivative=None)
 
         self.hist_param_model_with_antider = HistParametricModel(
             n_bins=self._ref_n_bins,
             bin_range=self._ref_n_bin_range,
-            model_func=self._ref_model_func, model_parameters=self._ref_params,
-            bin_edges=None, model_func_antiderivative=self._ref_model_func_antider)
+            model_density_func=self._ref_model_func, model_parameters=self._ref_params,
+            bin_edges=None, model_density_func_antiderivative=self._ref_model_func_antider)
 
         self.hist_param_model_only_antider = HistParametricModel(
             n_bins=self._ref_n_bins,
             bin_range=self._ref_n_bin_range,
-            model_func=None, model_parameters=self._ref_params,
-            bin_edges=None, model_func_antiderivative=self._ref_model_func_antider)
+            model_density_func=None, model_parameters=self._ref_params,
+            bin_edges=None, model_density_func_antiderivative=self._ref_model_func_antider)
 
         self._test_params = (20., 5.)
         self._ref_test_data = (self._ref_model_func_antider(self._ref_bin_edges[1:], *self._test_params) -

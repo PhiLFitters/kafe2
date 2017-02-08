@@ -4,6 +4,7 @@ from . import ParametricModelBaseMixin
 from .indexed import IndexedContainer, IndexedContainerException
 from ...core.error import SimpleGaussianError, MatrixGaussianError
 
+from scipy.misc import derivative
 
 class XYContainerException(IndexedContainerException):
     pass
@@ -12,9 +13,9 @@ class XYContainerException(IndexedContainerException):
 class XYContainer(IndexedContainer):
     AXIS_SPEC_DICT = {0:0, 1:1, '0':0, '1':1, 'x':0, 'y':1}
 
-    def __init__(self, x_data, y_data):
+    def __init__(self, x_data, y_data, dtype=float):
         # TODO: check user input (?)
-        self._xy_data = np.array([x_data, y_data], dtype=float)
+        self._xy_data = np.array([x_data, y_data], dtype=dtype)
         self._error_dicts = {}
         self._xy_total_errors = None
 
@@ -117,11 +118,25 @@ class XYContainer(IndexedContainer):
         _total_error_y = self.get_total_error(axis=1)
         return _total_error_y.error
 
+    @property
+    def x_range(self):
+        _x = self.x
+        return np.min(_x), np.max(_x)
+
+    @property
+    def y_range(self):
+        _y = self.y
+        return np.min(_y), np.max(_y)
+
 
     # -- public methods
 
     def add_simple_error(self, axis, err_val, correlation=0, relative=False):
         _axis = self._find_axis_raise(axis)
+        try:
+            err_val.ndim
+        except AttributeError:
+            err_val = np.ones(self.size) * err_val
         _err = SimpleGaussianError(err_val=err_val, corr_coeff=correlation,
                                    relative=relative, reference=self._get_data_for_axis(_axis))
         # TODO: reason not to use id() here?
@@ -172,7 +187,7 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
 
     def _recalculate(self):
         # use parent class setter for 'y'
-        XYContainer.y.fset(self, self._model_function_handle(self.x, *self._model_parameters))
+        XYContainer.y.fset(self, self.eval_model_function())
         self._pm_calculation_stale = False
 
 
@@ -208,3 +223,41 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
     @y.setter
     def y(self, new_y):
         raise XYParametricModelException("Parametric model data cannot be set!")
+
+    # -- public methods
+
+    def eval_model_function(self, x=None, model_parameters=None):
+        _x = x if x is not None else self.x
+        _pars = model_parameters if model_parameters is not None else self._model_parameters
+        return self._model_function_handle(_x, *_pars)
+
+    def eval_model_function_derivative_by_parameters(self, x=None, model_parameters=None, par_dx=None):
+        _x = x if x is not None else self.x
+        _pars = model_parameters if model_parameters is not None else self._model_parameters
+        _pars = np.asarray(_pars)
+        _par_dxs = par_dx if par_dx is not None else 1e-2 * (np.abs(_pars) + 1.0/(1.0+np.abs(_pars)))
+
+        _ret = []
+        for _par_idx, (_par_val, _par_dx) in enumerate(zip(_pars, _par_dxs)):
+            def _chipped_func(par):
+                _chipped_pars = _pars.copy()
+                _chipped_pars[_par_idx] = par
+                return self._model_function_handle(_x, *_chipped_pars)
+
+            _der_val = derivative(_chipped_func, _par_val, dx=_par_dx)
+            _ret.append(_der_val)
+        return np.array(_ret)
+
+    def eval_model_function_derivative_by_x(self, x=None, model_parameters=None, dx=None):
+        _x = x if x is not None else self.x
+        _pars = model_parameters if model_parameters is not None else self._model_parameters
+        _dxs = dx if dx is not None else 1e-2 * (np.abs(_x) + 1.0/(1.0+np.abs(_x)))
+
+        _ret = []
+        for _x_idx, (_x_val, _dx) in enumerate(zip(_x, _dxs)):
+            def _chipped_func(x):
+                return self._model_function_handle(x, *_pars)
+
+            _der_val = derivative(_chipped_func, _x_val, dx=_dx)
+            _ret.append(_der_val)
+        return np.array(_ret)

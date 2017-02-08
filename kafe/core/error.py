@@ -462,6 +462,12 @@ class SimpleGaussianError(GaussianErrorBase):
         return self._cov_mat.mat
 
     @property
+    def cov_mat_inverse(self):
+        if self._cov_mat is None:
+            self._calculate_cov_mat()
+        return self._cov_mat.I
+
+    @property
     def cov_mat_uncor(self):
         if self._cov_mat is None:
             self._calculate_cov_mat()
@@ -478,6 +484,12 @@ class SimpleGaussianError(GaussianErrorBase):
         if self._cov_mat_rel is None:
             self._calculate_cov_mat_rel()
         return self._cov_mat_rel.mat
+
+    @property
+    def cov_mat_rel_inverse(self):
+        if self._cov_mat is None:
+            self._calculate_cov_mat()
+        return self._cov_mat_rel.I
 
     @property
     def cov_mat_rel_uncor(self):
@@ -620,6 +632,15 @@ class MatrixGaussianError(GaussianErrorBase):
         self._cov_mat = None
 
     @property
+    def cov_mat_inverse(self):
+        if self.relative:
+            if self.reference is None:
+                raise AttributeError(
+                    "Requested 'absolute' inverse covariance matrix for error object declared 'relative', but 'reference' not set!")
+            self._cov_mat = self._calculate_cov_mat_from_cov_rel(self.cov_mat_rel, self.reference)
+        return self._cov_mat.I
+
+    @property
     def error(self):
         """"""
         if self._err is None:
@@ -703,6 +724,7 @@ class MatrixGaussianError(GaussianErrorBase):
 
     @property
     def cor_mat(self):
+        # TODO: check if these are equal
         if self.relative:
             return self._cov_mat_rel.cor_mat
         else:

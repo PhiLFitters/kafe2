@@ -76,27 +76,37 @@ class HistContainer(IndexedContainer):
                 # print "Bin %d (%5.3f, %5.3f)" % (_current_bin_index, _current_bin_lower_edge, _current_bin_upper_edge)
                 continue
             # increment histogram bin and move to next entry
-            # print "\tputting entry '%s' in bin %d (%5.3f, %5.3f)" % (
-            # _current_entry_value, _current_bin_index, _current_bin_lower_edge, _current_bin_upper_edge)
+            # print "\tputting entry #%d '%s' in bin %d (%5.3f, %5.3f)" % (
+            #     _current_entry_index, _current_entry_value, _current_bin_index, _current_bin_lower_edge, _current_bin_upper_edge)
             # add to processed entries
             self._processed_entries.append(_current_entry_value)
             self._idx_data[_current_bin_index] += 1
             _current_entry_index += 1
+            if _current_entry_index >= len(_entries_sorted):    # important BUGFIX!!!!!!!!!!
+                break
             _current_entry_value = _entries_sorted[_current_entry_index]
 
-        # remaining entries are overflows
-        _overflow_entries = _entries_sorted[_current_entry_index:]
-        self._idx_data[-1] += len(_overflow_entries)
-        # print "Bin %d (of): add %d entries" % (_current_bin_index+1, len(_overflow_entries))
-        # for i in _overflow_entries:
-        #     print '\t', i
-        self._processed_entries += list(_overflow_entries)
+        # any remaining entries are overflows
+        if _current_entry_index < len(_entries_sorted):    # important BUGFIX!!!!!!!!!!
+
+            _overflow_entries = _entries_sorted[_current_entry_index:]
+            self._idx_data[-1] += len(_overflow_entries)
+            # print "Bin %d (of): add %d entries" % (_current_bin_index+1, len(_overflow_entries))
+            # for i in _overflow_entries:
+            #     print '\t', i
+            self._processed_entries += list(_overflow_entries)
+
+        self._unprocessed_entries = []  # important BUGFIX!!!!!!!!!!
 
     # -- public properties
 
     @property
     def size(self):
         return len(self._idx_data) - 2  # don't consider underflow and overflow bins
+
+    @property
+    def n_entries(self):
+        return len(self._processed_entries) + len(self._unprocessed_entries)
 
     @property
     def data(self):
@@ -128,6 +138,10 @@ class HistContainer(IndexedContainer):
     def underflow(self):
         return self._idx_data[0]
 
+    @property
+    def bin_edges(self):
+        return self._bin_edges.copy()
+
     # -- public methods
 
     def fill(self, entries):
@@ -155,21 +169,21 @@ class HistParametricModelException(HistContainerException):
 
 
 class HistParametricModel(ParametricModelBaseMixin, HistContainer):
-    def __init__(self, n_bins, bin_range, model_func, model_parameters, bin_edges=None, model_func_antiderivative=None):
+    def __init__(self, n_bins, bin_range, model_density_func, model_parameters, bin_edges=None, model_density_func_antiderivative=None):
         # print "IndexedParametricModel.__init__(model_func=%r, model_parameters=%r)" % (model_func, model_parameters)
-        self._model_func_antider_handle = model_func_antiderivative
-        super(HistParametricModel, self).__init__(model_func, model_parameters, n_bins, bin_range,
+        self._model_density_func_antider_handle = model_density_func_antiderivative
+        super(HistParametricModel, self).__init__(model_density_func, model_parameters, n_bins, bin_range,
                                                   bin_edges=bin_edges, fill_data=None, dtype=float)
 
     # -- private methods
 
-    def _eval_model_func_integral_over_bins(self):
+    def _eval_model_func_density_integral_over_bins(self):
         _as = self._bin_edges[:-1]
         _bs = self._bin_edges[1:]
         assert len(_as) == len(_bs) == self.size
-        if self._model_func_antider_handle is not None:
-            _fval_antider_as = self._model_func_antider_handle(_as, *self._model_parameters)
-            _fval_antider_bs = self._model_func_antider_handle(_bs, *self._model_parameters)
+        if self._model_density_func_antider_handle is not None:
+            _fval_antider_as = self._model_density_func_antider_handle(_as, *self._model_parameters)
+            _fval_antider_bs = self._model_density_func_antider_handle(_bs, *self._model_parameters)
             assert len(_fval_antider_as) == len(_fval_antider_bs) == self.size
             _int_val = np.asarray(_fval_antider_bs) - np.asarray(_fval_antider_as)
         else:
@@ -183,7 +197,7 @@ class HistParametricModel(ParametricModelBaseMixin, HistContainer):
 
     def _recalculate(self):
         # don't use parent class setter for 'data' -> set directly
-        self._idx_data[1:-1] = self._eval_model_func_integral_over_bins()
+        self._idx_data[1:-1] = self._eval_model_func_density_integral_over_bins()
         self._pm_calculation_stale = False
 
 
