@@ -99,6 +99,16 @@ class XYContainer(IndexedContainer):
         return _total_error_x.error
 
     @property
+    def x_cov_mat(self):
+        _total_error_x = self.get_total_error(axis=0)
+        return _total_error_x.cov_mat
+
+    @property
+    def x_cov_mat_inverse(self):
+        _total_error_x = self.get_total_error(axis=0)
+        return _total_error_x.cov_mat_inverse
+
+    @property
     def y(self):
         return self._get_data_for_axis(1)
 
@@ -117,6 +127,16 @@ class XYContainer(IndexedContainer):
     def y_err(self):
         _total_error_y = self.get_total_error(axis=1)
         return _total_error_y.error
+
+    @property
+    def y_cov_mat(self):
+        _total_error_y = self.get_total_error(axis=1)
+        return _total_error_y.cov_mat
+
+    @property
+    def y_cov_mat_inverse(self):
+        _total_error_y = self.get_total_error(axis=1)
+        return _total_error_y.cov_mat_inverse
 
     @property
     def x_range(self):
