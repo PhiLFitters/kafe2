@@ -19,26 +19,40 @@ class NexusFitter(object):
         self.__cache_fit_parameters_name_value_dict = None
         self.__cache_parameter_to_minimize_value = None
 
+        self.__minimizing = False
         _par_name_val_map = self.fit_parameter_values
         self._minimizer = minimizer_class(parameters_to_fit,
                                           _par_name_val_map.values(),
                                           [0.1 if _v==0 else 0.1*_v for _v in _par_name_val_map.values()],
                                           self._fcn_wrapper)
+        self.__state_is_from_minimizer = False
+
 
     # -- private methods
 
     def _check_parnames_in_par_space_raise(self, fit_pars):
         for _pn in fit_pars:
             if self._nx.get_by_name(_pn) is None:
-                raise NexusFitterException("No parameter with name '%s' registered in ParameterSpace (%r)!" % (_pn, self._nx))
+                raise NexusFitterException("No parameter with name '%s' registered in Nexus (%r)!" % (_pn, self._nx))
 
-    def _renew_par_cache(self):
+    def _renew_all_par_cache(self):
         _fpns = self.parameters_to_fit
         _apnvd = self.__cache_all_parameters_name_value_dict = self._nx.parameter_values_dict
         self.__cache_fit_parameters_name_value_dict = OrderedDict([(_pn, _apnvd[_pn]) for _pn in _fpns])
         self.__cache_parameter_to_minimize_value = _apnvd[self.parameter_to_minimize]
 
+    def _renew_fit_par_cache(self):
+        _fpns = self.parameters_to_fit
+        _fpvs = self._nx.get_values_by_name(_fpns)
+        self.__cache_fit_parameters_name_value_dict = OrderedDict([(_pn, _pv) for _pn, _pv in zip(_fpns, _fpvs)])
+
+    def _renew_par_to_minimize_cache(self):
+        _ptmn = self.parameter_to_minimize
+        _ptmv = self._nx.get_values_by_name(_ptmn)
+        self.__cache_parameter_to_minimize_value = _ptmv
+
     def _minimize(self, max_calls=6000):
+        self.__minimizing = True
         self._minimizer.minimize(max_calls=max_calls)
         # opt.minimize(self._fcn_wrapper,
         #              self.fit_parameter_values.values(),
@@ -48,6 +62,8 @@ class NexusFitter(object):
         #              tol=None,
         #              callback=None,
         #              options=None)
+        self.__minimizing = False
+        self.__state_is_from_minimizer = True
         self.__cache_stale = True
 
 
@@ -89,14 +105,20 @@ class NexusFitter(object):
 
     @property
     def fit_parameter_values(self):
+        # if self.__cache_stale or self.__minimizing:  # allow getting fresh (non-cached) parameters while minimizing
         if self.__cache_stale:
-            self._renew_par_cache()
+            self._renew_fit_par_cache()
         return self.__cache_fit_parameters_name_value_dict
 
     @property
+    def fit_parameter_cov_mat(self):
+        return self._minimizer.cov_mat
+
+    @property
     def parameter_to_minimize_value(self):
+        # if self.__cache_stale or self.__minimizing:  # allow getting fresh (non-cached) parameters while minimizing
         if self.__cache_stale:
-            self._renew_par_cache()
+            self._renew_par_to_minimize_cache()
         return self.__cache_parameter_to_minimize_value
 
     @property
