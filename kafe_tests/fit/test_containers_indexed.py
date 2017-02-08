@@ -1,7 +1,9 @@
 import unittest
 import numpy as np
 
-from kafe.fit.containers.indexed import IndexedContainer, IndexedParametricModel, IndexedParametricModelException
+from kafe.fit import IndexedContainer, IndexedParametricModel
+from kafe.fit.indexed.container import IndexedContainerException
+from kafe.fit.indexed.model import IndexedParametricModelException
 from kafe.core.error import cov_mat_from_float_list
 
 

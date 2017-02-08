@@ -2,8 +2,9 @@ import unittest
 import numpy as np
 import scipy.stats as stats
 
-from kafe.fit.containers.histogram import (HistContainer, HistContainerException,
-                                           HistParametricModel, HistParametricModelException)
+from kafe.fit import HistContainer, HistParametricModel
+from kafe.fit.histogram.container import HistContainerException
+from kafe.fit.histogram.model import HistParametricModelException
 
 
 class TestDatastoreHistogram(unittest.TestCase):

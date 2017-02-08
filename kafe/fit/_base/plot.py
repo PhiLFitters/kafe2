@@ -1,8 +1,7 @@
 import abc
-import numpy as np
-from kafe.config import matplotlib as mpl
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gs
+
+from ...config import matplotlib as mpl
+from matplotlib import pyplot as plt
 
 
 class FitPlotBase(object):
@@ -135,4 +134,3 @@ class FitPlotBase(object):
 
         self._render_parameter_info_box(self._axes)
         self._render_legend(self._axes)
-

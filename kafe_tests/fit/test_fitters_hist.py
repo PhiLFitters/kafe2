@@ -3,8 +3,8 @@ import numpy as np
 
 from scipy import stats
 
-from kafe.fit.fitters.histogram import HistFit, HistFitException, HistContainer, HistParametricModel, CONFIG_PARAMETER_DEFAULT_VALUE
-from kafe.core.error import cov_mat_from_float_list
+from kafe.fit import HistContainer, HistFit
+from kafe.fit.histogram.fit import CONFIG_PARAMETER_DEFAULT_VALUE, HistFitException
 
 
 class TestFittersHist(unittest.TestCase):

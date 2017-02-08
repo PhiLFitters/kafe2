@@ -1,8 +1,8 @@
 import unittest
 import numpy as np
 
-from kafe.fit.fitters.xy import XYFit, XYFitException, XYContainer, XYParametricModel, CONFIG_PARAMETER_DEFAULT_VALUE
-from kafe.core.error import cov_mat_from_float_list
+from kafe.fit import XYFit
+from kafe.fit.xy.fit import CONFIG_PARAMETER_DEFAULT_VALUE, XYFitException
 
 
 class TestFittersXY(unittest.TestCase):

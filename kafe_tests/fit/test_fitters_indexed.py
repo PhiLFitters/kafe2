@@ -1,8 +1,8 @@
 import unittest
 import numpy as np
 
-from kafe.fit.fitters.indexed import IndexedFit, IndexedFitException, IndexedContainer, IndexedParametricModel, CONFIG_PARAMETER_DEFAULT_VALUE
-from kafe.core.error import cov_mat_from_float_list
+from kafe.fit import IndexedFit
+from kafe.fit.indexed.fit import CONFIG_PARAMETER_DEFAULT_VALUE, IndexedFitException
 
 
 class TestFittersIndexed(unittest.TestCase):

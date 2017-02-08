@@ -1,10 +1,9 @@
 import numpy as np
 
-from . import ParametricModelBaseMixin
-from .indexed import IndexedContainer, IndexedContainerException
-from ...core.error import SimpleGaussianError, MatrixGaussianError
+from ...core.error import MatrixGaussianError, SimpleGaussianError
+from ..indexed import IndexedContainer
+from ..indexed.container import IndexedContainerException
 
-from scipy.misc import derivative
 
 class XYContainerException(IndexedContainerException):
     pass
@@ -191,93 +190,3 @@ class XYContainer(IndexedContainer):
         if self._xy_total_errors is None:
             self._calculate_total_error()
         return self._xy_total_errors[_axis]
-
-
-class XYParametricModelException(XYContainerException):
-    pass
-
-
-class XYParametricModel(ParametricModelBaseMixin, XYContainer):
-    def __init__(self, x_data, model_func, model_parameters):
-        # print "XYParametricModel.__init__(x_data=%r, model_func=%r, model_parameters=%r)" % (x_data, model_func, model_parameters)
-        _y_data = model_func(x_data, *model_parameters)
-        super(XYParametricModel, self).__init__(model_func, model_parameters, x_data, _y_data)
-
-    # -- private methods
-
-    def _recalculate(self):
-        # use parent class setter for 'y'
-        XYContainer.y.fset(self, self.eval_model_function())
-        self._pm_calculation_stale = False
-
-
-    # -- public properties
-
-    @property
-    def data(self):
-        if self._pm_calculation_stale:
-            self._recalculate()
-        return super(XYParametricModel, self).data
-
-    @data.setter
-    def data(self, new_data):
-        raise XYParametricModelException("Parametric model data cannot be set!")
-
-    @property
-    def x(self):
-        return super(XYParametricModel, self).x
-
-    @x.setter
-    def x(self, new_x):
-        # resetting 'x' -> must reset entire data array
-        self._xy_data = np.zeros((2, len(new_x)))
-        self._xy_data[0] = new_x
-        self._pm_calculation_stale = True
-
-    @property
-    def y(self):
-        if self._pm_calculation_stale:
-            self._recalculate()
-        return super(XYParametricModel, self).y
-
-    @y.setter
-    def y(self, new_y):
-        raise XYParametricModelException("Parametric model data cannot be set!")
-
-    # -- public methods
-
-    def eval_model_function(self, x=None, model_parameters=None):
-        _x = x if x is not None else self.x
-        _pars = model_parameters if model_parameters is not None else self._model_parameters
-        return self._model_function_handle(_x, *_pars)
-
-    def eval_model_function_derivative_by_parameters(self, x=None, model_parameters=None, par_dx=None):
-        _x = x if x is not None else self.x
-        _pars = model_parameters if model_parameters is not None else self._model_parameters
-        _pars = np.asarray(_pars)
-        _par_dxs = par_dx if par_dx is not None else 1e-2 * (np.abs(_pars) + 1.0/(1.0+np.abs(_pars)))
-
-        _ret = []
-        for _par_idx, (_par_val, _par_dx) in enumerate(zip(_pars, _par_dxs)):
-            def _chipped_func(par):
-                _chipped_pars = _pars.copy()
-                _chipped_pars[_par_idx] = par
-                return self._model_function_handle(_x, *_chipped_pars)
-
-            _der_val = derivative(_chipped_func, _par_val, dx=_par_dx)
-            _ret.append(_der_val)
-        return np.array(_ret)
-
-    def eval_model_function_derivative_by_x(self, x=None, model_parameters=None, dx=None):
-        _x = x if x is not None else self.x
-        _pars = model_parameters if model_parameters is not None else self._model_parameters
-        _dxs = dx if dx is not None else 1e-2 * (np.abs(_x) + 1.0/(1.0+np.abs(_x)))
-
-        _ret = []
-        for _x_idx, (_x_val, _dx) in enumerate(zip(_x, _dxs)):
-            def _chipped_func(x):
-                return self._model_function_handle(x, *_pars)
-
-            _der_val = derivative(_chipped_func, _x_val, dx=_dx)
-            _ret.append(_der_val)
-        return np.array(_ret)

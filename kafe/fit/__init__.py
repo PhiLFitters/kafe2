@@ -6,16 +6,14 @@ User API: wraps kafe.core functionality
 
 # public interface of submodule 'kafe.fit'
 
-from .containers import (HistContainer, HistParametricModel,
-                         IndexedContainer, IndexedParametricModel,
-                         XYContainer, XYParametricModel)
+from .indexed import IndexedContainer, IndexedParametricModel, IndexedFit, IndexedFitPlot
+from .histogram import HistContainer, HistParametricModel, HistFit, HistFitPlot
+from .xy import XYContainer, XYParametricModel, XYFit, XYFitPlot
 
-from .fitters import (HistFit, IndexedFit, XYFit)
 
 __all__ = [
-    'HistContainer', 'HistParametricModel',
-    'IndexedContainer', 'IndexedParametricModel',
-    'XYContainer', 'XYParametricModel',
-    'HistFit', 'IndexedFit', 'XYFit'
+    "IndexedContainer", "IndexedParametricModel", "IndexedFit", "IndexedFitPlot",
+    "HistContainer", "HistParametricModel", "HistFit", "HistFitPlot",
+    "XYContainer", "XYParametricModel", "XYFit", "XYFitPlot"
 ]
 

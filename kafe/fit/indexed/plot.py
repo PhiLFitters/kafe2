@@ -1,19 +1,15 @@
 import numpy as np
-from kafe.config import matplotlib as mpl
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gs
-import matplotlib.transforms as tf
 
-from . import FitPlotBase
+from .._base import FitPlotBase
+from .._aux import step_fill_between
 
-from _aux import step_fill_between
 
-class HistFitPlot(FitPlotBase):
+class IndexedFitPlot(FitPlotBase):
 
     SUBPLOT_CONFIGS_DEFAULT = FitPlotBase.SUBPLOT_CONFIGS_DEFAULT
 
     def __init__(self, parent_fit):
-        super(HistFitPlot, self).__init__(parent_fit=parent_fit)
+        super(IndexedFitPlot, self).__init__(parent_fit=parent_fit)
 
     # -- private methods
 
@@ -46,20 +42,6 @@ class HistFitPlot(FitPlotBase):
 
     def _get_plot_range_y(self):
         return None  # no fixed range
-
-    def _plot_data(self, target_axis):
-        _y = self._fitter.data
-        if self._fitter.has_errors:
-            target_axis.errorbar(np.arange(len(_y)), _y,
-                                 yerr=self._fitter.data_error,
-                                 linestyle='',
-                                 marker='o',
-                                 label='data')
-        else:
-            target_axis.plot(self._fitter.data,
-                             linestyle='',
-                             marker='o',
-                             label='data')
 
     def _plot_model(self, target_axis, **kwargs):
         # overwrite default plot method

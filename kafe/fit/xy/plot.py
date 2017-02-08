@@ -1,11 +1,8 @@
 import numpy as np
-from kafe.config import matplotlib as mpl
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gs
 
-from . import FitPlotBase
+from .._base import FitPlotBase
+from .._aux import step_fill_between
 
-from _aux import step_fill_between
 
 class XYFitPlot(FitPlotBase):
 

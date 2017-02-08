@@ -5,6 +5,7 @@ import inspect
 class FitException(Exception):
     pass
 
+
 class FitBase(object):
     """
     Purely abstract class. Defines the minimal interface required by all specializations.
@@ -143,16 +144,3 @@ class FitBase(object):
 
     @abc.abstractmethod
     def do_fit(self): pass
-
-
-# public interface of submodule 'kafe.fit.fitters'
-
-from .indexed import IndexedFit
-from .histogram import HistFit
-from .xy import XYFit
-
-__all__ = [
-    'IndexedFit',
-    'HistFit',
-    'XYFit'
-]

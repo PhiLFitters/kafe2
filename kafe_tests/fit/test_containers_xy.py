@@ -1,8 +1,11 @@
 import unittest
 import numpy as np
 
-from kafe.fit.containers.xy import XYContainer, XYParametricModel, XYParametricModelException
+from kafe.fit import XYContainer, XYParametricModel
+from kafe.fit.xy.container import XYContainerException
+from kafe.fit.xy.model import XYParametricModelException
 from kafe.core.error import cov_mat_from_float_list
+
 
 
 class TestDatastoreXY(unittest.TestCase):

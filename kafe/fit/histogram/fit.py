@@ -1,15 +1,16 @@
+import inspect
 from collections import OrderedDict
 from copy import deepcopy
 
-import inspect
 import numpy as np
 
-from . import FitBase, FitException
-from ..containers import DataContainerBase
-from ..containers.histogram import HistContainer, HistParametricModel
-from ...core.fitters import Nexus, NexusFitter
+from ...core import NexusFitter, Nexus
+from .._base import FitException, FitBase, DataContainerBase
+from .container import HistContainer
+from .model import HistParametricModel
 
 CONFIG_PARAMETER_DEFAULT_VALUE = 1.0
+
 
 class HistFitException(FitException):
     pass

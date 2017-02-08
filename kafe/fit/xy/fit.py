@@ -4,74 +4,16 @@ from copy import deepcopy
 
 import numpy as np
 
-from . import FitBase, FitException
-from ..containers import DataContainerBase
-from ..containers.xy import XYContainer, XYParametricModel
-from ...core.fitters import Nexus, NexusFitter
+from ...core import NexusFitter, Nexus
+from .._base import FitException, FitBase, DataContainerBase
+from .container import XYContainer
+from .model import XYParametricModel
 
 CONFIG_PARAMETER_DEFAULT_VALUE = 1.0
 
 
 class XYFitException(FitException):
     pass
-
-
-# class XYFit(FitBase):
-#     CONTAINER_TYPE = XYContainer
-#     def __init__(self, data, model_function, cost_function):
-#         self.data = data
-#
-#         self._bare_model_func = model_function
-#         self._cost_function = cost_function
-#
-#         self._nexus = Nexus()
-#         self._nexus.new(data=self.data)
-#         self._nexus.new_function(self._bare_model_func, add_unknown_parameters=True)  # FIXME
-#         self._fit_param_names = self._nexus.parameter_names
-#         self._fit_param_names.remove('data')
-#         self._fit_param_names.remove(self._bare_model_func.__name__)
-#
-#         self._nexus.new_function(self._cost_function, add_unknown_parameters=False)
-#
-#         self._fitter = NexusFitter(nexus=self._nexus,
-#                                    parameters_to_fit=self._fit_param_names,
-#                                    parameter_to_minimize=self._cost_function.__name__)
-#
-#
-#     # -- private methods
-#
-#     def _new_data_container(self, new_data):
-#         return XYContainer(x_data=0, y_data=0)
-#
-#     # -- public properties
-#
-#     @property
-#     def data(self):
-#         return self._data_container.data
-#
-#     @data.setter
-#     def data(self, new_data):
-#         if isinstance(new_data, self.CONTAINER_TYPE):
-#             self._data_container = deepcopy(new_data)
-#         elif isinstance(new_data, DataContainerBase):
-#             raise XYFitException("Incompatible container type '%s' (expected '%s')"
-#                                       % (type(new_data), self.CONTAINER_TYPE))
-#         else:
-#             self._data_container = self._new_data_container(new_data)
-#
-#     @property
-#     def parameter_values(self):
-#         return self._fitter.fit_parameter_values
-#
-#     @property
-#     def cost_function_value(self):
-#         return self._fitter.parameter_to_minimize_value
-#
-#     # -- public methods
-#
-#     def do_fit(self):
-#         self._fitter.do_fit()
-#         self.__cache_par_value_dict = None
 
 
 class XYFit(FitBase):

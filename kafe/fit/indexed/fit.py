@@ -3,12 +3,13 @@ from copy import deepcopy
 
 import numpy as np
 
-from . import FitBase, FitException
-from ..containers import DataContainerBase
-from ..containers.indexed import IndexedContainer, IndexedParametricModel
-from ...core.fitters import Nexus, NexusFitter
+from ...core import NexusFitter, Nexus
+from .._base import FitException, FitBase, DataContainerBase
+from .container import IndexedContainer
+from .model import IndexedParametricModel
 
 CONFIG_PARAMETER_DEFAULT_VALUE = 1.0
+
 
 class IndexedFitException(FitException):
     pass
