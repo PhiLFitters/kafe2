@@ -2,6 +2,7 @@ import abc
 
 from ...config import matplotlib as mpl
 from matplotlib import pyplot as plt
+from matplotlib import gridspec as gs
 
 
 class FitPlotBase(object):
@@ -48,59 +49,59 @@ class FitPlotBase(object):
 
     # TODO: turn into properties
 
-    @abc.abstractmethod
-    def _get_plot_data_x(self): pass
+    @abc.abstractproperty
+    def plot_data_x(self): pass
 
-    @abc.abstractmethod
-    def _get_plot_data_y(self): pass
+    @abc.abstractproperty
+    def plot_data_y(self): pass
 
-    @abc.abstractmethod
-    def _get_plot_data_xerr(self): pass
+    @abc.abstractproperty
+    def plot_data_xerr(self): pass
 
-    @abc.abstractmethod
-    def _get_plot_data_yerr(self): pass
+    @abc.abstractproperty
+    def plot_data_yerr(self): pass
 
-    @abc.abstractmethod
-    def _get_plot_model_x(self): pass
+    @abc.abstractproperty
+    def plot_model_x(self): pass
 
-    @abc.abstractmethod
-    def _get_plot_model_y(self): pass
+    @abc.abstractproperty
+    def plot_model_y(self): pass
 
-    @abc.abstractmethod
-    def _get_plot_model_xerr(self): pass
+    @abc.abstractproperty
+    def plot_model_xerr(self): pass
 
-    @abc.abstractmethod
-    def _get_plot_model_yerr(self): pass
+    @abc.abstractproperty
+    def plot_model_yerr(self): pass
 
-    @abc.abstractmethod
-    def _get_plot_range_x(self): pass
+    @abc.abstractproperty
+    def plot_range_x(self): pass
 
-    @abc.abstractmethod
-    def _get_plot_range_y(self): pass
+    @abc.abstractproperty
+    def plot_range_y(self): pass
 
 
     def _plot_data(self, target_axis, **kwargs):
         if self._fitter.has_data_errors:
-            self._store_artists['data'] = target_axis.errorbar(self._get_plot_data_x(),
-                                 self._get_plot_data_y(),
-                                 xerr=self._get_plot_data_xerr(),
-                                 yerr=self._get_plot_data_yerr(),
+            self._store_artists['data'] = target_axis.errorbar(self.plot_data_x,
+                                 self.plot_data_y,
+                                 xerr=self.plot_data_xerr,
+                                 yerr=self.plot_data_yerr,
                                  **self._subplot_kwarg_dicts['data'])
         else:
-            self._store_artists['data'] = target_axis.plot(self._get_plot_data_x(),
-                             self._get_plot_data_y(),
+            self._store_artists['data'] = target_axis.plot(self.plot_data_x,
+                             self.plot_data_y,
                              **self._subplot_kwarg_dicts['data'])
 
     def _plot_model(self, target_axis, **kwargs):
         if self._fitter.has_model_errors:
-            self._store_artists['model'] = target_axis.errorbar(self._get_plot_model_x(),
-                                 self._get_plot_model_y(),
-                                 xerr=self._get_plot_model_xerr(),
-                                 yerr=self._get_plot_model_yerr(),
+            self._store_artists['model'] = target_axis.errorbar(self.plot_model_x,
+                                 self.plot_model_y,
+                                 xerr=self.plot_model_xerr,
+                                 yerr=self.plot_model_yerr,
                                  **self._subplot_kwarg_dicts['model'])
         else:
-            self._store_artists['model'] = target_axis.plot(self._get_plot_model_x(),
-                             self._get_plot_model_y(),
+            self._store_artists['model'] = target_axis.plot(self.plot_model_x,
+                             self.plot_model_y,
                              **self._subplot_kwarg_dicts['model'])
 
 
@@ -125,10 +126,10 @@ class FitPlotBase(object):
         self._plot_data(self._axes)
         self._plot_model(self._axes)
 
-        _xlim = self._get_plot_range_x()
+        _xlim = self.plot_range_x
         if _xlim is not None:
             self._axes.set_xlim(_xlim[0], _xlim[1])
-        _ylim = self._get_plot_range_y()
+        _ylim = self.plot_range_y
         if _ylim is not None:
             self._axes.set_ylim(_ylim[0], _ylim[1])
 

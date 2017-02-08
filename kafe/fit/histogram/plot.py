@@ -13,34 +13,44 @@ class HistFitPlot(FitPlotBase):
 
     # -- private methods
 
-    def _get_plot_data_x(self):
+    @property
+    def plot_data_x(self):
         return np.arange(self._fitter.data_size)
 
-    def _get_plot_data_y(self):
+    @property
+    def plot_data_y(self):
         return self._fitter.data
 
-    def _get_plot_data_xerr(self):
+    @property
+    def plot_data_xerr(self):
         return None
 
-    def _get_plot_data_yerr(self):
+    @property
+    def plot_data_yerr(self):
         return self._fitter.data_error
 
-    def _get_plot_model_x(self):
-        return self._get_plot_data_x()
+    @property
+    def plot_model_x(self):
+        return self.plot_data_x
 
-    def _get_plot_model_y(self):
+    @property
+    def plot_model_y(self):
         return self._fitter.model
 
-    def _get_plot_model_xerr(self):
+    @property
+    def plot_model_xerr(self):
         return 0.5
 
-    def _get_plot_model_yerr(self):
+    @property
+    def plot_model_yerr(self):
         return None #self._fitter.model_error
 
-    def _get_plot_range_x(self):
+    @property
+    def plot_range_x(self):
         return (-0.5, self._fitter.data_size-0.5)
 
-    def _get_plot_range_y(self):
+    @property
+    def plot_range_y(self):
         return None  # no fixed range
 
     def _plot_data(self, target_axis):
@@ -60,10 +70,10 @@ class HistFitPlot(FitPlotBase):
     def _plot_model(self, target_axis, **kwargs):
         # overwrite default plot method
         step_fill_between(self._axes,
-                          self._get_plot_model_x(),
-                          self._get_plot_model_y(),
-                          xerr=self._get_plot_model_xerr(),
-                          yerr=self._get_plot_model_yerr(),
+                          self.plot_model_x,
+                          self.plot_model_y,
+                          xerr=self.plot_model_xerr,
+                          yerr=self.plot_model_yerr,
                           draw_central_value=True,
                           **self._subplot_kwarg_dicts['model']
                           )
