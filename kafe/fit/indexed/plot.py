@@ -61,7 +61,7 @@ class IndexedFitPlot(FitPlotBase):
                           xerr=self.plot_model_xerr,
                           yerr=self.plot_model_yerr,
                           draw_central_value=True,
-                          **self._subplot_kwarg_dicts['model']
+                          **self._get_next_subplot_kwargs('model')
                           )
 
     # -- public methods

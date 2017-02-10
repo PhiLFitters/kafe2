@@ -20,12 +20,7 @@ class XYFitPlot(FitPlotBase):
     def __init__(self, parent_fit):
         super(XYFitPlot, self).__init__(parent_fit=parent_fit)
 
-        _sz = len(self._fitter.data)
-        self._axes.set_xlim(-0.5, _sz-0.5)
-
         self._plot_range_x = None
-
-        self.__plot_dicts = self.SUBPLOT_CONFIGS_DEFAULT.copy()
 
     # -- private methods
 
@@ -107,7 +102,7 @@ class XYFitPlot(FitPlotBase):
         _y = self._fitter._param_model.eval_model_function(x=_x)
         _band_y = self._fitter.y_error_band
         target_axis.fill_between(_x, _y-_band_y, _y+_band_y,
-                                 **self.__plot_dicts['model_error_band'])
+                                 **self._get_next_subplot_kwargs('model_error_band'))
 
     def _plot_model(self, target_axis, **kwargs):
         super(XYFitPlot, self)._plot_model(target_axis=target_axis, **kwargs)
