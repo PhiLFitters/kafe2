@@ -1,15 +1,15 @@
 import numpy as np
 
-from .._base import FitPlotBase
+from .._base import PlotContainerBase, PlotFigureBase
 from .._aux import step_fill_between
+from . import HistFit
 
 
-class HistFitPlot(FitPlotBase):
+class HistPlotContainer(PlotContainerBase):
+    FIT_TYPE = HistFit
 
-    SUBPLOT_CONFIGS_DEFAULT = FitPlotBase.SUBPLOT_CONFIGS_DEFAULT
-
-    def __init__(self, parent_fit):
-        super(HistFitPlot, self).__init__(parent_fit=parent_fit)
+    def __init__(self, hist_fit_object):
+        super(HistPlotContainer, self).__init__(fit_object=hist_fit_object)
 
     # -- private methods
 
@@ -53,29 +53,34 @@ class HistFitPlot(FitPlotBase):
     def plot_range_y(self):
         return None  # no fixed range
 
-    def _plot_data(self, target_axis):
-        _y = self._fitter.data
-        if self._fitter.has_errors:
-            target_axis.errorbar(np.arange(len(_y)), _y,
-                                 yerr=self._fitter.data_error,
-                                 linestyle='',
-                                 marker='o',
-                                 label='data')
-        else:
-            target_axis.plot(self._fitter.data,
-                             linestyle='',
-                             marker='o',
-                             label='data')
+    # public methods
 
-    def _plot_model(self, target_axis, **kwargs):
-        # overwrite default plot method
-        step_fill_between(self._axes,
+    def plot_data(self, target_axis, **kwargs):
+        if self._fitter.has_data_errors:
+            target_axis.errorbar(self.plot_data_x,
+                                 self.plot_data_y,
+                                 xerr=self.plot_data_xerr,
+                                 yerr=self.plot_data_yerr,
+                                 **kwargs)
+        else:
+            target_axis.plot(self.plot_data_x,
+                             self.plot_data_y,
+                             **kwargs)
+
+    def plot_model(self, target_axis, **kwargs):
+        step_fill_between(target_axis,
                           self.plot_model_x,
                           self.plot_model_y,
                           xerr=self.plot_model_xerr,
                           yerr=self.plot_model_yerr,
                           draw_central_value=True,
-                          **self._get_next_subplot_kwargs('model')
+                          **kwargs
                           )
 
-    # -- public methods
+
+class HistPlot(PlotFigureBase):
+
+    PLOT_CONTAINER_TYPE = HistPlotContainer
+
+    def __init__(self, fit_objects):
+        super(HistPlot, self).__init__(fit_objects=fit_objects)

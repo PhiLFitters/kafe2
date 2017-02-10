@@ -1,24 +1,16 @@
 import numpy as np
 
-from .._base import FitPlotBase
+from .._base import PlotContainerBase, PlotFigureBase
 from .._aux import step_fill_between
+from . import XYFit
 
 
-class XYFitPlot(FitPlotBase):
+class XYPlotContainer(PlotContainerBase):
+    FIT_TYPE = XYFit
 
-    SUBPLOT_CONFIGS_DEFAULT = FitPlotBase.SUBPLOT_CONFIGS_DEFAULT
-    SUBPLOT_CONFIGS_DEFAULT['model_error_band'] = dict(
-        alpha=0.5,
-        linestyle='-',
-        label='model error',
-        edgecolor='none',
-        linewidth=2
-    )
-
-    N_PLOT_POINTS = 100
-
-    def __init__(self, parent_fit):
-        super(XYFitPlot, self).__init__(parent_fit=parent_fit)
+    def __init__(self, xy_fit_object, n_plot_points_model=100):
+        super(XYPlotContainer, self).__init__(fit_object=xy_fit_object)
+        self._n_plot_points_model = n_plot_points_model
 
         self._plot_range_x = None
 
@@ -33,6 +25,8 @@ class XYFitPlot(FitPlotBase):
             0.5 * (_xmin + _xmax - _w * pad_coeff) - additional_pad[0],
             0.5 * (_xmin + _xmax + _w * pad_coeff) + additional_pad[1]
         )
+
+    # -- public properties
 
     @property
     def plot_data_x(self):
@@ -53,7 +47,7 @@ class XYFitPlot(FitPlotBase):
     @property
     def plot_model_x(self):
         _xmin, _xmax = self.plot_range_x
-        return np.linspace(_xmin, _xmax, self.N_PLOT_POINTS)
+        return np.linspace(_xmin, _xmax, self._n_plot_points_model)
 
     @property
     def plot_model_y(self):
@@ -61,7 +55,7 @@ class XYFitPlot(FitPlotBase):
 
     @property
     def plot_model_xerr(self):
-        return None if np.allclose(self._fitter.x_error, 0) else self._fitter.x_error,
+        return None if np.allclose(self._fitter.x_error, 0) else self._fitter.x_error
 
     @property
     def plot_model_yerr(self):
@@ -77,37 +71,82 @@ class XYFitPlot(FitPlotBase):
     def plot_range_y(self):
         return None
 
-    # def _plot_data(self, target_axis):
-    #     _x = self._fitter.x
-    #     _y = self._fitter.y_data
-    #     if self._fitter.has_errors:
-    #         target_axis.errorbar(_x, _y,
-    #                              yerr=None if np.allclose(self._fitter.y_data_error, 0) else self._fitter.y_data_error,
-    #                              xerr=None if np.allclose(self._fitter.x_error, 0) else self._fitter.x_error,
-    #                              **self.__plot_dicts['data'])
-    #     else:
-    #         target_axis.plot(self._fitter.data,
-    #                          **self.__plot_dicts['data'])
+    # public methods
 
-    # def _plot_model(self, target_axis):
-    #     _xmin, _xmax = self.plot_x_range
-    #     _x = np.linspace(_xmin, _xmax, 100)
-    #     _y = self._fitter.eval_model_function(x=_x)
-    #     target_axis.plot(_x, _y,
-    #                      **self.__plot_dicts['model'])
+    def plot_data(self, target_axis, **kwargs):
+        # TODO: how to handle 'data' errors and 'model' errors?
+        if self._fitter.has_errors:
+            target_axis.errorbar(self.plot_data_x,
+                                 self.plot_data_y,
+                                 xerr=self.plot_data_xerr,
+                                 yerr=self.plot_data_yerr,
+                                 **kwargs)
+        else:
+            target_axis.plot(self.plot_data_x,
+                             self.plot_data_y,
+                             **kwargs)
 
-    def _plot_model_error_band(self, target_axis):
-        _xmin, _xmax = self.plot_range_x
-        _x = np.linspace(_xmin, _xmax, 100)
-        _y = self._fitter._param_model.eval_model_function(x=_x)
+    def plot_model(self, target_axis, **kwargs):
+        # TODO: how to handle 'data' errors and 'model' errors?
+        if self._fitter.has_model_errors:
+            target_axis.errorbar(self.plot_model_x,
+                                 self.plot_model_y,
+                                 xerr=self.plot_model_xerr,
+                                 yerr=self.plot_model_yerr,
+                                 **kwargs)
+        else:
+            target_axis.plot(self.plot_model_x,
+                             self.plot_model_y,
+                             **kwargs)
+
+    def plot_model_error_band(self, target_axis, **kwargs):
         _band_y = self._fitter.y_error_band
-        target_axis.fill_between(_x, _y-_band_y, _y+_band_y,
-                                 **self._get_next_subplot_kwargs('model_error_band'))
+        _y = self.plot_model_y
+        if self._fitter.has_errors:
+            target_axis.fill_between(
+                self.plot_model_x,
+                _y - _band_y, _y + _band_y,
+                **kwargs)
+        else:
+            pass  # don't plot error band if fitter input data has no errors...
 
-    def _plot_model(self, target_axis, **kwargs):
-        super(XYFitPlot, self)._plot_model(target_axis=target_axis, **kwargs)
-        self._plot_model_error_band(target_axis=target_axis)
 
-    # -- public properties
+class XYPlot(PlotFigureBase):
 
-    # -- public methods
+    PLOT_CONTAINER_TYPE = XYPlotContainer
+
+    PLOT_CONTAINER_METHODS_BY_PLOT_TYPE = PlotFigureBase.PLOT_CONTAINER_METHODS_BY_PLOT_TYPE.copy()
+    PLOT_CONTAINER_METHODS_BY_PLOT_TYPE['model_error_band'] = 'plot_model_error_band'
+
+    SUBPLOT_CONFIGS_DEFAULT = PlotFigureBase.SUBPLOT_CONFIGS_DEFAULT.copy()
+    SUBPLOT_CONFIGS_DEFAULT['model_error_band'] = dict(
+        alpha=0.5,
+        linestyle='-',
+        label='model error',
+        edgecolor='none',
+        linewidth=2,
+        zorder=-100
+    )
+
+    SUBPLOT_CONFIGS_DEFAULT = PlotFigureBase.SUBPLOT_CONFIGS_DEFAULT.copy()
+    SUBPLOT_CONFIGS_DEFAULT['model_error_band'] = dict(
+        alpha=0.5,
+        linestyle='-',
+        label='model error',
+        edgecolor='none',
+        linewidth=2,
+        zorder=-100
+    )
+
+    SUBPLOT_PROPERTY_CYCLER_ARGS_DEFAULT = PlotFigureBase.SUBPLOT_PROPERTY_CYCLER_ARGS_DEFAULT.copy()
+    SUBPLOT_PROPERTY_CYCLER_ARGS_DEFAULT['model_error_band'] = tuple(
+        (
+            dict(
+                facecolor=('#a6cee3', '#b0dd8b', '#f59a96', '#fdbe6f', '#cbb1d2', '#b39c9a'),
+            ),
+        )
+    )
+
+    def __init__(self, fit_objects):
+        super(XYPlot, self).__init__(fit_objects=fit_objects)
+        self._plot_range_x = None

@@ -1,14 +1,13 @@
 import abc
 import numpy as np
 
+from ...config import matplotlib as mpl
+from fit import FitBase
+
 from collections import OrderedDict
 from copy import copy
-
-from ...config import matplotlib as mpl
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gs
-
-
 
 class CyclerException(Exception):
     pass
@@ -116,65 +115,25 @@ DEFAULT_PROPERTY_CYCLER_ARGS = dict(
     ),
 )
 
+# class FitPlotException(Exception):
+#     pass
 
-class FitPlotBase(object):
+class PlotContainerException(Exception):
+    pass
+
+class PlotContainerBase(object):
     """
     Purely abstract class. Defines the minimal interface required by all specializations.
     """
     __metaclass__ = abc.ABCMeta
 
-    SUBPLOT_CONFIGS_DEFAULT = dict(
-        data=dict(
-            linestyle='',
-            marker='o',
-            label='data',
-            zorder=10
-        ),
-        model=dict(
-            linestyle='-',
-            marker='',
-            label='model',
-            linewidth=2,
-            zorder=-10
-        ),
-        model_error_band=dict(
-            alpha=0.5,
-            linestyle='-',
-            label='model error',
-            edgecolor='none',
-            linewidth=2,
-            zorder=-100
-        )
-    )
-    SUBPLOT_PROPERTY_CYCLER_ARGS_DEFAULT = DEFAULT_PROPERTY_CYCLER_ARGS
+    FIT_TYPE = None
 
-    def __init__(self, parent_fit):
-        self._fig = plt.figure()  # defaults from matplotlibrc
-        self._gs = gs.GridSpec(nrows=1, ncols=1)
-        self._axes = plt.subplot(self._gs[0, 0])
-        self._fitter = parent_fit
-
-        self._plot_range_x = None
-        self._plot_range_y = None
-
-        # default kwargs (static) for different subplots ('data', 'model', 'model_error_band', ...)
-        self._subplot_kwarg_dicts = self.__class__.SUBPLOT_CONFIGS_DEFAULT.copy()
-        # default kwarg cyclers for different subplots (these override original static properties)
-        self._subplot_prop_cyclers = dict()
-        for _subplot_name, _subplot_cycler_args in self.__class__.SUBPLOT_PROPERTY_CYCLER_ARGS_DEFAULT.iteritems():
-            self._subplot_prop_cyclers[_subplot_name] = Cycler(*_subplot_cycler_args)
-
-        self._store_artists = dict()
-
-    # -- private methods
-
-    def _get_next_subplot_kwargs(self, subplot_name):
-        _kwargs = self._subplot_kwarg_dicts.get(subplot_name, dict())
-        if subplot_name in self._subplot_prop_cyclers:
-            _cycler = self._subplot_prop_cyclers[subplot_name]
-            _cycler_kwargs = _cycler.get_next()
-            _kwargs.update(_cycler_kwargs)
-        return _kwargs
+    def __init__(self, fit_object):
+        if not isinstance(fit_object, self.__class__.FIT_TYPE):
+            raise PlotContainerException("PlotContainer of type '%s' is incompatible with Fit of type '%s'"
+                                         % self.__class__, self.__class__.FIT_TYPE)
+        self._fitter = fit_object
 
     # -- properties
 
@@ -209,38 +168,180 @@ class FitPlotBase(object):
     def plot_range_y(self): pass
 
 
-    def _plot_data(self, target_axis, **kwargs):
-        if self._fitter.has_data_errors:
-            self._store_artists['data'] = target_axis.errorbar(self.plot_data_x,
-                                 self.plot_data_y,
-                                 xerr=self.plot_data_xerr,
-                                 yerr=self.plot_data_yerr,
-                                 **self._get_next_subplot_kwargs('data'))
-        else:
-            self._store_artists['data'] = target_axis.plot(self.plot_data_x,
-                             self.plot_data_y,
-                             **self._get_next_subplot_kwargs('data'))
+    @abc.abstractmethod
+    def plot_data(self, target_axis, **kwargs): pass
 
-    def _plot_model(self, target_axis, **kwargs):
-        if self._fitter.has_model_errors:
-            self._store_artists['model'] = target_axis.errorbar(self.plot_model_x,
-                                 self.plot_model_y,
-                                 xerr=self.plot_model_xerr,
-                                 yerr=self.plot_model_yerr,
-                                 **self._get_next_subplot_kwargs('model'))
-        else:
-            self._store_artists['model'] = target_axis.plot(self.plot_model_x,
-                             self.plot_model_y,
-                             **self._get_next_subplot_kwargs('model'))
+    @abc.abstractmethod
+    def plot_model(self, target_axis, **kwargs): pass
 
+# class PlotException(object):
+#     pass
+#
+# class PlotBase(object):
+#     pass
+
+
+# -- must come last!
+
+class PlotFigureException(Exception):
+    pass
+
+class PlotFigureBase(object):
+
+    __metaclass__ = abc.ABCMeta  # TODO: check if needed
+
+    PLOT_CONTAINER_TYPE = None
+
+    PLOT_CONTAINER_METHODS_BY_PLOT_TYPE = dict(data='plot_data',
+                                               model='plot_model')
+
+    SUBPLOT_CONFIGS_DEFAULT = dict(
+        data=dict(
+            linestyle='',
+            marker='o',
+            label='data',
+            zorder=10
+        ),
+        model=dict(
+            linestyle='-',
+            marker='',
+            label='model',
+            linewidth=2,
+            zorder=-10
+        ),
+    )
+
+    # don't take more keys from the default than is necessary
+    SUBPLOT_PROPERTY_CYCLER_ARGS_DEFAULT = dict(
+        data=tuple(
+            (
+                dict(
+                    color=('#2079b4', '#36a12e', '#e41f21', '#ff8001', '#6d409c', '#b15928'),
+                ),
+                dict(
+                    marker=('o', '^', 's'),
+                ),
+            )
+        ),
+        model=tuple(
+            (
+                dict(
+                    color=('#a6cee3', '#b0dd8b', '#f59a96', '#fdbe6f', '#cbb1d2', '#b39c9a'),
+                ),
+                dict(
+                    linestyle=('-', '--', '-.'),
+                ),
+            )
+        ),
+    )
+
+    def __init__(self, fit_objects):
+        self._fig = plt.figure()  # defaults from matplotlibrc
+        self._gs = gs.GridSpec(nrows=1, ncols=1)
+        self._axes = plt.subplot(self._gs[0, 0])
+
+        self._plot_data_containers = []
+        self._artist_store = []
+        try:
+            iter(fit_objects)
+        except TypeError:
+            fit_objects = (fit_objects,)
+
+        for _fit in fit_objects:
+            _pdc = self.__class__.PLOT_CONTAINER_TYPE(_fit)
+            self._plot_data_containers.append(_pdc)
+            self._artist_store.append(dict())
+
+        self._plot_range_x = None
+        self._plot_range_y = None
+
+        # default kwargs (static) for different subplots ('data', 'model', 'model_error_band', ...)
+        self._subplot_kwarg_dicts = self.__class__.SUBPLOT_CONFIGS_DEFAULT.copy()
+        # default kwarg cyclers for different subplots (these override original static properties)
+        self._subplot_prop_cyclers = dict()
+        for _subplot_name, _subplot_cycler_args in self.__class__.SUBPLOT_PROPERTY_CYCLER_ARGS_DEFAULT.iteritems():
+            self._subplot_prop_cyclers[_subplot_name] = Cycler(*_subplot_cycler_args)
+
+        self._defined_plot_types = self._subplot_kwarg_dicts.keys()
+
+
+    # -- private methods
+
+    def _get_next_subplot_kwargs(self, subplot_name):
+        _kwargs = self._subplot_kwarg_dicts.get(subplot_name, dict())
+        if subplot_name in self._subplot_prop_cyclers:
+            _cycler = self._subplot_prop_cyclers[subplot_name]
+            _cycler_kwargs = _cycler.get_next()
+            _kwargs.update(_cycler_kwargs)
+        return _kwargs
+
+    def _get_plot_handle_for_plot_type(self, plot_type, plot_data_container):
+        _plot_method_name = self.PLOT_CONTAINER_METHODS_BY_PLOT_TYPE.get(plot_type, None)
+        if _plot_method_name is None:
+            raise PlotFigureException("Cannot handle plot of type '%s': no entry in class dictionary "
+                                      "for corresponding plot method in %s..."
+                                      % (plot_type, self.PLOT_CONTAINER_TYPE))
+        try:
+            _plot_method_handle = getattr(plot_data_container, _plot_method_name)
+        except AttributeError:
+            raise PlotFigureException("Cannot handle plot of type '%s': cannot find corresponding "
+                                      "plot method '%s' in %s!"
+                                      % (plot_type, _plot_method_name, self.PLOT_CONTAINER_TYPE))
+        return _plot_method_handle
+
+    def _call_plot_method_for_plot_type(self, subplot_id, plot_type, target_axis):
+        _pdc = self._plot_data_containers[subplot_id]
+        _plot_method_handle = self._get_plot_handle_for_plot_type(plot_type, _pdc)
+        self._artist_store[subplot_id][plot_type] = _plot_method_handle(target_axis, **self._get_next_subplot_kwargs(plot_type))
+
+    def _plot_all_subplots_all_plot_types(self):
+        for _spid, _ in enumerate(self._plot_data_containers):
+            for _pt in self._defined_plot_types:
+                self._call_plot_method_for_plot_type(_spid, _pt, target_axis=self._axes)
 
     def _render_parameter_info_box(self, target_axis, **kwargs):
-        for _pi, (_pn, _pv) in enumerate(reversed(self._fitter.parameter_name_value_dict.items())):
-            target_axis.text(.2, .1+.05*_pi, "%s = %g" % (_pn, _pv), transform=target_axis.transAxes)
-        target_axis.text(.1, .1 + .05 * (_pi+1.), r"Model parameters", transform=target_axis.transAxes, fontdict={'weight': 'bold'})
+        _y_inc_offset = 0.
+        for _pdc in reversed(self._plot_data_containers):
+            for _pi, (_pn, _pv) in enumerate(reversed(_pdc._fitter.parameter_name_value_dict.items())):
+                target_axis.text(.2, .1+.05*_y_inc_offset, "%s = %g" % (_pn, _pv), transform=target_axis.transAxes)
+                _y_inc_offset += 1
+            target_axis.text(.1, .1 + .05 * (_y_inc_offset), r"Model parameters", transform=target_axis.transAxes, fontdict={'weight': 'bold'})
+            _y_inc_offset += 1
 
-    def _render_legend(self, target_axis, **kwargs):
+    def _render_legend(self, target_axis):
         target_axis.legend()
+
+    def _get_total_data_range_x(self):
+        _min, _max = None, None
+        for _pdc in self._plot_data_containers:
+            _lim = _pdc.plot_range_x
+            if _lim is None:
+                continue
+            if _min is None or _lim[0] < _min:
+                _min = _lim[0]
+            if _max is None or _lim[1] > _max:
+                _max = _lim[1]
+        return _min, _max
+
+    def _get_total_data_range_y(self):
+        _min, _max = None, None
+        for _pdc in self._plot_data_containers:
+            _lim = _pdc.plot_range_y
+            if _lim is None:
+                continue
+            if _min is None or _lim[0] < _min:
+                _min = _lim[0]
+            if _max is None or _lim[1] > _max:
+                _max = _lim[1]
+        return _min, _max
+
+    def _set_plot_range_to_total_data_range(self):
+        _xlim = self._get_total_data_range_x()
+        if None not in _xlim:
+            self._axes.set_xlim(_xlim[0], _xlim[1])
+        _ylim = self._get_total_data_range_y()
+        if None not in _ylim:
+            self._axes.set_ylim(_ylim[0], _ylim[1])
 
     # -- public properties
 
@@ -252,15 +353,7 @@ class FitPlotBase(object):
 
     def plot(self):
         # TODO: hooks?
-        self._plot_data(self._axes)
-        self._plot_model(self._axes)
-
-        _xlim = self.plot_range_x
-        if _xlim is not None:
-            self._axes.set_xlim(_xlim[0], _xlim[1])
-        _ylim = self.plot_range_y
-        if _ylim is not None:
-            self._axes.set_ylim(_ylim[0], _ylim[1])
-
+        self._plot_all_subplots_all_plot_types()
+        self._set_plot_range_to_total_data_range()
         self._render_parameter_info_box(self._axes)
         self._render_legend(self._axes)
