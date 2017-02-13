@@ -54,12 +54,16 @@ class Cycler(object):
 
     # public methods
 
-    def get_next(self):
-        _prop_positions = [(self._cycle_counter//self._counter_divisors[i])%self._prop_val_sizes[i] for i in xrange(self._dim)]
+    def get(self, cycle_position):
+        _prop_positions = [(cycle_position//self._counter_divisors[i])%self._prop_val_sizes[i] for i in xrange(self._dim)]
         _ps = {}
         for _i, _content in enumerate(self._props):
             for (_name, _values) in _content.iteritems():
                 _ps[_name] = _values[_prop_positions[_i]]
+        return _ps
+
+    def get_next(self):
+        _ps = self.get(self._cycle_counter)
         self._cycle_counter += 1
         return _ps
 
@@ -192,48 +196,47 @@ class PlotFigureBase(object):
 
     PLOT_CONTAINER_TYPE = None
 
-    PLOT_CONTAINER_METHODS_BY_PLOT_TYPE = dict(data='plot_data',
-                                               model='plot_model')
-
-    SUBPLOT_CONFIGS_DEFAULT = dict(
+    PLOT_TYPE_DEFAULT_CONFIGS = OrderedDict()
+    PLOT_TYPE_DEFAULT_CONFIGS.update(
         data=dict(
-            linestyle='',
-            marker='o',
-            label='data',
-            zorder=10
-        ),
-        model=dict(
-            linestyle='-',
-            marker='',
-            label='model',
-            linewidth=2,
-            zorder=-10
-        ),
-    )
-
-    # don't take more keys from the default than is necessary
-    SUBPLOT_PROPERTY_CYCLER_ARGS_DEFAULT = dict(
-        data=tuple(
-            (
+            plot_container_method='plot_data',
+            plot_container_method_static_kwargs=dict(
+                linestyle='',
+                marker='o',
+                label='data %(subplot_id)s',
+                #zorder=10
+            ),
+            plot_container_method_kwargs_cycler_args=tuple((
                 dict(
                     color=('#2079b4', '#36a12e', '#e41f21', '#ff8001', '#6d409c', '#b15928'),
                 ),
                 dict(
                     marker=('o', '^', 's'),
-                ),
-            )
-        ),
-        model=tuple(
-            (
+                ))
+            ),
+        )
+    )
+    PLOT_TYPE_DEFAULT_CONFIGS.update(
+        model=dict(
+            plot_container_method='plot_model',
+            plot_container_method_static_kwargs=dict(
+                linestyle='-',
+                marker='',
+                label='model %(subplot_id)s',
+                linewidth=2,
+                #zorder=-10
+            ),
+            plot_container_method_kwargs_cycler_args=tuple((
                 dict(
                     color=('#a6cee3', '#b0dd8b', '#f59a96', '#fdbe6f', '#cbb1d2', '#b39c9a'),
                 ),
                 dict(
                     linestyle=('-', '--', '-.'),
-                ),
+                ))
             )
         ),
     )
+
 
     def __init__(self, fit_objects):
         self._fig = plt.figure()  # defaults from matplotlibrc
@@ -255,32 +258,50 @@ class PlotFigureBase(object):
         self._plot_range_x = None
         self._plot_range_y = None
 
-        # default kwargs (static) for different subplots ('data', 'model', 'model_error_band', ...)
-        self._subplot_kwarg_dicts = self.__class__.SUBPLOT_CONFIGS_DEFAULT.copy()
-        # default kwarg cyclers for different subplots (these override original static properties)
+        # store defined plot types for conveniient access
+        self._defined_plot_types = self.PLOT_TYPE_DEFAULT_CONFIGS.keys()
+
+        # fill meta-information structures for all plot_types
+        self._subplot_static_kwarg_dicts = dict()
+        self._subplot_container_plot_method_name = dict()
         self._subplot_prop_cyclers = dict()
-        for _subplot_name, _subplot_cycler_args in self.__class__.SUBPLOT_PROPERTY_CYCLER_ARGS_DEFAULT.iteritems():
-            self._subplot_prop_cyclers[_subplot_name] = Cycler(*_subplot_cycler_args)
-
-        self._defined_plot_types = self._subplot_kwarg_dicts.keys()
-
+        for _pt in self._defined_plot_types:
+            self._subplot_container_plot_method_name[_pt] = self.PLOT_TYPE_DEFAULT_CONFIGS[_pt]['plot_container_method']
+            self._subplot_static_kwarg_dicts[_pt] = self.PLOT_TYPE_DEFAULT_CONFIGS[_pt]['plot_container_method_static_kwargs']
+            self._subplot_prop_cyclers[_pt] = Cycler(*self.PLOT_TYPE_DEFAULT_CONFIGS[_pt]['plot_container_method_kwargs_cycler_args'])
 
     # -- private methods
 
-    def _get_next_subplot_kwargs(self, subplot_name):
-        _kwargs = self._subplot_kwarg_dicts.get(subplot_name, dict())
-        if subplot_name in self._subplot_prop_cyclers:
-            _cycler = self._subplot_prop_cyclers[subplot_name]
-            _cycler_kwargs = _cycler.get_next()
+    def _get_interpolated_label(self, subplot_id, plot_type):
+        _kwargs = self._subplot_static_kwarg_dicts[subplot_id][plot_type]
+        _label_raw =_kwargs.pop('label')
+        return _label_raw % _kwargs
+
+    def _get_subplot_kwargs(self, subplot_id, plot_type):
+        # get static kwargs
+        _kwargs = self._subplot_static_kwarg_dicts.get(plot_type, dict()).copy()
+        # get kwargs from property cyclers
+        if plot_type in self._subplot_prop_cyclers:
+            _cycler = self._subplot_prop_cyclers[plot_type]
+            _cycler_kwargs = _cycler.get(subplot_id)
             _kwargs.update(_cycler_kwargs)
+
+        # apply interpolation to legend labels
+        _label_raw = _kwargs.pop('label')
+        # TODO: think of better way to handle this (and make for flexible)
+        _kwargs['label'] = _label_raw % dict(subplot_id=subplot_id, plot_type=plot_type)
+
+        # calculate zorder if not explicitly given
+        _n_defined_plot_types = len(self._defined_plot_types)
+        if 'zorder' not in _kwargs:
+            _kwargs['zorder'] = subplot_id * _n_defined_plot_types + self._defined_plot_types.index(plot_type)
+
+
         return _kwargs
 
     def _get_plot_handle_for_plot_type(self, plot_type, plot_data_container):
-        _plot_method_name = self.PLOT_CONTAINER_METHODS_BY_PLOT_TYPE.get(plot_type, None)
-        if _plot_method_name is None:
-            raise PlotFigureException("Cannot handle plot of type '%s': no entry in class dictionary "
-                                      "for corresponding plot method in %s..."
-                                      % (plot_type, self.PLOT_CONTAINER_TYPE))
+        _plot_method_name = self.PLOT_TYPE_DEFAULT_CONFIGS[plot_type]['plot_container_method']
+
         try:
             _plot_method_handle = getattr(plot_data_container, _plot_method_name)
         except AttributeError:
@@ -292,7 +313,10 @@ class PlotFigureBase(object):
     def _call_plot_method_for_plot_type(self, subplot_id, plot_type, target_axis):
         _pdc = self._plot_data_containers[subplot_id]
         _plot_method_handle = self._get_plot_handle_for_plot_type(plot_type, _pdc)
-        self._artist_store[subplot_id][plot_type] = _plot_method_handle(target_axis, **self._get_next_subplot_kwargs(plot_type))
+        _artist = _plot_method_handle(target_axis, **self._get_subplot_kwargs(subplot_id, plot_type))
+        # TODO: warn if plot function does not return artist (?)
+        # store the artist returned by the plot method
+        self._artist_store[subplot_id][plot_type] = _artist
 
     def _plot_all_subplots_all_plot_types(self):
         for _spid, _ in enumerate(self._plot_data_containers):
@@ -300,16 +324,49 @@ class PlotFigureBase(object):
                 self._call_plot_method_for_plot_type(_spid, _pt, target_axis=self._axes)
 
     def _render_parameter_info_box(self, target_axis, **kwargs):
+        if 'transform' not in kwargs:
+            kwargs['transform'] = target_axis.transAxes
+        if 'zorder' not in kwargs:
+            kwargs['zorder'] = 999
+
         _y_inc_offset = 0.
         for _pdc in reversed(self._plot_data_containers):
             for _pi, (_pn, _pv) in enumerate(reversed(_pdc._fitter.parameter_name_value_dict.items())):
-                target_axis.text(.2, .1+.05*_y_inc_offset, "%s = %g" % (_pn, _pv), transform=target_axis.transAxes)
+                target_axis.text(.2, .1+.05*_y_inc_offset, "%s = %g" % (_pn, _pv), **kwargs)
                 _y_inc_offset += 1
-            target_axis.text(.1, .1 + .05 * (_y_inc_offset), r"Model parameters", transform=target_axis.transAxes, fontdict={'weight': 'bold'})
+            target_axis.text(.1, .1 + .05 * (_y_inc_offset), r"Model parameters", fontdict={'weight': 'bold'}, **kwargs)
             _y_inc_offset += 1
 
-    def _render_legend(self, target_axis):
-        target_axis.legend()
+    def _render_legend(self, target_axis, **kwargs):
+        _hs_unsorted, _ls_unsorted = target_axis.get_legend_handles_labels()
+        _hs_sorted, _ls_sorted = [], []
+
+        # sort legend entries by drawing order
+        for _subplot_artist_map in self._artist_store:
+            for _pt in self._defined_plot_types:
+                _artist = _subplot_artist_map.get(_pt , None)
+                if _artist is None:
+                    continue
+                try:
+                    _artist_index = _hs_unsorted.index(_artist)
+                except ValueError:
+                    _artist_index = _hs_unsorted.index(_artist[0])
+                _hs_sorted.append(_hs_unsorted[_artist_index])
+                _ls_sorted.append(_ls_unsorted[_artist_index])
+
+        _zorder = kwargs.pop('zorder', 999)
+        _bbox_to_anchor = kwargs.pop('bbox_to_anchor', (0., -0.120, 1., .1))
+        _mode = kwargs.pop('mode', "expand")
+        _borderaxespad = kwargs.pop('borderaxespad', 0.)
+        _ncol = kwargs.pop('ncol', len(self._defined_plot_types))
+
+        target_axis.legend(_hs_sorted, _ls_sorted,
+                           #bbox_to_anchor=_bbox_to_anchor,
+                           #mode=_mode,
+                           #borderaxespad=_borderaxespad,
+                           #ncol=_ncol,
+                           **kwargs).set_zorder(_zorder)
+
 
     def _get_total_data_range_x(self):
         _min, _max = None, None

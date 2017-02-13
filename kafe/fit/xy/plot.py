@@ -76,26 +76,26 @@ class XYPlotContainer(PlotContainerBase):
     def plot_data(self, target_axis, **kwargs):
         # TODO: how to handle 'data' errors and 'model' errors?
         if self._fitter.has_errors:
-            target_axis.errorbar(self.plot_data_x,
+            return target_axis.errorbar(self.plot_data_x,
                                  self.plot_data_y,
                                  xerr=self.plot_data_xerr,
                                  yerr=self.plot_data_yerr,
                                  **kwargs)
         else:
-            target_axis.plot(self.plot_data_x,
+            return target_axis.plot(self.plot_data_x,
                              self.plot_data_y,
                              **kwargs)
 
     def plot_model(self, target_axis, **kwargs):
         # TODO: how to handle 'data' errors and 'model' errors?
         if self._fitter.has_model_errors:
-            target_axis.errorbar(self.plot_model_x,
+            return target_axis.errorbar(self.plot_model_x,
                                  self.plot_model_y,
                                  xerr=self.plot_model_xerr,
                                  yerr=self.plot_model_yerr,
                                  **kwargs)
         else:
-            target_axis.plot(self.plot_model_x,
+            return target_axis.plot(self.plot_model_x,
                              self.plot_model_y,
                              **kwargs)
 
@@ -103,48 +103,33 @@ class XYPlotContainer(PlotContainerBase):
         _band_y = self._fitter.y_error_band
         _y = self.plot_model_y
         if self._fitter.has_errors:
-            target_axis.fill_between(
+            return target_axis.fill_between(
                 self.plot_model_x,
                 _y - _band_y, _y + _band_y,
                 **kwargs)
         else:
-            pass  # don't plot error band if fitter input data has no errors...
+            return None  # don't plot error band if fitter input data has no errors...
 
 
 class XYPlot(PlotFigureBase):
 
     PLOT_CONTAINER_TYPE = XYPlotContainer
 
-    PLOT_CONTAINER_METHODS_BY_PLOT_TYPE = PlotFigureBase.PLOT_CONTAINER_METHODS_BY_PLOT_TYPE.copy()
-    PLOT_CONTAINER_METHODS_BY_PLOT_TYPE['model_error_band'] = 'plot_model_error_band'
-
-    SUBPLOT_CONFIGS_DEFAULT = PlotFigureBase.SUBPLOT_CONFIGS_DEFAULT.copy()
-    SUBPLOT_CONFIGS_DEFAULT['model_error_band'] = dict(
-        alpha=0.5,
-        linestyle='-',
-        label='model error',
-        edgecolor='none',
-        linewidth=2,
-        zorder=-100
-    )
-
-    SUBPLOT_CONFIGS_DEFAULT = PlotFigureBase.SUBPLOT_CONFIGS_DEFAULT.copy()
-    SUBPLOT_CONFIGS_DEFAULT['model_error_band'] = dict(
-        alpha=0.5,
-        linestyle='-',
-        label='model error',
-        edgecolor='none',
-        linewidth=2,
-        zorder=-100
-    )
-
-    SUBPLOT_PROPERTY_CYCLER_ARGS_DEFAULT = PlotFigureBase.SUBPLOT_PROPERTY_CYCLER_ARGS_DEFAULT.copy()
-    SUBPLOT_PROPERTY_CYCLER_ARGS_DEFAULT['model_error_band'] = tuple(
-        (
+    PLOT_TYPE_DEFAULT_CONFIGS = PlotFigureBase.PLOT_TYPE_DEFAULT_CONFIGS.copy()  # don't change original class variable
+    PLOT_TYPE_DEFAULT_CONFIGS['model_error_band'] = dict(
+        plot_container_method='plot_model_error_band',
+        plot_container_method_static_kwargs=dict(
+            alpha=0.5,
+            linestyle='-',
+            label='model %(subplot_id)s error',
+            edgecolor='none',
+            linewidth=2,
+            zorder=-100
+        ),
+        plot_container_method_kwargs_cycler_args=tuple((
             dict(
                 facecolor=('#a6cee3', '#b0dd8b', '#f59a96', '#fdbe6f', '#cbb1d2', '#b39c9a'),
-            ),
-        )
+            ),))
     )
 
     def __init__(self, fit_objects):

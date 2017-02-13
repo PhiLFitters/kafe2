@@ -57,18 +57,18 @@ class HistPlotContainer(PlotContainerBase):
 
     def plot_data(self, target_axis, **kwargs):
         if self._fitter.has_data_errors:
-            target_axis.errorbar(self.plot_data_x,
+            return target_axis.errorbar(self.plot_data_x,
                                  self.plot_data_y,
                                  xerr=self.plot_data_xerr,
                                  yerr=self.plot_data_yerr,
                                  **kwargs)
         else:
-            target_axis.plot(self.plot_data_x,
+            return target_axis.plot(self.plot_data_x,
                              self.plot_data_y,
                              **kwargs)
 
     def plot_model(self, target_axis, **kwargs):
-        step_fill_between(target_axis,
+        return step_fill_between(target_axis,
                           self.plot_model_x,
                           self.plot_model_y,
                           xerr=self.plot_model_xerr,
