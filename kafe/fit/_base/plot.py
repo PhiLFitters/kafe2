@@ -93,7 +93,7 @@ DEFAULT_PROPERTY_CYCLER_ARGS = dict(
     data=tuple(
         (
             dict(
-                color=('#2079b4', '#36a12e', '#e41f21', '#ff8001', '#6d409c', '#b15928'),
+                color=('#e41f21', '#2079b4', '#36a12e', '#ff8001', '#6d409c', '#b15928'),
             ),
             dict(
                 marker=('o', '^', 's'),
@@ -103,7 +103,7 @@ DEFAULT_PROPERTY_CYCLER_ARGS = dict(
     model=tuple(
         (
             dict(
-                color=('#a6cee3', '#b0dd8b', '#f59a96', '#fdbe6f', '#cbb1d2', '#faf899'),
+                color=('#f59a96', '#a6cee3', '#b0dd8b', '#fdbe6f', '#cbb1d2', '#faf899'),
             ),
             dict(
                 linestyle=('-', '--', '-.'),
@@ -142,34 +142,34 @@ class PlotContainerBase(object):
     # -- properties
 
     @abc.abstractproperty
-    def plot_data_x(self): pass
+    def data_x(self): pass
 
     @abc.abstractproperty
-    def plot_data_y(self): pass
+    def data_y(self): pass
 
     @abc.abstractproperty
-    def plot_data_xerr(self): pass
+    def data_xerr(self): pass
 
     @abc.abstractproperty
-    def plot_data_yerr(self): pass
+    def data_yerr(self): pass
 
     @abc.abstractproperty
-    def plot_model_x(self): pass
+    def model_x(self): pass
 
     @abc.abstractproperty
-    def plot_model_y(self): pass
+    def model_y(self): pass
 
     @abc.abstractproperty
-    def plot_model_xerr(self): pass
+    def model_xerr(self): pass
 
     @abc.abstractproperty
-    def plot_model_yerr(self): pass
+    def model_yerr(self): pass
 
     @abc.abstractproperty
-    def plot_range_x(self): pass
+    def x_range(self): pass
 
     @abc.abstractproperty
-    def plot_range_y(self): pass
+    def y_range(self): pass
 
 
     @abc.abstractmethod
@@ -208,7 +208,7 @@ class PlotFigureBase(object):
             ),
             plot_container_method_kwargs_cycler_args=tuple((
                 dict(
-                    color=('#2079b4', '#36a12e', '#e41f21', '#ff8001', '#6d409c', '#b15928'),
+                    color=('#e41f21', '#2079b4', '#36a12e', '#ff8001', '#6d409c', '#b15928'),
                 ),
                 dict(
                     marker=('o', '^', 's'),
@@ -228,7 +228,7 @@ class PlotFigureBase(object):
             ),
             plot_container_method_kwargs_cycler_args=tuple((
                 dict(
-                    color=('#a6cee3', '#b0dd8b', '#f59a96', '#fdbe6f', '#cbb1d2', '#b39c9a'),
+                    color=('#f59a96', '#a6cee3', '#b0dd8b', '#fdbe6f', '#cbb1d2', '#b39c9a'),
                 ),
                 dict(
                     linestyle=('-', '--', '-.'),
@@ -237,11 +237,39 @@ class PlotFigureBase(object):
         ),
     )
 
-
     def __init__(self, fit_objects):
         self._fig = plt.figure()  # defaults from matplotlibrc
-        self._gs = gs.GridSpec(nrows=1, ncols=1)
-        self._axes = plt.subplot(self._gs[0, 0])
+        # self._figsize = (self._fig.get_figwidth()*self._fig.dpi, self._fig.get_figheight()*self._fig.dpi)
+        self._outer_gs = gs.GridSpec(nrows=1,
+                                     ncols=3,
+                                     left=0.075,
+                                     bottom=0.1,
+                                     right=0.925,
+                                     top=0.9,
+                                     wspace=None,
+                                     hspace=None,
+                                     width_ratios=[6, 2, 2],
+                                     height_ratios=None)
+
+        # TODO: use these later to maintain absolute margin width on resize
+        self._absolute_outer_sizes = dict(left=self._outer_gs.left*self._fig.get_figwidth()*self._fig.dpi,
+                                          bottom=self._outer_gs.bottom*self._fig.get_figheight()*self._fig.dpi,
+                                          right=self._outer_gs.right*self._fig.get_figwidth()*self._fig.dpi,
+                                          top=self._outer_gs.top*self._fig.get_figheight()*self._fig.dpi)
+
+        self._plot_axes_gs = gs.GridSpecFromSubplotSpec(
+            nrows=1,
+            ncols=1,
+            wspace=None,
+            hspace=None,
+            width_ratios=None,
+            #height_ratios=[8, 1],
+            subplot_spec=self._outer_gs[0, 0]
+        )
+        self._main_plot_axes = plt.subplot(self._plot_axes_gs[0, 0])
+
+        # NOTE: not working because mpl_connect overwrites existing handlers for the same event x_x
+        #_cid = self._fig.canvas.mpl_connect('resize_event', self._on_resize)
 
         self._plot_data_containers = []
         self._artist_store = []
@@ -321,21 +349,23 @@ class PlotFigureBase(object):
     def _plot_all_subplots_all_plot_types(self):
         for _spid, _ in enumerate(self._plot_data_containers):
             for _pt in self._defined_plot_types:
-                self._call_plot_method_for_plot_type(_spid, _pt, target_axis=self._axes)
+                self._call_plot_method_for_plot_type(_spid, _pt, target_axis=self._main_plot_axes)
 
-    def _render_parameter_info_box(self, target_axis, **kwargs):
+    def _render_parameter_info_box(self, target_figure, **kwargs):
         if 'transform' not in kwargs:
-            kwargs['transform'] = target_axis.transAxes
+            kwargs['transform'] = target_figure.transFigure
         if 'zorder' not in kwargs:
             kwargs['zorder'] = 999
 
-        _y_inc_offset = 0.
-        for _pdc in reversed(self._plot_data_containers):
-            for _pi, (_pn, _pv) in enumerate(reversed(_pdc._fitter.parameter_name_value_dict.items())):
-                target_axis.text(.2, .1+.05*_y_inc_offset, "%s = %g" % (_pn, _pv), **kwargs)
-                _y_inc_offset += 1
-            target_axis.text(.1, .1 + .05 * (_y_inc_offset), r"Model parameters", fontdict={'weight': 'bold'}, **kwargs)
+        _fig_bs, _fig_ts, _fig_ls, _fig_rs = self._outer_gs.get_grid_positions(self._fig)
+
+        _y_inc_offset = 0.75
+        for _id, _pdc in enumerate(self._plot_data_containers):
+            target_figure.text(_fig_ls[2], _fig_ts[0] - .05 * (_y_inc_offset), r"Model %d parameters" % (_id,), fontdict={'weight': 'bold'}, **kwargs)
             _y_inc_offset += 1
+            for _pi, (_pn, _pv) in enumerate(reversed(_pdc._fitter.parameter_name_value_dict.items())):
+                target_figure.text(_fig_ls[2]+.05, _fig_ts[0]-.05*_y_inc_offset, "%s = %g" % (_pn, _pv), **kwargs)
+                _y_inc_offset += 1
 
     def _render_legend(self, target_axis, **kwargs):
         _hs_unsorted, _ls_unsorted = target_axis.get_legend_handles_labels()
@@ -355,23 +385,31 @@ class PlotFigureBase(object):
                 _ls_sorted.append(_ls_unsorted[_artist_index])
 
         _zorder = kwargs.pop('zorder', 999)
-        _bbox_to_anchor = kwargs.pop('bbox_to_anchor', (0., -0.120, 1., .1))
+        _bbox_to_anchor = kwargs.pop('bbox_to_anchor', None)
+        if _bbox_to_anchor is None:
+            # _ls, _rs = self._outer_gs.get_grid_positions(self._fig)[2:]
+            # _l = _ls[1]
+            # _b = self._outer_gs.bottom
+            # _w = self._outer_gs.right - _l
+            # _h = self._outer_gs.top - _b
+            # _bbox_to_anchor = (_l, _b, _w, _h)
+            _bbox_to_anchor = (1.05, 0.0, 0.67, 1.0)  # axes coordinates FIXME: no hardcoding!
         _mode = kwargs.pop('mode', "expand")
-        _borderaxespad = kwargs.pop('borderaxespad', 0.)
-        _ncol = kwargs.pop('ncol', len(self._defined_plot_types))
+        _borderaxespad = kwargs.pop('borderaxespad', 0.1)
+        _ncol = kwargs.pop('ncol', 1)
 
         target_axis.legend(_hs_sorted, _ls_sorted,
-                           #bbox_to_anchor=_bbox_to_anchor,
-                           #mode=_mode,
-                           #borderaxespad=_borderaxespad,
-                           #ncol=_ncol,
+                           bbox_to_anchor=_bbox_to_anchor,
+                           mode=_mode,
+                           borderaxespad=_borderaxespad,
+                           ncol=_ncol,
                            **kwargs).set_zorder(_zorder)
 
 
     def _get_total_data_range_x(self):
         _min, _max = None, None
         for _pdc in self._plot_data_containers:
-            _lim = _pdc.plot_range_x
+            _lim = _pdc.x_range
             if _lim is None:
                 continue
             if _min is None or _lim[0] < _min:
@@ -383,7 +421,7 @@ class PlotFigureBase(object):
     def _get_total_data_range_y(self):
         _min, _max = None, None
         for _pdc in self._plot_data_containers:
-            _lim = _pdc.plot_range_y
+            _lim = _pdc.y_range
             if _lim is None:
                 continue
             if _min is None or _lim[0] < _min:
@@ -395,10 +433,10 @@ class PlotFigureBase(object):
     def _set_plot_range_to_total_data_range(self):
         _xlim = self._get_total_data_range_x()
         if None not in _xlim:
-            self._axes.set_xlim(_xlim[0], _xlim[1])
+            self._main_plot_axes.set_xlim(_xlim[0], _xlim[1])
         _ylim = self._get_total_data_range_y()
         if None not in _ylim:
-            self._axes.set_ylim(_ylim[0], _ylim[1])
+            self._main_plot_axes.set_ylim(_ylim[0], _ylim[1])
 
     # -- public properties
 
@@ -412,5 +450,5 @@ class PlotFigureBase(object):
         # TODO: hooks?
         self._plot_all_subplots_all_plot_types()
         self._set_plot_range_to_total_data_range()
-        self._render_parameter_info_box(self._axes)
-        self._render_legend(self._axes)
+        self._render_parameter_info_box(self._fig)
+        self._render_legend(self._main_plot_axes)

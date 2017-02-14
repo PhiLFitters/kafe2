@@ -29,46 +29,46 @@ class XYPlotContainer(PlotContainerBase):
     # -- public properties
 
     @property
-    def plot_data_x(self):
+    def data_x(self):
         return self._fitter.x
 
     @property
-    def plot_data_y(self):
+    def data_y(self):
         return self._fitter.y_data
 
     @property
-    def plot_data_xerr(self):
+    def data_xerr(self):
         return self._fitter.x_error
 
     @property
-    def plot_data_yerr(self):
+    def data_yerr(self):
         return self._fitter.y_data_error
 
     @property
-    def plot_model_x(self):
-        _xmin, _xmax = self.plot_range_x
+    def model_x(self):
+        _xmin, _xmax = self.x_range
         return np.linspace(_xmin, _xmax, self._n_plot_points_model)
 
     @property
-    def plot_model_y(self):
-        return self._fitter.eval_model_function(x=self.plot_model_x)
+    def model_y(self):
+        return self._fitter.eval_model_function(x=self.model_x)
 
     @property
-    def plot_model_xerr(self):
+    def model_xerr(self):
         return None if np.allclose(self._fitter.x_error, 0) else self._fitter.x_error
 
     @property
-    def plot_model_yerr(self):
+    def model_yerr(self):
         return None if np.allclose(self._fitter.y_data_error, 0) else self._fitter.y_data_error
 
     @property
-    def plot_range_x(self):
+    def x_range(self):
         if self._plot_range_x is None:
             self._compute_plot_range_x()
         return self._plot_range_x
 
     @property
-    def plot_range_y(self):
+    def y_range(self):
         return None
 
     # public methods
@@ -76,35 +76,35 @@ class XYPlotContainer(PlotContainerBase):
     def plot_data(self, target_axis, **kwargs):
         # TODO: how to handle 'data' errors and 'model' errors?
         if self._fitter.has_errors:
-            return target_axis.errorbar(self.plot_data_x,
-                                 self.plot_data_y,
-                                 xerr=self.plot_data_xerr,
-                                 yerr=self.plot_data_yerr,
-                                 **kwargs)
+            return target_axis.errorbar(self.data_x,
+                                        self.data_y,
+                                        xerr=self.data_xerr,
+                                        yerr=self.data_yerr,
+                                        **kwargs)
         else:
-            return target_axis.plot(self.plot_data_x,
-                             self.plot_data_y,
-                             **kwargs)
+            return target_axis.plot(self.data_x,
+                                    self.data_y,
+                                    **kwargs)
 
     def plot_model(self, target_axis, **kwargs):
         # TODO: how to handle 'data' errors and 'model' errors?
         if self._fitter.has_model_errors:
-            return target_axis.errorbar(self.plot_model_x,
-                                 self.plot_model_y,
-                                 xerr=self.plot_model_xerr,
-                                 yerr=self.plot_model_yerr,
-                                 **kwargs)
+            return target_axis.errorbar(self.model_x,
+                                        self.model_y,
+                                        xerr=self.model_xerr,
+                                        yerr=self.model_yerr,
+                                        **kwargs)
         else:
-            return target_axis.plot(self.plot_model_x,
-                             self.plot_model_y,
-                             **kwargs)
+            return target_axis.plot(self.model_x,
+                                    self.model_y,
+                                    **kwargs)
 
     def plot_model_error_band(self, target_axis, **kwargs):
         _band_y = self._fitter.y_error_band
-        _y = self.plot_model_y
+        _y = self.model_y
         if self._fitter.has_errors:
             return target_axis.fill_between(
-                self.plot_model_x,
+                self.model_x,
                 _y - _band_y, _y + _band_y,
                 **kwargs)
         else:
@@ -128,7 +128,7 @@ class XYPlot(PlotFigureBase):
         ),
         plot_container_method_kwargs_cycler_args=tuple((
             dict(
-                facecolor=('#a6cee3', '#b0dd8b', '#f59a96', '#fdbe6f', '#cbb1d2', '#b39c9a'),
+                facecolor=('#f59a96', '#a6cee3', '#b0dd8b', '#fdbe6f', '#cbb1d2', '#b39c9a'),
             ),))
     )
 

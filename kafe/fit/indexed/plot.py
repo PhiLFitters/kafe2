@@ -12,68 +12,68 @@ class IndexedPlotContainer(PlotContainerBase):
         super(IndexedPlotContainer, self).__init__(fit_object=indexed_fit_object)
 
     @property
-    def plot_data_x(self):
+    def data_x(self):
         return np.arange(self._fitter.data_size)
 
     @property
-    def plot_data_y(self):
+    def data_y(self):
         return self._fitter.data
 
     @property
-    def plot_data_xerr(self):
+    def data_xerr(self):
         return None
 
     @property
-    def plot_data_yerr(self):
+    def data_yerr(self):
         return self._fitter.data_error
 
     @property
-    def plot_model_x(self):
-        return self.plot_data_x
+    def model_x(self):
+        return self.data_x
 
     @property
-    def plot_model_y(self):
+    def model_y(self):
         return self._fitter.model
 
     @property
-    def plot_model_xerr(self):
+    def model_xerr(self):
         return 0.5
 
     @property
-    def plot_model_yerr(self):
+    def model_yerr(self):
         return None #self._fitter.model_error
 
     @property
-    def plot_range_x(self):
+    def x_range(self):
         return (-0.5, self._fitter.data_size-0.5)
 
     @property
-    def plot_range_y(self):
+    def y_range(self):
         return None  # no fixed range
 
     # public methods
 
     def plot_data(self, target_axis, **kwargs):
         if self._fitter.has_errors:
-            return target_axis.errorbar(self.plot_data_x,
-                                 self.plot_data_y,
-                                 xerr=self.plot_data_xerr,
-                                 yerr=self.plot_data_yerr,
-                                 **kwargs)
+            return target_axis.errorbar(self.data_x,
+                                        self.data_y,
+                                        xerr=self.data_xerr,
+                                        yerr=self.data_yerr,
+                                        **kwargs)
         else:
-            return target_axis.plot(self.plot_data_x,
-                             self.plot_data_y,
-                             **kwargs)
+            return target_axis.plot(self.data_x,
+                                    self.data_y,
+                                    **kwargs)
 
     def plot_model(self, target_axis, **kwargs):
         return step_fill_between(target_axis,
-                          self.plot_model_x,
-                          self.plot_model_y,
-                          xerr=self.plot_model_xerr,
-                          yerr=self.plot_model_yerr,
-                          draw_central_value=True,
-                          **kwargs
-                          )
+                                 self.model_x,
+                                 self.model_y,
+                                 xerr=self.model_xerr,
+                                 yerr=self.model_yerr,
+                                 draw_central_value=True,
+                                 **kwargs
+                                 )
 
 
 class IndexedPlot(PlotFigureBase):
