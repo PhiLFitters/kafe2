@@ -140,6 +140,16 @@ class HistContainer(IndexedContainer):
     def bin_edges(self):
         return self._bin_edges.copy()
 
+    @property
+    def bin_widths(self):
+        _be = self._bin_edges
+        return (_be[1:] - _be[:-1])
+
+    @property
+    def bin_centers(self):
+        _be = self._bin_edges
+        return 0.5*(_be[1:] + _be[:-1])
+
     # -- public methods
 
     def fill(self, entries):
