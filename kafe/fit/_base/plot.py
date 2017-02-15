@@ -248,7 +248,7 @@ class PlotFigureBase(object):
                                      top=0.9,
                                      wspace=None,
                                      hspace=None,
-                                     width_ratios=[6, 2, 2],
+                                     width_ratios=[6, 2, 4],
                                      height_ratios=None)
 
         # TODO: use these later to maintain absolute margin width on resize
@@ -317,7 +317,8 @@ class PlotFigureBase(object):
         # apply interpolation to legend labels
         _label_raw = _kwargs.pop('label')
         # TODO: think of better way to handle this (and make for flexible)
-        _kwargs['label'] = _label_raw % dict(subplot_id=subplot_id, plot_type=plot_type)
+        _kwargs['label'] = _label_raw % dict(subplot_id=subplot_id,
+                                             plot_type=plot_type)
 
         # calculate zorder if not explicitly given
         _n_defined_plot_types = len(self._defined_plot_types)
@@ -351,7 +352,7 @@ class PlotFigureBase(object):
             for _pt in self._defined_plot_types:
                 self._call_plot_method_for_plot_type(_spid, _pt, target_axis=self._main_plot_axes)
 
-    def _render_parameter_info_box(self, target_figure, **kwargs):
+    def _render_parameter_info_box(self, target_figure, format_as_latex, **kwargs):
         if 'transform' not in kwargs:
             kwargs['transform'] = target_figure.transFigure
         if 'zorder' not in kwargs:
@@ -359,13 +360,29 @@ class PlotFigureBase(object):
 
         _fig_bs, _fig_ts, _fig_ls, _fig_rs = self._outer_gs.get_grid_positions(self._fig)
 
-        _y_inc_offset = 0.75
+        _n_text_lines = len(self._plot_data_containers) * 2
+        _n_text_lines += np.sum([len(_pdc._fitter._fit_param_formatters) for _pdc in self._plot_data_containers])
+
+        _y_inc_size = min(.05, (_fig_ts[0] - _fig_ls[0])/_n_text_lines)
+        _y_inc_offset = _fig_ts[0] - 0.05
+        _y_inc_counter = 0
         for _id, _pdc in enumerate(self._plot_data_containers):
-            target_figure.text(_fig_ls[2], _fig_ts[0] - .05 * (_y_inc_offset), r"Model %d parameters" % (_id,), fontdict={'weight': 'bold'}, **kwargs)
-            _y_inc_offset += 1
-            for _pi, (_pn, _pv) in enumerate(reversed(_pdc._fitter.parameter_name_value_dict.items())):
-                target_figure.text(_fig_ls[2]+.05, _fig_ts[0]-.05*_y_inc_offset, "%s = %g" % (_pn, _pv), **kwargs)
-                _y_inc_offset += 1
+            _y = _y_inc_offset - _y_inc_size*_y_inc_counter
+            target_figure.text(_fig_ls[2], _y, r"Model %d" % (_id,), fontdict={'weight': 'bold'}, **kwargs)
+            _y_inc_counter += 1
+
+            _y = _y_inc_offset - _y_inc_size * _y_inc_counter
+            _formatted_string = _pdc._fitter._model_func_formatter.get_formatted(
+                with_par_values=False, n_significant_digits=2, format_as_latex=format_as_latex, with_expression=True)
+            target_figure.text(_fig_ls[2] + .025, _y, _formatted_string, **kwargs)
+            _y_inc_counter += 1
+
+            for _pi, _pf in enumerate(_pdc._fitter._fit_param_formatters):
+                _y = _y_inc_offset - _y_inc_size * _y_inc_counter
+                _formatted_string = _pf.get_formatted(with_name=True, with_value=True, with_errors=True, format_as_latex=format_as_latex)
+                target_figure.text(_fig_ls[2]+.05, _y, _formatted_string, **kwargs)
+                _y_inc_counter += 1
+
 
     def _render_legend(self, target_axis, **kwargs):
         _hs_unsorted, _ls_unsorted = target_axis.get_legend_handles_labels()
@@ -450,5 +467,7 @@ class PlotFigureBase(object):
         # TODO: hooks?
         self._plot_all_subplots_all_plot_types()
         self._set_plot_range_to_total_data_range()
-        self._render_parameter_info_box(self._fig)
         self._render_legend(self._main_plot_axes)
+
+    def show_fit_info_box(self, format_as_latex=False):
+        self._render_parameter_info_box(self._fig, format_as_latex=format_as_latex)

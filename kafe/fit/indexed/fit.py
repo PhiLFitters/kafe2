@@ -4,7 +4,7 @@ from copy import deepcopy
 import numpy as np
 
 from ...core import NexusFitter, Nexus
-from .._base import FitException, FitBase, DataContainerBase
+from .._base import FitException, FitBase, DataContainerBase, ParameterFormatter, ModelFunctionFormatter
 from .container import IndexedContainer
 from .model import IndexedParametricModel
 
@@ -48,6 +48,12 @@ class IndexedFit(FitBase):
         self._fitter = NexusFitter(nexus=self._nexus,
                                    parameters_to_fit=self._fit_param_names,
                                    parameter_to_minimize=self._cost_function_handle.__name__)
+
+
+        self._fit_param_formatters = [ParameterFormatter(name=_pn, value=_pv, error=None)
+                                      for _pn, _pv in self._fitter.fit_parameter_values.iteritems()]
+        self._model_func_formatter = ModelFunctionFormatter(self._model_func_handle.__name__,
+                                                            arg_formatters=self._fit_param_formatters)
 
         # create the child ParametricModel objet
         self._param_model = self._new_parametric_model(self._model_func_handle, self.parameter_values)
@@ -193,6 +199,14 @@ class IndexedFit(FitBase):
     def parameter_values(self):
         return self.parameter_name_value_dict.values()
 
+    @property
+    def parameter_errors(self):
+        return self._fitter.fit_parameter_errors
+
+    @property
+    def parameter_cov_mat(self):
+        return self._fitter.fit_parameter_cov_mat
+
     # NOTE: not supported by kafe.core.fitters
     #       maybe implement _there_, but not here!
     # @parameter_values.setter
@@ -230,5 +244,5 @@ class IndexedFit(FitBase):
         self._mark_errors_for_update_invalidate_total_error_cache()
         return _ret
 
-    def do_fit(self):
-        self._fitter.do_fit()
+    # def do_fit(self):
+    #     self._fitter.do_fit()

@@ -115,6 +115,10 @@ class NexusFitter(object):
         return self._minimizer.cov_mat
 
     @property
+    def fit_parameter_errors(self):
+        return self._minimizer.parameter_errors
+
+    @property
     def parameter_to_minimize_value(self):
         # if self.__cache_stale or self.__minimizing:  # allow getting fresh (non-cached) parameters while minimizing
         if self.__cache_stale:
