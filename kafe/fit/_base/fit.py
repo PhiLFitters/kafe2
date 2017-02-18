@@ -150,20 +150,8 @@ class ModelFunctionFormatter(object):
     def __init__(self, name, latex_name=None, arg_formatters=None, expression_string=None, latex_expression_string=None):
         self._name = name
         self._arg_formatters = arg_formatters
-        self._expr_string = expression_string
-        try:
-            self._get_formatted_expression(format_as_latex=False)
-        except:
-            raise FormatterException("Expression string does not match number of arguments (%d): %s"
-                                     % (len(self._arg_formatters), expression_string))
-
-        self._latex_expr_string = latex_expression_string
-        try:
-            self._get_formatted_expression(format_as_latex=True)
-        except:
-            raise FormatterException("LaTeX expression string does not match number of arguments (%d): %s"
-                                     % (len(self._arg_formatters), latex_expression_string))
-
+        self.expression_format_string = expression_string
+        self.latex_expression_format_string = latex_expression_string
 
         self._latex_name = latex_name
         if self._latex_name is None:
@@ -173,6 +161,9 @@ class ModelFunctionFormatter(object):
     def _latexify_ascii(ascii_string):
         _lpn = string.replace(ascii_string, '_', r"\_")
         return r"{\tt %s}" % (_lpn,)
+
+    def _get_format_kwargs(self, format_as_latex=False):
+        return dict()
 
     def _get_formatted_name(self, format_as_latex=False):
         if format_as_latex:
@@ -199,15 +190,42 @@ class ModelFunctionFormatter(object):
         return ["%s" % (_pn,) for _pn in _par_name_strings]
 
     def _get_formatted_expression(self, format_as_latex=False):
+        _kwargs = self._get_format_kwargs(format_as_latex=format_as_latex)
         if format_as_latex and self._latex_expr_string is not None:
-            _par_expr_string = self._latex_expr_string % tuple([_af.latex_name for _af in self._arg_formatters])
+            _par_expr_string = self._latex_expr_string.format(*[_af.latex_name for _af in self._arg_formatters], **_kwargs)
         elif not format_as_latex and self._expr_string is not None:
-            _par_expr_string = self._expr_string % tuple([_af.name for _af in self._arg_formatters])
+            _par_expr_string = self._expr_string.format(*[_af.name for _af in self._arg_formatters], **_kwargs)
         elif format_as_latex and self._latex_expr_string is None:
-            _par_expr_string = r"\langle{\it not~specified}\rangle"
+            _par_expr_string = self.DEFAULT_LATEX_EXPRESSION_STRING
         else:
-            _par_expr_string = "<not specified>"
+            _par_expr_string = self.DEFAULT_EXPRESSION_STRING
         return _par_expr_string
+
+    @property
+    def expression_format_string(self):
+        return self._expr_string
+
+    @expression_format_string.setter
+    def expression_format_string(self, expression_format_string):
+        self._expr_string = expression_format_string
+        try:
+            self._get_formatted_expression(format_as_latex=False)
+        except:
+            raise FormatterException("Expression string does not match argument structure: %s"
+                                     % (expression_format_string,))
+
+    @property
+    def latex_expression_format_string(self):
+        return self._latex_expr_string
+
+    @latex_expression_format_string.setter
+    def latex_expression_format_string(self, latex_expression_format_string):
+        self._latex_expr_string = latex_expression_format_string
+        try:
+            self._get_formatted_expression(format_as_latex=True)
+        except:
+            raise FormatterException("LaTeX expression string does not match argument structure: %s"
+                                     % (latex_expression_format_string,))
 
     def get_formatted(self, with_par_values=True, n_significant_digits=2, format_as_latex=False, with_expression=False):
         _par_strings = self._get_formatted_args(with_par_values=with_par_values,
@@ -411,3 +429,15 @@ class FitBase(object):
         for _fpf, _pv, _pe in zip(self._fit_param_formatters, self.parameter_values, self.parameter_errors):
             _fpf.value = _pv
             _fpf.error = _pe
+
+    def assign_model_function_expression(self, expression_format_string):
+        self._model_func_formatter.expression_format_string = expression_format_string
+
+    def assign_model_function_latex_expression(self, latex_expression_format_string):
+        self._model_func_formatter.latex_expression_format_string = latex_expression_format_string
+
+    def assign_parameter_latex_names(self, **par_latex_names_dict):
+        for _pf in self._fit_param_formatters:
+            _pln = par_latex_names_dict.get(_pf.name, None)
+            if _pln is not None:
+                _pf.latex_name = _pln

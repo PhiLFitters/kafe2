@@ -26,18 +26,11 @@ class ModelDensityFunctionFormatter(ModelFunctionFormatter):
             latex_expression_string=latex_expression_string
         )
 
-    def _get_formatted_expression(self, format_as_latex=False):
-        if format_as_latex and self._latex_expr_string is not None:
-            _par_expr_string = self._latex_expr_string % tuple([_af.latex_name for _af in self._arg_formatters])
-            _par_expr_string = string.replace(_par_expr_string, '{x}', self._latex_x_name)
-        elif not format_as_latex and self._expr_string is not None:
-            _par_expr_string = self._expr_string % tuple([_af.name for _af in self._arg_formatters])
-            _par_expr_string = string.replace(_par_expr_string, '{x}', self._x_name)
-        elif format_as_latex and self._latex_expr_string is None:
-            _par_expr_string = self.DEFAULT_LATEX_EXPRESSION_STRING
+    def _get_format_kwargs(self, format_as_latex=False):
+        if format_as_latex:
+            return dict(x=self._latex_x_name)
         else:
-            _par_expr_string = self.DEFAULT_EXPRESSION_STRING
-        return _par_expr_string
+            return dict(x=self._x_name)
 
     def get_formatted(self, with_par_values=True, n_significant_digits=2, format_as_latex=False, with_expression=False):
         _par_strings = self._get_formatted_args(with_par_values=with_par_values,
