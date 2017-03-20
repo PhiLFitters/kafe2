@@ -1,7 +1,7 @@
 import abc
 #import pyximport
 
-pyximport.install()
+#pyximport.install()
 
 from .nexus import Nexus
 # from .nexus_cython import Nexus as NexusCython
