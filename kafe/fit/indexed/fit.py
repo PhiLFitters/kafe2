@@ -56,7 +56,7 @@ class IndexedFit(FitBase):
                                                             arg_formatters=self._fit_param_formatters)
 
         # create the child ParametricModel objet
-        self._param_model = self._new_parametric_model(self._model_func_handle, self.parameter_values)
+        self._param_model = self._new_parametric_model(self._model_func_handle, self.parameter_values, shape_like=self.data)
 
 
     # -- private methods

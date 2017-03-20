@@ -11,9 +11,13 @@ class IndexedParametricModelException(IndexedContainerException):
 
 
 class IndexedParametricModel(ParametricModelBaseMixin, IndexedContainer):
-    def __init__(self, model_func, model_parameters):
+    def __init__(self, model_func, model_parameters, shape_like=None):
         # print "IndexedParametricModel.__init__(model_func=%r, model_parameters=%r)" % (model_func, model_parameters)
-        _data = model_func(*model_parameters)
+        if shape_like is not None:
+            _data = np.zeros_like(shape_like)
+            _data[:] = model_func(*model_parameters)
+        else:
+            _data = model_func(*model_parameters)
         super(IndexedParametricModel, self).__init__(model_func, model_parameters, _data)
 
     # -- private methods
