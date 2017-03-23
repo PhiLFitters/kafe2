@@ -5,6 +5,7 @@ from scipy import stats
 
 from kafe.fit import HistContainer, HistFit
 from kafe.fit.histogram.fit import CONFIG_PARAMETER_DEFAULT_VALUE, HistFitException
+from kafe.fit.histogram.model import HistModelFunctionException
 
 
 class TestFittersHist(unittest.TestCase):
@@ -66,12 +67,12 @@ class TestFittersHist(unittest.TestCase):
         self._ref_hist_cont = HistContainer(self._ref_n_bins, self._ref_n_bin_range, bin_edges=None, fill_data=self._ref_entries)
 
         self.hist_fit = HistFit(data=self._ref_hist_cont,
-                            model_density_function=self.hist_model_density,
-                            cost_function=self.simple_chi2,
-                            model_density_function_antiderivative=self.hist_model_density_antideriv)
+                                model_density_function=self.hist_model_density,
+                                cost_function=self.simple_chi2,
+                                model_density_antiderivative=self.hist_model_density_antideriv)
         self.hist_fit_default_cost_function = HistFit(data=self._ref_hist_cont,
                                                       model_density_function=self.hist_model_density,
-                                                      model_density_function_antiderivative=self.hist_model_density_antideriv)
+                                                      model_density_antiderivative=self.hist_model_density_antideriv)
 
         self._ref_parameter_value_estimates = [13.828005427495496, 2.6276452391799703]
         self._ref_model_estimates = (self.hist_model_density_antideriv(self._ref_bin_edges[1:], *self._ref_parameter_value_estimates) -

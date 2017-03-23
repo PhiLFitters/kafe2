@@ -270,31 +270,10 @@ class FitBase(object):
     def _new_parametric_model(self, *args, **kwargs):
         return self.__class__.MODEL_TYPE(*args, **kwargs)
 
-    def _validate_model_function_raise(self):
-        self._model_func_argspec = inspect.getargspec(self._model_func_handle)
-        if self._model_func_argspec.varargs and self._model_func_argspec.keywords:
-            raise self.__class__.EXCEPTION_TYPE("Model function with variable arguments (*%s, **%s) is not supported"
-                                      % (self._model_func_argspec.varargs,
-                                         self._model_func_argspec.keywords))
-        elif self._model_func_argspec.varargs:
-            raise self.__class__.EXCEPTION_TYPE(
-                "Model function with variable arguments (*%s) is not supported"
-                % (self._model_func_argspec.varargs,))
-        elif self._model_func_argspec.keywords:
-            raise self.__class__.EXCEPTION_TYPE(
-                "Model function with variable arguments (**%s) is not supported"
-                % (self._model_func_argspec.keywords,))
-
-        # check for reserved keywords
-        if not self.RESERVED_NODE_NAMES.isdisjoint(set(self._model_func_argspec.args)):
-            _invalid_args = self.RESERVED_NODE_NAMES.intersection(set(self._model_func_argspec.args))
-            raise self.__class__.EXCEPTION_TYPE(
-                "The following names are reserved and cannot be used as model function arguments: %r"
-                % (_invalid_args,))
-
-        # check for reserved keywords
-        if not self.RESERVED_NODE_NAMES.isdisjoint(set(self._model_func_argspec.args)):
-            _invalid_args = self.RESERVED_NODE_NAMES.intersection(set(self._model_func_argspec.args))
+    def _validate_model_function_for_fit_raise(self):
+        # disallow using reserved keywords as model function arguments
+        if not self.RESERVED_NODE_NAMES.isdisjoint(set(self._model_function.argspec.args)):
+            _invalid_args = self.RESERVED_NODE_NAMES.intersection(set(self._model_function.argspec.args))
             raise self.__class__.EXCEPTION_TYPE(
                 "The following names are reserved and cannot be used as model function arguments: %r"
                 % (_invalid_args,))
@@ -382,7 +361,7 @@ class FitBase(object):
     # def do_fit(self): pass
 
     def get_model_function_string(self, with_par_names=True, with_par_values=False, format_as_latex=False):
-        _func_name_string = self._model_func_handle.__name__
+        _func_name_string = self._model_function.name
         if format_as_latex:
             _filter = self._latexify_ascii
             _args_string_circumfix = r"\left(%s\right)"

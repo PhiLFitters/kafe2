@@ -9,7 +9,7 @@ from ...core import NexusFitter, Nexus
 from .._base import FitException, FitBase, DataContainerBase, ParameterFormatter, ModelFunctionFormatter, CostFunctionBase
 from .container import HistContainer
 from .cost import HistCostFunction_Chi2_NoErrors, HistCostFunction_UserDefined
-from .model import HistParametricModel
+from .model import HistParametricModel, HistModelFunction
 
 CONFIG_PARAMETER_DEFAULT_VALUE = 1.0
 
@@ -60,23 +60,36 @@ class HistFitException(FitException):
 class HistFit(FitBase):
     CONTAINER_TYPE = HistContainer
     MODEL_TYPE = HistParametricModel
+    MODEL_FUNCTION_TYPE = HistModelFunction
     EXCEPTION_TYPE = HistFitException
-    X_VAR_NAME = 'x'
     RESERVED_NODE_NAMES = {'data', 'model', 'model_density', 'cost',
                           'data_error', 'model_error', 'total_error',
                           'data_cov_mat', 'model_cov_mat', 'total_cov_mat',
                           'data_cor_mat', 'model_cor_mat', 'total_cor_mat'}
 
-    def __init__(self, data, model_density_function, cost_function=HistCostFunction_Chi2_NoErrors(), model_density_function_antiderivative=None):
+    def __init__(self, data, model_density_function, cost_function=HistCostFunction_Chi2_NoErrors(), model_density_antiderivative=None):
         # set the data
         self.data = data
 
-        # set and validate the model function
-        self._model_func_handle = model_density_function
-        self._validate_model_function_raise()
+        # set/construct the model function object
+        if isinstance(model_density_function, self.__class__.MODEL_FUNCTION_TYPE):
+            if model_density_antiderivative is not None:
+                raise HistFitException("Antiderivative (%r) provided in constructor for %r, "
+                                       "but histogram model function object (%r) already constructed!"
+                                       % (model_density_antiderivative, self.__class__, model_density_function))
+            self._model_function = model_density_function
+        else:
+            self._model_function = self.__class__.MODEL_FUNCTION_TYPE(model_density_function, model_density_antiderivative=model_density_antiderivative)
 
-        self._model_func_antider_handle = model_density_function_antiderivative
-        self._validate_model_function_antiderivative_raise()
+        # validate the model function for this fit
+        self._validate_model_function_for_fit_raise()
+
+        # # set and validate the model function
+        # self._model_func_handle = model_density_function
+        # self._validate_model_function_raise()
+        #
+        # self._model_func_antider_handle = model_density_antiderivative
+        # self._validate_model_function_for_fit_raise()
 
         # set and validate the cost function
         if isinstance(cost_function, CostFunctionBase):
@@ -102,54 +115,21 @@ class HistFit(FitBase):
 
         self._fit_param_formatters = [ParameterFormatter(name=_pn, value=_pv, error=None)
                                       for _pn, _pv in self._fitter.fit_parameter_values.iteritems()]
-        self._model_func_formatter = ModelDensityFunctionFormatter(self._model_func_handle.__name__,
+        self._model_func_formatter = ModelDensityFunctionFormatter(self._model_function.name,
                                                                    arg_formatters=self._fit_param_formatters,
-                                                                   x_name=self.X_VAR_NAME)
+                                                                   x_name=self._model_function.x_name)
 
         # create the child ParametricModel object
         self._param_model = self._new_parametric_model(
             self._data_container.size,
             self._data_container.bin_range,
-            self._model_func_handle,
+            self._model_function.func,
             self.parameter_values,
             self._data_container.bin_edges,
-            model_density_func_antiderivative=self._model_func_antider_handle)
+            model_density_func_antiderivative=self._model_function.antiderivative)
 
 
     # -- private methods
-
-    def _validate_model_function_raise(self):
-        self._model_func_argspec = inspect.getargspec(self._model_func_handle)
-        if self.X_VAR_NAME not in self._model_func_argspec.args:
-            raise self.__class__.EXCEPTION_TYPE(
-                "Model density function '%r' must have independent variable '%s' among its arguments!"
-                % (self._model_func_handle, self.X_VAR_NAME))
-
-        self._model_func_argcount = self._model_func_handle.func_code.co_argcount
-        if self._model_func_argcount < 2:
-            raise self.__class__.EXCEPTION_TYPE(
-                "Model density function '%r' needs at least one parameter beside independent variable '%s'!"
-                % (self._model_func_handle, self.X_VAR_NAME))
-
-        super(HistFit, self)._validate_model_function_raise()
-
-    def _validate_model_function_antiderivative_raise(self):
-        if self._model_func_antider_handle is None:
-            self._model_func_antider_argspec = None
-            self._model_func_antider_argcount = None
-            return
-        self._model_func_antider_argspec = inspect.getargspec(self._model_func_antider_handle)
-        if self.X_VAR_NAME not in self._model_func_argspec.args:
-            raise self.__class__.EXCEPTION_TYPE(
-                "Model density function antiderivative '%r' must have independent variable '%s' among its arguments!"
-                % (self._model_func_antider_handle, self.X_VAR_NAME))
-
-        self._model_func_antider_argcount = self._model_func_antider_handle.func_code.co_argcount
-        if self._model_func_antider_argcount < 2:
-            raise self.__class__.EXCEPTION_TYPE(
-                "Model density function antiderivative '%r' needs at least one parameter beside independent variable '%s'!"
-                % (self._model_func_antider_handle, self.X_VAR_NAME))
-
 
     def _init_nexus(self):
         self._nexus = Nexus()
@@ -158,15 +138,15 @@ class HistFit(FitBase):
         # create a NexusNode for each parameter of the model function
 
         _nexus_new_dict = OrderedDict()
-        _arg_defaults = self._model_func_argspec.defaults
+        _arg_defaults = self._model_function.argspec.defaults
         _n_arg_defaults = 0 if _arg_defaults is None else len(_arg_defaults)
         self._fit_param_names = []
-        for _arg_pos, _arg_name in enumerate(self._model_func_argspec.args):
+        for _arg_pos, _arg_name in enumerate(self._model_function.argspec.args):
             # skip independent variable parameter
-            if _arg_name == self.X_VAR_NAME:
+            if _arg_name == self._model_function.x_name:
                 continue
-            if _arg_pos >= (self._model_func_argcount - _n_arg_defaults):
-                _default_value = _arg_defaults[_arg_pos - (self._model_func_argcount - _n_arg_defaults)]
+            if _arg_pos >= (self._model_function.argcount - _n_arg_defaults):
+                _default_value = _arg_defaults[_arg_pos - (self._model_function.argcount - _n_arg_defaults)]
             else:
                 _default_value = CONFIG_PARAMETER_DEFAULT_VALUE
             _nexus_new_dict[_arg_name] = _default_value

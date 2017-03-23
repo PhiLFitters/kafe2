@@ -2,8 +2,30 @@ import numpy as np
 
 from scipy.misc import derivative
 
-from .._base import ParametricModelBaseMixin
+from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException
 from .container import IndexedContainer, IndexedContainerException
+
+class IndexedModelFunctionException(ModelFunctionException):
+    pass
+
+class IndexedModelFunction(ModelFunctionBase):
+    EXCEPTION_TYPE = IndexedModelFunctionException
+    def __init__(self, model_function):
+        self._index_name = 'i'
+        super(IndexedModelFunction, self).__init__(model_function=model_function)
+
+    def _validate_model_function_raise(self):
+        # require 'indexed' model functions to have at least one argument
+        if self.argcount < 1:
+            raise self.__class__.EXCEPTION_TYPE(
+                "Model function '%r' needs at least one parameter!!"
+                % (self.func,))
+
+        super(IndexedModelFunction, self)._validate_model_function_raise()
+
+    @property
+    def index_name(self):
+        return self._index_name
 
 
 class IndexedParametricModelException(IndexedContainerException):

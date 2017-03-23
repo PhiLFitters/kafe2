@@ -1,9 +1,39 @@
+import inspect
 import numpy as np
 
 from scipy.misc import derivative
 
-from .._base import ParametricModelBaseMixin
+from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException
 from .container import XYContainer, XYContainerException
+
+class XYModelFunctionException(ModelFunctionException):
+    pass
+
+class XYModelFunction(ModelFunctionBase):
+    EXCEPTION_TYPE = XYModelFunctionException
+    def __init__(self, model_function):
+        self._x_name = 'x'
+        super(XYModelFunction, self).__init__(model_function=model_function)
+
+    def _validate_model_function_raise(self):
+        # require 'xy' model function agruments to include 'x'
+        if self.x_name not in self.argspec.args:
+            raise self.__class__.EXCEPTION_TYPE(
+                "Model function '%r' must have independent variable '%s' among its arguments!"
+                % (self.func, self.x_name))
+
+        # require 'xy' model functions to have at least two arguments
+        if self.argcount < 2:
+            raise self.__class__.EXCEPTION_TYPE(
+                "Model function '%r' needs at least one parameter beside independent variable '%s'!"
+                % (self.func, self.x_name))
+
+        # evaluate general model function requirements
+        super(XYModelFunction, self)._validate_model_function_raise()
+
+    @property
+    def x_name(self):
+        return self._x_name
 
 
 class XYParametricModelException(XYContainerException):

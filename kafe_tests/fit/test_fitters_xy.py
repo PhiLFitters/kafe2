@@ -3,6 +3,7 @@ import numpy as np
 
 from kafe.fit import XYFit
 from kafe.fit.xy.fit import CONFIG_PARAMETER_DEFAULT_VALUE, XYFitException
+from kafe.fit.xy.model import XYModelFunctionException
 
 
 class TestFittersXY(unittest.TestCase):
@@ -177,21 +178,21 @@ class TestFittersXY(unittest.TestCase):
                             cost_function=self.simple_chi2)
 
     def test_raise_varargs_in_model(self):
-        with self.assertRaises(XYFitException):
+        with self.assertRaises(XYModelFunctionException):
             xy_fit_reserved_names = XYFit(
                             xy_data=self._ref_xy_data,
                             model_function=self.xy_model_varargs,
                             cost_function=self.simple_chi2)
 
     def test_raise_varkwargs_in_model(self):
-        with self.assertRaises(XYFitException):
+        with self.assertRaises(XYModelFunctionException):
             xy_fit_reserved_names = XYFit(
                             xy_data=self._ref_xy_data,
                             model_function=self.xy_model_varkwargs,
                             cost_function=self.simple_chi2)
 
     def test_raise_varargs_and_varkwargs_in_model(self):
-        with self.assertRaises(XYFitException):
+        with self.assertRaises(XYModelFunctionException):
             xy_fit_reserved_names = XYFit(
                             xy_data=self._ref_xy_data,
                             model_function=self.xy_model_varargs_and_varkwargs,

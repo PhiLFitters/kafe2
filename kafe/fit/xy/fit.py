@@ -9,7 +9,7 @@ from ...core import NexusFitter, Nexus
 from .._base import FitException, FitBase, DataContainerBase, ParameterFormatter, ModelFunctionFormatter, CostFunctionBase
 from .container import XYContainer
 from .cost import XYCostFunction_Chi2_NoErrors, XYCostFunction_UserDefined
-from .model import XYParametricModel
+from .model import XYParametricModel, XYModelFunction
 
 CONFIG_PARAMETER_DEFAULT_VALUE = 1.0
 
@@ -61,8 +61,8 @@ class XYFitException(FitException):
 class XYFit(FitBase):
     CONTAINER_TYPE = XYContainer
     MODEL_TYPE = XYParametricModel
+    MODEL_FUNCTION_TYPE = XYModelFunction
     EXCEPTION_TYPE = XYFitException
-    X_VAR_NAME = 'x'
     RESERVED_NODE_NAMES = {'y_data', 'y_model', 'cost',
                           'x_error', 'y_data_error', 'y_model_error', 'total_error',
                           'x_cov_mat', 'y_data_cov_mat', 'y_model_cov_mat', 'total_cov_mat',
@@ -73,9 +73,14 @@ class XYFit(FitBase):
         # set the data
         self.data = xy_data
 
-        # set and validate the model function
-        self._model_func_handle = model_function
-        self._validate_model_function_raise()
+        # set/construct the model function object
+        if isinstance(model_function, self.__class__.MODEL_FUNCTION_TYPE):
+            self._model_function = model_function
+        else:
+            self._model_function = self.__class__.MODEL_FUNCTION_TYPE(model_function)
+
+        # validate the model function for this fit
+        self._validate_model_function_for_fit_raise()
 
         # set and validate the cost function
         if isinstance(cost_function, CostFunctionBase):
@@ -102,30 +107,15 @@ class XYFit(FitBase):
 
         self._fit_param_formatters = [ParameterFormatter(name=_pn, value=_pv, error=None)
                                       for _pn, _pv in self._fitter.fit_parameter_values.iteritems()]
-        self._model_func_formatter = ModelXYFunctionFormatter(self._model_func_handle.__name__,
+        self._model_func_formatter = ModelXYFunctionFormatter(self._model_function.name,
                                                               arg_formatters=self._fit_param_formatters,
-                                                              x_name=self.X_VAR_NAME)
+                                                              x_name=self._model_function.x_name)
 
-        # create the child ParametricModel objet
-        self._param_model = self._new_parametric_model(self.x, self._model_func_handle, self.parameter_values)
+        # create the child ParametricModel object
+        self._param_model = self._new_parametric_model(self.x, self._model_function.func, self.parameter_values)
 
 
     # -- private methods
-
-    def _validate_model_function_raise(self):
-        self._model_func_argspec = inspect.getargspec(self._model_func_handle)
-        if self.X_VAR_NAME not in self._model_func_argspec.args:
-            raise self.__class__.EXCEPTION_TYPE(
-                "Model function '%r' must have independent variable '%s' among its arguments!"
-                % (self._model_func_handle, self.X_VAR_NAME))
-
-        self._model_func_argcount = self._model_func_handle.func_code.co_argcount
-        if self._model_func_argcount < 2:
-            raise self.__class__.EXCEPTION_TYPE(
-                "Model function '%r' needs at least one parameter beside independent variable '%s'!"
-                % (self._model_func_handle, self.X_VAR_NAME))
-
-        super(XYFit, self)._validate_model_function_raise()
 
     def _init_nexus(self):
         self._nexus = Nexus()
@@ -135,15 +125,15 @@ class XYFit(FitBase):
         # create a NexusNode for each parameter of the model function
 
         _nexus_new_dict = OrderedDict()
-        _arg_defaults = self._model_func_argspec.defaults
+        _arg_defaults = self._model_function.argspec.defaults
         _n_arg_defaults = 0 if _arg_defaults is None else len(_arg_defaults)
         self._fit_param_names = []
-        for _arg_pos, _arg_name in enumerate(self._model_func_argspec.args):
+        for _arg_pos, _arg_name in enumerate(self._model_function.argspec.args):
             # skip independent variable parameter
-            if _arg_name == self.X_VAR_NAME:
+            if _arg_name == self._model_function.x_name:
                 continue
-            if _arg_pos >= (self._model_func_argcount - _n_arg_defaults):
-                _default_value = _arg_defaults[_arg_pos - (self._model_func_argcount - _n_arg_defaults)]
+            if _arg_pos >= (self._model_function.argcount - _n_arg_defaults):
+                _default_value = _arg_defaults[_arg_pos - (self._model_function.argcount - _n_arg_defaults)]
             else:
                 _default_value = CONFIG_PARAMETER_DEFAULT_VALUE
             _nexus_new_dict[_arg_name] = _default_value
@@ -151,10 +141,10 @@ class XYFit(FitBase):
 
         self._nexus.new(**_nexus_new_dict)  # Create nexus Nodes for function parameters
 
-        self._nexus.new_function(self._model_func_handle, add_unknown_parameters=False)
+        self._nexus.new_function(self._model_function.func, function_name=self._model_function.name, add_unknown_parameters=False)
 
         # add an alias 'model' for accessing the model values
-        self._nexus.new_alias(**{'y_model': self._model_func_handle.__name__})
+        self._nexus.new_alias(**{'y_model': self._model_function.name})
 
         # bind other reserved nodes
         self._nexus.new_function(lambda: self.y_data_error, function_name='y_data_error')

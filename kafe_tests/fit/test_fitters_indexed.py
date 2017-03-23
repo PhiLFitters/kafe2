@@ -3,6 +3,7 @@ import numpy as np
 
 from kafe.fit import IndexedFit
 from kafe.fit.indexed.fit import CONFIG_PARAMETER_DEFAULT_VALUE, IndexedFitException
+from kafe.fit.indexed.model import IndexedModelFunctionException
 
 
 class TestFittersIndexed(unittest.TestCase):
@@ -176,21 +177,21 @@ class TestFittersIndexed(unittest.TestCase):
                             cost_function=self.simple_chi2)
 
     def test_raise_varargs_in_model(self):
-        with self.assertRaises(IndexedFitException):
+        with self.assertRaises(IndexedModelFunctionException):
             idx_fit_reserved_names = IndexedFit(
                             data=self._ref_data_values,
                             model_function=self.idx_model_varargs,
                             cost_function=self.simple_chi2)
 
     def test_raise_varkwargs_in_model(self):
-        with self.assertRaises(IndexedFitException):
+        with self.assertRaises(IndexedModelFunctionException):
             idx_fit_reserved_names = IndexedFit(
                             data=self._ref_data_values,
                             model_function=self.idx_model_varkwargs,
                             cost_function=self.simple_chi2)
 
     def test_raise_varargs_and_varkwargs_in_model(self):
-        with self.assertRaises(IndexedFitException):
+        with self.assertRaises(IndexedModelFunctionException):
             idx_fit_reserved_names = IndexedFit(
                             data=self._ref_data_values,
                             model_function=self.idx_model_varargs_and_varkwargs,

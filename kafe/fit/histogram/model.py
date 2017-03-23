@@ -1,7 +1,57 @@
+import inspect
 import numpy as np
 
-from .._base import ParametricModelBaseMixin
+from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException
 from .container import HistContainer, HistContainerException
+
+class HistModelFunctionException(ModelFunctionException):
+    pass
+
+class HistModelFunction(ModelFunctionBase):
+    EXCEPTION_TYPE = HistModelFunctionException
+    def __init__(self, model_density_function, model_density_antiderivative=None):
+        self._x_name = 'x'
+        super(HistModelFunction, self).__init__(model_function=model_density_function)
+        self._antiderivative = model_density_antiderivative
+        self._validate_model_function_antiderivative_raise()
+
+    def _validate_model_function_raise(self):
+        # require 'hist' model function agruments to include 'x'
+        if self.x_name not in self.argspec.args:
+            raise self.__class__.EXCEPTION_TYPE(
+                "Model function '%r' must have independent variable '%s' among its arguments!"
+                % (self.func, self.x_name))
+
+        # require 'hist' model functions to have more than two arguments
+        if self.argcount < 2:
+            raise self.__class__.EXCEPTION_TYPE(
+                "Model function '%r' needs at least one parameter beside independent variable '%s'!"
+                % (self.func, self.x_name))
+
+        # evaluate general model function requirements
+        super(HistModelFunction, self)._validate_model_function_raise()
+
+    def _validate_model_function_antiderivative_raise(self):
+        if self.antiderivative is None:
+            return
+
+        _model_func_antider_argspec = inspect.getargspec(self.antiderivative)
+
+        # require antiderivative and density to have the same arguments
+        if self.argspec.args != _model_func_antider_argspec.args:
+            raise self.__class__.EXCEPTION_TYPE(
+                "Model density function and its antiderivative have different argument structures:"
+                "(%r vs %r)"
+                % (self.argspec.args, _model_func_antider_argspec.args))
+
+
+    @property
+    def x_name(self):
+        return self._x_name
+
+    @property
+    def antiderivative(self):
+        return self._antiderivative
 
 
 class HistParametricModelException(HistContainerException):
