@@ -69,6 +69,9 @@ class TestFittersHist(unittest.TestCase):
                             model_density_function=self.hist_model_density,
                             cost_function=self.simple_chi2,
                             model_density_function_antiderivative=self.hist_model_density_antideriv)
+        self.hist_fit_default_cost_function = HistFit(data=self._ref_hist_cont,
+                                                      model_density_function=self.hist_model_density,
+                                                      model_density_function_antiderivative=self.hist_model_density_antideriv)
 
         self._ref_parameter_value_estimates = [13.828005427495496, 2.6276452391799703]
         self._ref_model_estimates = (self.hist_model_density_antideriv(self._ref_bin_edges[1:], *self._ref_parameter_value_estimates) -
@@ -109,11 +112,20 @@ class TestFittersHist(unittest.TestCase):
             )
         )
 
-    def test_do_fit_explicit_model_name_in_chi2_compare_parameter_values(self):
-        self.hist_fit.do_fit()
+    def test_do_fit_default_cost_function_compare_parameter_values(self):
+        self.hist_fit_default_cost_function.do_fit()
         self.assertTrue(
             np.allclose(
-                self.hist_fit.parameter_values,
+                self.hist_fit_default_cost_function.parameter_values,
                 self._ref_parameter_value_estimates
+            )
+        )
+
+    def test_do_fit_default_cost_function_compare_model_values(self):
+        self.hist_fit_default_cost_function.do_fit()
+        self.assertTrue(
+            np.allclose(
+                self.hist_fit_default_cost_function.model,
+                self._ref_model_estimates
             )
         )

@@ -64,6 +64,8 @@ class TestFittersIndexed(unittest.TestCase):
             data=self._ref_data_values,
             model_function=self.idx_model,
             cost_function=self.simple_chi2_explicit_model_name)
+        self.idx_fit_default_cost_function = IndexedFit(data=self._ref_data_values,
+                                                        model_function=self.idx_model)
 
         self._ref_parameter_value_estimates = [1.1351433845831516, 2.137441531781195, 2.3405503488535118]
         self._ref_model_value_estimates = self.idx_model(*self._ref_parameter_value_estimates)
@@ -125,6 +127,22 @@ class TestFittersIndexed(unittest.TestCase):
             np.allclose(
                 self.idx_fit.parameter_values,
                 self.idx_fit_explicit_model_name_in_chi2.parameter_values
+            )
+        )
+
+    def test_compare_do_fit_default_cost_function(self):
+        self.idx_fit.do_fit()
+        self.idx_fit_default_cost_function.do_fit()
+        self.assertTrue(
+            np.allclose(
+                self.idx_fit.model,
+                self.idx_fit_default_cost_function.model
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                self.idx_fit.parameter_values,
+                self.idx_fit_default_cost_function.parameter_values
             )
         )
 

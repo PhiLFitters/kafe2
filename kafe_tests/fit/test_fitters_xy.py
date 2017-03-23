@@ -65,6 +65,8 @@ class TestFittersXY(unittest.TestCase):
             xy_data=self._ref_xy_data,
             model_function=self.xy_model,
             cost_function=self.simple_chi2_explicit_model_name)
+        self.xy_fit_default_cost_function = XYFit(xy_data=self._ref_xy_data,
+                                                  model_function=self.xy_model)
 
         self._ref_parameter_value_estimates = [1.1351433845831516, 2.137441531781195, 2.3405503488535118]
         self._ref_y_model_value_estimates = self.xy_model(self._ref_x, *self._ref_parameter_value_estimates)
@@ -126,6 +128,22 @@ class TestFittersXY(unittest.TestCase):
             np.allclose(
                 self.xy_fit.parameter_values,
                 self.xy_fit_explicit_model_name_in_chi2.parameter_values
+            )
+        )
+
+    def test_compare_do_fit_default_cost_function(self):
+        self.xy_fit.do_fit()
+        self.xy_fit_default_cost_function.do_fit()
+        self.assertTrue(
+            np.allclose(
+                self.xy_fit.y_model,
+                self.xy_fit_default_cost_function.y_model
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                self.xy_fit.parameter_values,
+                self.xy_fit_default_cost_function.parameter_values
             )
         )
 

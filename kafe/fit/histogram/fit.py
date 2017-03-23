@@ -6,8 +6,9 @@ from copy import deepcopy
 import numpy as np
 
 from ...core import NexusFitter, Nexus
-from .._base import FitException, FitBase, DataContainerBase, ParameterFormatter, ModelFunctionFormatter
+from .._base import FitException, FitBase, DataContainerBase, ParameterFormatter, ModelFunctionFormatter, CostFunctionBase
 from .container import HistContainer
+from .cost import HistCostFunction_Chi2_NoErrors, HistCostFunction_UserDefined
 from .model import HistParametricModel
 
 CONFIG_PARAMETER_DEFAULT_VALUE = 1.0
@@ -66,7 +67,7 @@ class HistFit(FitBase):
                           'data_cov_mat', 'model_cov_mat', 'total_cov_mat',
                           'data_cor_mat', 'model_cor_mat', 'total_cor_mat'}
 
-    def __init__(self, data, model_density_function, cost_function, model_density_function_antiderivative=None):
+    def __init__(self, data, model_density_function, cost_function=HistCostFunction_Chi2_NoErrors(), model_density_function_antiderivative=None):
         # set the data
         self.data = data
 
@@ -78,8 +79,12 @@ class HistFit(FitBase):
         self._validate_model_function_antiderivative_raise()
 
         # set and validate the cost function
-        self._cost_function_handle = cost_function
-        self._validate_cost_function_raise()
+        if isinstance(cost_function, CostFunctionBase):
+            self._cost_function = cost_function
+        else:
+            self._cost_function = HistCostFunction_UserDefined(cost_function)
+            #self._validate_cost_function_raise()
+            # TODO: validate user-defined cost function? how?
 
         # declare cache
         self.__cache_total_error = None
@@ -92,7 +97,7 @@ class HistFit(FitBase):
         # initialize the Fitter
         self._fitter = NexusFitter(nexus=self._nexus,
                                    parameters_to_fit=self._fit_param_names,
-                                   parameter_to_minimize=self._cost_function_handle.__name__)
+                                   parameter_to_minimize=self._cost_function.name)
 
 
         self._fit_param_formatters = [ParameterFormatter(name=_pn, value=_pv, error=None)
@@ -192,8 +197,8 @@ class HistFit(FitBase):
         self._nexus.new_function(lambda: self.total_cov_mat_inverse, function_name='total_cov_mat_inverse')
 
         # the cost function (the function to be minimized)
-        self._nexus.new_function(self._cost_function_handle, add_unknown_parameters=False)
-        self._nexus.new_alias(**{'cost': self._cost_function_handle.__name__})
+        self._nexus.new_function(self._cost_function.func, function_name=self._cost_function.name, add_unknown_parameters=False)
+        self._nexus.new_alias(**{'cost': self._cost_function.name})
 
     def _mark_errors_for_update_invalidate_total_error_cache(self):
         self.__cache_total_error = None
