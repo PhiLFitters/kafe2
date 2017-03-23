@@ -4,9 +4,10 @@ from copy import deepcopy
 import numpy as np
 
 from ...core import NexusFitter, Nexus
-from .._base import FitException, FitBase, DataContainerBase, ParameterFormatter, ModelFunctionFormatter, CostFunctionBase
+from .._base import FitException, FitBase, DataContainerBase, ModelParameterFormatter, CostFunctionBase
 from .container import IndexedContainer
 from .cost import IndexedCostFunction_Chi2_NoErrors, IndexedCostFunction_UserDefined
+from .format import IndexedModelFunctionFormatter
 from .model import IndexedParametricModel, IndexedModelFunction
 
 CONFIG_PARAMETER_DEFAULT_VALUE = 1.0
@@ -61,10 +62,10 @@ class IndexedFit(FitBase):
                                    parameter_to_minimize=self._cost_function.name)
 
 
-        self._fit_param_formatters = [ParameterFormatter(name=_pn, value=_pv, error=None)
+        self._fit_param_formatters = [ModelParameterFormatter(name=_pn, value=_pv, error=None)
                                       for _pn, _pv in self._fitter.fit_parameter_values.iteritems()]
-        self._model_func_formatter = ModelFunctionFormatter(self._model_function.name,
-                                                            arg_formatters=self._fit_param_formatters)
+        self._model_func_formatter = IndexedModelFunctionFormatter(self._model_function.name,
+                                                                   arg_formatters=self._fit_param_formatters)
 
         # create the child ParametricModel objet
         self._param_model = self._new_parametric_model(self._model_function.func, self.parameter_values, shape_like=self.data)

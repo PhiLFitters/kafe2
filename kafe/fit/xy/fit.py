@@ -1,57 +1,16 @@
-import inspect
-import string
 from collections import OrderedDict
 from copy import deepcopy
 
 import numpy as np
 
 from ...core import NexusFitter, Nexus
-from .._base import FitException, FitBase, DataContainerBase, ParameterFormatter, ModelFunctionFormatter, CostFunctionBase
+from .._base import FitException, FitBase, DataContainerBase, ModelParameterFormatter, CostFunctionBase
 from .container import XYContainer
 from .cost import XYCostFunction_Chi2_NoErrors, XYCostFunction_UserDefined
+from .format import XYModelFunctionFormatter
 from .model import XYParametricModel, XYModelFunction
 
 CONFIG_PARAMETER_DEFAULT_VALUE = 1.0
-
-class ModelXYFunctionFormatter(ModelFunctionFormatter):
-    def __init__(self, name, latex_name=None, x_name='x', latex_x_name=None,
-                 arg_formatters=None, expression_string=None, latex_expression_string=None):
-        self._x_name = x_name
-        self._latex_x_name = latex_x_name
-        if self._latex_x_name is None:
-            self._latex_x_name = self._latexify_ascii(self._x_name)
-
-        super(ModelXYFunctionFormatter, self).__init__(
-            name, latex_name=latex_name, arg_formatters=arg_formatters,
-            expression_string=expression_string,
-            latex_expression_string=latex_expression_string
-        )
-
-    def _get_format_kwargs(self, format_as_latex=False):
-        if format_as_latex:
-            return dict(x=self._latex_x_name)
-        else:
-            return dict(x=self._x_name)
-
-    def get_formatted(self, with_par_values=True, n_significant_digits=2, format_as_latex=False, with_expression=False):
-        _par_strings = self._get_formatted_args(with_par_values=with_par_values,
-                                                n_significant_digits=n_significant_digits,
-                                                format_as_latex=format_as_latex)
-        _par_expr_string = ""
-        if with_expression:
-            if format_as_latex:
-                _par_expr_string = self._get_formatted_expression(format_as_latex=format_as_latex)
-
-        if format_as_latex:
-            _out_string = r"%s\left(%s,%s\right)" % (self._latex_name, self._latex_x_name, ", ".join(_par_strings))
-            if _par_expr_string:
-                _out_string += " = " + _par_expr_string
-            _out_string = "$%s$" % (_out_string,)
-        else:
-            _out_string = "%s(%s, %s)" % (self._name, self._x_name, ", ".join(_par_strings))
-            if _par_expr_string:
-                _out_string += " = " + _par_expr_string
-        return _out_string
 
 
 class XYFitException(FitException):
@@ -105,9 +64,9 @@ class XYFit(FitBase):
                                    parameter_to_minimize=self._cost_function.name)
 
 
-        self._fit_param_formatters = [ParameterFormatter(name=_pn, value=_pv, error=None)
+        self._fit_param_formatters = [ModelParameterFormatter(name=_pn, value=_pv, error=None)
                                       for _pn, _pv in self._fitter.fit_parameter_values.iteritems()]
-        self._model_func_formatter = ModelXYFunctionFormatter(self._model_function.name,
+        self._model_func_formatter = XYModelFunctionFormatter(self._model_function.name,
                                                               arg_formatters=self._fit_param_formatters,
                                                               x_name=self._model_function.x_name)
 
