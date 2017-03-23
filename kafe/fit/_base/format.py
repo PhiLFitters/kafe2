@@ -107,8 +107,14 @@ class ModelParameterFormatter(object):
 
         if with_value:
             _display_string += " = "
+
+            # fallback to rounding to 10^(-1) if value is zero
+            _log_abs_value = -1
+            if self._value:
+                _log_abs_value = np.log(np.abs(self._value))
+
             if not with_errors or self._error is None:
-                _sig = int(-np.floor(np.log(self._value) / np.log(10))) + n_significant_digits - 1
+                _sig = int(-np.floor(_log_abs_value / np.log(10))) + n_significant_digits - 1
                 _display_val = round(self._value, _sig)
                 if format_as_latex:
                     _display_string += "$%g$" % (_display_val,)
@@ -116,10 +122,13 @@ class ModelParameterFormatter(object):
                     _display_string += "%g" % (_display_val,)
             else:
                 _min_err = np.min(map(abs, self._error))
+                # fallback to rounding to 10^(-1) if error is zero
+                if not _min_err:
+                    _min_err = 1e-1
                 if round_value_to_error:
                     _sig = int(-np.floor(np.log(_min_err)/np.log(10))) + n_significant_digits - 1
                 else:
-                    _sig = int(-np.floor(np.log(self._value) / np.log(10))) + n_significant_digits - 1
+                    _sig = int(-np.floor(_log_abs_value / np.log(10))) + n_significant_digits - 1
 
                 _display_val = round(self._value, _sig)
                 if self._error_is_asymmetric:
