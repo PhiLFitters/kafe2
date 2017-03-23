@@ -361,7 +361,8 @@ class PlotFigureBase(object):
         _fig_bs, _fig_ts, _fig_ls, _fig_rs = self._outer_gs.get_grid_positions(self._fig)
 
         _n_text_lines = len(self._plot_data_containers) * 2
-        _n_text_lines += np.sum([len(_pdc._fitter._fit_param_formatters) for _pdc in self._plot_data_containers])
+        _n_text_lines += np.sum([len(_pdc._fitter._model_function.argument_formatters) for _pdc in self._plot_data_containers])
+        # FIXME: access to "_pdc._fitter._model_function" not public!
 
         _y_inc_size = min(.05, (_fig_ts[0] - _fig_ls[0])/_n_text_lines)
         _y_inc_offset = _fig_ts[0] - 0.05
@@ -372,12 +373,12 @@ class PlotFigureBase(object):
             _y_inc_counter += 1
 
             _y = _y_inc_offset - _y_inc_size * _y_inc_counter
-            _formatted_string = _pdc._fitter._model_func_formatter.get_formatted(
+            _formatted_string = _pdc._fitter._model_function.formatter.get_formatted(
                 with_par_values=False, n_significant_digits=2, format_as_latex=format_as_latex, with_expression=True)
             target_figure.text(_fig_ls[2] + .025, _y, _formatted_string, **kwargs)
             _y_inc_counter += 1
 
-            for _pi, _pf in enumerate(_pdc._fitter._fit_param_formatters):
+            for _pi, _pf in enumerate(_pdc._fitter._model_function.argument_formatters):
                 _y = _y_inc_offset - _y_inc_size * _y_inc_counter
                 _formatted_string = _pf.get_formatted(with_name=True, with_value=True, with_errors=True, format_as_latex=format_as_latex)
                 target_figure.text(_fig_ls[2]+.05, _y, _formatted_string, **kwargs)

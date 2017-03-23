@@ -143,18 +143,18 @@ class FitBase(object):
     def do_fit(self):
         self._fitter.do_fit()
         # update parameter formatters
-        for _fpf, _pv, _pe in zip(self._fit_param_formatters, self.parameter_values, self.parameter_errors):
+        for _fpf, _pv, _pe in zip(self._model_function.argument_formatters, self.parameter_values, self.parameter_errors):
             _fpf.value = _pv
             _fpf.error = _pe
 
     def assign_model_function_expression(self, expression_format_string):
-        self._model_func_formatter.expression_format_string = expression_format_string
+        self._model_function.formatter.expression_format_string = expression_format_string
 
     def assign_model_function_latex_expression(self, latex_expression_format_string):
-        self._model_func_formatter.latex_expression_format_string = latex_expression_format_string
+        self._model_function.formatter.latex_expression_format_string = latex_expression_format_string
 
     def assign_parameter_latex_names(self, **par_latex_names_dict):
-        for _pf in self._fit_param_formatters:
+        for _pf in self._model_function.argument_formatters:
             _pln = par_latex_names_dict.get(_pf.name, None)
             if _pln is not None:
                 _pf.latex_name = _pln

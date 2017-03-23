@@ -1,14 +1,19 @@
 import inspect
 import numpy as np
 
-from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException
+from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException, ModelParameterFormatter
 from .container import HistContainer, HistContainerException
+from .format import HistModelDensityFunctionFormatter
+
 
 class HistModelFunctionException(ModelFunctionException):
     pass
 
+
 class HistModelFunction(ModelFunctionBase):
     EXCEPTION_TYPE = HistModelFunctionException
+    FORMATTER_TYPE = HistModelDensityFunctionFormatter
+
     def __init__(self, model_density_function, model_density_antiderivative=None):
         self._x_name = 'x'
         super(HistModelFunction, self).__init__(model_function=model_density_function)
@@ -43,6 +48,16 @@ class HistModelFunction(ModelFunctionBase):
                 "Model density function and its antiderivative have different argument structures:"
                 "(%r vs %r)"
                 % (self.argspec.args, _model_func_antider_argspec.args))
+
+    def _assign_parameter_formatters(self):
+        _start_at_arg = 1
+        self._arg_formatters = [ModelParameterFormatter(name=_pn, value=_pv, error=None)
+                                for _pn, _pv in zip(self.argspec.args[_start_at_arg:], self.argvals[_start_at_arg:])]
+
+    def _assign_function_formatter(self):
+        self._formatter = self.__class__.FORMATTER_TYPE(self.name,
+                                                        arg_formatters=self._arg_formatters,
+                                                        x_name=self.x_name)
 
 
     @property

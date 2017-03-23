@@ -61,12 +61,6 @@ class IndexedFit(FitBase):
                                    parameters_to_fit=self._fit_param_names,
                                    parameter_to_minimize=self._cost_function.name)
 
-
-        self._fit_param_formatters = [ModelParameterFormatter(name=_pn, value=_pv, error=None)
-                                      for _pn, _pv in self._fitter.fit_parameter_values.iteritems()]
-        self._model_func_formatter = IndexedModelFunctionFormatter(self._model_function.name,
-                                                                   arg_formatters=self._fit_param_formatters)
-
         # create the child ParametricModel objet
         self._param_model = self._new_parametric_model(self._model_function.func, self.parameter_values, shape_like=self.data)
 

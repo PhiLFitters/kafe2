@@ -4,12 +4,15 @@ from scipy.misc import derivative
 
 from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException
 from .container import IndexedContainer, IndexedContainerException
+from .format import IndexedModelFunctionFormatter
 
 class IndexedModelFunctionException(ModelFunctionException):
     pass
 
 class IndexedModelFunction(ModelFunctionBase):
     EXCEPTION_TYPE = IndexedModelFunctionException
+    FORMATTER_TYPE = IndexedModelFunctionFormatter
+
     def __init__(self, model_function):
         self._index_name = 'i'
         super(IndexedModelFunction, self).__init__(model_function=model_function)
