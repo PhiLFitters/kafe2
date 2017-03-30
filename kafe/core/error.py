@@ -119,7 +119,7 @@ class CovMat(object):
         if not (self._mat == self._mat.T).all():
             raise ValueError("Covariance matrix must be symmetric!")
         self._size = self._mat.shape[0]
-        self._cond = np.linalg.cond(self._mat)
+        self._cond = None
 
         self._invalidate_cache()
 
@@ -164,6 +164,8 @@ class CovMat(object):
         """
         Condition number of the matrix.
         """
+        if self._cond is None:
+            self._cond = np.linalg.cond(self.mat)
         return self._cond
 
     def split_svd(self):
