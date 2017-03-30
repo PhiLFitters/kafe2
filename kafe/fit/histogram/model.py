@@ -120,5 +120,9 @@ class HistParametricModel(ParametricModelBaseMixin, HistContainer):
 
     # -- public methods
 
+    def eval_model_function_density(self, x, model_parameters=None):
+        _pars = model_parameters if model_parameters is not None else self._model_parameters
+        return self._model_function_handle(x, *_pars)
+
     def fill(self, entries):
         raise HistParametricModelException("Parametric model of histogram cannot be filled!")

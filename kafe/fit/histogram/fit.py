@@ -272,3 +272,7 @@ class HistFit(FitBase):
         _ret = self._data_container.disable_error(err_id)   # mark nexus error parameters as stale
         self._mark_errors_for_update_invalidate_total_error_cache()
         return _ret
+
+    def eval_model_function_density(self, x, model_parameters=None):
+        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
+        return self._param_model.eval_model_function_density(x=x, model_parameters=model_parameters)
