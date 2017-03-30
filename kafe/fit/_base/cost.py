@@ -42,7 +42,7 @@ class CostFunctionBase(object):
         # TODO: fail if cost function does not depend on data or model
 
     def __call__(self, *args, **kwargs):
-        self._cost_function_handle(*args, **kwargs)
+        return self._cost_function_handle(*args, **kwargs)
 
     @property
     def name(self):
