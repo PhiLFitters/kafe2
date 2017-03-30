@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 
 from kafe.core.minimizers import MinimizerIMinuit
-from kafe.core.fitters import Nexus, NexusFitter
+from kafe.core.fitters import Nexus, NexusFitter, NexusFitterException
 
 
 # class TestNexusFitter(unittest.TestCase):
@@ -149,3 +149,31 @@ class TestNexusFitterIMinuit(unittest.TestCase):
     def test_compare_chi2_value_after_fit_only_slope(self):
         self.sf_only_slope.do_fit()
         self.assertAlmostEqual(self.sf_only_slope.parameter_to_minimize_value, self.chi2_after_fit_only_slope, places=4)
+
+    def test_set_fit_parameters_by_name_value_dict_compare_parameter_to_minimize_value(self):
+        self.sf.set_fit_parameter_values(slope=self.slope_after_fit,
+                                         y_intercept=self.y_intercept_after_fit)
+        self.assertEqual(
+            self.chi2_after_fit,
+            self.sf.parameter_to_minimize_value
+        )
+
+    def test_set_all_fit_parameters_compare_parameter_to_minimize_value(self):
+        self.sf.set_all_fit_parameter_values((self.slope_after_fit, self.y_intercept_after_fit))
+
+        self.assertEqual(
+            self.chi2_after_fit,
+            self.sf.parameter_to_minimize_value
+        )
+
+    def test_raise_set_fit_parameters_unknown_name(self):
+        with self.assertRaises(NexusFitterException):
+            self.sf.set_fit_parameter_values(bogus=0.2836)
+
+    def test_raise_set_fit_parameters_more_values(self):
+        with self.assertRaises(NexusFitterException):
+            self.sf.set_all_fit_parameter_values((self.slope_after_fit, self.y_intercept_after_fit, 1.234))
+
+    def test_raise_set_fit_parameters_less_values(self):
+        with self.assertRaises(NexusFitterException):
+            self.sf.set_all_fit_parameter_values((self.slope_after_fit,))

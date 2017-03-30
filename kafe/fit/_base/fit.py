@@ -109,6 +109,12 @@ class FitBase(object):
 
     # -- public methods
 
+    def set_parameter_values(self, **param_name_value_dict):
+        return self._fitter.set_fit_parameter_values(**param_name_value_dict)
+
+    def set_all_parameter_values(self, param_value_list):
+        return self._fitter.set_all_fit_parameter_values(param_value_list)
+
     @abc.abstractmethod
     def add_simple_error(self): pass
 

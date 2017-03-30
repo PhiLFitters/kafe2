@@ -206,12 +206,6 @@ class IndexedFit(FitBase):
     def parameter_cov_mat(self):
         return self._fitter.fit_parameter_cov_mat
 
-    # NOTE: not supported by kafe.core.fitters
-    #       maybe implement _there_, but not here!
-    # @parameter_values.setter
-    # def parameter_values(self, param_values):
-    #     return self.parameter_name_value_dict.values()
-
     @property
     def parameter_name_value_dict(self):
         return self._fitter.fit_parameter_values

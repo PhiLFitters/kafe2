@@ -147,6 +147,13 @@ class TestFittersIndexed(unittest.TestCase):
             )
         )
 
+    def test_update_cost_function_on_parameter_change(self):
+        self.idx_fit.set_all_parameter_values(self._ref_parameter_value_estimates)
+        self.assertEqual(
+            self.idx_fit.cost_function_value,
+            self.idx_fit._cost_function(self._ref_data_values, self._ref_model_value_estimates),
+        )
+
     def test_model_nodefaults(self):
         idx_fit = IndexedFit(data=self._ref_data_values,
                              model_function=self.idx_model_nodefaults,

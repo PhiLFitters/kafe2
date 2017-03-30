@@ -110,6 +110,30 @@ class NexusFitter(object):
             self._renew_fit_par_cache()
         return self.__cache_fit_parameters_name_value_dict
 
+    def set_fit_parameter_values(self, **parameter_value_dict):
+        _dict_key_set = set(parameter_value_dict.keys())
+        _par_name_set = set(self.parameters_to_fit)
+        # test parameter names
+        if not _dict_key_set.issubset(_par_name_set):
+            _unknown_par_names = _dict_key_set - _par_name_set
+            raise NexusFitterException("Cannot set fit parameter values: Unknown fit parameters: %r!"
+                                       % (_unknown_par_names,))
+        # set values in nexus
+        self._nx.set(**parameter_value_dict)
+        # set flags
+        self.__state_is_from_minimizer = False
+        self.__cache_stale = True
+
+    def set_all_fit_parameter_values(self, fit_par_value_list):
+        # test list length
+        if not len(fit_par_value_list) == len(self.parameters_to_fit):
+            raise NexusFitterException("Cannot set all fit parameter values: %d fit parameters declared, "
+                                       "but %d provided!"
+                                       % (len(self.parameters_to_fit), len(fit_par_value_list)))
+        # set values in nexus
+        _par_val_dict = {_pn: _pv for _pn, _pv in zip(self.parameters_to_fit, fit_par_value_list)}
+        self.set_fit_parameter_values(**_par_val_dict)
+
     @property
     def fit_parameter_cov_mat(self):
         return self._minimizer.cov_mat

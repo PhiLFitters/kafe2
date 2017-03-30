@@ -148,6 +148,13 @@ class TestFittersXY(unittest.TestCase):
             )
         )
 
+    def test_update_cost_function_on_parameter_change(self):
+        self.xy_fit.set_all_parameter_values(self._ref_parameter_value_estimates)
+        self.assertEqual(
+            self.xy_fit.cost_function_value,
+            self.xy_fit._cost_function(self._ref_y_data, self._ref_y_model_value_estimates),
+        )
+
     def test_model_nodefaults(self):
         xy_fit = XYFit(xy_data=self._ref_xy_data,
                              model_function=self.xy_model_nodefaults,

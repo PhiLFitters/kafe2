@@ -6,9 +6,9 @@ import abc
 from .nexus import Nexus
 # from .nexus_cython import Nexus as NexusCython
 #from simple_fitter import SimpleFitter
-from .nexus_fitter import NexusFitter
+from .nexus_fitter import NexusFitter, NexusFitterException
 
-__all__ = ['Nexus', 'SimpleFitter', 'NexusFitter']
+__all__ = ['Nexus', 'SimpleFitter', 'NexusFitter', 'NexusFitterException']
 
 AVAILABLE_FITTERS = {'nexus': NexusFitter,
                      #'simple': SimpleFitter,

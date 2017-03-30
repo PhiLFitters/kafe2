@@ -133,3 +133,10 @@ class TestFittersHist(unittest.TestCase):
                 self._ref_model_estimates_default_cost_function
             )
         )
+
+    def test_update_cost_function_on_parameter_change(self):
+        self.hist_fit.set_all_parameter_values(self._ref_parameter_value_estimates)
+        self.assertEqual(
+            self.hist_fit.cost_function_value,
+            self.hist_fit._cost_function(self.hist_fit.data, self._ref_model_estimates),
+        )

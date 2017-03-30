@@ -145,7 +145,7 @@ class XYFit(FitBase):
 
         self.__cache_y_error_band = _band_y
 
-        # -- public properties
+    # -- public properties
 
     @property
     def x(self):
