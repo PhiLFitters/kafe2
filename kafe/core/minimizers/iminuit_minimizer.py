@@ -217,6 +217,17 @@ class MinimizerIMinuit(object):
 
     # -- public methods
 
+    def set(self, parameter_name, parameter_value):
+        if parameter_name not in self._minimizer_param_dict:
+            raise MinimizerIMinuitException("No parameter named '%s'!" % (parameter_name,))
+        self.__iminuit = None  # delete curent iminuit instance
+        self._minimizer_param_dict[parameter_name] = parameter_value
+        self._invalidate_cache()
+
+    def set_several(self, parameter_names, parameter_values):
+        for _pn, _pv in zip(parameter_names,parameter_values):
+            self.set(_pn, _pv)
+
     def fix(self, parameter_name):
         self.__iminuit = None  # delete curent iminuit instance
         self._minimizer_param_dict["fix_" + parameter_name] = True

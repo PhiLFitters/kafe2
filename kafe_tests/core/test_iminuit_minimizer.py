@@ -222,3 +222,10 @@ class TestMinimizerIMinuit(unittest.TestCase):
         self.assertTrue(
             np.allclose(_hm_inv, _hm_inv_scipy, atol=1e-2)
         )
+
+
+    def test_compare_func_value_set_fcn3_parameters(self):
+        self.m3.set('x', 1.23)
+        self.m3.set('y', 4.32)
+        self.m3.set('z', 9.81)
+        self.assertAlmostEqual(self.m3.function_value, -5.23)
