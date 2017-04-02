@@ -221,6 +221,8 @@ class MinimizerIMinuit(object):
         if self.__iminuit is None:
             raise MinimizerIMinuitException("Need to perform a fit before calling contour()!")
         _x_errs, _y_errs, _contour_line = self.__iminuit.mncontour(parameter_name_1, parameter_name_2, numpoints=numpoints, sigma=1.0)
+        self.minimize()  # return to minimum
+
         return np.array(_contour_line).T
 
     def profile(self, parameter_name, bins=20, bound=2, args=None, subtract_min=False):
@@ -228,6 +230,7 @@ class MinimizerIMinuit(object):
             raise MinimizerIMinuitException("Need to perform a fit before calling profile()!")
         _bins, _vals, _statuses = self.__iminuit.mnprofile(parameter_name, bins=bins, bound=bound, subtract_min=subtract_min)
         # TODO: check statuses (?)
+        self.minimize()  # return to minimum
         return np.array([_bins, _vals])
 
     def set(self, parameter_name, parameter_value):
