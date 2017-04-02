@@ -266,7 +266,11 @@ class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
         """
         _per_point_likelihoods = norm.pdf(data, loc=model, scale=total_error)
         _total_likelihood = np.prod(_per_point_likelihoods)
-        return -2.0 * np.log(_total_likelihood)
+        # guard against returning NaN
+        _nll = -2.0 * np.log(_total_likelihood)
+        if np.isnan(_nll):
+            return np.inf
+        return _nll
 
     @staticmethod
     def nll_poisson(data, model):
@@ -289,4 +293,8 @@ class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
         """
         _per_point_likelihoods = poisson.pmf(data, mu=model, loc=0.0)
         _total_likelihood = np.prod(_per_point_likelihoods)
-        return -2.0 * np.log(_total_likelihood)
+        # guard against returning NaN
+        _nll = -2.0 * np.log(_total_likelihood)
+        if np.isnan(_nll):
+            return np.inf
+        return _nll

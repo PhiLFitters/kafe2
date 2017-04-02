@@ -169,7 +169,7 @@ class ModelParameterFormatter(object):
             else:
                 _min_err = np.min(map(abs, self._error))
                 # fallback to rounding to 10^(-1) if error is zero
-                if not _min_err:
+                if not _min_err or np.isnan(_min_err):
                     _min_err = 1e-1
                 if round_value_to_error:
                     _sig = int(-np.floor(np.log(_min_err)/np.log(10))) + n_significant_digits - 1
