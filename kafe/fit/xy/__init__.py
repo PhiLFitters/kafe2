@@ -1,6 +1,8 @@
 from .container import XYContainer
-from .model import XYParametricModel
+from .cost import (XYCostFunction_UserDefined, XYCostFunction_Chi2_CovarianceMatrix_Y,
+                   XYCostFunction_Chi2_NoErrors_Y, XYCostFunction_Chi2_PointwiseErrors_Y,
+                   XYCostFunction_NegLogLikelihood_Gaussian_Y)
 from .fit import XYFit
-from .plot import XYPlot
-
-__all__ = ['XYContainer', 'XYFit', 'XYParametricModel', 'XYPlot']
+from .format import XYModelFunctionFormatter
+from .model import XYParametricModel, XYModelFunction
+from .plot import XYPlot, XYPlotContainer
