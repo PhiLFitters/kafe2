@@ -4,6 +4,8 @@ import numpy as np
 import re
 import string
 
+from .format import ModelParameterFormatter, CostFunctionFormatter
+
 from scipy.stats import poisson, norm
 
 
@@ -81,6 +83,7 @@ class CostFunctionBase(object):
     __metaclass__ = abc.ABCMeta
 
     EXCEPTION_TYPE = CostFunctionException
+    FORMATTER_TYPE = CostFunctionFormatter
 
     def __init__(self, cost_function):
         """
@@ -89,7 +92,11 @@ class CostFunctionBase(object):
         :param cost_function: function handle
         """
         self._cost_function_handle = cost_function
+        self._cost_function_argspec = inspect.getargspec(self._cost_function_handle)
+        self._cost_function_argcount = self._cost_function_handle.func_code.co_argcount
         self._validate_cost_function_raise()
+        self._assign_parameter_formatters()
+        self._assign_function_formatter()
 
     def _validate_cost_function_raise(self):
         self._cost_func_argspec = inspect.getargspec(self._cost_function_handle)
@@ -111,6 +118,14 @@ class CostFunctionBase(object):
                 % (self._cost_func_argspec.keywords,))
         # TODO: fail if cost function does not depend on data or model
 
+    def _assign_parameter_formatters(self):
+        self._arg_formatters = [ModelParameterFormatter(name=_pn, value=_pv, error=None)
+                                for _pn, _pv in zip(self.argspec.args, self.argvals)]
+
+    def _assign_function_formatter(self):
+        self._formatter = self.__class__.FORMATTER_TYPE(self.name,
+                                                        arg_formatters=self._arg_formatters)
+
     def __call__(self, *args, **kwargs):
         return self._cost_function_handle(*args, **kwargs)
 
@@ -123,6 +138,33 @@ class CostFunctionBase(object):
     def func(self):
         """The cost function handle"""
         return self._cost_function_handle
+
+    @property
+    def argspec(self):
+        """The model function argument specification, as returned by :py:meth:`inspect.getargspec`"""
+        return self._cost_function_argspec
+
+    @property
+    def argcount(self):
+        """The number of arguments the model function accepts
+        (including any independent variables which are not parameters)"""
+        return self._cost_function_argcount
+
+    @property
+    def argvals(self):
+        """The current values of the function arguments (**not implemented**, returns an array of zeros)"""
+        # NOTE: only exists because needed by formatter (FIXME?)
+        return [0.0] * (self.argcount)
+
+    @property
+    def formatter(self):
+        """The :py:obj:`Formatter` object for this function"""
+        return self._formatter
+
+    @property
+    def argument_formatters(self):
+        """The :py:obj:`Formatter` objects for the function arguments"""
+        return self._arg_formatters
 
 
 
@@ -154,6 +196,8 @@ class CostFunctionBase_Chi2(CostFunctionBase):
             raise CostFunctionException("Unknown value '%s' for 'errors_to_use': must be one of ('covariance', 'pointwise', None)")
 
         super(CostFunctionBase_Chi2, self).__init__(cost_function=_chi2_func)
+
+        self._formatter.latex_name = "\chi^2"
 
     @staticmethod
     def chi2_no_errors(data, model):
@@ -243,6 +287,8 @@ class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
             raise CostFunctionException("Unknown value '%s' for 'data_point_distribution': must be one of ('gaussian', 'poisson')!")
 
         super(CostFunctionBase_NegLogLikelihood, self).__init__(cost_function=_nll_func)
+
+        self._formatter.latex_name = "-2\ln\mathcal{L}"
 
     @staticmethod
     def nll_gaussian(data, model, total_error):

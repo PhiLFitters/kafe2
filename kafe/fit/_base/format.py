@@ -309,6 +309,21 @@ class ModelFunctionFormatter(object):
             raise FormatterException("LaTeX expression string does not match argument structure: %s"
                                      % (latex_expression_format_string,))
 
+    @property
+    def name(self):
+        """a plain-text-formatted string indicating the parameter name"""
+        return self._name
+
+    @property
+    def latex_name(self):
+        """a LaTeX-formatted string indicating the function name"""
+        return self._latex_name
+
+    @latex_name.setter
+    def latex_name(self, new_latex_name):
+        # TODO: validate
+        self._latex_name = new_latex_name
+
     def get_formatted(self, with_par_values=True, n_significant_digits=2, format_as_latex=False, with_expression=False):
         """
         Get a formatted string representing this model function.
@@ -339,3 +354,5 @@ class ModelFunctionFormatter(object):
                 _out_string += " = " + _par_expr_string
         return _out_string
 
+class CostFunctionFormatter(ModelFunctionFormatter):
+    pass
