@@ -119,21 +119,39 @@ DEFAULT_PROPERTY_CYCLER_ARGS = dict(
     ),
 )
 
-# class FitPlotException(Exception):
-#     pass
 
 class PlotContainerException(Exception):
     pass
 
+
 class PlotContainerBase(object):
     """
-    Purely abstract class. Defines the minimal interface required by all specializations.
+    This is a purely abstract class implementing the minimal interface required by all
+    types of plotters.
+
+    A :py:obj:`PlotContainer` object can be constructed for a :py:obj:`Fit` object of the
+    corresponding type.
+    Its main purpose is to provide an interface for accessing data stored in the
+    :py:obj:`Fit` object, for the purposes of plotting.
+    Most importantly, it provides methods to call the relevant ``matplotlib`` methods
+    for plotting the data, model (and other information, depending on the fit type),
+    and constructs the arrays required by these routines in a meaningful way.
+
+    Classes derived from :py:obj:`PlotContainer` must at the very least contain
+    properties for constructing the ``x`` and ``y`` point arrays for both the
+    data and the fitted model, as well as methods calling the ``matplotlib`` routines
+    doing the actual plotting.
     """
     __metaclass__ = abc.ABCMeta
 
     FIT_TYPE = None
 
     def __init__(self, fit_object):
+        """
+        Construct a :py:obj:`PlotContainer` for a :py:obj:`Fit` object:
+
+        :param fit_object: an object derived from :py:obj:`~kafe.fit._base.FitBase`
+        """
         if not isinstance(fit_object, self.__class__.FIT_TYPE):
             raise PlotContainerException("PlotContainer of type '%s' is incompatible with Fit of type '%s'"
                                          % self.__class__, self.__class__.FIT_TYPE)
@@ -142,47 +160,115 @@ class PlotContainerBase(object):
     # -- properties
 
     @abc.abstractproperty
-    def data_x(self): pass
+    def data_x(self):
+        """
+        The 'x' coordinates of the data (used by :py:meth:`~plot_data`).
+
+        :return: iterable
+        """
+        pass
 
     @abc.abstractproperty
-    def data_y(self): pass
+    def data_y(self):
+        """
+        The 'y' coordinates of the data (used by :py:meth:`~plot_data`).
+
+        :return: iterable
+        """
+        pass
 
     @abc.abstractproperty
-    def data_xerr(self): pass
+    def data_xerr(self):
+        """
+        The magnitude of the data 'x' error bars (used by :py:meth:`~plot_data`).
+
+        :return: iterable
+        """
+        pass
 
     @abc.abstractproperty
-    def data_yerr(self): pass
+    def data_yerr(self):
+        """
+        The magnitude of the data 'y' error bars (used by :py:meth:`~plot_data`).
+
+        :return: iterable
+        """
+        pass
 
     @abc.abstractproperty
-    def model_x(self): pass
+    def model_x(self):
+        """
+        The 'x' coordinates of the model (used by :py:meth:`~plot_model`).
+
+        :return: iterable
+        """
+        pass
 
     @abc.abstractproperty
-    def model_y(self): pass
+    def model_y(self):
+        """
+        The 'y' coordinates of the model (used by :py:meth:`~plot_model`).
+
+        :return: iterable
+        """
+        pass
 
     @abc.abstractproperty
-    def model_xerr(self): pass
+    def model_xerr(self):
+        """
+        The magnitude of the model 'x' error bars (used by :py:meth:`~plot_model`).
+
+        :return: iterable
+        """
+        pass
 
     @abc.abstractproperty
-    def model_yerr(self): pass
+    def model_yerr(self):
+        """
+        The magnitude of the model 'y' error bars (used by :py:meth:`~plot_model`).
+
+        :return: iterable
+        """
+        pass
 
     @abc.abstractproperty
-    def x_range(self): pass
+    def x_range(self):
+        """
+        The 'x' axis plot range.
+
+        :return: iterable
+        """
+        pass
 
     @abc.abstractproperty
-    def y_range(self): pass
+    def y_range(self):
+        """
+        The 'y' axis plot range.
+
+        :return: iterable
+        """
+        pass
 
 
     @abc.abstractmethod
-    def plot_data(self, target_axis, **kwargs): pass
+    def plot_data(self, target_axis, **kwargs):
+        """
+        Method called by the main plot routine to plot the data points to a specified matplotlib ``Axes`` object.
+
+        :param target_axis: ``matplotlib`` ``Axes`` object
+        :return: plot handle(s)
+        """
+        pass
 
     @abc.abstractmethod
-    def plot_model(self, target_axis, **kwargs): pass
+    def plot_model(self, target_axis, **kwargs):
+        """
+        Method called by the main plot routine to plot the model to a specified matplotlib ``Axes`` object.
 
-# class PlotException(object):
-#     pass
-#
-# class PlotBase(object):
-#     pass
+        :param target_axis: ``matplotlib`` ``Axes`` object
+        :return: plot handle(s)
+        """
+        pass
 
 
 # -- must come last!
@@ -191,7 +277,15 @@ class PlotFigureException(Exception):
     pass
 
 class PlotFigureBase(object):
+    """
+    This is a purely abstract class implementing the minimal interface required by all
+    types of plotters.
 
+    A :py:obj:`PlotFigure` object corresponds to a single ``matplotlib`` figure and
+    can contain plots coming from different :py:obj:`FitBase`-derived objects simultaneously.
+
+    It controls the overall figure layout and is responsible for axes, subplot and legend management.
+    """
     __metaclass__ = abc.ABCMeta  # TODO: check if needed
 
     PLOT_CONTAINER_TYPE = None
@@ -460,15 +554,23 @@ class PlotFigureBase(object):
 
     @property
     def figure(self):
+        """The ``matplotlib`` figure managed by this object."""
         return self._fig
 
     # -- public methods
 
     def plot(self):
+        """Plot data, model (and other subplots) for all child :py:obj:`Fit` objects, and show legend."""
         # TODO: hooks?
+        # TODO: more fine-grained control over what is plotted
         self._plot_all_subplots_all_plot_types()
         self._set_plot_range_to_total_data_range()
         self._render_legend(self._main_plot_axes)
 
     def show_fit_info_box(self, format_as_latex=False):
+        """Render text information about each plot on the figure.
+
+        :param format_as_latex: if ``True``, the infobox text will be formatted as a LaTeX string
+        :type format_as_latex: bool
+        """
         self._render_parameter_info_box(self._fig, format_as_latex=format_as_latex)

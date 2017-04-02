@@ -15,6 +15,12 @@ class HistModelFunction(ModelFunctionBase):
     FORMATTER_TYPE = HistModelDensityFunctionFormatter
 
     def __init__(self, model_density_function, model_density_antiderivative=None):
+        """
+        Construct :py:class:`XYModelFunction` object (a wrapper for a native Python function):
+
+        :param model_density_function: function handle
+        :param model_density_antiderivative: function handle for model density antiderivative
+        """
         self._x_name = 'x'
         super(HistModelFunction, self).__init__(model_function=model_density_function)
         self._antiderivative = model_density_antiderivative
@@ -59,13 +65,14 @@ class HistModelFunction(ModelFunctionBase):
                                                         arg_formatters=self._arg_formatters,
                                                         x_name=self.x_name)
 
-
     @property
     def x_name(self):
+        """the name of the independent variable"""
         return self._x_name
 
     @property
     def antiderivative(self):
+        """model density antiderivative"""
         return self._antiderivative
 
 
@@ -110,6 +117,7 @@ class HistParametricModel(ParametricModelBaseMixin, HistContainer):
 
     @property
     def data(self):
+        """model predictions (one-dimensional :py:obj:`numpy.ndarray`)"""
         if self._pm_calculation_stale:
             self._recalculate()
         return super(HistParametricModel, self).data
@@ -121,6 +129,16 @@ class HistParametricModel(ParametricModelBaseMixin, HistContainer):
     # -- public methods
 
     def eval_model_function_density(self, x, model_parameters=None):
+        """
+        Evaluate the model function density.
+
+        :param x: *x* values of the support points
+        :type x: list of float
+        :param model_parameters: values of the model parameters (if ``None``, the current values are used)
+        :type model_parameters: list or ``None``
+        :return: value(s) of the model function for the given parameters
+        :rtype: :py:obj:`numpy.ndarray`
+        """
         _pars = model_parameters if model_parameters is not None else self._model_parameters
         return self._model_function_handle(x, *_pars)
 

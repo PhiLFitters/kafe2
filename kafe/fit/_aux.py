@@ -7,7 +7,25 @@ def step_fill_between(axes,
                       x, y,
                       yerr=None, xerr=None,
                       draw_central_value=False, **kwargs):
+    """
+    Draw two step functions and fill the area in-between.
 
+    :param axes: target ``Axes`` object
+    :type axes: ``matplotlib`` ``Axes`` object
+    :param x: *x* coordinates of the steps
+    :type x: list of float
+    :param y: *y* coordinates of the steps
+    :type y: list of float
+    :param yerr: distances between the center and upper step function (or lower and upper, if tuple)
+    :type yerr: list of float or list of 2-tuple of float
+    :param xerr: distances between the step center and preceding/next step (or both, if tuple)
+    :type xerr: list of float or list of 2-tuple of float
+    :param draw_central_value: if ``True``, also draw the central step function
+    :type draw_central_value: bool
+    :param kwargs: keyword arguments accepted by ``matplotlib`` methods ``plot`` and ``fill_between``
+    :type kwargs: dict
+    :return: plot handle(s)
+    """
     # -- give errors common structure: tuple(err_dn, err_up)
 
     _yerr = yerr

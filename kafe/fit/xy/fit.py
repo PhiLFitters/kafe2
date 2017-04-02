@@ -29,6 +29,16 @@ class XYFit(FitBase):
                           'x_cov_mat_inverse', 'y_data_cov_mat_inverse', 'y_model_cov_mat_inverse', 'total_cor_mat_inverse'}
 
     def __init__(self, xy_data, model_function, cost_function=XYCostFunction_Chi2_NoErrors_Y()):
+        """
+        Construct a fit of a model to *xy* data.
+
+        :param xy_data: the x and y measurement values
+        :type xy_data: (2, N)-array of float
+        :param model_function: the model function
+        :type model_function: :py:class:`~kafe.fit.indexed.XYModelFunction` or unwrapped native Python function
+        :param cost_function: the cost function
+        :type cost_function: :py:class:`~kafe.fit._base.CostFunctionBase`-derived or unwrapped native Python function
+        """
         # set the data
         self.data = xy_data
 
@@ -149,22 +159,27 @@ class XYFit(FitBase):
 
     @property
     def x(self):
+        """array of measurement *x* values"""
         return self._data_container.x
 
     @property
     def x_error(self):
+        """array of pointwise *x* uncertainties"""
         return self._data_container.x_err
 
     @property
     def x_cov_mat(self):
+        """the *x* covariance matrix"""
         return self._data_container.x_cov_mat
 
     @property
     def y_data(self):
+        """array of measurement data *y* values"""
         return self._data_container.y
 
     @property
     def data(self):
+        """(2, N)-array containing *x* and *y* measurement values"""
         return self._data_container.data
 
     @data.setter
@@ -181,42 +196,50 @@ class XYFit(FitBase):
 
     @property
     def y_data_error(self):
+        """array of pointwise *y* data uncertainties"""
         return self._data_container.y_err
 
     @property
     def y_data_cov_mat(self):
+        """the data *y* covariance matrix"""
         return self._data_container.y_cov_mat
 
     @property
     def y_data_cov_mat_inverse(self):
+        """inverse of the data *y* covariance matrix (or ``None`` if singular)"""
         return self._data_container.y_cov_mat_inverse
 
     @property
     def y_model(self):
+        """array of *y* model predictions for the data points"""
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x
         return self._param_model.y
 
     @property
     def y_model_error(self):
+        """array of pointwise model *y* uncertainties"""
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x
         return self._param_model.y_err
 
     @property
     def y_model_cov_mat(self):
+        """the model *y* covariance matrix"""
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x
         return self._param_model.y_cov_mat
 
     @property
     def y_model_cov_mat_inverse(self):
+        """inverse of the model *y* covariance matrix (or ``None`` if singular)"""
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x
         return self._param_model.y_cov_mat_inverse
 
     @property
     def y_total_error(self):
+        """array of pointwise total *y* uncertainties"""
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x
         if self.__cache_total_error is None:
@@ -227,6 +250,7 @@ class XYFit(FitBase):
 
     @property
     def y_total_cov_mat(self):
+        """the total *y* covariance matrix"""
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x
         if self.__cache_total_cov_mat is None:
@@ -237,6 +261,7 @@ class XYFit(FitBase):
 
     @property
     def y_total_cov_mat_inverse(self):
+        """inverse of the total *y* covariance matrix (or ``None`` if singular)"""
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x
         if self.__cache_total_cov_mat_inverse is None:
@@ -247,6 +272,7 @@ class XYFit(FitBase):
 
     @property
     def y_error_band(self):
+        """one-dimensional array representing the uncertainty band around the model function"""
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x
         if self.__cache_y_error_band is None:
@@ -255,41 +281,32 @@ class XYFit(FitBase):
 
     @property
     def x_range(self):
+        """range of the *x* measurement data"""
         return self._data_container.x_range
 
     @property
     def y_range(self):
+        """range of the *y* measurement data"""
         return self._data_container.y_range
-
-    @property
-    def parameter_values(self):
-        return self.parameter_name_value_dict.values()
-
-    # NOTE: not supported by kafe.core.fitters
-    #       maybe implement _there_, but not here!
-    # @parameter_values.setter
-    # def parameter_values(self, param_values):
-    #     return self.parameter_name_value_dict.values()
-
-    @property
-    def parameter_name_value_dict(self):
-        return self._fitter.fit_parameter_values
-
-    @property
-    def parameter_errors(self):
-        return self._fitter.fit_parameter_errors
-
-    @property
-    def parameter_cov_mat(self):
-        return self._fitter.fit_parameter_cov_mat
-
-    @property
-    def cost_function_value(self):
-        return self._fitter.parameter_to_minimize_value
 
     # -- public methods
 
     def add_simple_error(self, axis, err_val, correlation=0, relative=False):
+        """
+        Add a simple uncertainty source for axis to the data container.
+        Returns an error id which uniquely identifies the created error source.
+
+        :param axis: ``'x'``/``0`` or ``'y'``/``1``
+        :type axis: str or int
+        :param err_val: pointwise uncertainty/uncertainties for all data points
+        :type err_val: float or iterable of float
+        :param correlation: correlation coefficient between any two distinct data points
+        :type correlation: float
+        :param relative: if ``True``, **err_val** will be interpreted as a *relative* uncertainty
+        :type relative: bool
+        :return: error id
+        :rtype: int
+        """
         # delegate to data container
         _ret = self._data_container.add_simple_error(axis, err_val, correlation=correlation, relative=relative)
         # mark nexus error parameters as stale
@@ -297,6 +314,22 @@ class XYFit(FitBase):
         return _ret
 
     def add_matrix_error(self, axis, err_matrix, matrix_type, err_val=None, relative=False):
+        """
+        Add a matrix uncertainty source for an axis to the data container.
+        Returns an error id which uniquely identifies the created error source.
+
+        :param axis: ``'x'``/``0`` or ``'y'``/``1``
+        :type axis: str or int
+        :param err_matrix: covariance or correlation matrix
+        :param matrix_type: one of ``'covariance'``/``'cov'`` or ``'correlation'``/``'cor'``
+        :type matrix_type: str
+        :param err_val: the pointwise uncertainties (mandatory if only a correlation matrix is given)
+        :type err_val: iterable of float
+        :param relative: if ``True``, the covariance matrix and/or **err_val** will be interpreted as a *relative* uncertainty
+        :type relative: bool
+        :return: error id
+        :rtype: int
+        """
         # delegate to data container
         _ret = self._data_container.add_matrix_error(axis, err_matrix, matrix_type, err_val=err_val, relative=relative)
         # mark nexus error parameters as stale
@@ -304,15 +337,29 @@ class XYFit(FitBase):
         return _ret
 
     def disable_error(self, err_id):
+        """
+        Temporarily disable an uncertainty source so that it doesn't count towards calculating the
+        total uncertainty.
+
+        :param err_id: error id
+        :type err_id: int
+        """
         # delegate to data container
         _ret = self._data_container.disable_error(err_id)   # mark nexus error parameters as stale
         self._mark_errors_for_update_invalidate_total_error_cache()
         return _ret
 
-    # def do_fit(self):
-    #     self._fitter.do_fit()
-
     def eval_model_function(self, x=None, model_parameters=None):
+        """
+        Evaluate the model function.
+
+        :param x: values of *x* at which to evaluate the model function (if ``None``, the data *x* values are used)
+        :type x: iterable of float
+        :param model_parameters: the model parameter values (if ``None``, the current values are used)
+        :type model_parameters: iterable of float
+        :return: model function values
+        :rtype: :py:class:`numpy.ndarray`
+        """
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x
         return self._param_model.eval_model_function(x=x, model_parameters=model_parameters)

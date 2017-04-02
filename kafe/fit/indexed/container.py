@@ -9,7 +9,19 @@ class IndexedContainerException(DataContainerException):
 
 
 class IndexedContainer(DataContainerBase):
+    """
+    This object is a specialized data container for series of indexed measurements.
+
+    """
     def __init__(self, data, dtype=float):
+        """
+        Construct a container for indexed data:
+
+        :param data: a one-dimensional array of measurements
+        :type data: iterable of type <dtype>
+        :param dtype: data type of the measurements
+        :type dtype: type
+        """
         self._idx_data = np.array(data, dtype=dtype)
         self._error_dicts = {}
         self._total_error = None
@@ -31,10 +43,12 @@ class IndexedContainer(DataContainerBase):
 
     @property
     def size(self):
+        """number of data points"""
         return len(self._idx_data)
 
     @property
     def data(self):
+        """container data (one-dimensional :py:obj:`numpy.ndarray`)"""
         return self._idx_data.copy()  # copy to ensure no modification by user
 
     @data.setter
@@ -50,22 +64,38 @@ class IndexedContainer(DataContainerBase):
 
     @property
     def err(self):
+        """absolute total data uncertainties (one-dimensional :py:obj:`numpy.ndarray`)"""
         _total_error = self.get_total_error()
         return _total_error.error
 
     @property
     def cov_mat(self):
+        """absolute data covariance matrix (:py:obj:`numpy.matrix`)"""
         _total_error = self.get_total_error()
         return _total_error.cov_mat
 
     @property
     def cov_mat_inverse(self):
+        """inverse of absolute data covariance matrix (:py:obj:`numpy.matrix`), or ``None`` if singular"""
         _total_error = self.get_total_error()
         return _total_error.cov_mat_inverse
 
     # -- public methods
 
     def add_simple_error(self, err_val, correlation=0, relative=False):
+        """
+        Add a simple uncertainty source to the data container.
+        Returns an error id which uniquely identifies the created error source.
+
+        :param err_val: pointwise uncertainty/uncertainties for all data points
+        :type err_val: float or iterable of float
+        :param correlation: correlation coefficient between any two distinct data points
+        :type correlation: float
+        :param relative: if ``True``, **err_val** will be interpreted as a *relative* uncertainty
+        :type relative: bool
+        :return: error id
+        :rtype: int
+        """
         try:
             err_val.ndim
         except AttributeError:
@@ -81,6 +111,20 @@ class IndexedContainer(DataContainerBase):
         return _id
 
     def add_matrix_error(self, err_matrix, matrix_type, err_val=None, relative=False):
+        """
+        Add a matrix uncertainty source to the data container.
+        Returns an error id which uniquely identifies the created error source.
+
+        :param err_matrix: covariance or correlation matrix
+        :param matrix_type: one of ``'covariance'``/``'cov'`` or ``'correlation'``/``'cor'``
+        :type matrix_type: str
+        :param err_val: the pointwise uncertainties (mandatory if only a correlation matrix is given)
+        :type err_val: iterable of float
+        :param relative: if ``True``, the covariance matrix and/or **err_val** will be interpreted as a *relative* uncertainty
+        :type relative: bool
+        :return: error id
+        :rtype: int
+        """
         _err = MatrixGaussianError(err_matrix=err_matrix, matrix_type=matrix_type, err_val=err_val,
                                    relative=relative, reference=self._idx_data)
         # TODO: reason not to use id() here?
@@ -92,6 +136,13 @@ class IndexedContainer(DataContainerBase):
         return _id
 
     def disable_error(self, err_id):
+        """
+        Temporarily disable an uncertainty source so that it doesn't count towards calculating the
+        total uncertainty.
+
+        :param err_id: error id
+        :type err_id: int
+        """
         _err_dict = self._error_dicts.get(err_id, None)
         if _err_dict is None:
             raise IndexedContainerException("No error with id %d!" % (err_id,))
@@ -99,6 +150,12 @@ class IndexedContainer(DataContainerBase):
         self._total_error = None
 
     def get_total_error(self):
+        """
+        Get the error object representing the total uncertainty.
+
+        :return: error object representing the total uncertainty
+        :rtype: :py:class:`~kafe.core.error.MatrixGaussianError`
+        """
         if self._total_error is None:
             self._calculate_total_error()
         return self._total_error

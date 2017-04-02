@@ -11,7 +11,35 @@ class FormatterException(Exception):
 
 
 class ModelParameterFormatter(object):
+    """
+    :py:obj:`Formatter` class for model parameter objects.
+
+    These objects store the relevant information for constructing
+    plain-text and/or LaTeX string representations of model function parameters.
+
+    For this, :py:obj:`ModelParameterFormatter` objects store the parameter name, formatted as a plain-text/LaTeX
+    string, its value (a ``float``) and its error (a ``float`` for symmetric, a tuple of ``floats`` for
+    asymmetric errors).
+
+    The formatted string is obtained by calling the :py:meth:`~ModelParameterFormatter.get_formatted` method.
+    """
     def __init__(self, name, value, error=None, latex_name=None):
+        """
+
+        Construct a :py:obj:`Formatter` for a model function:
+
+        :param name:
+        :param latex_name: a LaTeX-formatted string indicating the function name
+        :param arg_formatters: list of :py:obj:`ModelParameterFormatter`-derived objects,
+                               formatters for function arguments
+        :param expression_string:  a plain-text-formatted string indicating the function expression
+        :param latex_expression_string:  a LaTeX-formatted string indicating the function expression
+
+        :param name: a plain-text-formatted string indicating the parameter name
+        :param value: the parameter value (``float``)
+        :param error: the parameter error: ``float`` (tuple of 2 ``floats``) for symmetric (asymmetric) error
+        :param latex_name: a LaTeX-formatted string indicating the parameter name
+        """
         self.value = value
 
         self._error_is_asymmetric = False
@@ -29,10 +57,12 @@ class ModelParameterFormatter(object):
 
     @property
     def name(self):
+        """a plain-text-formatted string indicating the parameter name"""
         return self._name
 
     @property
     def latex_name(self):
+        """a LaTeX-formatted string indicating the parameter name"""
         return self._latex_name
 
     @latex_name.setter
@@ -42,6 +72,7 @@ class ModelParameterFormatter(object):
 
     @property
     def value(self):
+        """the parameter value"""
         return self._value
 
     @value.setter
@@ -50,6 +81,7 @@ class ModelParameterFormatter(object):
 
     @property
     def error(self):
+        """the parameter error (``float``/tuple of 2 ``floats``)"""
         return self._error
 
     @error.setter
@@ -76,6 +108,7 @@ class ModelParameterFormatter(object):
 
     @property
     def error_rel(self):
+        """the relative parameter error (``float``/tuple of 2 ``floats``)"""
         if self._error is None:
             return None
         if self._error_is_asymmetric:
@@ -85,12 +118,14 @@ class ModelParameterFormatter(object):
 
     @property
     def error_up(self):
+        """the "up" error (only for asymmetric errors)"""
         if self._error is None:
             return None
         return self._error[1]
 
     @property
     def error_down(self):
+        """the "down" error (only for asymmetric errors)"""
         if self._error is None:
             return None
         return self._error[0]
@@ -98,6 +133,17 @@ class ModelParameterFormatter(object):
 
     def get_formatted(self, with_name=False, with_value=True, with_errors=True,
                       n_significant_digits=2, round_value_to_error=True, format_as_latex=False):
+        """
+        Get a formatted string representing this model parameter.
+
+        :param with_name:  if ``True``, output will include the parameter name
+        :param with_value: if ``True``, output will include the parameter value
+        :param with_errors: if ``True``, output will include the parameter error/errors
+        :param n_significant_digits: number of significant digits for rounding
+        :param round_value_to_error: if ``True``, the parameter value will be rounded to the same precision as the error
+        :param format_as_latex: if ``True``, the returned string will be formatted using LaTeX syntax
+        :return: string
+        """
         _display_string = ""
         if with_name:
             if format_as_latex:
@@ -153,9 +199,35 @@ class ModelParameterFormatter(object):
 
 
 class ModelFunctionFormatter(object):
+    """
+    Base class for model function :py:obj:`Formatter` objects. Requires further specialization for
+    each type of model function.
+
+    Objects derived from :py:class:`ModelFunctionFormatter` store information relevant for constructing
+    plain-text and/or LaTeX string representations of model functions.
+
+    For this, :py:obj:`ModelFunctionFormatter` objects store the function name, formatted as a plain-text/LaTeX
+    string, as well as a list of references to :py:obj:`ModelParameterFormatter` objects which contain information
+    on how to format the model function arguments.
+
+    Optionally, plain-text/LaTeX expression strings can be provided. These are strings representing the model
+    function expression (i.e. mathematical formula).
+
+    The formatted string is obtained by calling the :py:meth:`~ModelFunctionFormatter.get_formatted` method.
+    """
     DEFAULT_EXPRESSION_STRING = "<not_specified>"
     DEFAULT_LATEX_EXPRESSION_STRING = r"\langle{\it not\,\,specified}\rangle"
     def __init__(self, name, latex_name=None, arg_formatters=None, expression_string=None, latex_expression_string=None):
+        """
+        Construct a :py:obj:`Formatter` for a model function:
+
+        :param name: a plain-text-formatted string indicating the function name
+        :param latex_name: a LaTeX-formatted string indicating the function name
+        :param arg_formatters: list of :py:obj:`ModelParameterFormatter`-derived objects,
+                               formatters for function arguments
+        :param expression_string:  a plain-text-formatted string indicating the function expression
+        :param latex_expression_string:  a LaTeX-formatted string indicating the function expression
+        """
         self._name = name
         self._arg_formatters = arg_formatters
         self.expression_format_string = expression_string
@@ -211,6 +283,7 @@ class ModelFunctionFormatter(object):
 
     @property
     def expression_format_string(self):
+        """a plain-text-formatted expression for the function"""
         return self._expr_string
 
     @expression_format_string.setter
@@ -224,6 +297,7 @@ class ModelFunctionFormatter(object):
 
     @property
     def latex_expression_format_string(self):
+        """a LaTeX-formatted expression for the function"""
         return self._latex_expr_string
 
     @latex_expression_format_string.setter
@@ -236,6 +310,17 @@ class ModelFunctionFormatter(object):
                                      % (latex_expression_format_string,))
 
     def get_formatted(self, with_par_values=True, n_significant_digits=2, format_as_latex=False, with_expression=False):
+        """
+        Get a formatted string representing this model function.
+
+        :param with_par_values: if ``True``, output will include the value of each function parameter
+                                (e.g. ``f(a=1, b=2, ...)``)
+        :param n_significant_digits: number of significant digits for rounding
+        :param format_as_latex: if ``True``, the returned string will be formatted using LaTeX syntax
+        :param with_expression: if ``True``, the returned string will include the expression assigned to the function
+        :return: string
+        """
+        # FIXME: default should actually *not* show the parameter values
         _par_strings = self._get_formatted_args(with_par_values=with_par_values,
                                                 n_significant_digits=n_significant_digits,
                                                 format_as_latex=format_as_latex)

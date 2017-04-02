@@ -14,6 +14,11 @@ class IndexedModelFunction(ModelFunctionBase):
     FORMATTER_TYPE = IndexedModelFunctionFormatter
 
     def __init__(self, model_function):
+        """
+        Construct :py:class:`IndexedModelFunction` object (a wrapper for a native Python function):
+
+        :param model_function: function handle
+        """
         self._index_name = 'i'
         super(IndexedModelFunction, self).__init__(model_function=model_function)
 
@@ -28,6 +33,7 @@ class IndexedModelFunction(ModelFunctionBase):
 
     @property
     def index_name(self):
+        """the name of the index variable"""
         return self._index_name
 
 
@@ -37,6 +43,13 @@ class IndexedParametricModelException(IndexedContainerException):
 
 class IndexedParametricModel(ParametricModelBaseMixin, IndexedContainer):
     def __init__(self, model_func, model_parameters, shape_like=None):
+        """
+        Construct an :py:obj:`IndexedParametricModel` object:
+
+        :param model_func: handle of Python function (the model function)
+        :param model_parameters: iterable of parameter values with which the model function should be initialized
+        :param shape_like: array with the same shape as the model
+        """
         # print "IndexedParametricModel.__init__(model_func=%r, model_parameters=%r)" % (model_func, model_parameters)
         if shape_like is not None:
             _data = np.zeros_like(shape_like)
@@ -57,6 +70,7 @@ class IndexedParametricModel(ParametricModelBaseMixin, IndexedContainer):
 
     @property
     def data(self):
+        """model predictions (one-dimensional :py:obj:`numpy.ndarray`)"""
         if self._pm_calculation_stale:
             self._recalculate()
         return super(IndexedParametricModel, self).data
@@ -67,16 +81,35 @@ class IndexedParametricModel(ParametricModelBaseMixin, IndexedContainer):
 
     @property
     def data_range(self):
+        """tuple containing the minimum and maximum of all model predictions"""
         _data = self.data
         return np.min(_data), np.max(_data)
 
     # -- public methods
 
     def eval_model_function(self, model_parameters=None):
+        """
+        Evaluate the model function.
+
+        :param model_parameters: values of the model parameters (if ``None``, the current values are used)
+        :type model_parameters: list or ``None``
+        :return: value(s) of the model function for the given parameters
+        :rtype: :py:obj:`numpy.ndarray`
+        """
         _pars = model_parameters if model_parameters is not None else self._model_parameters
         return self._model_function_handle(*_pars)
 
     def eval_model_function_derivative_by_parameters(self, model_parameters=None, par_dx=None):
+        """
+        Evaluate the derivative of the model function with respect to the model parameters.
+
+        :param model_parameters: values of the model parameters (if ``None``, the current values are used)
+        :type model_parameters: list or ``None``
+        :param par_dx: step size for numeric differentiation
+        :type par_dx: float
+        :return: value(s) of the model function derivative for the given parameters
+        :rtype: :py:obj:`numpy.ndarray`
+        """
         _pars = model_parameters if model_parameters is not None else self._model_parameters
         _pars = np.asarray(_pars)
         _par_dxs = par_dx if par_dx is not None else 1e-2 * (np.abs(_pars) + 1.0 / (1.0 + np.abs(_pars)))

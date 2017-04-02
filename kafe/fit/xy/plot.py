@@ -9,6 +9,11 @@ class XYPlotContainer(PlotContainerBase):
     FIT_TYPE = XYFit
 
     def __init__(self, xy_fit_object, n_plot_points_model=100):
+        """
+        Construct an :py:obj:`XYPlotContainer` for a :py:obj:`~kafe.fit.xy.XYFit` object:
+
+        :param fit_object: an :py:obj:`~kafe.fit.xy.XYFit` object
+        """
         super(XYPlotContainer, self).__init__(fit_object=xy_fit_object)
         self._n_plot_points_model = n_plot_points_model
 
@@ -30,50 +35,67 @@ class XYPlotContainer(PlotContainerBase):
 
     @property
     def data_x(self):
+        """data x values"""
         return self._fitter.x
 
     @property
     def data_y(self):
+        """data y values"""
         return self._fitter.y_data
 
     @property
     def data_xerr(self):
+        """x error bars for data: ``None`` for :py:obj:`IndexedPlotContainer`"""
         return self._fitter.x_error
 
     @property
     def data_yerr(self):
+        """y error bars for data: total data uncertainty"""
         return self._fitter.y_data_error
 
     @property
     def model_x(self):
+        """x support values for model function"""
         _xmin, _xmax = self.x_range
         return np.linspace(_xmin, _xmax, self._n_plot_points_model)
 
     @property
     def model_y(self):
+        """y values at support points for model function"""
         return self._fitter.eval_model_function(x=self.model_x)
 
     @property
     def model_xerr(self):
+        """x error bars for model (not used)"""
         return None if np.allclose(self._fitter.x_error, 0) else self._fitter.x_error
 
     @property
     def model_yerr(self):
+        """y error bars for model (not used)"""
         return None if np.allclose(self._fitter.y_data_error, 0) else self._fitter.y_data_error
 
     @property
     def x_range(self):
+        """x plot range"""
         if self._plot_range_x is None:
             self._compute_plot_range_x()
         return self._plot_range_x
 
     @property
     def y_range(self):
+        """y plot range: ``None`` for :py:obj:`XYPlotContainer`"""
         return None
 
     # public methods
 
     def plot_data(self, target_axis, **kwargs):
+        """
+        Plot the measurement data to a specified ``matplotlib`` ``Axes`` object.
+
+        :param target_axis: ``matplotlib`` ``Axes`` object
+        :param kwargs: keyword arguments accepted by the ``matplotlib`` methods ``errorbar`` or ``plot``
+        :return: plot handle(s)
+        """
         # TODO: how to handle 'data' errors and 'model' errors?
         if self._fitter.has_errors:
             return target_axis.errorbar(self.data_x,
@@ -87,19 +109,26 @@ class XYPlotContainer(PlotContainerBase):
                                     **kwargs)
 
     def plot_model(self, target_axis, **kwargs):
+        """
+        Plot the model function to a specified matplotlib ``Axes`` object.
+
+        :param target_axis: ``matplotlib`` ``Axes`` object
+        :param kwargs: keyword arguments accepted by the ``matplotlib`` ``plot`` method
+        :return: plot handle(s)
+        """
         # TODO: how to handle 'data' errors and 'model' errors?
-        if self._fitter.has_model_errors:
-            return target_axis.errorbar(self.model_x,
-                                        self.model_y,
-                                        xerr=self.model_xerr,
-                                        yerr=self.model_yerr,
-                                        **kwargs)
-        else:
-            return target_axis.plot(self.model_x,
-                                    self.model_y,
-                                    **kwargs)
+        return target_axis.plot(self.model_x,
+                                self.model_y,
+                                **kwargs)
 
     def plot_model_error_band(self, target_axis, **kwargs):
+        """
+        Plot an error band around the model model function.
+
+        :param target_axis: ``matplotlib`` ``Axes`` object
+        :param kwargs: keyword arguments accepted by the ``matplotlib`` ``fill_between`` method
+        :return: plot handle(s)
+        """
         _band_y = self._fitter.y_error_band
         _y = self.model_y
         if self._fitter.has_errors:

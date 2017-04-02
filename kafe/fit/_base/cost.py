@@ -11,13 +11,33 @@ class CostFunctionException(Exception):
 
 class CostFunctionBase(object):
     """
-    Purely abstract class. Defines the minimal interface required by all specializations.
+    This is a purely abstract class implementing the minimal interface required by all
+    cost functions.
+
+    Any Python function returning a ``float`` can be used as a cost function,
+    although a number of common cost functions are provided as built-ins for
+    all fit types.
+
+    In order to be used as a model function, a native Python function must be wrapped
+    by an object whose class derives from this base class.
+    There is a dedicated :py:class:`CostFunction` specialization for each type of
+    fit.
+
+    This class provides the basic functionality used by all :py:class:`CostFunction` objects.
+    These use introspection (:py:mod:`inspect`) for determining the parameter structure of the
+    cost function and to ensure the function can be used as a cost function (validation).
+
     """
     __metaclass__ = abc.ABCMeta
 
     EXCEPTION_TYPE = CostFunctionException
 
     def __init__(self, cost_function):
+        """
+        Construct :py:class:`CostFunction` object (a wrapper for a native Python function):
+
+        :param cost_function: function handle
+        """
         self._cost_function_handle = cost_function
         self._validate_cost_function_raise()
 
@@ -46,8 +66,10 @@ class CostFunctionBase(object):
 
     @property
     def name(self):
+        """The cost function name (a valid Python identifier)"""
         return self._cost_function_handle.__name__
 
     @property
     def func(self):
+        """The cost function handle"""
         return self._cost_function_handle

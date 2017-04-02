@@ -28,6 +28,16 @@ class HistFit(FitBase):
                           'data_cor_mat', 'model_cor_mat', 'total_cor_mat'}
 
     def __init__(self, data, model_density_function, cost_function=HistCostFunction_NegLogLikelihood_Poisson(), model_density_antiderivative=None):
+        """
+        Construct a fit of a model to a histogram.
+
+        :param data: the measurement values
+        :type data: iterable of float
+        :param model_density_function: the model density function
+        :type model_density_function: :py:class:`~kafe.fit.hist.HistModelFunction` or unwrapped native Python function
+        :param cost_function: the cost function
+        :type cost_function: :py:class:`~kafe.fit._base.CostFunctionBase`-derived or unwrapped native Python function
+        """
         # set the data
         self.data = data
 
@@ -43,13 +53,6 @@ class HistFit(FitBase):
 
         # validate the model function for this fit
         self._validate_model_function_for_fit_raise()
-
-        # # set and validate the model function
-        # self._model_func_handle = model_density_function
-        # self._validate_model_function_raise()
-        #
-        # self._model_func_antider_handle = model_density_antiderivative
-        # self._validate_model_function_for_fit_raise()
 
         # set and validate the cost function
         if isinstance(cost_function, CostFunctionBase):
@@ -153,6 +156,7 @@ class HistFit(FitBase):
 
     @property
     def data(self):
+        """array of measurement values"""
         return self._data_container.data
 
     @data.setter
@@ -167,38 +171,46 @@ class HistFit(FitBase):
 
     @property
     def data_error(self):
+        """array of pointwise data uncertainties"""
         return self._data_container.err
 
     @property
     def data_cov_mat(self):
+        """the data covariance matrix"""
         return self._data_container.cov_mat
 
     @property
     def data_cov_mat_inverse(self):
+        """inverse of the data covariance matrix (or ``None`` if singular)"""
         return self._data_container.cov_mat_inverse
 
     @property
     def model(self):
+        """array of model predictions for the data points"""
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         return self._param_model.data * self._data_container.n_entries  # NOTE: model is just a density->scale up
 
     @property
     def model_error(self):
+        """array of pointwise model uncertainties"""
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         return self._param_model.err  # FIXME: how to handle scaling
 
     @property
     def model_cov_mat(self):
+        """the model covariance matrix"""
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         return self._param_model.cov_mat
 
     @property
     def model_cov_mat_inverse(self):
+        """inverse of the model covariance matrix (or ``None`` if singular)"""
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         return self._param_model.cov_mat_inverse
 
     @property
     def total_error(self):
+        """array of pointwise total uncertainties"""
         if self.__cache_total_error is None:
             _tmp = self.data_error**2
             _tmp += self.model_error**2
@@ -207,6 +219,7 @@ class HistFit(FitBase):
 
     @property
     def total_cov_mat(self):
+        """the total covariance matrix"""
         if self.__cache_total_cov_mat is None:
             _tmp = self.data_cov_mat
             _tmp += self.model_cov_mat
@@ -215,6 +228,7 @@ class HistFit(FitBase):
 
     @property
     def total_cov_mat_inverse(self):
+        """inverse of the total covariance matrix (or ``None`` if singular)"""
         if self.__cache_total_cov_mat_inverse is None:
             _tmp = self.total_cov_mat
             try:
@@ -224,35 +238,22 @@ class HistFit(FitBase):
                 pass
         return self.__cache_total_cov_mat_inverse
 
-    @property
-    def parameter_values(self):
-        return self.parameter_name_value_dict.values()
-
-    @property
-    def parameter_errors(self):
-        return self._fitter.fit_parameter_errors
-
-    @property
-    def parameter_cov_mat(self):
-        return self._fitter.fit_parameter_cov_mat
-
-    # NOTE: not supported by kafe.core.fitters
-    #       maybe implement _there_, but not here!
-    # @parameter_values.setter
-    # def parameter_values(self, param_values):
-    #     return self.parameter_name_value_dict.values()
-
-    @property
-    def parameter_name_value_dict(self):
-        return self._fitter.fit_parameter_values
-
-    @property
-    def cost_function_value(self):
-        return self._fitter.parameter_to_minimize_value
-
     # -- public methods
 
     def add_simple_error(self, err_val, correlation=0, relative=False):
+        """
+        Add a simple uncertainty source to the data container.
+        Returns an error id which uniquely identifies the created error source.
+
+        :param err_val: pointwise uncertainty/uncertainties for all data points
+        :type err_val: float or iterable of float
+        :param correlation: correlation coefficient between any two distinct data points
+        :type correlation: float
+        :param relative: if ``True``, **err_val** will be interpreted as a *relative* uncertainty
+        :type relative: bool
+        :return: error id
+        :rtype: int
+        """
         # delegate to data container
         _ret = self._data_container.add_simple_error(err_val, correlation=correlation, relative=relative)
         # mark nexus error parameters as stale
@@ -261,6 +262,20 @@ class HistFit(FitBase):
 
 
     def add_matrix_error(self, err_matrix, matrix_type, err_val=None, relative=False):
+        """
+        Add a matrix uncertainty source to the data container.
+        Returns an error id which uniquely identifies the created error source.
+
+        :param err_matrix: covariance or correlation matrix
+        :param matrix_type: one of ``'covariance'``/``'cov'`` or ``'correlation'``/``'cor'``
+        :type matrix_type: str
+        :param err_val: the pointwise uncertainties (mandatory if only a correlation matrix is given)
+        :type err_val: iterable of float
+        :param relative: if ``True``, the covariance matrix and/or **err_val** will be interpreted as a *relative* uncertainty
+        :type relative: bool
+        :return: error id
+        :rtype: int
+        """
         # delegate to data container
         _ret = self._data_container.add_matrix_error(err_matrix, matrix_type, err_val=err_val, relative=relative)
         # mark nexus error parameters as stale
@@ -268,11 +283,28 @@ class HistFit(FitBase):
         return _ret
 
     def disable_error(self, err_id):
+        """
+        Temporarily disable an uncertainty source so that it doesn't count towards calculating the
+        total uncertainty.
+
+        :param err_id: error id
+        :type err_id: int
+        """
         # delegate to data container
         _ret = self._data_container.disable_error(err_id)   # mark nexus error parameters as stale
         self._mark_errors_for_update_invalidate_total_error_cache()
         return _ret
 
     def eval_model_function_density(self, x, model_parameters=None):
+        """
+        Evaluate the model function density.
+
+        :param x: values of *x* at which to evaluate the model function density
+        :type x: iterable of float
+        :param model_parameters: the model parameter values (if ``None``, the current values are used)
+        :type model_parameters: iterable of float
+        :return: model function density values
+        :rtype: :py:class:`numpy.ndarray`
+        """
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         return self._param_model.eval_model_function_density(x=x, model_parameters=model_parameters)
