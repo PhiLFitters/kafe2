@@ -165,7 +165,7 @@ class MinimizerIMinuit(object):
             else:
                 # need to hack to get initial parameter values
                 _v = _m.values
-                _pvals = [_v[pname] for pname in _v]
+                _pvals = [_v[pname] for pname in self.parameter_names]
             self._par_val = tuple(_pvals)
         return self._par_val
 
