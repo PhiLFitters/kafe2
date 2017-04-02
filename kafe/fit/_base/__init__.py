@@ -9,7 +9,7 @@
 
 from .container import DataContainerBase, DataContainerException
 from .model import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException
-from .cost import CostFunctionBase, CostFunctionException
+from .cost import CostFunctionBase, CostFunctionBase_Chi2, CostFunctionBase_NegLogLikelihood, CostFunctionException
 from .fit import FitBase, FitException
 from .format import ModelParameterFormatter, ModelFunctionFormatter, FormatterException
 from .plot import PlotContainerBase, PlotFigureBase, PlotContainerException, PlotFigureException

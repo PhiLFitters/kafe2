@@ -6,7 +6,7 @@ import numpy as np
 from ...core import NexusFitter, Nexus
 from .._base import FitException, FitBase, DataContainerBase, ModelParameterFormatter, CostFunctionBase
 from .container import IndexedContainer
-from .cost import IndexedCostFunction_Chi2_NoErrors, IndexedCostFunction_UserDefined
+from .cost import IndexedCostFunction_Chi2, IndexedCostFunction_UserDefined
 from .format import IndexedModelFunctionFormatter
 from .model import IndexedParametricModel, IndexedModelFunction
 
@@ -27,7 +27,7 @@ class IndexedFit(FitBase):
                           'data_cov_mat', 'model_cov_mat', 'total_cov_mat',
                           'data_cor_mat', 'model_cor_mat', 'total_cor_mat'}
 
-    def __init__(self, data, model_function, cost_function=IndexedCostFunction_Chi2_NoErrors()):
+    def __init__(self, data, model_function, cost_function=IndexedCostFunction_Chi2(errors_to_use='covariance', fallback_on_singular=True)):
         """
         Construct a fit of a model to a series of indexed measurements.
 

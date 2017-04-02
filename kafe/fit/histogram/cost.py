@@ -1,8 +1,4 @@
-import numpy as np
-
-from scipy.stats import poisson, norm
-
-from .._base import CostFunctionBase, CostFunctionException
+from .._base import CostFunctionBase, CostFunctionBase_Chi2, CostFunctionBase_NegLogLikelihood, CostFunctionException
 
 
 class HistCostFunction_UserDefined(CostFunctionBase):
@@ -20,10 +16,19 @@ class HistCostFunction_UserDefined(CostFunctionBase):
         super(HistCostFunction_UserDefined, self).__init__(cost_function=user_defined_cost_function)
 
 
-class HistCostFunction_Chi2_NoErrors(CostFunctionBase):
-    def __init__(self):
-        r"""
-        Built-in least-squares cost function calculated from data and model values,
+class HistCostFunction_Chi2(CostFunctionBase_Chi2):
+    def __init__(self, errors_to_use='covariance', fallback_on_singular=True):
+        """
+        Built-in least-squares cost function for histogram data.
+
+        :param errors_to_use: which erros to use when calculating :math:`\chi^2`
+        :type errors_to_use: ``'covariance'``, ``'pointwise'`` or ``None``
+        """
+        super(HistCostFunction_Chi2, self).__init__(errors_to_use=errors_to_use, fallback_on_singular=fallback_on_singular)
+
+    @staticmethod
+    def chi2_no_errors(data, model):
+        r"""A least-squares cost function calculated from 'y' data and model values,
         without considering uncertainties:
 
         .. math::
@@ -31,24 +36,34 @@ class HistCostFunction_Chi2_NoErrors(CostFunctionBase):
 
         In the above, :math:`{\bf d}` are the measurements and :math:`{\bf m}` are the model
         predictions.
-        """
-        super(HistCostFunction_Chi2_NoErrors, self).__init__(cost_function=self.chi2)
-
-    @staticmethod
-    def chi2(data, model):
-        """Static method for calculating the :math:`\chi^2` cost function.
 
         :param data: measurement data
-        :param model: model predictions
-        :return: value of the cost function
+        :param model: model values
+        :return: cost function value
         """
-        return np.sum((data - model)**2)
+        return CostFunctionBase_Chi2.chi2_no_errors(data=data, model=model)
 
+    @staticmethod
+    def chi2_covariance(data, model, total_cov_mat_inverse):
+        r"""A least-squares cost function calculated from 'y' data and model values,
+        considering the covariance matrix of the 'y' measurements.
 
-class HistCostFunction_Chi2_PointwiseErrors(CostFunctionBase):
-    def __init__(self):
-        r"""
-        Built-in least-squares cost function calculated from data and model values,
+        .. math::
+            C = \chi^2({\bf d}, {\bf m}) = ({\bf d} - {\bf m})^{\top}\,{{\bf V}^{-1}}\,({\bf d} - {\bf m})
+
+        In the above, :math:`{\bf d}` are the measurements, :math:`{\bf m}` are the model
+        predictions, and :math:`{{\bf V}^{-1}}` is the inverse of the total covariance matrix.
+
+        :param data: measurement data
+        :param model: model values
+        :param total_cov_mat_inverse: inverse of the total covariance matrix
+        :return: cost function value
+        """
+        return CostFunctionBase_Chi2.chi2_covariance(data=data, model=model, total_cov_mat_inverse=total_cov_mat_inverse)
+
+    @staticmethod
+    def chi2_pointwise_errors(data, model, total_error):
+        r"""A least-squares cost function calculated from 'y' data and model values,
         considering pointwise (uncorrelated) uncertainties for each data point:
 
         .. math::
@@ -56,55 +71,64 @@ class HistCostFunction_Chi2_PointwiseErrors(CostFunctionBase):
 
         In the above, :math:`{\bf d}` are the measurements, :math:`{\bf m}` are the model
         predictions, and :math:`{\bf \sigma}` are the pointwise total uncertainties.
-        """
-        super(HistCostFunction_Chi2_PointwiseErrors, self).__init__(cost_function=self.chi2)
-
-    @staticmethod
-    def chi2(data, model, total_error):
-        """Static method for calculating the :math:`\chi^2` cost function.
 
         :param data: measurement data
-        :param model: model predictions
-        :param total_error: total uncertainties of the data points
-        :return: value of the cost function
+        :param model: model values
+        :param total_error: total measurement uncertainties
+        :return:
         """
-        return np.sum((data - model)**2/total_error**2)
+        return CostFunctionBase_Chi2.chi2_pointwise_errors(data=data, model=model, total_error=total_error)
 
 
-class HistCostFunction_Chi2_CovarianceMatrix(CostFunctionBase):
-    def __init__(self):
+
+class HistCostFunction_NegLogLikelihood(CostFunctionBase_NegLogLikelihood):
+    def __init__(self, data_point_distribution='poisson'):
         r"""
-        Built-in least-squares cost function calculated from data and model values,
-        considering the covariance matrix of the measurements:
+        Built-in negative log-likelihood cost function for *Hist* data.
+
+        In addition to the measurement data and model predictions, likelihood-fits require a
+        probability distribution describing how the measurements are distributed around the model
+        predictions.
+        This built-in cost function supports two such distributions: the *Poisson* and *Gaussian* (normal)
+        distributions.
+
+        In general, a negative log-likelihood cost function is defined as the double negative logarithm of the
+        product of the individual likelihoods of the data points.
+
+        :param data_point_distribution: which type of statistics to use for modelling the distribution of individual data points
+        :type data_point_distribution: ``'poisson'`` or ``'gaussian'``
+        """
+        super(HistCostFunction_NegLogLikelihood, self).__init__(data_point_distribution=data_point_distribution)
+
+    @staticmethod
+    def nll_gaussian(data, model, total_error):
+        r"""A negative log-likelihood function assuming Gaussian statistics for each measurement.
+
+        The cost function is given by:
 
         .. math::
-            C = \chi^2({\bf d}, {\bf m}) = ({\bf d} - {\bf m})^{\top}\,{{\bf V}^{-1}}\,({\bf d} - {\bf m})
+            C = -2 \ln \mathcal{L}({\bf d}, {\bf m}, {\bf \sigma}) = -2 \ln \prod_j \mathcal{L}_{\rm Gaussian} (x=d_j, \mu=m_j, \sigma=\sigma_j)
 
-        In the above, :math:`{\bf d}` are the measurements, :math:`{\bf m}` are the model
-        predictions, and :math:`{{\bf V}^{-1}}` is the inverse of the total covariance matrix.
-        """
-        super(HistCostFunction_Chi2_CovarianceMatrix, self).__init__(cost_function=self.chi2)
+        .. math::
+            \rightarrow C = -2 \ln \prod_j \frac{1}{\sqrt{2{\sigma_j}^2\pi}} \exp{\left(-\frac{ (d_j-m_j)^2 }{ {\sigma_j}^2}\right)}
 
-    @staticmethod
-    def chi2(data, model, total_cov_mat_inverse):
-        """Static method for calculating the :math:`\chi^2` cost function.
+        In the above, :math:`{\bf d}` are the measurements, :math:`{\bf m}` are the model predictions, and :math:`{\bf \sigma}`
+        are the pointwise total uncertainties.
 
         :param data: measurement data
-        :param model: model predictions
-        :param total_cov_mat_inverse: inverse of the total covariance matrix
-        :return: value of the cost function
+        :param model: model values
+        :param total_error: total *y* uncertainties for data
+        :return: cost function value
         """
-        _res = (data - model)
-        if total_cov_mat_inverse is None:
-            raise np.linalg.LinAlgError("Total covariance matrix is singular!")
-        return _res.dot(total_cov_mat_inverse).dot(_res)[0, 0]
+        # "translate" the argument names
+        return CostFunctionBase_NegLogLikelihood.nll_gaussian(data=data, model=model, total_error=total_error)
 
 
-class HistCostFunction_NegLogLikelihood_Poisson(CostFunctionBase):
-    def __init__(self):
-        r"""
-        Built-in negative log-likelihood cost function calculated from data and model values,
-        assuming Poisson statistics for the individual bin contents:
+    @staticmethod
+    def nll_poisson(data, model):
+        r"""A negative log-likelihood function assuming Poisson statistics for each measurement.
+
+        The cost function is given by:
 
         .. math::
             C = -2 \ln \mathcal{L}({\bf d}, {\bf m}) = -2 \ln \prod_j \mathcal{L}_{\rm Poisson} (k=d_j, \lambda=m_j)
@@ -114,48 +138,10 @@ class HistCostFunction_NegLogLikelihood_Poisson(CostFunctionBase):
 
         In the above, :math:`{\bf d}` are the measurements and :math:`{\bf m}` are the model
         predictions.
-        """
-        super(HistCostFunction_NegLogLikelihood_Poisson, self).__init__(cost_function=self.nll)
-
-    @staticmethod
-    def nll(data, model):
-        """Static method for calculating the negative log-likelihood cost function.
 
         :param data: measurement data
-        :param model: model predictions
-        :return: value of the cost function
+        :param model: model values
+        :return: cost function value
         """
-        _per_point_likelihoods = poisson.pmf(data, mu=model, loc=0.0)
-        _total_likelihood = np.prod(_per_point_likelihoods)
-        return -2.0 * np.log(_total_likelihood)
-
-
-class HistCostFunction_NegLogLikelihood_Gaussian(CostFunctionBase):
-    def __init__(self):
-        r"""
-        Built-in negative log-likelihood cost function calculated from data and model values,
-        assuming Gaussian statistics for the individual bin contents:
-
-        .. math::
-            C = -2 \ln \mathcal{L}({\bf d}, {\bf m}, {\bf \sigma}) = -2 \ln \prod_j \mathcal{L}_{\rm Gaussian} (x=d_j, \mu=m_j, \sigma=\sigma_j)
-
-        .. math::
-            \rightarrow C = -2 \ln \prod_j \frac{1}{\sqrt{2{\sigma_j}^2\pi}} \exp{\left(-\frac{ (d_j-m_j)^2 }{ {\sigma_j}^2}\right)}
-
-        In the above, :math:`{\bf d}` are the measurements, :math:`{\bf m}` are the model
-        predictions, and :math:`{\bf \sigma}` are the pointwise total uncertainties.
-        """
-        super(HistCostFunction_NegLogLikelihood_Gaussian, self).__init__(cost_function=self.nll)
-
-    @staticmethod
-    def nll(data, model, total_error):
-        """Static method for calculating the negative log-likelihood cost function.
-
-        :param data: measurement data
-        :param model: model predictions
-        :param total_error: total uncertainties of the data points
-        :return: value of the cost function
-        """
-        _per_point_likelihoods = norm.pdf(data, loc=model, scale=total_error)
-        _total_likelihood = np.prod(_per_point_likelihoods)
-        return -2.0 * np.log(_total_likelihood)
+        # "translate" the argument names
+        return CostFunctionBase_NegLogLikelihood.nll_poisson(data=data, model=model)

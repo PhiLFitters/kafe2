@@ -6,7 +6,7 @@ import numpy as np
 from ...core import NexusFitter, Nexus
 from .._base import FitException, FitBase, DataContainerBase, ModelParameterFormatter, CostFunctionBase
 from .container import XYContainer
-from .cost import XYCostFunction_Chi2_NoErrors_Y, XYCostFunction_UserDefined
+from .cost import XYCostFunction_Chi2, XYCostFunction_UserDefined
 from .format import XYModelFunctionFormatter
 from .model import XYParametricModel, XYModelFunction
 
@@ -28,7 +28,7 @@ class XYFit(FitBase):
                           'x_cor_mat', 'y_data_cor_mat', 'y_model_cor_mat', 'total_cor_mat',
                           'x_cov_mat_inverse', 'y_data_cov_mat_inverse', 'y_model_cov_mat_inverse', 'total_cor_mat_inverse'}
 
-    def __init__(self, xy_data, model_function, cost_function=XYCostFunction_Chi2_NoErrors_Y()):
+    def __init__(self, xy_data, model_function, cost_function=XYCostFunction_Chi2(axes_to_use='y', errors_to_use='covariance')):
         """
         Construct a fit of a model to *xy* data.
 
@@ -266,8 +266,11 @@ class XYFit(FitBase):
         self._param_model.x = self.x
         if self.__cache_total_cov_mat_inverse is None:
             _tmp = self.y_total_cov_mat
-            _tmp = _tmp.I
-            self.__cache_total_cov_mat_inverse = _tmp
+            try:
+                _tmp = _tmp.I
+                self.__cache_total_cov_mat_inverse = _tmp
+            except np.linalg.LinAlgError:
+                pass
         return self.__cache_total_cov_mat_inverse
 
     @property
