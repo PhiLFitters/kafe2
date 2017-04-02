@@ -13,3 +13,4 @@ from .cost import CostFunctionBase, CostFunctionBase_Chi2, CostFunctionBase_NegL
 from .fit import FitBase, FitException
 from .format import ModelParameterFormatter, ModelFunctionFormatter, FormatterException
 from .plot import PlotContainerBase, PlotFigureBase, PlotContainerException, PlotFigureException
+from .profile import ContoursProfiler, ProfilePlot, ContourPlot

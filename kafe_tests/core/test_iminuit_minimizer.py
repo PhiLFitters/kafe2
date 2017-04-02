@@ -46,6 +46,11 @@ class TestMinimizerIMinuit(unittest.TestCase):
 
         self._scipy_fmin = opt.minimize(fcn_3_wrapper, (1.,1.,1.), method=self._ref_scipy_method)
 
+        self._ref_contour_m3_x_y_5 = np.array([[ 0.23,  1.23      ,  2.23,  1.23      ,  0.45822021],
+                                               [ 4.32,  2.90578644,  4.32,  5.73421356,  5.21928411]])
+        self._ref_profile_m3_x_5 = np.array([[-0.77, 0.23, 1.23,  2.23,  3.23],
+                                             [ 4.,   1.,   0.,    1.,    4.  ]])
+
     def test_compare_par_values_minimize_fcn1(self):
         self.m1.minimize()
         _v = self.m1.parameter_values
@@ -229,3 +234,18 @@ class TestMinimizerIMinuit(unittest.TestCase):
         self.m3.set('y', 4.32)
         self.m3.set('z', 9.81)
         self.assertAlmostEqual(self.m3.function_value, -5.23)
+
+
+    def test_profile_m3_x(self):
+        self.m3.minimize()
+        _prof = self.m3.profile('x', bins=5, subtract_min=True)
+        self.assertTrue(
+            np.allclose(_prof, self._ref_profile_m3_x_5, atol=1e-3)
+        )
+
+    def test_contour_m3_x_y(self):
+        self.m3.minimize()
+        _cont = self.m3.contour('x', 'y', numpoints=5, sigma=1.0)
+        self.assertTrue(
+            np.allclose(_cont, self._ref_contour_m3_x_y_5, atol=1e-3)
+        )

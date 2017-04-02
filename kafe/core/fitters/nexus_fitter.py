@@ -143,6 +143,13 @@ class NexusFitter(object):
     def release_parameter(self, par_name):
         self._minimizer.release(par_name)
 
+    def contour(self, parameter_name_1, parameter_name_2, numpoints=20, sigma=1.0):
+        return self._minimizer.contour(parameter_name_1, parameter_name_2,
+                                       numpoints=numpoints, sigma=sigma)
+
+    def profile(self, parameter_name, bins=20, bound=2, args=None, subtract_min=False):
+        return self._minimizer.profile(parameter_name, bins=bins, bound=bound, subtract_min=subtract_min)
+
     def set_fit_parameter_values(self, **parameter_value_dict):
         _dict_key_set = set(parameter_value_dict.keys())
         _par_name_set = set(self.parameters_to_fit)
