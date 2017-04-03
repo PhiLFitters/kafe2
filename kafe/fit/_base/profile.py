@@ -121,9 +121,9 @@ class ContoursProfiler(object):
         :type show_grid: bool
         :param show_legend: if ``True``, the legend is displayed
         :type show_legend: bool
-        :param show_legend: if ``True``, a number of horizontal and vertical helper lines are
+        :param show_helper_lines: if ``True``, a number of horizontal and vertical helper lines are
                             displayed at the minimum and the parameter uncertainty
-        :type show_legend: bool
+        :type show_helper_lines: bool
         :param show_ticks: if ``True``, *x* and *y* ticks are displayed
         :type show_ticks: bool
         :return:

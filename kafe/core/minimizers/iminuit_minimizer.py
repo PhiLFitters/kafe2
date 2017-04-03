@@ -220,7 +220,7 @@ class MinimizerIMinuit(object):
     def contour(self, parameter_name_1, parameter_name_2, numpoints=20, sigma=1.0):
         if self.__iminuit is None:
             raise MinimizerIMinuitException("Need to perform a fit before calling contour()!")
-        _x_errs, _y_errs, _contour_line = self.__iminuit.mncontour(parameter_name_1, parameter_name_2, numpoints=numpoints, sigma=1.0)
+        _x_errs, _y_errs, _contour_line = self.__iminuit.mncontour(parameter_name_1, parameter_name_2, numpoints=numpoints, sigma=sigma)
         self.minimize()  # return to minimum
 
         return np.array(_contour_line).T
