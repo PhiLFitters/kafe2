@@ -8,7 +8,7 @@
 """
 
 from .container import HistContainer
-from .cost import HistCostFunction_UserDefined, HistCostFunction_Chi2, HistCostFunction_NegLogLikelihood
+from .cost import HistCostFunction_UserDefined, HistCostFunction_Chi2, HistCostFunction_NegLogLikelihood, HistCostFunction_NegLogLikelihoodRatio
 from .fit import HistFit
 from .format import HistModelDensityFunctionFormatter
 from .model import HistParametricModel, HistModelFunction

@@ -45,3 +45,28 @@ class IndexedCostFunction_NegLogLikelihood(CostFunctionBase_NegLogLikelihood):
         :type data_point_distribution: ``'poisson'`` or ``'gaussian'``
         """
         super(IndexedCostFunction_NegLogLikelihood, self).__init__(data_point_distribution=data_point_distribution)
+
+
+class IndexedCostFunction_NegLogLikelihoodRatio(CostFunctionBase_NegLogLikelihood):
+    def __init__(self, data_point_distribution='poisson'):
+        r"""
+        Built-in negative log-likelihood cost function for *indexed* data.
+
+        .. WARN:: This cost function has not yet been properly tested and should not
+                  be used yet!
+
+        In addition to the measurement data and model predictions, likelihood-fits require a
+        probability distribution describing how the measurements are distributed around the model
+        predictions.
+        This built-in cost function supports two such distributions: the *Poisson* and *Gaussian* (normal)
+        distributions.
+
+        The likelihood ratio is defined as ratio of the likelihood function for each individual
+        observation, divided by the so-called *marginal likelihood*.
+
+        .. TODO:: Explain the above in detail.
+
+        :param data_point_distribution: which type of statistics to use for modelling the distribution of individual data points
+        :type data_point_distribution: ``'poisson'`` or ``'gaussian'``
+        """
+        super(IndexedCostFunction_NegLogLikelihoodRatio, self).__init__(data_point_distribution=data_point_distribution)
