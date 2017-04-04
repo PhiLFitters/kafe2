@@ -109,6 +109,16 @@ class XYFit(FitBase):
         self._nexus.new_alias(**{'y_model': self._model_function.name})
 
         # bind other reserved nodes
+        self._nexus.new_function(lambda: self.x_data_error, function_name='x_data_error')
+        self._nexus.new_function(lambda: self.x_data_cov_mat, function_name='x_data_cov_mat')
+        self._nexus.new_function(lambda: self.x_data_cov_mat_inverse, function_name='x_data_cov_mat_inverse')
+        self._nexus.new_function(lambda: self.x_model_error, function_name='x_model_error')
+        self._nexus.new_function(lambda: self.x_model_cov_mat, function_name='x_model_cov_mat')
+        self._nexus.new_function(lambda: self.x_model_cov_mat, function_name='x_model_cov_mat_inverse')
+        self._nexus.new_function(lambda: self.x_total_error, function_name='x_total_error')
+        self._nexus.new_function(lambda: self.x_total_cov_mat, function_name='x_total_cov_mat')
+        self._nexus.new_function(lambda: self.x_total_cov_mat_inverse, function_name='x_total_cov_mat_inverse')
+
         self._nexus.new_function(lambda: self.y_data_error, function_name='y_data_error')
         self._nexus.new_function(lambda: self.y_data_cov_mat, function_name='y_data_cov_mat')
         self._nexus.new_function(lambda: self.y_data_cov_mat_inverse, function_name='y_data_cov_mat_inverse')
