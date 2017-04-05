@@ -60,9 +60,9 @@ class XYFit(FitBase):
             # TODO: validate user-defined cost function? how?
 
         # declare cache
-        self.__cache_total_error = None
-        self.__cache_total_cov_mat = None
-        self.__cache_total_cov_mat_inverse = None
+        self.__cache_y_total_error = None
+        self.__cache_y_total_cov_mat = None
+        self.__cache_y_total_cov_mat_inverse = None
         self.__cache_y_error_band = None
 
         # initialize the Nexus
@@ -114,7 +114,7 @@ class XYFit(FitBase):
         self._nexus.new_function(lambda: self.x_data_cov_mat_inverse, function_name='x_data_cov_mat_inverse')
         self._nexus.new_function(lambda: self.x_model_error, function_name='x_model_error')
         self._nexus.new_function(lambda: self.x_model_cov_mat, function_name='x_model_cov_mat')
-        self._nexus.new_function(lambda: self.x_model_cov_mat, function_name='x_model_cov_mat_inverse')
+        self._nexus.new_function(lambda: self.x_model_cov_mat_inverse, function_name='x_model_cov_mat_inverse')
         self._nexus.new_function(lambda: self.x_total_error, function_name='x_total_error')
         self._nexus.new_function(lambda: self.x_total_cov_mat, function_name='x_total_cov_mat')
         self._nexus.new_function(lambda: self.x_total_cov_mat_inverse, function_name='x_total_cov_mat_inverse')
@@ -124,7 +124,7 @@ class XYFit(FitBase):
         self._nexus.new_function(lambda: self.y_data_cov_mat_inverse, function_name='y_data_cov_mat_inverse')
         self._nexus.new_function(lambda: self.y_model_error, function_name='y_model_error')
         self._nexus.new_function(lambda: self.y_model_cov_mat, function_name='y_model_cov_mat')
-        self._nexus.new_function(lambda: self.y_model_cov_mat, function_name='y_model_cov_mat_inverse')
+        self._nexus.new_function(lambda: self.y_model_cov_mat_inverse, function_name='y_model_cov_mat_inverse')
         self._nexus.new_function(lambda: self.y_total_error, function_name='y_total_error')
         self._nexus.new_function(lambda: self.y_total_cov_mat, function_name='y_total_cov_mat')
         self._nexus.new_function(lambda: self.y_total_cov_mat_inverse, function_name='y_total_cov_mat_inverse')
@@ -134,11 +134,23 @@ class XYFit(FitBase):
         self._nexus.new_alias(**{'cost': self._cost_function.name})
 
     def _mark_errors_for_update_invalidate_total_error_cache(self):
-        self.__cache_total_error = None
-        self.__cache_total_cov_mat = None
-        self.__cache_total_cov_mat_inverse = None
+        self.__cache_x_total_error = None
+        self.__cache_x_total_cov_mat = None
+        self.__cache_x_total_cov_mat_inverse = None
+        self.__cache_y_total_error = None
+        self.__cache_y_total_cov_mat = None
+        self.__cache_y_total_cov_mat_inverse = None
         self.__cache_y_error_band = None
         # TODO: implement a mass 'mark_for_update' routine in Nexus
+        self._nexus.get_by_name('x_data_error').mark_for_update()
+        self._nexus.get_by_name('x_data_cov_mat').mark_for_update()
+        self._nexus.get_by_name('x_data_cov_mat_inverse').mark_for_update()
+        self._nexus.get_by_name('x_model_error').mark_for_update()
+        self._nexus.get_by_name('x_model_cov_mat').mark_for_update()
+        self._nexus.get_by_name('x_model_cov_mat_inverse').mark_for_update()
+        self._nexus.get_by_name('x_total_error').mark_for_update()
+        self._nexus.get_by_name('x_total_cov_mat').mark_for_update()
+        self._nexus.get_by_name('x_total_cov_mat_inverse').mark_for_update()
         self._nexus.get_by_name('y_data_error').mark_for_update()
         self._nexus.get_by_name('y_data_cov_mat').mark_for_update()
         self._nexus.get_by_name('y_data_cov_mat_inverse').mark_for_update()
@@ -205,14 +217,29 @@ class XYFit(FitBase):
             self._data_container = self._new_data_container(_x_data, _y_data, dtype=float)
 
     @property
+    def x_data_error(self):
+        """array of pointwise *x* data uncertainties"""
+        return self._data_container.x_err
+
+    @property
     def y_data_error(self):
         """array of pointwise *y* data uncertainties"""
         return self._data_container.y_err
 
     @property
+    def x_data_cov_mat(self):
+        """the data *x* covariance matrix"""
+        return self._data_container.x_cov_mat
+    
+    @property
     def y_data_cov_mat(self):
         """the data *y* covariance matrix"""
         return self._data_container.y_cov_mat
+
+    @property
+    def x_data_cov_mat_inverse(self):
+        """inverse of the data *x* covariance matrix (or ``None`` if singular)"""
+        return self._data_container.x_cov_mat_inverse
 
     @property
     def y_data_cov_mat_inverse(self):
@@ -227,11 +254,25 @@ class XYFit(FitBase):
         return self._param_model.y
 
     @property
+    def x_model_error(self):
+        """array of pointwise model *x* uncertainties"""
+        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
+        self._param_model.x = self.x
+        return self._param_model.x_err
+
+    @property
     def y_model_error(self):
         """array of pointwise model *y* uncertainties"""
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x
         return self._param_model.y_err
+
+    @property
+    def x_model_cov_mat(self):
+        """the model *x* covariance matrix"""
+        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
+        self._param_model.x = self.x
+        return self._param_model.x_cov_mat
 
     @property
     def y_model_cov_mat(self):
@@ -241,6 +282,13 @@ class XYFit(FitBase):
         return self._param_model.y_cov_mat
 
     @property
+    def x_model_cov_mat_inverse(self):
+        """inverse of the model *x* covariance matrix (or ``None`` if singular)"""
+        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
+        self._param_model.x = self.x
+        return self._param_model.x_cov_mat_inverse
+
+    @property
     def y_model_cov_mat_inverse(self):
         """inverse of the model *y* covariance matrix (or ``None`` if singular)"""
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
@@ -248,40 +296,76 @@ class XYFit(FitBase):
         return self._param_model.y_cov_mat_inverse
 
     @property
+    def x_total_error(self):
+        """array of pointwise total *x* uncertainties"""
+        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
+        self._param_model.x = self.x
+        if self.__cache_x_total_error is None:
+            _tmp = self.x_data_error**2
+            _tmp += self.x_model_error**2
+            self.__cache_x_total_error = np.sqrt(_tmp)
+        return self.__cache_x_total_error
+
+    @property
     def y_total_error(self):
         """array of pointwise total *y* uncertainties"""
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x
-        if self.__cache_total_error is None:
+        if self.__cache_y_total_error is None:
             _tmp = self.y_data_error**2
             _tmp += self.y_model_error**2
-            self.__cache_total_error = np.sqrt(_tmp)
-        return self.__cache_total_error
+            self.__cache_y_total_error = np.sqrt(_tmp)
+        return self.__cache_y_total_error
+
+    @property
+    def x_total_cov_mat(self):
+        """the total *x* covariance matrix"""
+        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
+        self._param_model.x = self.x
+        if self.__cache_x_total_cov_mat is None:
+            _tmp = self.x_data_cov_mat
+            _tmp += self.x_model_cov_mat
+            self.__cache_x_total_cov_mat = _tmp
+        return self.__cache_x_total_cov_mat
 
     @property
     def y_total_cov_mat(self):
         """the total *y* covariance matrix"""
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x
-        if self.__cache_total_cov_mat is None:
+        if self.__cache_y_total_cov_mat is None:
             _tmp = self.y_data_cov_mat
             _tmp += self.y_model_cov_mat
-            self.__cache_total_cov_mat = _tmp
-        return self.__cache_total_cov_mat
+            self.__cache_y_total_cov_mat = _tmp
+        return self.__cache_y_total_cov_mat
+
+    @property
+    def x_total_cov_mat_inverse(self):
+        """inverse of the total *x* covariance matrix (or ``None`` if singular)"""
+        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
+        self._param_model.x = self.x
+        if self.__cache_x_total_cov_mat_inverse is None:
+            _tmp = self.x_total_cov_mat
+            try:
+                _tmp = _tmp.I
+                self.__cache_x_total_cov_mat_inverse = _tmp
+            except np.linalg.LinAlgError:
+                pass
+        return self.__cache_x_total_cov_mat_inverse
 
     @property
     def y_total_cov_mat_inverse(self):
         """inverse of the total *y* covariance matrix (or ``None`` if singular)"""
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x
-        if self.__cache_total_cov_mat_inverse is None:
+        if self.__cache_y_total_cov_mat_inverse is None:
             _tmp = self.y_total_cov_mat
             try:
                 _tmp = _tmp.I
-                self.__cache_total_cov_mat_inverse = _tmp
+                self.__cache_y_total_cov_mat_inverse = _tmp
             except np.linalg.LinAlgError:
                 pass
-        return self.__cache_total_cov_mat_inverse
+        return self.__cache_y_total_cov_mat_inverse
 
     @property
     def y_error_band(self):
