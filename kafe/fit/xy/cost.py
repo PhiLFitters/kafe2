@@ -17,7 +17,7 @@ class XYCostFunction_UserDefined(CostFunctionBase):
 
 
 class XYCostFunction_Chi2(CostFunctionBase_Chi2):
-    def __init__(self, errors_to_use='covariance', fallback_on_singular=True, axes_to_use='y'):
+    def __init__(self, errors_to_use='covariance', fallback_on_singular=True, axes_to_use='xy'):
         """
         Built-in least-squares cost function for *xy* data.
 
@@ -30,7 +30,8 @@ class XYCostFunction_Chi2(CostFunctionBase_Chi2):
         if axes_to_use.lower() == 'y':
             pass
         elif axes_to_use.lower() == 'xy':
-            raise NotImplementedError('"x-errors" have not been implemented yet!')
+            print "xy"
+#            raise NotImplementedError('"x-errors" have not been implemented yet!')
         else:
             raise CostFunctionException("Unknown value '%s' for 'axes_to_use': must be one of ('xy', 'y')")
 
