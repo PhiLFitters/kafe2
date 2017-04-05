@@ -340,6 +340,19 @@ class XYFit(FitBase):
         return self.__cache_y_total_cov_mat
 
     @property
+    def projected_xy_total_cov_mat(self):
+        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
+        self._param_model.x = self.x
+        if self.__cache_projected_xy_total_cov_mat is None:
+            _x_errors = np.sqrt(np-diag(self.x_total_cov_mat))            
+            _precision = 0.01 * np.min(_x_errors)
+            _derivatives = self._model_function.eval_model_function_derivative_by_x(dx=_precision)
+            _outer_product = np.outer(_derivatives, _derivatives)
+            _projected_x_cov_mat = np.asarray(self.x_total_cov_mat) * _outer_product
+            self.__cache_projected_xy_total_cov_mat = self.y_total_cov_mat + np.asmatrix(_projected_x_cov_mat)
+        return self.__cache_projected_xy_total_cov_mat
+
+    @property
     def x_total_cov_mat_inverse(self):
         """inverse of the total *x* covariance matrix (or ``None`` if singular)"""
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
@@ -366,6 +379,10 @@ class XYFit(FitBase):
             except np.linalg.LinAlgError:
                 pass
         return self.__cache_y_total_cov_mat_inverse
+
+    @property
+    def projected_xy_total_cov_mat_inverse(self):
+        return None
 
     @property
     def y_error_band(self):
