@@ -114,7 +114,7 @@ class XYFit(FitBase):
         self._nexus.new_function(lambda: self.y_data_cov_mat_inverse, function_name='y_data_cov_mat_inverse')
         self._nexus.new_function(lambda: self.y_model_error, function_name='y_model_error')
         self._nexus.new_function(lambda: self.y_model_cov_mat, function_name='y_model_cov_mat')
-        self._nexus.new_function(lambda: self.y_model_cov_mat, function_name='y_model_cov_mat_inverse')
+        self._nexus.new_function(lambda: self.y_model_cov_mat_inverse, function_name='y_model_cov_mat_inverse')
         self._nexus.new_function(lambda: self.y_total_error, function_name='y_total_error')
         self._nexus.new_function(lambda: self.y_total_cov_mat, function_name='y_total_cov_mat')
         self._nexus.new_function(lambda: self.y_total_cov_mat_inverse, function_name='y_total_cov_mat_inverse')
