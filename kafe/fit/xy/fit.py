@@ -141,6 +141,7 @@ class XYFit(FitBase):
         self.__cache_x_total_error = None
         self.__cache_x_total_cov_mat = None
         self.__cache_x_total_cov_mat_inverse = None
+        self.__cache_projected_xy_total_error = None
         self.__cache_projected_xy_total_cov_mat = None
         self.__cache_projected_xy_total_cov_mat_inverse = None
         self.__cache_y_total_error = None
