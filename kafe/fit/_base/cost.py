@@ -171,7 +171,7 @@ class CostFunctionBase(object):
 class CostFunctionBase_Chi2(CostFunctionBase):
     def __init__(self, errors_to_use='covariance', fallback_on_singular=True):
         """
-        Built-in least-squares cost function for *xy* data.
+        Base class for built-in least-squares cost function.
 
         :param errors_to_use: which errors to use when calculating :math:`\chi^2`
         :type errors_to_use: ``'covariance'``, ``'pointwise'`` or ``None``
@@ -264,7 +264,7 @@ class CostFunctionBase_Chi2(CostFunctionBase):
 class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
     def __init__(self, data_point_distribution='poisson'):
         r"""
-        Built-in negative log-likelihood cost function for *xy* data.
+        Base class for built-in negative log-likelihood cost function.
 
         In addition to the measurement data and model predictions, likelihood-fits require a
         probability distribution describing how the measurements are distributed around the model
@@ -341,6 +341,99 @@ class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
         _total_likelihood = np.prod(_per_point_likelihoods)
         # guard against returning NaN
         _nll = -2.0 * np.log(_total_likelihood)
+        if np.isnan(_nll):
+            return np.inf
+        return _nll
+
+
+class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
+    def __init__(self, data_point_distribution='poisson'):
+        r"""
+        Base class for built-in negative log-likelihood ratio cost function.
+
+        .. WARN:: This cost function has not yet been properly tested and should not
+                  be used yet!
+
+        In addition to the measurement data and model predictions, likelihood-fits require a
+        probability distribution describing how the measurements are distributed around the model
+        predictions.
+        This built-in cost function supports two such distributions: the *Poisson* and *Gaussian* (normal)
+        distributions.
+
+        The likelihood ratio is defined as ratio of the likelihood function for each individual
+        observation, divided by the so-called *marginal likelihood*.
+
+        .. TODO:: Explain the above in detail.
+
+        :param data_point_distribution: which type of statistics to use for modelling the distribution of individual data points
+        :type data_point_distribution: ``'poisson'`` or ``'gaussian'``
+        """
+
+        if data_point_distribution.lower() == 'gaussian':
+            _nll_func = self.nllr_gaussian
+        elif data_point_distribution.lower() == 'poisson':
+            _nll_func = self.nllr_poisson
+        else:
+            raise CostFunctionException(
+                "Unknown value '%s' for 'data_point_distribution': must be one of ('gaussian', 'poisson')!")
+
+        super(CostFunctionBase_NegLogLikelihoodRatio, self).__init__(cost_function=_nll_func)
+
+        self._formatter.latex_name = r"-2\ln\mathcal{L}_{\rm R}"
+
+    @staticmethod
+    def nllr_gaussian(data, model, total_error):
+        r"""A negative log-likelihood ratio function assuming Gaussian statistics for each measurement.
+
+        The cost function is given by:
+
+        .. math::
+            C = -2 \ln \mathcal{L}({\bf d}, {\bf m}, {\bf \sigma}) = -2 \ln \prod_j \mathcal{L}_{\rm Gaussian} (x=d_j, \mu=m_j, \sigma=\sigma_j)
+
+        .. math::
+            \rightarrow C = -2 \ln \prod_j \frac{1}{\sqrt{2{\sigma_j}^2\pi}} \exp{\left(-\frac{ (d_j-m_j)^2 }{ {\sigma_j}^2}\right)}
+
+        In the above, :math:`{\bf d}` are the measurements, :math:`{\bf m}` are the model predictions, and :math:`{\bf \sigma}`
+        are the pointwise total uncertainties.
+
+        :param data: measurement data
+        :param model: model values
+        :param total_error: total *y* uncertainties for data
+        :return: cost function value
+        """
+        _per_point_likelihoods = norm.pdf(data, loc=model, scale=total_error)
+        _total_likelihood = np.prod(_per_point_likelihoods)
+        _marginal_likelihood = np.prod(model)
+        # guard against returning NaN
+        _nll = -2.0 * np.log(_total_likelihood/_marginal_likelihood)
+        if np.isnan(_nll):
+            return np.inf
+        return _nll
+
+    @staticmethod
+    def nllr_poisson(data, model):
+        r"""A negative log-likelihood function assuming Poisson statistics for each measurement.
+
+        The cost function is given by:
+
+        .. math::
+            C = -2 \ln \mathcal{L}({\bf d}, {\bf m}) = -2 \ln \prod_j \mathcal{L}_{\rm Poisson} (k=d_j, \lambda=m_j)
+
+        .. math::
+            \rightarrow C = -2 \ln \prod_j \frac{{m_j}^{d_j} \exp(-m_j)}{d_j!}
+
+        In the above, :math:`{\bf d}` are the measurements and :math:`{\bf m}` are the model
+        predictions.
+
+        :param data: measurement data
+        :param model: model values
+        :return: cost function value
+        """
+        _per_point_likelihoods = poisson.pmf(data, mu=model, loc=0.0)
+        _total_likelihood = np.prod(_per_point_likelihoods)
+        _marginal_likelihood = np.prod(model)
+        # guard against returning NaN
+        _nll = -2.0 * np.log(_total_likelihood/_marginal_likelihood)
         if np.isnan(_nll):
             return np.inf
         return _nll

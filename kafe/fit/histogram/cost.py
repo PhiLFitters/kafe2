@@ -1,4 +1,4 @@
-from .._base import CostFunctionBase, CostFunctionBase_Chi2, CostFunctionBase_NegLogLikelihood, CostFunctionException
+from .._base import CostFunctionBase, CostFunctionBase_Chi2, CostFunctionBase_NegLogLikelihood, CostFunctionBase_NegLogLikelihoodRatio, CostFunctionException
 
 
 class HistCostFunction_UserDefined(CostFunctionBase):
@@ -145,3 +145,73 @@ class HistCostFunction_NegLogLikelihood(CostFunctionBase_NegLogLikelihood):
         """
         # "translate" the argument names
         return CostFunctionBase_NegLogLikelihood.nll_poisson(data=data, model=model)
+
+class HistCostFunction_NegLogLikelihoodRatio(CostFunctionBase_NegLogLikelihoodRatio):
+    def __init__(self, data_point_distribution='poisson'):
+        r"""
+        Built-in negative log-likelihood ratio cost function for histograms.
+
+        .. WARN:: This cost function has not yet been properly tested and should not
+                  be used yet!
+
+        In addition to the measurement data and model predictions, likelihood-fits require a
+        probability distribution describing how the measurements are distributed around the model
+        predictions.
+        This built-in cost function supports two such distributions: the *Poisson* and *Gaussian* (normal)
+        distributions.
+
+        The likelihood ratio is defined as ratio of the likelihood function for each individual
+        observation, divided by the so-called *marginal likelihood*.
+
+        .. TODO:: Explain the above in detail.
+
+        :param data_point_distribution: which type of statistics to use for modelling the distribution of individual data points
+        :type data_point_distribution: ``'poisson'`` or ``'gaussian'``
+        """
+        super(HistCostFunction_NegLogLikelihoodRatio, self).__init__(data_point_distribution=data_point_distribution)
+
+    @staticmethod
+    def nllr_gaussian(data, model, total_error):
+        r"""A negative log-likelihood function assuming Gaussian statistics for each measurement.
+
+        The cost function is given by:
+
+        .. math::
+            C = -2 \ln \mathcal{L}({\bf d}, {\bf m}, {\bf \sigma}) = -2 \ln \prod_j \mathcal{L}_{\rm Gaussian} (x=d_j, \mu=m_j, \sigma=\sigma_j)
+
+        .. math::
+            \rightarrow C = -2 \ln \prod_j \frac{1}{\sqrt{2{\sigma_j}^2\pi}} \exp{\left(-\frac{ (d_j-m_j)^2 }{ {\sigma_j}^2}\right)}
+
+        In the above, :math:`{\bf d}` are the measurements, :math:`{\bf m}` are the model predictions, and :math:`{\bf \sigma}`
+        are the pointwise total uncertainties.
+
+        :param data: measurement data
+        :param model: model values
+        :param total_error: total *y* uncertainties for data
+        :return: cost function value
+        """
+        # "translate" the argument names
+        return CostFunctionBase_NegLogLikelihoodRatio.nllr_gaussian(data=data, model=model, total_error=total_error)
+
+
+    @staticmethod
+    def nllr_poisson(data, model):
+        r"""A negative log-likelihood function assuming Poisson statistics for each measurement.
+
+        The cost function is given by:
+
+        .. math::
+            C = -2 \ln \mathcal{L}({\bf d}, {\bf m}) = -2 \ln \prod_j \mathcal{L}_{\rm Poisson} (k=d_j, \lambda=m_j)
+
+        .. math::
+            \rightarrow C = -2 \ln \prod_j \frac{{m_j}^{d_j} \exp(-m_j)}{d_j!}
+
+        In the above, :math:`{\bf d}` are the measurements and :math:`{\bf m}` are the model
+        predictions.
+
+        :param data: measurement data
+        :param model: model values
+        :return: cost function value
+        """
+        # "translate" the argument names
+        return CostFunctionBase_NegLogLikelihoodRatio.nllr_poisson(data=data, model=model)
