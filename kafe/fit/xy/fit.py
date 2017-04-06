@@ -362,9 +362,10 @@ class XYFit(FitBase):
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x
         if self.__cache_projected_xy_total_cov_mat is None:
+            print "xy cov"
             _x_errors = self.x_total_error            
             _precision = 0.01 * np.min(_x_errors)
-            _derivatives = self._model_function.eval_model_function_derivative_by_x(dx=_precision)
+            _derivatives = self._param_model.eval_model_function_derivative_by_x(dx=_precision)
             _outer_product = np.outer(_derivatives, _derivatives)
             _projected_x_cov_mat = np.asarray(self.x_total_cov_mat) * _outer_product
             self.__cache_projected_xy_total_cov_mat = self.y_total_cov_mat + np.asmatrix(_projected_x_cov_mat)

@@ -28,7 +28,7 @@ class XYCostFunction_Chi2(CostFunctionBase_Chi2):
         """
 
         if axes_to_use.lower() == 'y':
-            pass
+            super(XYCostFunction_Chi2, self).__init__(errors_to_use=errors_to_use, fallback_on_singular=fallback_on_singular)
         elif axes_to_use.lower() == 'xy':
             if errors_to_use is None:
                 _chi2_func = self.chi2_no_errors
@@ -44,11 +44,11 @@ class XYCostFunction_Chi2(CostFunctionBase_Chi2):
                     _chi2_func = self.chi2_xy_pointwise_errors
             else:
                 raise CostFunctionException("Unknown value '%s' for 'errors_to_use': must be one of ('covariance', 'pointwise', None)")
-
+            CostFunctionBase.__init__(self, cost_function=_chi2_func)
         else:
             raise CostFunctionException("Unknown value '%s' for 'axes_to_use': must be one of ('xy', 'y')")
 
-        super(XYCostFunction_Chi2, self).__init__(errors_to_use=errors_to_use, fallback_on_singular=fallback_on_singular)
+        
 
     @staticmethod
     def chi2_no_errors(y_data, y_model):
@@ -83,7 +83,6 @@ class XYCostFunction_Chi2(CostFunctionBase_Chi2):
         :param y_total_cov_mat_inverse: inverse of the total covariance matrix
         :return: cost function value
         """
-        print "cov"
         return CostFunctionBase_Chi2.chi2_covariance(data=y_data, model=y_model, total_cov_mat_inverse=y_total_cov_mat_inverse)
 
     @staticmethod
@@ -121,12 +120,12 @@ class XYCostFunction_Chi2(CostFunctionBase_Chi2):
         return CostFunctionBase_Chi2.chi2_covariance_fallback(data=y_data, model=y_model, total_cov_mat_inverse=y_total_cov_mat_inverse)
 
     @staticmethod
-    def chi2_xy_pointwise_errors_fallback(y_data, y_model, x_total_error, y_total_error):
+    def chi2_xy_pointwise_errors_fallback(y_data, y_model, projected_xy_total_error):
         return CostFunctionBase_Chi2.chi2_pointwise_errors_fallback(y_data, y_model, total_error=projected_xy_total_error)
 
     @staticmethod
-    def chi2_xy_covariance_fallback(y_data, y_model, xy_total_cov_mat_inverse):
-        return CostFunctionBase_Chi2.chi2_covariance_fallback(data=y_data, model=y_model, total_cov_mat_inverse=xy_total_cov_mat_inverse)
+    def chi2_xy_covariance_fallback(y_data, y_model, projected_xy_total_cov_mat_inverse):
+        return CostFunctionBase_Chi2.chi2_covariance_fallback(data=y_data, model=y_model, total_cov_mat_inverse=projected_xy_total_cov_mat_inverse)
 
 
 class XYCostFunction_NegLogLikelihood(CostFunctionBase_NegLogLikelihood):

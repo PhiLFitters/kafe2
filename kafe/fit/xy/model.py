@@ -178,6 +178,10 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
         _x = x if x is not None else self.x
         _pars = model_parameters if model_parameters is not None else self._model_parameters
         _dxs = dx if dx is not None else 1e-2 * (np.abs(_x) + 1.0/(1.0+np.abs(_x)))
+        try:
+            iter(_dxs)
+        except TypeError:
+            _dxs = np.ones_like(_x)*_dxs
 
         _ret = []
         for _x_idx, (_x_val, _dx) in enumerate(zip(_x, _dxs)):
