@@ -24,7 +24,7 @@ class ContoursProfiler(object):
 
         self._fit = fit_object
         self._profile_kwargs = dict(points=profile_points, subtract_min=profile_subtract_min, bound=profile_bound)
-        self._contour_kwargs = dict(points=profile_points, sigma_values=contour_sigma_values)
+        self._contour_kwargs = dict(points=contour_points, sigma_values=contour_sigma_values)
 
         self._cost_function_formatted_name = "${}$".format(self._fit._cost_function.formatter.latex_name)
         self._parameters_formatted_names = ["${}$".format(pf.latex_name) for pf in self._fit._model_function.argument_formatters]
