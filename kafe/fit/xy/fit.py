@@ -60,11 +60,8 @@ class XYFit(FitBase):
             # TODO: validate user-defined cost function? how?
 
         # declare cache
-        self.__cache_y_total_error = None
-        self.__cache_y_total_cov_mat = None
-        self.__cache_y_total_cov_mat_inverse = None
-        self.__cache_y_error_band = None
-
+        self._invalidate_total_error_cache()
+        
         # initialize the Nexus
         self._init_nexus()
 
@@ -137,7 +134,7 @@ class XYFit(FitBase):
         self._nexus.new_function(self._cost_function.func, function_name=self._cost_function.name, add_unknown_parameters=False)
         self._nexus.new_alias(**{'cost': self._cost_function.name})
 
-    def _mark_errors_for_update_invalidate_total_error_cache(self):
+    def _invalidate_total_error_cache(self):
         self.__cache_x_total_error = None
         self.__cache_x_total_cov_mat = None
         self.__cache_x_total_cov_mat_inverse = None
@@ -148,6 +145,9 @@ class XYFit(FitBase):
         self.__cache_y_total_cov_mat = None
         self.__cache_y_total_cov_mat_inverse = None
         self.__cache_y_error_band = None
+        
+
+    def _mark_errors_for_update(self):
         # TODO: implement a mass 'mark_for_update' routine in Nexus
         self._nexus.get_by_name('x_data_error').mark_for_update()
         self._nexus.get_by_name('x_data_cov_mat').mark_for_update()
@@ -167,6 +167,10 @@ class XYFit(FitBase):
         self._nexus.get_by_name('y_total_error').mark_for_update()
         self._nexus.get_by_name('y_total_cov_mat').mark_for_update()
         self._nexus.get_by_name('y_total_cov_mat_inverse').mark_for_update()
+
+    def _mark_errors_for_update_invalidate_total_error_cache(self):
+        self._mark_errors_for_update()
+        self._invalidate_total_error_cache()
 
     def _calculate_y_error_band(self):
         _xmin, _xmax = self._data_container.x_range
@@ -329,6 +333,8 @@ class XYFit(FitBase):
         """array of pointwise total *y* with the x uncertainties projected on top of them"""
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x
+        if np.count_nonzero(self._data_container.x_err) == 0:
+            return self.y_total_error
         if self.__cache_projected_xy_total_error is None:
             _x_errors = self.x_total_error
             _precision = 0.01 * np.min(_x_errors)
@@ -362,6 +368,8 @@ class XYFit(FitBase):
     def projected_xy_total_cov_mat(self):
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x
+        if np.count_nonzero(self._data_container.x_err) == 0:
+            return self.y_total_cov_mat
         if self.__cache_projected_xy_total_cov_mat is None:
             print "xy cov"
             _x_errors = self.x_total_error            
@@ -491,6 +499,20 @@ class XYFit(FitBase):
         _ret = self._data_container.disable_error(err_id)   # mark nexus error parameters as stale
         self._mark_errors_for_update_invalidate_total_error_cache()
         return _ret
+
+#     def do_fit(self):
+#         print self._data_container.x_err
+#         self._fitter.do_fit()
+#         _previous_cost_function_value = self.cost_function_value
+#         for i in range(10):
+#             self._mark_errors_for_update_invalidate_total_error_cache()
+#             self._fitter.do_fit()
+#             if np.abs(self.cost_function_value - _previous_cost_function_value) < 1e-5:
+#                 break
+#         # update parameter formatters
+#         for _fpf, _pv, _pe in zip(self._model_function.argument_formatters, self.parameter_values, self.parameter_errors):
+#             _fpf.value = _pv
+#             _fpf.error = _pe
 
     def eval_model_function(self, x=None, model_parameters=None):
         """
