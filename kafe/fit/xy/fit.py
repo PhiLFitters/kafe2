@@ -11,7 +11,8 @@ from .format import XYModelFunctionFormatter
 from .model import XYParametricModel, XYModelFunction
 
 CONFIG_PARAMETER_DEFAULT_VALUE = 1.0
-
+CONFIG_FIT_MAX_ITERATIONS = 10
+CONFIG_FIT_CONVERGENCE_LIMIT = 1e-5
 
 class XYFitException(FitException):
     pass
@@ -167,6 +168,9 @@ class XYFit(FitBase):
         self._nexus.get_by_name('y_total_error').mark_for_update()
         self._nexus.get_by_name('y_total_cov_mat').mark_for_update()
         self._nexus.get_by_name('y_total_cov_mat_inverse').mark_for_update()
+        self._nexus.get_by_name('projected_xy_total_error').mark_for_update()
+        self._nexus.get_by_name('projected_xy_total_cov_mat').mark_for_update()
+        self._nexus.get_by_name('projected_xy_total_cov_mat_inverse').mark_for_update()
 
     def _mark_errors_for_update_invalidate_total_error_cache(self):
         self._mark_errors_for_update()
@@ -371,7 +375,6 @@ class XYFit(FitBase):
         if np.count_nonzero(self._data_container.x_err) == 0:
             return self.y_total_cov_mat
         if self.__cache_projected_xy_total_cov_mat is None:
-            print "xy cov"
             _x_errors = self.x_total_error            
             _precision = 0.01 * np.min(_x_errors)
             _derivatives = self._param_model.eval_model_function_derivative_by_x(dx=_precision)
@@ -500,19 +503,23 @@ class XYFit(FitBase):
         self._mark_errors_for_update_invalidate_total_error_cache()
         return _ret
 
-#     def do_fit(self):
-#         print self._data_container.x_err
-#         self._fitter.do_fit()
-#         _previous_cost_function_value = self.cost_function_value
-#         for i in range(10):
-#             self._mark_errors_for_update_invalidate_total_error_cache()
-#             self._fitter.do_fit()
-#             if np.abs(self.cost_function_value - _previous_cost_function_value) < 1e-5:
-#                 break
-#         # update parameter formatters
-#         for _fpf, _pv, _pe in zip(self._model_function.argument_formatters, self.parameter_values, self.parameter_errors):
-#             _fpf.value = _pv
-#             _fpf.error = _pe
+    def do_fit(self):
+        if np.count_nonzero(self._data_container.x_err) == 0:
+            super(XYFit, self).do_fit()
+        else:
+            self._fitter.do_fit()
+            _previous_cost_function_value = self.cost_function_value
+            for i in range(CONFIG_FIT_MAX_ITERATIONS):
+                self._mark_errors_for_update_invalidate_total_error_cache()
+                self._fitter.do_fit()
+                if np.abs(self.cost_function_value - _previous_cost_function_value) < CONFIG_FIT_CONVERGENCE_LIMIT:
+                    break
+#                 print "{}: {} -> {}".format(i, _previous_cost_function_value, self.cost_function_value)
+                _previous_cost_function_value = self.cost_function_value
+            # update parameter formatters
+            for _fpf, _pv, _pe in zip(self._model_function.argument_formatters, self.parameter_values, self.parameter_errors):
+                _fpf.value = _pv
+                _fpf.error = _pe
 
     def eval_model_function(self, x=None, model_parameters=None):
         """
