@@ -12,10 +12,11 @@ class MinimizerScipyOptimizeException(Exception):
 class MinimizerScipyOptimize(object):
     def __init__(self,
                  parameter_names, parameter_values, parameter_errors,
-                 function_to_minimize):
+                 function_to_minimize, method="slsqp"):
         self._par_names = parameter_names
         self._par_val = parameter_values
         self._par_err = parameter_errors
+        self._method = method
         self._par_bounds = None
         #self._par_bounds = [(None, None) for _pn in self._par_names]
         self._par_fixed = [False] * len(parameter_names)
@@ -147,7 +148,7 @@ class MinimizerScipyOptimize(object):
     def _func_wrapper_unpack_args(self, args):
         return self._func_handle(*args)
 
-    def minimize(self, max_calls=6000, method='slsqp'):
+    def minimize(self, max_calls=6000):
         self._par_constraints = []
         for _par_id, (_pf, _pv) in enumerate(zip(self._par_fixed, self._par_val)):
             if _pf:
@@ -159,7 +160,7 @@ class MinimizerScipyOptimize(object):
         self._opt_result = opt.minimize(self._func_wrapper_unpack_args,
                                         self._par_val,
                                         args=(),
-                                        method=method,
+                                        method=self._method,
                                         jac=None,
                                         hess=None, hessp=None,
                                         bounds=self._par_bounds,
@@ -171,7 +172,8 @@ class MinimizerScipyOptimize(object):
 
         self._par_val = self._opt_result.x
 
-        _hi = self._hessian_inv
+        _hi = self._opt_result.hess_inv
+        print _hi
         if _hi is not None:
             try:
                 self._hessian_inv = np.asmatrix(_hi.todense())
@@ -183,3 +185,9 @@ class MinimizerScipyOptimize(object):
             self._par_err = np.sqrt(np.diag(self._par_cov_mat))
 
         self._fval = self._opt_result.fun
+
+    def contour(self, parameter_name_1, parameter_name_2, numpoints=20, sigma=1.0):
+        return np.array([[1,1,-1,-1],[1,-1,1,-1]])
+    
+    def profile(self, parameter_name, bins=20, bound=2, args=None, subtract_min=False):
+        return np.array([[5,2,1,2,5],[-2,-1,0,1,2]])

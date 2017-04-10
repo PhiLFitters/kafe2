@@ -17,8 +17,9 @@ class MinimizerROOTTMinuitException(Exception):
 class MinimizerROOTTMinuit(object):
     def __init__(self,
                  parameter_names, parameter_values, parameter_errors,
-                 function_to_minimize):
+                 function_to_minimize, strategy = 1):
         self._par_names = parameter_names
+        self._strategy = strategy
 
         self._func_handle = function_to_minimize
         self._err_def = 1.0
@@ -71,6 +72,7 @@ class MinimizerROOTTMinuit(object):
     def _recreate_gMinuit(self):
         self.__gMinuit = TMinuit(self.n_pars)
         self.__gMinuit.SetPrintLevel(-1)
+        self.__gMinuit.mncomd("SET STRATEGY {}".format(self._strategy), Long(0))
         self.__gMinuit.SetFCN(self._minuit_fcn)
         self.__gMinuit.SetErrorDef(self._err_def)
 

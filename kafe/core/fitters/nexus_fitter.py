@@ -8,7 +8,7 @@ class NexusFitterException(Exception):
 
 class NexusFitter(object):
 
-    def __init__(self, nexus, parameters_to_fit, parameter_to_minimize, minimizer_class=MinimizerIMinuit):
+    def __init__(self, nexus, parameters_to_fit, parameter_to_minimize, minimizer_class=MinimizerIMinuit, minimizer_specification = None):
         self._nx = nexus
         self.parameters_to_fit = parameters_to_fit
         self.parameter_to_minimize = parameter_to_minimize
@@ -21,7 +21,13 @@ class NexusFitter(object):
 
         self.__minimizing = False
         _par_name_val_map = self.fit_parameter_values
-        self._minimizer = minimizer_class(parameters_to_fit,
+        if minimizer_specification is not None:
+            self._minimizer = minimizer_class(parameters_to_fit,
+                                          _par_name_val_map.values(),
+                                          [0.1 if _v==0 else 0.1*_v for _v in _par_name_val_map.values()],
+                                          self._fcn_wrapper, minimizer_specification)
+        else:
+            self._minimizer = minimizer_class(parameters_to_fit,
                                           _par_name_val_map.values(),
                                           [0.1 if _v==0 else 0.1*_v for _v in _par_name_val_map.values()],
                                           self._fcn_wrapper)

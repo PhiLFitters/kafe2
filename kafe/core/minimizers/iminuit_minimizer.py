@@ -12,9 +12,10 @@ class MinimizerIMinuitException(Exception):
 class MinimizerIMinuit(object):
     def __init__(self,
                  parameter_names, parameter_values, parameter_errors,
-                 function_to_minimize):
+                 function_to_minimize, strategy = 1):
         self._par_names = parameter_names
-
+        self._strategy = strategy
+        
         self._func_handle = function_to_minimize
         self._err_def = 1.0
         self._tol = 0.001
@@ -61,6 +62,7 @@ class MinimizerIMinuit(object):
                                         errordef=self._err_def,
                                         **self._minimizer_param_dict)
             self.__iminuit.set_print_level(-1)
+            self.__iminuit.set_strategy(self._strategy)
         return self.__iminuit
 
     def _fill_in_zeroes_for_fixed(self, submatrix):

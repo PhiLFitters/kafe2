@@ -27,7 +27,7 @@ class IndexedFit(FitBase):
                           'data_cov_mat', 'model_cov_mat', 'total_cov_mat',
                           'data_cor_mat', 'model_cor_mat', 'total_cor_mat'}
 
-    def __init__(self, data, model_function, cost_function=IndexedCostFunction_Chi2(errors_to_use='covariance', fallback_on_singular=True)):
+    def __init__(self, data, model_function, cost_function=IndexedCostFunction_Chi2(errors_to_use='covariance', fallback_on_singular=True), minimizer="iminuit"):
         """
         Construct a fit of a model to a series of indexed measurements.
 
@@ -67,10 +67,7 @@ class IndexedFit(FitBase):
         self._init_nexus()
 
         # initialize the Fitter
-        self._fitter = NexusFitter(nexus=self._nexus,
-                                   parameters_to_fit=self._fit_param_names,
-                                   parameter_to_minimize=self._cost_function.name)
-
+        self._initialize_fitter(minimizer)
         # create the child ParametricModel objet
         self._param_model = self._new_parametric_model(self._model_function.func, self.parameter_values, shape_like=self.data)
 
