@@ -263,3 +263,19 @@ class XYContainer(IndexedContainer):
         if self._xy_total_errors is None:
             self._calculate_total_error()
         return self._xy_total_errors[_axis]
+
+    @property
+    def has_x_errors(self):
+        """``True`` if at least one *x* uncertainty source is defined for the data container"""
+        for _err_dict in self._error_dicts.values():
+            if _err_dict['axis'] == 0:
+                return True
+        return False
+
+    @property
+    def has_y_errors(self):
+        """``True`` if at least one *x* uncertainty source is defined for the data container"""
+        for _err_dict in self._error_dicts.values():
+            if _err_dict['axis'] == 1:
+                return True
+        return False

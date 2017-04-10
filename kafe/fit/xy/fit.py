@@ -504,7 +504,7 @@ class XYFit(FitBase):
         return _ret
 
     def do_fit(self):
-        if np.count_nonzero(self._data_container.x_err) == 0:
+        if not self._data_container.has_x_errors:
             super(XYFit, self).do_fit()
         else:
             self._fitter.do_fit()
@@ -514,7 +514,6 @@ class XYFit(FitBase):
                 self._fitter.do_fit()
                 if np.abs(self.cost_function_value - _previous_cost_function_value) < CONFIG_FIT_CONVERGENCE_LIMIT:
                     break
-#                 print "{}: {} -> {}".format(i, _previous_cost_function_value, self.cost_function_value)
                 _previous_cost_function_value = self.cost_function_value
             # update parameter formatters
             for _fpf, _pv, _pe in zip(self._model_function.argument_formatters, self.parameter_values, self.parameter_errors):
