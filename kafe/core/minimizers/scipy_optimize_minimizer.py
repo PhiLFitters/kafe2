@@ -263,7 +263,9 @@ class MinimizerScipyOptimize(object):
                 break 
 #         print "contour"
 #         print _contour_coords
-        _contour_array = np.asarray(_contour_coords).T
+        _contour_array = np.asarray(_contour_coords, dtype=float).T
+        _contour_array[0] = _contour_array[0] * step_1 + _minimum[0]
+        _contour_array[1] = _contour_array[1] * step_2 + _minimum[1]
         print _contour_array
         return _contour_array
     
