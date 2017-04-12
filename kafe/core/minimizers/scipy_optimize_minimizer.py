@@ -5,6 +5,7 @@ except ImportError:
     raise
 
 import numpy as np
+import numdifftools as nd
 
 class MinimizerScipyOptimizeException(Exception):
     pass
@@ -155,8 +156,8 @@ class MinimizerScipyOptimize(object):
                 self._par_constraints.append(
                     dict(type='eq', fun=lambda x: x[_par_id] - _pv, jac=lambda x: 0.)
                 )
-
-
+                
+                
         self._opt_result = opt.minimize(self._func_wrapper_unpack_args,
                                         self._par_val,
                                         args=(),
@@ -169,22 +170,16 @@ class MinimizerScipyOptimize(object):
                                         callback=None,
                                         options=dict(maxiter=max_calls, disp=False))
 
-
         self._par_val = self._opt_result.x
 
-        _hi = self._opt_result.hess_inv
-        print _hi
-        if _hi is not None:
-            try:
-                self._hessian_inv = np.asmatrix(_hi.todense())
-            except AttributeError:
-                self._hessian_inv = np.asmatrix(_hi)
+        self._hessian_inv = np.asmatrix(nd.Hessian(self._func_wrapper_unpack_args)(self._par_val)).I
 
         if self._hessian_inv is not None:
             self._par_cov_mat = self._hessian_inv * 2.0 * self._err_def
             self._par_err = np.sqrt(np.diag(self._par_cov_mat))
 
         self._fval = self._opt_result.fun
+
 
     def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, step_1=0.01, step_2=0.01, numpoints = 20, strategy=1):
         if strategy == 0:
@@ -198,7 +193,6 @@ class MinimizerScipyOptimize(object):
             _bias = 1
             
         _contour_fun = self.function_value + sigma ** 2
-        print "contour fun {}".format(_contour_fun)
         _ids = (self._par_names.index(parameter_name_1), self._par_names.index(parameter_name_2))
         _minimum = np.asarray([self._par_val[_ids[0]], self._par_val[_ids[1]]])
         _coords = (0, 0)
@@ -266,7 +260,8 @@ class MinimizerScipyOptimize(object):
         _contour_array = np.asarray(_contour_coords, dtype=float).T
         _contour_array[0] = _contour_array[0] * step_1 + _minimum[0]
         _contour_array[1] = _contour_array[1] * step_2 + _minimum[1]
-        print _contour_array
+        #function call needed to reset the nexus cache to minimal values
+        self._func_wrapper_unpack_args(self._par_val)
         return _contour_array
     
     def _get_adjacent_coords(self, central_coords):
@@ -291,4 +286,4 @@ class MinimizerScipyOptimize(object):
         return _result.fun
         
     def profile(self, parameter_name, bins=20, bound=2, args=None, subtract_min=False):
-        return np.array([[5,2,1,2,5],[-2,-1,0,1,2]])
+        return np.array([[0,1,1.5],[1,2,3.25]])
