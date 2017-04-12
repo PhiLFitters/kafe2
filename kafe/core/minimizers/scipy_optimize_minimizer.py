@@ -186,8 +186,107 @@ class MinimizerScipyOptimize(object):
 
         self._fval = self._opt_result.fun
 
-    def contour(self, parameter_name_1, parameter_name_2, numpoints=20, sigma=1.0):
-        return np.array([[1,1,-1,-1],[1,-1,1,-1]])
+    def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, step_1=0.01, step_2=0.01, numpoints = 20, strategy=1):
+        if strategy == 0:
+            _fraction = 0.08
+            _bias = 0.1
+        elif strategy == 1:
+            _fraction = 0.04
+            _bias = 1
+        elif strategy == 2:
+            _fraction = 0.01
+            _bias = 1
+            
+        _contour_fun = self.function_value + sigma ** 2
+        print "contour fun {}".format(_contour_fun)
+        _ids = (self._par_names.index(parameter_name_1), self._par_names.index(parameter_name_2))
+        _minimum = np.asarray([self._par_val[_ids[0]], self._par_val[_ids[1]]])
+        _coords = (0, 0)
+#         step_1 *= self._par_err[_ids[0]]
+#         step_2 *= self._par_err[_ids[1]]
+        _x_err, _y_err = 0.27, 0.1
+        step_1, step_2 = _x_err * _fraction, _y_err * _fraction
+        _x_vector = np.asarray([step_1, 0])
+        _y_vector = np.asarray([0, step_2])
+        _steps = np.asarray([[0, step_2], [step_1, 0], [0, -step_2], [-step_1, 0]])
+        _fun_distance = sigma ** 2
+        _adjacent_funs = np.zeros(4)
+        _last_direction = -1
+        
+        _contour_coords = []
+        _explored_coords = set()
+        _explored_coords.add((0,0))
+        _log_points = False
+        _termination_coords = None
+        _first_lap = True
+
+        _loops = 0
+        
+        while True:
+            if _coords == _termination_coords:
+                if not _first_lap:
+                    break
+                else:
+                    _first_lap = False
+            _adjacent_coords = self._get_adjacent_coords(_coords)
+            for i in range(4):
+                if _adjacent_coords[i] in _explored_coords or i == _last_direction:
+                    _adjacent_funs[i] = 0
+                elif _adjacent_coords[i] == _termination_coords:
+                    _adjacent_funs[i] = _contour_fun
+                else:
+                    _adjacent_funs[i] = self._calc_fun_at_point(_minimum + _adjacent_coords[i][0] * _x_vector + _adjacent_coords[i][1] * _y_vector, _ids)
+            _distances = _contour_fun - _adjacent_funs
+            for i in range(4):
+                if _distances[i] < 0:
+                    _distances[i] *= -_bias
+            _adjacent_funs_best_distance = np.min(_distances)
+            _min_index = np.argmin(_distances)
+            _new_coords = _adjacent_coords[_min_index]
+            
+            for i in range(4):
+                if i != _last_direction:
+                    _explored_coords.add(_adjacent_coords[i])
+            if _fun_distance < _adjacent_funs_best_distance and not _log_points:
+                _log_points = True
+#                 print "found contour"
+                _termination_coords = _new_coords
+                _explored_coords.clear()
+            _coords = _new_coords
+            _fun_distance = _adjacent_funs_best_distance
+            _last_direction = (np.argmin(_distances) + 2) % 4
+            if _log_points:
+                _contour_coords.append(_coords)
+            if _loops < 10000:
+                _loops += 1
+            else:
+                break 
+#         print "contour"
+#         print _contour_coords
+        _contour_array = np.asarray(_contour_coords).T
+        print _contour_array
+        return _contour_array
     
+    def _get_adjacent_coords(self, central_coords):
+        return [(central_coords[0], central_coords[1] + 1),
+                (central_coords[0] + 1, central_coords[1]),
+                (central_coords[0], central_coords[1] - 1),
+                (central_coords[0] - 1, central_coords[1])]
+    
+    def _calc_fun_at_point(self, values, ids):
+        _local_constraints = self._par_constraints + [{'type' : 'eq', 'fun' : lambda x: x[ids[0]] - values[0]},
+                                                      {'type' : 'eq', 'fun' : lambda x: x[ids[1]] - values[1]}]
+        _result = opt.minimize(self._func_wrapper_unpack_args,
+                                        self._par_val,
+                                        args=(),
+                                        method="slsqp",
+                                        jac=None,
+                                        bounds=self._par_bounds,
+                                        constraints=_local_constraints,
+                                        tol=self.tolerance,
+                                        callback=None,
+                                        options=dict(maxiter=6000, disp=False))
+        return _result.fun
+        
     def profile(self, parameter_name, bins=20, bound=2, args=None, subtract_min=False):
         return np.array([[5,2,1,2,5],[-2,-1,0,1,2]])
