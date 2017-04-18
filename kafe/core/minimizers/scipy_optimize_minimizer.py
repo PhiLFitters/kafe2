@@ -182,6 +182,7 @@ class MinimizerScipyOptimize(object):
 
 
     def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, numpoints = 20, strategy=1):
+        print sigma
         if strategy == 0:
             _fraction = 0.08
             _bias = 0.1
@@ -192,84 +193,72 @@ class MinimizerScipyOptimize(object):
             _fraction = 0.01
             _bias = 1
             
+        _fraction = 0.04
         _contour_fun = self.function_value + sigma ** 2
         _ids = (self._par_names.index(parameter_name_1), self._par_names.index(parameter_name_2))
         _minimum = np.asarray([self._par_val[_ids[0]], self._par_val[_ids[1]]])
-        _coords = (0, 0)
-        _x_err, _y_err = self._par_err[_ids[0]], self._par_err[_ids[1]]
-        step_1, step_2 = _x_err * _fraction, _y_err * _fraction
-        _x_vector = np.asarray([step_1, 0])
-        _y_vector = np.asarray([0, step_2])
-        _steps = np.asarray([[0, step_2], [step_1, 0], [0, -step_2], [-step_1, 0]])
-        _fun_distance = sigma ** 2
-        _adjacent_funs = np.zeros(4)
-        _last_direction = -1
+        _err = np.asarray([self._par_err[_ids[0]], self._par_err[_ids[1]]])
+
+        CONTOUR_ELLIPSE_POINTS = 21
+        _untransformed_ellipse_linspace = np.linspace(-np.pi/2, np.pi/2, CONTOUR_ELLIPSE_POINTS, endpoint=True)
+        _contour_search_ellipse = np.empty((2, CONTOUR_ELLIPSE_POINTS))
+        _contour_search_ellipse[0] = _fraction * np.sin(_untransformed_ellipse_linspace)
+        _contour_search_ellipse[1] = 4 * _fraction * np.cos(_untransformed_ellipse_linspace)
         
-        _contour_coords = []
-        _explored_coords = set()
-        _explored_coords.add((0,0))
-        _log_points = False
-        _termination_coords = None
-        _first_lap = True
+        _termination_distance = (4 * _fraction) ** 2
+        
+        _meta_cost_function = lambda z: _contour_fun - self._calc_fun_with_constraints([{'type' : 'eq', 'fun' : lambda x: x[_ids[0]] - (_minimum[0] + _err[0] * z)},
+                                                                                        {'type' : 'eq', 'fun' : lambda x: x[_ids[1]] - _minimum[1]}])
+        
+        _start_x = opt.newton(_meta_cost_function, _minimum[0] + 0.1 * _err[0])
+        _start_point = np.asarray([_start_x, 0.0])
+        
+        
+        _phi = 0.75 * np.pi
+        _coords = _start_point
 
         _loops = 0
         
-        while True:
-            if _coords == _termination_coords:
-                if not _first_lap:
-                    break
-                else:
-                    _first_lap = False
-            _adjacent_coords = self._get_adjacent_coords(_coords)
-            for i in range(4):
-                if _adjacent_coords[i] in _explored_coords or i == _last_direction:
-                    _adjacent_funs[i] = 0
-                elif _adjacent_coords[i] == _termination_coords:
-                    _adjacent_funs[i] = _contour_fun
-                else:
-                    _point = _minimum + _adjacent_coords[i][0] * _x_vector + _adjacent_coords[i][1] * _y_vector
-                    _local_constraints = [{'type' : 'eq', 'fun' : lambda x: x[_ids[0]] - _point[0]},
-                                          {'type' : 'eq', 'fun' : lambda x: x[_ids[1]] - _point[1]}]
-                    _adjacent_funs[i] = self._calc_fun_with_constraints(_local_constraints)
-            _distances = _contour_fun - _adjacent_funs
-            for i in range(4):
-                if _distances[i] < 0:
-                    _distances[i] *= -_bias
-            _adjacent_funs_best_distance = np.min(_distances)
-            _min_index = np.argmin(_distances)
-            _new_coords = _adjacent_coords[_min_index]
-            
-            for i in range(4):
-                if i != _last_direction:
-                    _explored_coords.add(_adjacent_coords[i])
-            if _fun_distance < _adjacent_funs_best_distance and not _log_points:
-                _log_points = True
-#                 print "found contour"
-                _termination_coords = _new_coords
-                _explored_coords.clear()
+        _contour_coords = [_start_point]
+        
+        while(True):
+            _transformed_search_ellipse = self._rotate_clockwise(_contour_search_ellipse, _phi)
+            _transformed_search_ellipse[0] += _coords[0]
+            _transformed_search_ellipse[1] += _coords[1]
+            _transformed_search_ellipse = _transformed_search_ellipse.T
+            _ellipse_fun_values = np.empty(CONTOUR_ELLIPSE_POINTS)
+            for i in range(CONTOUR_ELLIPSE_POINTS):
+                _ellipse_coords = _transformed_search_ellipse[i]
+                _transformed_coords = self._transform_coordinates(_minimum, _ellipse_coords, _err)
+                _point_constraints = [{"type" : "eq", "fun" : lambda x: x[_ids[0]] - _transformed_coords[0]},
+                                      {"type" : "eq", "fun" : lambda x: x[_ids[1]] - _transformed_coords[1]}]
+                _ellipse_fun_values[i] = self._calc_fun_with_constraints(_point_constraints)
+            _min_index = np.argmin(np.abs(_ellipse_fun_values - _contour_fun))
+            _new_coords = _transformed_search_ellipse[_min_index]
+            _contour_coords.append(_new_coords)
+
+            _delta = _new_coords - _coords
+            _phi = np.arctan2(_delta[0], _delta[1])
             _coords = _new_coords
-            _fun_distance = _adjacent_funs_best_distance
-            _last_direction = (np.argmin(_distances) + 2) % 4
-            if _log_points:
-                _contour_coords.append(_coords)
-            if _loops < 10000:
+            
+            if np.sum((_coords - _start_point) ** 2) < _termination_distance and _loops > 10:
+                break
+            
+            if _loops < 1000:
                 _loops += 1
             else:
-                break 
-#         print "contour"
-#         print _contour_coords
-        _contour_array = np.asarray(_contour_coords, dtype=float).T
-        _contour_array[0] = _contour_array[0] * step_1 + _minimum[0]
-        _contour_array[1] = _contour_array[1] * step_2 + _minimum[1]
-        #function call needed to reset the nexus cache to minimal values
-        self._func_wrapper_unpack_args(self._par_val)
-        return _contour_array
+                break
+        return np.asarray(_contour_coords).T
     
-    def _get_adjacent_coords(self, central_coords):
-        return [(central_coords[0], central_coords[1] + 1),
-                (central_coords[0] + 1, central_coords[1]),
-                (central_coords[0], central_coords[1] - 1),
-                (central_coords[0] - 1, central_coords[1])]
+    def _transform_coordinates(self, minimum, sigma_coordinates, errors):
+        return minimum + sigma_coordinates * errors
+    
+    def _rotate_clockwise(self, xy_values, phi):
+        _rotated_xy_values = np.empty(shape=xy_values.shape)
+        _rotated_xy_values[0] =  np.cos(phi) * xy_values[0] + np.sin(phi) * xy_values[1]
+        _rotated_xy_values[1] = -np.sin(phi) * xy_values[0] + np.cos(phi) * xy_values[1]
+        return _rotated_xy_values
+    
     
     def _calc_fun_with_constraints(self, additional_constraints):
         _local_constraints = self._par_constraints + additional_constraints
