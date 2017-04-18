@@ -5,10 +5,6 @@ import re
 import string
 
 from ...core import NexusFitter
-from kafe.core.minimizers.iminuit_minimizer import MinimizerIMinuit
-from kafe.core.minimizers.root_tminuit_minimizer import MinimizerROOTTMinuit
-import scipy
-from kafe.core.minimizers.scipy_optimize_minimizer import MinimizerScipyOptimize
 
 class FitException(Exception):
     pass
@@ -49,6 +45,7 @@ class FitBase(object):
         minimizer = minimizer.lower()
         _split_input = minimizer.split(":")
         if _split_input[0] == "iminuit":
+            from kafe.core.minimizers.iminuit_minimizer import MinimizerIMinuit
             _strategy = 1
             if len(_split_input) >= 2:
                 try:
@@ -63,6 +60,7 @@ class FitBase(object):
                                    parameter_to_minimize=self._cost_function.name,
                                    minimizer_class=MinimizerIMinuit, minimizer_specification=_strategy)
         elif _split_input[0] == "tminuit":
+            from kafe.core.minimizers.root_tminuit_minimizer import MinimizerROOTTMinuit
             _strategy = 1
             if len(_split_input) >= 2:
                 try:
@@ -77,6 +75,7 @@ class FitBase(object):
                                    parameter_to_minimize=self._cost_function.name,
                                    minimizer_class=MinimizerROOTTMinuit, minimizer_specification=_strategy)
         elif _split_input[0] == "scipy":
+            from kafe.core.minimizers.scipy_optimize_minimizer import MinimizerScipyOptimize
             _method = "slsqp"
             if len(_split_input) >= 2:
                 _method = _split_input[1]
