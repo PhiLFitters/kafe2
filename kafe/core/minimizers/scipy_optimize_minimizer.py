@@ -181,7 +181,7 @@ class MinimizerScipyOptimize(object):
         self._fval = self._opt_result.fun
 
 
-    def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, step_1=0.01, step_2=0.01, numpoints = 20, strategy=1):
+    def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, numpoints = 20, strategy=1):
         if strategy == 0:
             _fraction = 0.08
             _bias = 0.1
@@ -229,7 +229,10 @@ class MinimizerScipyOptimize(object):
                 elif _adjacent_coords[i] == _termination_coords:
                     _adjacent_funs[i] = _contour_fun
                 else:
-                    _adjacent_funs[i] = self._calc_fun_at_point(_minimum + _adjacent_coords[i][0] * _x_vector + _adjacent_coords[i][1] * _y_vector, _ids)
+                    _point = _minimum + _adjacent_coords[i][0] * _x_vector + _adjacent_coords[i][1] * _y_vector
+                    _local_constraints = [{'type' : 'eq', 'fun' : lambda x: x[_ids[0]] - _point[0]},
+                                          {'type' : 'eq', 'fun' : lambda x: x[_ids[1]] - _point[1]}]
+                    _adjacent_funs[i] = self._calc_fun_with_constraints(_local_constraints)
             _distances = _contour_fun - _adjacent_funs
             for i in range(4):
                 if _distances[i] < 0:
@@ -270,9 +273,8 @@ class MinimizerScipyOptimize(object):
                 (central_coords[0], central_coords[1] - 1),
                 (central_coords[0] - 1, central_coords[1])]
     
-    def _calc_fun_at_point(self, values, ids):
-        _local_constraints = self._par_constraints + [{'type' : 'eq', 'fun' : lambda x: x[ids[0]] - values[0]},
-                                                      {'type' : 'eq', 'fun' : lambda x: x[ids[1]] - values[1]}]
+    def _calc_fun_with_constraints(self, additional_constraints):
+        _local_constraints = self._par_constraints + additional_constraints
         _result = opt.minimize(self._func_wrapper_unpack_args,
                                         self._par_val,
                                         args=(),
@@ -285,5 +287,15 @@ class MinimizerScipyOptimize(object):
                                         options=dict(maxiter=6000, disp=False))
         return _result.fun
         
-    def profile(self, parameter_name, bins=20, bound=2, args=None, subtract_min=False):
-        return np.array([[0,1,1.5],[1,2,3.25]])
+    def profile(self, parameter_name, bins=21, bound=2, args=None, subtract_min=False):
+        _par_id = self._par_names.index(parameter_name)
+        _par_err = self._par_err[_par_id]
+        _par_min = self._par_val[_par_id]
+        _par = np.linspace(start=_par_min - bound * _par_err, stop=_par_min + bound * _par_err, num=bins, endpoint=True)
+        _y_offset = self.function_value if subtract_min else 0
+        
+        _y = np.empty(bins)
+        for i in range(bins):
+            _y[i] = self._calc_fun_with_constraints([{"type" : "eq", "fun" : lambda x: x[_par_id] - _par[i]}])
+        self._func_wrapper_unpack_args(self._par_val)
+        return np.asarray([_par, _y])
