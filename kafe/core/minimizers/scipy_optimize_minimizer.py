@@ -196,9 +196,7 @@ class MinimizerScipyOptimize(object):
         _ids = (self._par_names.index(parameter_name_1), self._par_names.index(parameter_name_2))
         _minimum = np.asarray([self._par_val[_ids[0]], self._par_val[_ids[1]]])
         _coords = (0, 0)
-#         step_1 *= self._par_err[_ids[0]]
-#         step_2 *= self._par_err[_ids[1]]
-        _x_err, _y_err = 0.27, 0.1
+        _x_err, _y_err = self._par_err[_ids[0]], self._par_err[_ids[1]]
         step_1, step_2 = _x_err * _fraction, _y_err * _fraction
         _x_vector = np.asarray([step_1, 0])
         _y_vector = np.asarray([0, step_2])
