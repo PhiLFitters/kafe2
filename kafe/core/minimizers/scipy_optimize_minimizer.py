@@ -198,12 +198,17 @@ class MinimizerScipyOptimize(object):
         _ids = (self._par_names.index(parameter_name_1), self._par_names.index(parameter_name_2))
         _minimum = np.asarray([self._par_val[_ids[0]], self._par_val[_ids[1]]])
         _err = np.asarray([self._par_err[_ids[0]], self._par_err[_ids[1]]])
+        
+        _angles = []
 
         CONTOUR_ELLIPSE_POINTS = 21
-        _untransformed_ellipse_linspace = np.linspace(-np.pi/2, np.pi/2, CONTOUR_ELLIPSE_POINTS, endpoint=True)
+        CONTOUR_STRETCHING = 4.0
+        _unstretched_angles = np.linspace(-np.pi/2, np.pi/2, CONTOUR_ELLIPSE_POINTS, endpoint=True)
         _contour_search_ellipse = np.empty((2, CONTOUR_ELLIPSE_POINTS))
-        _contour_search_ellipse[0] = _fraction * np.sin(_untransformed_ellipse_linspace)
-        _contour_search_ellipse[1] = 4 * _fraction * np.cos(_untransformed_ellipse_linspace)
+        _contour_search_ellipse[0] = _fraction * np.sin(_unstretched_angles)
+        _contour_search_ellipse[1] = CONTOUR_STRETCHING * _fraction * np.cos(_unstretched_angles)
+        _stretched_absolute_angles = np.abs(np.arctan(np.tan(_unstretched_angles) / CONTOUR_STRETCHING))
+        _curvature_adjustion_factors = 1 + 0.01 * (10 - _stretched_absolute_angles * 180 / np.pi)
         
         _termination_distance = (4 * _fraction) ** 2
         
@@ -216,13 +221,14 @@ class MinimizerScipyOptimize(object):
         
         _phi = 0.75 * np.pi
         _coords = _start_point
+        _curvature_adjustion = 1.0
 
         _loops = 0
         
         _contour_coords = [_start_point]
         
         while(True):
-            _transformed_search_ellipse = self._rotate_clockwise(_contour_search_ellipse, _phi)
+            _transformed_search_ellipse = self._rotate_clockwise(_contour_search_ellipse * _curvature_adjustion, _phi)
             _transformed_search_ellipse[0] += _coords[0]
             _transformed_search_ellipse[1] += _coords[1]
             _transformed_search_ellipse = _transformed_search_ellipse.T
@@ -237,9 +243,17 @@ class MinimizerScipyOptimize(object):
             _new_coords = _transformed_search_ellipse[_min_index]
             _contour_coords.append(_new_coords)
 
-            _delta = _new_coords - _coords
+            _curvature_adjustion *= _curvature_adjustion_factors[_min_index]
+            if _curvature_adjustion > 1.0:
+                _curvature_adjustion = 1.0
+
+            
+            if _stretched_absolute_angles[_min_index] > 0.349111 and len(_contour_coords) >= 10:
+                _contour_coords = _contour_coords[0:-2]
+            
+            _delta = _contour_coords[-1] - _contour_coords[-2]
             _phi = np.arctan2(_delta[0], _delta[1])
-            _coords = _new_coords
+            _coords = _contour_coords[-1]
             
             if np.sum((_coords - _start_point) ** 2) < _termination_distance and _loops > 10:
                 break
@@ -248,12 +262,22 @@ class MinimizerScipyOptimize(object):
                 _loops += 1
             else:
                 break
-        return np.asarray(_contour_coords).T
+        self._func_wrapper_unpack_args(self._par_val)
+        return np.asarray(self._transform_contour(_minimum, _contour_coords, _err)).T
     
-    def _transform_coordinates(self, minimum, sigma_coordinates, errors):
+    @staticmethod
+    def _transform_coordinates(minimum, sigma_coordinates, errors):
         return minimum + sigma_coordinates * errors
     
-    def _rotate_clockwise(self, xy_values, phi):
+    @staticmethod
+    def _transform_contour(minimum, sigma_contour, errors):
+        _transformed_contour = []
+        for _coords in sigma_contour:
+            _transformed_contour.append(MinimizerScipyOptimize._transform_coordinates(minimum, _coords, errors))
+        return _transformed_contour
+        
+    @staticmethod
+    def _rotate_clockwise(xy_values, phi):
         _rotated_xy_values = np.empty(shape=xy_values.shape)
         _rotated_xy_values[0] =  np.cos(phi) * xy_values[0] + np.sin(phi) * xy_values[1]
         _rotated_xy_values[1] = -np.sin(phi) * xy_values[0] + np.cos(phi) * xy_values[1]
@@ -285,4 +309,4 @@ class MinimizerScipyOptimize(object):
         for i in range(bins):
             _y[i] = self._calc_fun_with_constraints([{"type" : "eq", "fun" : lambda x: x[_par_id] - _par[i]}])
         self._func_wrapper_unpack_args(self._par_val)
-        return np.asarray([_par, _y])
+        return np.asarray([_par, _y]) - _y_offset
