@@ -265,6 +265,10 @@ class MinimizerScipyOptimize(object):
         self._func_wrapper_unpack_args(self._par_val)
         return _contour_array
     
+    def contour_marching_squares(self, parameter_name_1, parameter_name_2, sigma=1.0, numpoints = 20):
+        
+        return None
+    
     def _get_adjacent_coords(self, central_coords):
         return [(central_coords[0], central_coords[1] + 1),
                 (central_coords[0] + 1, central_coords[1]),
