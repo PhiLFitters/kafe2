@@ -1,3 +1,4 @@
+from numpy import dtype
 try:
     import scipy.optimize as opt
 except ImportError:
@@ -181,7 +182,7 @@ class MinimizerScipyOptimize(object):
         self._fval = self._opt_result.fun
 
 
-    def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, numpoints = 20, strategy=1):
+    def contour_old(self, parameter_name_1, parameter_name_2, sigma=1.0, numpoints = 20, strategy=1):
         if strategy == 0:
             _fraction = 0.08
             _bias = 0.1
@@ -265,9 +266,114 @@ class MinimizerScipyOptimize(object):
         self._func_wrapper_unpack_args(self._par_val)
         return _contour_array
     
-    def contour_marching_squares(self, parameter_name_1, parameter_name_2, sigma=1.0, numpoints = 20):
-        
-        return None
+    def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, numpoints = 20):
+        _initial_points_per_axis = 3
+        _target_points_per_axis = 65
+        _contour_fun = self.function_value + sigma ** 2
+        _ids = (self._par_names.index(parameter_name_1), self._par_names.index(parameter_name_2))
+        _minimum = np.asarray([self._par_val[_ids[0]], self._par_val[_ids[1]]])
+        _err = np.asarray([self._par_err[_ids[0]], self._par_err[_ids[1]]])
+
+
+        _grid = np.zeros((_target_points_per_axis, _target_points_per_axis)) - 1
+        _x_step = (_target_points_per_axis - 1) / 2
+        _y_step = (_target_points_per_axis - 1) / 2
+
+        _min_coords = (_target_points_per_axis - 1) / 2
+
+        for _x in range(0, _target_points_per_axis, _x_step):
+            for _y in range(0, _target_points_per_axis, _y_step):
+                    _point = (_minimum[0] + 3 * sigma * _err[0] * (_x - _min_coords) / (_target_points_per_axis - 1),
+                              _minimum[1] + 3 * sigma * _err[1] * (_y - _min_coords) / (_target_points_per_axis - 1))
+                    _local_constraints = [{'type' : 'eq', 'fun' : lambda x: x[_ids[0]] - _point[0]},
+                                          {'type' : 'eq', 'fun' : lambda x: x[_ids[1]] - _point[1]}]
+                    _grid[_x,_y] = self._calc_fun_with_constraints(_local_constraints)
+
+
+
+        _iterations = 0
+        while _x_step > 0 and _y_step > 1:
+            if _iterations % 2 == 0:
+                _x_0 = _x_step / 2
+                _y_0 = _y_step / 2
+                _vector_1 = (_x_step / 2, _y_step / 2)
+                _vector_2 = (_x_step / 2, -_y_step / 2)
+            else:
+                _x_0 = 0
+                _y_0 = 0
+                _vector_1 = (_x_step, 0)
+                _vector_2 = (0, _y_step / 2)
+                
+            for _x in range(_x_0, _target_points_per_axis, _x_step):
+                if _iterations % 2 == 1 and _x % (2 * _x_step) == 0:
+                    _current_y_0 = _y_0 + _y_step / 2
+                else:
+                    _current_y_0 = _y_0
+                for _y in range(_current_y_0, _target_points_per_axis, _y_step):
+                    _point_value = self._heuristic_point_evaluation(_contour_fun, _grid, _x, _y, _vector_1, _vector_2)
+                    if _point_value == -1:
+                        _point = (_minimum[0] + 2.4 * sigma * _err[0] * (_x - _min_coords) / (_target_points_per_axis - 1),
+                                  _minimum[1] + 2.4 * sigma * _err[1] * (_y - _min_coords) / (_target_points_per_axis - 1))
+                        _local_constraints = [{'type' : 'eq', 'fun' : lambda x: x[_ids[0]] - _point[0]},
+                                              {'type' : 'eq', 'fun' : lambda x: x[_ids[1]] - _point[1]}]
+                        _grid[_x, _y] = self._calc_fun_with_constraints(_local_constraints)
+                    else:
+                        _grid[_x, _y] = _point_value
+            
+            if _iterations % 2 == 0:
+                _x_step /= 2
+            else:
+                _y_step /= 2
+            _iterations += 1
+            
+        _contour_list_x = []
+        _contour_list_y = []
+        for x in range(_target_points_per_axis):
+            for y in range(_target_points_per_axis):
+                if _grid[x,y] < _contour_fun:
+                    _contour_list_x.append(x)
+                    _contour_list_y.append(y)
+        np.set_printoptions(threshold=np.nan, linewidth = 1000)
+        _contour_list = np.asarray([_contour_list_x, _contour_list_y], dtype = np.float)
+        _contour_list[0] = _minimum[0] + 3 * sigma * _err[0] * (_contour_list[0] - _min_coords) / (_target_points_per_axis - 1)
+        _contour_list[1] = _minimum[1] + 3 * sigma * _err[1] * (_contour_list[1] - _min_coords) / (_target_points_per_axis - 1)
+        self._func_wrapper_unpack_args(self._par_val)
+        return _contour_list
+    
+    @staticmethod
+    def _heuristic_point_evaluation(contour_fun, grid, x, y, vector_1, vector_2):
+        _adjacent_points = MinimizerScipyOptimize._get_adjacent_grid_points(grid, x, y, vector_1, vector_2)
+        if np.max(_adjacent_points) < contour_fun:
+            return np.mean(_adjacent_points)
+        if np.min(_adjacent_points) > contour_fun:
+            return np.mean(_adjacent_points)
+        return -1
+    
+    
+    @staticmethod
+    def _get_adjacent_grid_points(grid, x_0, y_0, vector_1, vector_2):
+        _x_size = np.ma.size(grid, 0)
+        _y_size = np.ma.size(grid, 1)
+        _grid_points = []
+        for i in range(4):
+            _x = x_0
+            _y = y_0
+            if i == 0:
+                _x -= vector_1[0]
+                _y -= vector_1[1]
+            elif i == 1:
+                _x -= vector_2[0]
+                _y -= vector_2[1]
+            elif i == 2:
+                _x += vector_1[0]
+                _y += vector_1[1]
+            elif i == 3:
+                _x += vector_2[0]
+                _y += vector_2[1]
+#             print "x:", _x, " y:", _y
+            if _x >= 0 and _x < _x_size and _y >= 0 and _y < _y_size:
+                _grid_points.append(grid[_x][_y])
+        return np.asarray(_grid_points)
     
     def _get_adjacent_coords(self, central_coords):
         return [(central_coords[0], central_coords[1] + 1),
