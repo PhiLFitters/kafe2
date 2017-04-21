@@ -209,7 +209,7 @@ class MinimizerScipyOptimize(object):
 
 
         
-        _start_x = opt.brentq(_meta_cost_function, 0, sigma, maxiter=1000)
+        _start_x = opt.brentq(_meta_cost_function, 0, 2 * sigma, maxiter=1000)
         _start_point = np.asarray([_start_x, 0.0])
         
         _phi = self._calculate_tangential_angle(_start_point, _ids)
@@ -257,7 +257,7 @@ class MinimizerScipyOptimize(object):
             if np.sum((_coords - _start_point) ** 2) < _termination_distance and _loops > 10:
                 break
             
-            if _loops < 500:
+            if _loops < 100:
                 _loops += 1
             else:
                 break
