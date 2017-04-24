@@ -276,10 +276,12 @@ class MinimizerScipyOptimize(object):
 
 
         _grid = np.zeros((_target_points_per_axis, _target_points_per_axis)) - 1
-        _x_step = (_target_points_per_axis - 1) / 2
-        _y_step = (_target_points_per_axis - 1) / 2
+        _x_step = (_target_points_per_axis - 1) / (_initial_points_per_axis - 1)
+        _y_step = (_target_points_per_axis - 1) / (_initial_points_per_axis - 1)
 
         _min_coords = (_target_points_per_axis - 1) / 2
+        _confirmed_coords = set()
+        _unsure_coords = set()
 
         for _x in range(0, _target_points_per_axis, _x_step):
             for _y in range(0, _target_points_per_axis, _y_step):
@@ -312,14 +314,55 @@ class MinimizerScipyOptimize(object):
                 for _y in range(_current_y_0, _target_points_per_axis, _y_step):
                     _point_value = self._heuristic_point_evaluation(_contour_fun, _grid, _x, _y, _vector_1, _vector_2)
                     if _point_value == -1:
-                        _point = (_minimum[0] + 2.4 * sigma * _err[0] * (_x - _min_coords) / (_target_points_per_axis - 1),
-                                  _minimum[1] + 2.4 * sigma * _err[1] * (_y - _min_coords) / (_target_points_per_axis - 1))
+                        _point = (_minimum[0] + 3 * sigma * _err[0] * (_x - _min_coords) / (_target_points_per_axis - 1),
+                                  _minimum[1] + 3 * sigma * _err[1] * (_y - _min_coords) / (_target_points_per_axis - 1))
                         _local_constraints = [{'type' : 'eq', 'fun' : lambda x: x[_ids[0]] - _point[0]},
                                               {'type' : 'eq', 'fun' : lambda x: x[_ids[1]] - _point[1]}]
                         _grid[_x, _y] = self._calc_fun_with_constraints(_local_constraints)
+                        _confirmed_coords.add((_x,_y))
+                        if _iterations % 2 == 0:
+                            _unsure_coords.add((_x - _x_step,   _y))
+                            _unsure_coords.add((_x,             _y - _y_step))
+                            _unsure_coords.add((_x + _x_step,   _y))
+                            _unsure_coords.add((_x,             _y + _y_step))
+                        else:
+                            _unsure_coords.add((_x - _x_step, _y - _y_step / 2))
+                            _unsure_coords.add((_x - _x_step, _y + _y_step / 2))
+                            _unsure_coords.add((_x + _x_step, _y - _y_step / 2))
+                            _unsure_coords.add((_x + _x_step, _y + _y_step / 2))
                     else:
                         _grid[_x, _y] = _point_value
             
+            while _unsure_coords:
+                _current_coords = _unsure_coords.pop()
+                if (_current_coords[0] < 0 or _current_coords[0] >= _target_points_per_axis or 
+                    _current_coords[1] < 0 or _current_coords[1] >= _target_points_per_axis):
+                    continue
+                if _current_coords in _confirmed_coords:
+                    continue
+                _x = _current_coords[0]
+                _y = _current_coords[1]
+                _point = (_minimum[0] + 3 * sigma * _err[0] * (_x - _min_coords) / (_target_points_per_axis - 1),
+                          _minimum[1] + 3 * sigma * _err[1] * (_y - _min_coords) / (_target_points_per_axis - 1))
+                _local_constraints = [{'type' : 'eq', 'fun' : lambda x: x[_ids[0]] - _point[0]},
+                                      {'type' : 'eq', 'fun' : lambda x: x[_ids[1]] - _point[1]}]
+                _current_fun = self._calc_fun_with_constraints(_local_constraints)
+                _grid_fun = _grid[_current_coords[0], _current_coords[1]]
+                if ((_current_fun > _contour_fun and _grid_fun < _contour_fun) or
+                    (_current_fun < _contour_fun and _grid_fun > _contour_fun)):
+                        if _iterations % 2 == 0:
+                            _unsure_coords.add((_x - _x_step,   _y))
+                            _unsure_coords.add((_x,             _y - _y_step))
+                            _unsure_coords.add((_x + _x_step,   _y))
+                            _unsure_coords.add((_x,             _y + _y_step))
+                        else:
+                            _unsure_coords.add((_x - _x_step, _y - _y_step / 2))
+                            _unsure_coords.add((_x - _x_step, _y + _y_step / 2))
+                            _unsure_coords.add((_x + _x_step, _y - _y_step / 2))
+                            _unsure_coords.add((_x + _x_step, _y + _y_step / 2))
+                _grid[_current_coords[0], _current_coords[1]] = _current_fun
+                _confirmed_coords.add(_current_coords)
+                
             if _iterations % 2 == 0:
                 _x_step /= 2
             else:
@@ -338,6 +381,7 @@ class MinimizerScipyOptimize(object):
         _contour_list[0] = _minimum[0] + 3 * sigma * _err[0] * (_contour_list[0] - _min_coords) / (_target_points_per_axis - 1)
         _contour_list[1] = _minimum[1] + 3 * sigma * _err[1] * (_contour_list[1] - _min_coords) / (_target_points_per_axis - 1)
         self._func_wrapper_unpack_args(self._par_val)
+        print len(_confirmed_coords)
         return _contour_list
     
     @staticmethod
