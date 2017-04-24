@@ -1,4 +1,3 @@
-from numpy import dtype
 try:
     import scipy.optimize as opt
 except ImportError:
@@ -177,7 +176,6 @@ class MinimizerScipyOptimize(object):
 
         if self._hessian_inv is not None:
             self._par_cov_mat = self._hessian_inv * 2.0 * self._err_def
-            print self._par_cov_mat
             self._par_err = np.sqrt(np.diag(self._par_cov_mat))
 
         self._fval = self._opt_result.fun
@@ -249,7 +247,6 @@ class MinimizerScipyOptimize(object):
                     _explored_coords.add(_adjacent_coords[i])
             if _fun_distance < _adjacent_funs_best_distance and not _log_points:
                 _log_points = True
-#                 print "found contour"
                 _termination_coords = _new_coords
                 _explored_coords.clear()
             _coords = _new_coords
@@ -261,8 +258,6 @@ class MinimizerScipyOptimize(object):
                 _loops += 1
             else:
                 break 
-#         print "contour"
-#         print _contour_coords
         _contour_array = np.asarray(_contour_coords, dtype=float).T
         _contour_array[0] = _contour_array[0] * step_1 + _minimum[0]
         _contour_array[1] = _contour_array[1] * step_2 + _minimum[1]
@@ -380,12 +375,10 @@ class MinimizerScipyOptimize(object):
                 if _grid[x,y] < _contour_fun:
                     _contour_list_x.append(x)
                     _contour_list_y.append(y)
-        np.set_printoptions(threshold=np.nan, linewidth = 1000)
         _contour_list = np.asarray([_contour_list_x, _contour_list_y], dtype = np.float)
         _contour_list[0] = _minimum[0] + 3 * sigma * _err[0] * (_contour_list[0] - _min_coords) / (_target_points_per_axis - 1)
         _contour_list[1] = _minimum[1] + 3 * sigma * _err[1] * (_contour_list[1] - _min_coords) / (_target_points_per_axis - 1)
         self._func_wrapper_unpack_args(self._par_val)
-        print len(_confirmed_coords)
         return _contour_list
     
     @staticmethod
@@ -418,7 +411,6 @@ class MinimizerScipyOptimize(object):
             elif i == 3:
                 _x += vector_2[0]
                 _y += vector_2[1]
-#             print "x:", _x, " y:", _y
             if _x >= 0 and _x < _x_size and _y >= 0 and _y < _y_size:
                 _grid_points.append(grid[_x][_y])
         return np.asarray(_grid_points)
@@ -428,7 +420,116 @@ class MinimizerScipyOptimize(object):
                 (central_coords[0] + 1, central_coords[1]),
                 (central_coords[0], central_coords[1] - 1),
                 (central_coords[0] - 1, central_coords[1])]
+
+    def _contour_beacon(self, parameter_name_1, parameter_name_2, sigma=1.0, numpoints = 20, strategy=1):
+        print sigma
+            
+        _fraction = 0.02
+        _contour_fun = self.function_value + sigma ** 2
+        _ids = (self._par_names.index(parameter_name_1), self._par_names.index(parameter_name_2))
+        _minimum = np.asarray([self._par_val[_ids[0]], self._par_val[_ids[1]]])
+        _err = np.asarray([self._par_err[_ids[0]], self._par_err[_ids[1]]])
+        
+        _angles = []
+
+        CONTOUR_ELLIPSE_POINTS = 21
+        CONTOUR_STRETCHING = 4.0
+        _unstretched_angles = np.linspace(-np.pi/2, np.pi/2, CONTOUR_ELLIPSE_POINTS, endpoint=True)
+        _contour_search_ellipse = np.empty((2, CONTOUR_ELLIPSE_POINTS))
+        _contour_search_ellipse[0] = sigma * _fraction * np.sin(_unstretched_angles)
+        _contour_search_ellipse[1] = sigma * CONTOUR_STRETCHING * _fraction * np.cos(_unstretched_angles)
+        _stretched_absolute_angles = np.abs(np.arctan(np.tan(_unstretched_angles) / CONTOUR_STRETCHING))
+        _curvature_adjustion_factors = 1 + 0.01 * (10 - _stretched_absolute_angles * 180 / np.pi)
+        _curvature_adjustion_factors = np.where(_curvature_adjustion_factors >= 0.25, _curvature_adjustion_factors, 0.25)
+        
+        _termination_distance = (6 * _fraction) ** 2
+        
+        _meta_cost_function = lambda z: (_contour_fun - self._calc_fun_with_constraints([{'type' : 'eq', 'fun' : lambda x: x[_ids[0]] - (_minimum[0] + _err[0] * z)},
+                                                                                         {'type' : 'eq', 'fun' : lambda x: x[_ids[1]] - _minimum[1]}]))
+
+
+        
+        _start_x = opt.brentq(_meta_cost_function, 0, 2 * sigma, maxiter=1000)
+        _start_point = np.asarray([_start_x, 0.0])
+        
+        _phi = self._calculate_tangential_angle(_start_point, _ids)
+        _coords = _start_point
+        _curvature_adjustion = 1.0
+        _last_backtrack = 0
+
+        _loops = 0
+        
+        _contour_coords = [_start_point]
+        
+        while(True):
+            _transformed_search_ellipse = self._rotate_clockwise(_contour_search_ellipse * _curvature_adjustion, _phi)
+            _transformed_search_ellipse[0] += _coords[0]
+            _transformed_search_ellipse[1] += _coords[1]
+            _transformed_search_ellipse = _transformed_search_ellipse.T
+            _ellipse_fun_values = np.empty(CONTOUR_ELLIPSE_POINTS)
+            for i in range(CONTOUR_ELLIPSE_POINTS):
+                _ellipse_coords = _transformed_search_ellipse[i]
+                _transformed_coords = self._transform_coordinates(_minimum, _ellipse_coords, _err)
+                _point_constraints = [{"type" : "eq", "fun" : lambda x: x[_ids[0]] - _transformed_coords[0]},
+                                      {"type" : "eq", "fun" : lambda x: x[_ids[1]] - _transformed_coords[1]}]
+                _ellipse_fun_values[i] = self._calc_fun_with_constraints(_point_constraints)
+            _min_index = np.argmin(np.abs(_ellipse_fun_values - _contour_fun))
+            _new_coords = _transformed_search_ellipse[_min_index]
+
+            _curvature_adjustion *= _curvature_adjustion_factors[_min_index]
+            if _curvature_adjustion > 1.0:
+                _curvature_adjustion = 1.0
+
+            
+            if _stretched_absolute_angles[_min_index] > 0.349111 and _last_backtrack > 3:
+                print "BACKTRACK"
+                _last_backtrack = 0
+                _contour_coords = _contour_coords[0:-1]
+            else:
+                _contour_coords.append(_new_coords)
+                _last_backtrack += 1
+            
+            _delta = _contour_coords[-1] - _contour_coords[-2]
+            _phi = np.arctan2(_delta[0], _delta[1])
+            _coords = _contour_coords[-1]
+#             _phi = self._calculate_tangential_angle(_coords, _ids)
+            
+            if np.sum((_coords - _start_point) ** 2) < _termination_distance and _loops > 10:
+                break
+            
+            if _loops < 100:
+                _loops += 1
+            else:
+                break
+        self._func_wrapper_unpack_args(self._par_val)
+        return np.asarray(self._transform_contour(_minimum, _contour_coords, _err)).T
+
+        return np.asarray(self._transform_contour(_minimum, _contour_coords, _err)).T
     
+    @staticmethod
+    def _transform_coordinates(minimum, sigma_coordinates, errors):
+        return minimum + sigma_coordinates * errors
+    
+    @staticmethod
+    def _transform_contour(minimum, sigma_contour, errors):
+        _transformed_contour = []
+        for _coords in sigma_contour:
+            _transformed_contour.append(MinimizerScipyOptimize._transform_coordinates(minimum, _coords, errors))
+        return _transformed_contour
+        
+    @staticmethod
+    def _rotate_clockwise(xy_values, phi):
+        _rotated_xy_values = np.empty(shape=xy_values.shape)
+        _rotated_xy_values[0] =  np.cos(phi) * xy_values[0] + np.sin(phi) * xy_values[1]
+        _rotated_xy_values[1] = -np.sin(phi) * xy_values[0] + np.cos(phi) * xy_values[1]
+        return _rotated_xy_values
+    
+    def _calculate_tangential_angle(self, coords, ids):
+        _meta_cost_function_gradient = lambda pars: self._calc_fun_with_constraints([{'type' : 'eq', 'fun' : lambda x: x[ids[0]] - (self._par_val[ids[0]] + self._par_err[ids[0]] * pars[0])},
+                                                                                     {'type' : 'eq', 'fun' : lambda x: x[ids[1]] - (self._par_val[ids[1]] + self._par_err[ids[1]] * pars[1])}])
+        _grad = nd.Gradient(_meta_cost_function_gradient)(coords)
+        return np.arctan2(_grad[0], _grad[1]) + np.pi / 2
+
     def _calc_fun_with_constraints(self, additional_constraints):
         _local_constraints = self._par_constraints + additional_constraints
         _result = opt.minimize(self._func_wrapper_unpack_args,
