@@ -181,7 +181,7 @@ class MinimizerScipyOptimize(object):
         self._fval = self._opt_result.fun
 
 
-    def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, numpoints = 20, strategy=1):
+    def _contour_beacon(self, parameter_name_1, parameter_name_2, sigma=1.0, numpoints = 20, strategy=1):
         print sigma
             
         _fraction = 0.02
