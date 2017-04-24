@@ -177,12 +177,16 @@ class MinimizerScipyOptimize(object):
 
         if self._hessian_inv is not None:
             self._par_cov_mat = self._hessian_inv * 2.0 * self._err_def
+            print self._par_cov_mat
             self._par_err = np.sqrt(np.diag(self._par_cov_mat))
 
         self._fval = self._opt_result.fun
 
 
-    def contour_old(self, parameter_name_1, parameter_name_2, sigma=1.0, numpoints = 20, strategy=1):
+    def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, numpoints = 20, strategy=1):
+        return self._contour_heuristic_grid(parameter_name_1, parameter_name_2, sigma=sigma)
+
+    def _contour_old(self, parameter_name_1, parameter_name_2, sigma=1.0, numpoints = 20, strategy=1):
         if strategy == 0:
             _fraction = 0.08
             _bias = 0.1
@@ -266,7 +270,7 @@ class MinimizerScipyOptimize(object):
         self._func_wrapper_unpack_args(self._par_val)
         return _contour_array
     
-    def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, numpoints = 20):
+    def _contour_heuristic_grid(self, parameter_name_1, parameter_name_2, sigma=1.0, numpoints = 20):
         _initial_points_per_axis = 3
         _target_points_per_axis = 65
         _contour_fun = self.function_value + sigma ** 2
