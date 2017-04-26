@@ -182,7 +182,7 @@ class MinimizerScipyOptimize(object):
 
 
     def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, numpoints = 20, strategy=1):
-        return self._contour_heuristic_grid(parameter_name_1, parameter_name_2, sigma=sigma)
+        return self._contour_beacon(parameter_name_1, parameter_name_2, sigma=sigma)
 
     def _contour_old(self, parameter_name_1, parameter_name_2, sigma=1.0, numpoints = 20, strategy=1):
         if strategy == 0:
@@ -426,6 +426,8 @@ class MinimizerScipyOptimize(object):
             
         _fraction = 0.02
         _contour_fun = self.function_value + sigma ** 2
+        _contour_fun_upper_tolerance = self.function_value + (1.2 * sigma) ** 2
+        _contour_fun_lower_tolerance = self.function_value + (0.8 * sigma) ** 2
         _ids = (self._par_names.index(parameter_name_1), self._par_names.index(parameter_name_2))
         _minimum = np.asarray([self._par_val[_ids[0]], self._par_val[_ids[1]]])
         _err = np.asarray([self._par_err[_ids[0]], self._par_err[_ids[1]]])
@@ -439,10 +441,10 @@ class MinimizerScipyOptimize(object):
         _contour_search_ellipse[0] = sigma * _fraction * np.sin(_unstretched_angles)
         _contour_search_ellipse[1] = sigma * CONTOUR_STRETCHING * _fraction * np.cos(_unstretched_angles)
         _stretched_absolute_angles = np.abs(np.arctan(np.tan(_unstretched_angles) / CONTOUR_STRETCHING))
-        _curvature_adjustion_factors = 1 + 0.01 * (10 - _stretched_absolute_angles * 180 / np.pi)
+        _curvature_adjustion_factors = 1 + 0.025 * (10 - _stretched_absolute_angles * 180 / np.pi)
         _curvature_adjustion_factors = np.where(_curvature_adjustion_factors >= 0.25, _curvature_adjustion_factors, 0.25)
         
-        _termination_distance = (6 * _fraction) ** 2
+        _termination_distance = (sigma * CONTOUR_STRETCHING * _fraction) ** 2
         
         _meta_cost_function = lambda z: (_contour_fun - self._calc_fun_with_constraints([{'type' : 'eq', 'fun' : lambda x: x[_ids[0]] - (_minimum[0] + _err[0] * z)},
                                                                                          {'type' : 'eq', 'fun' : lambda x: x[_ids[1]] - _minimum[1]}]))
@@ -481,23 +483,21 @@ class MinimizerScipyOptimize(object):
                 _curvature_adjustion = 1.0
 
             
-            if _stretched_absolute_angles[_min_index] > 0.349111 and _last_backtrack > 3:
+            if _stretched_absolute_angles[_min_index] > 0.349111:
                 print "BACKTRACK"
-                _last_backtrack = 0
                 _contour_coords = _contour_coords[0:-1]
             else:
                 _contour_coords.append(_new_coords)
-                _last_backtrack += 1
             
-            _delta = _contour_coords[-1] - _contour_coords[-2]
-            _phi = np.arctan2(_delta[0], _delta[1])
+#             _delta = _contour_coords[-1] - _contour_coords[-2]
+#             _phi = np.arctan2(_delta[0], _delta[1])
             _coords = _contour_coords[-1]
-#             _phi = self._calculate_tangential_angle(_coords, _ids)
+            _phi = self._calculate_tangential_angle(_coords, _ids)
             
             if np.sum((_coords - _start_point) ** 2) < _termination_distance and _loops > 10:
                 break
             
-            if _loops < 100:
+            if _loops < 200:
                 _loops += 1
             else:
                 break
