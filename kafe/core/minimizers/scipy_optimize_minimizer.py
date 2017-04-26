@@ -181,8 +181,21 @@ class MinimizerScipyOptimize(object):
         self._fval = self._opt_result.fun
 
 
-    def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, numpoints = 20, strategy=1):
-        return self._contour_beacon(parameter_name_1, parameter_name_2, sigma=sigma)
+    def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, minimizer_contour_kwargs=None):
+        if minimizer_contour_kwargs == None:
+            minimizer_contour_kwargs = dict()
+        try:
+            _algorithm = minimizer_contour_kwargs["algorithm"]
+        except:
+            _algorithm = "heuristic_grid"
+
+        if _algorithm == "beacon":
+            return self._contour_beacon(parameter_name_1, parameter_name_2, sigma=sigma)
+        elif _algorithm == "heuristic_grid":
+            return self._contour_heuristic_grid(parameter_name_1, parameter_name_2, sigma=sigma)
+        else:
+            raise ValueError("Unknown algorithm: {}".format(_algorithm))
+
 
     def _contour_old(self, parameter_name_1, parameter_name_2, sigma=1.0, numpoints = 20, strategy=1):
         if strategy == 0:

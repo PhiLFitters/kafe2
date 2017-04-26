@@ -8,7 +8,7 @@ class NexusFitterException(Exception):
 
 class NexusFitter(object):
 
-    def __init__(self, nexus, parameters_to_fit, parameter_to_minimize, minimizer_class=MinimizerIMinuit, minimizer_specification = None):
+    def __init__(self, nexus, parameters_to_fit, parameter_to_minimize, minimizer_class=MinimizerIMinuit, minimizer_kwargs=None):
         self._nx = nexus
         self.parameters_to_fit = parameters_to_fit
         self.parameter_to_minimize = parameter_to_minimize
@@ -21,16 +21,12 @@ class NexusFitter(object):
 
         self.__minimizing = False
         _par_name_val_map = self.fit_parameter_values
-        if minimizer_specification is not None:
-            self._minimizer = minimizer_class(parameters_to_fit,
+        if minimizer_kwargs == None:
+            minimizer_kwargs = dict()
+        self._minimizer = minimizer_class(parameters_to_fit,
                                           _par_name_val_map.values(),
                                           [0.1 if _v==0 else 0.1*_v for _v in _par_name_val_map.values()],
-                                          self._fcn_wrapper, minimizer_specification)
-        else:
-            self._minimizer = minimizer_class(parameters_to_fit,
-                                          _par_name_val_map.values(),
-                                          [0.1 if _v==0 else 0.1*_v for _v in _par_name_val_map.values()],
-                                          self._fcn_wrapper)
+                                          self._fcn_wrapper, **minimizer_kwargs)
         self.__state_is_from_minimizer = False
 
 
@@ -149,9 +145,8 @@ class NexusFitter(object):
     def release_parameter(self, par_name):
         self._minimizer.release(par_name)
 
-    def contour(self, parameter_name_1, parameter_name_2, numpoints=20, sigma=1.0):
-        return self._minimizer.contour(parameter_name_1, parameter_name_2,
-                                       numpoints=numpoints, sigma=sigma)
+    def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, **kwargs):
+        return self._minimizer.contour(parameter_name_1, parameter_name_2, sigma=sigma, **kwargs)
 
     def profile(self, parameter_name, bins=20, bound=2, args=None, subtract_min=False):
         return self._minimizer.profile(parameter_name, bins=bins, bound=bound, subtract_min=subtract_min)

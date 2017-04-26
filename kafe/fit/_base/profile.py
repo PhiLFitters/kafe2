@@ -172,8 +172,12 @@ class ContoursProfiler(object):
             smoothing_sigma = self._contour_kwargs['smooting_sigma']
         _contours = []
         for _sigma in self._contour_kwargs['sigma_values']:
-            _kwargs = dict(numpoints=self._contour_kwargs['points'], sigma=_sigma)
-            _cont = self._fit._fitter.contour(parameter_1, parameter_2, **_kwargs)
+            try:
+                _minimizer_contour_kwargs = self._contour_kwargs['minimizer_contour_kwargs']
+            except KeyError:
+                _minimizer_contour_kwargs = dict()
+            _cont = self._fit._fitter.contour(parameter_1, parameter_2, sigma=_sigma, 
+                                              **_minimizer_contour_kwargs)
 
             # smooth contours if requested
             if smoothing_sigma > 0 and _cont is not None:

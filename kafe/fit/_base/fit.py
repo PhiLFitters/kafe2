@@ -41,51 +41,23 @@ class FitBase(object):
                 "The following names are reserved and cannot be used as model function arguments: %r"
                 % (_invalid_args,))
 
-    def _initialize_fitter(self, minimizer='iminuit'):
+    def _initialize_fitter(self, minimizer="iminuit", minimizer_kwargs = None):
         minimizer = minimizer.lower()
-        _split_input = minimizer.split(":")
-        if _split_input[0] == "iminuit":
+        if minimizer == "iminuit":
             from kafe.core.minimizers.iminuit_minimizer import MinimizerIMinuit
-            _strategy = 1
-            if len(_split_input) >= 2:
-                try:
-                    _strategy = int(_split_input[1])
-                except TypeError as e:
-                    e.set_message("The String {} cannot be resolved to an IMinuit strategy. Valid inputs: 0, 1, or 2".format(_split_input[1]))
-                    raise e
-            if _strategy not in (0,1,2):
-                raise ValueError("{} is not a valid value for an IMinuit strategy. Valid values: 0, 1, or 2")
-            self._fitter = NexusFitter(nexus=self._nexus,
-                                   parameters_to_fit=self._fit_param_names,
-                                   parameter_to_minimize=self._cost_function.name,
-                                   minimizer_class=MinimizerIMinuit, minimizer_specification=_strategy)
-        elif _split_input[0] == "tminuit":
+            _minimizer_class = MinimizerIMinuit
+        elif minimizer == "tminuit":
             from kafe.core.minimizers.root_tminuit_minimizer import MinimizerROOTTMinuit
-            _strategy = 1
-            if len(_split_input) >= 2:
-                try:
-                    _strategy = int(_split_input[1])
-                except TypeError as e:
-                    e.set_message("The String {} cannot be resolved to a TMinuit strategy. Valid inputs: 0, 1, or 2".format(_split_input[1]))
-                    raise e
-            if _strategy not in (0,1,2):
-                raise ValueError("{} is not a valid value for a TMinuit strategy. Valid values: 0, 1, or 2")
-            self._fitter = NexusFitter(nexus=self._nexus,
-                                   parameters_to_fit=self._fit_param_names,
-                                   parameter_to_minimize=self._cost_function.name,
-                                   minimizer_class=MinimizerROOTTMinuit, minimizer_specification=_strategy)
-        elif _split_input[0] == "scipy":
+            _minimizer_class = MinimizerROOTTMinuit
+        elif minimizer == "scipy":
             from kafe.core.minimizers.scipy_optimize_minimizer import MinimizerScipyOptimize
-            _method = "slsqp"
-            if len(_split_input) >= 2:
-                _method = _split_input[1]
-                
-            self._fitter = NexusFitter(nexus=self._nexus,
-                                   parameters_to_fit=self._fit_param_names,
-                                   parameter_to_minimize=self._cost_function.name,
-                                   minimizer_class=MinimizerScipyOptimize, minimizer_specification=_method)
+            _minimizer_class = MinimizerScipyOptimize
         else:
             raise ValueError("Unknown minimizer: {}".format(minimizer))
+        self._fitter = NexusFitter(nexus=self._nexus,
+                                parameters_to_fit=self._fit_param_names,
+                                parameter_to_minimize=self._cost_function.name,
+                                minimizer_class=_minimizer_class, minimizer_kwargs=minimizer_kwargs)
 
 
     @staticmethod
