@@ -146,9 +146,13 @@ class NexusFitter(object):
         self._minimizer.release(par_name)
 
     def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, **kwargs):
+        if not self.__state_is_from_minimizer:
+            raise NexusFitterException("To calculate a contour the do_fit method has to be called first.")
         return self._minimizer.contour(parameter_name_1, parameter_name_2, sigma=sigma, **kwargs)
 
     def profile(self, parameter_name, bins=20, bound=2, args=None, subtract_min=False):
+        if not self.__state_is_from_minimizer:
+            raise NexusFitterException("To calculate a profile the do_fit method has to be called first.")
         return self._minimizer.profile(parameter_name, bins=bins, bound=bound, subtract_min=subtract_min)
 
     def set_fit_parameter_values(self, **parameter_value_dict):

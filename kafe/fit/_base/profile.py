@@ -42,7 +42,8 @@ class ContoursProfiler(object):
 
     def __init__(self, fit_object,
                  profile_points=100, profile_subtract_min=False, profile_bound=2,
-                 contour_points=100, contour_sigma_values=(1.0, 2.0), contour_smoothing_sigma=0.0):
+                 contour_points=100, contour_sigma_values=(1.0, 2.0), contour_smoothing_sigma=0.0,
+                 contour_method_kwargs=None):
         """
         Construct a :py:obj:`~kafe.fit._base.profile.ContoursProfiler` object:
 
@@ -68,7 +69,8 @@ class ContoursProfiler(object):
 
         self._fit = fit_object
         self._profile_kwargs = dict(points=profile_points, subtract_min=profile_subtract_min, bound=profile_bound)
-        self._contour_kwargs = dict(points=contour_points, sigma_values=contour_sigma_values, smooting_sigma=contour_smoothing_sigma)
+        self._contour_kwargs = dict(points=contour_points, sigma_values=contour_sigma_values, smooting_sigma=contour_smoothing_sigma,
+                                    method_kwargs = contour_method_kwargs)
 
         self._cost_function_formatted_name = "${}$".format(self._fit._cost_function.formatter.latex_name)
         self._parameters_formatted_names = ["${}$".format(pf.latex_name) for pf in self._fit._model_function.argument_formatters]
@@ -173,11 +175,11 @@ class ContoursProfiler(object):
         _contours = []
         for _sigma in self._contour_kwargs['sigma_values']:
             try:
-                _minimizer_contour_kwargs = self._contour_kwargs['minimizer_contour_kwargs']
+                _contour_method_kwargs = self._contour_kwargs['method_kwargs']
             except KeyError:
-                _minimizer_contour_kwargs = dict()
+                _contour_method_kwargs = dict()
             _cont = self._fit._fitter.contour(parameter_1, parameter_2, sigma=_sigma, 
-                                              **_minimizer_contour_kwargs)
+                                              **_contour_method_kwargs)
 
             # smooth contours if requested
             if smoothing_sigma > 0 and _cont is not None:
