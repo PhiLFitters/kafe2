@@ -137,9 +137,16 @@ class ContoursProfiler(object):
         return _min_pt_artists, _min_lines_artists
 
     @staticmethod
-    def _plot_contour_xy(target_axes, x, y, label):
+    def _plot_contour_xy(target_axes, contour, label):
         _kwargs = ContoursProfiler._DEFAULT_PLOT_FILL_CONTOUR_KWARGS.copy()
-        return target_axes.fill(x, y, label=label, **_kwargs)
+        if contour.xy_points is not None:
+            return target_axes.fill(xy_points[0], xy_points[1], label=label, **_kwargs)
+        else:
+            print contour.grid_x
+            print contour.grid_y
+            print contour.grid_z
+            return target_axes.contour(contour.grid_x, contour.grid_y, contour.grid_z.T, levels=[contour.sigma],
+                                       label=label, **_kwargs)
 
 
     # -- public methods
@@ -315,8 +322,7 @@ class ContoursProfiler(object):
         for _sigma, _contour_xy in _sigma_contour_pairs:
             _artist = None
             if _contour_xy is not None:
-                _x, _y = _contour_xy
-                _artist = self._plot_contour_xy(_axes, _x, _y, label="%g$\sigma$ contour" % (_sigma,))
+                _artist = self._plot_contour_xy(_axes, _contour_xy, label="%g$\sigma$ contour" % (_sigma,))
             _contour_artists.append(_artist)
 
         _minimum_artist = None

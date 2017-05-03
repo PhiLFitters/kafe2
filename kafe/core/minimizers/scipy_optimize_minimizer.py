@@ -1,3 +1,4 @@
+from kafe.core.contour import ContourFactory
 try:
     import scipy.optimize as opt
 except ImportError:
@@ -286,7 +287,7 @@ class MinimizerScipyOptimize(object):
         return _contour_array
     
     def _contour_heuristic_grid(self, parameter_name_1, parameter_name_2, sigma=1.0, initial_points=1,
-                                iterations=5, area_scale_factor=2.5):
+                                iterations=5, area_scale_factor=1.5):
         initial_points = int(initial_points)
         iterations = int(iterations)
 
@@ -302,6 +303,10 @@ class MinimizerScipyOptimize(object):
         _minimum = np.asarray([self._par_val[_ids[0]], self._par_val[_ids[1]]])
         _err = np.asarray([self._par_err[_ids[0]], self._par_err[_ids[1]]])
 
+        _x_values = np.linspace(start=-area_scale_factor * sigma * _err[0], stop=area_scale_factor * sigma * _err[0], num=_target_points_per_axis, endpoint = True)
+        _x_values += _minimum[0]
+        _y_values = np.linspace(start=-area_scale_factor * sigma * _err[1], stop=area_scale_factor * sigma * _err[1], num=_target_points_per_axis, endpoint = True)
+        _y_values += _minimum[1]
 
         _grid = np.zeros((_target_points_per_axis, _target_points_per_axis)) - 1
         _x_step = (_target_points_per_axis - 1) / (_initial_points_per_axis - 1)
@@ -313,10 +318,8 @@ class MinimizerScipyOptimize(object):
 
         for _x in range(0, _target_points_per_axis, _x_step):
             for _y in range(0, _target_points_per_axis, _y_step):
-                    _point = (_minimum[0] + 2 * area_scale_factor * sigma * _err[0] * (_x - _min_coords) / (_target_points_per_axis - 1),
-                              _minimum[1] + 2 * area_scale_factor * sigma * _err[1] * (_y - _min_coords) / (_target_points_per_axis - 1))
-                    _local_constraints = [{'type' : 'eq', 'fun' : lambda x: x[_ids[0]] - _point[0]},
-                                          {'type' : 'eq', 'fun' : lambda x: x[_ids[1]] - _point[1]}]
+                    _local_constraints = [{'type' : 'eq', 'fun' : lambda x: x[_ids[0]] - _x_values[_x]},
+                                          {'type' : 'eq', 'fun' : lambda x: x[_ids[1]] - _y_values[_y]}]
                     _grid[_x,_y] = self._calc_fun_with_constraints(_local_constraints)
 
 
@@ -342,10 +345,8 @@ class MinimizerScipyOptimize(object):
                 for _y in range(_current_y_0, _target_points_per_axis, _y_step):
                     _point_value = self._heuristic_point_evaluation(_contour_fun, _grid, _x, _y, _vector_1, _vector_2)
                     if _point_value == -1:
-                        _point = (_minimum[0] + 2 * area_scale_factor * sigma * _err[0] * (_x - _min_coords) / (_target_points_per_axis - 1),
-                                  _minimum[1] + 2 * area_scale_factor * sigma * _err[1] * (_y - _min_coords) / (_target_points_per_axis - 1))
-                        _local_constraints = [{'type' : 'eq', 'fun' : lambda x: x[_ids[0]] - _point[0]},
-                                              {'type' : 'eq', 'fun' : lambda x: x[_ids[1]] - _point[1]}]
+                        _local_constraints = [{'type' : 'eq', 'fun' : lambda x: x[_ids[0]] - _x_values[_x]},
+                                              {'type' : 'eq', 'fun' : lambda x: x[_ids[1]] - _y_values[_y]}]
                         _grid[_x, _y] = self._calc_fun_with_constraints(_local_constraints)
                         _confirmed_coords.add((_x,_y))
                         if _iterations % 2 == 0:
@@ -370,10 +371,8 @@ class MinimizerScipyOptimize(object):
                     continue
                 _x = _current_coords[0]
                 _y = _current_coords[1]
-                _point = (_minimum[0] + 2 * area_scale_factor * sigma * _err[0] * (_x - _min_coords) / (_target_points_per_axis - 1),
-                          _minimum[1] + 2 * area_scale_factor * sigma * _err[1] * (_y - _min_coords) / (_target_points_per_axis - 1))
-                _local_constraints = [{'type' : 'eq', 'fun' : lambda x: x[_ids[0]] - _point[0]},
-                                      {'type' : 'eq', 'fun' : lambda x: x[_ids[1]] - _point[1]}]
+                _local_constraints = [{'type' : 'eq', 'fun' : lambda x: x[_ids[0]] - _x_values[_x]},
+                                      {'type' : 'eq', 'fun' : lambda x: x[_ids[1]] - _y_values[_y]}]
                 _current_fun = self._calc_fun_with_constraints(_local_constraints)
                 _grid_fun = _grid[_current_coords[0], _current_coords[1]]
                 if ((_current_fun > _contour_fun and _grid_fun < _contour_fun) or
@@ -397,18 +396,9 @@ class MinimizerScipyOptimize(object):
                 _y_step /= 2
             _iterations += 1
             
-        _contour_list_x = []
-        _contour_list_y = []
-        for x in range(_target_points_per_axis):
-            for y in range(_target_points_per_axis):
-                if _grid[x,y] < _contour_fun:
-                    _contour_list_x.append(x)
-                    _contour_list_y.append(y)
-        _contour_list = np.asarray([_contour_list_x, _contour_list_y], dtype = np.float)
-        _contour_list[0] = _minimum[0] + 3 * sigma * _err[0] * (_contour_list[0] - _min_coords) / (_target_points_per_axis - 1)
-        _contour_list[1] = _minimum[1] + 3 * sigma * _err[1] * (_contour_list[1] - _min_coords) / (_target_points_per_axis - 1)
         self._func_wrapper_unpack_args(self._par_val)
-        return _contour_list
+        _grid = np.sqrt(_grid - self.function_value)
+        return ContourFactory.create_grid_contour(_x_values, _y_values, _grid, sigma)
     
     @staticmethod
     def _heuristic_point_evaluation(contour_fun, grid, x, y, vector_1, vector_2):
