@@ -2,13 +2,12 @@ import numpy as np
 
 from ...config import matplotlib as mpl
 from . import FitBase
-from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt, rcParams
 from matplotlib import gridspec as gs
 from matplotlib import ticker as plticker
 
 class ContoursProfilerException(Exception):
     pass
-
 
 class ContoursProfiler(object):
     """
@@ -137,16 +136,16 @@ class ContoursProfiler(object):
         return _min_pt_artists, _min_lines_artists
 
     @staticmethod
-    def _plot_contour_xy(target_axes, contour, label):
+    def _plot_contour_xy(target_axes, contour, label, contour_color):
         _kwargs = ContoursProfiler._DEFAULT_PLOT_FILL_CONTOUR_KWARGS.copy()
         if contour.xy_points is not None:
-            return target_axes.fill(xy_points[0], xy_points[1], label=label, **_kwargs)
+            return [target_axes.fill(contour.xy_points[0], contour.xy_points[1], 
+                                    label=label, **_kwargs)]
         else:
-            print contour.grid_x
-            print contour.grid_y
-            print contour.grid_z
-            return target_axes.contour(contour.grid_x, contour.grid_y, contour.grid_z.T, levels=[contour.sigma],
-                                       label=label, **_kwargs)
+            return [target_axes.contour(contour.grid_x, contour.grid_y, contour.grid_z.T, levels=[0,contour.sigma],
+                                       colors="gray", **_kwargs),
+                    target_axes.contourf(contour.grid_x, contour.grid_y, contour.grid_z.T, levels=[0,contour.sigma],
+                                       colors=contour_color, label=label, **_kwargs)]
 
 
     # -- public methods
@@ -319,11 +318,13 @@ class ContoursProfiler(object):
         _sigma_contour_pairs = self.get_contours(parameter_1, parameter_2)
 
         _contour_artists = []
-        for _sigma, _contour_xy in _sigma_contour_pairs:
-            _artist = None
+        for _sigma_contour_pair, _prop_cycler in zip(_sigma_contour_pairs, rcParams["axes.prop_cycle"]):
+            _sigma, _contour_xy = _sigma_contour_pair
+            _artists = []
             if _contour_xy is not None:
-                _artist = self._plot_contour_xy(_axes, _contour_xy, label="%g$\sigma$ contour" % (_sigma,))
-            _contour_artists.append(_artist)
+                _artists = self._plot_contour_xy(_axes, _contour_xy, label="%g$\sigma$ contour" % (_sigma,), 
+                                                contour_color=_prop_cycler["color"])
+            _contour_artists += _artists
 
         _minimum_artist = None
         if show_fit_minimum:
@@ -350,7 +351,6 @@ class ContoursProfiler(object):
             _axes.set_yticks([])
 
         return _contour_artists, _minimum_artist
-
 
     def plot_profiles_contours_matrix(self,
                                       show_grid_for=None,

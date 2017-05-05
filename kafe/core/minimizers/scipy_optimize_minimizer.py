@@ -192,6 +192,7 @@ class MinimizerScipyOptimize(object):
         elif _algorithm == "heuristic_grid":
             _initial_points = minimizer_contour_kwargs.pop("initial_points", 1)
             _iterations = minimizer_contour_kwargs.pop("iterations", 5)
+            _area_scale_factor = minimizer_contour_kwargs.pop("area_scale_factor", 1.5)
         else:
             raise MinimizerScipyOptimizeException("Unknown algorithm: {}".format(_algorithm))
         
@@ -202,7 +203,8 @@ class MinimizerScipyOptimize(object):
             return self._contour_beacon(parameter_name_1, parameter_name_2, sigma=sigma)
         elif _algorithm == "heuristic_grid":
             return self._contour_heuristic_grid(parameter_name_1, parameter_name_2, sigma=sigma, 
-                                                initial_points=_initial_points, iterations=_iterations)
+                                                initial_points=_initial_points, iterations=_iterations,
+                                                area_scale_factor=_area_scale_factor)
 
 
     def _contour_old(self, parameter_name_1, parameter_name_2, sigma=1.0, numpoints = 20, strategy=1):
@@ -396,8 +398,43 @@ class MinimizerScipyOptimize(object):
                 _y_step /= 2
             _iterations += 1
             
-        self._func_wrapper_unpack_args(self._par_val)
+        _left_cutoff = 0
+        _right_cutoff = _target_points_per_axis - 1
+        _bottom_cutoff = 0
+        _top_cutoff = _target_points_per_axis - 1
+        _padding = int(3 / area_scale_factor * max(1, 2 ** (iterations - 4)))
+
+        while _right_cutoff > 0 and np.min(_grid[_right_cutoff]) > _contour_fun:
+            _right_cutoff -= 1
+        _right_cutoff += _padding
+        _right_cutoff = min(_right_cutoff, _target_points_per_axis - 1)
+        
+        while _left_cutoff < _right_cutoff and np.min(_grid[_left_cutoff]) > _contour_fun:
+            _left_cutoff += 1
+        _left_cutoff -= _padding
+        _left_cutoff = max(_left_cutoff, 0)
+        
+        _grid = _grid[_left_cutoff:_right_cutoff]
+        _grid = _grid.T
+        
+        while _top_cutoff > 0 and np.min(_grid[_top_cutoff]) > _contour_fun:
+            _top_cutoff -= 1
+        _top_cutoff += _padding
+        _top_cutoff = min(_top_cutoff, _target_points_per_axis - 1)
+        
+        while _bottom_cutoff < _top_cutoff and np.min(_grid[_bottom_cutoff]) > _contour_fun:
+            _bottom_cutoff += 1
+        _bottom_cutoff -= _padding
+        _bottom_cutoff = max(_bottom_cutoff, 0)
+        
+        _grid=_grid[_bottom_cutoff:_top_cutoff]
+        _grid = _grid.T
+            
+        _x_values = _x_values[_left_cutoff:_right_cutoff]
+        _y_values = _y_values[_bottom_cutoff:_top_cutoff]
+        
         _grid = np.sqrt(_grid - self.function_value)
+        self._func_wrapper_unpack_args(self._par_val)
         return ContourFactory.create_grid_contour(_x_values, _y_values, _grid, sigma)
     
     @staticmethod
@@ -521,9 +558,7 @@ class MinimizerScipyOptimize(object):
             else:
                 break
         self._func_wrapper_unpack_args(self._par_val)
-        return np.asarray(self._transform_contour(_minimum, _contour_coords, _err)).T
-
-        return np.asarray(self._transform_contour(_minimum, _contour_coords, _err)).T
+        return ContourFactory.create_xy_contour(self._transform_contour(_minimum, _contour_coords, _err), sigma)
     
     @staticmethod
     def _transform_coordinates(minimum, sigma_coordinates, errors):
