@@ -30,7 +30,7 @@ class MinimizerScipyOptimize(object):
 
         self._func_handle = function_to_minimize
         self._err_def = 1.0
-        self._tol = 0.001
+        self._tol = 1e-6
 
         # cache for calculations
         self._hessian = None

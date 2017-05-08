@@ -65,6 +65,12 @@ class NexusFitter(object):
         #              callback=None,
         #              options=None)
         self.__minimizing = False
+
+        # evaluate function one more time with the final parameters,
+        # in order to ensure the nexus is up to date
+        _par_vals = self._minimizer.parameter_values
+        self._fcn_wrapper(*_par_vals)
+
         self.__state_is_from_minimizer = True
         self.__cache_stale = True
 
