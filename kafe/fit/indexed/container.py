@@ -97,9 +97,13 @@ class IndexedContainer(DataContainerBase):
         :rtype: int
         """
         try:
-            err_val.ndim
+            err_val.ndim   # will raise if simple float
         except AttributeError:
+            err_val = np.asarray(err_val, dtype=float)
+
+        if err_val.ndim == 0:  # if dimensionless numpy array (i.e. float64), add a dimension
             err_val = np.ones(self.size) * err_val
+
         _err = SimpleGaussianError(err_val=err_val, corr_coeff=correlation,
                                    relative=relative, reference=self._idx_data)
         # TODO: reason not to use id() here?
