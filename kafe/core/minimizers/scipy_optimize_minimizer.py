@@ -183,8 +183,6 @@ class MinimizerScipyOptimize(object):
 
 
     def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, **minimizer_contour_kwargs):
-        if minimizer_contour_kwargs == None:
-            minimizer_contour_kwargs = dict()
         _algorithm = minimizer_contour_kwargs.pop("algorithm", "heuristic_grid")
 
         if _algorithm == "beacon":

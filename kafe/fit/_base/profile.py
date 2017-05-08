@@ -184,6 +184,8 @@ class ContoursProfiler(object):
                 _contour_method_kwargs = self._contour_kwargs['method_kwargs']
             except KeyError:
                 _contour_method_kwargs = dict()
+            if _contour_method_kwargs is None:
+                _contour_method_kwargs = dict()
             _cont = self._fit._fitter.contour(parameter_1, parameter_2, sigma=_sigma, 
                                               **_contour_method_kwargs)
 

@@ -1,3 +1,4 @@
+from kafe.core.contour import ContourFactory
 try:
     import iminuit
 except ImportError:
@@ -219,14 +220,18 @@ class MinimizerIMinuit(object):
 
     # -- public methods
 
-    def contour(self, parameter_name_1, parameter_name_2, numpoints=20, sigma=1.0):
+    def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, **minimizer_contour_kwargs):
         if self.__iminuit is None:
             raise MinimizerIMinuitException("Need to perform a fit before calling contour()!")
-        _x_errs, _y_errs, _contour_line = self.__iminuit.mncontour(parameter_name_1, parameter_name_2, numpoints=numpoints, sigma=sigma)
+        _numpoints = minimizer_contour_kwargs.pop("numpoints", 20)
+        if minimizer_contour_kwargs:
+            raise MinimizerScipyOptimizeException("Unknown parameters for {}: {}".format(_algorithm, minimizer_contour_kwargs.keys()))
+        _x_errs, _y_errs, _contour_line = self.__iminuit.mncontour(parameter_name_1, parameter_name_2, 
+                                                                   numpoints=_numpoints, sigma=sigma)
         self.minimize()  # return to minimum
         if len(_contour_line) == 0:
             return None  # failed to find any point on contour
-        return np.array(_contour_line).T
+        return ContourFactory.create_xy_contour(np.array(_contour_line), sigma)
 
     def profile(self, parameter_name, bins=20, bound=2, args=None, subtract_min=False):
         if self.__iminuit is None:
