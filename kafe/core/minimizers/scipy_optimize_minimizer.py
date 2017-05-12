@@ -298,7 +298,6 @@ class MinimizerScipyOptimize(object):
         
         _initial_points_per_axis = 1 + initial_points * 2
         _target_points_per_axis = 1 + initial_points * 2 ** (iterations + 1)
-        _contour_fun = self.function_value + sigma ** 2
         _ids = (self._par_names.index(parameter_name_1), self._par_names.index(parameter_name_2))
         _minimum = np.asarray([self._par_val[_ids[0]], self._par_val[_ids[1]]])
         _err = np.asarray([self._par_err[_ids[0]], self._par_err[_ids[1]]])
@@ -322,7 +321,9 @@ class MinimizerScipyOptimize(object):
                                           {'type' : 'eq', 'fun' : lambda x: x[_ids[1]] - _y_values[_y]}]
                     _grid[_x,_y] = self._calc_fun_with_constraints(_local_constraints)
 
-
+        
+        _min_fun = min(self.function_value, _grid[_min_coords,_min_coords])
+        _contour_fun = _min_fun + sigma ** 2
 
         _iterations = 0
         while _x_step > 0 and _y_step > 1:
@@ -431,7 +432,7 @@ class MinimizerScipyOptimize(object):
         _x_values = _x_values[_left_cutoff:_right_cutoff]
         _y_values = _y_values[_bottom_cutoff:_top_cutoff]
         
-        _grid = np.sqrt(_grid - self.function_value)
+        _grid = np.sqrt(_grid - _min_fun)
         self._func_wrapper_unpack_args(self._par_val)
         return ContourFactory.create_grid_contour(_x_values, _y_values, _grid, sigma)
     
