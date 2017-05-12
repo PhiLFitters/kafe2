@@ -1,3 +1,4 @@
+from kafe.core.contour import ContourFactory
 try:
     from ROOT import TMinuit, Double, Long
     from ROOT import TMath  # for using ROOT's chi2prob function
@@ -179,6 +180,49 @@ class MinimizerROOTTMinuit(object):
 
     # -- public properties
 
+    def get_fit_info(self, info):
+        '''Retrieves other info from `Minuit`.
+        **info** : string
+            Information about the fit to retrieve.
+            This can be any of the following:
+              - ``'fcn'``: `FCN` value at minimum,
+              - ``'edm'``: estimated distance to minimum
+              - ``'err_def'``: `Minuit` error matrix status code
+              - ``'status_code'``: `Minuit` general status code
+        '''
+
+        # declare vars in which to retrieve other info
+        fcn_at_min = Double(0)
+        edm = Double(0)
+        err_def = Double(0)
+        n_var_param = Long(0)
+        n_tot_param = Long(0)
+        status_code = Long(0)
+
+        # Tell TMinuit to update the variables declared above
+        self.__gMinuit.mnstat(fcn_at_min,
+                              edm,
+                              err_def,
+                              n_var_param,
+                              n_tot_param,
+                              status_code)
+
+        if info == 'fcn':
+            return fcn_at_min
+
+        elif info == 'edm':
+            return edm
+
+        elif info == 'err_def':
+            return err_def
+
+        elif info == 'status_code':
+            try:
+                return D_MATRIX_ERROR[status_code]
+            except:
+                return status_code
+
+
     @property
     def n_pars(self):
         return len(self.parameter_names)
@@ -349,3 +393,54 @@ class MinimizerROOTTMinuit(object):
             self._par_err.append(float(_pe))
 
         self._min_result_stale = False
+        
+    def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, **minimizer_contour_kwargs):
+        if self.__gMinuit is None:
+            raise MinimizerROOTTMinuitException("Need to perform a fit before calling contour()!")
+        _numpoints = minimizer_contour_kwargs.pop("numpoints", 20)
+        if minimizer_contour_kwargs:
+            raise MinimizerROOTTMinuitException("Unknown parameters: {}".format(minimizer_contour_kwargs))
+        _id_1 = self.parameter_names.index(parameter_name_1)
+        _id_2 = self.parameter_names.index(parameter_name_2)
+        self.__gMinuit.SetErrorDef(sigma)
+        _t_graph = self.__gMinuit.Contour(_numpoints, _id_1, _id_2)
+        self.__gMinuit.SetErrorDef(self._err_def)
+        
+        _x_buffer, _y_buffer = _t_graph.GetX(), _t_graph.GetY()
+        _N = _t_graph.GetN()
+        
+        _x = np.frombuffer(_x_buffer, dtype=float, count=_N)
+        _y = np.frombuffer(_y_buffer, dtype=float, count=_N)
+        self._func_handle(*self.parameter_values)
+        return ContourFactory.create_xy_contour((_x, _y), sigma)
+    
+    def profile(self, parameter_name, bins=21, bound=2, args=None, subtract_min=False):
+        if self.__gMinuit is None:
+            raise MinimizerROOTTMinuitException("Need to perform a fit before calling contour()!")
+        
+        MAX_ITERATIONS = 6000
+        
+        _error_code = Long(0)
+        _minuit_id = Long(self.parameter_names.index(parameter_name) + 1)
+
+        self.__gMinuit.mnexcm("FIX", arr('d', [_minuit_id]), 1, _error_code)
+
+
+        _par_min = Double(0)
+        _par_err = Double(0)
+        
+        self.__gMinuit.GetParameter(_minuit_id - 1, _par_min, _par_err)
+
+        _x = np.linspace(start=_par_min - bound * _par_err, stop=_par_min + bound * _par_err, num=bins, endpoint=True)
+
+        _y = np.empty(bins)
+        for i in range(bins):
+            self.__gMinuit.mnexcm("SET PAR", arr('d', [_minuit_id, Double(i)]), 2, _error_code)
+            self.__gMinuit.mnexcm("MIGRAD", arr('d', [MAX_ITERATIONS, self.tolerance]), 2, _error_code)
+            _y[i] = self.get_fit_info("fcn")
+
+            self.__gMinuit.mnexcm("SET PAR", arr('d', [_minuit_id, Double(_par_min)]), 2, _error_code)
+            self.__gMinuit.mnexcm("RELEASE", arr('d', [_minuit_id]), 1, _error_code)
+
+        
+        return np.asarray((_x, _y))

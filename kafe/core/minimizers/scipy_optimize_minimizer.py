@@ -476,10 +476,8 @@ class MinimizerScipyOptimize(object):
                 (central_coords[0], central_coords[1] - 1),
                 (central_coords[0] - 1, central_coords[1])]
 
-    def _contour_beacon(self, parameter_name_1, parameter_name_2, sigma=1.0, numpoints = 20, strategy=1):
-        print sigma
+    def _contour_beacon(self, parameter_name_1, parameter_name_2, sigma=1.0, beacon_size=0.02):
             
-        _fraction = 0.02
         _contour_fun = self.function_value + sigma ** 2
         _contour_fun_upper_tolerance = self.function_value + (1.2 * sigma) ** 2
         _contour_fun_lower_tolerance = self.function_value + (0.8 * sigma) ** 2
@@ -493,13 +491,13 @@ class MinimizerScipyOptimize(object):
         CONTOUR_STRETCHING = 4.0
         _unstretched_angles = np.linspace(-np.pi/2, np.pi/2, CONTOUR_ELLIPSE_POINTS, endpoint=True)
         _contour_search_ellipse = np.empty((2, CONTOUR_ELLIPSE_POINTS))
-        _contour_search_ellipse[0] = sigma * _fraction * np.sin(_unstretched_angles)
-        _contour_search_ellipse[1] = sigma * CONTOUR_STRETCHING * _fraction * np.cos(_unstretched_angles)
+        _contour_search_ellipse[0] = sigma * beacon_size * np.sin(_unstretched_angles)
+        _contour_search_ellipse[1] = sigma * CONTOUR_STRETCHING * beacon_size * np.cos(_unstretched_angles)
         _stretched_absolute_angles = np.abs(np.arctan(np.tan(_unstretched_angles) / CONTOUR_STRETCHING))
         _curvature_adjustion_factors = 1 + 0.025 * (10 - _stretched_absolute_angles * 180 / np.pi)
         _curvature_adjustion_factors = np.where(_curvature_adjustion_factors >= 0.25, _curvature_adjustion_factors, 0.25)
         
-        _termination_distance = (sigma * CONTOUR_STRETCHING * _fraction) ** 2
+        _termination_distance = (sigma * CONTOUR_STRETCHING * beacon_size) ** 2
         
         _meta_cost_function = lambda z: (_contour_fun - self._calc_fun_with_constraints([{'type' : 'eq', 'fun' : lambda x: x[_ids[0]] - (_minimum[0] + _err[0] * z)},
                                                                                          {'type' : 'eq', 'fun' : lambda x: x[_ids[1]] - _minimum[1]}]))
