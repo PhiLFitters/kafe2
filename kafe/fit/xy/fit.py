@@ -339,9 +339,9 @@ class XYFit(FitBase):
         if self.__cache_projected_xy_total_error is None:
             _x_errors = self.x_total_error
             _precision = 0.01 * np.min(_x_errors)
-            _derivatives = self._model_function.eval_model_function_derivative_by_x(dx=_precision)
+            _derivatives = self._param_model.eval_model_function_derivative_by_x(dx=_precision)
             self.__cache_projected_xy_total_error = np.sqrt(self.y_total_error**2 + self.x_total_error**2 * _derivatives**2)
-        return self.projected_xy_total_error
+        return self.__cache_projected_xy_total_error
 
     @property
     def x_total_cov_mat(self):

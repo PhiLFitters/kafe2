@@ -108,7 +108,7 @@ class XYCostFunction_Chi2(CostFunctionBase_Chi2):
         return CostFunctionBase_Chi2.chi2_covariance(data=y_data, model=y_model, total_cov_mat_inverse=projected_xy_total_cov_mat_inverse)
 
     @staticmethod
-    def chi2_xy_pointwise_errors(y_data, y_model, x_total_error, y_total_error):
+    def chi2_xy_pointwise_errors(y_data, y_model, x_total_error, projected_xy_total_error):
         return CostFunctionBase_Chi2.chi2_pointwise_errors(y_data, y_model, total_error=projected_xy_total_error)
 
     @staticmethod
