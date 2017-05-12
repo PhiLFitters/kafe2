@@ -180,10 +180,7 @@ class ContoursProfiler(object):
             smoothing_sigma = self._contour_kwargs['smooting_sigma']
         _contours = []
         for _sigma in self._contour_kwargs['sigma_values']:
-            try:
-                _contour_method_kwargs = self._contour_kwargs['method_kwargs']
-            except KeyError:
-                _contour_method_kwargs = dict()
+            _contour_method_kwargs = self._contour_kwargs.get('method_kwargs', dict())
             if _contour_method_kwargs is None:
                 _contour_method_kwargs = dict()
             _cont = self._fit._fitter.contour(parameter_1, parameter_2, sigma=_sigma, 
