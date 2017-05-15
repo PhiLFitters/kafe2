@@ -223,7 +223,7 @@ class MinimizerIMinuit(object):
     def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, **minimizer_contour_kwargs):
         if self.__iminuit is None:
             raise MinimizerIMinuitException("Need to perform a fit before calling contour()!")
-        _numpoints = minimizer_contour_kwargs.pop("numpoints", 20)
+        _numpoints = minimizer_contour_kwargs.pop("numpoints", 100)
         if minimizer_contour_kwargs:
             raise MinimizerScipyOptimizeException("Unknown parameters for {}: {}".format(_algorithm, minimizer_contour_kwargs.keys()))
         _x_errs, _y_errs, _contour_line = self.__iminuit.mncontour(parameter_name_1, parameter_name_2, 
