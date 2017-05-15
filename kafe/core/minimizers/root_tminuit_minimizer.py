@@ -416,14 +416,13 @@ class MinimizerROOTTMinuit(object):
     
     def profile(self, parameter_name, bins=21, bound=2, args=None, subtract_min=False):
         if self.__gMinuit is None:
-            raise MinimizerROOTTMinuitException("Need to perform a fit before calling contour()!")
+            raise MinimizerROOTTMinuitException("Need to perform a fit before calling profile()!")
         
         MAX_ITERATIONS = 6000
         
         _error_code = Long(0)
         _minuit_id = Long(self.parameter_names.index(parameter_name) + 1)
 
-        self.__gMinuit.mnexcm("FIX", arr('d', [_minuit_id]), 1, _error_code)
 
 
         _par_min = Double(0)
@@ -432,15 +431,20 @@ class MinimizerROOTTMinuit(object):
         self.__gMinuit.GetParameter(_minuit_id - 1, _par_min, _par_err)
 
         _x = np.linspace(start=_par_min - bound * _par_err, stop=_par_min + bound * _par_err, num=bins, endpoint=True)
+        print bound
+        print _par_err
 
-        _y = np.empty(bins)
+        self.__gMinuit.mnexcm("FIX", arr('d', [_minuit_id]), 1, _error_code)
+
+        _y = np.zeros(bins)
         for i in range(bins):
-            self.__gMinuit.mnexcm("SET PAR", arr('d', [_minuit_id, Double(i)]), 2, _error_code)
+            self.__gMinuit.mnexcm("SET PAR", arr('d', [_minuit_id, Double(_x[i])]), 2, _error_code)
             self.__gMinuit.mnexcm("MIGRAD", arr('d', [MAX_ITERATIONS, self.tolerance]), 2, _error_code)
             _y[i] = self.get_fit_info("fcn")
 
-            self.__gMinuit.mnexcm("SET PAR", arr('d', [_minuit_id, Double(_par_min)]), 2, _error_code)
-            self.__gMinuit.mnexcm("RELEASE", arr('d', [_minuit_id]), 1, _error_code)
+        self.__gMinuit.mnexcm("RELEASE", arr('d', [_minuit_id]), 1, _error_code)
+        self._migrad()
+        self.__gMinuit.mnexcm("SET PAR", arr('d', [_minuit_id, Double(_par_min)]), 2, _error_code)
 
         
         return np.asarray((_x, _y))
