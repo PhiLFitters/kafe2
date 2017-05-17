@@ -1,10 +1,29 @@
 import numpy as np
 
 from ...config import matplotlib as mpl
+from ...core.confidence import ConfidenceLevel
 from . import FitBase
 from matplotlib import pyplot as plt, rcParams
 from matplotlib import gridspec as gs
 from matplotlib import ticker as plticker
+
+
+class ConfidenceLevelFormatted(ConfidenceLevel):
+    @property
+    def sigma_string(self):
+        return "%.3g-sigma" % (self.sigma,)
+
+    @property
+    def sigma_latex_string(self):
+        return r"%g$\sigma$" % (self.sigma,)
+
+    @property
+    def cl_string(self):
+        return "%.4g%% CL" % (self.cl*100,)
+
+    @property
+    def cl_latex_string(self):
+        return r"$%.4g\%%$ CL" % (self.cl*100,)
 
 
 class SigmaLocator(plticker.Locator):
@@ -48,6 +67,7 @@ class SigmaFormatter(plticker.Formatter):
 
 class ContoursProfilerException(Exception):
     pass
+
 
 class ContoursProfiler(object):
     """
@@ -102,10 +122,14 @@ class ContoursProfiler(object):
         if not isinstance(fit_object, FitBase):
             raise ContoursProfilerException("Object %r is not a fit object!" % (fit_object,))
 
+        _contour_confidence_levels = [ConfidenceLevelFormatted.from_sigma(2, _sigma) for _sigma in contour_sigma_values]
+
         self._fit = fit_object
         self._profile_kwargs = dict(points=profile_points, subtract_min=profile_subtract_min, bound=profile_bound)
-        self._contour_kwargs = dict(points=contour_points, sigma_values=contour_sigma_values, smooting_sigma=contour_smoothing_sigma,
-                                    method_kwargs = contour_method_kwargs)
+        self._contour_kwargs = dict(points=contour_points,
+                                    confidence_levels=_contour_confidence_levels,
+                                    smooting_sigma=contour_smoothing_sigma,
+                                    method_kwargs=contour_method_kwargs)
 
         self._cost_function_formatted_name = "${}$".format(self._fit._cost_function.formatter.latex_name)
         self._parameters_formatted_names = ["${}$".format(pf.latex_name) for pf in self._fit._model_function.argument_formatters]
@@ -207,11 +231,11 @@ class ContoursProfiler(object):
         if smoothing_sigma is None:
             smoothing_sigma = self._contour_kwargs['smooting_sigma']
         _contours = []
-        for _sigma in self._contour_kwargs['sigma_values']:
+        for _cl_obj in self._contour_kwargs['confidence_levels']:
             _contour_method_kwargs = self._contour_kwargs.get('method_kwargs', dict())
             if _contour_method_kwargs is None:
                 _contour_method_kwargs = dict()
-            _cont = self._fit._fitter.contour(parameter_1, parameter_2, sigma=_sigma, 
+            _cont = self._fit._fitter.contour(parameter_1, parameter_2, sigma=_cl_obj.sigma,
                                               **_contour_method_kwargs)
 
             # smooth contours if requested
@@ -220,7 +244,7 @@ class ContoursProfiler(object):
                 _cont[0] = gaussian_filter(_cont[0], smoothing_sigma, mode='wrap')
                 _cont[1] = gaussian_filter(_cont[1], smoothing_sigma, mode='wrap')
 
-            _contours.append((_sigma, _cont))
+            _contours.append((_cl_obj, _cont))
         return _contours
 
     # - plot profiles/contours
@@ -323,7 +347,8 @@ class ContoursProfiler(object):
                       show_legend=True,
                       show_fit_minimum=True,
                       show_ticks=True,
-                      label_ticks_in_sigma=True):
+                      label_ticks_in_sigma=True,
+                      naming_convention='sigma'):
         """
         Plot the contour for a parameter pair.
 
@@ -356,15 +381,25 @@ class ContoursProfiler(object):
         _par_1_formatted_name = self._parameters_formatted_names[_par_1_id]
         _par_2_formatted_name = self._parameters_formatted_names[_par_2_id]
 
-        _sigma_contour_pairs = self.get_contours(parameter_1, parameter_2)
+        if naming_convention.lower() == 'cl':
+            _use_cl_in_label = True
+        elif naming_convention.lower() == 'sigma':
+            _use_cl_in_label = False
+        else:
+            raise ContoursProfilerException("Unknown contour naming convention '%s'! "
+                                            "Must be one of: ('cl', 'sigma')"
+                                            % (naming_convention,))
+
+        _cl_contour_pairs = self.get_contours(parameter_1, parameter_2)
 
         _contour_artists = []
-        for _sigma_contour_pair, _prop_cycler in zip(_sigma_contour_pairs, rcParams["axes.prop_cycle"]):
-            _sigma, _contour_xy = _sigma_contour_pair
+        for _cl_contour_pair, _prop_cycler in zip(_cl_contour_pairs, rcParams["axes.prop_cycle"]):
+            _cl, _contour_xy = _cl_contour_pair
             _artists = []
             if _contour_xy is not None:
-                _artists = self._plot_contour_xy(_axes, _contour_xy, label="%g$\sigma$ contour" % (_sigma,), 
-                                                contour_color=_prop_cycler["color"])
+                _label = "%s contour" % (_cl.cl_latex_string if _use_cl_in_label else _cl.sigma_latex_string)
+                _artists = self._plot_contour_xy(_axes, _contour_xy, label=_label,
+                                                 contour_color=_prop_cycler["color"])
             _contour_artists += _artists
 
         _par_1_val = self._fit.parameter_name_value_dict[parameter_1]
@@ -412,7 +447,8 @@ class ContoursProfiler(object):
                                       show_parabolic_profiles=True,
                                       show_error_span_profiles=False,
                                       full_matrix=False,
-                                      label_ticks_in_sigma=True):
+                                      label_ticks_in_sigma=True,
+                                      contour_naming_convention='sigma'):
         """
         Plot all profiles and contours to subplots arranges in a matrix-like fashion.
 
@@ -495,7 +531,8 @@ class ContoursProfiler(object):
                                    show_legend=False,
                                    show_fit_minimum=_show_minimum_contours,
                                    show_ticks=_show_ticks_contours,
-                                   label_ticks_in_sigma=label_ticks_in_sigma)
+                                   label_ticks_in_sigma=label_ticks_in_sigma,
+                                   naming_convention=contour_naming_convention)
 
                 if show_legend:
                     _hs, _ls = _axes.get_legend_handles_labels()
@@ -516,7 +553,8 @@ class ContoursProfiler(object):
                                        show_legend=False,
                                        show_fit_minimum=_show_minimum_contours,
                                        show_ticks=_show_ticks_contours,
-                                       label_ticks_in_sigma=label_ticks_in_sigma)
+                                       label_ticks_in_sigma=label_ticks_in_sigma,
+                                       naming_convention=contour_naming_convention)
 
                     _xlim, _ylim = _axes.get_xlim(), _axes.get_ylim()
                     _subplot_lims_x_cols[row] = min(_subplot_lims_x_cols[row][0], _xlim[0]), max(
