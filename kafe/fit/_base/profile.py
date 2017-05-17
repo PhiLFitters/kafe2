@@ -6,6 +6,46 @@ from matplotlib import pyplot as plt, rcParams
 from matplotlib import gridspec as gs
 from matplotlib import ticker as plticker
 
+
+class SigmaLocator(plticker.Locator):
+    """
+    Create ticks at evenly spaced offsets from a central value.
+    The offsets are integer multiples of a fixed value ('sigma')
+    """
+    def __init__(self, central_value, sigma):
+        self._cval = central_value
+        self._sigma = sigma
+
+    def __call__(self):
+        """Return the locations of the ticks"""
+        _vmin, _vmax = self.axis.get_view_interval()
+        return self.tick_values(_vmin, _vmax)
+
+    def tick_values(self, vmin, vmax):
+        _n_sigma_dn = int((vmin - self._cval)/self._sigma)
+        _n_sigma_up = int((vmax - self._cval)/self._sigma)
+        return self.raise_if_exceeds(
+            np.arange(_n_sigma_dn, _n_sigma_up+1, 1) * self._sigma + self._cval)
+
+
+class SigmaFormatter(plticker.Formatter):
+    """
+    Set the tick labels to indicate the distance to the
+    central value, in intervals
+    """
+    def __init__(self, central_value, sigma):
+        """set the tick labels to correspond to sigma"""
+        self._cval = central_value
+        self._sigma = sigma
+
+    def __call__(self, x, pos=None):
+        'Return the format for tick val *x* at position *pos*'
+        # _vmin, _vmax = self.axis.get_data_interval()
+        _numeric_label = (x - self._cval)/self._sigma
+        _str_label = r"%.2g$\sigma$" % (_numeric_label,)
+        return _str_label
+
+
 class ContoursProfilerException(Exception):
     pass
 
@@ -25,10 +65,6 @@ class ContoursProfiler(object):
     along which this function remains constant.
 
     This object offers a means of calculating both profiles and contours
-
-    .. NOTE:: In order to obtain contours, the minimizer used by the fit object must support their
-              calculation. At the moment, only the ``iminuit`` minimizer
-              (:py:class:`~kafe.core.minimizers.MinimizerIMinuit`) provides this functionality.
     """
 
     _DEFAULT_PLOT_PROFILE_KWARGS = dict(marker='', linewidth=2)
@@ -89,14 +125,6 @@ class ContoursProfiler(object):
                           height_ratios=None)
 
         return _fig, _gs
-
-    @staticmethod
-    def _assign_fixed_major_tick_number_locators_xy(axes, n_ticks_xy):
-        _loc_x = plticker.MaxNLocator(n_ticks_xy[0])
-        _loc_y = plticker.MaxNLocator(n_ticks_xy[1])
-
-        axes.xaxis.set_major_locator(_loc_x)
-        axes.yaxis.set_major_locator(_loc_y)
 
     @staticmethod
     def _plot_profile_xy(target_axes, x, y, label):
@@ -203,7 +231,8 @@ class ContoursProfiler(object):
                      show_legend=True,
                      show_fit_minimum=True,
                      show_error_span=True,
-                     show_ticks=True):
+                     show_ticks=True,
+                     label_ticks_in_sigma=True):
         """
         Plot the profile cost function for a parameter.
 
@@ -271,7 +300,19 @@ class ContoursProfiler(object):
         if show_grid:
             _axes.grid('on')
 
-        if not show_ticks:
+        if show_ticks:
+            _loc_x = SigmaLocator(central_value=_par_val, sigma=_par_err)
+            _axes.xaxis.set_major_locator(_loc_x)
+            if label_ticks_in_sigma:
+                _form_x = SigmaFormatter(central_value=_par_val, sigma=_par_err)
+                _axes.xaxis.set_major_formatter(_form_x)
+            # else:
+            #     _form_x = ScalarFormatter()
+            #     _axes.xaxis.set_major_formatter(_form_x)
+
+            _loc_y = plticker.MaxNLocator(5)
+            _axes.yaxis.set_major_locator(_loc_y)
+        else:
             _axes.set_xticks([])
             _axes.set_yticks([])
 
@@ -281,7 +322,8 @@ class ContoursProfiler(object):
                       show_grid=True,
                       show_legend=True,
                       show_fit_minimum=True,
-                      show_ticks=True):
+                      show_ticks=True,
+                      label_ticks_in_sigma=True):
         """
         Plot the contour for a parameter pair.
 
@@ -325,16 +367,16 @@ class ContoursProfiler(object):
                                                 contour_color=_prop_cycler["color"])
             _contour_artists += _artists
 
+        _par_1_val = self._fit.parameter_name_value_dict[parameter_1]
+        _par_2_val = self._fit.parameter_name_value_dict[parameter_2]
+        _par_1_err = self._fit.parameter_errors[_par_1_id]
+        _par_2_err = self._fit.parameter_errors[_par_2_id]
+
         _minimum_artist = None
         if show_fit_minimum:
-            _par_1_val = self._fit.parameter_name_value_dict[parameter_1]
-            _par_2_val = self._fit.parameter_name_value_dict[parameter_2]
-            _par_1_err = self._fit.parameter_errors[_par_1_id]
-            _par_2_err = self._fit.parameter_errors[_par_2_id]
-
             _minimum_artist = self._plot_minimum(_axes, x=_par_1_val, y=_par_2_val,
                                                  xerr=_par_1_err, yerr=_par_2_err,
-                                                 label="minimum")
+                                                 label="fit minimum")
 
         _axes.set_xlabel(_par_1_formatted_name)
         _axes.set_ylabel(_par_2_formatted_name)
@@ -345,9 +387,20 @@ class ContoursProfiler(object):
         if show_grid:
             _axes.grid('on')
 
-        if not show_ticks:
+        if show_ticks:
+            _loc_x = SigmaLocator(central_value=_par_1_val, sigma=_par_1_err)
+            _loc_y = SigmaLocator(central_value=_par_2_val, sigma=_par_2_err)
+            _axes.xaxis.set_major_locator(_loc_x)
+            _axes.yaxis.set_major_locator(_loc_y)
+            if label_ticks_in_sigma:
+                _form_x = SigmaFormatter(central_value=_par_1_val, sigma=_par_1_err)
+                _form_y = SigmaFormatter(central_value=_par_2_val, sigma=_par_2_err)
+                _axes.xaxis.set_major_formatter(_form_x)
+                _axes.yaxis.set_major_formatter(_form_y)
+        else:
             _axes.set_xticks([])
             _axes.set_yticks([])
+
 
         return _contour_artists, _minimum_artist
 
@@ -358,7 +411,8 @@ class ContoursProfiler(object):
                                       show_legend=True,
                                       show_parabolic_profiles=True,
                                       show_error_span_profiles=False,
-                                      full_matrix=False):
+                                      full_matrix=False,
+                                      label_ticks_in_sigma=True):
         """
         Plot all profiles and contours to subplots arranges in a matrix-like fashion.
 
@@ -422,6 +476,7 @@ class ContoursProfiler(object):
                               show_legend=False,
                               show_fit_minimum=_show_minimum_profiles,
                               show_error_span=show_error_span_profiles,
+                              label_ticks_in_sigma=label_ticks_in_sigma,
                               show_ticks=_show_ticks_profiles)
 
             if show_legend:
@@ -439,7 +494,8 @@ class ContoursProfiler(object):
                                    show_grid=_show_grid_contours,
                                    show_legend=False,
                                    show_fit_minimum=_show_minimum_contours,
-                                   show_ticks=_show_ticks_contours)
+                                   show_ticks=_show_ticks_contours,
+                                   label_ticks_in_sigma=label_ticks_in_sigma)
 
                 if show_legend:
                     _hs, _ls = _axes.get_legend_handles_labels()
@@ -459,7 +515,8 @@ class ContoursProfiler(object):
                                        show_grid=_show_grid_contours,
                                        show_legend=False,
                                        show_fit_minimum=_show_minimum_contours,
-                                       show_ticks=_show_ticks_contours)
+                                       show_ticks=_show_ticks_contours,
+                                       label_ticks_in_sigma=label_ticks_in_sigma)
 
                     _xlim, _ylim = _axes.get_xlim(), _axes.get_ylim()
                     _subplot_lims_x_cols[row] = min(_subplot_lims_x_cols[row][0], _xlim[0]), max(
@@ -470,8 +527,6 @@ class ContoursProfiler(object):
         # post-processing: synchronize the x and y plot ranges, adjust tick frequency
         for row in xrange(_npar):
             _pf_axes = plt.subplot(_gs[row, row])
-
-            self._assign_fixed_major_tick_number_locators_xy(_pf_axes, (5, 5))
 
             # synchronize x axis ranges across profile and contour plots
             if not np.any(np.isinf(_subplot_lims_x_cols[row])):
@@ -485,8 +540,6 @@ class ContoursProfiler(object):
                 if not np.any(np.isinf(_subplot_lims_y_rows[row])):
                     _ct_axes.set_ylim(_subplot_lims_y_rows[row])
 
-                    self._assign_fixed_major_tick_number_locators_xy(_ct_axes, (5, 5))
-
                 if full_matrix:
                     _ct_axes = plt.subplot(_gs[col, row])
                     # synchronize x and y axis ranges across contour plots
@@ -494,8 +547,6 @@ class ContoursProfiler(object):
                         _ct_axes.set_xlim(_subplot_lims_x_cols[row])
                     if not np.any(np.isinf(_subplot_lims_y_rows[col])):
                         _ct_axes.set_ylim(_subplot_lims_y_rows[col])
-
-                        self._assign_fixed_major_tick_number_locators_xy(_ct_axes, (5, 5))
 
 
         if show_legend:
