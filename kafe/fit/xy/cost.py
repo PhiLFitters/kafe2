@@ -45,6 +45,7 @@ class XYCostFunction_Chi2(CostFunctionBase_Chi2):
             else:
                 raise CostFunctionException("Unknown value '%s' for 'errors_to_use': must be one of ('covariance', 'pointwise', None)")
             CostFunctionBase.__init__(self, cost_function=_chi2_func)
+            self._formatter.latex_name = "\chi^2"
         else:
             raise CostFunctionException("Unknown value '%s' for 'axes_to_use': must be one of ('xy', 'y')")
 
