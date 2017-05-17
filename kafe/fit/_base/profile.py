@@ -296,17 +296,20 @@ class ContoursProfiler(object):
 
         _profile_artist = self._plot_profile_xy(_axes, _x, _y, label="profile %s" % (self._cost_function_formatted_name,))
 
+        _y_offset = _cost_function_min if not self._profile_kwargs['subtract_min'] else 0.0
+
         _parabola_artist = self._plot_parabolic_cost(_axes,
                                   _x,
                                   quad_coeff=1. / (_par_err**2),
                                   x_offset=_par_val,
-                                  y_offset=_cost_function_min,
+                                  y_offset=_y_offset,
                                   label="parabolic approximation")
 
         _minimum_artist = None
         if show_fit_minimum:
             _minimum_artist = self._plot_minimum(_axes,
-                                                 x=_par_val, y=_cost_function_min,
+                                                 x=_par_val,
+                                                 y=_y_offset,
                                                  xerr=_par_err, yerr=None,
                                                  label="fit minimum")
 
