@@ -605,4 +605,4 @@ class MinimizerScipyOptimize(object):
         for i in range(bins):
             _y[i] = self._calc_fun_with_constraints([{"type" : "eq", "fun" : lambda x: x[_par_id] - _par[i]}])
         self._func_wrapper_unpack_args(self._par_val)
-        return np.asarray([_par, _y])
+        return np.asarray([_par, _y - _y_offset])
