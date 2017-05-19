@@ -76,7 +76,8 @@ class TestFittersIndexed(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.idx_fit.parameter_values,
-                self._ref_parameter_values
+                self._ref_parameter_values,
+                rtol=1e-3
             )
         )
 
@@ -84,7 +85,8 @@ class TestFittersIndexed(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.idx_fit.model,
-                self._ref_model_values
+                self._ref_model_values,
+                rtol=1e-2
             )
         )
 
@@ -93,7 +95,8 @@ class TestFittersIndexed(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.idx_fit.parameter_values,
-                self._ref_parameter_value_estimates
+                self._ref_parameter_value_estimates,
+                rtol=1e-3
             )
         )
 
@@ -102,7 +105,8 @@ class TestFittersIndexed(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.idx_fit.model,
-                self._ref_model_value_estimates
+                self._ref_model_value_estimates,
+                rtol=1e-2
             )
         )
 
@@ -111,7 +115,8 @@ class TestFittersIndexed(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.idx_fit.parameter_values,
-                self._ref_parameter_value_estimates
+                self._ref_parameter_value_estimates,
+                rtol=1e-3
             )
         )
 
@@ -121,13 +126,15 @@ class TestFittersIndexed(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.idx_fit.model,
-                self.idx_fit_explicit_model_name_in_chi2.model
+                self.idx_fit_explicit_model_name_in_chi2.model,
+                rtol=1e-3
             )
         )
         self.assertTrue(
             np.allclose(
                 self.idx_fit.parameter_values,
-                self.idx_fit_explicit_model_name_in_chi2.parameter_values
+                self.idx_fit_explicit_model_name_in_chi2.parameter_values,
+                rtol=1e-3
             )
         )
 
@@ -137,13 +144,15 @@ class TestFittersIndexed(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.idx_fit.model,
-                self.idx_fit_default_cost_function.model
+                self.idx_fit_default_cost_function.model,
+                rtol=1e-3
             )
         )
         self.assertTrue(
             np.allclose(
                 self.idx_fit.parameter_values,
-                self.idx_fit_default_cost_function.parameter_values
+                self.idx_fit_default_cost_function.parameter_values,
+                rtol=1e-3
             )
         )
 
@@ -161,7 +170,8 @@ class TestFittersIndexed(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 idx_fit.parameter_values,
-                self._ref_parameter_values_default
+                self._ref_parameter_values_default,
+                rtol=1e-3
             )
         )
 
@@ -172,7 +182,8 @@ class TestFittersIndexed(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 idx_fit.parameter_values,
-                self._ref_parameter_values_partialdefault
+                self._ref_parameter_values_partialdefault,
+                rtol=1e-3
             )
         )
 
@@ -261,7 +272,8 @@ class TestFittersIndexedChi2WithError(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.idx_fit.parameter_values,
-                self.idx_fit_chi2_with_cov_mat.parameter_values
+                self.idx_fit_chi2_with_cov_mat.parameter_values,
+                rtol=1e-3
             )
         )
 
@@ -269,7 +281,8 @@ class TestFittersIndexedChi2WithError(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.idx_fit.data_error,
-                self.idx_fit._nexus.get_values('data_error')
+                self.idx_fit._nexus.get_values('data_error'),
+                rtol=1e-3
             )
         )
 
@@ -277,7 +290,8 @@ class TestFittersIndexedChi2WithError(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.idx_fit.data_cov_mat,
-                self.idx_fit._nexus.get_values('data_cov_mat')
+                self.idx_fit._nexus.get_values('data_cov_mat'),
+                rtol=1e-3
             )
         )
 
@@ -285,7 +299,8 @@ class TestFittersIndexedChi2WithError(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.idx_fit.data_cov_mat_inverse,
-                self.idx_fit._nexus.get_values('data_cov_mat_inverse')
+                self.idx_fit._nexus.get_values('data_cov_mat_inverse'),
+                rtol=1e-3
             )
         )
 
@@ -293,7 +308,8 @@ class TestFittersIndexedChi2WithError(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.idx_fit.parameter_values,
-                self._ref_parameter_values
+                self._ref_parameter_values,
+                rtol=1e-3
             )
         )
 
@@ -301,7 +317,8 @@ class TestFittersIndexedChi2WithError(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.idx_fit.model,
-                self._ref_model_values
+                self._ref_model_values,
+                rtol=1e-2
             )
         )
 
@@ -310,7 +327,8 @@ class TestFittersIndexedChi2WithError(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.idx_fit.parameter_values,
-                self._ref_parameter_value_estimates
+                self._ref_parameter_value_estimates,
+                rtol=1e-3
             )
         )
 
@@ -319,6 +337,7 @@ class TestFittersIndexedChi2WithError(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.idx_fit.model,
-                self._ref_model_value_estimates
+                self._ref_model_value_estimates,
+                rtol=1e-2
             )
         )

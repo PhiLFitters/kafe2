@@ -77,7 +77,8 @@ class TestFittersXY(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.xy_fit.parameter_values,
-                self._ref_parameter_values
+                self._ref_parameter_values,
+                rtol=1e-3
             )
         )
 
@@ -85,7 +86,8 @@ class TestFittersXY(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.xy_fit.y_model,
-                self._ref_y_model_values
+                self._ref_y_model_values,
+                rtol=1e-2
             )
         )
 
@@ -94,7 +96,8 @@ class TestFittersXY(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.xy_fit.parameter_values,
-                self._ref_parameter_value_estimates
+                self._ref_parameter_value_estimates,
+                rtol=1e-3
             )
         )
 
@@ -103,7 +106,8 @@ class TestFittersXY(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.xy_fit.y_model,
-                self._ref_y_model_value_estimates
+                self._ref_y_model_value_estimates,
+                rtol=1e-2
             )
         )
 
@@ -112,7 +116,8 @@ class TestFittersXY(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.xy_fit.parameter_values,
-                self._ref_parameter_value_estimates
+                self._ref_parameter_value_estimates,
+                rtol=1e-3
             )
         )
 
@@ -122,13 +127,15 @@ class TestFittersXY(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.xy_fit.y_model,
-                self.xy_fit_explicit_model_name_in_chi2.y_model
+                self.xy_fit_explicit_model_name_in_chi2.y_model,
+                rtol=1e-3
             )
         )
         self.assertTrue(
             np.allclose(
                 self.xy_fit.parameter_values,
-                self.xy_fit_explicit_model_name_in_chi2.parameter_values
+                self.xy_fit_explicit_model_name_in_chi2.parameter_values,
+                rtol=1e-3
             )
         )
 
@@ -138,13 +145,15 @@ class TestFittersXY(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.xy_fit.y_model,
-                self.xy_fit_default_cost_function.y_model
+                self.xy_fit_default_cost_function.y_model,
+                rtol=1e-3
             )
         )
         self.assertTrue(
             np.allclose(
                 self.xy_fit.parameter_values,
-                self.xy_fit_default_cost_function.parameter_values
+                self.xy_fit_default_cost_function.parameter_values,
+                rtol=1e-3
             )
         )
 
@@ -162,7 +171,8 @@ class TestFittersXY(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 xy_fit.parameter_values,
-                self._ref_parameter_values_default
+                self._ref_parameter_values_default,
+                rtol=1e-3
             )
         )
 
@@ -173,7 +183,8 @@ class TestFittersXY(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 xy_fit.parameter_values,
-                self._ref_parameter_values_partialdefault
+                self._ref_parameter_values_partialdefault,
+                rtol=1e-3
             )
         )
 
@@ -270,7 +281,8 @@ class TestFittersXYChi2WithError(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.xy_fit.y_data_error,
-                self.xy_fit._nexus.get_values('y_data_error')
+                self.xy_fit._nexus.get_values('y_data_error'),
+                rtol=1e-3
             )
         )
 
@@ -278,7 +290,8 @@ class TestFittersXYChi2WithError(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.xy_fit.y_data_cov_mat,
-                self.xy_fit._nexus.get_values('y_data_cov_mat')
+                self.xy_fit._nexus.get_values('y_data_cov_mat'),
+                rtol=1e-3
             )
         )
 
@@ -286,7 +299,8 @@ class TestFittersXYChi2WithError(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.xy_fit.y_data_cov_mat_inverse,
-                self.xy_fit._nexus.get_values('y_data_cov_mat_inverse')
+                self.xy_fit._nexus.get_values('y_data_cov_mat_inverse'),
+                rtol=1e-3
             )
         )
 
@@ -294,7 +308,8 @@ class TestFittersXYChi2WithError(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.xy_fit.parameter_values,
-                self._ref_parameter_values
+                self._ref_parameter_values,
+                rtol=1e-3
             )
         )
 
@@ -302,7 +317,8 @@ class TestFittersXYChi2WithError(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.xy_fit.y_model,
-                self._ref_y_model_values
+                self._ref_y_model_values,
+                rtol=1e-2
             )
         )
 
@@ -311,7 +327,8 @@ class TestFittersXYChi2WithError(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.xy_fit.parameter_values,
-                self._ref_parameter_value_estimates
+                self._ref_parameter_value_estimates,
+                rtol=1e-3
             )
         )
 
@@ -320,6 +337,7 @@ class TestFittersXYChi2WithError(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.xy_fit.y_model,
-                self._ref_model_value_estimates
+                self._ref_model_value_estimates,
+                rtol=1e-2
             )
         )

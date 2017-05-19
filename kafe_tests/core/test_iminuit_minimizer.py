@@ -243,6 +243,7 @@ class TestMinimizerIMinuit(unittest.TestCase):
             np.allclose(_prof, self._ref_profile_m3_x_5, atol=1e-3)
         )
 
+    @unittest.skip("Testing contours not yet implemented!")
     def test_contour_m3_x_y(self):
         self.m3.minimize()
         _cont = self.m3.contour('x', 'y', numpoints=5, sigma=1.0)

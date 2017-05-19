@@ -94,7 +94,8 @@ class TestFittersHist(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.hist_fit.model,
-                self._ref_model
+                self._ref_model,
+                rtol=1e-2
             )
         )
 
@@ -103,7 +104,8 @@ class TestFittersHist(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.hist_fit.parameter_values,
-                self._ref_parameter_value_estimates
+                self._ref_parameter_value_estimates,
+                rtol=1e-3
             )
         )
 
@@ -112,7 +114,8 @@ class TestFittersHist(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.hist_fit.model,
-                self._ref_model_estimates
+                self._ref_model_estimates,
+                rtol=1e-2
             )
         )
 
@@ -121,7 +124,8 @@ class TestFittersHist(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.hist_fit_default_cost_function.parameter_values,
-                self._ref_parameter_value_estimates_default_cost_function
+                self._ref_parameter_value_estimates_default_cost_function,
+                rtol=1e-3
             )
         )
 
@@ -130,7 +134,8 @@ class TestFittersHist(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.hist_fit_default_cost_function.model,
-                self._ref_model_estimates_default_cost_function
+                self._ref_model_estimates_default_cost_function,
+                rtol=1e-2
             )
         )
 
