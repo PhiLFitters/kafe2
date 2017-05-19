@@ -204,7 +204,6 @@ class MinimizerScipyOptimize(object):
                                                 initial_points=_initial_points, iterations=_iterations,
                                                 area_scale_factor=_area_scale_factor)
 
-
     def _contour_old(self, parameter_name_1, parameter_name_2, sigma=1.0, numpoints = 20, strategy=1):
         if strategy == 0:
             _fraction = 0.08

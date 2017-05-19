@@ -397,12 +397,12 @@ class MinimizerROOTTMinuit(object):
     def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, **minimizer_contour_kwargs):
         if self.__gMinuit is None:
             raise MinimizerROOTTMinuitException("Need to perform a fit before calling contour()!")
-        _numpoints = minimizer_contour_kwargs.pop("numpoints", 20)
+        _numpoints = minimizer_contour_kwargs.pop("numpoints", 100)
         if minimizer_contour_kwargs:
             raise MinimizerROOTTMinuitException("Unknown parameters: {}".format(minimizer_contour_kwargs))
         _id_1 = self.parameter_names.index(parameter_name_1)
         _id_2 = self.parameter_names.index(parameter_name_2)
-        self.__gMinuit.SetErrorDef(sigma)
+        self.__gMinuit.SetErrorDef(sigma ** 2)
         _t_graph = self.__gMinuit.Contour(_numpoints, _id_1, _id_2)
         self.__gMinuit.SetErrorDef(self._err_def)
         
