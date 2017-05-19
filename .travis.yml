@@ -1,16 +1,19 @@
 sudo: false
 
+# only one TRAVIS_PYTHON_VERSION
 language: python
 python:
   - 2.7
 
-# use cache for pip (especially for scipy)
-cache:
-    pip: true
-    custom_install: true
-
-virtualenv:
-    system_site_packages: true
+# matrix of several CONDA_PYTHON_VERSIONs
+env:
+  matrix:
+    - CONDA_PYTHON_VERSION=2.7.9
+    - CONDA_PYTHON_VERSION=2.7.13
+    # Python 3 not supported yet
+    #- CONDA_PYTHON_VERSION=3.5
+    #- CONDA_PYTHON_VERSION=3.4
+    #- CONDA_PYTHON_VERSION=3.3
 
 addons:
   apt:
@@ -18,36 +21,40 @@ addons:
     - libblas-dev
     - liblapack-dev
     - gfortran
-    #don't install LaTeX (yet)
-    #- texlive-extra-utils
-    #- texlive-latex-extra
-    - dvipng
-    #- libfreetype6
-    - python-qt4
-    #don't install ROOT yet
-    #- root-system
 
 before_install:
-  # create cache directory if none exists
-  - mkdir -p $HOME/.cache/pip/wheels
-  # upgrade pip to latest version
+  # get miniconda
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O $HOME/miniconda.sh;
+    else
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O $HOME/miniconda.sh;
+    fi
+  # install miniconda in batch mode and add to PATH
+  - bash $HOME/miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+
+  # configure conda for batch mode
+  - conda config --set always_yes yes --set changeps1 no
+  # update conda and show package/environment information
+  - conda update -q conda
+  - conda info -a
+
+  # install some dependencies with conda and activate environment
+  - conda create -q -n kafe_env python=$CONDA_PYTHON_VERSION numpy scipy tk matplotlib
+  - source activate kafe_env
+
+  # upgrade pip to latest version and install iminuit with pip
   - pip install --upgrade pip
-  # get and build scipy, if not already cached
-  - travis_wait pip wheel --find-links=$HOME/.cache/pip/wheels --use-wheel --wheel-dir=$HOME/.cache/pip/wheels scipy
-  # install from cache
-  - pip install --no-index --find-links=$HOME/.cache/pip/wheels scipy
-  # install other dependencies
-  - pip install pytest
-  - pip install numpy
-  - pip install matplotlib
   - pip install --upgrade iminuit
-  # check success
-  - python -c "import numpy"
-  - python -c "import scipy"
-  - python -c "import matplotlib"
+  - pip install --upgrade numdifftools
+
+  # output python version to log
+  - python --version
 
 install:
+  # install kafe from current directory using pip
   - pip install -e .
 
 script:
+  # run unittests with setup.py
   - python setup.py test
