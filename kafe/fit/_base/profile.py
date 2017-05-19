@@ -128,7 +128,7 @@ class ContoursProfiler(object):
         self._profile_kwargs = dict(points=profile_points, subtract_min=profile_subtract_min, bound=profile_bound)
         self._contour_kwargs = dict(points=contour_points,
                                     confidence_levels=_contour_confidence_levels,
-                                    smooting_sigma=contour_smoothing_sigma,
+                                    smoothing_sigma=contour_smoothing_sigma,
                                     method_kwargs=contour_method_kwargs)
 
         self._cost_function_formatted_name = "${}$".format(self._fit._cost_function.formatter.latex_name)
@@ -229,7 +229,7 @@ class ContoursProfiler(object):
         :rtype: list of 2-tuples of float and 2d-array
         """
         if smoothing_sigma is None:
-            smoothing_sigma = self._contour_kwargs['smooting_sigma']
+            smoothing_sigma = self._contour_kwargs['smoothing_sigma']
         _contours = []
         for _cl_obj in self._contour_kwargs['confidence_levels']:
             _contour_method_kwargs = self._contour_kwargs.get('method_kwargs', dict())
