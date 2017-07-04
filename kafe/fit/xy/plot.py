@@ -1,5 +1,6 @@
 import numpy as np
 
+from ...config import kc
 from .._base import PlotContainerBase, PlotFigureBase
 from .._aux import step_fill_between
 from . import XYFit
@@ -147,18 +148,8 @@ class XYPlot(PlotFigureBase):
     PLOT_TYPE_DEFAULT_CONFIGS = PlotFigureBase.PLOT_TYPE_DEFAULT_CONFIGS.copy()  # don't change original class variable
     PLOT_TYPE_DEFAULT_CONFIGS['model_error_band'] = dict(
         plot_container_method='plot_model_error_band',
-        plot_container_method_static_kwargs=dict(
-            alpha=0.5,
-            linestyle='-',
-            label='model %(subplot_id)s error',
-            edgecolor='none',
-            linewidth=2,
-            zorder=-100
-        ),
-        plot_container_method_kwargs_cycler_args=tuple((
-            dict(
-                facecolor=('#f59a96', '#a6cee3', '#b0dd8b', '#fdbe6f', '#cbb1d2', '#b39c9a'),
-            ),))
+        plot_container_method_static_kwargs=kc['fit']['plot']['model_error_band']['plot_kwargs'],
+        plot_container_method_kwargs_cycler_args=kc['fit']['plot']['model_error_band']['property_cycler']
     )
 
     def __init__(self, fit_objects):

@@ -2,6 +2,7 @@ import abc
 import numpy as np
 
 from ...config import matplotlib as mpl
+from ...config import kc
 from fit import FitBase
 
 from collections import OrderedDict
@@ -87,37 +88,6 @@ class Cycler(object):
                     _tmp_dict[_name] = _values
             _args.append(_tmp_dict)
         return Cycler(*_args)
-
-# TODO: get from config
-DEFAULT_PROPERTY_CYCLER_ARGS = dict(
-    data=tuple(
-        (
-            dict(
-                color=('#e41f21', '#2079b4', '#36a12e', '#ff8001', '#6d409c', '#b15928'),
-            ),
-            dict(
-                marker=('o', '^', 's'),
-            ),
-        )
-    ),
-    model=tuple(
-        (
-            dict(
-                color=('#f59a96', '#a6cee3', '#b0dd8b', '#fdbe6f', '#cbb1d2', '#faf899'),
-            ),
-            dict(
-                linestyle=('-', '--', '-.'),
-            ),
-        )
-    ),
-    model_error_band=tuple(
-        (
-            dict(
-                facecolor=('#a6cee3', '#b0dd8b', '#f59a96', '#fdbe6f', '#cbb1d2', '#faf899'),
-            ),
-        )
-    ),
-)
 
 
 class PlotContainerException(Exception):
@@ -294,40 +264,15 @@ class PlotFigureBase(object):
     PLOT_TYPE_DEFAULT_CONFIGS.update(
         data=dict(
             plot_container_method='plot_data',
-            plot_container_method_static_kwargs=dict(
-                linestyle='',
-                marker='o',
-                label='data %(subplot_id)s',
-                #zorder=10
-            ),
-            plot_container_method_kwargs_cycler_args=tuple((
-                dict(
-                    color=('#e41f21', '#2079b4', '#36a12e', '#ff8001', '#6d409c', '#b15928'),
-                ),
-                dict(
-                    marker=('o', '^', 's'),
-                ))
-            ),
+            plot_container_method_static_kwargs=kc['fit']['plot']['data']['plot_kwargs'],
+            plot_container_method_kwargs_cycler_args=kc['fit']['plot']['data']['property_cycler']
         )
     )
     PLOT_TYPE_DEFAULT_CONFIGS.update(
         model=dict(
             plot_container_method='plot_model',
-            plot_container_method_static_kwargs=dict(
-                linestyle='-',
-                marker='',
-                label='model %(subplot_id)s',
-                linewidth=2,
-                #zorder=-10
-            ),
-            plot_container_method_kwargs_cycler_args=tuple((
-                dict(
-                    color=('#f59a96', '#a6cee3', '#b0dd8b', '#fdbe6f', '#cbb1d2', '#b39c9a'),
-                ),
-                dict(
-                    linestyle=('-', '--', '-.'),
-                ))
-            )
+            plot_container_method_static_kwargs=kc['fit']['plot']['model']['plot_kwargs'],
+            plot_container_method_kwargs_cycler_args=kc['fit']['plot']['model']['property_cycler']
         ),
     )
 
