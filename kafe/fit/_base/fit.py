@@ -4,7 +4,7 @@ import numpy as np
 import re
 import string
 
-from ...core import NexusFitter
+from ...core import get_minimizer, NexusFitter
 
 class FitException(Exception):
     pass
@@ -43,17 +43,8 @@ class FitBase(object):
 
     def _initialize_fitter(self, minimizer="iminuit", minimizer_kwargs = None):
         minimizer = minimizer.lower()
-        if minimizer == "iminuit":
-            from kafe.core.minimizers.iminuit_minimizer import MinimizerIMinuit
-            _minimizer_class = MinimizerIMinuit
-        elif minimizer == "tminuit":
-            from kafe.core.minimizers.root_tminuit_minimizer import MinimizerROOTTMinuit
-            _minimizer_class = MinimizerROOTTMinuit
-        elif minimizer == "scipy":
-            from kafe.core.minimizers.scipy_optimize_minimizer import MinimizerScipyOptimize
-            _minimizer_class = MinimizerScipyOptimize
-        else:
-            raise ValueError("Unknown minimizer: {}".format(minimizer))
+        _minimizer_class = get_minimizer(minimizer)
+
         self._fitter = NexusFitter(nexus=self._nexus,
                                 parameters_to_fit=self._fit_param_names,
                                 parameter_to_minimize=self._cost_function.name,

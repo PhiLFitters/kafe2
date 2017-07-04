@@ -52,9 +52,9 @@ class ConfidenceLevel(object):
     @cl.setter
     def cl(self, new_cl):
         if new_cl <= 0 or new_cl >= 1:
-            return ConfidenceLevelError("Confidence level must be greater "
-                                        "than 0 and less than 1. Got: %g"
-                                        % (new_cl,))
+            raise ConfidenceLevelError("Confidence level must be greater "
+                                       "than 0 and less than 1. Got: %g"
+                                       % (new_cl,))
         self._cl = float(new_cl)
         self._sigma = None
 
