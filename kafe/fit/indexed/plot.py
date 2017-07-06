@@ -5,6 +5,9 @@ from .._aux import step_fill_between
 from . import IndexedFit
 
 
+__all__ = ["IndexedPlot", "IndexedPlotContainer"]
+
+
 class IndexedPlotContainer(PlotContainerBase):
     FIT_TYPE = IndexedFit
 
@@ -108,6 +111,7 @@ class IndexedPlotContainer(PlotContainerBase):
 class IndexedPlot(PlotFigureBase):
 
     PLOT_CONTAINER_TYPE = IndexedPlotContainer
+    PLOT_STYLE_CONFIG_DATA_TYPE = 'indexed'
 
     def __init__(self, fit_objects):
         super(IndexedPlot, self).__init__(fit_objects=fit_objects)

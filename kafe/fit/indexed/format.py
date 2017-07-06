@@ -1,6 +1,9 @@
 from .._base import ModelFunctionFormatter
 
 
+__all__ = ["IndexedModelFunctionFormatter"]
+
+
 class IndexedModelFunctionFormatter(ModelFunctionFormatter):
     def __init__(self, name, latex_name=None, index_name='i', latex_index_name='i',
                  arg_formatters=None, expression_string=None, latex_expression_string=None):

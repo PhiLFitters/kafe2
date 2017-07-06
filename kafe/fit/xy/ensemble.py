@@ -10,6 +10,9 @@ from matplotlib import pyplot as plt
 from matplotlib import gridspec as gs
 
 
+__all__ = ["XYFitEnsemble"]
+
+
 def _heuristic_optimal_subplot_grid_size(n_subplots, aspect_ratio_priority=0.5):
     def f2(s, k):
         if n_subplots > s * (s + k):

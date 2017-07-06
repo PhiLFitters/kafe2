@@ -1,6 +1,9 @@
 import abc
 
 
+__all__ = ["FitEnsembleBase", "FitEnsembleException"]
+
+
 class FitEnsembleException(Exception):
     pass
 

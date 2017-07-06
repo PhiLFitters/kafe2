@@ -5,6 +5,9 @@ from .._aux import step_fill_between
 from . import HistFit
 
 
+__all__ = ["HistPlot", "HistPlotContainer"]
+
+
 class HistPlotContainer(PlotContainerBase):
     FIT_TYPE = HistFit
 
@@ -134,41 +137,11 @@ class HistPlotContainer(PlotContainerBase):
 class HistPlot(PlotFigureBase):
 
     PLOT_CONTAINER_TYPE = HistPlotContainer
+    PLOT_STYLE_CONFIG_DATA_TYPE = 'histogram'
 
-    PLOT_TYPE_DEFAULT_CONFIGS = PlotFigureBase.PLOT_TYPE_DEFAULT_CONFIGS.copy()  # don't change original class variable
-    PLOT_TYPE_DEFAULT_CONFIGS['model'] = dict(
-        plot_container_method='plot_model',
-        plot_container_method_static_kwargs=dict(
-            bar_width_pad = 0.05,
-            alpha=0.5,
-            linestyle='-',
-            label='model %(subplot_id)s',
-            edgecolor='none',
-            linewidth=0,
-            zorder=-100
-        ),
-        plot_container_method_kwargs_cycler_args=tuple((
-            dict(
-                facecolor=('#f59a96', '#a6cee3', '#b0dd8b', '#fdbe6f', '#cbb1d2', '#b39c9a'),
-            ),))
-    )
-    PLOT_TYPE_DEFAULT_CONFIGS['model_density'] = dict(
-            plot_container_method='plot_model_density',
-            plot_container_method_static_kwargs=dict(
-                linestyle='-',
-                marker='',
-                label='density %(subplot_id)s',
-                linewidth=2,
-                #zorder=-10
-            ),
-            plot_container_method_kwargs_cycler_args=tuple((
-                dict(
-                    color=('#e41f21', '#2079b4', '#36a12e', '#ff8001', '#6d409c', '#b15928'),
-                ),
-                dict(
-                    linestyle=('-', '--', '-.'),
-                ))
-            )
+    PLOT_SUBPLOT_TYPES = PlotFigureBase.PLOT_SUBPLOT_TYPES.copy()  # don't change original class variable
+    PLOT_SUBPLOT_TYPES['model_density'] = dict(
+        plot_container_method='plot_model_density',
     )
 
     def __init__(self, fit_objects):

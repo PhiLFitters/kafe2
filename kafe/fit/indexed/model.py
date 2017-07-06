@@ -6,6 +6,10 @@ from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionEx
 from .container import IndexedContainer, IndexedContainerException
 from .format import IndexedModelFunctionFormatter
 
+
+__all__ = ["IndexedParametricModel", "IndexedModelFunction"]
+
+
 class IndexedModelFunctionException(ModelFunctionException):
     pass
 

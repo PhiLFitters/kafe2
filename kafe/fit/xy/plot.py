@@ -1,9 +1,13 @@
 import numpy as np
 
 from ...config import kc
-from .._base import PlotContainerBase, PlotFigureBase
+from .._base import PlotContainerBase, PlotFigureBase, kc_plot_style
 from .._aux import step_fill_between
 from . import XYFit
+
+
+
+__all__ = ["XYPlot", "XYPlotContainer"]
 
 
 class XYPlotContainer(PlotContainerBase):
@@ -144,12 +148,11 @@ class XYPlotContainer(PlotContainerBase):
 class XYPlot(PlotFigureBase):
 
     PLOT_CONTAINER_TYPE = XYPlotContainer
+    PLOT_STYLE_CONFIG_DATA_TYPE = 'xy'
 
-    PLOT_TYPE_DEFAULT_CONFIGS = PlotFigureBase.PLOT_TYPE_DEFAULT_CONFIGS.copy()  # don't change original class variable
-    PLOT_TYPE_DEFAULT_CONFIGS['model_error_band'] = dict(
+    PLOT_SUBPLOT_TYPES = PlotFigureBase.PLOT_SUBPLOT_TYPES.copy()  # don't change original class variable
+    PLOT_SUBPLOT_TYPES['model_error_band'] = dict(
         plot_container_method='plot_model_error_band',
-        plot_container_method_static_kwargs=kc['fit']['plot']['model_error_band']['plot_kwargs'],
-        plot_container_method_kwargs_cycler_args=kc['fit']['plot']['model_error_band']['property_cycler']
     )
 
     def __init__(self, fit_objects):

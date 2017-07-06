@@ -7,10 +7,10 @@
 .. moduleauthor:: Daniel Savoiu <daniel.savoiu@cern.ch>
 """
 
-from .container import XYContainer
-from .cost import (XYCostFunction_UserDefined, XYCostFunction_Chi2, XYCostFunction_NegLogLikelihood)
-from .ensemble import XYFitEnsemble
-from .fit import XYFit
-from .format import XYModelFunctionFormatter
-from .model import XYParametricModel, XYModelFunction
-from .plot import XYPlot, XYPlotContainer
+from .container import *
+from .cost import *
+from .ensemble import *
+from .fit import *
+from .format import *
+from .model import *
+from .plot import *

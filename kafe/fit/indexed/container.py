@@ -4,6 +4,9 @@ from ...core.error import MatrixGaussianError, SimpleGaussianError
 from .._base import DataContainerException, DataContainerBase
 
 
+__all__ = ["IndexedContainer"]
+
+
 class IndexedContainerException(DataContainerException):
     pass
 

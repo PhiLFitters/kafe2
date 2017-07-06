@@ -1,6 +1,9 @@
 from .._base import CostFunctionBase, CostFunctionBase_Chi2, CostFunctionBase_NegLogLikelihood, CostFunctionBase_NegLogLikelihoodRatio, CostFunctionException
 
 
+__all__ = ["XYCostFunction_UserDefined", "XYCostFunction_Chi2", "XYCostFunction_NegLogLikelihood"]
+
+
 class XYCostFunction_UserDefined(CostFunctionBase):
     def __init__(self, user_defined_cost_function):
         """

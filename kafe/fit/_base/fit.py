@@ -6,6 +6,10 @@ import string
 
 from ...core import get_minimizer, NexusFitter
 
+
+__all__ = ["FitBase", "FitException"]
+
+
 class FitException(Exception):
     pass
 

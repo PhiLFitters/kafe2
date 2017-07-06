@@ -6,6 +6,9 @@ from .container import HistContainer, HistContainerException
 from .format import HistModelDensityFunctionFormatter
 
 
+__all__ = ["HistParametricModel", "HistModelFunction"]
+
+
 class HistModelFunctionException(ModelFunctionException):
     pass
 

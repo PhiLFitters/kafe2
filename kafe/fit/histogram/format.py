@@ -1,6 +1,9 @@
 from .._base import ModelFunctionFormatter
 
 
+__all__ = ["HistModelDensityFunctionFormatter"]
+
+
 class HistModelDensityFunctionFormatter(ModelFunctionFormatter):
     def __init__(self, name, latex_name=None, x_name='x', latex_x_name=None,
                  arg_formatters=None, expression_string=None, latex_expression_string=None):

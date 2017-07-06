@@ -2,13 +2,27 @@ import abc
 import numpy as np
 
 from ...config import matplotlib as mpl
-from ...config import kc
+from ...config import kc, ConfigError
 from fit import FitBase
 
 from collections import OrderedDict
 from copy import copy
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gs
+
+
+__all__ = ["PlotContainerBase", "PlotFigureBase", "PlotContainerException", "PlotFigureException",
+           "kc_plot_style"]
+
+
+def kc_plot_style(data_type, subplot_key, property_key):
+    try:
+        # try to find plot style-related configuration entry
+        return kc('fit', 'plot', 'style', data_type, subplot_key, property_key)
+    except ConfigError:
+        # if not available, do lookup for the default data type
+        return kc('fit', 'plot', 'style', 'default', subplot_key, property_key)
+
 
 class CyclerException(Exception):
     pass
@@ -259,20 +273,15 @@ class PlotFigureBase(object):
     __metaclass__ = abc.ABCMeta  # TODO: check if needed
 
     PLOT_CONTAINER_TYPE = None
+    PLOT_STYLE_CONFIG_DATA_TYPE = 'default'
 
-    PLOT_TYPE_DEFAULT_CONFIGS = OrderedDict()
-    PLOT_TYPE_DEFAULT_CONFIGS.update(
+    PLOT_SUBPLOT_TYPES = OrderedDict()
+    PLOT_SUBPLOT_TYPES.update(
         data=dict(
             plot_container_method='plot_data',
-            plot_container_method_static_kwargs=kc['fit']['plot']['data']['plot_kwargs'],
-            plot_container_method_kwargs_cycler_args=kc['fit']['plot']['data']['property_cycler']
-        )
-    )
-    PLOT_TYPE_DEFAULT_CONFIGS.update(
+        ),
         model=dict(
             plot_container_method='plot_model',
-            plot_container_method_static_kwargs=kc['fit']['plot']['model']['plot_kwargs'],
-            plot_container_method_kwargs_cycler_args=kc['fit']['plot']['model']['property_cycler']
         ),
     )
 
@@ -326,16 +335,16 @@ class PlotFigureBase(object):
         self._plot_range_y = None
 
         # store defined plot types for conveniient access
-        self._defined_plot_types = self.PLOT_TYPE_DEFAULT_CONFIGS.keys()
+        self._defined_plot_types = self.PLOT_SUBPLOT_TYPES.keys()
 
         # fill meta-information structures for all plot_types
         self._subplot_static_kwarg_dicts = dict()
         self._subplot_container_plot_method_name = dict()
         self._subplot_prop_cyclers = dict()
         for _pt in self._defined_plot_types:
-            self._subplot_container_plot_method_name[_pt] = self.PLOT_TYPE_DEFAULT_CONFIGS[_pt]['plot_container_method']
-            self._subplot_static_kwarg_dicts[_pt] = self.PLOT_TYPE_DEFAULT_CONFIGS[_pt]['plot_container_method_static_kwargs']
-            self._subplot_prop_cyclers[_pt] = Cycler(*self.PLOT_TYPE_DEFAULT_CONFIGS[_pt]['plot_container_method_kwargs_cycler_args'])
+            self._subplot_container_plot_method_name[_pt] = self.PLOT_SUBPLOT_TYPES[_pt]['plot_container_method']
+            self._subplot_static_kwarg_dicts[_pt] = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, _pt, 'plot_kwargs')
+            self._subplot_prop_cyclers[_pt] = Cycler(*kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, _pt, 'property_cycler'))
 
     # -- private methods
 
@@ -368,7 +377,7 @@ class PlotFigureBase(object):
         return _kwargs
 
     def _get_plot_handle_for_plot_type(self, plot_type, plot_data_container):
-        _plot_method_name = self.PLOT_TYPE_DEFAULT_CONFIGS[plot_type]['plot_container_method']
+        _plot_method_name = self.PLOT_SUBPLOT_TYPES[plot_type]['plot_container_method']
 
         try:
             _plot_method_handle = getattr(plot_data_container, _plot_method_name)
@@ -511,6 +520,9 @@ class PlotFigureBase(object):
         self._plot_all_subplots_all_plot_types()
         self._set_plot_range_to_total_data_range()
         self._render_legend(self._main_plot_axes)
+        # set axis labels
+        self._main_plot_axes.set_xlabel(kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'x'))
+        self._main_plot_axes.set_ylabel(kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'y'))
 
     def show_fit_info_box(self, format_as_latex=False):
         """Render text information about each plot on the figure.

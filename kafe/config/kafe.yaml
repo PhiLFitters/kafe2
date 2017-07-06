@@ -5,88 +5,20 @@ core:
 
   minimizers:
     default_minimizer: "iminuit"
+    minuit:
+      log_filename: "minuit.log"
+      print_level: -1
 
   fitters:
     default_fitter: "nexus_fitter"
 
-minuit:
-  log_filename: "minuit.log"
-  print_level: -1
 
 fit:
   log_filename: "fit.log"
 
   plot:
-    colors:
-      - &kafe_red '#e41f21'
-      - &kafe_light_red '#f59a96'
-      - &kafe_blue '#2079b4'
-      - &kafe_light_blue '#a6cee3'
-      - &kafe_green '#36a12e'
-      - &kafe_light_green '#b0dd8b'
-      - &kafe_orange '#ff8001'
-      - &kafe_light_orange '#fdbe6f'
-      - &kafe_violet '#6d409c'
-      - &kafe_light_violet '#cbb1d2'
-      - &kafe_brown '#b15928'
-      - &kafe_light_brown '#faf899'
-      - &kafe_black '#000000'
+    axis_labels:
+      x: '$x$'
+      y: '$y$'
 
-    data:
-      plot_kwargs:
-        linestyle: ''
-        marker: 'o'
-        label: 'data %(subplot_id)s'
-        #zorder: 10
-      property_cycler:
-        -
-          color:
-            - *kafe_red
-            - *kafe_blue
-            - *kafe_green
-            - *kafe_orange
-            - *kafe_violet
-            - *kafe_brown
-        -
-          marker:
-            - 'o'
-            - '^'
-            - 's'
-    model:
-      plot_kwargs:
-        linestyle: '-'
-        marker: ''
-        label: 'model %(subplot_id)s'
-        linewidth: 2
-        #zorder: -10
-      property_cycler:
-        -
-          color:
-            - *kafe_light_red
-            - *kafe_light_blue
-            - *kafe_light_green
-            - *kafe_light_orange
-            - *kafe_light_violet
-            - *kafe_light_brown
-        -
-          linestyle:
-            - '-'
-            - '--'
-            - '-.'
-    model_error_band:
-      plot_kwargs:
-        alpha: 0.5
-        linestyle: '-'
-        label: 'model %(subplot_id)s error'
-        edgecolor: 'none'
-        linewidth: 2
-        zorder: -100
-      property_cycler:
-        -
-          facecolor:
-            - *kafe_light_red
-            - *kafe_light_blue
-            - *kafe_light_green
-            - *kafe_light_orange
-            - *kafe_light_violet
-            - *kafe_light_brown
+    style: !include plot_style_color.yaml

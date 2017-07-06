@@ -4,6 +4,9 @@ from ..indexed import IndexedContainer
 from ..indexed.container import IndexedContainerException
 
 
+__all__ = ["HistContainer"]
+
+
 class HistContainerException(IndexedContainerException):
     pass
 

@@ -8,6 +8,9 @@ from matplotlib import gridspec as gs
 from matplotlib import ticker as plticker
 
 
+__all__ = ["ContoursProfiler"]
+
+
 class ConfidenceLevelFormatted(ConfidenceLevel):
     @property
     def sigma_string(self):

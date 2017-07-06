@@ -128,7 +128,7 @@ The following objects are provided for handling histograms:
 
 # public interface of submodule 'kafe.fit'
 
-from ._base.profile import *
+from ._base.profile import *   # just for `ContoursProfiler` -> better way?
 
 from .indexed import *
 from .histogram import *

@@ -10,6 +10,10 @@ from .cost import XYCostFunction_Chi2, XYCostFunction_UserDefined
 from .format import XYModelFunctionFormatter
 from .model import XYParametricModel, XYModelFunction
 
+
+__all__ = ["XYFit"]
+
+
 CONFIG_PARAMETER_DEFAULT_VALUE = 1.0
 CONFIG_FIT_MAX_ITERATIONS = 10
 CONFIG_FIT_CONVERGENCE_LIMIT = 1e-5

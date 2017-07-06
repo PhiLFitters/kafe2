@@ -10,6 +10,10 @@ from .cost import HistCostFunction_NegLogLikelihood, HistCostFunction_UserDefine
 from .format import HistModelDensityFunctionFormatter
 from .model import HistParametricModel, HistModelFunction
 
+
+__all__ = ["HistFit"]
+
+
 CONFIG_PARAMETER_DEFAULT_VALUE = 1.0
 
 

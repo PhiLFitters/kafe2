@@ -1,6 +1,10 @@
 from .._base import CostFunctionBase, CostFunctionBase_Chi2, CostFunctionBase_NegLogLikelihood, CostFunctionBase_NegLogLikelihoodRatio, CostFunctionException
 
 
+__all__ = ["HistCostFunction_UserDefined", "HistCostFunction_Chi2", "HistCostFunction_NegLogLikelihood", "HistCostFunction_NegLogLikelihoodRatio"]
+
+
+
 class HistCostFunction_UserDefined(CostFunctionBase):
     def __init__(self, user_defined_cost_function):
         """

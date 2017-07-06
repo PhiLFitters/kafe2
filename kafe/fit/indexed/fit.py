@@ -10,6 +10,10 @@ from .cost import IndexedCostFunction_Chi2, IndexedCostFunction_UserDefined
 from .format import IndexedModelFunctionFormatter
 from .model import IndexedParametricModel, IndexedModelFunction
 
+
+__all__ = ["IndexedFit"]
+
+
 CONFIG_PARAMETER_DEFAULT_VALUE = 1.0
 
 
