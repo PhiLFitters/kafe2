@@ -29,7 +29,7 @@ class HistFit(FitBase):
                           'data_cov_mat', 'model_cov_mat', 'total_cov_mat',
                           'data_cor_mat', 'model_cor_mat', 'total_cor_mat'}
 
-    def __init__(self, data, model_density_function, cost_function=HistCostFunction_NegLogLikelihood(data_point_distribution='poisson'), model_density_antiderivative=None, minimizer="iminuit"):
+    def __init__(self, data, model_density_function, cost_function=HistCostFunction_NegLogLikelihood(data_point_distribution='poisson'), model_density_antiderivative=None, minimizer=None, minimizer_kwargs=None):
         """
         Construct a fit of a model to a histogram.
 
@@ -73,7 +73,7 @@ class HistFit(FitBase):
         self._init_nexus()
 
         # initialize the Fitter
-        self._initialize_fitter(minimizer)
+        self._initialize_fitter(minimizer, minimizer_kwargs)
 
         # create the child ParametricModel object
         self._param_model = self._new_parametric_model(

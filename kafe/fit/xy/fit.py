@@ -30,7 +30,7 @@ class XYFit(FitBase):
                           'x_cor_mat', 'y_data_cor_mat', 'y_model_cor_mat', 'total_cor_mat',
                           'x_cov_mat_inverse', 'y_data_cov_mat_inverse', 'y_model_cov_mat_inverse', 'total_cor_mat_inverse'}
 
-    def __init__(self, xy_data, model_function, cost_function=XYCostFunction_Chi2(axes_to_use='xy', errors_to_use='covariance'), minimizer="iminuit",minimizer_kwargs=None):
+    def __init__(self, xy_data, model_function, cost_function=XYCostFunction_Chi2(axes_to_use='xy', errors_to_use='covariance'), minimizer=None, minimizer_kwargs=None):
         """
         Construct a fit of a model to *xy* data.
 

@@ -46,10 +46,10 @@ def get_minimizer(minimizer_spec=None):
     global AVAILABLE_MINIMIZERS
     # for 'None', return the default minimizer
     if minimizer_spec is None:
-        _minimizer = AVAILABLE_MINIMIZERS.get(kc['core']['minimizers']['default_minimizer'], None)
-    else:
-        minimizer_spec = minimizer_spec.lower()
-        _minimizer = AVAILABLE_MINIMIZERS.get(minimizer_spec, None)
+        minimizer_spec = kc('core', 'minimizers', 'default_minimizer')
+    minimizer_spec = minimizer_spec.lower()
+
+    _minimizer = AVAILABLE_MINIMIZERS.get(kc('core', 'minimizers', 'default_minimizer'), None)
 
     if _minimizer is None:
         raise ValueError("Unknown minimizer '{}'! Available: {}".format(minimizer_spec, AVAILABLE_MINIMIZERS.keys()))

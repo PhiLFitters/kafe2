@@ -2,7 +2,6 @@ import unittest
 
 import numpy as np
 
-from kafe.core.minimizers import MinimizerIMinuit
 from kafe.core.fitters import Nexus, NexusFitter, NexusFitterException
 
 
@@ -106,8 +105,8 @@ class TestNexusFitterIMinuit(unittest.TestCase):
         self.ps.new_function(y_theory)
         self.ps.new_function(chi2)
 
-        self.sf = NexusFitter(self.ps, ('slope', 'y_intercept'), 'chi2', minimizer_class=MinimizerIMinuit)
-        self.sf_only_slope = NexusFitter(self.ps, ('slope',), 'chi2', minimizer_class=MinimizerIMinuit)
+        self.sf = NexusFitter(self.ps, ('slope', 'y_intercept'), 'chi2', minimizer=None)
+        self.sf_only_slope = NexusFitter(self.ps, ('slope',), 'chi2', minimizer=None)
 
         self.slope_after_fit = 1.0546496459587062
         self.y_intercept_after_fit = -0.10477992306698165

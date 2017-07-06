@@ -45,14 +45,12 @@ class FitBase(object):
                 "The following names are reserved and cannot be used as model function arguments: %r"
                 % (_invalid_args,))
 
-    def _initialize_fitter(self, minimizer="iminuit", minimizer_kwargs = None):
-        minimizer = minimizer.lower()
-        _minimizer_class = get_minimizer(minimizer)
-
+    def _initialize_fitter(self, minimizer=None, minimizer_kwargs=None):
         self._fitter = NexusFitter(nexus=self._nexus,
-                                parameters_to_fit=self._fit_param_names,
-                                parameter_to_minimize=self._cost_function.name,
-                                minimizer_class=_minimizer_class, minimizer_kwargs=minimizer_kwargs)
+                                   parameters_to_fit=self._fit_param_names,
+                                   parameter_to_minimize=self._cost_function.name,
+                                   minimizer=minimizer,
+                                   minimizer_kwargs=minimizer_kwargs)
 
 
     @staticmethod

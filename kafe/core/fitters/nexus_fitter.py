@@ -1,6 +1,8 @@
 from collections import OrderedDict
 
-from ..minimizers import MinimizerIMinuit
+from ...config import kc
+from ..minimizers import get_minimizer
+
 
 class NexusFitterException(Exception):
     pass
@@ -8,7 +10,7 @@ class NexusFitterException(Exception):
 
 class NexusFitter(object):
 
-    def __init__(self, nexus, parameters_to_fit, parameter_to_minimize, minimizer_class=MinimizerIMinuit, minimizer_kwargs=None):
+    def __init__(self, nexus, parameters_to_fit, parameter_to_minimize, minimizer=None, minimizer_kwargs=None):
         self._nx = nexus
         self.parameters_to_fit = parameters_to_fit
         self.parameter_to_minimize = parameter_to_minimize
@@ -23,10 +25,16 @@ class NexusFitter(object):
         _par_name_val_map = self.fit_parameter_values
         if minimizer_kwargs == None:
             minimizer_kwargs = dict()
-        self._minimizer = minimizer_class(parameters_to_fit,
-                                          _par_name_val_map.values(),
-                                          [0.1 if _v==0 else 0.1*_v for _v in _par_name_val_map.values()],
-                                          self._fcn_wrapper, **minimizer_kwargs)
+
+        if minimizer is not None:
+            _minimizer_class = get_minimizer(minimizer)
+        else:
+            _minimizer_class = get_minimizer()  # get the default minimizer
+
+        self._minimizer = _minimizer_class(parameters_to_fit,
+                                           _par_name_val_map.values(),
+                                           [0.1 if _v==0 else 0.1*_v for _v in _par_name_val_map.values()],
+                                           self._fcn_wrapper, **minimizer_kwargs)
         self.__state_is_from_minimizer = False
 
 
@@ -53,8 +61,10 @@ class NexusFitter(object):
         _ptmv = self._nx.get_values_by_name(_ptmn)
         self.__cache_parameter_to_minimize_value = _ptmv
 
-    def _minimize(self, max_calls=6000):
+    def _minimize(self, max_calls=None):
         self.__minimizing = True
+        if max_calls is None:
+            max_calls = kc('core', 'fitters', 'nexus_fitter', 'max_calls')
         self._minimizer.minimize(max_calls=max_calls)
         # opt.minimize(self._fcn_wrapper,
         #              self.fit_parameter_values.values(),
