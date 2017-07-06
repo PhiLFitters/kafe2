@@ -4,6 +4,7 @@ from copy import deepcopy
 import numpy as np
 
 from ...core import NexusFitter, Nexus
+from ...config import kc
 from .._base import FitException, FitBase, DataContainerBase, ModelParameterFormatter, CostFunctionBase
 from .container import XYContainer
 from .cost import XYCostFunction_Chi2, XYCostFunction_UserDefined
@@ -13,10 +14,6 @@ from .model import XYParametricModel, XYModelFunction
 
 __all__ = ["XYFit"]
 
-
-CONFIG_PARAMETER_DEFAULT_VALUE = 1.0
-CONFIG_FIT_MAX_ITERATIONS = 10
-CONFIG_FIT_CONVERGENCE_LIMIT = 1e-5
 
 class XYFitException(FitException):
     pass
@@ -96,7 +93,7 @@ class XYFit(FitBase):
             if _arg_pos >= (self._model_function.argcount - _n_arg_defaults):
                 _default_value = _arg_defaults[_arg_pos - (self._model_function.argcount - _n_arg_defaults)]
             else:
-                _default_value = CONFIG_PARAMETER_DEFAULT_VALUE
+                _default_value = kc('core', 'default_initial_parameter_value')
             _nexus_new_dict[_arg_name] = _default_value
             self._fit_param_names.append(_arg_name)
 
@@ -510,10 +507,10 @@ class XYFit(FitBase):
         else:
             self._fitter.do_fit()
             _previous_cost_function_value = self.cost_function_value
-            for i in range(CONFIG_FIT_MAX_ITERATIONS):
+            for i in range(kc('fit', 'max_x_error_fit_iterations')):
                 self._mark_errors_for_update_invalidate_total_error_cache()
                 self._fitter.do_fit()
-                if np.abs(self.cost_function_value - _previous_cost_function_value) < CONFIG_FIT_CONVERGENCE_LIMIT:
+                if np.abs(self.cost_function_value - _previous_cost_function_value) < kc('fit', 'x_error_fit_convergence_limit'):
                     break
                 _previous_cost_function_value = self.cost_function_value
             # update parameter formatters

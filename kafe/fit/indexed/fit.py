@@ -3,6 +3,7 @@ from copy import deepcopy
 
 import numpy as np
 
+from ...config import kc
 from ...core import NexusFitter, Nexus
 from .._base import FitException, FitBase, DataContainerBase, ModelParameterFormatter, CostFunctionBase
 from .container import IndexedContainer
@@ -12,9 +13,6 @@ from .model import IndexedParametricModel, IndexedModelFunction
 
 
 __all__ = ["IndexedFit"]
-
-
-CONFIG_PARAMETER_DEFAULT_VALUE = 1.0
 
 
 class IndexedFitException(FitException):
@@ -92,7 +90,7 @@ class IndexedFit(FitBase):
             if _arg_pos >= (self._model_function.argcount - _n_arg_defaults):
                 _default_value = _arg_defaults[_arg_pos - (self._model_function.argcount - _n_arg_defaults)]
             else:
-                _default_value = CONFIG_PARAMETER_DEFAULT_VALUE
+                _default_value = kc('core', 'default_initial_parameter_value')
             _nexus_new_dict[_arg_name] = _default_value
             self._fit_param_names.append(_arg_name)
 

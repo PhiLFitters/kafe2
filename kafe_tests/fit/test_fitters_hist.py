@@ -3,9 +3,13 @@ import numpy as np
 
 from scipy import stats
 
+from kafe.config import kc
 from kafe.fit import HistContainer, HistFit
-from kafe.fit.histogram.fit import CONFIG_PARAMETER_DEFAULT_VALUE, HistFitException
+from kafe.fit.histogram.fit import HistFitException
 from kafe.fit.histogram.model import HistModelFunctionException
+
+
+CONFIG_PARAMETER_DEFAULT_VALUE = kc('core', 'default_initial_parameter_value')
 
 
 class TestFittersHist(unittest.TestCase):

@@ -1,9 +1,13 @@
 import unittest
 import numpy as np
 
+from kafe.config import kc
 from kafe.fit import IndexedFit
-from kafe.fit.indexed.fit import CONFIG_PARAMETER_DEFAULT_VALUE, IndexedFitException
+from kafe.fit.indexed.fit import IndexedFitException
 from kafe.fit.indexed.model import IndexedModelFunctionException
+
+
+CONFIG_PARAMETER_DEFAULT_VALUE = kc('core', 'default_initial_parameter_value')
 
 
 class TestFittersIndexed(unittest.TestCase):

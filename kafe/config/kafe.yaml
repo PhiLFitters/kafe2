@@ -2,6 +2,7 @@ log_level: "info"
 
 core:
   log_filename: "kafe.log"
+  default_initial_parameter_value: 1.0
 
   minimizers:
     default_minimizer: "iminuit"
@@ -15,7 +16,8 @@ core:
 
 fit:
   log_filename: "fit.log"
-
+  max_x_error_fit_iterations: 10
+  x_error_fit_convergence_limit: 1e-5
   plot:
     axis_labels:
       x: '$x$'

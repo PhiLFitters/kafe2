@@ -1,9 +1,12 @@
 import unittest
 import numpy as np
 
+from kafe.config import kc
 from kafe.fit import XYFit
-from kafe.fit.xy.fit import CONFIG_PARAMETER_DEFAULT_VALUE, XYFitException
+from kafe.fit.xy.fit import XYFitException
 from kafe.fit.xy.model import XYModelFunctionException
+
+CONFIG_PARAMETER_DEFAULT_VALUE = kc('core', 'default_initial_parameter_value')
 
 
 class TestFittersXY(unittest.TestCase):
