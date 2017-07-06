@@ -65,7 +65,7 @@ histogram:
     y: "Entries"
   model:
     plot_kwargs:
-      bar_width_pad: 0.05
+      bar_width_scale_factor: 1.0
       alpha: 0.5
       linestyle: '-'
       label: 'model %(subplot_id)s'

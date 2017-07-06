@@ -111,11 +111,13 @@ class HistPlotContainer(PlotContainerBase):
         :param kwargs: keyword arguments accepted by the ``matplotlib`` method ``bar``
         :return: plot handle(s)
         """
-        _pad = kwargs.pop('bar_width_pad')
+        #_pad = kwargs.pop('bar_width_pad')
+        _sf = kwargs.pop('bar_width_scale_factor')
         return target_axis.bar(
-                             left=self.model_x - self.model_xerr + _pad/2.,
+                             left=self.model_x,
+                             align='center',
                              height=self.model_y,
-                             width=self.model_xerr*2.0 - _pad,
+                             width=self.model_xerr*2.0 * _sf,
                              bottom=None,
                              **kwargs
                              )
