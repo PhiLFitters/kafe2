@@ -272,6 +272,10 @@ class GaussianErrorBase(object):
         """'Fully correlated' part of relative covariance matrix for error."""
         pass
 
+    def get_cov_mat_object(self):
+        """Returns the internal-use `CovMat` object used to represent measurement errors. (advanced)"""
+        return self._cov_mat
+
 
 class SimpleGaussianError(GaussianErrorBase):
     """
@@ -541,6 +545,7 @@ class MatrixGaussianError(GaussianErrorBase):
 
         # set the main matrix
         if matrix_type.lower() in ('covariance', 'cov'):
+            self._matrix_type_at_construction = 'covariance'
             if self.relative:
                 self.cov_mat_rel = err_matrix
                 # check err_val against cov_mat diagonal
@@ -555,6 +560,7 @@ class MatrixGaussianError(GaussianErrorBase):
                         raise ValueError("Covariance matrix diagonal does not match array of error values!")
 
         elif matrix_type.lower() in ('correlation', 'correlations', 'cor', 'corr'):
+            self._matrix_type_at_construction = 'correlation'
             if err_val is None:
                 raise ValueError("Cannot construct matrix-type error from correlation matrix without an array of error values!")
             _cm = self._calculate_cov_mat_from_cor_mat_and_error_array(err_val, err_matrix)
