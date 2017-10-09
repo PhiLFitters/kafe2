@@ -43,10 +43,12 @@ before_install:
   - conda create -q -n kafe_env python=$CONDA_PYTHON_VERSION numpy scipy tk matplotlib
   - source activate kafe_env
 
-  # upgrade pip to latest version and install iminuit with pip
+  # upgrade pip to latest version and install dependencies with pip
   - pip install --upgrade pip
+  - pip install --upgrade setuptools
   - pip install --upgrade iminuit
   - pip install --upgrade numdifftools
+  - pip install --upgrade yaml
 
   # output python version to log
   - python --version
