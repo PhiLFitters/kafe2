@@ -151,6 +151,12 @@ class HistContainer(IndexedContainer):
         raise HistContainerException("Changing histogram data directly is not allowed! Use fill().")
 
     @property
+    def raw_data(self):
+        """the number of entries in each bin"""
+        # TODO: commit unprocessed entries (?)
+        return self._processed_entries + self._unprocessed_entries
+
+    @property
     def low(self):
         """the lower edge of the histogram"""
         return self._bin_range[0]
