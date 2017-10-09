@@ -48,7 +48,7 @@ before_install:
   - pip install --upgrade setuptools
   - pip install --upgrade iminuit
   - pip install --upgrade numdifftools
-  - pip install --upgrade yaml
+  - pip install --upgrade PyYAML
 
   # output python version to log
   - python --version
