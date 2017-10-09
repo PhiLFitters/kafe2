@@ -342,9 +342,9 @@ class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
         :return: cost function value
         """
         _per_point_likelihoods = norm.pdf(data, loc=model, scale=total_error)
-        _total_likelihood = np.prod(_per_point_likelihoods)
+
+        _nll = np.sum(np.log(_per_point_likelihoods)*(-2.0))
         # guard against returning NaN
-        _nll = -2.0 * np.log(_total_likelihood)
         if np.isnan(_nll):
             return np.inf
         return _nll
