@@ -24,7 +24,7 @@ class XYCostFunction_Chi2(CostFunctionBase_Chi2):
         """
         Built-in least-squares cost function for *xy* data.
 
-        :param errors_to_use: which erros to use when calculating :math:`\chi^2`
+        :param errors_to_use: which errors to use when calculating :math:`\chi^2`
         :type errors_to_use: ``'covariance'``, ``'pointwise'`` or ``None``
         :param axes_to_use: take into account errors for which axes
         :type axes_to_use: ``'y'`` or ``'xy'``

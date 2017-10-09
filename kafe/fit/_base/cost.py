@@ -9,7 +9,11 @@ from .format import ModelParameterFormatter, CostFunctionFormatter
 from scipy.stats import poisson, norm
 
 
-__all__ = ["CostFunctionBase", "CostFunctionBase_Chi2", "CostFunctionBase_NegLogLikelihood", "CostFunctionBase_NegLogLikelihoodRatio", "CostFunctionException"]
+__all__ = ["CostFunctionBase",
+           "CostFunctionBase_Chi2",
+           "CostFunctionBase_NegLogLikelihood",
+           "CostFunctionBase_NegLogLikelihoodRatio",
+           "CostFunctionException"]
 
 
 def _generic_chi2(data, model,

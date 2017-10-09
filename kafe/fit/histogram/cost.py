@@ -1,7 +1,10 @@
 from .._base import CostFunctionBase, CostFunctionBase_Chi2, CostFunctionBase_NegLogLikelihood, CostFunctionBase_NegLogLikelihoodRatio, CostFunctionException
 
 
-__all__ = ["HistCostFunction_UserDefined", "HistCostFunction_Chi2", "HistCostFunction_NegLogLikelihood", "HistCostFunction_NegLogLikelihoodRatio"]
+__all__ = ["HistCostFunction_UserDefined",
+           "HistCostFunction_Chi2",
+           "HistCostFunction_NegLogLikelihood",
+           "HistCostFunction_NegLogLikelihoodRatio"]
 
 
 

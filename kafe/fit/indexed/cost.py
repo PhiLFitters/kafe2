@@ -1,7 +1,9 @@
 from .._base import CostFunctionBase, CostFunctionBase_Chi2, CostFunctionBase_NegLogLikelihood, CostFunctionException
 
 
-__all__ = ["IndexedCostFunction_UserDefined", "IndexedCostFunction_Chi2", "IndexedCostFunction_NegLogLikelihood"]
+__all__ = ["IndexedCostFunction_UserDefined",
+           "IndexedCostFunction_Chi2",
+           "IndexedCostFunction_NegLogLikelihood"]
 
 
 
