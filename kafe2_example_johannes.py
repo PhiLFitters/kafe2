@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 # -*- coding: utf8 -*-
+from __future__ import print_function
 
 # some things we need
 import numpy as np
@@ -197,24 +198,24 @@ def test_implementation():
     f.add_simple_error('x', 0.3, correlation=0)
     f.add_simple_error('y', 0.4 * _y, correlation=0)    
     f.do_fit()
-    
-    print f.parameter_values
-    print f.parameter_errors
-    print f.cost_function_value
-   
+
+    print("parameter values: {}".format(f.parameter_values))
+    print("parameter errors: {}".format(f.parameter_errors))
+    print("cost function at minimum: {}".format(f.cost_function_value))
+
     cpf = ContoursProfiler(f)
     cpf.plot_profiles_contours_matrix(show_ticks_for="all")
-     
+
     p = XYPlot(fit_objects=f)
     p.plot()
     p.show_fit_info_box(format_as_latex=True)
-    
+
 if __name__ == "__main__":
     # run example workflows
 #     example_indexed_fit()
 #     example_xy_fit()
 #     example_histogram_fit()
-    
+
     # show results
     test_implementation()
     plt.show()

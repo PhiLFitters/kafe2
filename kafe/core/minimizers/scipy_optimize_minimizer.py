@@ -1,3 +1,4 @@
+from __future__ import print_function
 from kafe.core.contour import ContourFactory
 try:
     import scipy.optimize as opt
@@ -536,7 +537,7 @@ class MinimizerScipyOptimize(object):
 
             
             if _stretched_absolute_angles[_min_index] > 0.349111:
-                print "BACKTRACK"
+                print("BACKTRACK")
                 _contour_coords = _contour_coords[0:-1]
             else:
                 _contour_coords.append(_new_coords)

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 
 
@@ -55,7 +56,7 @@ class IOStreamHandle(object):
             raise IOError("Cannot perform write: buffer is None")
         if truncate:
             # TODO: use log system
-            print "WARNING: truncation of stream requested, ignored"
+            print("WARNING: truncation of stream requested, ignored")
         return self._buffer.write(content)
 
     def read(self, *args, **kwargs):
@@ -230,7 +231,7 @@ if __name__ == "__main__":
     # TODO: move this to a unit test
     import sys
     # test 1: IOStreamHandle
-    print 'Instantiating `IOStreamHandle`...'
+    print('Instantiating `IOStreamHandle`...')
     _iosh = IOStreamHandle(sys.stdout)
     _iosh.write("1")
     with _iosh as _fh:
@@ -238,40 +239,40 @@ if __name__ == "__main__":
         _fh.write("3\n")
 
     # test 2: IOFileHandle
-    print 'Instantiating `OutputFile`'
+    print('Instantiating `OutputFile`')
     _ofh = OutputFileHandle("/tmp/test_IOFileHandle.txt")
-    print 'Writing...'
+    print('Writing...')
     _ofh.write("4", truncate=True)
     with _ofh as _fh:
         _fh.write("5")
         _fh.write("6\n")
-    print '...done!'
+    print('...done!')
 
-    print 'Trying to read from output stream...'
+    print('Trying to read from output stream...')
     try:
         _ofh.read()
     except IOError as e:
-        print "...OK! IOError raised:", e
+        print("...OK! IOError raised:", e)
 
     _ifh = InputFileHandle("/tmp/test_IOFileHandle.txt")
-    print "Reading from file: "
-    print _ifh.read()
+    print("Reading from file: ")
+    print(_ifh.read())
 
-    print 'Trying to write to input stream...'
+    print('Trying to write to input stream...')
     try:
         _ifh.write("bla")
     except IOError as e:
-        print "...OK! IOError raised:", e
+        print("...OK! IOError raised:", e)
 
     # test 3: OutputHandleMultiplexer
-    print 'Instantiating `OutputHandleMultiplexer`'
+    print('Instantiating `OutputHandleMultiplexer`')
     _ohm = OutputHandleMultiplexer(_iosh, _ofh)
-    print 'Writing...'
+    print('Writing...')
     _ohm.write("a")
     with _ohm as _fh:
         _fh.write("b")
         _fh.write("c\n")
-    print '...done!'
+    print('...done!')
 
-    print "Reading from file: "
-    print _ifh.read()
+    print("Reading from file: ")
+    print(_ifh.read())

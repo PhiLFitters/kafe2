@@ -446,8 +446,8 @@ class SimpleGaussianError(GaussianErrorBase):
             # check for zero-valued references if error is marked 'relative'
             if self.relative and np.any(np.isclose(_ref, 0.0, atol=1e-5)):
                 # TODO: avoid hard-coded value
-                print ("WARNING: Error reference contains zero values! Replacing them "
-                       "with default minimum '%g'" % (1e-2,))
+                print("WARNING: Error reference contains zero values! Replacing them "
+                      "with default minimum '%g'" % (1e-2,))
                 _default = np.ones_like(_ref) * 1e-2
                 _ref = np.where(np.isclose(_ref, 0.0, atol=1e-5), _default, _ref)
             self._reference = _ref
@@ -592,12 +592,9 @@ class MatrixGaussianError(GaussianErrorBase):
 
     @staticmethod
     def _calculate_cov_mat_from_cov_rel(cov_mat_rel, reference):
-        #print 'CR', cov_mat_rel
-        #print 'RV', reference
         _ref = np.asarray(reference)
         _refmat = np.outer(_ref, _ref)
         _mat_rel = np.asarray(cov_mat_rel)
-        #print 'CA',_mat_rel * _refmat
         return CovMat(_mat_rel * _refmat)
 
     # -- public methods
@@ -683,8 +680,8 @@ class MatrixGaussianError(GaussianErrorBase):
             # check for zero-valued references if error is marked 'relative'
             if self.relative and np.any(np.isclose(_ref, 0.0, atol=1e-5)):
                 # TODO: avoid hard-coded value
-                print ("WARNING: Error reference contains zero values! Replacing them "
-                       "with default minimum '%g'" % (1e-2,))
+                print("WARNING: Error reference contains zero values! Replacing them "
+                      "with default minimum '%g'" % (1e-2,))
                 _default = np.ones_like(_ref) * 1e-2
                 _ref = np.where(np.isclose(_ref, 0.0, atol=1e-5), _default, _ref)
             self._reference = _ref

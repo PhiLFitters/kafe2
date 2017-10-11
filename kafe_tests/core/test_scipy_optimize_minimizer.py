@@ -43,7 +43,6 @@ class TestMinimizerScipyOptimize(unittest.TestCase):
             return fcn_3(*args)
 
         self._scipy_fmin = opt.minimize(fcn_3_wrapper, (1.,1.,1.), method=self._ref_scipy_method)
-        print type(self._scipy_fmin)
 
     def test_compare_par_values_minimize_fcn1(self):
         self.m1.minimize(method=self._ref_scipy_method)
@@ -113,7 +112,6 @@ class TestMinimizerScipyOptimize(unittest.TestCase):
     def test_compare_cov_mat_minimize_fcn3(self):
         self.m3.minimize(method=self._ref_scipy_method)
         _cm = self.m3.cov_mat
-        #print (_cm, self._ref_cov_mat_fcn3)
         self.assertTrue(
             np.allclose(_cm, self._ref_cov_mat_fcn3, atol=1e-7)
         )
@@ -129,7 +127,6 @@ class TestMinimizerScipyOptimize(unittest.TestCase):
         self.m3.fix('x')
         self.m3.minimize(method=self._ref_scipy_method)
         _cm = self.m3.cov_mat
-        #print _cm, self._ref_cov_mat_fcn3_fix_x
         self.assertTrue(
             np.allclose(_cm, self._ref_cov_mat_fcn3_fix_x, atol=1e-7)
         )
@@ -138,7 +135,6 @@ class TestMinimizerScipyOptimize(unittest.TestCase):
         self.m3.fix('x')
         self.m3.minimize(method=self._ref_scipy_method)
         _cm = self.m3.cor_mat
-        #print _cm, self._ref_cor_mat_fcn3_fix_x
         self.assertTrue(
             np.allclose(_cm, self._ref_cor_mat_fcn3_fix_x, atol=1e-7)
         )
@@ -167,7 +163,6 @@ class TestMinimizerScipyOptimize(unittest.TestCase):
         #self.m3.errordef = 4.0
         self.m3.minimize(method=self._ref_scipy_method)
         _hm = self.m3.hessian
-        #print _hm, self._ref_hessian_fcn3
         self.assertTrue(
             np.allclose(_hm, self._ref_hessian_fcn3, atol=1e-7)
         )
@@ -176,7 +171,6 @@ class TestMinimizerScipyOptimize(unittest.TestCase):
         self.m3.errordef = 4.0
         self.m3.minimize(method=self._ref_scipy_method)
         _hm = self.m3.hessian
-        #print _hm, self._ref_hessian_fcn3
         self.assertTrue(
             np.allclose(_hm, self._ref_hessian_fcn3, atol=1e-7)
         )
@@ -185,7 +179,6 @@ class TestMinimizerScipyOptimize(unittest.TestCase):
         #self.m3.errordef = 4.0
         self.m3.minimize(method=self._ref_scipy_method)
         _hm = self.m3.hessian_inv
-        #print _hm, self._ref_hessian_inv_fcn3
         self.assertTrue(
             np.allclose(_hm, self._ref_hessian_inv_fcn3, atol=1e-7)
         )
@@ -194,7 +187,6 @@ class TestMinimizerScipyOptimize(unittest.TestCase):
         self.m3.errordef = 4.0
         self.m3.minimize(method=self._ref_scipy_method)
         _hm = self.m3.hessian_inv
-        #print _hm, self._ref_hessian_inv_fcn3
         self.assertTrue(
             np.allclose(_hm, self._ref_hessian_inv_fcn3, atol=1e-7)
         )
@@ -202,19 +194,13 @@ class TestMinimizerScipyOptimize(unittest.TestCase):
     def test_compare_par_values_to_scipy_optimize(self):
         self.m3.minimize(method=self._ref_scipy_method)
         _vs = self.m3.parameter_values
-        #print self._scipy_fmin
-        print self.m3._get_opt_result()
         for _v_scipy, _v in zip(self._scipy_fmin.x, _vs):
-            print 'scipy direct:     ', _v_scipy
-            print 'scipy minimizer:  ', _v
             self.assertAlmostEqual(_v_scipy, _v, places=2)
 
     def test_compare_hessian_inv_to_scipy_optimize(self):
         self.m3.minimize(method=self._ref_scipy_method)
         _hm_inv = self.m3.hessian_inv
         _hm_inv_scipy = self._scipy_fmin.hess_inv
-        print _hm_inv
-        print _hm_inv_scipy
         self.assertTrue(
             np.allclose(_hm_inv, _hm_inv_scipy, atol=1e-2)
         )

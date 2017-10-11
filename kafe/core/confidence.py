@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 import numpy as np
 from scipy.special import gammainccinv, gammaincc
@@ -89,50 +90,50 @@ class ConfidenceLevel(object):
                                         "than or equal to 1. Got: %d"
                                         % (_ndim_int,))
         if _ndim_int != new_ndim:
-            print "Warning: Got fractional number of dimensions (%f)! Coercing to: %d" % (new_ndim, _ndim_int)
+            print("Warning: Got fractional number of dimensions (%f)! Coercing to: %d" % (new_ndim, _ndim_int))
 
         self._ndim = _ndim_int
 
 
 if __name__ == "__main__":
     _cl_obj = ConfidenceLevel.from_sigma(2, 1.0)
-    print _cl_obj
+    print(_cl_obj)
 
     _cl_obj = ConfidenceLevel.from_cl(2, .86)
-    print _cl_obj
+    print(_cl_obj)
 
     _cl_obj = ConfidenceLevel.from_sigma(1, 1.0)
-    print _cl_obj
+    print(_cl_obj)
 
     _cl_obj = ConfidenceLevel.from_cl(1, .86)
-    print _cl_obj
+    print(_cl_obj)
 
 
     try:
-        print ConfidenceLevel.from_sigma(2.1, .86)
-    except ConfidenceLevelError as e: print e
+        print(ConfidenceLevel.from_sigma(2.1, .86))
+    except ConfidenceLevelError as e: print(e)
 
     try:
-        print ConfidenceLevel.from_sigma(2, 400)
-    except ConfidenceLevelError as e: print e
+        print(ConfidenceLevel.from_sigma(2, 400))
+    except ConfidenceLevelError as e: print(e)
 
     try:
-        print ConfidenceLevel.from_sigma(2, -1)
-    except ConfidenceLevelError as e: print e
+        print(ConfidenceLevel.from_sigma(2, -1))
+    except ConfidenceLevelError as e: print(e)
 
     try:
         _co = ConfidenceLevel.from_sigma(-2, 400)
-        print _co
-    except ConfidenceLevelError as e: print e
+        print(_co)
+    except ConfidenceLevelError as e: print(e)
 
     try:
-        print ConfidenceLevel.from_sigma(-2, -1)
-    except ConfidenceLevelError as e: print e
+        print(ConfidenceLevel.from_sigma(-2, -1))
+    except ConfidenceLevelError as e: print(e)
 
     try:
-        print ConfidenceLevel.from_sigma(-2.3, 400)
-    except ConfidenceLevelError as e: print e
+        print(ConfidenceLevel.from_sigma(-2.3, 400))
+    except ConfidenceLevelError as e: print(e)
 
     try:
-        print ConfidenceLevel.from_sigma(-2.3, -1)
-    except ConfidenceLevelError as e: print e
+        print(ConfidenceLevel.from_sigma(-2.3, -1))
+    except ConfidenceLevelError as e: print(e)

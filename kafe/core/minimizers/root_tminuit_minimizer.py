@@ -1,3 +1,4 @@
+from __future__ import print_function
 from kafe.core.contour import ContourFactory
 try:
     from ROOT import TMinuit, Double, Long
@@ -431,8 +432,6 @@ class MinimizerROOTTMinuit(object):
         self.__gMinuit.GetParameter(_minuit_id - 1, _par_min, _par_err)
 
         _x = np.linspace(start=_par_min - bound * _par_err, stop=_par_min + bound * _par_err, num=bins, endpoint=True)
-        print bound
-        print _par_err
 
         self.__gMinuit.mnexcm("FIX", arr('d', [_minuit_id]), 1, _error_code)
 

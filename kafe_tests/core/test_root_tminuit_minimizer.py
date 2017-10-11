@@ -134,8 +134,6 @@ class TestMinimizerIMinuit(unittest.TestCase):
         self.m3.fix('x')
         self.m3.minimize()
         _cm = self.m3.cov_mat
-        #print _cm
-        #print self._ref_cov_mat_fcn3_fix_x
         self.assertTrue(
             np.allclose(_cm, self._ref_cov_mat_fcn3_fix_x, atol=1e-7)
         )
@@ -144,8 +142,6 @@ class TestMinimizerIMinuit(unittest.TestCase):
         self.m3.fix('x')
         self.m3.minimize()
         _cm = self.m3.cor_mat
-        #print _cm
-        #print self._ref_cor_mat_fcn3_fix_x
         self.assertTrue(
             np.allclose(_cm, self._ref_cor_mat_fcn3_fix_x, atol=1e-7)
         )
@@ -174,7 +170,6 @@ class TestMinimizerIMinuit(unittest.TestCase):
         #self.m3.errordef = 4.0
         self.m3.minimize()
         _hm = self.m3.hessian
-        #print _hm, self._ref_hessian_fcn3
         self.assertTrue(
             np.allclose(_hm, self._ref_hessian_fcn3, atol=1e-7)
         )
@@ -183,7 +178,6 @@ class TestMinimizerIMinuit(unittest.TestCase):
         self.m3.errordef = 4.0
         self.m3.minimize()
         _hm = self.m3.hessian
-        #print _hm, self._ref_hessian_fcn3
         self.assertTrue(
             np.allclose(_hm, self._ref_hessian_fcn3, atol=1e-7)
         )
@@ -192,7 +186,6 @@ class TestMinimizerIMinuit(unittest.TestCase):
         #self.m3.errordef = 4.0
         self.m3.minimize()
         _hm = self.m3.hessian_inv
-        #print _hm, self._ref_hessian_inv_fcn3
         self.assertTrue(
             np.allclose(_hm, self._ref_hessian_inv_fcn3, atol=1e-7)
         )
@@ -201,7 +194,6 @@ class TestMinimizerIMinuit(unittest.TestCase):
         self.m3.errordef = 4.0
         self.m3.minimize()
         _hm = self.m3.hessian_inv
-        #print _hm, self._ref_hessian_inv_fcn3
         self.assertTrue(
             np.allclose(_hm, self._ref_hessian_inv_fcn3, atol=1e-7)
         )
@@ -209,23 +201,14 @@ class TestMinimizerIMinuit(unittest.TestCase):
     def test_compare_par_values_to_scipy_optimize(self):
         self.m3.minimize()
         _vs = self.m3.parameter_values
-        #print self._scipy_fmin
-        # for k, v in self.m3._get_fmin_struct().iteritems():
-        #     print k, v
         for _v_scipy, _v in zip(self._scipy_fmin.x, _vs):
-            #print 'scipy direct:     ', _v_scipy
-            #print 'iminuit minimizer:', _v
             self.assertAlmostEqual(_v_scipy, _v, places=2)
 
     @unittest.skip("SLSQP does not compute hessian by default")
     def test_compare_hessian_inv_to_scipy_optimize(self):
         self.m3.minimize()
-        print type(self._scipy_fmin)
-        print self._scipy_fmin
         _hm_inv = self.m3.hessian_inv
         _hm_inv_scipy = self._scipy_fmin.hess_inv
-        #print _hm_inv
-        #print _hm_inv_scipy
         self.assertTrue(
             np.allclose(_hm_inv, _hm_inv_scipy, atol=1e-2)
         )
