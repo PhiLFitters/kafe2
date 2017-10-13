@@ -506,11 +506,12 @@ class XYFit(FitBase):
             super(XYFit, self).do_fit()
         else:
             self._fitter.do_fit()
+            _convergence_limit = float(kc('fit', 'x_error_fit_convergence_limit'))
             _previous_cost_function_value = self.cost_function_value
             for i in range(kc('fit', 'max_x_error_fit_iterations')):
                 self._mark_errors_for_update_invalidate_total_error_cache()
                 self._fitter.do_fit()
-                if np.abs(self.cost_function_value - _previous_cost_function_value) < kc('fit', 'x_error_fit_convergence_limit'):
+                if np.abs(self.cost_function_value - _previous_cost_function_value) < _convergence_limit:
                     break
                 _previous_cost_function_value = self.cost_function_value
             # update parameter formatters
