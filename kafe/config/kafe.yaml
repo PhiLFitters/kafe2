@@ -5,7 +5,10 @@ core:
   default_initial_parameter_value: 1.0
 
   minimizers:
-    default_minimizer: "iminuit"
+    default_minimizer_list:
+      - "root::tminuit"
+      - "iminuit"
+      - "scipy"
     minuit:
       log_filename: "minuit.log"
       print_level: -1

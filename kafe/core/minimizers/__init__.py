@@ -6,13 +6,15 @@ __all__ = ['get_minimizer']
 
 AVAILABLE_MINIMIZERS = dict()
 
+_MINIMIZER_NAME_ALIASES = dict()
+
 try:
     from .scipy_optimize_minimizer import MinimizerScipyOptimize
     __all__.append('MinimizerScipyOptimize')
     AVAILABLE_MINIMIZERS.update({
         'scipy': MinimizerScipyOptimize,
-        'scipy.optimize': MinimizerScipyOptimize,
     })
+    _MINIMIZER_NAME_ALIASES['scipy.optimize'] = 'scipy'
 except ImportError:
     pass
 
@@ -29,10 +31,10 @@ try:
     from .root_tminuit_minimizer import MinimizerROOTTMinuit
     __all__.append('MinimizerROOTTMinuit')
     AVAILABLE_MINIMIZERS.update({
-        'minuit': MinimizerROOTTMinuit,
-        'root::tminuit': MinimizerROOTTMinuit,
-        'root': MinimizerROOTTMinuit,
+        'root.tminuit': MinimizerROOTTMinuit,
     })
+    _MINIMIZER_NAME_ALIASES['minuit'] = 'root.tminuit'
+    _MINIMIZER_NAME_ALIASES['root'] = 'root.tminuit'
 except ImportError:
     pass
 
@@ -46,15 +48,28 @@ def get_minimizer(minimizer_spec=None):
     global AVAILABLE_MINIMIZERS
     # for 'None', return the default minimizer
     if minimizer_spec is None:
-        minimizer_spec = kc('core', 'minimizers', 'default_minimizer')
-    minimizer_spec = minimizer_spec.lower()
+        # go through the default minimizers in the order specified in config
+        _minimizer_specs = kc('core', 'minimizers', 'default_minimizer_list')
 
-    _minimizer = AVAILABLE_MINIMIZERS.get(kc('core', 'minimizers', 'default_minimizer'), None)
+        # try every spec until a minimizer is found
+        for _minimizer_spec in _minimizer_specs:
+            _minimizer_spec = _minimizer_spec.lower()
+            _minimizer_spec = _MINIMIZER_NAME_ALIASES.get(_minimizer_spec, _minimizer_spec)
+            _minimizer = AVAILABLE_MINIMIZERS.get(_minimizer_spec, None)
+            if _minimizer is not None:
+                return _minimizer
 
-    if _minimizer is None:
-        raise ValueError("Unknown minimizer '{}'! Available: {}".format(minimizer_spec, AVAILABLE_MINIMIZERS.keys()))
+        raise ValueError(
+            "Could not find any minimizer in default list: {}! Available: {}".format(_minimizer_specs, list(AVAILABLE_MINIMIZERS.keys())))
+    else:
+        _minimizer_spec = minimizer_spec.lower()
+        _minimizer_spec = _MINIMIZER_NAME_ALIASES.get(_minimizer_spec, _minimizer_spec)
+        _minimizer = AVAILABLE_MINIMIZERS.get(_minimizer_spec, None)
+        if _minimizer is not None:
+            return _minimizer
 
-    return _minimizer
+        raise ValueError(
+            "Unknown minimizer '{}'! Available: {}".format(minimizer_spec, list(AVAILABLE_MINIMIZERS.keys())))
 
 
 class MinimizerBase(object):
