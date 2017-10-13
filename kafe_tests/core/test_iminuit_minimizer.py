@@ -3,7 +3,12 @@ from scipy import optimize as opt
 
 import numpy as np
 
-from kafe.core.minimizers.iminuit_minimizer import MinimizerIMinuit
+_cannot_import_IMinuit = False
+try:
+    from kafe.core.minimizers.iminuit_minimizer import MinimizerIMinuit
+except ImportError:
+    _cannot_import_IMinuit = True
+
 
 
 def fcn_3(x, y, z):
@@ -12,6 +17,7 @@ def fcn_3(x, y, z):
 def fcn_1(x):
     return 42.*(x - 42.)**2 + 42.
 
+@unittest.skipIf(_cannot_import_IMinuit, "Cannot import iminuit")
 class TestMinimizerIMinuit(unittest.TestCase):
 
     def setUp(self):
