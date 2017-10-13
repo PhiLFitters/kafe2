@@ -117,6 +117,16 @@ class MinimizerScipyOptimize(object):
 
     # -- public methods
 
+    def set(self, parameter_name, parameter_value):
+        if parameter_name not in self._par_names:
+            raise MinimizerScipyOptimizeException("No parameter named '%s'!" % (parameter_name,))
+        _par_id = self._par_names.index(parameter_name)
+        self._par_val[_par_id] = parameter_value
+
+    def set_several(self, parameter_names, parameter_values):
+        for _pn, _pv in zip(parameter_names, parameter_values):
+            self.set(_pn, _pv)
+
     def fix(self, parameter_name):
         raise NotImplementedError
         _par_id = self._par_names.index(parameter_name)
@@ -158,8 +168,8 @@ class MinimizerScipyOptimize(object):
                 self._par_constraints.append(
                     dict(type='eq', fun=lambda x: x[_par_id] - _pv, jac=lambda x: 0.)
                 )
-                
-                
+
+
         self._opt_result = opt.minimize(self._func_wrapper_unpack_args,
                                         self._par_val,
                                         args=(),
