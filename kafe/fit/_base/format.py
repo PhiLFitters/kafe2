@@ -55,7 +55,7 @@ class ModelParameterFormatter(object):
 
     @staticmethod
     def _latexify_ascii(ascii_string):
-        _lpn = string.replace(ascii_string, '_', r"\_")
+        _lpn = ascii_string.replace('_', r"\_")
         return r"{\tt %s}" % (_lpn,)
 
     @property
@@ -170,7 +170,7 @@ class ModelParameterFormatter(object):
                 else:
                     _display_string += "%g" % (_display_val,)
             else:
-                _min_err = np.min(map(abs, self._error))
+                _min_err = np.min(list(map(abs, self._error)))
                 # fallback to rounding to 10^(-1) if error is zero
                 if not _min_err or np.isnan(_min_err):
                     _min_err = 1e-1
@@ -242,7 +242,7 @@ class ModelFunctionFormatter(object):
 
     @staticmethod
     def _latexify_ascii(ascii_string):
-        _lpn = string.replace(ascii_string, '_', r"\_")
+        _lpn = ascii_string.replace('_', r"\_")
         return r"{\tt %s}" % (_lpn,)
 
     def _get_format_kwargs(self, format_as_latex=False):

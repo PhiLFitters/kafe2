@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from StringIO import StringIO
+from six import StringIO
 
 from kafe.fit import IndexedContainer, XYContainer, HistContainer
 from kafe.fit.representation import DataContainerYamlWriter, DataContainerYamlReader, DReprError

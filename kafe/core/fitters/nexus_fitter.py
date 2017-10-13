@@ -32,7 +32,7 @@ class NexusFitter(object):
             _minimizer_class = get_minimizer()  # get the default minimizer
 
         self._minimizer = _minimizer_class(parameters_to_fit,
-                                           _par_name_val_map.values(),
+                                           list(_par_name_val_map.values()),
                                            [0.1 if _v==0 else 0.1*_v for _v in _par_name_val_map.values()],
                                            self._fcn_wrapper, **minimizer_kwargs)
         self.__state_is_from_minimizer = False
@@ -181,7 +181,7 @@ class NexusFitter(object):
                                        % (_unknown_par_names,))
         # set values in nexus
         self._nx.set(**parameter_value_dict)
-        self._minimizer.set_several(parameter_value_dict.keys(), parameter_value_dict.values())
+        self._minimizer.set_several(list(parameter_value_dict.keys()), list(parameter_value_dict.values()))
         # set flags
         self.__state_is_from_minimizer = False
         self.__cache_stale = True

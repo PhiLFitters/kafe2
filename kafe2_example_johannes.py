@@ -5,6 +5,7 @@ from __future__ import print_function
 # some things we need
 import numpy as np
 import scipy.stats as stats
+import six.moves
 
 # import main stuff from kafe
 from kafe.fit import (

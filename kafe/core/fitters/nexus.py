@@ -1,5 +1,6 @@
 import abc
 import inspect
+import six
 import weakref
 from ast import parse
 from collections import OrderedDict
@@ -7,8 +8,10 @@ from collections import OrderedDict
 
 NODE_VALUE_DEFAULT = 1.0
 
+
 class NodeException(Exception):
     pass
+
 
 class NodeBase(object):
     """
@@ -159,7 +162,7 @@ class NodeFunction(NodeBase):
     def func(self, function_handle):
         self._func = function_handle
         # do introspection
-        self._func_varcount = self._func.func_code.co_argcount
+        self._func_varcount = self._func.__code__.co_argcount
         self._func_varnames = inspect.getargspec(self._func)[0]
         self._stale = True
 
@@ -237,7 +240,7 @@ class Nexus(object):
         _subsequent_par_function_obj_names_ids = OrderedDict()
         _real_dim = 0
         _main_id = 0
-        for _pn, _p in self.__map_par_name_to_par_obj.iteritems():
+        for _pn, _p in six.iteritems(self.__map_par_name_to_par_obj):
             if _p not in _first_seen_par_obj_names_ids and _p not in _first_seen_par_function_obj_names_ids:
                 if isinstance(_p, NodeFunction):
                     _first_seen_par_function_obj_names_ids[_p] = (_pn, _main_id)
@@ -252,19 +255,19 @@ class Nexus(object):
                 _id = _first_seen_par_obj_names_ids[_p][1]
                 _subsequent_par_obj_names_ids[_p] = (_pn, _id)
 
-        for _p, (_pn, _pid) in _first_seen_par_obj_names_ids.iteritems():
+        for _p, (_pn, _pid) in six.iteritems(_first_seen_par_obj_names_ids):
             self.__nexus_list_main_par_objects.append(_p)
             self.__nexus_list_main_par_names.append(_pn)
             self.__nexus_map_all_par_names_to_id[_pn] = _pid
-        for _p, (_pn, _pid) in _first_seen_par_function_obj_names_ids.iteritems():
+        for _p, (_pn, _pid) in six.iteritems(_first_seen_par_function_obj_names_ids):
             self.__nexus_list_main_par_objects.append(_p)
             self.__nexus_list_main_par_names.append(_pn)
             self.__nexus_map_all_par_names_to_id[_pn] = _pid
-        for _p, (_pn, _pid) in _subsequent_par_obj_names_ids.iteritems():
+        for _p, (_pn, _pid) in six.iteritems(_subsequent_par_obj_names_ids):
             self.__nexus_list_main_par_objects.append(_p)
             self.__nexus_list_main_par_names.append(_pn)
             self.__nexus_map_all_par_names_to_id[_pn] = _pid
-        for _p, (_pn, _pid) in _subsequent_par_function_obj_names_ids.iteritems():
+        for _p, (_pn, _pid) in six.iteritems(_subsequent_par_function_obj_names_ids):
             self.__nexus_list_main_par_objects.append(_p)
             self.__nexus_list_main_par_names.append(_pn)
             self.__nexus_map_all_par_names_to_id[_pn] = _pid
@@ -366,7 +369,7 @@ class Nexus(object):
                 self.__map_par_name_to_par_obj[name] = NodeValue(name, value, parent_nexus=self)
             except NodeException as pe:
                 # re-raise ParameterException as ParameterSpaceException
-                raise NexusException(pe.message)
+                raise NexusException(pe)
             self.__nexus_stale = True
 
     def _set_one(self, name, value):
@@ -397,7 +400,7 @@ class Nexus(object):
             self.__map_par_name_to_par_obj[alias] = _p
         except NodeException as pe:
             # re-raise ParameterException as ParameterSpaceException
-            raise NexusException(pe.message)
+            raise NexusException(pe)
 
         self.__nexus_stale = True
 
@@ -432,7 +435,7 @@ class Nexus(object):
             self._rebuild_nexus()
         _par_n_id_dict = self.__nexus_map_all_par_names_to_id
         _par_n_par_dict = OrderedDict([(_pn, self._get_one_by_name(_pn, None)) for _pn in _par_n_id_dict])
-        _par_n_val_dict = OrderedDict([(_pn, _p.value) for _pn, _p in _par_n_par_dict.iteritems() if _p is not None])
+        _par_n_val_dict = OrderedDict([(_pn, _p.value) for _pn, _p in six.iteritems(_par_n_par_dict) if _p is not None])
         return _par_n_val_dict
 
     @property
@@ -477,7 +480,7 @@ class Nexus(object):
             self._rebuild_nexus()
         try:
             iter(name)
-            if isinstance(name, str) or isinstance(name, unicode):
+            if isinstance(name, six.string_types[0]):
                 # return one parameter
                 return self._get_one_by_name(name, default)
             else:
@@ -495,7 +498,7 @@ class Nexus(object):
     # create new parameters
 
     def new(self, **kwargs):
-        for k, v in kwargs.iteritems():
+        for k, v in six.iteritems(kwargs):
             self._new_one(k, v)
 
     def new_function(self, function_handle, function_name=None, add_unknown_parameters=False):
@@ -521,17 +524,17 @@ class Nexus(object):
     # change parameter values
 
     def set(self, **kwargs):
-        for k, v in kwargs.iteritems():
+        for k, v in six.iteritems(kwargs):
             self._set_one(k, v)
 
     def set_function(self, **kwargs):
-        for k, v in kwargs.iteritems():
+        for k, v in six.iteritems(kwargs):
             self._set_function_one(k, v)
 
     # parameter aliases
 
     def new_alias(self, **kwargs):
-        for k, v in kwargs.iteritems():
+        for k, v in six.iteritems(kwargs):
             self._new_alias_one(k, v)
 
     # def add_dependency(self, target, sources):

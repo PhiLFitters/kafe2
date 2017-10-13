@@ -161,7 +161,7 @@ class DataContainerYamlWriter(DReprWriterMixin, DataContainerDReprBase):
             _yaml['y_data'] = self._container.y.tolist()
         elif _type == 'histogram':
             _yaml['bin_edges'] = self._container.bin_edges.tolist()
-            _yaml['raw_data'] = map(float, self._container.raw_data)  # float64 -> float
+            _yaml['raw_data'] = list(map(float, self._container.raw_data))  # float64 -> float
         else:
             raise NotImplemented("Container type unknown or not supported: {}".format(_type))
 

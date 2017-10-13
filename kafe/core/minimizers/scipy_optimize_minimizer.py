@@ -318,10 +318,10 @@ class MinimizerScipyOptimize(object):
         _y_values += _minimum[1]
 
         _grid = np.zeros((_target_points_per_axis, _target_points_per_axis)) - 1
-        _x_step = (_target_points_per_axis - 1) / (_initial_points_per_axis - 1)
-        _y_step = (_target_points_per_axis - 1) / (_initial_points_per_axis - 1)
+        _x_step = int((_target_points_per_axis - 1) / (_initial_points_per_axis - 1))
+        _y_step = int((_target_points_per_axis - 1) / (_initial_points_per_axis - 1))
 
-        _min_coords = (_target_points_per_axis - 1) / 2
+        _min_coords = int((_target_points_per_axis - 1) / 2)
         _confirmed_coords = set()
         _unsure_coords = set()
 
@@ -338,19 +338,19 @@ class MinimizerScipyOptimize(object):
         _iterations = 0
         while _x_step > 0 and _y_step > 1:
             if _iterations % 2 == 0:
-                _x_0 = _x_step / 2
-                _y_0 = _y_step / 2
-                _vector_1 = (_x_step / 2, _y_step / 2)
-                _vector_2 = (_x_step / 2, -_y_step / 2)
+                _x_0 = int(_x_step / 2)
+                _y_0 = int(_y_step / 2)
+                _vector_1 = (int(_x_step / 2), int(_y_step / 2))
+                _vector_2 = (int(_x_step / 2), -int(_y_step / 2))
             else:
                 _x_0 = 0
                 _y_0 = 0
                 _vector_1 = (_x_step, 0)
-                _vector_2 = (0, _y_step / 2)
+                _vector_2 = (0, int(_y_step / 2))
                 
             for _x in range(_x_0, _target_points_per_axis, _x_step):
                 if _iterations % 2 == 1 and _x % (2 * _x_step) == 0:
-                    _current_y_0 = _y_0 + _y_step / 2
+                    _current_y_0 = _y_0 + int(_y_step / 2)
                 else:
                     _current_y_0 = _y_0
                 for _y in range(_current_y_0, _target_points_per_axis, _y_step):
@@ -366,10 +366,10 @@ class MinimizerScipyOptimize(object):
                             _unsure_coords.add((_x + _x_step,   _y))
                             _unsure_coords.add((_x,             _y + _y_step))
                         else:
-                            _unsure_coords.add((_x - _x_step, _y - _y_step / 2))
-                            _unsure_coords.add((_x - _x_step, _y + _y_step / 2))
-                            _unsure_coords.add((_x + _x_step, _y - _y_step / 2))
-                            _unsure_coords.add((_x + _x_step, _y + _y_step / 2))
+                            _unsure_coords.add((_x - _x_step, _y - int(_y_step / 2)))
+                            _unsure_coords.add((_x - _x_step, _y + int(_y_step / 2)))
+                            _unsure_coords.add((_x + _x_step, _y - int(_y_step / 2)))
+                            _unsure_coords.add((_x + _x_step, _y + int(_y_step / 2)))
                     else:
                         _grid[_x, _y] = _point_value
             
@@ -394,17 +394,17 @@ class MinimizerScipyOptimize(object):
                             _unsure_coords.add((_x + _x_step,   _y))
                             _unsure_coords.add((_x,             _y + _y_step))
                         else:
-                            _unsure_coords.add((_x - _x_step, _y - _y_step / 2))
-                            _unsure_coords.add((_x - _x_step, _y + _y_step / 2))
-                            _unsure_coords.add((_x + _x_step, _y - _y_step / 2))
-                            _unsure_coords.add((_x + _x_step, _y + _y_step / 2))
+                            _unsure_coords.add((_x - _x_step, _y - int(_y_step / 2)))
+                            _unsure_coords.add((_x - _x_step, _y + int(_y_step / 2)))
+                            _unsure_coords.add((_x + _x_step, _y - int(_y_step / 2)))
+                            _unsure_coords.add((_x + _x_step, _y + int(_y_step / 2)))
                 _grid[_current_coords[0], _current_coords[1]] = _current_fun
                 _confirmed_coords.add(_current_coords)
                 
             if _iterations % 2 == 0:
-                _x_step /= 2
+                _x_step = int(_x_step / 2)
             else:
-                _y_step /= 2
+                _y_step = int(_y_step / 2)
             _iterations += 1
             
         _left_cutoff = 0

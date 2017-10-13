@@ -56,7 +56,7 @@ class FitBase(object):
     @staticmethod
     def _latexify_ascii(ascii_string):
         """function computing a fallback LaTeX representation of an plain-text string"""
-        _lpn = string.replace(ascii_string, '_', r"\_")
+        _lpn = ascii_string.replace('_', r"\_")
         return r"{\tt %s}" % (_lpn,)
 
     # -- public properties
@@ -97,7 +97,7 @@ class FitBase(object):
     @property
     def parameter_values(self):
         """the current parameter values"""
-        return self.parameter_name_value_dict.values()
+        return list(self.parameter_name_value_dict.values())
 
     @property
     def parameter_errors(self):

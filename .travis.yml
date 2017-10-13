@@ -10,10 +10,9 @@ env:
   matrix:
     - CONDA_PYTHON_VERSION=2.7.9
     - CONDA_PYTHON_VERSION=2.7.13
-    # Python 3 not supported yet
-    #- CONDA_PYTHON_VERSION=3.5
-    #- CONDA_PYTHON_VERSION=3.4
-    #- CONDA_PYTHON_VERSION=3.3
+    - CONDA_PYTHON_VERSION=3.4
+    - CONDA_PYTHON_VERSION=3.5
+    - CONDA_PYTHON_VERSION=3.6
 
 addons:
   apt:

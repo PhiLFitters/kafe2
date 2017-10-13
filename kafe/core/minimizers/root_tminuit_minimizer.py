@@ -388,7 +388,7 @@ class MinimizerROOTTMinuit(object):
         self._par_val = []
         self._par_err = []
         _pv, _pe = Double(0), Double(0)
-        for _par_id in xrange(0, self.n_pars):
+        for _par_id in six.moves.range(0, self.n_pars):
             self.__gMinuit.GetParameter(_par_id, _pv, _pe)  # retrieve fitresult
             self._par_val.append(float(_pv))
             self._par_err.append(float(_pe))

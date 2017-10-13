@@ -22,8 +22,8 @@ def _heuristic_optimal_subplot_grid_size(n_subplots, aspect_ratio_priority=0.5):
 
     _optimal_f = np.inf
     _optimal_sk = n_subplots, 0
-    for s in xrange(1, n_subplots):
-        for k in xrange(0, n_subplots):
+    for s in six.moves.range(1, n_subplots):
+        for k in six.moves.range(0, n_subplots):
             _f = f2(s, k)
             if _f < _optimal_f:
                 _optimal_f = _f
@@ -209,7 +209,7 @@ class XYFitEnsemble(FitEnsembleBase):
             dict(stat_name="y_data_pulls",  # FIXME: get automatically
                  stat_name_formatted="y_data_pulls",  # FIXME: get automatically
                  plot_xrange=(-3, 3),
-                 plot_xlabel=['Pull $y_{%d}$' % (_i,) for _i in xrange(self.n_dat)],
+                 plot_xlabel=['Pull $y_{%d}$' % (_i,) for _i in six.moves.range(self.n_dat)],
                  plot_label="{} pseudoexperiments".format(self.n_exp),
                  plot_hist_nbins=51,
                  plot_prob_density_label="expected density",
@@ -323,7 +323,7 @@ class XYFitEnsemble(FitEnsembleBase):
     def run(self):
         """Perform the pseudo-experiments. Retrieve and store the requested fit result variables."""
         self._initialize_result_arrays()
-        for _i_exp in xrange(self.n_exp):
+        for _i_exp in six.moves.range(self.n_exp):
             self._generate_pseudodata()
             self._do_toy_fit()
             self._gather_results_from_toy_fit(_i_exp)
@@ -368,7 +368,7 @@ class XYFitEnsemble(FitEnsembleBase):
                 _nplots = int(_result_array.shape[1])
                 _nrows, _ncols = _heuristic_optimal_subplot_grid_size(_nplots, aspect_ratio_priority=0.8)
                 _fig, _gs = self._make_figure_gs(figsize=(8, 8), nrows=_nrows, ncols=_ncols)
-                for _i_plot in xrange(_nplots):
+                for _i_plot in six.moves.range(_nplots):
                     _plot_config_subplot = _plot_config.copy()
                     _plot_config_subplot['plot_xlabel'] = _plot_config_subplot['plot_xlabel'][_i_plot]
                     _row = int(_i_plot/_ncols)
@@ -386,8 +386,8 @@ class XYFitEnsemble(FitEnsembleBase):
                 _ncols = _result_array.shape[2]
 
                 _fig, _gs = self._make_figure_gs(figsize=(8, 8), nrows=_nrows, ncols=_ncols)
-                for _row in xrange(_nrows):
-                    for _col in xrange(_ncols):
+                for _row in six.moves.range(_nrows):
+                    for _col in six.moves.range(_ncols):
                         _plot_config_subplot = _plot_config.copy()
                         _plot_config_subplot['plot_xlabel'] = _plot_config_subplot['plot_xlabel'][_row, _col]
                         _ax = plt.subplot(_gs[_row, _col])

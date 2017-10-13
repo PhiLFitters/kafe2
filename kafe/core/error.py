@@ -18,7 +18,7 @@ def cov_mat_from_float(value, size, correlation=0.0):
 
 
 def cov_mat_from_float_list(value_list, correlation=0.0):
-    _vals = np.array(map(float, value_list))
+    _vals = np.array(list(map(float, value_list)))
     correlation = float(correlation)
     if not (0.0 <= correlation <= 1.0):
         raise ValueError("Correlation must be between 0 and 1: %g given." % (correlation,))
@@ -77,8 +77,8 @@ class CovMat(object):
         """
         Rescale the covariance matrix (variant implementation, pure Python).
         """
-        for i in xrange(self._size):
-            for j in xrange(self._size):
+        for i in six.moves.range(self._size):
+            for j in six.moves.range(self._size):
                 _v = self._mat[i, j]
                 _v /= old_reference_values[i]
                 _v /= old_reference_values[j]

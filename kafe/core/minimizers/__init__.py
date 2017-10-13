@@ -1,4 +1,5 @@
 import abc
+import sys
 
 from ...config import kc
 
@@ -8,6 +9,11 @@ AVAILABLE_MINIMIZERS = dict()
 
 _MINIMIZER_NAME_ALIASES = dict()
 
+_catch_error_class = ImportError
+if sys.version_info >= (3,6):
+    # python version 3.6+ throws a different exception type on import fail...
+    _catch_error_class = ModuleNotFoundError
+
 try:
     from .scipy_optimize_minimizer import MinimizerScipyOptimize
     __all__.append('MinimizerScipyOptimize')
@@ -15,7 +21,7 @@ try:
         'scipy': MinimizerScipyOptimize,
     })
     _MINIMIZER_NAME_ALIASES['scipy.optimize'] = 'scipy'
-except ImportError:
+except _catch_error_class:
     pass
 
 try:
@@ -24,7 +30,7 @@ try:
     AVAILABLE_MINIMIZERS.update({
         'iminuit': MinimizerIMinuit,
     })
-except ImportError:
+except _catch_error_class:
     pass
 
 try:
@@ -35,7 +41,7 @@ try:
     })
     _MINIMIZER_NAME_ALIASES['minuit'] = 'root.tminuit'
     _MINIMIZER_NAME_ALIASES['root'] = 'root.tminuit'
-except ImportError:
+except _catch_error_class:
     pass
 
 # raise if no minimizers can be imported

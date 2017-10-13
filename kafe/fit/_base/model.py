@@ -81,7 +81,7 @@ class ModelFunctionBase(object):
         """
         self._model_function_handle = model_function
         self._model_function_argspec = inspect.getargspec(self._model_function_handle)
-        self._model_function_argcount = self._model_function_handle.func_code.co_argcount
+        self._model_function_argcount = self._model_function_handle.__code__.co_argcount
         self._validate_model_function_raise()
         self._assign_parameter_formatters()
         self._assign_function_formatter()

@@ -1,9 +1,10 @@
 import abc
 import numpy as np
+import six
 
 from ...config import matplotlib as mpl
 from ...config import kc, ConfigError
-from fit import FitBase
+from .fit import FitBase
 
 from collections import OrderedDict
 from copy import copy
@@ -39,7 +40,7 @@ class Cycler(object):
         for _i, _content in enumerate(args):
             _prop_size_i = None
             _prop_dict_i = dict()
-            for _prop_name, _prop_vals in _content.iteritems():
+            for _prop_name, _prop_vals in six.iteritems(_content):
                 # for the time being: 'refuse' any mismatching property value lengths
                 if _prop_size_i is None:
                     _prop_size_i = len(_prop_vals)
@@ -70,10 +71,10 @@ class Cycler(object):
     # public methods
 
     def get(self, cycle_position):
-        _prop_positions = [(cycle_position//self._counter_divisors[i])%self._prop_val_sizes[i] for i in xrange(self._dim)]
+        _prop_positions = [(cycle_position//self._counter_divisors[i])%self._prop_val_sizes[i] for i in six.moves.range(self._dim)]
         _ps = {}
         for _i, _content in enumerate(self._props):
-            for (_name, _values) in _content.iteritems():
+            for (_name, _values) in six.iteritems(_content):
                 _ps[_name] = _values[_prop_positions[_i]]
         return _ps
 
@@ -97,7 +98,7 @@ class Cycler(object):
         _args = []
         for _i, _content in enumerate(self._props):
             _tmp_dict = {}
-            for (_name, _values) in _content.iteritems():
+            for (_name, _values) in six.iteritems(_content):
                 if _name in properties:
                     _tmp_dict[_name] = _values
             _args.append(_tmp_dict)

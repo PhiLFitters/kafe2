@@ -100,7 +100,7 @@ class CostFunctionBase(object):
         """
         self._cost_function_handle = cost_function
         self._cost_function_argspec = inspect.getargspec(self._cost_function_handle)
-        self._cost_function_argcount = self._cost_function_handle.func_code.co_argcount
+        self._cost_function_argcount = self._cost_function_handle.__code__.co_argcount
         self._validate_cost_function_raise()
         self._assign_parameter_formatters()
         self._assign_function_formatter()

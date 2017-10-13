@@ -1,4 +1,5 @@
 import numpy as np
+import six
 
 from ...config import matplotlib as mpl
 from ...core.confidence import ConfidenceLevel
@@ -290,7 +291,7 @@ class ContoursProfiler(object):
             _axes = target_axes
 
         _par_val = self._fit.parameter_name_value_dict[parameter]
-        _par_id = self._fit.parameter_name_value_dict.keys().index(parameter)
+        _par_id = list(self._fit.parameter_name_value_dict.keys()).index(parameter)
         _par_err = self._fit.parameter_errors[_par_id]
         _cost_function_min = self._fit.cost_function_value
         _par_formatted_name = self._parameters_formatted_names[_par_id]
@@ -382,8 +383,8 @@ class ContoursProfiler(object):
         else:
             _axes = target_axes
 
-        _par_1_id = self._fit.parameter_name_value_dict.keys().index(parameter_1)
-        _par_2_id = self._fit.parameter_name_value_dict.keys().index(parameter_2)
+        _par_1_id = list(self._fit.parameter_name_value_dict.keys()).index(parameter_1)
+        _par_2_id = list(self._fit.parameter_name_value_dict.keys()).index(parameter_2)
         _par_1_formatted_name = self._parameters_formatted_names[_par_1_id]
         _par_2_formatted_name = self._parameters_formatted_names[_par_2_id]
 
@@ -472,7 +473,7 @@ class ContoursProfiler(object):
                                          profile plots
         :type show_error_span_profiles: bool
         """
-        _par_names = self._fit.parameter_name_value_dict.keys()
+        _par_names = list(self._fit.parameter_name_value_dict.keys())
 
         _npar = len(_par_names)
         _fig, _gs = self._make_figure_gs(_npar, _npar)
@@ -510,7 +511,7 @@ class ContoursProfiler(object):
 
 
         # fill all subplots in the grid (diagonal and lower triangle)
-        for row in xrange(_npar):
+        for row in six.moves.range(_npar):
             _axes = plt.subplot(_gs[row, row])
             self.plot_profile(_par_names[row], target_axes=_axes,
                               show_parabolic=show_parabolic_profiles,
@@ -529,7 +530,7 @@ class ContoursProfiler(object):
             _xlim, _ylim = _axes.get_xlim(), _axes.get_ylim()
             _subplot_lims_x_cols[row] = min(_subplot_lims_x_cols[row][0], _xlim[0]), max(_subplot_lims_x_cols[row][1], _xlim[1])
 
-            for col in xrange(row):
+            for col in six.moves.range(row):
                 _axes = plt.subplot(_gs[row, col])
                 self.plot_contours(_par_names[col], _par_names[row],
                                    target_axes=_axes,
@@ -569,13 +570,13 @@ class ContoursProfiler(object):
                         _subplot_lims_y_rows[col][1], _ylim[1])
 
         # post-processing: synchronize the x and y plot ranges, adjust tick frequency
-        for row in xrange(_npar):
+        for row in six.moves.range(_npar):
             _pf_axes = plt.subplot(_gs[row, row])
 
             # synchronize x axis ranges across profile and contour plots
             if not np.any(np.isinf(_subplot_lims_x_cols[row])):
                 _pf_axes.set_xlim(_subplot_lims_x_cols[row])
-            for col in xrange(row):
+            for col in six.moves.range(row):
 
                 _ct_axes = plt.subplot(_gs[row, col])
                 # synchronize x and y axis ranges across contour plots
