@@ -246,7 +246,11 @@ class ModelFunctionFormatter(object):
         return r"{\tt %s}" % (_lpn,)
 
     def _get_format_kwargs(self, format_as_latex=False):
-        return dict()
+        if format_as_latex:
+            _par_name_string_dict = {_af.name: _af.latex_name for _af in self._arg_formatters}
+        else:
+            _par_name_string_dict = {_af.name: _af.name for _af in self._arg_formatters}
+        return _par_name_string_dict
 
     def _get_formatted_name(self, format_as_latex=False):
         if format_as_latex:
