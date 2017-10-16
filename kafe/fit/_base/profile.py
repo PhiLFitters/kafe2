@@ -447,6 +447,7 @@ class ContoursProfiler(object):
         return _contour_artists, _minimum_artist
 
     def plot_profiles_contours_matrix(self,
+                                      parameters=None,
                                       show_grid_for=None,
                                       show_ticks_for=None,
                                       show_fit_minimum_for='contours',
@@ -459,6 +460,8 @@ class ContoursProfiler(object):
         """
         Plot all profiles and contours to subplots arranges in a matrix-like fashion.
 
+        :param parameters: parameters for which to display profiles and contours. If ``None``, all parameters.
+        :type parameters: list of parameter names or ``None``
         :param show_grid_for: subplots for which to show a grid
         :type show_grid_for: ``None``, ``'profiles'``, ``'contours'`` or ``'all'``
         :param show_ticks_for: subplots for which to show ticks
@@ -473,7 +476,19 @@ class ContoursProfiler(object):
                                          profile plots
         :type show_error_span_profiles: bool
         """
-        _par_names = list(self._fit.parameter_name_value_dict.keys())
+        _par_names = parameters
+        if _par_names is None:
+            _par_names = list(self._fit.parameter_name_value_dict.keys())
+        else:
+            # check if there are any unknown parameters
+            _unknown_parameters = set(_par_names) - set(self._fit.parameter_name_value_dict.keys())
+            if _unknown_parameters:
+                raise ContoursProfilerException("Unknown parameters: {}".format(_unknown_parameters))
+
+        # # check if any parameters are fixed and exclude them from the matrix:
+        # # TODO: public interface for querying parameter status
+        # _free_pars = set(self._fit._fitter._fit_pars)
+        # _par_names = [_par for _par in _par_names if _par in _free_pars]
 
         _npar = len(_par_names)
         _fig, _gs = self._make_figure_gs(_npar, _npar)
