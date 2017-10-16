@@ -84,6 +84,10 @@ class HistFit(FitBase):
             self._data_container.bin_edges,
             model_density_func_antiderivative=self._model_function.antiderivative)
 
+        # TODO: check where to update this (set/release/etc.)
+        # FIXME: nicer way than len()?
+        self._cost_function.ndf = self._data_container.size - len(self._param_model.parameters)
+
 
     # -- private methods
 

@@ -358,4 +358,37 @@ class ModelFunctionFormatter(object):
         return _out_string
 
 class CostFunctionFormatter(ModelFunctionFormatter):
-    pass
+
+    def get_formatted(self, value=None, n_degrees_of_freedom=None,
+                      with_value_per_ndf=True, format_as_latex=False):
+        """
+        Get a formatted string representing this cost function.
+
+        :param value: value of the cost function (if not ``None``, the returned string will include this)
+        :type value: float
+        :param n_degrees_of_freedom: number of degrees of freedom (if not ``None``, the returned string will include this)
+        :type n_degrees_of_freedom: int
+        :param with_value_per_ndf: if ``True``, the returned string will include the value-ndf ratio as a decimal value
+        :param format_as_latex: if ``True``, the returned string will be formatted using LaTeX syntax
+        :return: string
+        """
+
+        _name_string = "%s" % (self._latex_name)
+        _value_string = ""
+        if value is not None:
+            _value_string = "%.4g" % (value,)
+            if n_degrees_of_freedom is not None:
+                if format_as_latex:
+                    _name_string = r"%s / {\rm ndf}" % (self._latex_name)
+                else:
+                    _name_string = "%s / ndf" % (self._latex_name)
+                _value_string = "%s / %d" % (_value_string, n_degrees_of_freedom)
+                if with_value_per_ndf:
+                    _value_string = "%s = %.4g" % (_value_string, float(value)/n_degrees_of_freedom)
+
+        _out_string = "%s = %s" % (_name_string, _value_string)
+
+        if format_as_latex:
+            _out_string = "$%s$" % (_out_string ,)
+
+        return _out_string

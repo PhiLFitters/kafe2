@@ -104,6 +104,7 @@ class CostFunctionBase(object):
         self._validate_cost_function_raise()
         self._assign_parameter_formatters()
         self._assign_function_formatter()
+        self._ndf = None
 
     def _validate_cost_function_raise(self):
         self._cost_func_argspec = inspect.getargspec(self._cost_function_handle)
@@ -172,6 +173,18 @@ class CostFunctionBase(object):
     def argument_formatters(self):
         """The :py:obj:`Formatter` objects for the function arguments"""
         return self._arg_formatters
+
+    @property
+    def ndf(self):
+        """The number of degrees of freedom of this cost function"""
+        return self._ndf
+
+    @ndf.setter
+    def ndf(self, new_ndf):
+        """The number of degrees of freedom of this cost function"""
+        assert new_ndf > 0  # ndf must be positive
+        assert new_ndf == int(new_ndf)  # ndf must be integer
+        self._ndf = new_ndf
 
 
 

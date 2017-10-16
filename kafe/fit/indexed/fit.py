@@ -73,6 +73,10 @@ class IndexedFit(FitBase):
         # create the child ParametricModel objet
         self._param_model = self._new_parametric_model(self._model_function.func, self.parameter_values, shape_like=self.data)
 
+        # TODO: check where to update this (set/release/etc.)
+        # FIXME: nicer way than len()?
+        self._cost_function.ndf = self._data_container.size - len(self._param_model.parameters)
+
 
     # -- private methods
 
