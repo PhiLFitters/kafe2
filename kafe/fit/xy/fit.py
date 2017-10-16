@@ -188,7 +188,7 @@ class XYFit(FitBase):
             _p_res = _f_deriv_by_params[_x_idx]
             _band_y[_x_idx] = _p_res.dot(self.parameter_cov_mat).dot(_p_res)[0, 0]
 
-        self.__cache_y_error_band = _band_y
+        self.__cache_y_error_band = np.sqrt(_band_y)
 
     # -- public properties
 
