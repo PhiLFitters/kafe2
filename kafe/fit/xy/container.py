@@ -74,12 +74,60 @@ class XYContainer(IndexedContainer):
         """recalculate total errors next time they are needed"""
         self._xy_total_errors = None
 
-    # -- public properties
+    def _calculate_y_uncor_error_cov_mat(self):
+        #calculate y uncorrelated covariance matrix
+        _sz = self.size
+        _tmp_uncor_cov_mat_y = np.zeros((_sz, _sz))
+        for _err_dict in self._error_dicts.values():
+            if not _err_dict['enabled']:
+                continue
+            if not _err_dict['axis'] == 1:
+                continue
+            _err = _err_dict["err"]
+            if isinstance(_err, MatrixGaussianError):
+                _tmp_uncor_cov_mat_y+=_err.cov_mat
+            else:
+                _tmp_uncor_cov_mat_y+=_err.cov_mat_uncor
+
+        return np.matrix(_tmp_uncor_cov_mat_y)
+
+    def _calculate_nuisance_y_cor_error_cov_mat(self):
+        # calculate the correlated covariance matrix for Chisquare with Nuisance Parameters
+        _data_size = self.size
+        _err_size = self.simple_error_size
+        _tmp_cor_cov_mat = np.zeros((_err_size, _data_size))
+        _col = 0
+        for _err_dict in self._error_dicts.values():
+            if not _err_dict['enabled']:
+                continue
+            if not _err_dict['axis'] == 1:
+                continue
+            _err = _err_dict["err"]
+            if isinstance(_err, SimpleGaussianError):
+                if not _err.corr_coeff:
+                    continue
+                _tmp_cor_cov_mat[_col, :] = _err.error_cor
+                _col += 1
+        return np.matrix(_tmp_cor_cov_mat)
+
+        # -- public properties
 
     @property
     def size(self):
         """number of data points"""
         return self._xy_data.shape[1]
+
+    @property
+    def simple_error_size(self):
+        #gives number of simple errors
+        _size_er = 0
+        for _err_dict in self._error_dicts.values():
+            _err = _err_dict["err"]
+            if isinstance(_err, SimpleGaussianError):
+                if not _err.corr_coeff:
+                    continue
+                _size_er += 1
+        return _size_er
 
     @property
     def data(self):
@@ -193,6 +241,23 @@ class XYContainer(IndexedContainer):
         _y = self.y
         return np.min(_y), np.max(_y)
 
+    @property
+    def y_uncor_cov_mat(self):
+        # y uncorrelated covariance matrix
+        _y_uncor_cov_mat = self._calculate_y_uncor_error_cov_mat()
+        return _y_uncor_cov_mat
+
+    @property
+    def y_uncor_cov_mat_inverse(self):
+        # y uncorrelated inverse covariance matrix
+
+        return self.y_uncor_cov_mat.I
+
+    @property
+    def nuisance_y_cor_cov_mat (self):
+        #y correlated covariance matrix (nuisanse)
+         _nuisance_y_cor_cov_mat = self._calculate_nuisance_y_cor_error_cov_mat()
+         return _nuisance_y_cor_cov_mat
 
     # -- public methods
 
@@ -287,3 +352,5 @@ class XYContainer(IndexedContainer):
             if _err_dict['axis'] == 1:
                 return True
         return False
+
+
