@@ -516,6 +516,9 @@ class SimpleGaussianError(GaussianErrorBase):
         else:
             return self.cov_mat.cor_mat
 
+    @property
+    def corr_coeff(self):
+        return self._corr_coeff
 
 class MatrixGaussianError(GaussianErrorBase):
     """
