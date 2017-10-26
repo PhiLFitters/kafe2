@@ -128,6 +128,12 @@ class NodeFunction(NodeBase):
     def parameter_names(self):
         return self._func_varnames
 
+    @parameter_names.setter
+    def parameter_names(self, para_names):
+        self._func_varcount = len(para_names)
+        self._func_varnames = para_names
+        self._stale = True
+
     def _update(self):
         #logger.debug("Recalculating: %s", self)
         if self.nexus is None:
@@ -532,6 +538,9 @@ class Nexus(object):
         for k, v in six.iteritems(kwargs):
             self._set_function_one(k, v)
 
+    def set_function_parameter_names(self, function_name, parameter_names):
+        _func_node = self.get(par_spec=function_name, default=None)
+        _func_node.parameter_names = parameter_names
     # parameter aliases
 
     def new_alias(self, **kwargs):
