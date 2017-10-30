@@ -387,7 +387,7 @@ class XYFit(FitBase):
     @property
     def y_model_cov_mat(self):
         """the model *y* covariance matrix"""
-        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
+        self._param_model.parameters = self.poi_values # this is lazy, so just do it
         self._param_model.x = self.x
         return self._param_model.y_cov_mat
 
@@ -715,6 +715,45 @@ class XYFit(FitBase):
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x
         return self._param_model.eval_model_function(x=x, model_parameters=model_parameters)
+
+
+
+    def value_chisquare_nuisance_parameters(self):
+        #calculate nuisance parameters (wrong!!)
+        for _err_dict in self._data_container._error_dicts.values():
+            _err = _err_dict["err"]
+            if isinstance(_err, MatrixGaussianError):
+                raise XYFitException("Calculating Nuisance Parameters is only "
+                                           "working with simple errors")
+
+
+            _nuisance_cal = (self.eval_model_function(x=self.x) - self.y_data) / _err.error
+
+            _chisquare_uncorr = np.sum((_nuisance_cal * np.sqrt(1.0 - _err._corr_coeff)) ** 2.0)
+            #_chisquare_corr = (_nuisance[] * np.sqrt(_err._corr_coeff)) ** 2.0
+
+            #_chisquare_corr = _chisquare_corr / (self._data_container.size)
+            _chisquare = _chisquare_uncorr
+
+        return _chisquare
+
+    def calculate_nuisance_parameters(self):
+
+        _uncor_cov_mat_inverse = self.y_data_uncor_cov_mat_inverse
+        _cor_cov_mat = self.nuisance_y_data_cor_cov_mat
+        _full_cov_mat_inverse = self.y_data_cov_mat
+        _y_data = self.y_data
+        _y_model = self.eval_model_function(x=self.x)
+        _nuisance_size = self._data_container.simple_error_size
+        _residuals = _y_data - _y_model
+
+        _left_side = (_cor_cov_mat).dot(_uncor_cov_mat_inverse).dot(np.transpose(_cor_cov_mat))+np.eye(_nuisance_size, _nuisance_size)
+        _right_side =np.asarray(_cor_cov_mat).dot(np.asarray(_uncor_cov_mat_inverse)).dot(_residuals)
+
+        _nuisance_vector = np.linalg.solve(_left_side, np.transpose(_right_side))
+
+
+        return _nuisance_vector
 
     def report(self, output_stream=sys.stdout,
                show_data=True,
