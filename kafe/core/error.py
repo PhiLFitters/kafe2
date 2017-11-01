@@ -328,7 +328,7 @@ class SimpleGaussianError(GaussianErrorBase):
         if self.relative:
             if self.reference is None:
                 raise AttributeError("Requested 'absolute' errors for error object declared 'relative', but 'reference' not set!")
-            _abs_err = self.error * self.reference
+            _abs_err = self.error_rel * self.reference
         else:
             _abs_err = self.error
 
@@ -337,7 +337,7 @@ class SimpleGaussianError(GaussianErrorBase):
     def _calculate_cov_mat_rel(self):
         """Calculate relative covariance matrix for error object."""
         if self.relative:
-            _rel_err = self.error
+            _rel_err = self.error_rel
         else:
             if self.reference is None:
                 raise AttributeError("Requested 'relative' errors for error object declared 'absolute', but 'reference' not set!")
