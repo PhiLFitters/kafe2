@@ -2,10 +2,16 @@ import abc
 import inspect
 import numpy as np
 import re
+import six
 import string
+import sys
+import textwrap
 
+from collections import OrderedDict
+
+from ...tools import print_dict_as_table
 from ...core import get_minimizer, NexusFitter
-
+from ...tools import print_dict_recursive
 
 __all__ = ["FitBase", "FitException"]
 
@@ -207,3 +213,100 @@ class FitBase(object):
             _pln = par_latex_names_dict.get(_pf.name, None)
             if _pln is not None:
                 _pf.latex_name = _pln
+
+    def get_result_dict(self):
+        """Return a structured dictionary of human-readable strings characterizing the fit result."""
+        # TODO: warn if self._fitter.state_is_from_minimizer is False?
+        _result_dict = OrderedDict()
+
+        _result_dict['did_fit'] = self._fitter.state_is_from_minimizer
+
+        _cost = self.cost_function_value
+        _ndf = self._cost_function.ndf
+        _round_cost_sig = max(2, int(-np.floor(np.log(_cost)/np.log(10))) + 2 - 1)
+        _rounded_cost = round(_cost, _round_cost_sig)
+        _result_dict['cost'] = _rounded_cost
+
+        _result_dict['ndf'] = _ndf
+        _result_dict['cost/ndf'] = "{}/{} = {}".format(_rounded_cost, _ndf, round(_cost/_ndf, 3))
+
+        _result_dict['model function'] = self._model_function.formatter.get_formatted(
+            with_par_values=False,
+            n_significant_digits=2,
+            format_as_latex=False,
+            with_expression=True)
+
+        _result_dict['formatted fit parameters'] = dict()
+        for _pf in self._model_function.argument_formatters:
+            _result_dict['formatted fit parameters'][_pf.name] = _pf.get_formatted(with_name=False,
+                                                                                   with_value=True,
+                                                                                   with_errors=True,
+                                                                                   format_as_latex=False)
+
+        _result_dict['fit parameter values'] = self.parameter_values
+        _result_dict['fit parameter errors'] = self.parameter_errors
+        _result_dict['fit parameter covariance matrix'] = self.parameter_cov_mat
+
+        return _result_dict
+
+    def report(self, output_stream=sys.stdout):
+        """Print a summary of the fit state and/or results."""
+        _result_dict = self.get_result_dict()
+
+        ###print_dict_recursive(_result_dict, output_stream)
+
+        _indent = ' ' * 4
+
+        output_stream.write(textwrap.dedent("""
+                    ###############
+                    # Fit Results #
+                    ###############
+
+                """))
+
+        if not _result_dict['did_fit']:
+            output_stream.write('WARNING: No fit has been performed yet. Did you forget to run do_fit()?\n\n')
+
+        output_stream.write(_indent + "Model Parameters\n")
+        output_stream.write(_indent + "================\n\n")
+
+        for _pf in self._model_function.argument_formatters:
+            output_stream.write(_indent * 2)
+            output_stream.write(
+                _pf.get_formatted(with_name=True,
+                                  with_value=True,
+                                  with_errors=True,
+                                  format_as_latex=False)
+            )
+            output_stream.write('\n')
+        output_stream.write('\n')
+
+        output_stream.write(_indent + "Model Parameter Correlations\n")
+        output_stream.write(_indent + "============================\n\n")
+
+        _cor_mat_content = self.parameter_cor_mat
+        if _cor_mat_content is not None:
+            _cor_mat_as_dict = OrderedDict()
+            _cor_mat_as_dict['_invisible_first_column'] = self._fit_param_names
+            for _par_name, _row in zip(self._fit_param_names, self.parameter_cor_mat.T):
+                _cor_mat_as_dict[_par_name] = np.atleast_1d(np.squeeze(np.asarray(_row)))
+
+            print_dict_as_table(_cor_mat_as_dict, output_stream=output_stream, indent_level=2)
+        else:
+            output_stream.write(_indent * 2 + '<not available>\n')
+        output_stream.write('\n')
+
+        output_stream.write(_indent + "Cost Function\n")
+        output_stream.write(_indent + "=============\n\n")
+
+        _pf = self._cost_function._formatter
+        output_stream.write(_indent * 2 + "cost function: {}\n\n".format(_pf.description))
+        output_stream.write(_indent * 2 + "cost / ndf = ")
+        output_stream.write(
+            _pf.get_formatted(value=self.cost_function_value,
+                              n_degrees_of_freedom=self._cost_function.ndf,
+                              with_name=False,
+                              with_value_per_ndf=True,
+                              format_as_latex=False)
+        )
+        output_stream.write('\n')
