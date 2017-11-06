@@ -1,5 +1,6 @@
 from __future__ import print_function
 from kafe.core.contour import ContourFactory
+from kafe.core.error import CovMat
 try:
     import scipy.optimize as opt
 except ImportError:
@@ -87,7 +88,6 @@ class MinimizerScipyOptimize(object):
 
     @property
     def cor_mat(self):
-        raise NotImplementedError
         return self._par_cor_mat
 
     @property
@@ -189,6 +189,7 @@ class MinimizerScipyOptimize(object):
         if self._hessian_inv is not None:
             self._par_cov_mat = self._hessian_inv * 2.0 * self._err_def
             self._par_err = np.sqrt(np.diag(self._par_cov_mat))
+            self._par_cor_mat = CovMat(self._par_cov_mat).cor_mat
 
         self._fval = self._opt_result.fun
 
