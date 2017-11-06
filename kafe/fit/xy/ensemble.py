@@ -6,6 +6,7 @@ from .._base import FitEnsembleBase, FitEnsembleException
 from .cost import XYCostFunction_Chi2
 from .fit import XYFit
 
+import matplotlib as mpl
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gs
 
@@ -63,6 +64,11 @@ class XYFitEnsemble(FitEnsembleBase):
     AVAILABLE_RESULTS = {'parameter_pulls', 'y_data_pulls', 'cost'}
 
     _DEFAULT_PLOT_PDF_KWARGS = dict(marker='')
+    _DEFAULT_PLOT_EXPECTED_MEAN_KWARGS = dict(linewidth=1, marker='', linestyle='--',
+                                              # use second color in default color cycle
+                                              color=mpl.rcParams['axes.prop_cycle'].by_key()['color'][1])
+    _DEFAULT_PLOT_OBSERVED_MEAN_KWARGS = dict(linewidth=1, marker='', color='k')
+    _DEFAULT_PLOT_ONE_SIGMA_BAND_MEAN_KWARGS = dict(color='k', alpha=0.1)
 
     def __init__(self, n_experiments, x_support, model_function, model_parameters,
                  cost_function=XYCostFunction_Chi2(axes_to_use='y', errors_to_use='covariance')):
@@ -204,7 +210,9 @@ class XYFitEnsemble(FitEnsembleBase):
                  plot_hist_nbins=51,
                  plot_prob_density_label="expected density",
                  plot_prob_density=scipy.stats.norm,
-                 plot_prob_density_pars=dict(loc=0, scale=1)))
+                 plot_prob_density_pars=dict(loc=0, scale=1),
+                 plot_expected_mean=0.0,
+                 plot_expected_mean_error=1.0/np.sqrt(self.n_exp)))
         self._plot_config_dicts['y_data_pulls'].update(
             dict(stat_name="y_data_pulls",  # FIXME: get automatically
                  stat_name_formatted="y_data_pulls",  # FIXME: get automatically
@@ -214,7 +222,9 @@ class XYFitEnsemble(FitEnsembleBase):
                  plot_hist_nbins=51,
                  plot_prob_density_label="expected density",
                  plot_prob_density=scipy.stats.norm,
-                 plot_prob_density_pars=dict(loc=0, scale=1)))
+                 plot_prob_density_pars=dict(loc=0, scale=1),
+                 plot_expected_mean=0.0,
+                 plot_expected_mean_error=1.0/np.sqrt(self.n_exp)))
         self._plot_config_dicts['cost'].update(
             dict(stat_name="cost",  # FIXME: get automatically
                  stat_name_formatted="cost",  # FIXME: get automatically
@@ -224,7 +234,8 @@ class XYFitEnsemble(FitEnsembleBase):
                  plot_hist_nbins=51,
                  plot_prob_density_label="expected density",
                  plot_prob_density=scipy.stats.chi2,  # FIXME: assume chi2 for all cost functions -> change
-                 plot_prob_density_pars=dict(loc=0, df=self.n_df)))
+                 plot_prob_density_pars=dict(loc=0, df=self.n_df),
+                 plot_expected_mean=self.n_df))
 
     @staticmethod
     def _plot_hist(axes, data, **plot_config):
@@ -238,8 +249,40 @@ class XYFitEnsemble(FitEnsembleBase):
         _pdf = plot_config.get('plot_prob_density', None)
         _pdf_params = plot_config.get('plot_prob_density_pars', None)
         _pdf_label = plot_config.get('plot_prob_density_label', None)
+        _expected_mean = plot_config.get('plot_expected_mean', None)
+        _expected_mean_error = plot_config.get('plot_expected_mean_error', None)
 
         _bin_contents, _bin_edges, _ = axes.hist(data, bins=_nbins, range=_xrange, label=_label)
+
+        if _expected_mean is not None:
+            # only show observed mean if expected mean is requested/available
+            _observed_mean = np.mean(data)
+
+            _observed_mean_pull = None
+            if _expected_mean_error:
+                _observed_mean_pull = (_observed_mean - _expected_mean)/_expected_mean_error
+
+            axes.annotate(r"$\mu={}$".format(round(_observed_mean, 2)),
+                          xycoords='data',
+                          xy=(_observed_mean, 0),
+                          textcoords='offset points',
+                          xytext=(0, 25),
+                          fontsize=12,
+                          horizontalalignment='center',
+                          verticalalignment='bottom',
+                          arrowprops=dict(facecolor='k', shrink=.0)
+            )
+            if _expected_mean_error:
+                axes.annotate(r"$({:+.2f}\sigma)$".format(round(_observed_mean_pull, 2)),
+                              xycoords='data',
+                              xy=(_observed_mean, 0),
+                              textcoords='offset points',
+                              xytext=(0, 40),
+                              fontsize=12,
+                              horizontalalignment='center',
+                              verticalalignment='bottom',
+                              arrowprops=dict(arrowstyle='-')
+                )
 
         axes.yaxis.set_ticks([])  # don't show y ticks
 
@@ -259,6 +302,13 @@ class XYFitEnsemble(FitEnsembleBase):
             _pdf_x_support = np.linspace(*axes.get_xlim(), num=50)   # TODO: config entry for 'num'
             _pdf_y = _plot_prob_density_scale * _pdf.pdf(_pdf_x_support, **_pdf_params)
             axes.plot(_pdf_x_support, _pdf_y, label=_pdf_label, **XYFitEnsemble._DEFAULT_PLOT_PDF_KWARGS)
+
+        if _expected_mean is not None:
+            axes.axvline(_expected_mean, label="expected mean", **XYFitEnsemble._DEFAULT_PLOT_EXPECTED_MEAN_KWARGS)
+            if _expected_mean_error:
+                axes.axvspan(_expected_mean-_expected_mean_error, _expected_mean+_expected_mean_error,
+                             label="standard error of the mean",
+                             **XYFitEnsemble._DEFAULT_PLOT_ONE_SIGMA_BAND_MEAN_KWARGS)
 
         if _xlabel is not None:
             axes.set_xlabel(_xlabel)
