@@ -133,6 +133,10 @@ class NexusFitter(object):
         return self._minimizer.cov_mat
 
     @property
+    def fit_parameter_cor_mat(self):
+        return self._minimizer.cor_mat
+
+    @property
     def fit_parameter_errors(self):
         return self._minimizer.parameter_errors
 
