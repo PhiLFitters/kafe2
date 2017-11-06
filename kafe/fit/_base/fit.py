@@ -61,15 +61,15 @@ class FitBase(object):
 
     # -- public properties
 
-    # @abc.abstractproperty
-    # def data(self): pass
-    #
-    # @abc.abstractproperty
-    # def model(self): pass
-    #
+    @abc.abstractproperty
+    def data(self): pass
+
+    @abc.abstractproperty
+    def model(self): pass
+
     # @abc.abstractproperty
     # def data_error(self): pass
-    #
+
     # @abc.abstractproperty
     # def data_cov_mat(self): pass
     #
@@ -108,6 +108,11 @@ class FitBase(object):
     def parameter_cov_mat(self):
         """the current parameter covariance matrix"""
         return self._fitter.fit_parameter_cov_mat
+
+    @property
+    def parameter_cor_mat(self):
+        """the current parameter correlation matrix"""
+        return self._fitter.fit_parameter_cor_mat
 
     @property
     def parameter_name_value_dict(self):
