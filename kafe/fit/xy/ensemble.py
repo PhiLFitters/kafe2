@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.stats
+import six
 
 from ...core.error import CovMat
 from .._base import FitEnsembleBase, FitEnsembleException
@@ -34,6 +35,17 @@ def _heuristic_optimal_subplot_grid_size(n_subplots, aspect_ratio_priority=0.5):
     return s, s+k
 
 
+def _mean_error(array, axis, *args, **kwargs):
+    """Return the standard error of the mean; standard deviation/sqrt(N)"""
+    return np.std(array, axis=axis, *args, **kwargs) / np.sqrt(array.shape[axis])
+
+def _mean_pull(array, axis, expected_mean=0.0, expected_standard_deviation=1.0, *args, **kwargs):
+    """Return the deviation of the sample mean from the expected mean, normalized
+    to the standard error of the mean; standard deviation/sqrt(N)"""
+    _expected_mean_errors = expected_standard_deviation / np.sqrt(array.shape[axis])
+    _observed_means = np.mean(array, axis=axis) - expected_mean
+    return (_observed_means - expected_mean)/_expected_mean_errors
+
 
 class XYFitEnsembleException(FitEnsembleException):
     pass
@@ -62,6 +74,13 @@ class XYFitEnsemble(FitEnsembleBase):
     FIT_TYPE = XYFit
 
     AVAILABLE_RESULTS = {'parameter_pulls', 'y_data_pulls', 'cost'}
+    _DEFAULT_STATISTICS = {'mean', 'std', 'skew'}
+    STATISTICS_FUNCTIONS = {'mean': np.mean,
+                            'mean_error': _mean_error,
+                            'mean_pull': _mean_pull,
+                            'std': np.std,
+                            'skew': scipy.stats.skew,
+                            'kurtosis': scipy.stats.kurtosis}
 
     _DEFAULT_PLOT_PDF_KWARGS = dict(marker='')
     _DEFAULT_PLOT_EXPECTED_MEAN_KWARGS = dict(linewidth=1, marker='', linestyle='--',
@@ -378,6 +397,35 @@ class XYFitEnsemble(FitEnsembleBase):
             self._do_toy_fit()
             self._gather_results_from_toy_fit(_i_exp)
 
+    def get_results_statistics(self, results='all', statistics='all'):
+        """
+        Return a dictionary containing ...
+
+        :param results: names of retrieves fit variable for which to return statistics
+        :type results: iterable of str or ``'all'`` (get statistics for all retrieved variables)
+        :return: dict
+        """
+        if results == 'all':
+            results = self._requested_results
+
+        if statistics == 'all':
+            statistics = self.__class__._DEFAULT_STATISTICS
+
+        _dict_to_return = dict()
+        for _result_name in results:
+            _result_array = self._result_array_dicts.get(_result_name, None)
+            _current_result_dict = _dict_to_return[_result_name] = dict()
+
+            # calculate and store statistics
+            for _stat_name in statistics:
+                _stat = self.__class__.STATISTICS_FUNCTIONS.get(_stat_name, None)
+                if _stat is None:
+                    raise FitEnsembleException(
+                        "Unknown statistic '%s' requested!" % (_stat_name,))
+                _stat = _stat(_result_array, axis=0)
+                _current_result_dict[_stat_name] = _stat
+
+        return _dict_to_return
 
     def plot_results(self, results='all',
                      show_legend=True):
