@@ -118,29 +118,35 @@ class MinimizerIMinuit(object):
     @property
     def cov_mat(self):
         if self._par_cov_mat is None:
-            self._get_iminuit().hesse()
-            # FIX_UPSTREAM we need skip_fixed=False, but this is unsupported
-            # _mat = self._get_iminuit().matrix(correlation, skip_fixed=False)
+            try:
+                self._get_iminuit().hesse()
+                # FIX_UPSTREAM we need skip_fixed=False, but this is unsupported
+                # _mat = self._get_iminuit().matrix(correlation, skip_fixed=False)
 
-            # ... so use skip_fixed=True instead and fill in the gaps
-            _mat = self._get_iminuit().matrix(correlation=False, skip_fixed=True)
-            _mat = np.asmatrix(_mat)  # reshape into numpy matrix
-            _mat = self._fill_in_zeroes_for_fixed(_mat)  # fill in fixed par 'gaps'
-            self._par_cov_mat = _mat
+                # ... so use skip_fixed=True instead and fill in the gaps
+                _mat = self._get_iminuit().matrix(correlation=False, skip_fixed=True)
+                _mat = np.asmatrix(_mat)  # reshape into numpy matrix
+                _mat = self._fill_in_zeroes_for_fixed(_mat)  # fill in fixed par 'gaps'
+                self._par_cov_mat = _mat
+            except RuntimeError:
+                pass
         return self._par_cov_mat
 
     @property
     def cor_mat(self):
         if self._par_cor_mat is None:
-            self._get_iminuit().hesse()
-            # FIX_UPSTREAM we need skip_fixed=False, but this is unsupported
-            #_mat = self._get_iminuit().matrix(correlation, skip_fixed=False)
+            try:
+                self._get_iminuit().hesse()
+                # FIX_UPSTREAM we need skip_fixed=False, but this is unsupported
+                #_mat = self._get_iminuit().matrix(correlation, skip_fixed=False)
 
-            # ... so use skip_fixed=True instead and fill in the gaps
-            _mat = self._get_iminuit().matrix(correlation=True, skip_fixed=True)
-            _mat = np.asmatrix(_mat)  # reshape into numpy matrix
-            _mat = self._fill_in_zeroes_for_fixed(_mat)  # fill in fixed par 'gaps'
-            self._par_cor_mat = _mat
+                # ... so use skip_fixed=True instead and fill in the gaps
+                _mat = self._get_iminuit().matrix(correlation=True, skip_fixed=True)
+                _mat = np.asmatrix(_mat)  # reshape into numpy matrix
+                _mat = self._fill_in_zeroes_for_fixed(_mat)  # fill in fixed par 'gaps'
+                self._par_cor_mat = _mat
+            except RuntimeError:
+                pass
         return self._par_cor_mat
 
     @property
