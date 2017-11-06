@@ -131,6 +131,13 @@ class XYContainer(IndexedContainer):
         return _total_error_x.cov_mat_inverse
 
     @property
+    def x_cor_mat(self):
+        """absolute data *x* correlation matrix (:py:obj:`numpy.matrix`)"""
+        _total_error_x = self.get_total_error(axis=0)
+        return _total_error_x.cor_mat
+
+
+    @property
     def y(self):
         return self._get_data_for_axis(1)
 
@@ -163,6 +170,12 @@ class XYContainer(IndexedContainer):
         """inverse of absolute data *y* covariance matrix (:py:obj:`numpy.matrix`), or ``None`` if singular"""
         _total_error_y = self.get_total_error(axis=1)
         return _total_error_y.cov_mat_inverse
+
+    @property
+    def y_cor_mat(self):
+        """absolute data *y* correlation matrix (:py:obj:`numpy.matrix`)"""
+        _total_error_y = self.get_total_error(axis=1)
+        return _total_error_y.cor_mat
 
     @property
     def x_range(self):
