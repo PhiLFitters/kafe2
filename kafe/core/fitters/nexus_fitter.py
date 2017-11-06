@@ -151,6 +151,10 @@ class NexusFitter(object):
     def n_fit_par(self):
         return len(self.parameters_to_fit)
 
+    @property
+    def state_is_from_minimizer(self):
+        return self.__state_is_from_minimizer
+
     # -- public methods
 
     def do_fit(self):
