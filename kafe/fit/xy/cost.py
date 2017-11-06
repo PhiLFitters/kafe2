@@ -33,22 +33,28 @@ class XYCostFunction_Chi2(CostFunctionBase_Chi2):
         if axes_to_use.lower() == 'y':
             super(XYCostFunction_Chi2, self).__init__(errors_to_use=errors_to_use, fallback_on_singular=fallback_on_singular)
         elif axes_to_use.lower() == 'xy':
+            _cost_function_description = "chi-square with projected x errors"
             if errors_to_use is None:
                 _chi2_func = self.chi2_no_errors
+                _cost_function_description += ' (no errors)'
             elif errors_to_use.lower() == 'covariance':
                 if fallback_on_singular:
                     _chi2_func = self.chi2_xy_covariance_fallback
                 else:
                     _chi2_func = self.chi2_xy_covariance
+                _cost_function_description += ' (covariance matrix)'
             elif errors_to_use.lower() == 'pointwise':
                 if fallback_on_singular:
                     _chi2_func = self.chi2_xy_pointwise_errors_fallback
                 else:
                     _chi2_func = self.chi2_xy_pointwise_errors
+                _cost_function_description += ' (pointwise errors)'
             else:
                 raise CostFunctionException("Unknown value '%s' for 'errors_to_use': must be one of ('covariance', 'pointwise', None)")
             CostFunctionBase.__init__(self, cost_function=_chi2_func)
             self._formatter.latex_name = "\chi^2"
+            self._formatter.name = "chi2"
+            self._formatter.description = _cost_function_description
         else:
             raise CostFunctionException("Unknown value '%s' for 'axes_to_use': must be one of ('xy', 'y')")
 

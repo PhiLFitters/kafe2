@@ -200,24 +200,30 @@ class CostFunctionBase_Chi2(CostFunctionBase):
         :type fallback_on_singular: bool
         """
 
+        _cost_function_description = "chi-square"
         if errors_to_use is None:
             _chi2_func = self.chi2_no_errors
+            _cost_function_description += " (no uncertainties)"
         elif errors_to_use.lower() == 'covariance':
             if fallback_on_singular:
                 _chi2_func = self.chi2_covariance_fallback
             else:
                 _chi2_func = self.chi2_covariance
+            _cost_function_description += " (with covariance matrix)"
         elif errors_to_use.lower() == 'pointwise':
             if fallback_on_singular:
                 _chi2_func = self.chi2_pointwise_errors_fallback
             else:
                 _chi2_func = self.chi2_pointwise_errors
+            _cost_function_description += " (with pointwise errors)"
         else:
             raise CostFunctionException("Unknown value '%s' for 'errors_to_use': must be one of ('covariance', 'pointwise', None)")
 
         super(CostFunctionBase_Chi2, self).__init__(cost_function=_chi2_func)
 
         self._formatter.latex_name = "\chi^2"
+        self._formatter.name = "chi2"
+        self._formatter.description = _cost_function_description
 
     @staticmethod
     def chi2_no_errors(data, model):
@@ -299,16 +305,21 @@ class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
         :type data_point_distribution: ``'poisson'`` or ``'gaussian'``
         """
 
+        _cost_function_description = "negative log-likelihood"
         if data_point_distribution.lower() == 'gaussian':
             _nll_func = self.nll_gaussian
+            _cost_function_description += " (Gaussian uncertainties)"
         elif data_point_distribution.lower() == 'poisson':
             _nll_func = self.nll_poisson
+            _cost_function_description += " (Poisson uncertainties)"
         else:
             raise CostFunctionException("Unknown value '%s' for 'data_point_distribution': must be one of ('gaussian', 'poisson')!")
 
         super(CostFunctionBase_NegLogLikelihood, self).__init__(cost_function=_nll_func)
 
         self._formatter.latex_name = "-2\ln\mathcal{L}"
+        self._formatter.name = "nll"
+        self._formatter.description = _cost_function_description
 
     @staticmethod
     def nll_gaussian(data, model, total_error):
@@ -389,10 +400,13 @@ class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
         :type data_point_distribution: ``'poisson'`` or ``'gaussian'``
         """
 
+        _cost_function_description = "negative log-likelihood ratio"
         if data_point_distribution.lower() == 'gaussian':
             _nll_func = self.nllr_gaussian
+            _cost_function_description += " (Gaussian uncertainties)"
         elif data_point_distribution.lower() == 'poisson':
             _nll_func = self.nllr_poisson
+            _cost_function_description += " (Poisson uncertainties)"
         else:
             raise CostFunctionException(
                 "Unknown value '%s' for 'data_point_distribution': must be one of ('gaussian', 'poisson')!")
@@ -400,6 +414,8 @@ class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
         super(CostFunctionBase_NegLogLikelihoodRatio, self).__init__(cost_function=_nll_func)
 
         self._formatter.latex_name = r"-2\ln\mathcal{L}_{\rm R}"
+        self._formatter.name = "nllr"
+        self._formatter.description = _cost_function_description
 
     @staticmethod
     def nllr_gaussian(data, model, total_error):
