@@ -2,7 +2,10 @@ from collections import OrderedDict
 from copy import deepcopy
 
 import numpy as np
+import sys
+import textwrap
 
+from ...tools import print_dict_as_table
 from ...core import NexusFitter, Nexus
 from ...config import kc
 from .._base import FitException, FitBase, DataContainerBase, ModelParameterFormatter, CostFunctionBase
@@ -566,3 +569,79 @@ class XYFit(FitBase):
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x
         return self._param_model.eval_model_function(x=x, model_parameters=model_parameters)
+
+    def report(self, output_stream=sys.stdout,
+               show_data=True,
+               show_model=True):
+        """Print a summary of the fit state and/or results."""
+        _result_dict = self.get_result_dict()
+
+        _indent = ' ' * 4
+
+        if show_data:
+            output_stream.write(textwrap.dedent("""
+                ########
+                # Data #
+                ########
+
+            """))
+            _data_table_dict = OrderedDict()
+            _data_table_dict['X Data'] = self.x
+            if self._data_container.has_x_errors:
+                _data_table_dict['X Data Error'] = self.x_error
+                #_data_table_dict['X Data Total Covariance Matrix'] = self.x_cov_mat
+                _data_table_dict['X Data Total Correlation Matrix'] = self.x_cov_mat
+
+            print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=1)
+            output_stream.write('\n')
+
+            _data_table_dict = OrderedDict()
+            _data_table_dict['Y Data'] = self.y_data
+            if self.has_data_errors:
+                _data_table_dict['Y Data Error'] = self.y_data_error
+                #_data_table_dict['Y Data Total Covariance Matrix'] = self.y_data_cov_mat
+                _data_table_dict['Y Data Total Correlation Matrix'] = self.y_data_cor_mat
+
+            print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=1)
+
+        if show_model:
+            output_stream.write(textwrap.dedent("""
+                #########
+                # Model #
+                #########
+
+            """))
+
+            #output_stream.write(_indent)
+            output_stream.write(_indent + "Model Function\n")
+            output_stream.write(_indent + "==============\n\n")
+            output_stream.write(_indent * 2)
+            output_stream.write(
+                self._model_function.formatter.get_formatted(
+                    with_par_values=False,
+                    n_significant_digits=2,
+                    format_as_latex=False,
+                    with_expression=True
+                )
+            )
+            output_stream.write('\n\n\n')
+
+            # FIXME: x model
+            # _data_table_dict = OrderedDict()
+            # _data_table_dict['X Model'] = self.x
+            # _data_table_dict['X Model Error'] = self.x_error
+            # _data_table_dict['X Model Total Covariance Matrix'] = self.x_cov_mat
+
+            # print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=1)
+            # output_stream.write('\n')
+
+            _data_table_dict = OrderedDict()
+            _data_table_dict['Y Model'] = self.y_model
+            if self.has_model_errors:
+                _data_table_dict['Y Model Error'] = self.y_model_error
+                #_data_table_dict['Y Model Total Covariance Matrix'] = self.y_model_cov_mat
+                _data_table_dict['Y Model Total Correlation Matrix'] = self.y_model_cor_mat
+
+            print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=1)
+
+        super(XYFit, self).report()
