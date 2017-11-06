@@ -116,7 +116,7 @@ class CovMat(object):
         self._mat = np.asmatrix(matrix)
         if not (self._mat.shape[1] == self._mat.shape[0]):
             raise ValueError("Covariance matrix must be square matrix, shape %r given," % (self._mat.shape,))
-        if not (self._mat == self._mat.T).all():
+        if not np.allclose(self._mat - self._mat.T, 0):
             raise ValueError("Covariance matrix must be symmetric!")
         self._size = self._mat.shape[0]
         self._cond = None
