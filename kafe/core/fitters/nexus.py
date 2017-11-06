@@ -1,6 +1,7 @@
 import abc
 import inspect
 import six
+import sys
 import weakref
 from ast import parse
 from collections import OrderedDict
@@ -607,3 +608,18 @@ class Nexus(object):
             finally:
                 self.notify_dependencies(_target)
 
+    def print_state(self, output_stream=sys.stdout):
+        for _par_name, _par_obj in six.iteritems(self.__map_par_name_to_par_obj):
+
+            if isinstance(_par_obj, NodeFunction):
+                sys.stdout.write("{}({})".format(_par_name, ", ".join(_par_obj.parameter_names)))
+            else:
+                sys.stdout.write("{}".format(_par_name))
+
+            _content = "{}".format(_par_obj.value)
+
+            # if content repr has newlines, display as indented block
+            if '\n' in _content:
+                _content = "\n" + _content
+                _content = _content.replace("\n", "\n\t")
+            sys.stdout.write(" = {}\n".format(_content))
