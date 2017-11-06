@@ -155,7 +155,8 @@ class ModelParameterFormatter(object):
                 _display_string += "%s" % (self.name,)
 
         if with_value:
-            _display_string += " = "
+            if with_name:
+                _display_string += " = "
 
             # fallback to rounding to 10^(-1) if value is zero
             _log_abs_value = -1
@@ -240,6 +241,8 @@ class ModelFunctionFormatter(object):
         if self._latex_name is None:
             self._latex_name = self._latexify_ascii(self._name)
 
+        self._description = None
+
     @staticmethod
     def _latexify_ascii(ascii_string):
         _lpn = ascii_string.replace('_', r"\_")
@@ -321,6 +324,11 @@ class ModelFunctionFormatter(object):
         """a plain-text-formatted string indicating the parameter name"""
         return self._name
 
+    @name.setter
+    def name(self, new_name):
+        # TODO: validate
+        self._name = new_name
+
     @property
     def latex_name(self):
         """a LaTeX-formatted string indicating the function name"""
@@ -330,6 +338,16 @@ class ModelFunctionFormatter(object):
     def latex_name(self, new_latex_name):
         # TODO: validate
         self._latex_name = new_latex_name
+
+    @property
+    def description(self):
+        """a short plain-text description of the function"""
+        return self._description or "<no description provided>"
+
+    @description.setter
+    def description(self, new_description):
+        # TODO: validate
+        self._description = new_description
 
     def get_formatted(self, with_par_values=True, n_significant_digits=2, format_as_latex=False, with_expression=False):
         """
@@ -364,6 +382,7 @@ class ModelFunctionFormatter(object):
 class CostFunctionFormatter(ModelFunctionFormatter):
 
     def get_formatted(self, value=None, n_degrees_of_freedom=None,
+                      with_name=True,
                       with_value_per_ndf=True, format_as_latex=False):
         """
         Get a formatted string representing this cost function.
@@ -372,6 +391,7 @@ class CostFunctionFormatter(ModelFunctionFormatter):
         :type value: float
         :param n_degrees_of_freedom: number of degrees of freedom (if not ``None``, the returned string will include this)
         :type n_degrees_of_freedom: int
+        :param with_name: if ``True``, the returned string will include the cost function name
         :param with_value_per_ndf: if ``True``, the returned string will include the value-ndf ratio as a decimal value
         :param format_as_latex: if ``True``, the returned string will be formatted using LaTeX syntax
         :return: string
@@ -390,7 +410,10 @@ class CostFunctionFormatter(ModelFunctionFormatter):
                 if with_value_per_ndf:
                     _value_string = "%s = %.4g" % (_value_string, float(value)/n_degrees_of_freedom)
 
-        _out_string = "%s = %s" % (_name_string, _value_string)
+        if with_name:
+            _out_string = "%s = %s" % (_name_string, _value_string)
+        else:
+            _out_string = "%s" % (_value_string,)
 
         if format_as_latex:
             _out_string = "$%s$" % (_out_string ,)
