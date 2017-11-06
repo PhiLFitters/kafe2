@@ -252,7 +252,7 @@ class XYFit(FitBase):
     def x_data_cov_mat(self):
         """the data *x* covariance matrix"""
         return self._data_container.x_cov_mat
-    
+
     @property
     def y_data_cov_mat(self):
         """the data *y* covariance matrix"""
@@ -267,6 +267,16 @@ class XYFit(FitBase):
     def y_data_cov_mat_inverse(self):
         """inverse of the data *y* covariance matrix (or ``None`` if singular)"""
         return self._data_container.y_cov_mat_inverse
+
+    @property
+    def x_data_cor_mat(self):
+        """the data *x* correlation matrix"""
+        return self._data_container.x_cor_mat
+
+    @property
+    def y_data_cor_mat(self):
+        """the data *y* correlation matrix"""
+        return self._data_container.y_cor_mat
 
     @property
     def y_model(self):
@@ -316,6 +326,20 @@ class XYFit(FitBase):
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x
         return self._param_model.y_cov_mat_inverse
+
+    @property
+    def x_model_cor_mat(self):
+        """the model *x* correlation matrix"""
+        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
+        self._param_model.x = self.x
+        return self._param_model.y_cor_mat
+
+    @property
+    def y_model_cor_mat(self):
+        """the model *y* correlation matrix"""
+        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
+        self._param_model.x = self.x
+        return self._param_model.y_cor_mat
 
     @property
     def x_total_error(self):
