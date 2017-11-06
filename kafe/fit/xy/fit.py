@@ -234,6 +234,11 @@ class XYFit(FitBase):
             self._data_container = self._new_data_container(_x_data, _y_data, dtype=float)
 
     @property
+    def model(self):
+        """(2, N)-array containing *x* and *y* model values"""
+        return self._param_model.data
+
+    @property
     def x_data_error(self):
         """array of pointwise *x* data uncertainties"""
         return self._data_container.x_err
