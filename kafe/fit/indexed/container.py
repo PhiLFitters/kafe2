@@ -83,6 +83,12 @@ class IndexedContainer(DataContainerBase):
         _total_error = self.get_total_error()
         return _total_error.cov_mat_inverse
 
+    @property
+    def cor_mat(self):
+        """absolute data correlation matrix (:py:obj:`numpy.matrix`)"""
+        _total_error = self.get_total_error()
+        return _total_error.cor_mat
+
     # -- public methods
 
     def add_simple_error(self, err_val, correlation=0, relative=False):

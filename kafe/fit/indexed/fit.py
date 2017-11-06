@@ -168,6 +168,11 @@ class IndexedFit(FitBase):
         return self._data_container.cov_mat_inverse
 
     @property
+    def data_cor_mat(self):
+        """the data correlation matrix"""
+        return self._data_container.cor_mat
+
+    @property
     def model(self):
         """array of model predictions for the data points"""
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
@@ -190,6 +195,12 @@ class IndexedFit(FitBase):
         """inverse of the model covariance matrix (or ``None`` if singular)"""
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         return self._param_model.cov_mat_inverse
+
+    @property
+    def model_cor_mat(self):
+        """the model correlation matrix"""
+        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
+        return self._param_model.cor_mat
 
     @property
     def total_error(self):
