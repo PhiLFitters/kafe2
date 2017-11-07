@@ -90,7 +90,8 @@ class XYFitEnsemble(FitEnsembleBase):
     _DEFAULT_PLOT_ONE_SIGMA_BAND_MEAN_KWARGS = dict(color='k', alpha=0.1)
 
     def __init__(self, n_experiments, x_support, model_function, model_parameters,
-                 cost_function=XYCostFunction_Chi2(axes_to_use='y', errors_to_use='covariance')):
+                 cost_function=XYCostFunction_Chi2(axes_to_use='y', errors_to_use='covariance'),
+                 requested_results=None):
         """
         Construct an :py:obj:`~kafe.fit.XYFitEnsemble` object.
 
@@ -104,6 +105,8 @@ class XYFitEnsemble(FitEnsembleBase):
         :type model_parameters: iterable of float
         :param cost_function: the cost function
         :type cost_function: :py:class:`~kafe.fit._base.CostFunctionBase`-derived or unwrapped native Python function
+        :param requested_results: list of result variables to collect for each toy fit
+        :type requested_results: iterable of str
         """
         self._n_exp = n_experiments
         self._x_support = np.asarray(x_support, dtype=float)
@@ -121,12 +124,15 @@ class XYFitEnsemble(FitEnsembleBase):
         self._ref_y_data = self._toy_fit.eval_model_function(x=self._x_support,
                                                              model_parameters=self._model_parameters)
 
-        self._requested_results = {'parameter_pulls', 'y_data_pulls', 'cost'}
-
-        _unavailable_results = set(self._requested_results) - self.AVAILABLE_RESULTS
-        if _unavailable_results:
-            raise ValueError("Requested unavailable test statistics: %r"
-                             % (_unavailable_results,))
+        self._requested_results = requested_results
+        if self._requested_results is None:
+            self._requested_results = self._DEFAULT_RESULTS
+        else:
+            # validate list of results requested by user
+            _unavailable_results = set(self._requested_results) - set(self.RESULTS_PROPERTIES.keys())
+            if _unavailable_results:
+                raise ValueError("Requested unavailable result variable(s): %r"
+                                 % (_unavailable_results,))
 
         self._initialize_result_arrays()
 
@@ -173,33 +179,33 @@ class XYFitEnsemble(FitEnsembleBase):
         self._toy_fit._data_container.y = _y_data
 
     def _gather_results_from_toy_fit(self, i_exp):
-        for _stat_name in self._requested_results:
-            self._result_array_dicts[_stat_name][i_exp] = self._get_stat(_stat_name)
+        for _var_name in self._requested_results:
+            self._result_array_dicts[_var_name][i_exp] = self._get_var(_var_name)
 
     def _do_toy_fit(self):
         """run fit with current pseudo-data"""
         self._toy_fit.do_fit()
 
-    def _get_stat_shape_spec(self, stat_name):
-        """get the required shape for the test statistic array"""
+    def _get_var_shape_spec(self, var_name):
+        """get the required shape for the result variable array"""
         _shape = (self.n_exp,)
-        _prop_shapes = self.RESULTS_SHAPE_SPECS[stat_name]
+        _prop_shapes = self.RESULTS_SHAPE_SPECS[var_name]
         if _prop_shapes is None:
             return _shape
         for _prop in _prop_shapes:
             _shape += (_prop.fget(self),)
         return _shape
 
-    def _get_stat(self, stat_name):
-        """get the value of the test statistics for the current fit"""
-        return self.RESULTS_PROPERTIES[stat_name].fget(self)
+    def _get_var(self, var_name):
+        """get the value of the result variables for the current fit"""
+        return self.RESULTS_PROPERTIES[var_name].fget(self)
 
     def _initialize_result_arrays(self):
         """initialize the a"""
         self._result_array_dicts = {}
-        for _stat_name in self._requested_results:
-            _shape = self._get_stat_shape_spec(_stat_name)
-            self._result_array_dicts[_stat_name] = np.zeros(_shape)
+        for _var_name in self._requested_results:
+            _shape = self._get_var_shape_spec(_var_name)
+            self._result_array_dicts[_var_name] = np.zeros(_shape)
 
     def _make_figure_gs(self, figsize=(8, 8), nrows=1, ncols=1,
                         left=0.1, bottom=0.1,
@@ -219,48 +225,54 @@ class XYFitEnsemble(FitEnsembleBase):
 
     def _init_results_plot_config_dicts(self):
         """initialize the configuration dictionaries relevant for plotting"""
-        self._plot_config_dicts = {_result: dict() for _result in self._requested_results}
-        self._plot_config_dicts['parameter_pulls'].update(
-            dict(stat_name="parameter_pulls",  # FIXME: get automatically
-                 stat_name_formatted="parameter_pulls",  # FIXME: get automatically
-                 plot_xrange=(-3, 3),
-                 plot_xlabel=["Pull ${}$".format(_arg_formatter.latex_name) for _arg_formatter in self._toy_fit._model_function.argument_formatters],
-                 plot_label="{} pseudoexperiments".format(self.n_exp),
-                 plot_hist_nbins=51,
-                 plot_prob_density_label="expected density",
-                 plot_prob_density=scipy.stats.norm,
-                 plot_prob_density_pars=dict(loc=0, scale=1),
-                 plot_expected_mean=0.0,
-                 plot_expected_mean_error=1.0/np.sqrt(self.n_exp)))
-        self._plot_config_dicts['y_data_pulls'].update(
-            dict(stat_name="y_data_pulls",  # FIXME: get automatically
-                 stat_name_formatted="y_data_pulls",  # FIXME: get automatically
-                 plot_xrange=(-3, 3),
-                 plot_xlabel=['Pull $y_{%d}$' % (_i,) for _i in six.moves.range(self.n_dat)],
-                 plot_label="{} pseudoexperiments".format(self.n_exp),
-                 plot_hist_nbins=51,
-                 plot_prob_density_label="expected density",
-                 plot_prob_density=scipy.stats.norm,
-                 plot_prob_density_pars=dict(loc=0, scale=1),
-                 plot_expected_mean=0.0,
-                 plot_expected_mean_error=1.0/np.sqrt(self.n_exp)))
-        self._plot_config_dicts['cost'].update(
-            dict(stat_name="cost",  # FIXME: get automatically
-                 stat_name_formatted="cost",  # FIXME: get automatically
-                 plot_xrange=(0, 3*self.n_df),
-                 plot_xlabel="${}$".format(self._toy_fit._cost_function.formatter.latex_name),
-                 plot_label="{} pseudoexperiments".format(self.n_exp),
-                 plot_hist_nbins=51,
-                 plot_prob_density_label="expected density",
-                 plot_prob_density=scipy.stats.chi2,  # FIXME: assume chi2 for all cost functions -> change
-                 plot_prob_density_pars=dict(loc=0, df=self.n_df),
-                 plot_expected_mean=self.n_df))
+        self._plot_config_dicts = {} #_result: dict() for _result in self._requested_results}
+
+        if 'parameter_pulls' in self._requested_results:
+            self._plot_config_dicts['parameter_pulls'] = dict(
+                var_name="parameter_pulls",  # FIXME: get automatically
+                var_name_formatted="parameter_pulls",  # FIXME: get automatically
+                var_value_ranges=[(-3, 3) for _i in six.moves.range(self.n_dat)],
+                var_axis_label=["Pull ${}$".format(_arg_formatter.latex_name) for _arg_formatter in self._toy_fit._model_function.argument_formatters],
+                plot_label="{} pseudoexperiments".format(self.n_exp),
+                plot_hist_nbins=51,
+                plot_prob_density_label="expected density",
+                plot_prob_density=scipy.stats.norm,
+                plot_prob_density_pars=dict(loc=0, scale=1),
+                plot_expected_mean=0.0,
+                plot_expected_mean_error=1.0/np.sqrt(self.n_exp))
+
+        if 'y_data_pulls' in self._requested_results:
+            self._plot_config_dicts['y_data_pulls'] = dict(
+                var_name="y_data_pulls",  # FIXME: get automatically
+                var_name_formatted="y_data_pulls",  # FIXME: get automatically
+                var_value_ranges=[(-3, 3) for _i in six.moves.range(self.n_dat)],
+                var_axis_label=['Pull $y_{%d}$' % (_i,) for _i in six.moves.range(self.n_dat)],
+                plot_label="{} pseudoexperiments".format(self.n_exp),
+                plot_hist_nbins=51,
+                plot_prob_density_label="expected density",
+                plot_prob_density=scipy.stats.norm,
+                plot_prob_density_pars=dict(loc=0, scale=1),
+                plot_expected_mean=0.0,
+                plot_expected_mean_error=1.0/np.sqrt(self.n_exp))
+
+        if 'cost' in self._requested_results:
+            self._plot_config_dicts['cost'] = dict(
+                var_name="cost",  # FIXME: get automatically
+                var_name_formatted="cost",  # FIXME: get automatically
+                var_value_ranges=(0, 3*self.n_df),
+                var_axis_label="${}$".format(self._toy_fit._cost_function.formatter.latex_name),
+                plot_label="{} pseudoexperiments".format(self.n_exp),
+                plot_hist_nbins=51,
+                plot_prob_density_label="expected density",
+                plot_prob_density=scipy.stats.chi2,  # FIXME: assume chi2 for all cost functions -> change
+                plot_prob_density_pars=dict(loc=0, df=self.n_df),
+                plot_expected_mean=self.n_df)
 
     @staticmethod
     def _plot_hist(axes, data, **plot_config):
         """plot a histogram for a result variable, taking the plot configuration dictionaries into account"""
-        _stat_name = plot_config.get('stat_name', None)
-        _stat_name_formatted = plot_config.get('stat_name_formatted', None)
+        _var_name = plot_config.get('var_name', None)
+        _var_name_formatted = plot_config.get('var_name_formatted', None)
         _xrange = plot_config.get('plot_xrange', None)
         _xlabel = plot_config.get('plot_xlabel', None)
         _label = plot_config.get('plot_label', None)
@@ -279,7 +291,7 @@ class XYFitEnsemble(FitEnsembleBase):
 
             _observed_mean_pull = None
             if _expected_mean_error:
-                _observed_mean_pull = (_observed_mean - _expected_mean)/_expected_mean_error
+                _observed_mean_pull = (_observed_mean - _expected_mean) / _expected_mean_error
 
             axes.annotate(r"$\mu={}$".format(round(_observed_mean, 2)),
                           xycoords='data',
@@ -397,12 +409,40 @@ class XYFitEnsemble(FitEnsembleBase):
             self._do_toy_fit()
             self._gather_results_from_toy_fit(_i_exp)
 
+    def get_results(self, *results):
+        """
+        Return a dictionary containing the ensembles of result variables.
+
+        :param results: names of result variables to retrieve
+        :type results: iterable of str. Calling without arguments retrieves *all* collected results.
+        :return: dict
+        """
+        if not results:
+            results = self._requested_results
+        else:
+            # validate list of results requested by user
+            _unavailable_results = set(self._requested_results) - set(self.RESULTS_PROPERTIES.keys())
+            if _unavailable_results:
+                raise ValueError("Requested unavailable result variable(s): %r"
+                                 % (_unavailable_results,))
+
+        _dict_to_return = dict()
+        for _result_name in results:
+            _result_array = self._result_array_dicts.get(_result_name, None)
+            if _result_array is None:
+                raise FitEnsembleException("Cannot retrieve result '{}': variable not collected!")
+            _dict_to_return[_result_name] = _result_array
+
+        return _dict_to_return
+
     def get_results_statistics(self, results='all', statistics='all'):
         """
-        Return a dictionary containing ...
+        Return a dictionary containing statistics (e.g. mean) of the result variables.
 
-        :param results: names of retrieves fit variable for which to return statistics
+        :param results: names of retrieved fit variable for which to return statistics
         :type results: iterable of str or ``'all'`` (get statistics for all retrieved variables)
+        :param statistics: names of statistics to retrieve for each result variable
+        :type statistics: iterable of str or ``'all'`` (get all statistics for each retrieved variable)
         :return: dict
         """
         if results == 'all':
@@ -439,6 +479,12 @@ class XYFitEnsemble(FitEnsembleBase):
         """
         if results == 'all':
             results = self._requested_results
+        else:
+            # validate list of results requested by user
+            _unavailable_results = set(self._requested_results) - set(self.RESULTS_PROPERTIES.keys())
+            if _unavailable_results:
+                raise ValueError("Requested unavailable result variable(s): %r"
+                                 % (_unavailable_results,))
 
         self._init_results_plot_config_dicts()
 
@@ -468,7 +514,8 @@ class XYFitEnsemble(FitEnsembleBase):
                 _fig, _gs = self._make_figure_gs(figsize=(8, 8), nrows=_nrows, ncols=_ncols)
                 for _i_plot in six.moves.range(_nplots):
                     _plot_config_subplot = _plot_config.copy()
-                    _plot_config_subplot['plot_xlabel'] = _plot_config_subplot['plot_xlabel'][_i_plot]
+                    _plot_config_subplot['plot_xlabel'] = _plot_config_subplot['var_axis_label'][_i_plot]
+                    _plot_config_subplot['plot_xrange'] = _plot_config_subplot['var_value_ranges'][_i_plot]
                     _row = int(_i_plot/_ncols)
                     _col = _i_plot % _ncols
                     _ax = plt.subplot(_gs[_row, _col])
@@ -487,7 +534,8 @@ class XYFitEnsemble(FitEnsembleBase):
                 for _row in six.moves.range(_nrows):
                     for _col in six.moves.range(_ncols):
                         _plot_config_subplot = _plot_config.copy()
-                        _plot_config_subplot['plot_xlabel'] = _plot_config_subplot['plot_xlabel'][_row, _col]
+                        _plot_config_subplot['plot_xlabel'] = _plot_config_subplot['var_axis_label'][_row, _col]
+                        _plot_config_subplot['plot_xrange'] = _plot_config_subplot['var_value_ranges'][_row, _col]
                         _ax = plt.subplot(_gs[_row, _col])
                         self._plot_hist(_ax, _result_array[:, _row, _col], **_plot_config_subplot)
 
@@ -528,3 +576,5 @@ class XYFitEnsemble(FitEnsembleBase):
     RESULTS_SHAPE_SPECS = {'parameter_pulls': (n_par,),
                            'y_data_pulls': (n_dat,),
                            'cost': None}
+
+    _DEFAULT_RESULTS = {'y_data_pulls', 'parameter_pulls', 'cost'}
