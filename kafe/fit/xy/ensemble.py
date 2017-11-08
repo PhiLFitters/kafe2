@@ -4,6 +4,7 @@ import six
 
 from ...core.error import CovMat
 from .._base import FitEnsembleBase, FitEnsembleException
+from ..tools.ensemble import EnsembleVariable, EnsembleVariablePlotter
 from .cost import XYCostFunction_Chi2
 from .fit import XYFit
 
@@ -35,20 +36,9 @@ def _heuristic_optimal_subplot_grid_size(n_subplots, aspect_ratio_priority=0.5):
     return s, s+k
 
 
-def _mean_error(array, axis, *args, **kwargs):
-    """Return the standard error of the mean; standard deviation/sqrt(N)"""
-    return np.std(array, axis=axis, *args, **kwargs) / np.sqrt(array.shape[axis])
-
-def _mean_pull(array, axis, expected_mean=0.0, expected_standard_deviation=1.0, *args, **kwargs):
-    """Return the deviation of the sample mean from the expected mean, normalized
-    to the standard error of the mean; standard deviation/sqrt(N)"""
-    _expected_mean_errors = expected_standard_deviation / np.sqrt(array.shape[axis])
-    _observed_means = np.mean(array, axis=axis) - expected_mean
-    return (_observed_means - expected_mean)/_expected_mean_errors
-
-
 class XYFitEnsembleException(FitEnsembleException):
     pass
+
 
 class XYFitEnsemble(FitEnsembleBase):
     """
@@ -73,21 +63,15 @@ class XYFitEnsemble(FitEnsembleBase):
     """
     FIT_TYPE = XYFit
 
-    AVAILABLE_RESULTS = {'parameter_pulls', 'y_data_pulls', 'cost'}
-    _DEFAULT_STATISTICS = {'mean', 'std', 'skew'}
-    STATISTICS_FUNCTIONS = {'mean': np.mean,
-                            'mean_error': _mean_error,
-                            'mean_pull': _mean_pull,
-                            'std': np.std,
-                            'skew': scipy.stats.skew,
-                            'kurtosis': scipy.stats.kurtosis}
-
-    _DEFAULT_PLOT_PDF_KWARGS = dict(marker='')
-    _DEFAULT_PLOT_EXPECTED_MEAN_KWARGS = dict(linewidth=1, marker='', linestyle='--',
-                                              # use second color in default color cycle
-                                              color=mpl.rcParams['axes.prop_cycle'].by_key()['color'][1])
-    _DEFAULT_PLOT_OBSERVED_MEAN_KWARGS = dict(linewidth=1, marker='', color='k')
-    _DEFAULT_PLOT_ONE_SIGMA_BAND_MEAN_KWARGS = dict(color='k', alpha=0.1)
+    AVAILABLE_STATISTICS = {
+        'mean': EnsembleVariable.mean,
+        'std': EnsembleVariable.std,
+        'skew': EnsembleVariable.skew,
+        'kurtosis': EnsembleVariable.kurtosis,
+        'cor_mat': EnsembleVariable.cor_mat,
+        'cov_mat': EnsembleVariable.cov_mat,
+    }
+    _DEFAULT_STATISTICS = {'mean', 'std'}
 
     def __init__(self, n_experiments, x_support, model_function, model_parameters,
                  cost_function=XYCostFunction_Chi2(axes_to_use='y', errors_to_use='covariance'),
@@ -129,13 +113,12 @@ class XYFitEnsemble(FitEnsembleBase):
             self._requested_results = self._DEFAULT_RESULTS
         else:
             # validate list of results requested by user
-            _unavailable_results = set(self._requested_results) - set(self.RESULTS_PROPERTIES.keys())
+            _unavailable_results = set(self._requested_results) - set(self.AVAILABLE_RESULTS.keys())
             if _unavailable_results:
                 raise ValueError("Requested unavailable result variable(s): %r"
                                  % (_unavailable_results,))
 
-        self._initialize_result_arrays()
-
+        self._initialize_ensemble_variables()
 
     def _generate_pseudodata(self):
         """generate new pseudo-data according to fit error model and commit to data container"""
@@ -153,7 +136,8 @@ class XYFitEnsemble(FitEnsembleBase):
             _x_cov_mat = CovMat(self._toy_fit.x_total_cov_mat)  # need cholesky decomposition from CovMat object
             _x_cholesky_l = _x_cov_mat.chol
             if _x_cholesky_l is None:
-               raise XYFitEnsembleException("Cannot generate pseudo-data: The total 'x' covariance matrix is not positive definite!")
+               raise XYFitEnsembleException("Cannot generate pseudo-data: The total 'x' "
+                                            "covariance matrix is not positive definite!")
             _x_lu = _x_cholesky_l.dot(np.matrix(np.diag(np.diag(_x_cholesky_l))).I)
             _x_jitter = np.array(_x_lu).dot(_x_jitter)
             _x_data += _x_jitter
@@ -169,7 +153,8 @@ class XYFitEnsemble(FitEnsembleBase):
         _y_cov_mat = CovMat(self._toy_fit.y_total_cov_mat)  # need cholesky decomposition from CovMat object
         _y_cholesky_l = _y_cov_mat.chol
         if _y_cholesky_l is None:
-           raise XYFitEnsembleException("Cannot generate pseudo-data: The total 'y' covariance matrix is not positive definite!")
+           raise XYFitEnsembleException("Cannot generate pseudo-data: The total 'y' covariance matrix "
+                                        "is not positive definite!")
         _y_lu = _y_cholesky_l.dot(np.matrix(np.diag(np.diag(_y_cholesky_l))).I)
         _y_jitter = np.array(_y_lu).T.dot(_y_jitter)
         _y_data += _y_jitter
@@ -180,7 +165,7 @@ class XYFitEnsemble(FitEnsembleBase):
 
     def _gather_results_from_toy_fit(self, i_exp):
         for _var_name in self._requested_results:
-            self._result_array_dicts[_var_name][i_exp] = self._get_var(_var_name)
+            self._ensemble_variables[_var_name].set_value(index=i_exp, variable_value=self._get_var(_var_name))
 
     def _do_toy_fit(self):
         """run fit with current pseudo-data"""
@@ -198,14 +183,47 @@ class XYFitEnsemble(FitEnsembleBase):
 
     def _get_var(self, var_name):
         """get the value of the result variables for the current fit"""
-        return self.RESULTS_PROPERTIES[var_name].fget(self)
+        return self.AVAILABLE_RESULTS[var_name].fget(self)
 
-    def _initialize_result_arrays(self):
-        """initialize the a"""
-        self._result_array_dicts = {}
-        for _var_name in self._requested_results:
-            _shape = self._get_var_shape_spec(_var_name)
-            self._result_array_dicts[_var_name] = np.zeros(_shape)
+    def _initialize_ensemble_variables(self):
+        self._ensemble_variables = {}
+        self._ensemble_variable_plotters = {}
+        if 'y_pulls' in self._requested_results:
+            self._ensemble_variables['y_pulls'] = EnsembleVariable(
+                ensemble_array=np.zeros((self._n_exp, self.n_dat)),
+                distribution=scipy.stats.norm,
+                distribution_parameters=dict(loc=0, scale=1)
+            )
+            self._ensemble_variable_plotters['y_pulls'] = EnsembleVariablePlotter(
+                ensemble_variable=self._ensemble_variables['y_pulls'],
+                value_ranges=(-3, 3),
+                variable_labels=['Pull $y_{%d}$' % (_i,) for _i in six.moves.range(self.n_dat)]
+            )
+
+        if 'parameter_pulls' in self._requested_results:
+            self._ensemble_variables['parameter_pulls'] = EnsembleVariable(
+                ensemble_array=np.zeros((self._n_exp, self._n_par)),
+                distribution=scipy.stats.norm,
+                distribution_parameters=dict(loc=0, scale=1)
+            )
+            self._ensemble_variable_plotters['parameter_pulls'] = EnsembleVariablePlotter(
+                ensemble_variable=self._ensemble_variables['parameter_pulls'],
+                value_ranges=(-3, 3),
+                variable_labels=["Pull ${}$".format(_arg_formatter.latex_name)
+                                 for _arg_formatter in self._toy_fit._model_function.argument_formatters]
+            )
+
+        if 'cost' in self._requested_results:
+            self._ensemble_variables['cost'] = EnsembleVariable(
+                ensemble_array=np.zeros((self._n_exp,)),
+                distribution=scipy.stats.chi2,  # FIXME: assume chi2 for all cost functions -> change
+                distribution_parameters=dict(loc=0, df=self.n_df)
+            )
+            self._ensemble_variable_plotters['cost'] = EnsembleVariablePlotter(
+                ensemble_variable=self._ensemble_variables['cost'],
+                value_ranges=(0, 3*self.n_df),
+                variable_labels="${}$".format(self._toy_fit._cost_function.formatter.latex_name)
+            )
 
     def _make_figure_gs(self, figsize=(8, 8), nrows=1, ncols=1,
                         left=0.1, bottom=0.1,
@@ -223,143 +241,21 @@ class XYFitEnsemble(FitEnsembleBase):
                           height_ratios=None)
         return _fig, _gs
 
-    def _init_results_plot_config_dicts(self):
-        """initialize the configuration dictionaries relevant for plotting"""
-        self._plot_config_dicts = {} #_result: dict() for _result in self._requested_results}
-
-        if 'parameter_pulls' in self._requested_results:
-            self._plot_config_dicts['parameter_pulls'] = dict(
-                var_name="parameter_pulls",  # FIXME: get automatically
-                var_name_formatted="parameter_pulls",  # FIXME: get automatically
-                var_value_ranges=[(-3, 3) for _i in six.moves.range(self.n_dat)],
-                var_axis_label=["Pull ${}$".format(_arg_formatter.latex_name) for _arg_formatter in self._toy_fit._model_function.argument_formatters],
-                plot_label="{} pseudoexperiments".format(self.n_exp),
-                plot_hist_nbins=51,
-                plot_prob_density_label="expected density",
-                plot_prob_density=scipy.stats.norm,
-                plot_prob_density_pars=dict(loc=0, scale=1),
-                plot_expected_mean=0.0,
-                plot_expected_mean_error=1.0/np.sqrt(self.n_exp))
-
-        if 'y_data_pulls' in self._requested_results:
-            self._plot_config_dicts['y_data_pulls'] = dict(
-                var_name="y_data_pulls",  # FIXME: get automatically
-                var_name_formatted="y_data_pulls",  # FIXME: get automatically
-                var_value_ranges=[(-3, 3) for _i in six.moves.range(self.n_dat)],
-                var_axis_label=['Pull $y_{%d}$' % (_i,) for _i in six.moves.range(self.n_dat)],
-                plot_label="{} pseudoexperiments".format(self.n_exp),
-                plot_hist_nbins=51,
-                plot_prob_density_label="expected density",
-                plot_prob_density=scipy.stats.norm,
-                plot_prob_density_pars=dict(loc=0, scale=1),
-                plot_expected_mean=0.0,
-                plot_expected_mean_error=1.0/np.sqrt(self.n_exp))
-
-        if 'cost' in self._requested_results:
-            self._plot_config_dicts['cost'] = dict(
-                var_name="cost",  # FIXME: get automatically
-                var_name_formatted="cost",  # FIXME: get automatically
-                var_value_ranges=(0, 3*self.n_df),
-                var_axis_label="${}$".format(self._toy_fit._cost_function.formatter.latex_name),
-                plot_label="{} pseudoexperiments".format(self.n_exp),
-                plot_hist_nbins=51,
-                plot_prob_density_label="expected density",
-                plot_prob_density=scipy.stats.chi2,  # FIXME: assume chi2 for all cost functions -> change
-                plot_prob_density_pars=dict(loc=0, df=self.n_df),
-                plot_expected_mean=self.n_df)
-
-    @staticmethod
-    def _plot_hist(axes, data, **plot_config):
-        """plot a histogram for a result variable, taking the plot configuration dictionaries into account"""
-        _var_name = plot_config.get('var_name', None)
-        _var_name_formatted = plot_config.get('var_name_formatted', None)
-        _xrange = plot_config.get('plot_xrange', None)
-        _xlabel = plot_config.get('plot_xlabel', None)
-        _label = plot_config.get('plot_label', None)
-        _nbins = plot_config.get('plot_hist_nbins', None)
-        _pdf = plot_config.get('plot_prob_density', None)
-        _pdf_params = plot_config.get('plot_prob_density_pars', None)
-        _pdf_label = plot_config.get('plot_prob_density_label', None)
-        _expected_mean = plot_config.get('plot_expected_mean', None)
-        _expected_mean_error = plot_config.get('plot_expected_mean_error', None)
-
-        _bin_contents, _bin_edges, _ = axes.hist(data, bins=_nbins, range=_xrange, label=_label)
-
-        if _expected_mean is not None:
-            # only show observed mean if expected mean is requested/available
-            _observed_mean = np.mean(data)
-
-            _observed_mean_pull = None
-            if _expected_mean_error:
-                _observed_mean_pull = (_observed_mean - _expected_mean) / _expected_mean_error
-
-            axes.annotate(r"$\mu={}$".format(round(_observed_mean, 2)),
-                          xycoords='data',
-                          xy=(_observed_mean, 0),
-                          textcoords='offset points',
-                          xytext=(0, 25),
-                          fontsize=12,
-                          horizontalalignment='center',
-                          verticalalignment='bottom',
-                          arrowprops=dict(facecolor='k', shrink=.0)
-            )
-            if _expected_mean_error:
-                axes.annotate(r"$({:+.2f}\sigma)$".format(round(_observed_mean_pull, 2)),
-                              xycoords='data',
-                              xy=(_observed_mean, 0),
-                              textcoords='offset points',
-                              xytext=(0, 40),
-                              fontsize=12,
-                              horizontalalignment='center',
-                              verticalalignment='bottom',
-                              arrowprops=dict(arrowstyle='-')
-                )
-
-        axes.yaxis.set_ticks([])  # don't show y ticks
-
-        if _xrange is not None:
-            axes.set_xlim(_xrange)
-
-        if _pdf is not None:
-            if _pdf_params is None:
-                raise XYFitEnsembleException("PDF '%s' specified for result '%s', but no parameters given!"
-                                             % (_pdf.__name__, _stat_name))
-
-            # calculate normalization
-            _mean_bin_width = np.mean(_bin_edges[1:] - _bin_edges[:-1])
-            _n_entries = np.sum(_bin_contents)
-            _plot_prob_density_scale = _mean_bin_width * _n_entries
-
-            _pdf_x_support = np.linspace(*axes.get_xlim(), num=50)   # TODO: config entry for 'num'
-            _pdf_y = _plot_prob_density_scale * _pdf.pdf(_pdf_x_support, **_pdf_params)
-            axes.plot(_pdf_x_support, _pdf_y, label=_pdf_label, **XYFitEnsemble._DEFAULT_PLOT_PDF_KWARGS)
-
-        if _expected_mean is not None:
-            axes.axvline(_expected_mean, label="expected mean", **XYFitEnsemble._DEFAULT_PLOT_EXPECTED_MEAN_KWARGS)
-            if _expected_mean_error:
-                axes.axvspan(_expected_mean-_expected_mean_error, _expected_mean+_expected_mean_error,
-                             label="standard error of the mean",
-                             **XYFitEnsemble._DEFAULT_PLOT_ONE_SIGMA_BAND_MEAN_KWARGS)
-
-        if _xlabel is not None:
-            axes.set_xlabel(_xlabel)
-
-
     # -- private properties
 
     @property
     def _parameter_pulls(self):
-        """property for fit variable 'parameter_pulls'"""
+        """property for ensemble variable 'parameter_pulls'"""
         return (self._toy_fit.parameter_values - self._model_parameters)/self._toy_fit.parameter_errors
 
     @property
-    def _y_data_pulls(self):
-        """property for fit variable 'y_data_pulls'"""
+    def _y_pulls(self):
+        """property for ensemble variable 'y_pulls'"""
         return (self._toy_fit.y_data - self._toy_fit.y_model)/self._toy_fit.y_total_error
 
     @property
     def _cost(self):
-        """property for fit variable 'cost'"""
+        """property for ensemble variable 'cost'"""
         return self._toy_fit.cost_function_value
 
 
@@ -396,14 +292,15 @@ class XYFitEnsemble(FitEnsembleBase):
     add_simple_error.__doc__ = XYFit.add_simple_error.__doc__
 
     def add_matrix_error(self, axis, err_matrix, matrix_type, err_val=None, relative=False):
-        self._toy_fit.add_matrix_error(axis=axis, err_matrix=err_matrix, matrix_type=matrix_type, err_val=err_val, relative=relative)
+        self._toy_fit.add_matrix_error(axis=axis, err_matrix=err_matrix,
+                                       matrix_type=matrix_type, err_val=err_val, relative=relative)
 
     # "inherit" docstring
     add_matrix_error.__doc__ = XYFit.add_matrix_error.__doc__
 
     def run(self):
         """Perform the pseudo-experiments. Retrieve and store the requested fit result variables."""
-        self._initialize_result_arrays()
+        self._initialize_ensemble_variables()
         for _i_exp in six.moves.range(self.n_exp):
             self._generate_pseudodata()
             self._do_toy_fit()
@@ -421,17 +318,18 @@ class XYFitEnsemble(FitEnsembleBase):
             results = self._requested_results
         else:
             # validate list of results requested by user
-            _unavailable_results = set(self._requested_results) - set(self.RESULTS_PROPERTIES.keys())
+            _unavailable_results = set(self._requested_results) - set(self.AVAILABLE_RESULTS.keys())
             if _unavailable_results:
                 raise ValueError("Requested unavailable result variable(s): %r"
                                  % (_unavailable_results,))
 
         _dict_to_return = dict()
         for _result_name in results:
-            _result_array = self._result_array_dicts.get(_result_name, None)
-            if _result_array is None:
-                raise FitEnsembleException("Cannot retrieve result '{}': variable not collected!")
-            _dict_to_return[_result_name] = _result_array
+            _var = self._ensemble_variables.get(_result_name, None)
+            if _var is None:
+                raise FitEnsembleException("Cannot retrieve result '{}': "
+                                           "variable not collected!".format(_result_name))
+            _dict_to_return[_result_name] = _var.values
 
         return _dict_to_return
 
@@ -453,22 +351,27 @@ class XYFitEnsemble(FitEnsembleBase):
 
         _dict_to_return = dict()
         for _result_name in results:
-            _result_array = self._result_array_dicts.get(_result_name, None)
+            #_result_array = self._result_array_dicts.get(_result_name, None)
+            _result_variable = self._ensemble_variables.get(_result_name, None)
+            if _result_variable is None:
+                raise FitEnsembleException("Cannot retrieve statistics for result "
+                                           "variable '{}': variable not collected!".format(_result_name))
+
             _current_result_dict = _dict_to_return[_result_name] = dict()
 
             # calculate and store statistics
             for _stat_name in statistics:
-                _stat = self.__class__.STATISTICS_FUNCTIONS.get(_stat_name, None)
-                if _stat is None:
+                _stat_unbound_method = self.__class__.AVAILABLE_STATISTICS.get(_stat_name, None)
+                if _stat_unbound_method is None:
                     raise FitEnsembleException(
                         "Unknown statistic '%s' requested!" % (_stat_name,))
-                _stat = _stat(_result_array, axis=0)
+                _stat = _stat_unbound_method.__get__(_result_variable, EnsembleVariable)
                 _current_result_dict[_stat_name] = _stat
 
         return _dict_to_return
 
-    def plot_results(self, results='all',
-                     show_legend=True):
+    def plot_result_distributions(self, results='all',
+                                  show_legend=True):
         """
         Make plots with histograms of the requested fit variable values across all pseudo-experiments.
 
@@ -481,100 +384,94 @@ class XYFitEnsemble(FitEnsembleBase):
             results = self._requested_results
         else:
             # validate list of results requested by user
-            _unavailable_results = set(self._requested_results) - set(self.RESULTS_PROPERTIES.keys())
+            _unavailable_results = set(self._requested_results) - set(self.AVAILABLE_RESULTS.keys())
             if _unavailable_results:
                 raise ValueError("Requested unavailable result variable(s): %r"
                                  % (_unavailable_results,))
 
-        self._init_results_plot_config_dicts()
-
         for _result_name in results:
-            _result_array = self._result_array_dicts.get(_result_name, None)
-            _plot_config = self._plot_config_dicts[_result_name].copy()
+            _result_variable = self._ensemble_variables.get(_result_name, None)
 
-            _all_legend_handles = tuple()
-            _all_legend_labels = tuple()
-            if _result_array is None:
-                raise FitEnsembleException("Cannot plot result for variable '%s': variable not collected!" % (_result_name,))
+            if _result_variable is None:
+                raise FitEnsembleException("Cannot plot result for variable '%s': "
+                                           "variable not collected!" % (_result_name,))
 
-            if _result_array.ndim == 1:
+            _result_variable_plotter = self._ensemble_variable_plotters.get(_result_name, None)
+
+            if _result_variable_plotter is None:
+                raise FitEnsembleException("Cannot plot result for variable '%s': "
+                                           "no plotter defined!" % (_result_name,))
+
+            # -- decide how to lay out plots depending on the result variable dimensionality
+            if _result_variable.ndim == 0:
+                # if the ensemble variable is a scalar,
+                # plot it into a single `Axes` object
                 _fig, _gs = self._make_figure_gs(figsize=(8, 8), nrows=1, ncols=1)
                 _ax = plt.subplot(_gs[0, 0])
-                self._plot_hist(_ax, _result_array, **_plot_config)
+                # call the plotting routine on the axes grid
+                _plot_result_dict = _result_variable_plotter.plot_hist(_ax)
 
-                # keep track of subplot legend handles/labels
-                if show_legend:
-                    _hs, _ls = _ax.get_legend_handles_labels()
-                    _all_legend_handles += tuple(_hs)
-                    _all_legend_labels += tuple(_ls)
-
-            elif _result_array.ndim == 2:
-                _nplots = int(_result_array.shape[1])
+            elif _result_variable.ndim == 1:
+                # if the ensemble variable is a one-dimensional vector,
+                # plot each entry into a separate `Axes` object and display
+                # them in a grid-like layout
+                _nplots = int(_result_variable.shape[0])
                 _nrows, _ncols = _heuristic_optimal_subplot_grid_size(_nplots, aspect_ratio_priority=0.8)
                 _fig, _gs = self._make_figure_gs(figsize=(8, 8), nrows=_nrows, ncols=_ncols)
-                for _i_plot in six.moves.range(_nplots):
-                    _plot_config_subplot = _plot_config.copy()
-                    _plot_config_subplot['plot_xlabel'] = _plot_config_subplot['var_axis_label'][_i_plot]
-                    _plot_config_subplot['plot_xrange'] = _plot_config_subplot['var_value_ranges'][_i_plot]
-                    _row = int(_i_plot/_ncols)
-                    _col = _i_plot % _ncols
-                    _ax = plt.subplot(_gs[_row, _col])
-                    self._plot_hist(_ax, _result_array[:, _i_plot], **_plot_config_subplot)
 
-                    # keep track of subplot legend handles/labels
-                    if show_legend:
-                        _hs, _ls = _ax.get_legend_handles_labels()
-                        _all_legend_handles += tuple(_hs)
-                        _all_legend_labels += tuple(_ls)
-            elif _result_array.ndim == 3:
-                _nrows = _result_array.shape[1]
-                _ncols = _result_array.shape[2]
+                # create an array 'a' with a[i, j] = [i, j]
+                _axes_grid = np.dstack(reversed(np.meshgrid(np.arange(_nrows), np.arange(_ncols))))
+                # replace [i, j] by the `Axes` object for _gs[i, j] -> array of `Axes`
+                _axes_grid = np.apply_along_axis(
+                    lambda irow_icol: plt.subplot(_gs[irow_icol[0], irow_icol[1]]),
+                    -1, _axes_grid)
+                # reshape the `Axes` array to match the variable shape
+                _axes_grid = _axes_grid.reshape(_result_variable.shape)
+                # call the plotting routine on the axes grid
+                _plot_result_dict = _result_variable_plotter.plot_hist(_axes_grid)
+
+            elif _result_variable.ndim == 2:
+                # if the ensemble variable is a two-dimensional vector,
+                # plot the (i,j)-th entry into a an `Axes` object at the
+                # (i,j)-th position in a grid
+
+                _nrows = _result_variable.shape[0]
+                _ncols = _result_variable.shape[1]
 
                 _fig, _gs = self._make_figure_gs(figsize=(8, 8), nrows=_nrows, ncols=_ncols)
-                for _row in six.moves.range(_nrows):
-                    for _col in six.moves.range(_ncols):
-                        _plot_config_subplot = _plot_config.copy()
-                        _plot_config_subplot['plot_xlabel'] = _plot_config_subplot['var_axis_label'][_row, _col]
-                        _plot_config_subplot['plot_xrange'] = _plot_config_subplot['var_value_ranges'][_row, _col]
-                        _ax = plt.subplot(_gs[_row, _col])
-                        self._plot_hist(_ax, _result_array[:, _row, _col], **_plot_config_subplot)
 
-                        # keep track of subplot legend handles/labels
-                        if show_legend:
-                            _hs, _ls = _ax.get_legend_handles_labels()
-                            _all_legend_handles += tuple(_hs)
-                            _all_legend_labels += tuple(_ls)
+                # create an array 'a' with a[i, j] = [i, j]
+                _axes_grid = np.dstack(reversed(np.meshgrid(np.arange(_nrows), np.arange(_ncols))))
+                # replace [i, j] by the `Axes` object for _gs[i, j] -> array of `Axes`
+                _axes_grid = np.apply_along_axis(
+                    lambda irow_icol: plt.subplot(_gs[irow_icol[0], irow_icol[1]]),
+                    -1, _axes_grid)
+                # do not reshape _axes_grid -> its shape already matches variable shape
+
+                # call the plotting routine on the axes grid
+                _plot_result_dict = _result_variable_plotter.plot_hist(_axes_grid)
             else:
-                raise FitEnsembleException("Cannot plot result for variable '%s': variable "
-                                           "entry dimensionality too high (%d)!" % (_result_name, _result_array.ndim))
+                # cannot plot variables with 3 or more dimensions...
+                raise FitEnsembleException("Cannot plot result for variable '%s': variable entry dimensionality "
+                                           "too high (%d)!" % (_result_name, _result_variable.ndim))
 
             if show_legend:
-                # suppress multiple entries for the same label
-                _hs = []
-                _ls = []
-                _seen_labels = set()
-                for _h, _l in zip(_all_legend_handles, _all_legend_labels):
-                    if _l not in _seen_labels:
-                        _hs.append(_h)
-                        _ls.append(_l)
-                        _seen_labels.add(_l)
-
-                _fig.legend(_hs, _ls, loc='lower center')
-                _figure_extra_bottom = 0.05 * len(_ls)  # more space at figure bottom for legend
+                _fig.legend(_plot_result_dict['legend_handles'],
+                            _plot_result_dict['legend_labels'], loc='lower center')
+                # add extra space at figure bottom for legend
+                _figure_extra_bottom = 0.05 * len(_plot_result_dict['legend_labels'])
             else:
-                _figure_extra_bottom = 0.0  # no extra space at figure bottom
+                # no extra space at figure bottom
+                _figure_extra_bottom = 0.0
 
             _gs.tight_layout(_fig,
                              pad=0.0, w_pad=0, h_pad=-0.2,
                              rect=(0.01, 0.02+_figure_extra_bottom, 0.98, 0.98))
 
-        # TODO: maybe return something?
+        return _plot_result_dict
 
-    RESULTS_PROPERTIES  = {'parameter_pulls': _parameter_pulls,
-                           'y_data_pulls': _y_data_pulls,
-                           'cost': _cost}
-    RESULTS_SHAPE_SPECS = {'parameter_pulls': (n_par,),
-                           'y_data_pulls': (n_dat,),
-                           'cost': None}
 
-    _DEFAULT_RESULTS = {'y_data_pulls', 'parameter_pulls', 'cost'}
+    AVAILABLE_RESULTS = {'parameter_pulls': _parameter_pulls,
+                         'y_pulls': _y_pulls,
+                         'cost': _cost}
+    _DEFAULT_RESULTS = {'y_pulls', 'parameter_pulls', 'cost'}
