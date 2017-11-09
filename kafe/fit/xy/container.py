@@ -110,7 +110,7 @@ class XYContainer(IndexedContainer):
         for _err_dict in self._error_dicts.values():
             if _err_dict['axis'] == 0:
                 _err_dict['err'].reference = self._get_data_for_axis(0)
-        self._total_error = None
+        self._xy_total_errors= None
 
     @property
     def x_err(self):
@@ -151,7 +151,7 @@ class XYContainer(IndexedContainer):
         for _err_dict in self._error_dicts.values():
             if _err_dict['axis'] == 1:
                 _err_dict['err'].reference = self._get_data_for_axis(1)
-        self._total_error = None
+        self._xy_total_errors = None
 
     @property
     def y_err(self):
@@ -224,7 +224,7 @@ class XYContainer(IndexedContainer):
         assert _id not in self._error_dicts
         _new_err_dict = dict(err=_err, axis=_axis, enabled=True)
         self._error_dicts[_id] = _new_err_dict
-        self._total_error = None
+        self._xy_total_errors = None
         return _id
 
     def add_matrix_error(self, axis, err_matrix, matrix_type, err_val=None, relative=False):
@@ -252,7 +252,7 @@ class XYContainer(IndexedContainer):
         assert _id not in self._error_dicts
         _new_err_dict = dict(err=_err, axis=_axis, enabled=True)
         self._error_dicts[_id] = _new_err_dict
-        self._total_error = None
+        self._xy_total_errors = None
         return _id
 
     def disable_error(self, err_id):
@@ -267,7 +267,7 @@ class XYContainer(IndexedContainer):
         if _err_dict is None:
             raise XYContainerException("No error with id %d!" % (err_id,))
         _err_dict['enabled'] = False
-        self._total_error = None
+        self._xy_total_errors = None
 
     def get_total_error(self, axis):
         """
