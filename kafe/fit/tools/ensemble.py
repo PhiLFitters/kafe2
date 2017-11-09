@@ -10,6 +10,30 @@ import six
 from kafe.core.error import CovMat
 
 
+def expand_to_ndim(array, target_ndim, direction='right'):
+    """Add axes to an array until the desired number of dimensions is reached.
+
+    :param array: array to expand
+    :type array: ``numpy.ndarray``
+    :param target_ndim: number of dimensions to reach
+    :type target_ndim: int
+    :param direction: direction of expansion
+    :type direction: 'left' or 'right'
+    :return: expanded array
+    :rtype: ``numpy.ndarray``
+    """
+    _new_array = array
+    if direction == 'right':
+        _append_pos = -1
+    elif direction == 'left':
+        _append_pos = 0
+    else:
+        raise ValueError("Unknown direction specification '{}': "
+                         "expected 'left' or 'right'!".format(direction))
+    while _new_array.ndim < target_ndim:
+        _new_array = np.expand_dims(_new_array, _append_pos)
+    return _new_array
+
 def broadcast_to_shape(array, shape, scheme='default'):
     """
     Broadcast a ``numpy.ndarray`` to a shape according to different schemes.
@@ -132,6 +156,7 @@ class EnsembleVariable(object):
         if self._array.ndim > 1:
             self._shape = self._total_shape[1:]
 
+        self._dist = None
         if distribution is not None:
             self._dist = EnsembleVariableProbabilityDistribution(
                 distribution=distribution,
@@ -411,16 +436,26 @@ class EnsembleVariablePlotter(object):
         :type axis_labels: `numpy.ndarray` (shape must match the ensemble variable shape)
         """
         self._var = ensemble_variable
+
+        # check variable dimensionality (can only plot scalar, 1D and 2D)
+        if self._var.ndim >= 3:
+            raise EnsembleError("Cannot create plotter for ensemble variable: "
+                                "dimensionality too high ({}>2)!".format(self._var.ndim))
+
         self._ensemble_label = ensemble_label or "{} pseudoexperiments".format(self._var.size)
 
         self._value_ranges = np.array(value_ranges)
-        self._value_ranges = broadcast_to_shape(self._value_ranges, self._var.shape, scheme="expand_left")
+        if self._value_ranges.shape[:-1] != self._var.shape:
+            # prefix dimensions do not match -> expand array
+            self._value_ranges = broadcast_to_shape(self._value_ranges, self._var.shape, scheme="expand_left")
 
-        self._variable_labels = variable_labels
+        # expand, if needed, to at least 3 axes (needed for nested for loop below)
+        self._value_ranges = expand_to_ndim(self._value_ranges, target_ndim=3, direction='left')
+
+        self._variable_labels = np.array(variable_labels)
         if self._variable_labels is not None:
-            self._variable_labels = np.atleast_1d(np.array(self._variable_labels))
-
-        # TODO: check dimensionality of supplied arrays
+            self._variable_labels = broadcast_to_shape(self._variable_labels, self._var.shape, scheme="expand_left")
+            self._variable_labels = expand_to_ndim(self._variable_labels, target_ndim=2, direction='left')
 
     def plot_hist(self, axes_array, show_y_ticks=False):
         """
@@ -436,7 +471,6 @@ class EnsembleVariablePlotter(object):
         :return: mapping containing plot metadata and other information
         :rtype: `dict`
         """
-
         axes_array = np.asarray(axes_array)
 
         if axes_array.shape != self._var.shape:
@@ -453,106 +487,111 @@ class EnsembleVariablePlotter(object):
         # get the expected mean and its error from the ensemble variable distribution
         _dist = self._var.dist
         if _dist is not None:
-            _expected_means = np.atleast_1d(self._var.dist.mean)
+            _expected_means = np.atleast_2d(self._var.dist.mean)
             # TODO: presumably only valid/relevant for Gaussian -> solution for non-Gaussian?
-            _expected_mean_errors = np.atleast_1d(self._var.dist.std)/np.sqrt(self._var.size)
+            _expected_mean_errors = np.atleast_2d(self._var.dist.std)/np.sqrt(self._var.size)
 
             # evaluate PDF at pre-computed plot points
-
             _pdf_eval_x = np.apply_along_axis(
-                lambda xminmax: np.linspace(xminmax[0], xminmax[1], _pdf_eval_npts), -1, self._value_ranges)
-            _pdf_eval_x = np.atleast_2d(_pdf_eval_x)
+                lambda xminmax: np.linspace(xminmax[0], xminmax[1], _pdf_eval_npts), -1, np.squeeze(self._value_ranges))
             _pdf_eval_y = _dist.eval(_pdf_eval_x,
                                      x_contains_var_shape=True)
 
+            # pad the evaluated PDF coordinates to at least 3 dimensions
+            _pdf_eval_x = expand_to_ndim(_pdf_eval_x, 3, direction='left')
+            _pdf_eval_y = expand_to_ndim(_pdf_eval_y, 3, direction='left')
+
             _pdf_eval_ymax = np.max(_pdf_eval_y)
 
-        # get the observed mean
-        _observed_means = np.atleast_1d(self._var.mean)
+        # get the observed mean (pad to at least 2 dimensions: one scalar per plot in 2D matrix)
+        _observed_means = np.atleast_2d(self._var.mean)
+
+        # get value array (pad to at least 3 dimensions: one 1D-array per plot in 2D matrix)
+        _var_values = expand_to_ndim(self._var.values, 3, direction='right')
 
         _all_legend_handles = []
         _all_legend_labels = []
 
+
         _plot_result_dict = dict()
-        for _index, _ax in enumerate(np.atleast_1d(axes_array)):
-            try:
-                _data = self._var.values[:, _index]
-            except IndexError:
-                _data = self._var.values[:]
+        for _index1, _axes in enumerate(np.atleast_2d(axes_array)):
+            for _index2, _ax in enumerate(_axes):
+                _data = _var_values[:, _index2, _index1]
+                assert len(_data) == self._var.size
 
-            _bin_contents, _bin_edges, _ = _ax.hist(
-                _data,
-                bins=_nbins,
-                # range=self._value_ranges[_index], # TODO
-                label=self._ensemble_label
-            )
+                _bin_contents, _bin_edges, _ = _ax.hist(
+                    _data,
+                    bins=_nbins,
+                    # range=self._value_ranges[_index], # TODO
+                    label=self._ensemble_label
+                )
 
-            if _expected_means is not None:
-                # only show observed mean if expected mean is available
-                _ax.annotate(r"$\mu={}$".format(round(_observed_means[_index], 2)),
-                             xycoords='data',
-                             xy=(_observed_means[_index], 0),
-                             textcoords='offset points',
-                             xytext=(0, 25),
-                             fontsize=12,
-                             horizontalalignment='center',
-                             verticalalignment='bottom',
-                             arrowprops=dict(facecolor='k', shrink=.0)
-                             )
-                if _expected_mean_errors is not None and _expected_mean_errors[_index]:
-                    _mean_pull = (_observed_means[_index] - _expected_means[_index]) / _expected_mean_errors[_index]
-                    _ax.annotate(r"$({:+.2f}\sigma)$".format(round(_mean_pull, 2)),
+                if _expected_means is not None:
+                    # only show observed mean if expected mean is available
+                    _ax.annotate(r"$\mu={}$".format(round(_observed_means[_index1, _index2], 2)),
                                  xycoords='data',
-                                 xy=(_observed_means[_index], 0),
+                                 xy=(_observed_means[_index1, _index2], 0),
                                  textcoords='offset points',
-                                 xytext=(0, 40),
+                                 xytext=(0, 25),
                                  fontsize=12,
                                  horizontalalignment='center',
                                  verticalalignment='bottom',
-                                 arrowprops=dict(arrowstyle='-')
+                                 arrowprops=dict(facecolor='k', shrink=.0)
                                  )
+                    if _expected_mean_errors is not None and _expected_mean_errors[_index1, _index2]:
+                        _mean_pull = (_observed_means[_index1, _index2] - _expected_means[_index1, _index2]) / _expected_mean_errors[_index1, _index2]
+                        _ax.annotate(r"$({:+.2f}\sigma)$".format(round(_mean_pull, 2)),
+                                     xycoords='data',
+                                     xy=(_observed_means[_index1, _index2], 0),
+                                     textcoords='offset points',
+                                     xytext=(0, 40),
+                                     fontsize=12,
+                                     horizontalalignment='center',
+                                     verticalalignment='bottom',
+                                     arrowprops=dict(arrowstyle='-')
+                                     )
 
-            if self._value_ranges is not None:
-                _ax.set_xlim(self._value_ranges[_index])
+                if self._value_ranges is not None:
+                    _ax.set_xlim(self._value_ranges[_index1, _index2])
 
-            if _dist is not None:
-                _pdf_label = "expected density"
-                # calculate normalization
-                _mean_bin_width = np.mean(_bin_edges[1:] - _bin_edges[:-1])
-                _n_entries = np.sum(_bin_contents)
-                _plot_prob_density_scale = _mean_bin_width * _n_entries
-                _pdf_x = _pdf_eval_x[_index]
-                _pdf_y = _pdf_eval_y[_index] * _plot_prob_density_scale
+                if _dist is not None:
+                    _pdf_label = "expected density"
+                    # calculate normalization
+                    _mean_bin_width = np.mean(_bin_edges[1:] - _bin_edges[:-1])
+                    _n_entries = np.sum(_bin_contents)
+                    _plot_prob_density_scale = _mean_bin_width * _n_entries
+                    _pdf_x = _pdf_eval_x[_index1, _index2]
+                    _pdf_y = _pdf_eval_y[_index1, _index2] * _plot_prob_density_scale
 
-                _ax.plot(_pdf_x, _pdf_y, label=_pdf_label, **self._DEFAULT_PLOT_PDF_KWARGS)
+                    _ax.plot(_pdf_x, _pdf_y, label=_pdf_label, **self._DEFAULT_PLOT_PDF_KWARGS)
 
-            if _expected_means is not None:
-                _ax.axvline(_expected_means[_index], label="expected mean",
-                            **self._DEFAULT_PLOT_EXPECTED_MEAN_KWARGS)
-                if _expected_mean_errors is not None:
-                    _ax.axvspan(_expected_means[_index] - _expected_mean_errors[_index],
-                                _expected_means[_index] + _expected_mean_errors[_index],
-                                label="standard error of the mean",
-                                **self._DEFAULT_PLOT_ONE_SIGMA_BAND_MEAN_KWARGS)
+                if _expected_means is not None:
+                    _ax.axvline(_expected_means[_index1, _index2], label="expected mean",
+                                **self._DEFAULT_PLOT_EXPECTED_MEAN_KWARGS)
+                    if _expected_mean_errors is not None:
+                        _ax.axvspan(_expected_means[_index1, _index2] - _expected_mean_errors[_index1, _index2],
+                                    _expected_means[_index1, _index2] + _expected_mean_errors[_index1, _index2],
+                                    label="standard error of the mean",
+                                    **self._DEFAULT_PLOT_ONE_SIGMA_BAND_MEAN_KWARGS)
 
-            # ensure density appears with the same scaling across all axes
-            if _pdf_eval_ymax is not None:
-                _ax.set_ylim((0, _pdf_eval_ymax * _plot_prob_density_scale * 1.2))
+                # ensure density appears with the same scaling across all axes
+                if _pdf_eval_ymax is not None:
+                    _ax.set_ylim((0, _pdf_eval_ymax * _plot_prob_density_scale * 1.2))
 
-            # set the x axis label
-            if self._variable_labels is not None:
-                _xlabel = self._variable_labels[_index]
-                if _xlabel is not None:
-                    _ax.set_xlabel(_xlabel)
+                # set the x axis label
+                if self._variable_labels is not None:
+                    _xlabel = self._variable_labels[_index1, _index2]
+                    if _xlabel is not None:
+                        _ax.set_xlabel(_xlabel)
 
-            # disable the y axis ticks
-            if not show_y_ticks:
-                _ax.yaxis.set_ticks([])
+                # disable the y axis ticks
+                if not show_y_ticks:
+                    _ax.yaxis.set_ticks([])
 
-            # collect legend handles and labels
-            _hs, _ls = _ax.get_legend_handles_labels()
-            _all_legend_handles += tuple(_hs)
-            _all_legend_labels += tuple(_ls)
+                # collect legend handles and labels
+                _hs, _ls = _ax.get_legend_handles_labels()
+                _all_legend_handles += tuple(_hs)
+                _all_legend_labels += tuple(_ls)
 
         # suppress multiple entries for the same label
         _hs, _ls = [], []
