@@ -200,6 +200,21 @@ class XYFitEnsemble(FitEnsembleBase):
                 variable_labels=['Pull $y_{%d}$' % (_i,) for _i in six.moves.range(self.n_dat)]
             )
 
+        if 'y_data' in self._requested_results:
+            self._ensemble_variables['y_data'] = EnsembleVariable(
+                ensemble_array=np.zeros((self._n_exp, self.n_dat)),
+                distribution=scipy.stats.norm,
+                distribution_parameters=dict(loc=self._ref_y_data, scale=self._toy_fit.y_data_error)
+            )
+            self._ensemble_variable_plotters['y_data'] = EnsembleVariablePlotter(
+                ensemble_variable=self._ensemble_variables['y_data'],
+                #value_ranges=(self._ref_y_data-3*self._toy_fit.y_data_error,
+                #              self._ref_y_data+3*self._toy_fit.y_data_error),
+                value_ranges=np.array([self._ref_y_data-3*self._toy_fit.y_data_error,
+                             self._ref_y_data+3*self._toy_fit.y_data_error]).T,
+                variable_labels=['$y_{%d}$' % (_i,) for _i in six.moves.range(self.n_dat)]
+            )
+
         if 'parameter_pulls' in self._requested_results:
             self._ensemble_variables['parameter_pulls'] = EnsembleVariable(
                 ensemble_array=np.zeros((self._n_exp, self._n_par)),
@@ -249,9 +264,14 @@ class XYFitEnsemble(FitEnsembleBase):
         return (self._toy_fit.parameter_values - self._model_parameters)/self._toy_fit.parameter_errors
 
     @property
+    def _y_data(self):
+        """property for ensemble variable 'y_data'"""
+        return self._toy_fit.y_data
+
+    @property
     def _y_pulls(self):
         """property for ensemble variable 'y_pulls'"""
-        return (self._toy_fit.y_data - self._toy_fit.y_model)/self._toy_fit.y_total_error
+        return (self._toy_fit.y_data - self._toy_fit.y_model) / self._toy_fit.y_total_error
 
     @property
     def _cost(self):
@@ -473,5 +493,6 @@ class XYFitEnsemble(FitEnsembleBase):
 
     AVAILABLE_RESULTS = {'parameter_pulls': _parameter_pulls,
                          'y_pulls': _y_pulls,
-                         'cost': _cost}
+                         'cost': _cost,
+                         'y_data': _y_data}
     _DEFAULT_RESULTS = {'y_pulls', 'parameter_pulls', 'cost'}
