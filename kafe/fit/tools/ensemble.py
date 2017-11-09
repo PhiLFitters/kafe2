@@ -30,6 +30,36 @@ def broadcast_to_shape(array, shape, scheme='default'):
         #      ---------------------
         #       result:  a x b x c
         return np.broadcast_to(array, shape=shape)
+    elif scheme == 'expand_right_successive':
+        # dimensions are added to the array (on the right) until
+        # a broadcastable situation is reached
+        # target shape to the array shape:
+        #  self._shape:      a x b
+        #        array:  n x a x 1
+        #      ---------------------
+        #       result:  n x a x b
+        _new_array = array
+        while True:
+            _can_bcast = all([_i == _j or _i == 1 or _j == 1 for _i, _j in zip(reversed(_new_array.shape), reversed(shape))])
+            if _can_bcast:
+                break
+            _new_array = np.expand_dims(_new_array, -1)
+        return _new_array
+    elif scheme == 'expand_left_successive':
+        # dimensions are added to the array (on the left) until
+        # a broadcastable situation is reached
+        # target shape to the array shape:
+        #  self._shape:  a x b
+        #        array:  1 x b x n
+        #      ---------------------
+        #       result:  a x b x n
+        _new_array = array
+        while True:
+            _can_bcast = all([_i == _j or _i == 1 or _j == 1 for _i, _j in zip(_new_array.shape, shape)])
+            if _can_bcast:
+                break
+            _new_array = np.expand_dims(_new_array, 0)
+        return _new_array
     elif scheme == 'transposed':
         # "transposed" numpy broadcasting scheme:
         # (broadcasting is done on the transposed arrays
