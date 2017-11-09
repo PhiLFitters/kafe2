@@ -440,13 +440,13 @@ class XYFitEnsemble(FitEnsembleBase):
                 _fig, _gs = self._make_figure_gs(figsize=(8, 8), nrows=_nrows, ncols=_ncols)
 
                 # create an array 'a' with a[i, j] = [i, j]
-                _axes_grid = np.dstack(reversed(np.meshgrid(np.arange(_nrows), np.arange(_ncols))))
+                _axes_grid = np.dstack((np.meshgrid(np.arange(_nrows), np.arange(_ncols))))
                 # replace [i, j] by the `Axes` object for _gs[i, j] -> array of `Axes`
                 _axes_grid = np.apply_along_axis(
-                    lambda irow_icol: plt.subplot(_gs[irow_icol[0], irow_icol[1]]),
+                    lambda irow_icol: plt.subplot(_gs[irow_icol[0], irow_icol[1]]) if irow_icol[0]*_ncols+irow_icol[1] < _nplots else None,
                     -1, _axes_grid)
                 # reshape the `Axes` array to match the variable shape
-                _axes_grid = _axes_grid.reshape(_result_variable.shape)
+                _axes_grid = _axes_grid.T.flatten()[:_result_variable.shape[0]]
                 # call the plotting routine on the axes grid
                 _plot_result_dict = _result_variable_plotter.plot_hist(_axes_grid)
 
