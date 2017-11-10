@@ -15,7 +15,6 @@ __all__ = ["CostFunctionBase",
            "CostFunctionBase_NegLogLikelihoodRatio",
            "CostFunctionException"]
 
-
 def _generic_chi2(data, model,
                   cov_mat_inverse=None,
                   err=None, err_relative_to=None,
@@ -62,6 +61,34 @@ def _generic_chi2(data, model,
 
     # return sum of squared residuals
     return np.sum(_res ** 2)
+
+def _generic_chi2_nuisance(data, model, nuisance_vector=np.array([]), nuisance_cor_cov_mat=None, uncor_cov_mat_inverse=None,
+                           fail_on_no_matrix=False):
+
+    data = np.asarray(data)
+    model = np.asarray(model)
+
+    if model.shape != data.shape:
+        raise CostFunctionException("'data' and 'model' must have the same shape! Got %r and %r..."
+                                    % (data.shape, model.shape))
+
+    #if a uncorrelated cov-mat is given use it
+    if uncor_cov_mat_inverse is not None:
+        _inner_sum = np.squeeze(np.asarray(nuisance_vector.dot(nuisance_cor_cov_mat)))
+        _penalties = nuisance_vector.dot(nuisance_vector)
+        _chisquare = (data - model - _inner_sum).dot(uncor_cov_mat_inverse).dot(data - model - _inner_sum)[0, 0]
+        return _chisquare + _penalties
+
+    #raise if uncorrelaed matrix is None and the correlated is not None
+    if nuisance_vector.all() == 0.0:
+        raise CostFunctionException('Is not working for only fullcorrelated y-errors')
+
+    if fail_on_no_matrix:
+        raise np.linalg.LinAlgError("Uncorrelated Covariance matrix is singular!")
+    else:
+        #chisquaere without errors
+        _chisquare = (data -model).dot(data-model)
+        return _chisquare
 
 
 class CostFunctionException(Exception):
@@ -283,7 +310,7 @@ class CostFunctionBase_Chi2(CostFunctionBase):
         :param y_total_error: total measurement uncertainties
         :return:
         """
-        return _generic_chi2(data=data, model=model, cov_mat_inverse=None, err=total_error)
+        return _generic_chi2(data=data, model=model, cov_mat_inverse=None, err=total_error, fail_on_zero_errors=True)
 
     @staticmethod
     def chi2_covariance_fallback(data, model, total_cov_mat_inverse):
@@ -484,9 +511,35 @@ class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
 class CostFunctionBase_Chi2_Nuisance(CostFunctionBase_Chi2):
 
 
-    def __init__(self):
+    def __init__(self, errors_to_use='covariance', fall_back_on_singular=True):
+        """
+        Base class for built-in least-squares cost function, which uses nuisance-parameters.
 
-        super(CostFunctionBase_Chi2, self).__init__(cost_function=self.csn)
+          :param errors_to_use: which errors to use when calculating :math:`\chi^2`
+          :type errors_to_use: ``'covariance'``, ``'pointwise'`` or ``None``
+          :param fallback_on_singular: if ``True`` and the covariance matrix is singular (or the errors are zero),
+                                                 calculate :math:`\chi^2` as with ``errors_to_use=None``
+          :type fallback_on_singular: bool
+        """
+
+        if errors_to_use is None:
+            _chi2_nui = self.chi2_no_errors  # inherited from CostFunctionBase_Chi2
+        elif errors_to_use == 'covariance':
+            if fall_back_on_singular:
+                _chi2_nui = self.chi2_nui_cov_fallback
+            else:
+                _chi2_nui = self.chi2_nui_cov
+        elif errors_to_use == 'pointwise':
+            if fall_back_on_singular:
+                _chi2_nui = self.chi2_nui_pointwise_fallback
+            else:
+                _chi2_nui = self.chi2_nui_pointwise
+        else:
+            raise CostFunctionException(
+                "Unknown value '%s' for 'errors_to_use': must be one of ('covariance', 'pointwise', None)")
+
+        super(CostFunctionBase_Chi2, self).__init__(cost_function=_chi2_nui)
+        #set flag for creating nuisance-parameters
         self.set_flag("need_nuisance", True)
 
         self._formatter.latex_name = r"\chi^{2}_{nui}"
@@ -494,12 +547,18 @@ class CostFunctionBase_Chi2_Nuisance(CostFunctionBase_Chi2):
         self._formatter.description = "chi-square (with nuisance parameters for correlated uncertainties)"
 
     @staticmethod
-    def csn(data, model, total_uncor_cov_mat_inverse, nuisance_total_cor_cov_mat, nuisance_vector):
-        r"""A least-squares costfunction that accounts for correlated uncertainties through nuisance parameters. The nuisance parameters are fitted.
+    def chi2_nui_cov(data, model, total_uncor_cov_mat_inverse, nuisance_total_cor_cov_mat, nuisance_vector):
+        r"""A least-squares cost function that accounts for correlated uncertainties through nuisance parameters. The nuisance parameters are fitted.
 
         The cost function is given by:
 
-        .. TODO: chi-square nuisance formula
+                C = \chi^2({\bf d}, {\bf m} = ({\bf yd} - {\bf m})*{\bf cor_cov} * {\bf nui}) {\bf uncor_cov_inverse} *
+                ({\bf d} - {\bf m})*{\bf cor_cov}{\bf nui}) +  {\bf nui}^2
+
+             In the above, :math:`{\bf d}` are the measurements and :math:`{\bf m}` are the model
+             predictions, :math:{\bf cor_cov} is the total nuisance correlated covariance matrix and
+             :math:{\bf uncor_cov}} is the inverse of the total uncorrelated  covariance matrix
+             :math:{\bf nui} is the  Nuisance-vector
 
         :param data: measurement data
         :param model model values
@@ -509,8 +568,77 @@ class CostFunctionBase_Chi2_Nuisance(CostFunctionBase_Chi2):
 
         :return: cost function value
         """
-        _inner_sum = np.squeeze(np.asarray(nuisance_vector.dot(nuisance_total_cor_cov_mat)))
-        _penalties = nuisance_vector.dot(nuisance_vector)
-        _chisquare = (data-model - _inner_sum).dot(total_uncor_cov_mat_inverse).dot(data-model - _inner_sum)[0, 0]
-        return _chisquare + _penalties
+        return _generic_chi2_nuisance(data=data, model=model, uncor_cov_mat_inverse=total_uncor_cov_mat_inverse,
+                                      nuisance_cor_cov_mat=nuisance_total_cor_cov_mat, nuisance_vector=nuisance_vector,
+                                      fail_on_no_matrix=True)
+
+    @staticmethod
+    def chi2_nui_cov_fallback(data, model, total_uncor_cov_mat_inverse, nuisance_total_cor_cov_mat, nuisance_vector):
+        r"""A least-squares cost function that accounts for correlated uncertainties through nuisance parameters. The nuisance parameters are fitted.
+
+        .. TODO: describe fallback behavior
+
+        The cost function is given by:
+
+                C = \chi^2({\bf d}, {\bf m} = ({\bf yd} - {\bf m})*{\bf cor_cov} * {\bf nui}) {\bf uncor_cov_inverse} *
+                ({\bf d} - {\bf m})*{\bf cor_cov}{\bf nui}) +  {\bf nui}^2
+
+             In the above, :math:`{\bf d}` are the measurements and :math:`{\bf m}` are the model
+             predictions, :math:{\bf cor_cov} is the total nuisance correlated covariance matrix and
+             :math:{\bf uncor_cov}} is the inverse of the total uncorrelated  covariance matrix
+             :math:{\bf nui} is the  Nuisance-vector
+
+        :param data: measurement data
+        :param model model values
+        :param total_uncor_cov_mat_inverse: inverse of the uncorrelated part of the total covariance matrix
+        :param: nuisance_total_cor_cov_mat: matrix containing the correlated parts of each uncertainty source for each data point
+        :param: nuisance_vector: vector containing nuisance parameters
+
+        :return: cost function value
+        """
+        return _generic_chi2_nuisance(data=data, model=model, uncor_cov_mat_inverse=total_uncor_cov_mat_inverse,
+                                      nuisance_cor_cov_mat=nuisance_total_cor_cov_mat, nuisance_vector=nuisance_vector,
+                                      fail_on_no_matrix=False)
+
+    @staticmethod
+    def chi2_nui_pointwise(data, model, total_error):
+        r"""A least-squares cost function calculated from the data and model values,
+              considering pointwise (uncorrelated) uncertainties for each data point:
+
+        .. math::
+            C = \chi^2({\bf d}, {\bf m}, {\bf \sigma}) = \sum_k \frac{d_k - m_k}{\sigma_k}
+
+        In the above, :math:`{\bf d}` are the measurements, :math:`{\bf m}` are the model
+        predictions, and :math:`{\bf \sigma}` are the pointwise total uncertainties.
+
+        :param data: measurement data
+        :param total_error: array of total errors
+
+        :return cost function value
+        """
+        return CostFunctionBase_Chi2.chi2_pointwise_errors(data=data, model=model,
+                                                       total_error=total_error)
+
+    @staticmethod
+    def chi2_nui_pointwise_fallback(data, model, total_error):
+        r"""A least-squares cost function calculated from the data and model values,
+              considering pointwise (uncorrelated) uncertainties for each data point:
+
+        .. TODO: describe fallback behavior
+
+        .. math::
+            C = \chi^2({\bf d}, {\bf m}, {\bf \sigma}) = \sum_k \frac{d_k - m_k}{\sigma_k}
+
+        In the above, :math:`{\bf d}` are the measurements, :math:`{\bf m}` are the model
+        predictions, and :math:`{\bf \sigma}` are the pointwise total uncertainties.
+
+        :param data: measurement data
+        :param total_error: array of total errors
+
+        :return cost function value
+        """
+        return CostFunctionBase_Chi2.chi2_pointwise_errors_fallback(data=data, model=model,
+                                                     total_error=total_error)
+
+
 
