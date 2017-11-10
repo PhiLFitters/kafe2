@@ -41,7 +41,7 @@ class XYPlotContainer(PlotContainerBase):
     @property
     def data_x(self):
         """data x values"""
-        return self._fitter.x
+        return self._fitter.x_data
 
     @property
     def data_y(self):
