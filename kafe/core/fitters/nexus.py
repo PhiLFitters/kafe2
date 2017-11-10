@@ -508,7 +508,7 @@ class Nexus(object):
         for k, v in six.iteritems(kwargs):
             self._new_one(k, v)
 
-    def new_function(self, function_handle, function_name=None, add_unknown_parameters=False):
+    def new_function(self, function_handle, function_name=None, add_unknown_parameters=False, wire_parameters=True):
         _p = self.__map_par_name_to_par_obj.get(function_handle)
         if _p is not None:
             raise NexusException("Cannot create parameter '%s': exists!" % (function_handle,))
@@ -522,7 +522,8 @@ class Nexus(object):
                         _pf_par_obj = self.get_by_name(_pf_par_name)
                         if _pf_par_obj is None:
                             self.new(**{_pf_par_name: NODE_VALUE_DEFAULT})
-                    self.add_dependency(source=_pf_par_name, target=_pf.name)
+                    if wire_parameters:
+                        self.add_dependency(source=_pf_par_name, target=_pf.name)
             except NodeException as pe:
                 # re-raise NodeException as NexusException
                 raise NexusException(pe.message)
