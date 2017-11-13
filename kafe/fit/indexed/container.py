@@ -42,6 +42,9 @@ class IndexedContainer(DataContainerBase):
         _total_err = MatrixGaussianError(_tmp_cov_mat, 'cov', relative=False, reference=self.data)
         self._total_error = _total_err
 
+    def _clear_total_error_cache(self):
+        self._total_error = None
+
     # -- public properties
 
     @property
@@ -63,7 +66,7 @@ class IndexedContainer(DataContainerBase):
         # reset member error references to the new data values
         for _err_dict in self._error_dicts.values():
             _err_dict['err'].reference = self._idx_data
-        self._total_error = None
+        self._clear_total_error_cache()
 
     @property
     def err(self):
@@ -120,7 +123,7 @@ class IndexedContainer(DataContainerBase):
         assert _id not in self._error_dicts
         _new_err_dict = dict(err=_err, enabled=True)
         self._error_dicts[_id] = _new_err_dict
-        self._total_error = None
+        self._clear_total_error_cache()
         return _id
 
     def add_matrix_error(self, err_matrix, matrix_type, err_val=None, relative=False):
@@ -145,7 +148,7 @@ class IndexedContainer(DataContainerBase):
         assert _id not in self._error_dicts
         _new_err_dict = dict(err=_err, enabled=True)
         self._error_dicts[_id] = _new_err_dict
-        self._total_error = None
+        self._clear_total_error_cache()
         return _id
 
     def disable_error(self, err_id):
@@ -160,7 +163,7 @@ class IndexedContainer(DataContainerBase):
         if _err_dict is None:
             raise IndexedContainerException("No error with id %d!" % (err_id,))
         _err_dict['enabled'] = False
-        self._total_error = None
+        self._clear_total_error_cache()
 
     def get_total_error(self):
         """

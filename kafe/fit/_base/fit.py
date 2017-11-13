@@ -8,10 +8,10 @@ import sys
 import textwrap
 
 from collections import OrderedDict
-
 from ...tools import print_dict_as_table
 from ...core import get_minimizer, NexusFitter
 from ...tools import print_dict_recursive
+from .container import DataContainerException
 
 __all__ = ["FitBase", "FitException"]
 
@@ -64,6 +64,14 @@ class FitBase(object):
         """function computing a fallback LaTeX representation of an plain-text string"""
         _lpn = ascii_string.replace('_', r"\_")
         return r"{\tt %s}" % (_lpn,)
+
+    @abc.abstractmethod
+    def _invalidate_total_error_cache(self):
+        pass
+
+    @abc.abstractmethod
+    def _mark_errors_for_update(self):
+        pass
 
     # -- public properties
 
@@ -169,25 +177,93 @@ class FitBase(object):
         """
         return self._fitter.set_all_fit_parameter_values(param_value_list)
 
-    @abc.abstractmethod
-    def add_simple_error(self):
+    def add_simple_error(self, err_val, correlation=0, relative=False, reference='data', **kwargs):
         """
-        Add a simple uncertainty source (constructed from pointwise errors and optionally
-        a non-negative global correlation coefficient for any two daya points) to the data container.
+        Add a simple uncertainty source to the data container.
+        Returns an error id which uniquely identifies the created error source.
 
-        :return: int: error_id
+        :param err_val: pointwise uncertainty/uncertainties for all data points
+        :type err_val: float or iterable of float
+        :param correlation: correlation coefficient between any two distinct data points
+        :type correlation: float
+        :param relative: if ``True``, **err_val** will be interpreted as a *relative* uncertainty
+        :type relative: bool
+        :param reference: which reference values to use when calculating absolute errors from relative errors
+        :type reference: 'data' or 'model'
+        :return: error id
+        :rtype: int
         """
-        pass
+        if reference == 'data':
+            # delegate to data container
+            _reference_object = self._data_container
+        elif reference == 'model':
+            # delegate to model container
+            _reference_object = self._param_model
+        else:
+            raise FitException("Cannot add simple error: unknown reference "
+                               "specification '{}', expected one of: 'data', 'model'...".format(reference))
 
-    @abc.abstractmethod
-    def add_matrix_error(self):
-        """
-        Add a matrix uncertainty source (constructed from pointwise errors and a
-        correlation matrix or the full point-to-point covariance matrix) to the data container.
+        _ret = _reference_object.add_simple_error(err_val=err_val, correlation=correlation, relative=relative, **kwargs)
 
-        :return: int: error_id
+        # mark nexus error parameters as stale
+        self._mark_errors_for_update()
+        self._invalidate_total_error_cache()
+        return _ret
+
+    def add_matrix_error(self, err_matrix, matrix_type, err_val=None, relative=False, reference='data', **kwargs):
         """
-        pass
+        Add a matrix uncertainty source to the data container.
+        Returns an error id which uniquely identifies the created error source.
+
+        :param err_matrix: covariance or correlation matrix
+        :param matrix_type: one of ``'covariance'``/``'cov'`` or ``'correlation'``/``'cor'``
+        :type matrix_type: str
+        :param err_val: the pointwise uncertainties (mandatory if only a correlation matrix is given)
+        :type err_val: iterable of float
+        :param relative: if ``True``, the covariance matrix and/or **err_val** will be interpreted as a *relative* uncertainty
+        :type relative: bool
+        :param reference: which reference values to use when calculating absolute errors from relative errors
+        :type reference: 'data' or 'model'
+        :return: error id
+        :rtype: int
+        """
+        if reference == 'data':
+            # delegate to data container
+            _reference_object = self._data_container
+        elif reference == 'model':
+            # delegate to model container
+            _reference_object = self._param_model
+        else:
+            raise FitException("Cannot add matrix error: unknown reference "
+                               "specification '{}', expected one of: 'data', 'model'...".format(reference))
+
+        _ret = _reference_object.add_matrix_error(err_matrix=err_matrix, matrix_type=matrix_type,
+                                                  err_val=err_val, relative=relative, **kwargs)
+
+        # mark nexus error parameters as stale
+        self._mark_errors_for_update()
+        self._invalidate_total_error_cache()
+        return _ret
+
+    def disable_error(self, err_id):
+        """
+        Temporarily disable an uncertainty source so that it doesn't count towards calculating the
+        total uncertainty.
+
+        :param err_id: error id
+        :type err_id: int
+        """
+        try:
+            # try to find error in data container
+            _ret = self._data_container.disable_error(err_id)
+        except DataContainerException:
+            # try to find error in model container
+            _ret = self._param_model.disable_error(err_id)
+
+        # mark nexus error parameters as stale
+        self._mark_errors_for_update()
+        self._invalidate_total_error_cache()
+        return _ret
 
     def do_fit(self):
         """

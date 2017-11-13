@@ -108,6 +108,7 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
         self._xy_data = np.zeros((2, len(new_x)))
         self._xy_data[0] = new_x
         self._pm_calculation_stale = True
+        self._clear_total_error_cache()
 
     @property
     def y(self):

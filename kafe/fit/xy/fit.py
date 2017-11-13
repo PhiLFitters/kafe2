@@ -8,7 +8,8 @@ import textwrap
 from ...tools import print_dict_as_table
 from ...core import NexusFitter, Nexus
 from ...config import kc
-from .._base import FitException, FitBase, DataContainerBase, ModelParameterFormatter, CostFunctionBase
+from .._base import (FitException, FitBase, DataContainerBase,
+                     ModelParameterFormatter, CostFunctionBase)
 from .container import XYContainer
 from .cost import XYCostFunction_Chi2, XYCostFunction_UserDefined
 from .format import XYModelFunctionFormatter
@@ -151,7 +152,6 @@ class XYFit(FitBase):
         self.__cache_y_total_cov_mat = None
         self.__cache_y_total_cov_mat_inverse = None
         self.__cache_y_error_band = None
-        
 
     def _mark_errors_for_update(self):
         # TODO: implement a mass 'mark_for_update' routine in Nexus
@@ -176,10 +176,6 @@ class XYFit(FitBase):
         self._nexus.get_by_name('projected_xy_total_error').mark_for_update()
         self._nexus.get_by_name('projected_xy_total_cov_mat').mark_for_update()
         self._nexus.get_by_name('projected_xy_total_cov_mat_inverse').mark_for_update()
-
-    def _mark_errors_for_update_invalidate_total_error_cache(self):
-        self._mark_errors_for_update()
-        self._invalidate_total_error_cache()
 
     def _calculate_y_error_band(self):
         _xmin, _xmax = self._data_container.x_range
@@ -479,7 +475,7 @@ class XYFit(FitBase):
 
     # -- public methods
 
-    def add_simple_error(self, axis, err_val, correlation=0, relative=False):
+    def add_simple_error(self, axis, err_val, correlation=0, relative=False, reference='data'):
         """
         Add a simple uncertainty source for axis to the data container.
         Returns an error id which uniquely identifies the created error source.
@@ -492,16 +488,19 @@ class XYFit(FitBase):
         :type correlation: float
         :param relative: if ``True``, **err_val** will be interpreted as a *relative* uncertainty
         :type relative: bool
+        :param reference: which reference values to use when calculating absolute errors from relative errors
+        :type reference: 'data' or 'model'
         :return: error id
         :rtype: int
         """
-        # delegate to data container
-        _ret = self._data_container.add_simple_error(axis, err_val, correlation=correlation, relative=relative)
-        # mark nexus error parameters as stale
-        self._mark_errors_for_update_invalidate_total_error_cache()
+        _ret = super(XYFit, self).add_simple_error(err_val=err_val,
+                                                   correlation=correlation,
+                                                   relative=relative,
+                                                   reference=reference,
+                                                   axis=axis)
         return _ret
 
-    def add_matrix_error(self, axis, err_matrix, matrix_type, err_val=None, relative=False):
+    def add_matrix_error(self, axis, err_matrix, matrix_type, err_val=None, relative=False, reference='data'):
         """
         Add a matrix uncertainty source for an axis to the data container.
         Returns an error id which uniquely identifies the created error source.
@@ -515,26 +514,17 @@ class XYFit(FitBase):
         :type err_val: iterable of float
         :param relative: if ``True``, the covariance matrix and/or **err_val** will be interpreted as a *relative* uncertainty
         :type relative: bool
+        :param reference: which reference values to use when calculating absolute errors from relative errors
+        :type reference: 'data' or 'model'
         :return: error id
         :rtype: int
         """
-        # delegate to data container
-        _ret = self._data_container.add_matrix_error(axis, err_matrix, matrix_type, err_val=err_val, relative=relative)
-        # mark nexus error parameters as stale
-        self._mark_errors_for_update_invalidate_total_error_cache()
-        return _ret
-
-    def disable_error(self, err_id):
-        """
-        Temporarily disable an uncertainty source so that it doesn't count towards calculating the
-        total uncertainty.
-
-        :param err_id: error id
-        :type err_id: int
-        """
-        # delegate to data container
-        _ret = self._data_container.disable_error(err_id)   # mark nexus error parameters as stale
-        self._mark_errors_for_update_invalidate_total_error_cache()
+        _ret = super(XYFit, self).add_matrix_error(err_matrix=err_matrix,
+                                                   matrix_type=matrix_type,
+                                                   err_val=err_val,
+                                                   relative=relative,
+                                                   reference=reference,
+                                                   axis=axis)
         return _ret
 
     def do_fit(self):
@@ -545,7 +535,8 @@ class XYFit(FitBase):
             _convergence_limit = float(kc('fit', 'x_error_fit_convergence_limit'))
             _previous_cost_function_value = self.cost_function_value
             for i in range(kc('fit', 'max_x_error_fit_iterations')):
-                self._mark_errors_for_update_invalidate_total_error_cache()
+                self._mark_errors_for_update()
+                self._invalidate_total_error_cache()
                 self._fitter.do_fit()
                 if np.abs(self.cost_function_value - _previous_cost_function_value) < _convergence_limit:
                     break

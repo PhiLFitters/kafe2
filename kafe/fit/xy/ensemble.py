@@ -127,8 +127,8 @@ class XYFitEnsemble(FitEnsembleBase):
     def _generate_pseudodata(self):
         """generate new pseudo-data according to fit error model and commit to data container"""
 
-        if not self._toy_fit.has_data_errors:
-            raise FitEnsembleException("Cannot generate fit ensemble data: no data error model declared!")
+        if not self._toy_fit.has_errors:
+            raise FitEnsembleException("Cannot generate fit ensemble: no error model specified!")
 
         # -- generate 'x' data
         _x_data = self._ref_x_data.copy()
@@ -161,6 +161,7 @@ class XYFitEnsemble(FitEnsembleBase):
 
     def _do_toy_fit(self):
         """run fit with current pseudo-data"""
+        self._toy_fit._invalidate_total_error_cache()
         self._toy_fit.do_fit()
 
     def _get_var(self, var_name):
@@ -196,44 +197,28 @@ class XYFitEnsemble(FitEnsembleBase):
             )
 
         if 'y_data' in self._requested_results:
-            if self._toy_fit._data_container.has_x_errors:
-                _precision = 0.01 * np.min(self._toy_fit.x_error)
-                _derivatives = self._toy_fit._param_model.eval_model_function_derivative_by_x(dx=_precision)
-                _projected_xy_total_error = np.sqrt(
-                    self._toy_fit.y_total_error ** 2 +(self._toy_fit.x_total_error * _derivatives) ** 2)
-            else:
-                _projected_xy_total_error = self._toy_fit.y_total_error
-
             self._ensemble_variables['y_data'] = EnsembleVariable(
                 ensemble_array=np.zeros((self._n_exp, self.n_dat)),
                 distribution=scipy.stats.norm,
-                distribution_parameters=dict(loc=self._ref_y_data, scale=_projected_xy_total_error)
+                distribution_parameters=dict(loc=self._ref_y_data, scale=self._ref_projected_xy_err)
             )
             self._ensemble_variable_plotters['y_data'] = EnsembleVariablePlotter(
                 ensemble_variable=self._ensemble_variables['y_data'],
-                value_ranges=np.array([self._ref_y_data-3*_projected_xy_total_error,
-                                       self._ref_y_data+3*_projected_xy_total_error]).T,
+                value_ranges=np.array([self._ref_y_data-3*self._ref_projected_xy_err,
+                                       self._ref_y_data+3*self._ref_projected_xy_err]).T,
                 variable_labels=['$y_{%d}$' % (_i,) for _i in six.moves.range(1, self.n_dat+1)]
             )
 
         if 'y_model' in self._requested_results:
-            if self._toy_fit._data_container.has_x_errors:
-                _precision = 0.01 * np.min(self._toy_fit.x_error)
-                _derivatives = self._toy_fit._param_model.eval_model_function_derivative_by_x(dx=_precision)
-                _projected_xy_total_error = np.sqrt(
-                    self._toy_fit.y_total_error ** 2 +(self._toy_fit.x_total_error * _derivatives) ** 2)
-            else:
-                _projected_xy_total_error = self._toy_fit.y_total_error
-
             self._ensemble_variables['y_model'] = EnsembleVariable(
                 ensemble_array=np.zeros((self._n_exp, self.n_dat)),
                 distribution=scipy.stats.norm,
-                distribution_parameters=dict(loc=self._ref_y_data, scale=_projected_xy_total_error)
+                distribution_parameters=dict(loc=self._ref_y_data, scale=self._ref_projected_xy_err)
             )
             self._ensemble_variable_plotters['y_model'] = EnsembleVariablePlotter(
                 ensemble_variable=self._ensemble_variables['y_model'],
-                value_ranges=np.array([self._ref_y_data-3*_projected_xy_total_error,
-                                       self._ref_y_data+3*_projected_xy_total_error]).T,
+                value_ranges=np.array([self._ref_y_data-3*self._ref_projected_xy_err,
+                                       self._ref_y_data+3*self._ref_projected_xy_err]).T,
                 variable_labels=['$f(x_{%d})$' % (_i,) for _i in six.moves.range(1, self.n_dat+1)]
             )
 
@@ -347,16 +332,19 @@ class XYFitEnsemble(FitEnsembleBase):
 
     # -- public methods
 
-    def add_simple_error(self, axis, err_val, correlation=0, relative=False):
-        self._toy_fit.add_simple_error(axis=axis, err_val=err_val, correlation=correlation, relative=relative)
+    def add_simple_error(self, axis, err_val, correlation=0, relative=False, reference='data'):
+        self._toy_fit.add_simple_error(axis=axis, err_val=err_val,
+                                       correlation=correlation, relative=relative,
+                                       reference=reference)
         self._update_reference_quantities_from_toy_fit()  # recompute reference errors
 
     # "inherit" docstring
     add_simple_error.__doc__ = XYFit.add_simple_error.__doc__
 
-    def add_matrix_error(self, axis, err_matrix, matrix_type, err_val=None, relative=False):
+    def add_matrix_error(self, axis, err_matrix, matrix_type, err_val=None, relative=False, reference='data'):
         self._toy_fit.add_matrix_error(axis=axis, err_matrix=err_matrix,
-                                       matrix_type=matrix_type, err_val=err_val, relative=relative)
+                                       matrix_type=matrix_type, err_val=err_val,
+                                       relative=relative, reference=reference)
         self._update_reference_quantities_from_toy_fit()  # recompute reference errors
 
     # "inherit" docstring

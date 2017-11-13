@@ -5,7 +5,8 @@ import numpy as np
 
 from ...config import kc
 from ...core import NexusFitter, Nexus
-from .._base import FitException, FitBase, DataContainerBase, ModelParameterFormatter, CostFunctionBase
+from .._base import (FitException, FitBase, DataContainerBase,
+                     ModelParameterFormatter, CostFunctionBase)
 from .container import HistContainer
 from .cost import HistCostFunction_NegLogLikelihood, HistCostFunction_UserDefined
 from .format import HistModelDensityFunctionFormatter
@@ -140,10 +141,12 @@ class HistFit(FitBase):
         self._nexus.new_function(self._cost_function.func, function_name=self._cost_function.name, add_unknown_parameters=False)
         self._nexus.new_alias(**{'cost': self._cost_function.name})
 
-    def _mark_errors_for_update_invalidate_total_error_cache(self):
+    def _invalidate_total_error_cache(self):
         self.__cache_total_error = None
         self.__cache_total_cov_mat = None
         self.__cache_total_cov_mat_inverse = None
+
+    def _mark_errors_for_update(self):
         # TODO: implement a mass 'mark_for_update' routine in Nexus
         self._nexus.get_by_name('model').mark_for_update()
         self._nexus.get_by_name('data_error').mark_for_update()
@@ -244,60 +247,7 @@ class HistFit(FitBase):
 
     # -- public methods
 
-    def add_simple_error(self, err_val, correlation=0, relative=False):
-        """
-        Add a simple uncertainty source to the data container.
-        Returns an error id which uniquely identifies the created error source.
-
-        :param err_val: pointwise uncertainty/uncertainties for all data points
-        :type err_val: float or iterable of float
-        :param correlation: correlation coefficient between any two distinct data points
-        :type correlation: float
-        :param relative: if ``True``, **err_val** will be interpreted as a *relative* uncertainty
-        :type relative: bool
-        :return: error id
-        :rtype: int
-        """
-        # delegate to data container
-        _ret = self._data_container.add_simple_error(err_val, correlation=correlation, relative=relative)
-        # mark nexus error parameters as stale
-        self._mark_errors_for_update_invalidate_total_error_cache()
-        return _ret
-
-
-    def add_matrix_error(self, err_matrix, matrix_type, err_val=None, relative=False):
-        """
-        Add a matrix uncertainty source to the data container.
-        Returns an error id which uniquely identifies the created error source.
-
-        :param err_matrix: covariance or correlation matrix
-        :param matrix_type: one of ``'covariance'``/``'cov'`` or ``'correlation'``/``'cor'``
-        :type matrix_type: str
-        :param err_val: the pointwise uncertainties (mandatory if only a correlation matrix is given)
-        :type err_val: iterable of float
-        :param relative: if ``True``, the covariance matrix and/or **err_val** will be interpreted as a *relative* uncertainty
-        :type relative: bool
-        :return: error id
-        :rtype: int
-        """
-        # delegate to data container
-        _ret = self._data_container.add_matrix_error(err_matrix, matrix_type, err_val=err_val, relative=relative)
-        # mark nexus error parameters as stale
-        self._mark_errors_for_update_invalidate_total_error_cache()
-        return _ret
-
-    def disable_error(self, err_id):
-        """
-        Temporarily disable an uncertainty source so that it doesn't count towards calculating the
-        total uncertainty.
-
-        :param err_id: error id
-        :type err_id: int
-        """
-        # delegate to data container
-        _ret = self._data_container.disable_error(err_id)   # mark nexus error parameters as stale
-        self._mark_errors_for_update_invalidate_total_error_cache()
-        return _ret
+    ## add_error... methods inherited from FitBase ##
 
     def eval_model_function_density(self, x, model_parameters=None):
         """

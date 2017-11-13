@@ -70,6 +70,9 @@ class XYContainer(IndexedContainer):
         _total_err_y = MatrixGaussianError(_tmp_cov_mat_y, 'cov', relative=False, reference=self.y)
         self._xy_total_errors = [_total_err_x, _total_err_y]
 
+    def _clear_total_error_cache(self):
+        """recalculate total errors next time they are needed"""
+        self._xy_total_errors = None
 
     # -- public properties
 
@@ -95,6 +98,7 @@ class XYContainer(IndexedContainer):
         else:
             raise XYContainerException(
                 "XYContainer data length must be 2 in at least one axis! Got shape: %r..." % (_new_data.shape,))
+        self._clear_total_error_cache()
 
     @property
     def x(self):
@@ -110,7 +114,7 @@ class XYContainer(IndexedContainer):
         for _err_dict in self._error_dicts.values():
             if _err_dict['axis'] == 0:
                 _err_dict['err'].reference = self._get_data_for_axis(0)
-        self._xy_total_errors= None
+        self._clear_total_error_cache()
 
     @property
     def x_err(self):
@@ -151,7 +155,7 @@ class XYContainer(IndexedContainer):
         for _err_dict in self._error_dicts.values():
             if _err_dict['axis'] == 1:
                 _err_dict['err'].reference = self._get_data_for_axis(1)
-        self._xy_total_errors = None
+        self._clear_total_error_cache()
 
     @property
     def y_err(self):
@@ -224,7 +228,7 @@ class XYContainer(IndexedContainer):
         assert _id not in self._error_dicts
         _new_err_dict = dict(err=_err, axis=_axis, enabled=True)
         self._error_dicts[_id] = _new_err_dict
-        self._xy_total_errors = None
+        self._clear_total_error_cache()
         return _id
 
     def add_matrix_error(self, axis, err_matrix, matrix_type, err_val=None, relative=False):
@@ -252,7 +256,7 @@ class XYContainer(IndexedContainer):
         assert _id not in self._error_dicts
         _new_err_dict = dict(err=_err, axis=_axis, enabled=True)
         self._error_dicts[_id] = _new_err_dict
-        self._xy_total_errors = None
+        self._clear_total_error_cache()
         return _id
 
     def disable_error(self, err_id):
@@ -267,7 +271,7 @@ class XYContainer(IndexedContainer):
         if _err_dict is None:
             raise XYContainerException("No error with id %d!" % (err_id,))
         _err_dict['enabled'] = False
-        self._xy_total_errors = None
+        self._clear_total_error_cache()
 
     def get_total_error(self, axis):
         """
