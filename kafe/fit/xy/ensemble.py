@@ -93,7 +93,7 @@ class XYFitEnsemble(FitEnsembleBase):
         :type requested_results: iterable of str
         """
         self._n_exp = n_experiments
-        self._x_support = np.asarray(x_support, dtype=float)
+        self._ref_x_data = np.asarray(x_support, dtype=float)
         self._model_parameters = np.asarray(model_parameters)
         self._n_par = len(self._model_parameters)
 
@@ -104,10 +104,13 @@ class XYFitEnsemble(FitEnsembleBase):
         self._toy_fit = XYFit(xy_data=[x_support, _dummy_y_data],
                               model_function=model_function,
                               cost_function=cost_function)
+        self._toy_fit._param_model._model_parameters = model_parameters
+        self._toy_fit._param_model._pm_calculation_stale = True
 
-        self._ref_y_data = self._toy_fit.eval_model_function(x=self._x_support,
-                                                             model_parameters=self._model_parameters)
+        # get reference quantities (y data, covariance matrices...) from toy fit
+        self._update_reference_quantities_from_toy_fit()
 
+        # store and validate names of requested ensemble variables
         self._requested_results = requested_results
         if self._requested_results is None:
             self._requested_results = self._DEFAULT_RESULTS
@@ -118,6 +121,7 @@ class XYFitEnsemble(FitEnsembleBase):
                 raise ValueError("Requested unavailable result variable(s): %r"
                                  % (_unavailable_results,))
 
+        # initialize `EnsembleVariable` objects to store ensembles
         self._initialize_ensemble_variables()
 
     def _generate_pseudodata(self):
@@ -127,36 +131,24 @@ class XYFitEnsemble(FitEnsembleBase):
             raise FitEnsembleException("Cannot generate fit ensemble data: no data error model declared!")
 
         # -- generate 'x' data
-        _x_data = self._x_support
+        _x_data = self._ref_x_data.copy()
 
         if self._toy_fit._data_container.has_x_errors:
-            _x_data_error = self._toy_fit.x_total_error
-            _x_jitter = np.random.normal(np.zeros_like(_x_data, dtype=float), _x_data_error)
-
-            _x_cov_mat = CovMat(self._toy_fit.x_total_cov_mat)  # need cholesky decomposition from CovMat object
-            _x_cholesky_l = _x_cov_mat.chol
-            if _x_cholesky_l is None:
-               raise XYFitEnsembleException("Cannot generate pseudo-data: The total 'x' "
-                                            "covariance matrix is not positive definite!")
-            _x_lu = _x_cholesky_l.dot(np.matrix(np.diag(np.diag(_x_cholesky_l))).I)
-            _x_jitter = np.array(_x_lu).dot(_x_jitter)
+            # smear x data according to the total 'x' covariance matrix
+            # TODO: only gaussian smearing is implemented -> more?
+            _x_jitter =  np.random.multivariate_normal(
+                np.zeros_like(_x_data),
+                self._ref_x_cov_mat)
             _x_data += _x_jitter
 
         _y_data = self._toy_fit.eval_model_function(x=_x_data,
                                                     model_parameters=self._model_parameters)
-        _y_data_error = self._toy_fit.y_total_error
 
         # smear y data according to the total 'y' covariance matrix
         # TODO: only gaussian smearing is implemented -> more?
-        _y_jitter = np.random.normal(np.zeros_like(_y_data), _y_data_error)
-
-        _y_cov_mat = CovMat(self._toy_fit.y_total_cov_mat)  # need cholesky decomposition from CovMat object
-        _y_cholesky_l = _y_cov_mat.chol
-        if _y_cholesky_l is None:
-           raise XYFitEnsembleException("Cannot generate pseudo-data: The total 'y' covariance matrix "
-                                        "is not positive definite!")
-        _y_lu = _y_cholesky_l.dot(np.matrix(np.diag(np.diag(_y_cholesky_l))).I)
-        _y_jitter = np.array(_y_lu).T.dot(_y_jitter)
+        _y_jitter = np.random.multivariate_normal(
+            np.zeros_like(_y_data),
+            self._ref_y_cov_mat)
         _y_data += _y_jitter
 
         # update toy fit data container
@@ -256,6 +248,16 @@ class XYFitEnsemble(FitEnsembleBase):
                           height_ratios=None)
         return _fig, _gs
 
+    def _update_reference_quantities_from_toy_fit(self):
+        self._ref_y_data = self._toy_fit.eval_model_function(x=self._ref_x_data,
+                                                             model_parameters=self._model_parameters)
+        self._ref_x_cov_mat = self._toy_fit.x_total_cov_mat
+        self._ref_y_cov_mat = self._toy_fit.y_total_cov_mat
+        self._ref_projected_xy_cov_mat = self._toy_fit.projected_xy_total_cov_mat
+        self._ref_x_err = self._toy_fit.x_total_error
+        self._ref_y_err = self._toy_fit.y_total_error
+        self._ref_projected_xy_err = self._toy_fit.projected_xy_total_error
+
     # -- private properties
 
     @property
@@ -307,6 +309,7 @@ class XYFitEnsemble(FitEnsembleBase):
 
     def add_simple_error(self, axis, err_val, correlation=0, relative=False):
         self._toy_fit.add_simple_error(axis=axis, err_val=err_val, correlation=correlation, relative=relative)
+        self._update_reference_quantities_from_toy_fit()  # recompute reference errors
 
     # "inherit" docstring
     add_simple_error.__doc__ = XYFit.add_simple_error.__doc__
@@ -314,6 +317,7 @@ class XYFitEnsemble(FitEnsembleBase):
     def add_matrix_error(self, axis, err_matrix, matrix_type, err_val=None, relative=False):
         self._toy_fit.add_matrix_error(axis=axis, err_matrix=err_matrix,
                                        matrix_type=matrix_type, err_val=err_val, relative=relative)
+        self._update_reference_quantities_from_toy_fit()  # recompute reference errors
 
     # "inherit" docstring
     add_matrix_error.__doc__ = XYFit.add_matrix_error.__doc__
