@@ -65,6 +65,7 @@ class XYFitEnsemble(FitEnsembleBase):
 
     AVAILABLE_STATISTICS = {
         'mean': EnsembleVariable.mean,
+        'mean_error': EnsembleVariable.mean_error,
         'std': EnsembleVariable.std,
         'skew': EnsembleVariable.skew,
         'kurtosis': EnsembleVariable.kurtosis,
@@ -575,6 +576,9 @@ class XYFitEnsemble(FitEnsembleBase):
             # plot each entry into a separate `Axes` object and display
             # them in a grid-like layout
             _nrows = _ncols = int(_result_variable.shape[0])
+            if _nrows <= 1:
+                raise FitEnsembleException("Cannot create scatter plot for result variable '%s': "
+                                           "vector has less than two entries!" % (_result_name,))
             _fig, _gs = self._make_figure_gs(figsize=(8, 8), nrows=_nrows, ncols=_ncols)
 
             # create an array 'a' with a[i, j] = [i, j]
