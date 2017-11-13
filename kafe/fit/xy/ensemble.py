@@ -579,13 +579,13 @@ class XYFitEnsemble(FitEnsembleBase):
             if _nrows <= 1:
                 raise FitEnsembleException("Cannot create scatter plot for result variable '%s': "
                                            "vector has less than two entries!" % (_result_name,))
-            _fig, _gs = self._make_figure_gs(figsize=(8, 8), nrows=_nrows, ncols=_ncols)
+            _fig, _gs = self._make_figure_gs(figsize=(8, 8), nrows=_nrows-1, ncols=_ncols-1)
 
             # create an array 'a' with a[i, j] = [i, j]
             _axes_grid = np.dstack((np.meshgrid(np.arange(_nrows), np.arange(_ncols))))
             # replace [i, j] by the `Axes` object for _gs[i, j] -> array of `Axes`
             _axes_grid = np.apply_along_axis(
-                lambda irow_icol: plt.subplot(_gs[irow_icol[0], irow_icol[1]]) if irow_icol[0] > irow_icol[1] else None,
+                lambda irow_icol: plt.subplot(_gs[irow_icol[0] - 1, irow_icol[1]]) if irow_icol[0] > irow_icol[1] else None,
                 -1, _axes_grid)
 
             # call the plotting routine on the axes grid
