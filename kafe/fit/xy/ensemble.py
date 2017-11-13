@@ -179,22 +179,62 @@ class XYFitEnsemble(FitEnsembleBase):
             self._ensemble_variable_plotters['y_pulls'] = EnsembleVariablePlotter(
                 ensemble_variable=self._ensemble_variables['y_pulls'],
                 value_ranges=(-3, 3),
-                variable_labels=['Pull $y_{%d}$' % (_i,) for _i in six.moves.range(self.n_dat)]
+                variable_labels=['Pull $y_{%d}$' % (_i,) for _i in six.moves.range(1, self.n_dat+1)]
+            )
+
+        if 'x_data' in self._requested_results:
+            self._ensemble_variables['x_data'] = EnsembleVariable(
+                ensemble_array=np.zeros((self._n_exp, self.n_dat)),
+                distribution=scipy.stats.norm,
+                distribution_parameters=dict(loc=self._ref_x_data, scale=self._toy_fit.x_total_error)
+            )
+            self._ensemble_variable_plotters['x_data'] = EnsembleVariablePlotter(
+                ensemble_variable=self._ensemble_variables['x_data'],
+                value_ranges=np.array([self._ref_x_data - 3 * self._toy_fit.x_total_error,
+                                       self._ref_x_data + 3 * self._toy_fit.x_total_error]).T,
+                variable_labels=['$x_{%d}$' % (_i,) for _i in six.moves.range(1, self.n_dat+1)]
             )
 
         if 'y_data' in self._requested_results:
+            if self._toy_fit._data_container.has_x_errors:
+                _precision = 0.01 * np.min(self._toy_fit.x_error)
+                _derivatives = self._toy_fit._param_model.eval_model_function_derivative_by_x(dx=_precision)
+                _projected_xy_total_error = np.sqrt(
+                    self._toy_fit.y_total_error ** 2 +(self._toy_fit.x_total_error * _derivatives) ** 2)
+            else:
+                _projected_xy_total_error = self._toy_fit.y_total_error
+
             self._ensemble_variables['y_data'] = EnsembleVariable(
                 ensemble_array=np.zeros((self._n_exp, self.n_dat)),
                 distribution=scipy.stats.norm,
-                distribution_parameters=dict(loc=self._ref_y_data, scale=self._toy_fit.y_data_error)
+                distribution_parameters=dict(loc=self._ref_y_data, scale=_projected_xy_total_error)
             )
             self._ensemble_variable_plotters['y_data'] = EnsembleVariablePlotter(
                 ensemble_variable=self._ensemble_variables['y_data'],
-                #value_ranges=(self._ref_y_data-3*self._toy_fit.y_data_error,
-                #              self._ref_y_data+3*self._toy_fit.y_data_error),
-                value_ranges=np.array([self._ref_y_data-3*self._toy_fit.y_data_error,
-                             self._ref_y_data+3*self._toy_fit.y_data_error]).T,
-                variable_labels=['$y_{%d}$' % (_i,) for _i in six.moves.range(self.n_dat)]
+                value_ranges=np.array([self._ref_y_data-3*_projected_xy_total_error,
+                                       self._ref_y_data+3*_projected_xy_total_error]).T,
+                variable_labels=['$y_{%d}$' % (_i,) for _i in six.moves.range(1, self.n_dat+1)]
+            )
+
+        if 'y_model' in self._requested_results:
+            if self._toy_fit._data_container.has_x_errors:
+                _precision = 0.01 * np.min(self._toy_fit.x_error)
+                _derivatives = self._toy_fit._param_model.eval_model_function_derivative_by_x(dx=_precision)
+                _projected_xy_total_error = np.sqrt(
+                    self._toy_fit.y_total_error ** 2 +(self._toy_fit.x_total_error * _derivatives) ** 2)
+            else:
+                _projected_xy_total_error = self._toy_fit.y_total_error
+
+            self._ensemble_variables['y_model'] = EnsembleVariable(
+                ensemble_array=np.zeros((self._n_exp, self.n_dat)),
+                distribution=scipy.stats.norm,
+                distribution_parameters=dict(loc=self._ref_y_data, scale=_projected_xy_total_error)
+            )
+            self._ensemble_variable_plotters['y_model'] = EnsembleVariablePlotter(
+                ensemble_variable=self._ensemble_variables['y_model'],
+                value_ranges=np.array([self._ref_y_data-3*_projected_xy_total_error,
+                                       self._ref_y_data+3*_projected_xy_total_error]).T,
+                variable_labels=['$f(x_{%d})$' % (_i,) for _i in six.moves.range(1, self.n_dat+1)]
             )
 
         if 'parameter_pulls' in self._requested_results:
@@ -251,6 +291,11 @@ class XYFitEnsemble(FitEnsembleBase):
     # -- private properties
 
     @property
+    def _x_data(self):
+        """property for ensemble variable 'x_data'"""
+        return self._toy_fit.x
+
+    @property
     def _parameter_pulls(self):
         """property for ensemble variable 'parameter_pulls'"""
         return (self._toy_fit.parameter_values - self._model_parameters)/self._toy_fit.parameter_errors
@@ -259,6 +304,11 @@ class XYFitEnsemble(FitEnsembleBase):
     def _y_data(self):
         """property for ensemble variable 'y_data'"""
         return self._toy_fit.y_data
+
+    @property
+    def _y_model(self):
+        """property for ensemble variable 'y_model'"""
+        return self._toy_fit.y_model
 
     @property
     def _y_pulls(self):
@@ -556,8 +606,12 @@ class XYFitEnsemble(FitEnsembleBase):
         return _plot_result_dict
 
 
-    AVAILABLE_RESULTS = {'parameter_pulls': _parameter_pulls,
-                         'y_pulls': _y_pulls,
-                         'cost': _cost,
-                         'y_data': _y_data}
+    AVAILABLE_RESULTS = {
+        'parameter_pulls': _parameter_pulls,
+        'x_data': _x_data,
+        'y_pulls': _y_pulls,
+        'cost': _cost,
+        'y_data': _y_data,
+        'y_model': _y_model,
+    }
     _DEFAULT_RESULTS = {'y_pulls', 'parameter_pulls', 'cost'}
