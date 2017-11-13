@@ -212,14 +212,21 @@ class EnsembleVariable(object):
     @property
     def cov_mat(self):
         """The sample covariance matrix (only available for one-dimensional ensemble variables)."""
-        if self.ndim == 1:
+        if self.ndim == 0:
+            # trivial covariance matrix
+            return np.matrix([[self.std**2]])
+        elif self.ndim == 1:
             return np.cov(self._array.T)
+
         raise EnsembleError("Cannot calculate covariance matrix: ensemble variable must "
                             "have dimension 1 (got {})".format(self.ndim))
 
     @property
     def cor_mat(self):
         """The sample correlation matrix (only available for one-dimensional ensemble variables)."""
+        if self.ndim == 0:
+            # trivial correlation matrix
+            return np.matrix([[1.0]])
         if self.ndim == 1:
             return CovMat(self.cov_mat).cor_mat
 
