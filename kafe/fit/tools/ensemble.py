@@ -528,7 +528,7 @@ class EnsembleVariablePlotter(object):
                 _bin_contents, _bin_edges, _ = _ax.hist(
                     _data,
                     bins=_nbins,
-                    # range=self._value_ranges[_index], # TODO
+                    range=self._value_ranges[_index1, _index2], # TODO: what about underflow/overflow?
                     label=self._ensemble_label
                 )
 
@@ -612,7 +612,6 @@ class EnsembleVariablePlotter(object):
         _plot_result_dict['legend_labels'] = _ls
 
         return _plot_result_dict
-
 
     def plot_scatter(self, axes_array):
         """

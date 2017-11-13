@@ -409,7 +409,7 @@ class XYFit(FitBase):
         if np.count_nonzero(self._data_container.x_err) == 0:
             return self.y_total_cov_mat
         if self.__cache_projected_xy_total_cov_mat is None:
-            _x_errors = self.x_total_error            
+            _x_errors = self.x_total_error
             _precision = 0.01 * np.min(_x_errors)
             _derivatives = self._param_model.eval_model_function_derivative_by_x(dx=_precision)
             _outer_product = np.outer(_derivatives, _derivatives)

@@ -163,16 +163,6 @@ class XYFitEnsemble(FitEnsembleBase):
         """run fit with current pseudo-data"""
         self._toy_fit.do_fit()
 
-    def _get_var_shape_spec(self, var_name):
-        """get the required shape for the result variable array"""
-        _shape = (self.n_exp,)
-        _prop_shapes = self.RESULTS_SHAPE_SPECS[var_name]
-        if _prop_shapes is None:
-            return _shape
-        for _prop in _prop_shapes:
-            _shape += (_prop.fget(self),)
-        return _shape
-
     def _get_var(self, var_name):
         """get the value of the result variables for the current fit"""
         return self.AVAILABLE_RESULTS[var_name].fget(self)
