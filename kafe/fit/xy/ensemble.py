@@ -94,18 +94,22 @@ class XYFitEnsemble(FitEnsembleBase):
         """
         self._n_exp = n_experiments
         self._ref_x_data = np.asarray(x_support, dtype=float)
+        self._model_function = model_function
         self._model_parameters = np.asarray(model_parameters)
+        self._cost_function = cost_function
         self._n_par = len(self._model_parameters)
 
+        # initialize an `XYFit` object for performing the toy fits
         # need some dummy initial data values in order to initialize a Fit object
-        _dummy_y_data = model_function(x_support, *model_parameters)
+        self._ref_y_data = self._model_function(self._ref_x_data, *self._model_parameters)
 
         # initialize Fit object used for fitting the pseudo-data
-        self._toy_fit = XYFit(xy_data=[x_support, _dummy_y_data],
-                              model_function=model_function,
-                              cost_function=cost_function)
-        self._toy_fit._param_model._model_parameters = model_parameters
-        self._toy_fit._param_model._pm_calculation_stale = True
+        self._toy_fit = XYFit(xy_data=[self._ref_x_data, self._ref_y_data],
+                              model_function=self._model_function,
+                              cost_function=self._cost_function)
+
+        # set the model parameters of the toy fit to the reference values
+        self._set_toy_fit_parameters_to_reference()
 
         # get reference quantities (y data, covariance matrices...) from toy fit
         self._update_reference_quantities_from_toy_fit()
@@ -123,6 +127,11 @@ class XYFitEnsemble(FitEnsembleBase):
 
         # initialize `EnsembleVariable` objects to store ensembles
         self._initialize_ensemble_variables()
+
+    def _set_toy_fit_parameters_to_reference(self):
+        """set the model parameters of the toy fit to the reference values"""
+        self._toy_fit._param_model._model_parameters = self._model_parameters
+        self._toy_fit._param_model._pm_calculation_stale = True
 
     def _generate_pseudodata(self):
         """generate new pseudo-data according to fit error model and commit to data container"""
@@ -352,6 +361,8 @@ class XYFitEnsemble(FitEnsembleBase):
 
     def run(self):
         """Perform the pseudo-experiments. Retrieve and store the requested fit result variables."""
+        self._set_toy_fit_parameters_to_reference()
+        self._update_reference_quantities_from_toy_fit()
         self._initialize_ensemble_variables()
         for _i_exp in six.moves.range(self.n_exp):
             self._generate_pseudodata()
