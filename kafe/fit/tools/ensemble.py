@@ -508,7 +508,7 @@ class EnsembleVariablePlotter(object):
             _pdf_eval_x = expand_to_ndim(_pdf_eval_x, 3, direction='left')
             _pdf_eval_y = expand_to_ndim(_pdf_eval_y, 3, direction='left')
 
-            _pdf_eval_ymax = np.max(_pdf_eval_y)
+            _pdf_eval_ymax = np.max(_pdf_eval_y, axis=-1)
 
         # get the observed mean (pad to at least 2 dimensions: one scalar per plot in 2D matrix)
         _observed_means = np.atleast_2d(self._var.mean)
@@ -518,7 +518,6 @@ class EnsembleVariablePlotter(object):
 
         _all_legend_handles = []
         _all_legend_labels = []
-
 
         _plot_result_dict = dict()
         for _index1, _axes in enumerate(np.atleast_2d(axes_array)):
@@ -583,7 +582,7 @@ class EnsembleVariablePlotter(object):
 
                 # ensure density appears with the same scaling across all axes
                 if _pdf_eval_ymax is not None:
-                    _ax.set_ylim((0, _pdf_eval_ymax * _plot_prob_density_scale * 1.2))
+                    _ax.set_ylim((0, _pdf_eval_ymax[_index1, _index2] * _plot_prob_density_scale * 1.2))
 
                 # set the x axis label
                 if self._variable_labels is not None:
