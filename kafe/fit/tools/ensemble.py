@@ -613,3 +613,102 @@ class EnsembleVariablePlotter(object):
 
         return _plot_result_dict
 
+
+    def plot_scatter(self, axes_array):
+        """
+        Plot a one-dimensional ensemble variable as a matrix of scatter plots.
+
+        :param axes_array: an array of ``matplotlib`` axes objects in which to perform the plotting. The array must
+                           be a two-dimensional square (*N* x *N*) array, with *N* being identical to the
+                           size of the ensemble variable.
+
+        :type axes_array: ``numpy.ndarray`` of ``matplotlib`` ``Axes`` objects.
+
+        :return: mapping containing plot metadata and other information
+        :rtype: `dict`
+        """
+        axes_array = np.asarray(axes_array)
+
+        if self._var.ndim != 1:
+            raise EnsembleError("Cannot create scatter plots: ensemble variable "
+                                "must be a 1D array, but got shape {} instead!".format(self._var.shape))
+
+        _ncols = self._var.shape[0]
+
+        if axes_array.shape != (_ncols, _ncols):
+            raise EnsembleError("Cannot create scatter plots: "
+                                "`axes_array` must be a 2D ({0},{0}) array, "
+                                "but got shape {1} instead!".format(self._var.shape[0], axes_array.shape))
+
+        # get the expected mean and its error from the ensemble variable distribution
+        _dist = self._var.dist
+        if _dist is not None:
+            _expected_means = np.atleast_2d(self._var.dist.mean)
+            # TODO: presumably only valid/relevant for Gaussian -> solution for non-Gaussian?
+            _expected_mean_errors = np.atleast_2d(self._var.dist.std) / np.sqrt(self._var.size)
+
+        _all_legend_handles = []
+        _all_legend_labels = []
+
+        _plot_result_dict = dict()
+        for _index1, _axes in enumerate(np.atleast_2d(axes_array)):
+            for _index2, _ax in enumerate(_axes):
+                if _ax is None:
+                    continue
+
+                _data_x = self._var.values[:, _index1]
+                _data_y = self._var.values[:, _index2]
+                assert len(_data_x) == self._var.size
+                assert len(_data_y) == self._var.size
+
+                _ = _ax.scatter(
+                    _data_x,
+                    _data_y,
+                    # range=self._value_ranges[_index], # TODO
+                    label=self._ensemble_label,
+                    marker='.'
+                )
+
+                if _dist is not None:
+                    _ax.axvline(x=_expected_means[:, _index1],
+                                #extra label for expected 'x' mean covered by 'y' mean legend entry
+                                **self.__class__._DEFAULT_PLOT_EXPECTED_MEAN_KWARGS)
+                    _ax.axhline(y=_expected_means[:, _index2],
+                                label="expected mean",
+                                **self.__class__._DEFAULT_PLOT_EXPECTED_MEAN_KWARGS)
+
+                if self._value_ranges is not None:
+                    _ax.set_xlim(self._value_ranges[0, _index1])
+                    _ax.set_ylim(self._value_ranges[0, _index2])
+
+                _ax.xaxis.set_ticks([])
+                _ax.yaxis.set_ticks([])
+
+                # set the x axis label
+                if self._variable_labels is not None:
+                    _xlabel = self._variable_labels[0, _index1]
+                    _ylabel = self._variable_labels[0, _index2]
+                    if _xlabel is not None:
+                        _ax.set_xlabel(_xlabel)
+                    if _ylabel is not None:
+                        _ax.set_ylabel(_ylabel)
+
+                # collect legend handles and labels
+                _hs, _ls = _ax.get_legend_handles_labels()
+                _all_legend_handles += tuple(_hs)
+                _all_legend_labels += tuple(_ls)
+
+        # suppress multiple entries for the same label
+        _hs, _ls = [], []
+        _seen_labels = set()
+        for _h, _l in zip(_all_legend_handles, _all_legend_labels):
+            if _l not in _seen_labels:
+                _hs.append(_h)
+                _ls.append(_l)
+                _seen_labels.add(_l)
+
+        _plot_result_dict['legend_handles'] = _hs
+        _plot_result_dict['legend_labels'] = _ls
+
+        return _plot_result_dict
+

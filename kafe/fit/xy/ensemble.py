@@ -488,6 +488,77 @@ class XYFitEnsemble(FitEnsembleBase):
                 # no extra space at figure bottom
                 _figure_extra_bottom = 0.0
 
+            _fig.canvas.set_window_title(_result_name)
+
+            _gs.tight_layout(_fig,
+                             pad=0.0, w_pad=0, h_pad=-0.2,
+                             rect=(0.01, 0.02+_figure_extra_bottom, 0.98, 0.98))
+
+        return _plot_result_dict
+
+    def plot_result_scatter(self, results='all',
+                                  show_legend=True):
+        """
+        Make plots with histograms of the requested fit variable values across all pseudo-experiments.
+
+        :param results: names of retrieved fit variable for which to generate plots
+        :type results: iterable of str or ``'all'`` (make plots for all retrieved variables)
+        :param show_legend: if ``True``, show a plot legend on each figure
+        :type show_legend: bool
+        """
+        if results == 'all':
+            results = self._requested_results
+        else:
+            # validate list of results requested by user
+            _unavailable_results = set(self._requested_results) - set(self.AVAILABLE_RESULTS.keys())
+            if _unavailable_results:
+                raise ValueError("Requested unavailable result variable(s): %r"
+                                 % (_unavailable_results,))
+
+        for _result_name in results:
+            _result_variable = self._ensemble_variables.get(_result_name, None)
+
+            if _result_variable is None:
+                raise FitEnsembleException("Cannot plot result for variable '%s': "
+                                           "variable not collected!" % (_result_name,))
+
+            _result_variable_plotter = self._ensemble_variable_plotters.get(_result_name, None)
+
+            if _result_variable_plotter is None:
+                raise FitEnsembleException("Cannot plot result for variable '%s': "
+                                           "no plotter defined!" % (_result_name,))
+
+            # -- decide how to lay out plots depending on the result variable dimensionality
+            if _result_variable.ndim != 1:
+                raise ValueError()
+
+            # if the ensemble variable is a one-dimensional vector,
+            # plot each entry into a separate `Axes` object and display
+            # them in a grid-like layout
+            _nrows = _ncols = int(_result_variable.shape[0])
+            _fig, _gs = self._make_figure_gs(figsize=(8, 8), nrows=_nrows, ncols=_ncols)
+
+            # create an array 'a' with a[i, j] = [i, j]
+            _axes_grid = np.dstack((np.meshgrid(np.arange(_nrows), np.arange(_ncols))))
+            # replace [i, j] by the `Axes` object for _gs[i, j] -> array of `Axes`
+            _axes_grid = np.apply_along_axis(
+                lambda irow_icol: plt.subplot(_gs[irow_icol[0], irow_icol[1]]) if irow_icol[0] > irow_icol[1] else None,
+                -1, _axes_grid)
+
+            # call the plotting routine on the axes grid
+            _plot_result_dict = _result_variable_plotter.plot_scatter(_axes_grid)
+
+            if show_legend:
+                _fig.legend(_plot_result_dict['legend_handles'],
+                            _plot_result_dict['legend_labels'], loc='lower center')
+                # add extra space at figure bottom for legend
+                _figure_extra_bottom = 0.05 * len(_plot_result_dict['legend_labels'])
+            else:
+                # no extra space at figure bottom
+                _figure_extra_bottom = 0.0
+
+            _fig.canvas.set_window_title(_result_name)
+
             _gs.tight_layout(_fig,
                              pad=0.0, w_pad=0, h_pad=-0.2,
                              rect=(0.01, 0.02+_figure_extra_bottom, 0.98, 0.98))
