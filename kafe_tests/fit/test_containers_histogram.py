@@ -3,6 +3,7 @@ import numpy as np
 import scipy.stats as stats
 
 from kafe.fit import HistContainer, HistParametricModel
+from kafe.fit._base import DataContainerException
 from kafe.fit.histogram.container import HistContainerException
 from kafe.fit.histogram.model import HistParametricModelException
 
@@ -116,6 +117,19 @@ class TestDatastoreHistogram(unittest.TestCase):
         with self.assertRaises(HistContainerException):
             _hc = HistContainer(self._ref_n_bins_manual, self._ref_n_bin_range,
                                 bin_edges=self._probe_bin_edges_variablespacing_unsorted)
+
+    def test_raise_add_same_error_name_twice(self):
+        self.hist_cont_binedges_auto.add_simple_error(0.1,
+                                      name="MyNewError",
+                                      correlation=0, relative=False)
+        with self.assertRaises(DataContainerException):
+            self.hist_cont_binedges_auto.add_simple_error(0.1,
+                                          name="MyNewError",
+                                          correlation=0, relative=False)
+
+    def test_raise_get_inexistent_error(self):
+        with self.assertRaises(DataContainerException):
+            self.hist_cont_binedges_auto.get_error("MyInexistentError")
 
 
 class TestDatastoreHistParametricModel(unittest.TestCase):

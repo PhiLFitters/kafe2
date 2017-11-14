@@ -5,6 +5,8 @@ import numpy as np
 import six
 import sys
 
+from string import ascii_letters
+
 
 @contextlib.contextmanager
 def numpy_print_options(*args, **kwargs):
@@ -17,6 +19,12 @@ def numpy_print_options(*args, **kwargs):
         yield
     finally:
         np.set_printoptions(**_saved_options)
+
+
+_ALPHANUMERIC = np.array(list(ascii_letters) + list("0123456789"))
+def random_alphanumeric(size):
+    return "".join(np.random.choice(_ALPHANUMERIC, size=size))
+
 
 def print_dict_recursive(dct, output_stream=sys.stdout, indent_level=0, indent_width=4, indent_char=' ', filter_func=lambda x: True):
     _max_key_len = max([len(_key) for _key in dct.keys()])

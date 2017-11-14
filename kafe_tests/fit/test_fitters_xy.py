@@ -254,12 +254,18 @@ class TestFittersXYChi2WithError(unittest.TestCase):
         self._ref_y_data = self._ref_y_model_values + self._ref_data_jitter
         self._ref_xy_data = np.array([self._ref_x, self._ref_y_data])
         self._ref_y_data_error = np.ones_like(self._ref_y_data) * 1.0
+        self._ref_y_model_error = 1.0
 
         self.xy_fit = XYFit(xy_data=self._ref_xy_data,
                                   model_function=self.xy_model,
                                   cost_function=self.chi2_with_error)
 
-        self.xy_fit.add_simple_error('y', self._ref_y_data_error, correlation=0, relative=False)
+        self.xy_fit.add_simple_error('y', self._ref_y_data_error,
+                                     name="MyYDataError", correlation=0, relative=False, reference='data')
+        self.xy_fit.add_simple_error('y', self._ref_y_model_error,
+                                     name="MyYModelError", correlation=0, relative=False, reference='model')
+
+        self._ref_y_total_error = np.sqrt(self._ref_y_data_error ** 2 + self._ref_y_model_error ** 2)
 
         self._ref_parameter_value_estimates = [1.1351433845831516, 2.137441531781195, 2.3405503488535118]
         self._ref_model_value_estimates = self.xy_model(self._ref_x, *self._ref_parameter_value_estimates)
@@ -270,7 +276,7 @@ class TestFittersXYChi2WithError(unittest.TestCase):
                                   xy_data=self._ref_xy_data,
                                   model_function=self.xy_model,
                                   cost_function=self.chi2_with_cov_mat)
-        self.xy_fit_chi2_with_cov_mat.add_simple_error('y', self._ref_y_data_error, correlation=0, relative=False)
+        self.xy_fit_chi2_with_cov_mat.add_simple_error('y', self._ref_y_data_error, correlation=0, relative=False, reference='data')
         self.xy_fit_chi2_with_cov_mat.do_fit()
 
         self.assertTrue(
@@ -325,6 +331,15 @@ class TestFittersXYChi2WithError(unittest.TestCase):
             )
         )
 
+    def test_before_fit_compare_y_total_error(self):
+        self.assertTrue(
+            np.allclose(
+                self.xy_fit.y_total_error,
+                self._ref_y_total_error,
+                rtol=1e-2
+            )
+        )
+
     def test_do_fit_compare_parameter_values(self):
         self.xy_fit.do_fit()
         self.assertTrue(
@@ -341,6 +356,16 @@ class TestFittersXYChi2WithError(unittest.TestCase):
             np.allclose(
                 self.xy_fit.y_model,
                 self._ref_model_value_estimates,
+                rtol=1e-2
+            )
+        )
+
+    def test_do_fit_compare_y_total_error(self):
+        self.xy_fit.do_fit()
+        self.assertTrue(
+            np.allclose(
+                self.xy_fit.y_total_error,
+                self._ref_y_total_error,
                 rtol=1e-2
             )
         )

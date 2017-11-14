@@ -2,6 +2,7 @@ import unittest
 import numpy as np
 
 from kafe.fit import XYContainer, XYParametricModel
+from kafe.fit._base import DataContainerException
 from kafe.fit.xy.container import XYContainerException
 from kafe.fit.xy.model import XYParametricModelException
 from kafe.core.error import cov_mat_from_float_list
@@ -23,9 +24,9 @@ class TestDatastoreXY(unittest.TestCase):
         self._ref_x_err_corr_coeff = 0.1
         self._ref_y_err_corr_coeff = 0.23
 
-        self.data_xy.add_simple_error('x', self._ref_x_err_abs_valuearray, correlation=self._ref_x_err_corr_coeff,
+        self.data_xy.add_simple_error('x', self._ref_x_err_abs_valuearray, name='MyXError', correlation=self._ref_x_err_corr_coeff,
                                       relative=False)
-        self.data_xy.add_simple_error('y', self._ref_y_err_abs_valuearray, correlation=self._ref_y_err_corr_coeff,
+        self.data_xy.add_simple_error('y', self._ref_y_err_abs_valuearray, name='MyYError', correlation=self._ref_y_err_corr_coeff,
                                       relative=False)
 
         self._ref_x_cov_mat = cov_mat_from_float_list(self._ref_x_err_abs_valuearray,
@@ -84,6 +85,41 @@ class TestDatastoreXY(unittest.TestCase):
         _err = self.data_xy.get_total_error(1)
         _mat = _err.cov_mat
         self.assertTrue(np.allclose(_mat, self._ref_y_cov_mat + self._ref_x_cov_mat, atol=1e-5))
+
+    def test_compare_ref_total_y_for_x_plus_y_as_y_err_disabled(self):
+        self.data_xy.add_simple_error('y', self._ref_x_err_abs_valuearray,
+                                      name="MyNewYError",
+                                      correlation=self._ref_x_err_corr_coeff,
+                                      relative=False)
+        self.data_xy.disable_error("MyNewYError")
+        _err = self.data_xy.get_total_error(1)
+        _mat = _err.cov_mat
+        self.assertTrue(np.allclose(_mat, self._ref_y_cov_mat, atol=1e-5))
+
+    def test_compare_ref_total_y_for_x_plus_y_as_y_err_disabled_reenabled(self):
+        self.data_xy.add_simple_error('y', self._ref_x_err_abs_valuearray,
+                                      name="MyNewYError",
+                                      correlation=self._ref_x_err_corr_coeff,
+                                      relative=False)
+        self.data_xy.disable_error("MyNewYError")
+        _err = self.data_xy.get_total_error(1)
+        self.data_xy.enable_error("MyNewYError")
+        _err = self.data_xy.get_total_error(1)
+        _mat = _err.cov_mat
+        self.assertTrue(np.allclose(_mat, self._ref_y_cov_mat + self._ref_x_cov_mat, atol=1e-5))
+
+    def test_raise_add_same_error_name_twice(self):
+        self.data_xy.add_simple_error('y', 0.1,
+                                      name="MyNewYError",
+                                      correlation=0, relative=False)
+        with self.assertRaises(DataContainerException):
+            self.data_xy.add_simple_error('y', 0.1,
+                                          name="MyNewYError",
+                                          correlation=0, relative=False)
+
+    def test_raise_get_inexistent_error(self):
+        with self.assertRaises(DataContainerException):
+            self.data_xy.get_error("MyInexistentYError")
 
 
 class TestDatastoreXYParametricModel(unittest.TestCase):

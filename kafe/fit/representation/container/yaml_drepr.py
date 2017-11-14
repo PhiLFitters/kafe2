@@ -94,7 +94,7 @@ class DataContainerYamlWriter(DReprWriterMixin, DataContainerDReprBase):
 
     def _write_errors_to_yaml(self, yaml_struct):
         # TODO: create public error retrieval interface
-        for _err_id, _err_dict in self._container._error_dicts.items():
+        for _err_name, _err_dict in self._container._error_dicts.items():
 
             _err_obj = _err_dict['err']
             _err_axis = _err_dict.get('axis', None)
@@ -118,6 +118,7 @@ class DataContainerYamlWriter(DReprWriterMixin, DataContainerDReprBase):
             # -- handle different error types
             if _err_obj.__class__ is SimpleGaussianError:
                 _yaml_section.append(dict(
+                    name=_err_name,
                     type='simple',
                     error_value=_err_val,
                     relative=_is_relative,
@@ -126,6 +127,7 @@ class DataContainerYamlWriter(DReprWriterMixin, DataContainerDReprBase):
             elif _err_obj.__class__ is MatrixGaussianError:
                 _mtype = _err_obj._matrix_type_at_construction  # TODO: public interface!
                 _yaml_section.append(dict(
+                    name=_err_name,
                     type='matrix',
                     matrix_type=_mtype,
                     relative=_is_relative,
@@ -244,7 +246,9 @@ class DataContainerYamlReader(DReprReaderMixin, DataContainerDReprBase):
             _add_kwargs = dict()
             # translate and check that all required keys are present
             try:
-                _err_type = _err.get('type')
+                _err_type = _err['type']
+
+                _add_kwargs['name'] = _err['name']
 
                 if _err_type == 'simple':
                     _add_kwargs['err_val']= _err['error_value']

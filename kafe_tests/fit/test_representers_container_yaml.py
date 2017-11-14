@@ -4,6 +4,7 @@ import numpy as np
 from six import StringIO
 
 from kafe.fit import IndexedContainer, XYContainer, HistContainer
+from kafe.fit._base.container import DataContainerException
 from kafe.fit.representation import DataContainerYamlWriter, DataContainerYamlReader, DReprError
 from kafe.fit.io.handle import IOStreamHandle
 
@@ -20,24 +21,28 @@ dataset:
       - 0.0
     - - 0.0
       - 0.1
+    name: ErrorOne
     matrix_type: covariance
     relative: false
     type: matrix
   - matrix: !matrix |
       0.2   0.1
       0.1   0.2
+    name: ErrorTwo
     matrix_type: covariance
     relative: false
     type: matrix
   - matrix: !symmetric_matrix |
       0.3
       0.1   0.3
+    name: ErrorThree
     matrix_type: covariance
     relative: false
     type: matrix
   - matrix:
       [[0.2,  0.1],
        [0.1,  0.2]]
+    name: ErrorFour
     matrix_type: covariance
     relative: false
     type: matrix
@@ -51,11 +56,11 @@ class TestIndexedContainerYamlRepresentation(unittest.TestCase):
         _ndat = len(_data)
         self._container = IndexedContainer(data=_data)
 
-        self._container.add_simple_error(err_val=0.1, correlation=0.0, relative=False)
-        self._container.add_simple_error(err_val=0.1, correlation=0.0, relative=True)
-        self._container.add_simple_error(err_val=0.1, correlation=1.0, relative=False)
-        self._container.add_matrix_error(err_matrix=np.eye(_ndat) * 0.1, relative=False, matrix_type='covariance')
-        self._container.add_matrix_error(err_matrix=np.eye(_ndat), relative=False, matrix_type='correlation', err_val=0.1)
+        self._container.add_simple_error(err_val=0.1, name="SUA", correlation=0.0, relative=False)
+        self._container.add_simple_error(err_val=0.1, name="SUR", correlation=0.0, relative=True)
+        self._container.add_simple_error(err_val=0.1, name="SCA", correlation=1.0, relative=False)
+        self._container.add_matrix_error(err_matrix=np.eye(_ndat) * 0.1, name="MCov", relative=False, matrix_type='covariance')
+        self._container.add_matrix_error(err_matrix=np.eye(_ndat), name="MCor", relative=False, matrix_type='correlation', err_val=0.1)
 
         # # xy
         # self._container.add_simple_error(axis='x', err_val=0.1, correlation=0.0, relative=False)
@@ -75,6 +80,7 @@ class TestIndexedContainerYamlRepresentation(unittest.TestCase):
         self._ref_testfile_data = [80.429, 80.339]
         self._ref_testfile_err = [0.89442719,  0.89442719]
         self._ref_testfile_cov_mat = np.matrix([[0.8, 0.3], [0.3, 0.8]])
+        self._ref_testfile_error_names = {'ErrorOne', 'ErrorTwo', 'ErrorThree', 'ErrorFour'}
 
 
     def test_write_to_roundtrip_stringstream(self):
@@ -101,6 +107,12 @@ class TestIndexedContainerYamlRepresentation(unittest.TestCase):
                 _read_container.cov_mat,
                 self._ref_testfile_cov_mat,
             )
+        )
+
+        # check that the error names are the same
+        self.assertEqual(
+            set(_read_container._error_dicts.keys()),
+            self._ref_testfile_error_names
         )
 
 
@@ -134,6 +146,12 @@ class TestIndexedContainerYamlRepresentation(unittest.TestCase):
             )
         )
 
+        # check that the error names are the same
+        self.assertEqual(
+            set(self._container._error_dicts.keys()),
+            set(_read_container._error_dicts.keys())
+        )
+
 
 TEST_DATASET_XY = """
 dataset:
@@ -146,12 +164,14 @@ dataset:
       - 0.0
     - - 0.0
       - 0.1
+    name: YErrorOne
     matrix_type: covariance
     relative: false
     type: matrix
   - matrix: !matrix |
       0.2   0.1
       0.1   0.2
+    name: YErrorTwo
     matrix_type: covariance
     relative: false
     type: matrix
@@ -159,12 +179,14 @@ dataset:
   - matrix: !symmetric_matrix |
       0.3
       0.1   0.3
+    name: XErrorOne
     matrix_type: covariance
     relative: false
     type: matrix
   - matrix:
       [[0.2,  0.1],
        [0.1,  0.2]]
+    name: XErrorTwo
     matrix_type: covariance
     relative: false
     type: matrix
@@ -178,20 +200,19 @@ class TestXYContainerYamlRepresentation(unittest.TestCase):
         _ndat = len(_data[0])
         self._container = XYContainer(x_data=_data[0], y_data=_data[1])
 
-        self._container.add_simple_error(axis='y', err_val=0.1, correlation=0.0, relative=False)
-        self._container.add_simple_error(axis='y', err_val=0.1, correlation=0.0, relative=True)
-        self._container.add_simple_error(axis='y', err_val=0.1, correlation=1.0, relative=False)
-        self._container.add_matrix_error(axis='y', err_matrix=np.eye(_ndat) * 0.1, relative=False, matrix_type='covariance')
-        self._container.add_matrix_error(axis='y', err_matrix=np.eye(_ndat), relative=False, matrix_type='correlation', err_val=0.1)
+        self._container.add_simple_error(axis='y', name="ySUA", err_val=0.1, correlation=0.0, relative=False)
+        self._container.add_simple_error(axis='y', name="ySUR", err_val=0.1, correlation=0.0, relative=True)
+        self._container.add_simple_error(axis='y', name="ySCA", err_val=0.1, correlation=1.0, relative=False)
+        self._container.add_matrix_error(axis='y', name="yMCov", err_matrix=np.eye(_ndat) * 0.1, relative=False, matrix_type='covariance')
+        self._container.add_matrix_error(axis='y', name="yMCor", err_matrix=np.eye(_ndat), relative=False, matrix_type='correlation', err_val=0.1)
 
-        self._container.add_simple_error(axis='x', err_val=0.1, correlation=0.0, relative=False)
-        self._container.add_simple_error(axis='x', err_val=0.1, correlation=0.0, relative=True)
-        self._container.add_matrix_error(axis='x', err_matrix=np.eye(_ndat) * 0.1, relative=False, matrix_type='covariance')
+        self._container.add_simple_error(axis='x', name="xSUA", err_val=0.1, correlation=0.0, relative=False)
+        self._container.add_simple_error(axis='x', name="xSUR", err_val=0.1, correlation=0.0, relative=True)
+        self._container.add_matrix_error(axis='x', name="xMCov", err_matrix=np.eye(_ndat) * 0.1, relative=False, matrix_type='covariance')
 
         # self._container.add_simple_error(axis='x', err_val=0.1, correlation=0.0, relative=False)
         # self._container.add_simple_error(axis='y', err_val=0.2, correlation=0.0, relative=False)
         # self._container.add_matrix_error(axis='y', err_matrix=np.eye(8) * 0.1, relative=False, matrix_type='covariance')
-
 
         self._roundtrip_stringstream = IOStreamHandle(StringIO())
         self._testfile_stringstream = IOStreamHandle(StringIO(TEST_DATASET_XY))
@@ -206,6 +227,7 @@ class TestXYContainerYamlRepresentation(unittest.TestCase):
         self._ref_testfile_y_err = [0.54772256,  0.54772256]
         self._ref_testfile_y_cov_mat = np.matrix([[0.3, 0.1], [0.1, 0.3]])
         self._ref_testfile_x_cov_mat = np.matrix([[0.5, 0.2], [0.2, 0.5]])
+        self._ref_testfile_error_names = {'XErrorOne', 'XErrorTwo', 'YErrorOne', 'YErrorTwo'}
 
 
     def test_write_to_roundtrip_stringstream(self):
@@ -250,6 +272,12 @@ class TestXYContainerYamlRepresentation(unittest.TestCase):
                 _read_container.y_cov_mat,
                 self._ref_testfile_y_cov_mat,
             )
+        )
+
+        # check that the error names are the same
+        self.assertEqual(
+            set(_read_container._error_dicts.keys()),
+            self._ref_testfile_error_names
         )
 
 
@@ -301,6 +329,12 @@ class TestXYContainerYamlRepresentation(unittest.TestCase):
             )
         )
 
+        # check that the error names are the same
+        self.assertEqual(
+            set(self._container._error_dicts.keys()),
+            set(_read_container._error_dicts.keys())
+        )
+
 
 TEST_DATASET_HIST = """
 dataset:
@@ -321,24 +355,28 @@ dataset:
       - 0.0
     - - 0.0
       - 0.2
+    name: ErrorOne
     matrix_type: covariance
     relative: false
     type: matrix
   - matrix: !matrix |
       0.2   0.1
       0.1   0.3
+    name: ErrorTwo
     matrix_type: covariance
     relative: false
     type: matrix
   - matrix: !symmetric_matrix |
       0.3
       0.1   0.4
+    name: ErrorThree
     matrix_type: covariance
     relative: false
     type: matrix
   - matrix:
       [[0.2,  0.1],
        [0.1,  0.1]]
+    name: ErrorFour
     matrix_type: covariance
     relative: false
     type: matrix
@@ -356,10 +394,10 @@ class TestHistContainerYamlRepresentation(unittest.TestCase):
                                         bin_range=(0.0, 10.),
                                         fill_data=_data)
 
-        self._container.add_simple_error(err_val=0.1, correlation=0.5, relative=False)
-        self._container.add_simple_error(err_val=[i/10. for i in range(1, _nbins+1)], correlation=0.5, relative=False)
-        self._container.add_matrix_error(err_matrix=np.eye(_nbins) * 0.1, relative=False, matrix_type='covariance')
-        self._container.add_matrix_error(err_matrix=np.eye(_nbins), relative=False, matrix_type='correlation', err_val=0.03)
+        self._container.add_simple_error(err_val=0.1, name='SC5A_1', correlation=0.5, relative=False)
+        self._container.add_simple_error(err_val=[i/10. for i in range(1, _nbins+1)], name='SC5A_2', correlation=0.5, relative=False)
+        self._container.add_matrix_error(err_matrix=np.eye(_nbins) * 0.1, name='MCov', relative=False, matrix_type='covariance')
+        self._container.add_matrix_error(err_matrix=np.eye(_nbins), name='MCor', relative=False, matrix_type='correlation', err_val=0.03)
 
         self._roundtrip_stringstream = IOStreamHandle(StringIO())
         self._testfile_stringstream = IOStreamHandle(StringIO(TEST_DATASET_HIST))
@@ -371,6 +409,7 @@ class TestHistContainerYamlRepresentation(unittest.TestCase):
         self._ref_testfile_data = [1, 1]
         self._ref_testfile_err = [0.89442719,  1]
         self._ref_testfile_cov_mat = np.matrix([[0.8, 0.3], [0.3, 1.0]])
+        self._ref_testfile_error_names = {'ErrorOne', 'ErrorTwo', 'ErrorThree', 'ErrorFour'}
 
 
     def test_write_to_roundtrip_stringstream(self):
@@ -400,12 +439,19 @@ class TestHistContainerYamlRepresentation(unittest.TestCase):
             )
         )
 
+        # check that the error names are the same
+        self.assertEqual(
+            set(_read_container._error_dicts.keys()),
+            self._ref_testfile_error_names
+        )
 
     def test_round_trip_with_stringstream(self):
         self._roundtrip_streamwriter.write()
         self._roundtrip_stringstream.seek(0)  # return to beginning
         _read_container = self._roundtrip_streamreader.read()
         self.assertTrue(isinstance(_read_container, HistContainer))
+
+        print(self._roundtrip_streamwriter._container)
 
         # compare data members
         self.assertTrue(
@@ -429,4 +475,10 @@ class TestHistContainerYamlRepresentation(unittest.TestCase):
                 self._container.cov_mat,
                 _read_container.cov_mat
             )
+        )
+
+        # check that the error names are the same
+        self.assertEqual(
+            set(self._container._error_dicts.keys()),
+            set(_read_container._error_dicts.keys())
         )

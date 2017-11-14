@@ -177,13 +177,16 @@ class FitBase(object):
         """
         return self._fitter.set_all_fit_parameter_values(param_value_list)
 
-    def add_simple_error(self, err_val, correlation=0, relative=False, reference='data', **kwargs):
+    def add_simple_error(self, err_val, name=None, correlation=0, relative=False, reference='data', **kwargs):
         """
         Add a simple uncertainty source to the data container.
         Returns an error id which uniquely identifies the created error source.
 
         :param err_val: pointwise uncertainty/uncertainties for all data points
         :type err_val: float or iterable of float
+        :param name: unique name for this uncertainty source. If ``None``, the name
+                     of the error source will be set to a random alphanumeric string.
+        :type name: str or ``None``
         :param correlation: correlation coefficient between any two distinct data points
         :type correlation: float
         :param relative: if ``True``, **err_val** will be interpreted as a *relative* uncertainty
@@ -203,21 +206,26 @@ class FitBase(object):
             raise FitException("Cannot add simple error: unknown reference "
                                "specification '{}', expected one of: 'data', 'model'...".format(reference))
 
-        _ret = _reference_object.add_simple_error(err_val=err_val, correlation=correlation, relative=relative, **kwargs)
+        _ret = _reference_object.add_simple_error(err_val=err_val,
+                                                  name=name, correlation=correlation, relative=relative, **kwargs)
 
         # mark nexus error parameters as stale
         self._mark_errors_for_update()
         self._invalidate_total_error_cache()
         return _ret
 
-    def add_matrix_error(self, err_matrix, matrix_type, err_val=None, relative=False, reference='data', **kwargs):
+    def add_matrix_error(self, err_matrix, matrix_type,
+                         name=None, err_val=None, relative=False, reference='data', **kwargs):
         """
-        Add a matrix uncertainty source to the data container.
+        Add a matrix uncertainty source for use in the fit.
         Returns an error id which uniquely identifies the created error source.
 
         :param err_matrix: covariance or correlation matrix
         :param matrix_type: one of ``'covariance'``/``'cov'`` or ``'correlation'``/``'cor'``
         :type matrix_type: str
+        :param name: unique name for this uncertainty source. If ``None``, the name
+                     of the error source will be set to a random alphanumeric string.
+        :type name: str or ``None``
         :param err_val: the pointwise uncertainties (mandatory if only a correlation matrix is given)
         :type err_val: iterable of float
         :param relative: if ``True``, the covariance matrix and/or **err_val** will be interpreted as a *relative* uncertainty
@@ -238,7 +246,7 @@ class FitBase(object):
                                "specification '{}', expected one of: 'data', 'model'...".format(reference))
 
         _ret = _reference_object.add_matrix_error(err_matrix=err_matrix, matrix_type=matrix_type,
-                                                  err_val=err_val, relative=relative, **kwargs)
+                                                  name=name, err_val=err_val, relative=relative, **kwargs)
 
         # mark nexus error parameters as stale
         self._mark_errors_for_update()

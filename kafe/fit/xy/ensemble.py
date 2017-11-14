@@ -342,18 +342,18 @@ class XYFitEnsemble(FitEnsembleBase):
 
     # -- public methods
 
-    def add_simple_error(self, axis, err_val, correlation=0, relative=False, reference='data'):
+    def add_simple_error(self, axis, err_val, name=None, correlation=0, relative=False, reference='data'):
         self._toy_fit.add_simple_error(axis=axis, err_val=err_val,
-                                       correlation=correlation, relative=relative,
+                                       name=name, correlation=correlation, relative=relative,
                                        reference=reference)
         self._update_reference_quantities_from_toy_fit()  # recompute reference errors
 
     # "inherit" docstring
     add_simple_error.__doc__ = XYFit.add_simple_error.__doc__
 
-    def add_matrix_error(self, axis, err_matrix, matrix_type, err_val=None, relative=False, reference='data'):
+    def add_matrix_error(self, axis, err_matrix, matrix_type, name=None, err_val=None, relative=False, reference='data'):
         self._toy_fit.add_matrix_error(axis=axis, err_matrix=err_matrix,
-                                       matrix_type=matrix_type, err_val=err_val,
+                                       matrix_type=matrix_type, name=name, err_val=err_val,
                                        relative=relative, reference=reference)
         self._update_reference_quantities_from_toy_fit()  # recompute reference errors
 

@@ -94,39 +94,34 @@ class IndexedContainer(DataContainerBase):
 
     # -- public methods
 
-    def add_simple_error(self, err_val, correlation=0, relative=False):
+    def add_simple_error(self, err_val,
+                         name=None, correlation=0, relative=False):
         """
         Add a simple uncertainty source to the data container.
         Returns an error id which uniquely identifies the created error source.
 
         :param err_val: pointwise uncertainty/uncertainties for all data points
         :type err_val: float or iterable of float
+        :param name: unique name for this uncertainty source. If ``None``, the name
+                     of the error source will be set to a random alphanumeric string.
+        :type name: str or ``None``
         :param correlation: correlation coefficient between any two distinct data points
         :type correlation: float
         :param relative: if ``True``, **err_val** will be interpreted as a *relative* uncertainty
         :type relative: bool
-        :return: error id
-        :rtype: int
+        :return: error name
+        :rtype: str
         """
-        try:
-            err_val.ndim   # will raise if simple float
-        except AttributeError:
-            err_val = np.asarray(err_val, dtype=float)
+        return super(IndexedContainer, self).add_simple_error(
+            err_val=err_val,
+            name=name,
+            correlation=correlation,
+            relative=relative,
+            reference=self._idx_data  # set the reference appropriately
+        )
 
-        if err_val.ndim == 0:  # if dimensionless numpy array (i.e. float64), add a dimension
-            err_val = np.ones(self.size) * err_val
-
-        _err = SimpleGaussianError(err_val=err_val, corr_coeff=correlation,
-                                   relative=relative, reference=self._idx_data)
-        # TODO: reason not to use id() here?
-        _id = id(_err)
-        assert _id not in self._error_dicts
-        _new_err_dict = dict(err=_err, enabled=True)
-        self._error_dicts[_id] = _new_err_dict
-        self._clear_total_error_cache()
-        return _id
-
-    def add_matrix_error(self, err_matrix, matrix_type, err_val=None, relative=False):
+    def add_matrix_error(self, err_matrix, matrix_type,
+                         name=None, err_val=None, relative=False):
         """
         Add a matrix uncertainty source to the data container.
         Returns an error id which uniquely identifies the created error source.
@@ -134,44 +129,23 @@ class IndexedContainer(DataContainerBase):
         :param err_matrix: covariance or correlation matrix
         :param matrix_type: one of ``'covariance'``/``'cov'`` or ``'correlation'``/``'cor'``
         :type matrix_type: str
+        :param name: unique name for this uncertainty source. If ``None``, the name
+                     of the error source will be set to a random alphanumeric string.
+        :type name: str or ``None``
         :param err_val: the pointwise uncertainties (mandatory if only a correlation matrix is given)
         :type err_val: iterable of float
-        :param relative: if ``True``, the covariance matrix and/or **err_val** will be interpreted as a *relative* uncertainty
+        :param relative: if ``True``, the covariance matrix and/or **err_val** will be interpreted
+                         as a *relative* uncertainty
         :type relative: bool
-        :return: error id
-        :rtype: int
+        :return: error name
+        :rtype: str
         """
-        _err = MatrixGaussianError(err_matrix=err_matrix, matrix_type=matrix_type, err_val=err_val,
-                                   relative=relative, reference=self._idx_data)
-        # TODO: reason not to use id() here?
-        _id = id(_err)
-        assert _id not in self._error_dicts
-        _new_err_dict = dict(err=_err, enabled=True)
-        self._error_dicts[_id] = _new_err_dict
-        self._clear_total_error_cache()
-        return _id
+        return super(IndexedContainer, self).add_matrix_error(
+            err_matrix=err_matrix,
+            matrix_type=matrix_type,
+            name=name,
+            err_val=err_val,
+            relative=relative,
+            reference=self._idx_data  # set the reference appropriately
+        )
 
-    def disable_error(self, err_id):
-        """
-        Temporarily disable an uncertainty source so that it doesn't count towards calculating the
-        total uncertainty.
-
-        :param err_id: error id
-        :type err_id: int
-        """
-        _err_dict = self._error_dicts.get(err_id, None)
-        if _err_dict is None:
-            raise IndexedContainerException("No error with id %d!" % (err_id,))
-        _err_dict['enabled'] = False
-        self._clear_total_error_cache()
-
-    def get_total_error(self):
-        """
-        Get the error object representing the total uncertainty.
-
-        :return: error object representing the total uncertainty
-        :rtype: :py:class:`~kafe.core.error.MatrixGaussianError`
-        """
-        if self._total_error is None:
-            self._calculate_total_error()
-        return self._total_error

@@ -254,12 +254,18 @@ class TestFittersIndexedChi2WithError(unittest.TestCase):
                                            1.95670326,  0.31200215])
         self._ref_data_values = self._ref_model_values + self._ref_data_jitter
         self._ref_data_error = np.ones_like(self._ref_data_values) * 1.0
+        self._ref_model_error = 0.1
 
         self.idx_fit = IndexedFit(data=self._ref_data_values,
                                   model_function=self.idx_model,
                                   cost_function=self.chi2_with_error)
 
-        self.idx_fit.add_simple_error(self._ref_data_error, correlation=0, relative=False)
+        self.idx_fit.add_simple_error(self._ref_data_error,
+                                      name="MyDataError", correlation=0, relative=False, reference='data')
+        self.idx_fit.add_simple_error(self._ref_model_error,
+                                      name="MyModelError", correlation=0, relative=False, reference='model')
+
+        self._ref_total_error = np.sqrt(self._ref_data_error ** 2 + self._ref_model_error ** 2)
 
         self._ref_parameter_value_estimates = [1.1351433845831516, 2.137441531781195, 2.3405503488535118]
         self._ref_model_value_estimates = self.idx_model(*self._ref_parameter_value_estimates)
@@ -270,7 +276,7 @@ class TestFittersIndexedChi2WithError(unittest.TestCase):
                                   data=self._ref_data_values,
                                   model_function=self.idx_model,
                                   cost_function=self.chi2_with_cov_mat)
-        self.idx_fit_chi2_with_cov_mat.add_simple_error(self._ref_data_error, correlation=0, relative=False)
+        self.idx_fit_chi2_with_cov_mat.add_simple_error(self._ref_data_error, correlation=0, relative=False, reference='data')
         self.idx_fit_chi2_with_cov_mat.do_fit()
 
         self.assertTrue(
@@ -326,6 +332,15 @@ class TestFittersIndexedChi2WithError(unittest.TestCase):
             )
         )
 
+    def test_before_fit_compare_total_error(self):
+        self.assertTrue(
+            np.allclose(
+                self.idx_fit.total_error,
+                self._ref_total_error,
+                rtol=1e-2
+            )
+        )
+
     def test_do_fit_compare_parameter_values(self):
         self.idx_fit.do_fit()
         self.assertTrue(
@@ -342,6 +357,16 @@ class TestFittersIndexedChi2WithError(unittest.TestCase):
             np.allclose(
                 self.idx_fit.model,
                 self._ref_model_value_estimates,
+                rtol=1e-2
+            )
+        )
+
+    def test_do_fit_compare_total_error(self):
+        self.idx_fit.do_fit()
+        self.assertTrue(
+            np.allclose(
+                self.idx_fit.total_error,
+                self._ref_total_error,
                 rtol=1e-2
             )
         )
