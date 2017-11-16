@@ -10,6 +10,25 @@ import six
 from kafe.core.error import CovMat
 
 
+def cycle_axes(array, k):
+    """
+    Cycle the dimensions of an array forward by `k` (such that the
+    the `i`-th axis becomes the `i+k`-th axis, modulo the array
+    dimensionality).
+
+    :param array: array for which to cycle axes
+    :type array: ``numpy.ndarray``
+    :param k: number of positions to cycle axes.
+    :type k: int with ``abs(n) < array.ndim``
+    :return: the array with moved axes
+    :rtype: ``numpy.ndarray``
+    """
+    _nd = array.ndim
+    k = k % _nd
+    _axes_permutation = (np.arange(_nd) - k) % _nd
+    return np.transpose(array, _axes_permutation)
+
+
 def expand_to_ndim(array, target_ndim, direction='right'):
     """Add axes to an array until the desired number of dimensions is reached.
 
@@ -332,61 +351,67 @@ class EnsembleVariableProbabilityDistribution(object):
 
     def eval(self, x, x_contains_var_shape=False):
         """
-        Evaluate the probability distribution/mass at a given point.
+        Evaluate the probability distribution/mass at a given point/an array of given points.
 
         If `x` is a scalar, the probability distribution/mass function
         will be evaluated at the single point `x` for *all*
         different parameter values specified when constructing the object.
         If the parameter values are specified as *p*-dimensional
         arrays, the resulting array will also have *p* dimensions,
-        and the shape will match that of the parameter arrays.
+        and the shape will match that of the parameter arrays. For example::
+
+          par_shape =    (a, b, c)  # ndim = 3 (= p)
+          x.shape =      ()         # ndim = 0 (scalar, n = 0)
+          result.shape = (a, b, c)  # ndim = 3
 
         If `x` is an *n*-dimensional array with shape `x.shape`,
         the probability distribution/mass function
         will be evaluated at every value of `x`.
         In this case, the resulting array will have *p+n* dimensions,
-        with the first (innermost) *p* corresponding to the parameter arrays
-        and the last (outermost) *n*  corresponding to `x.shape`.
+        with the first *p* corresponding to the parameter arrays
+        and the last *n*  corresponding to `x.shape`. For example::
+
+          par_shape =    (a, b, c)        # ndim = 3 (= p)
+          x.shape =      (m, n)           # ndim = 2 (= n)
+          result.shape = (a, b, c, m, n)  # ndim = p+n = 5
 
         Alternatively, if the flag ``x_contains_var_shape`` is set, the
-        last (outermost) dimensions of ``x`` are assumed to have the
+        first dimensions of ``x`` are assumed to have the
         same shape as the parameter arrays. If this is the case, no
         broadcasting of ``x`` to the parameter arrays is done
         and the resulting array will have the same dimension and shape as
-        the input array ``x``.
+        the input array ``x``. For example::
+
+          par_shape =    (a, b, c)        # ndim = 3 (= p)
+          x.shape =      (a, b, c, m, n)  # ndim = p + 2 = 5
+          result.shape = (a, b, c, m, n)  # ndim = p + 2 = 5
 
         :param x: value (array of values) at which to evaluate the pdf/pmf
-        :type x: `numpy.ndarray` with the *first* entries of `x.shape`
-                 matching the ensemble variable's shape
-        :param x_contains_var_shape: if ``True``, the alternate method described above is used.
+        :type x: `numpy.ndarray`. If the alternative method above is used, the *first* entries of `x.shape`
+                 must match the ensemble variable's shape
+        :param x_contains_var_shape: if ``True``, the alternative method described above is used.
         :type x_contains_var_shape: bool
         :return:
         """
+        # copy x so it is not modified
+        x = np.asarray(x).copy()
 
-        x = np.asarray(x)
-        _x_ndim = x.ndim
-
-        # x needs to be broadcast together with the parameter arrays
-        # GOAL:
-        # x shape:                      a  x  b  x  c   (n axes)
-        # par shape:        m  x  n                     (p axes)
-        # ---
-        # resulting y:      m  x  n  x  a  x  b  x  c   (p+n axes)
-
-        # 1) cannot expand par -> transpose x
-        # x.T shape:        c  x  b  x  a               (n axes)
-        x = x.T
-
-        # 2) expand x.T
-        # x.T shape:        c  x  b  x  a  x  1  x  1   (n axes)
+        # if not already done, the `x` array shape must be expanded
+        # so that the first dimensions match `self._shape`
+        # -> transform x.shape from (m, n) to (a, b, c, m, n) -> 'expand_left'
         if not x_contains_var_shape:
-            x = broadcast_to_shape(x, shape=self._shape, scheme='expand_right')
+            # reminder example:
+            # par_shape =    (a, b, c)        # ndim = 3 (= p)
+            # x.shape =      (m, n)           # ndim = 2 (= n)
+            # new x.shape =  (a, b, c, m, n)  # ndim = p+n = 5
+            x = broadcast_to_shape(x, shape=self._shape, scheme='expand_left')
 
-        # 3) evaluate pdf at x.T -> broadcast on last n axes
-        # x.T shape:        c  x  b  x  a  x  1  x  1   (n axes)
-        # par shape:                          m  x  n   (p axes)
-        # ---
-        # resulting y:      c  x  b  x  a  x  m  x  n   (n+p axes)
+        # before evaluating, `x` must have a shape that can be broadcast
+        # together with the parameter array with shape = (a, b, c)
+        # -> transform x.shape from (a, b, c, m, n) to (m, n, a, b, c)
+        x = cycle_axes(x, -self.ndim)
+
+        # evaluate pdf or pmf for x
         _y = None
         if _y is None:
             try:
@@ -399,23 +424,10 @@ class EnsembleVariableProbabilityDistribution(object):
             except AttributeError:
                 pass
 
-        if _y is None:
-            raise EnsembleError("Probability distribution has no method 'pdf' or 'pmf'!")
-
-        # 4) transpose last p axes
-        # resulting y:      c  x  b  x  a  x  n  x  m   (n+p axes)
-        if not x_contains_var_shape:
-            _axes_permutation = list(range(_x_ndim)) + list(reversed(range(_x_ndim, _x_ndim + self.ndim)))
-        else:
-            _axes_permutation = list(range(_x_ndim))
-
-        _y = np.transpose(_y, _axes_permutation)
-
-        # 5) transpose everything
-        # resulting y:      m  x  n  x  a  x  b  x  c   (p+n axes)
-        _y = _y.T
-
-        return _y
+        # after the evaluation, the result must be broadcast back to
+        # the desired output shape
+        # -> transform x.shape from (m, n, a, b, c) back to (a, b, c, m, n)
+        return cycle_axes(_y, self.ndim)
 
 
 class EnsembleVariablePlotter(object):
