@@ -2,6 +2,7 @@ from collections import OrderedDict
 from copy import deepcopy
 
 import numpy as np
+import six
 import sys
 import textwrap
 
@@ -89,25 +90,28 @@ class XYFit(FitBase):
         # FIXME: nicer way than len()?
         self._cost_function.ndf = self._data_container.size - len(self._param_model.parameters)
 
-
     # -- private methods
 
     def _init_nexus(self):
         self._nexus = Nexus()
+
+        # create regular nexus Nodes for the x and y data values
         self._nexus.new(y_data=self.y_data)
         self._nexus.new(x_data=self.x_data)
 
-        # create a NexusNode for each parameter of the model function
+        # create nexus function Nodes for the x and y model values
+        self._nexus.new_function(lambda: self.x_model, function_name='x_model')
+        self._nexus.new_function(lambda: self.y_model, function_name='y_model')
 
+        # create a nexus Node for each parameter of the model function
         _nexus_new_dict = OrderedDict()
         _arg_defaults = self._model_function.argspec.defaults
         _n_arg_defaults = 0 if _arg_defaults is None else len(_arg_defaults)
-        self._fit_param_names = [] #every fit parameter name (with nuisance)
-        self._func_fit_para_names = [] #just the names of the parameters in the modelfunction
+        self._fit_param_names = []  # every fit parameter name (with nuisance)
+        self._func_fit_para_names = []  # just the names of the parameters in the modelfunction
         self._y_nuisance_names = []
         self._x_uncor_nuisance_names = []
-       # self._x_cor_nuisance_names = []
-
+        # self._x_cor_nuisance_names = []
 
         for _arg_pos, _arg_name in enumerate(self._model_function.argspec.args):
             # skip independent variable parameter
@@ -123,10 +127,8 @@ class XYFit(FitBase):
 
         self._nexus.new(**_nexus_new_dict)  # Create nexus Nodes for function parameters
 
-        self._nexus.new_function(self._model_function.func, function_name=self._model_function.name,
-                                 add_unknown_parameters=False, wire_parameters=False)
-        # add an alias 'model' for accessing the model values
-        #self._nexus.new_alias(**{'y_model': self._model_function.name})
+        # add the original function name as an alias to 'y_model'
+        self._nexus.new_alias(**{self._model_function.name: 'y_model'})
 
         # node function for collecting nuisance parameters into a vector
         def _calc_y_nuisance_vector(*n_para):
@@ -175,11 +177,7 @@ class XYFit(FitBase):
                 self._x_uncor_nuisance_names.append(_delta_name)
             self._nexus.set_function_parameter_names("x_uncor_nuisance_vector", self._x_uncor_nuisance_names)
 
-
-
         # bind other reserved nodes
-        self._nexus.new_function(lambda: self.x_model, function_name='x_model')
-        self._nexus.new_function(lambda: self.y_model, function_name='y_model')
         self._nexus.new_function(lambda: self.x_data_error, function_name='x_data_error')
         self._nexus.new_function(lambda: self.x_data_cov_mat, function_name='x_data_cov_mat')
         self._nexus.new_function(lambda: self.x_data_cov_mat_inverse, function_name='x_data_cov_mat_inverse')
@@ -246,8 +244,6 @@ class XYFit(FitBase):
         # self._nexus.add_dependency(source='x_uncor_nuisance_vector', target='y_model')
         for _arg_name in self._func_fit_para_names:
             self._nexus.add_dependency(source=_arg_name, target="y_model")
-
-
 
     def _invalidate_total_error_cache(self):
         self.__cache_x_data_error = None
