@@ -811,6 +811,13 @@ class XYFit(FitBase):
                                                    relative=relative,
                                                    reference=reference,
                                                    axis=axis)
+
+        # need to reinitialize the nexus, since simple errors are
+        # possibly relevant for nuisance parameters
+        self._init_nexus()
+        # initialize the Fitter
+        self._initialize_fitter(self._minimizer, self._minimizer_kwargs)
+
         return _ret
 
     def add_matrix_error(self, axis, err_matrix, matrix_type,
@@ -840,16 +847,15 @@ class XYFit(FitBase):
                                                    relative=relative,
                                                    reference=reference,
                                                    axis=axis)
+
+        # do not reinitialize the nexus, since matrix errors are not
+        # relevant for nuisance parameters
+
         return _ret
 
-    def do_fit(self):
 
-        self._init_nexus()
-        # initialize the Fitter
-        self._initialize_fitter(self._minimizer, self._minimizer_kwargs)
-        # create the child ParametricModel object
-        # self._param_model = self._new_parametric_model(self.x, self._model_function.func,
-        #                                                self.func_parameter_values)
+    def do_fit(self):
+        """Perform the fit."""
         if not self._data_container.has_x_errors:
             super(XYFit, self).do_fit()
         else:
@@ -882,8 +888,6 @@ class XYFit(FitBase):
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.eval_model_function(x=x, model_parameters=model_parameters)
-
-
 
     # def value_chisquare_nuisance_parameters(self):
     # #calculate nuisance parameters (wrong!!)
