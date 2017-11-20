@@ -107,11 +107,11 @@ class XYFit(FitBase):
         _nexus_new_dict = OrderedDict()
         _arg_defaults = self._model_function.argspec.defaults
         _n_arg_defaults = 0 if _arg_defaults is None else len(_arg_defaults)
-        self._fit_param_names = []  # every fit parameter name (with nuisance)
-        self._func_fit_para_names = []  # just the names of the parameters in the modelfunction
-        self._y_nuisance_names = []
-        self._x_uncor_nuisance_names = []
-        # self._x_cor_nuisance_names = []
+        self._fit_param_names = []  # names of all fit parameters (including nuisance parameters)
+        self._poi_names = []  # names of the parameters of interest (i.e. the model parameters)
+        self._y_nuisance_names = []  # names of all nuisance parameters accounting for correlated y errors
+        self._x_uncor_nuisance_names = []  # names of all nuisance parameters accounting for uncorrelated x errors
+        # self._x_cor_nuisance_names = []  # names of all nuisance parameters accounting for correlated x errors
 
         for _arg_pos, _arg_name in enumerate(self._model_function.argspec.args):
             # skip independent variable parameter
@@ -123,7 +123,7 @@ class XYFit(FitBase):
                 _default_value = kc('core', 'default_initial_parameter_value')
             _nexus_new_dict[_arg_name] = _default_value
             self._fit_param_names.append(_arg_name)
-            self._func_fit_para_names.append(_arg_name)
+            self._poi_names.append(_arg_name)
 
         self._nexus.new(**_nexus_new_dict)  # Create nexus Nodes for function parameters
 
@@ -242,7 +242,7 @@ class XYFit(FitBase):
 
         self._nexus.add_dependency(source='x_model', target="y_model")
         # self._nexus.add_dependency(source='x_uncor_nuisance_vector', target='y_model')
-        for _arg_name in self._func_fit_para_names:
+        for _arg_name in self._poi_names:
             self._nexus.add_dependency(source=_arg_name, target="y_model")
 
     def _invalidate_total_error_cache(self):
@@ -768,7 +768,7 @@ class XYFit(FitBase):
     def poi_values(self):
         # gives the values of the model_function_parameters
         _poi_values = []
-        for _name in self._func_fit_para_names:
+        for _name in self._poi_names:
             _poi_values.append(self.parameter_name_value_dict[_name])
         return _poi_values
 
@@ -851,7 +851,7 @@ class XYFit(FitBase):
 
     def set_poi_values(self, param_values):
         """set the start values of all parameters of interests"""
-        _param_names = self._func_fit_para_names
+        _param_names = self._poi_names
         #test list length
         if not len(param_values) == len(_param_names):
             raise XYFitException("Cannot set all fit parameter values: %d fit parameters declared, "
