@@ -480,3 +480,37 @@ class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
         if np.isnan(_nll):
             return np.inf
         return _nll
+
+class CostFunctionBase_Chi2_Nuisance(CostFunctionBase_Chi2):
+
+
+    def __init__(self):
+
+        super(CostFunctionBase_Chi2, self).__init__(cost_function=self.csn)
+        self.set_flag("need_nuisance", True)
+
+        self._formatter.latex_name = r"\chi^{2}_{nui}"
+        self._formatter.name = "chi2_nui"
+        self._formatter.description = "chi-square (with nuisance parameters for correlated uncertainties)"
+
+    @staticmethod
+    def csn(data, model, total_uncor_cov_mat_inverse, nuisance_total_cor_cov_mat, nuisance_vector):
+        r"""A least-squares costfunction that accounts for correlated uncertainties through nuisance parameters. The nuisance parameters are fitted.
+
+        The cost function is given by:
+
+        .. TODO: chi-square nuisance formula
+
+        :param data: measurement data
+        :param model model values
+        :param total_uncor_cov_mat_inverse: inverse of the uncorrelated part of the total covariance matrix
+        :param: nuisance_total_cor_cov_mat: matrix containing the correlated parts of each uncertainty source for each data point
+        :param: nuisance_vector: vector containing nuisance parameters
+
+        :return: cost function value
+        """
+        _inner_sum = np.squeeze(np.asarray(nuisance_vector.dot(nuisance_total_cor_cov_mat)))
+        _penalties = nuisance_vector.dot(nuisance_vector)
+        _chisquare = (data-model - _inner_sum).dot(total_uncor_cov_mat_inverse).dot(data-model - _inner_sum)[0, 0]
+        return _chisquare + _penalties
+

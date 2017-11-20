@@ -1,5 +1,6 @@
 from .._base import CostFunctionBase, CostFunctionBase_Chi2, CostFunctionBase_NegLogLikelihood, CostFunctionBase_NegLogLikelihoodRatio, CostFunctionException
-
+from kafe.fit._base.cost import CostFunctionBase_Chi2_Nuisance
+import numpy as np
 
 __all__ = ["XYCostFunction_UserDefined", "XYCostFunction_Chi2", "XYCostFunction_NegLogLikelihood"]
 
@@ -244,7 +245,8 @@ class XYCostFunction_NegLogLikelihoodRatio(CostFunctionBase_NegLogLikelihoodRati
         :return: cost function value
         """
         # "translate" the argument names
-        return CostFunctionBase_NegLogLikelihoodRatio.nllr_gaussian(data=y_data, model=y_model, total_error=y_total_error)
+        return CostFunctionBase_NegLogLikelihoodRatio.nllr_gaussian(data=y_data, model=y_model,
+                                                                    total_error=y_total_error)
 
 
     @staticmethod
@@ -268,3 +270,14 @@ class XYCostFunction_NegLogLikelihoodRatio(CostFunctionBase_NegLogLikelihoodRati
         """
         # "translate" the argument names
         return CostFunctionBase_NegLogLikelihoodRatio.nllr_poisson(data=y_data, model=y_model)
+
+class XYCostFunction_Chi2_Nuisance(CostFunctionBase_Chi2_Nuisance):
+    #CHiSquare Cosfunction with Nuisanceparameters
+    def __init__(self):
+        super(XYCostFunction_Chi2_Nuisance, self).__init__()
+
+    @staticmethod
+    def csn(y_data, y_model, y_total_uncor_cov_mat_inverse, y_total_uncor_cov_mat, nuisance_y_total_cor_cov_mat, y_nuisance_vector):
+
+             return  CostFunctionBase_Chi2_Nuisance.csn(data=y_data, model=y_model, total_uncor_cov_mat_inverse=y_total_uncor_cov_mat_inverse, nuisance_total_cor_cov_mat=nuisance_y_total_cor_cov_mat, nuisance_vector=y_nuisance_vector)
+
