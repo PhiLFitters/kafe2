@@ -104,6 +104,8 @@ class CostFunctionBase(object):
         self._validate_cost_function_raise()
         self._assign_parameter_formatters()
         self._assign_function_formatter()
+
+        self._flags = {}
         self._ndf = None
 
     def _validate_cost_function_raise(self):
@@ -186,6 +188,11 @@ class CostFunctionBase(object):
         assert new_ndf == int(new_ndf)  # ndf must be integer
         self._ndf = new_ndf
 
+    def set_flag(self, name, value):
+        self._flags[name] = value
+
+    def get_flag(self, name):
+        return self._flags.get(name, None)
 
 
 class CostFunctionBase_Chi2(CostFunctionBase):
