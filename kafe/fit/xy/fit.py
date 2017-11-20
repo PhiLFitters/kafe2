@@ -853,6 +853,17 @@ class XYFit(FitBase):
 
         return _ret
 
+    def set_poi_values(self, param_values):
+        """set the start values of all parameters of interests"""
+        _param_names = self._func_fit_para_names
+        #test list length
+        if not len(param_values) == len(_param_names):
+            raise XYFitException("Cannot set all fit parameter values: %d fit parameters declared, "
+                                       "but %d provided!"
+                                       % (len(_param_names), len(param_values)))
+        # set values in nexus
+        _par_val_dict = {_pn: _pv for _pn, _pv in zip(_param_names, param_values)}
+        self.set_parameter_values(**_par_val_dict)
 
     def do_fit(self):
         """Perform the fit."""
