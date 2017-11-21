@@ -53,12 +53,11 @@ def _generic_xy_chi2_nuisance_pointwise(x_data, x_model, y_model, y_data, y_tota
 def _generic_xy_chi2_nuisance_covaraince(x_data, x_model,  y_data, y_model,
                   x_uncor_cov_mat_inverse=None, y_uncor_cov_mat_inverse=None, y_nuisance_cor_cov_mat=None, y_nuisance_vector=np.array([]),
                   fail_on_no_y_matrix=False, fail_on_no_x_matrix=False):
- # calculates the costfunction values for ChiSquare with Nuisanceparameters for pointwise errors.
+    """calculates the cost function values for ChiSquare with Nuisanceparameters for pointwise errors."""
 
     if y_model.shape != y_data.shape or y_model.shape != x_model.shape or x_model.shape != x_data.shape:
         raise CostFunctionException("x_data, x_model, 'y_data' and 'y_model' must have the same shape! Got %r, %r, %r and %r..."
                                 % (x_data.shape, x_model.shape, y_data.shape, y_model.shape))
-
 
     _x_res = (x_data - x_model)
     _y_res = (y_data - y_model)
@@ -69,13 +68,13 @@ def _generic_xy_chi2_nuisance_covaraince(x_data, x_model,  y_data, y_model,
         else:
             if y_uncor_cov_mat_inverse is None:
                 if y_nuisance_vector.all() ==0.0:
-                    # raise if uncorrelaed matrix is None and the correlated is not None
+                    # raise if uncorrelated matrix is None and the correlated is not None
                     raise CostFunctionException('Is not working for only fullcorrelated y-errors')
                 else:
                     if fail_on_no_y_matrix:
                         raise np.linalg.LinAlgError("Uncorrelated Y Covariance matrix is singular!")
                     else:
-                        #cost function values without any errors
+                        # cost function values without any errors
                         _chisquare = _y_res.dot(_y_res)
                         return _chisquare
 
@@ -84,7 +83,7 @@ def _generic_xy_chi2_nuisance_covaraince(x_data, x_model,  y_data, y_model,
                 _inner_sum = np.squeeze(np.asarray(y_nuisance_vector.dot(y_nuisance_cor_cov_mat)))
                 _y_penalties = y_nuisance_vector.dot(y_nuisance_vector)
                 _chisquare = (_y_res - _inner_sum).dot(y_uncor_cov_mat_inverse).dot(_y_res - _inner_sum)[0, 0]
-                return _y_penalties + _chisquare
+                return (_y_penalties + _chisquare)[0, 0]
 
     else:
         _x_penalties = np.transpose(_x_res).dot(x_uncor_cov_mat_inverse).dot(_x_res)
@@ -98,14 +97,14 @@ def _generic_xy_chi2_nuisance_covaraince(x_data, x_model,  y_data, y_model,
                 else:
                     #with x-errors but without y-errors
                     _chisquare = _y_res.dot(_y_res)
-                    return _chisquare +_x_penalties
+                    return (_chisquare +_x_penalties)[0, 0]
 
         else:
                 #with x- and y-errors
                 _inner_sum = np.squeeze(np.asarray(y_nuisance_vector.dot(y_nuisance_cor_cov_mat)))
                 _y_penalties = y_nuisance_vector.dot(y_nuisance_vector)
                 _chi2 = (_y_res - _inner_sum).dot(y_uncor_cov_mat_inverse).dot(_y_res- _inner_sum)[0, 0]
-                return _chi2 + _x_penalties + _y_penalties
+                return (_chi2 + _x_penalties + _y_penalties)[0, 0]
 
 
 class XYCostFunction_UserDefined(CostFunctionBase):
