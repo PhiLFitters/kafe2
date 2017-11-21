@@ -139,32 +139,6 @@ class XYContainer(IndexedContainer):
         return self._xy_data.shape[1]
 
     @property
-    def y_simple_error_size(self):
-        """number of simple 'y' errors with non-zero correlation coefficients"""
-        _size_er = 0
-        for _err_dict in self._error_dicts.values():
-            _err = _err_dict["err"]
-            if isinstance(_err, SimpleGaussianError):
-                if not _err.corr_coeff:
-                    continue
-                if _err_dict['axis'] == 1:
-                    _size_er += 1
-        return _size_er
-
-    @property
-    def x_simple_error_size_correlated(self):
-        """number of simple 'x' errors with non-zero correlation coefficients"""
-        _size_er = 0
-        for _err_dict in self._error_dicts.values():
-            _err = _err_dict["err"]
-            if isinstance(_err, SimpleGaussianError):
-                if not _err.corr_coeff:
-                    continue
-                if _err_dict['axis'] == 0:
-                    _size_er += 1
-        return _size_er
-
-    @property
     def data(self):
         """container data (both *x* and *y*, two-dimensional :py:obj:`numpy.ndarray`)"""
         return self._xy_data.copy()  # copy to ensure no modification by user

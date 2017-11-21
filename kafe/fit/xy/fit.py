@@ -111,6 +111,7 @@ class XYFit(FitBase):
         self._poi_names = []  # names of the parameters of interest (i.e. the model parameters)
         self._y_nuisance_names = []  # names of all nuisance parameters accounting for correlated y errors
         self._x_uncor_nuisance_names = []  # names of all nuisance parameters accounting for uncorrelated x errors
+        # TODO
         # self._x_cor_nuisance_names = []  # names of all nuisance parameters accounting for correlated x errors
 
         for _arg_pos, _arg_name in enumerate(self._model_function.argspec.args):
@@ -137,6 +138,7 @@ class XYFit(FitBase):
         self._nexus.new_function(_calc_y_nuisance_vector, function_name="y_nuisance_vector",
                                  add_unknown_parameters=False)
 
+        # TODO
         # x-nuisance vector for correlated errors
         # def _calc_x_corr_nuisance_vector(*n_para):
         #     return np.asarray(n_para)
@@ -149,35 +151,53 @@ class XYFit(FitBase):
         self._nexus.new_function(_calc_x_uncor_nuisance_vector, function_name="x_uncor_nuisance_vector",
                                  add_unknown_parameters=False)
 
-        #initialize nuisance parameters
-        if self._cost_function.get_flag("need_y_nuisance") and self._data_container.has_y_errors:
-            # y-nuisance parameters
-            for i in six.moves.range(self._data_container.y_simple_error_size):
-                _eps_name="_eps_{}".format(i)
-                self._nexus.new(**{_eps_name:0.0})
-                self._nexus.add_dependency(_eps_name, "y_nuisance_vector")
-                self._fit_param_names.append(_eps_name)
-                self._y_nuisance_names.append(_eps_name)
-            self._nexus.set_function_parameter_names("y_nuisance_vector", self._y_nuisance_names)
-        if self._cost_function.get_flag("need_x_nuisance") and self._data_container.has_uncor_x_errors:
-            # x-nuisance parameters for correlated errors
-            # for i in six.moves.range(self._data_container.x_simple_error_size_corelated):
-            #     _delta_name = "_delta_cor_{}".format(i)
-            #     self._nexus.new(**{_delta_name: 0.0})
-            #     self._nexus.add_dependency(_delta_name, "x_cor_nuisance_vector")
-            #     self._fit_param_names.append(_delta_name)
-            #     _x_cor_nuisance_names.append(_delta_name)
-            # self._nexus.set_function_parameter_names("x_cor_nuisance_vector", _x_cor_nuisance_names)
-            #x-nuisance paramters for uncorrelated errors
-            for i in six.moves.range(self._data_container.size):
-                _delta_name = "_delta_un_{}".format(i)
-                self._nexus.new(**{_delta_name: 0.0})
-                self._nexus.add_dependency(_delta_name, "x_uncor_nuisance_vector")
-                self._fit_param_names.append(_delta_name)
-                self._x_uncor_nuisance_names.append(_delta_name)
-            self._nexus.set_function_parameter_names("x_uncor_nuisance_vector", self._x_uncor_nuisance_names)
+        # -- initialize nuisance parameters
 
-        # bind other reserved nodes
+        # one nuisance parameter per correlated 'y' error
+        if self._cost_function.get_flag("need_y_nuisance") and self._data_container.has_y_errors:
+            # retrieve the errors for which to assign 'y'-nuisance parameters
+            _nuisance_error_objects = self.get_matching_errors(
+                matching_criteria=dict(
+                    axis=1,  # cannot use 'y' here
+                    correlated=True
+                )
+            )
+            for _err_name, _err_obj in six.iteritems(_nuisance_error_objects):
+                _nuisance_name = "_n_yc_{}".format(_err_name)
+                self._nexus.new(**{_nuisance_name: 0.0})
+                self._nexus.add_dependency(_nuisance_name, "y_nuisance_vector")
+                self._fit_param_names.append(_nuisance_name)
+                self._y_nuisance_names.append(_nuisance_name)
+            self._nexus.set_function_parameter_names("y_nuisance_vector", self._y_nuisance_names)
+
+        # one 'x' nuisance parameter per data point (TODO: and one per correlated 'x' error)
+        if self._cost_function.get_flag("need_x_nuisance") and self._data_container.has_uncor_x_errors:
+            # one 'x' nuisance parameter per data point
+            for i in six.moves.range(self._data_container.size):
+                _nuisance_name = "_n_xu_{}".format(i)
+                self._nexus.new(**{_nuisance_name: 0.0})
+                self._nexus.add_dependency(_nuisance_name, "x_uncor_nuisance_vector")
+                self._fit_param_names.append(_nuisance_name)
+                self._x_uncor_nuisance_names.append(_nuisance_name)
+            self._nexus.set_function_parameter_names("x_uncor_nuisance_vector", self._x_uncor_nuisance_names)
+            # TODO
+            # # retrieve the errors for which to assign 'x'-nuisance parameters
+            # _nuisance_error_objects = self.get_matching_errors(
+            #     matching_criteria=dict(
+            #         axis=0,  # cannot use 'x' here
+            #         correlated=True
+            #     )
+            # )
+            # for _err_name, _err_obj in six.iteritems(_nuisance_error_objects):
+            #     _nuisance_name = "_n_xc_{}".format(_err_name)
+            #     self._nexus.new(**{_nuisance_name: 0.0})
+            #     self._nexus.add_dependency(_nuisance_name, "x_cor_nuisance_vector")
+            #     self._fit_param_names.append(_nuisance_name)
+            #     self._x_cor_nuisance_names.append(_nuisance_name)
+            # self._nexus.set_function_parameter_names("x_cor_nuisance_vector", self._x_cor_nuisance_names)
+
+        # -- bind other reserved nodes
+
         self._nexus.new_function(lambda: self.x_data_error, function_name='x_data_error')
         self._nexus.new_function(lambda: self.x_data_cov_mat, function_name='x_data_cov_mat')
         self._nexus.new_function(lambda: self.x_data_cov_mat_inverse, function_name='x_data_cov_mat_inverse')
@@ -896,38 +916,37 @@ class XYFit(FitBase):
         self._param_model.x = self.x_model
         return self._param_model.eval_model_function(x=x, model_parameters=model_parameters)
 
-    # def value_chisquare_nuisance_parameters(self):
-    # #calculate nuisance parameters (wrong!!)
-    #     for _err_dict in self._data_container._error_dicts.values():
-    #         _err = _err_dict["err"]
-    #         if isinstance(_err, MatrixGaussianError):
-    #             raise XYFitException("Calculating Nuisance Parameters is only "
-    #                                        "working with simple errors")
-    #
-    #          _nuisance_cal = (self.eval_model_function(x=self.x) - self.y_data) / _err.error
-    #             _chisquare_uncorr = np.sum((_nuisance_cal * np.sqrt(1.0 - _err._corr_coeff)) ** 2.0)
-    #         #_chisquare_corr = (_nuisance[] * np.sqrt(_err._corr_coeff)) ** 2.0
-    #
-    #         #_chisquare_corr = _chisquare_corr / (self._data_container.size)
-    #         _chisquare = _chisquare_uncorr
-    #
-    #     return _chisquare
-
     def calculate_nuisance_parameters(self):
-        """calculate y-nuisance-vector"""
+        """
+        Calculate and return the nuisance parameter values.
+
+        NOTE: currently only works for calculating nuisance parameters
+        for correlated 'y' uncertainties.
+
+        :return: vector containing the nuisance parameter values
+        :rtype: ``numpy.array``
+        """
         _uncor_cov_mat_inverse = self.y_data_uncor_cov_mat_inverse
         _cor_cov_mat = self.nuisance_y_data_cor_cov_mat
-        _full_cov_mat_inverse = self.y_data_cov_mat
         _y_data = self.y_data
         _y_model = self.eval_model_function(x=self.x_model)
-        _nuisance_size = self._data_container.y_simple_error_size
+
+        # retrieve the errors for which to assign nuisance parameters
+        _nuisance_error_objects = self.get_matching_errors(
+            matching_criteria=dict(
+                axis=1,  # cannot use 'y' here
+                correlated=True
+            )
+        )
+
+        _nuisance_size = len(_nuisance_error_objects)
         _residuals = _y_data - _y_model
 
-        _left_side = (_cor_cov_mat).dot(_uncor_cov_mat_inverse).dot(np.transpose(_cor_cov_mat))+np.eye(_nuisance_size, _nuisance_size)
-        _right_side =np.asarray(_cor_cov_mat).dot(np.asarray(_uncor_cov_mat_inverse)).dot(_residuals)
+        _left_side = (_cor_cov_mat).dot(_uncor_cov_mat_inverse).dot(np.transpose(_cor_cov_mat))
+        _left_side += np.eye(_nuisance_size, _nuisance_size)
+        _right_side = np.asarray(_cor_cov_mat).dot(np.asarray(_uncor_cov_mat_inverse)).dot(_residuals)
 
         _nuisance_vector = np.linalg.solve(_left_side, np.transpose(_right_side))
-
 
         return _nuisance_vector
 
