@@ -466,10 +466,13 @@ class XYFit(FitBase):
         # data x uncorrelated inverse covariance matrix
         return self._data_container.x_uncor_cov_mat_inverse
 
-    # @property TODO: correlated x-errors
+    # TODO: correlated x-errors
+    # @property
     # def nuisance_x_data_cor_cov_mat(self):
     #     # date x correlated matrix (nuisance)
     #     return self._data_container.nuisance_y_cor_cov_mat
+
+    @property
     def y_data_cor_mat(self):
         """the data *y* correlation matrix"""
         return self._data_container.y_cor_mat
@@ -562,7 +565,7 @@ class XYFit(FitBase):
     def x_model_cor_mat(self):
         """the model *x* correlation matrix"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
-        self._param_model.x = self.x
+        self._param_model.x = self.x_model
         return self._param_model.y_cor_mat
 
     # @property TODO: correlated x-errors
