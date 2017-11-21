@@ -34,6 +34,47 @@ class TestDatastoreXY(unittest.TestCase):
         self._ref_y_cov_mat = cov_mat_from_float_list(self._ref_y_err_abs_valuearray,
                                                       correlation=self._ref_y_err_corr_coeff).mat
 
+    def test_get_matching_error_all_empty_dict(self):
+        _errs = self.data_xy.get_matching_errors(matching_criteria=dict())
+        self.assertEqual(len(_errs), 2)
+        self.assertIs(self.data_xy._error_dicts['MyXError']['err'], _errs['MyXError'])
+        self.assertIs(self.data_xy._error_dicts['MyYError']['err'], _errs['MyYError'])
+
+    def test_get_matching_error_all_None(self):
+        _errs = self.data_xy.get_matching_errors(matching_criteria=None)
+        self.assertEqual(len(_errs), 2)
+        self.assertIs(self.data_xy._error_dicts['MyXError']['err'], _errs['MyXError'])
+        self.assertIs(self.data_xy._error_dicts['MyYError']['err'], _errs['MyYError'])
+
+    def test_get_matching_error_name(self):
+        _errs = self.data_xy.get_matching_errors(matching_criteria=dict(name='MyXError'))
+        self.assertEqual(len(_errs), 1)
+        self.assertIs(self.data_xy._error_dicts['MyXError']['err'], _errs['MyXError'])
+
+    def test_get_matching_error_type_simple(self):
+        _errs = self.data_xy.get_matching_errors(matching_criteria=dict(type='simple'))
+        self.assertEqual(len(_errs), 2)
+        self.assertIs(self.data_xy._error_dicts['MyXError']['err'], _errs['MyXError'])
+        self.assertIs(self.data_xy._error_dicts['MyYError']['err'], _errs['MyYError'])
+
+    def test_get_matching_error_type_matrix(self):
+        _errs = self.data_xy.get_matching_errors(matching_criteria=dict(type='matrix'))
+        self.assertEqual(len(_errs), 0)
+
+    def test_get_matching_error_uncorrelated(self):
+        _errs = self.data_xy.get_matching_errors(matching_criteria=dict(correlated=False))
+        self.assertEqual(len(_errs), 0)
+
+    def test_get_matching_error_correlated(self):
+        _errs = self.data_xy.get_matching_errors(matching_criteria=dict(correlated=True))
+        self.assertEqual(len(_errs), 2)
+        self.assertIs(self.data_xy._error_dicts['MyXError']['err'], _errs['MyXError'])
+        self.assertIs(self.data_xy._error_dicts['MyYError']['err'], _errs['MyYError'])
+
+    def test_get_matching_error_axis(self):
+        _errs = self.data_xy.get_matching_errors(matching_criteria=dict(axis=1))
+        self.assertEqual(len(_errs), 1)
+        self.assertIs(self.data_xy._error_dicts['MyYError']['err'], _errs['MyYError'])
 
     def test_compare_error_reference(self):
         for _err_dict in self.data_xy._error_dicts.values():

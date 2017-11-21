@@ -270,6 +270,53 @@ class TestFittersIndexedChi2WithError(unittest.TestCase):
         self._ref_parameter_value_estimates = [1.1351433845831516, 2.137441531781195, 2.3405503488535118]
         self._ref_model_value_estimates = self.idx_model(*self._ref_parameter_value_estimates)
 
+    def test_get_matching_error_all_empty_dict(self):
+        _errs = self.idx_fit.get_matching_errors(matching_criteria=dict())
+        self.assertEqual(len(_errs), 2)
+        self.assertIs(self.idx_fit._data_container._error_dicts['MyDataError']['err'], _errs['MyDataError'])
+        self.assertIs(self.idx_fit._param_model._error_dicts['MyModelError']['err'], _errs['MyModelError'])
+
+    def test_get_matching_error_all_None(self):
+        _errs = self.idx_fit.get_matching_errors(matching_criteria=None)
+        self.assertEqual(len(_errs), 2)
+        self.assertIs(self.idx_fit._data_container._error_dicts['MyDataError']['err'], _errs['MyDataError'])
+        self.assertIs(self.idx_fit._param_model._error_dicts['MyModelError']['err'], _errs['MyModelError'])
+
+    def test_get_matching_error_name(self):
+        _errs = self.idx_fit.get_matching_errors(matching_criteria=dict(name='MyDataError'))
+        self.assertEqual(len(_errs), 1)
+        self.assertIs(self.idx_fit._data_container._error_dicts['MyDataError']['err'], _errs['MyDataError'])
+
+    def test_get_matching_error_type_simple(self):
+        _errs = self.idx_fit.get_matching_errors(matching_criteria=dict(type='simple'))
+        self.assertEqual(len(_errs), 2)
+        self.assertIs(self.idx_fit._data_container._error_dicts['MyDataError']['err'], _errs['MyDataError'])
+        self.assertIs(self.idx_fit._param_model._error_dicts['MyModelError']['err'], _errs['MyModelError'])
+
+    def test_get_matching_error_type_matrix(self):
+        _errs = self.idx_fit.get_matching_errors(matching_criteria=dict(type='matrix'))
+        self.assertEqual(len(_errs), 0)
+
+    def test_get_matching_error_uncorrelated(self):
+        _errs = self.idx_fit.get_matching_errors(matching_criteria=dict(correlated=True))
+        self.assertEqual(len(_errs), 0)
+
+    def test_get_matching_error_correlated(self):
+        _errs = self.idx_fit.get_matching_errors(matching_criteria=dict(correlated=False))
+        self.assertEqual(len(_errs), 2)
+        self.assertIs(self.idx_fit._data_container._error_dicts['MyDataError']['err'], _errs['MyDataError'])
+        self.assertIs(self.idx_fit._param_model._error_dicts['MyModelError']['err'], _errs['MyModelError'])
+
+    def test_get_matching_error_reference_data(self):
+        _errs = self.idx_fit.get_matching_errors(matching_criteria=dict(reference='data'))
+        self.assertEqual(len(_errs), 1)
+        self.assertIs(self.idx_fit._data_container._error_dicts['MyDataError']['err'], _errs['MyDataError'])
+
+    def test_get_matching_error_reference_model(self):
+        _errs = self.idx_fit.get_matching_errors(matching_criteria=dict(reference='model'))
+        self.assertEqual(len(_errs), 1)
+        self.assertIs(self.idx_fit._param_model._error_dicts['MyModelError']['err'], _errs['MyModelError'])
+
     def test_compare_fit_chi2_errors_chi2_cov_mat(self):
         self.idx_fit.do_fit()
         self.idx_fit_chi2_with_cov_mat = IndexedFit(

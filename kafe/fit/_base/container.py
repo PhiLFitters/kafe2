@@ -2,6 +2,9 @@ from __future__ import print_function
 
 import abc
 import numpy as np
+import six
+
+from copy import copy
 
 from ...tools import random_alphanumeric
 from ...core.error import SimpleGaussianError, MatrixGaussianError
@@ -23,7 +26,19 @@ class DataContainerBase(object):
     """
     __metaclass__ = abc.ABCMeta
 
+    def __init__(self):
+        self._error_dicts = dict()
+        self._total_error = None
+
     # -- private methods
+
+    @abc.abstractmethod
+    def _calculate_total_error(self):
+        pass
+
+    @abc.abstractmethod
+    def _clear_total_error_cache(self):
+        pass
 
     def _add_error_object(self, name, error_object, **additional_error_dict_keys):
         """create a new entry <name> under self._error_dicts,
@@ -42,7 +57,7 @@ class DataContainerBase(object):
         self._clear_total_error_cache()
         return _name
 
-    def _get_error_dict_raise(self, error_name):
+    def _get_error_by_name_raise(self, error_name):
         """return a dictionary containing the error object for error 'name' and additional information"""
         _err_dict = self._error_dicts.get(error_name, None)
         if _err_dict is None:
@@ -52,27 +67,27 @@ class DataContainerBase(object):
     @abc.abstractproperty
     def size(self):
         """The size of the data (number of measurement points)"""
-        pass
+        return 0
 
     @abc.abstractproperty
     def data(self):
         """A numpy array containing the data values"""
-        pass
+        return np.empty(tuple())
 
     @abc.abstractproperty
     def err(self):
         """A numpy array containing the pointwise data uncertainties"""
-        pass
+        return np.empty(tuple())
 
     @abc.abstractproperty
     def cov_mat(self):
         """A numpy matrix containing the covariance matrix of the data"""
-        pass
+        return np.matrix(np.empty(tuple()))
 
     @abc.abstractproperty
     def cov_mat_inverse(self):
         """A numpy matrix containing inverse of the data covariance matrix (or ``None`` if not invertible)"""
-        pass
+        return np.matrix(np.empty(tuple()))
 
     @property
     def has_errors(self):
@@ -153,7 +168,7 @@ class DataContainerBase(object):
         :param error_name: error name
         :type error_name: str
         """
-        _err_dict = self._get_error_dict_raise(error_name)
+        _err_dict = self._get_error_by_name_raise(error_name)
         _err_dict['enabled'] = False
         self._clear_total_error_cache()
 
@@ -165,17 +180,98 @@ class DataContainerBase(object):
         :param error_name: error name
         :type error_name: str
         """
-        _err_dict = self._get_error_dict_raise(error_name)
+        _err_dict = self._get_error_by_name_raise(error_name)
         _err_dict['enabled'] = True
         self._clear_total_error_cache()
 
+    def get_matching_errors(self, matching_criteria=None, matching_type='equal'):
+        """
+        Return a list of uncertainty objects fulfilling the specified
+        matching criteria.
+
+        Valid keys for ``matching_criteria``:
+
+            * ``name`` (the unique error name)
+            * ``type`` (either ``simple`` or ``matrix``)
+            * ``correlated`` (bool, only matches simple errors!)
+
+        NOTE: The error objects contained in the dictionary are not copies,
+        but the original error objects.
+        Modifying them is possible, but not recommended. If you do modify any
+        of them, the changes will not be reflected in the total error calculation
+        until the error cache is cleared. This can be done by calling the
+        private method
+        :py:meth:`~kafe.fit._base.container.DataContainerBase._clear_total_error_cache`.
+
+        :param matching_criteria: key-value pairs specifying matching criteria.
+                                  The resulting error array will only contain
+                                  error objects matching *all* provided criteria.
+                                  If ``None``, all error objects are returned.
+        :type matching_criteria: dict or ``None``
+        :param matching_type: how to perform the matching. If ``'equal'``, the
+                              value in ``matching_criteria`` is checked for equality
+                              against the stored value. If ``'regex', the
+                              value in ``matching_criteria`` is interpreted as a regular
+                              expression and is matched against the stored value.
+        :type matching_type: ``'equal'`` or ``'regex'``
+        :return: list of error objects
+        :rtype: dict mapping error name to `~kafe.core.error.GausianErrorBase`-derived
+        """
+        _result = copy(self._error_dicts)
+
+        if matching_criteria is None:
+            matching_criteria = dict()
+
+        if matching_type == 'regex':
+            raise NotImplementedError("Matching type 'regex' not yet implemented!")
+        elif matching_type != 'equal':
+            raise NotImplementedError("Unknown matching type: '{}'! "
+                                      "Available: ['equals']".format(matching_type))
+
+        for _crit_key, _crit_value in six.iteritems(matching_criteria):
+            # go through all errors, removing those that don't match
+            for _error_name, _error_dict in list(_result.items()):  # do not use an iterator!
+                if _crit_key == 'name' and _error_name == _crit_value:
+                    continue
+                elif _crit_key == 'type':
+                    # type 'simple'
+                    _err_obj = _error_dict['err']
+                    if ((_crit_value == 'simple' and isinstance(_err_obj, SimpleGaussianError)) or
+                        (_crit_value == 'matrix' and isinstance(_err_obj, MatrixGaussianError))):
+                        continue
+                elif _crit_key == 'correlated':
+                    _err_obj = _error_dict['err']
+                    try:
+                        if _crit_value == bool(_err_obj.corr_coeff != 0):
+                            continue
+                    except AttributeError:
+                        pass  # error is a MatrixGaussianError and will not be matched
+                else:
+                    # check the error dict keys for a match
+                    _cmp_val = _error_dict.get(_crit_key, None)
+                    if _cmp_val == _crit_value and _cmp_val is not None:
+                        continue
+
+                # no if clause above executed -> no match, remove error element
+                _result.pop(_error_name)
+
+                # exit loop if no remaining errors to examine
+                if not _result:
+                    break
+
+            # exit loop if no remaining errors to examine
+            if not _result:
+                break
+
+        return {_name: _entry['err'] for _name, _entry in six.iteritems(_result)}
+
     def get_error(self, error_name):
         """
-        Return the uncertainty object object holding the uncertainty.
+        Return the uncertainty object holding the uncertainty.
 
         NOTE: If you modify this object, the changes will not be reflected
         in the total error calculation until the error cache is cleared.
-        This can be forced by calling e.g.
+        This can be forced by calling
         :py:meth:`~kafe.fit._base.container.DataContainerBase.enable_error`.
 
         :param error_name: error name
@@ -183,7 +279,7 @@ class DataContainerBase(object):
         :return: error object
         :rtype: `~kafe.core.error.GausianErrorBase`-derived
         """
-        return self._get_error_dict_raise(error_name)
+        return self._get_error_by_name_raise(error_name)
 
     def get_total_error(self):
         """

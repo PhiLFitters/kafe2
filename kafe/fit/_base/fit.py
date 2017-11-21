@@ -32,6 +32,15 @@ class FitBase(object):
     EXCEPTION_TYPE = FitException
     RESERVED_NODE_NAMES = None
 
+    def __init__(self):
+        self._data_container = None
+        self._param_model = None
+        self._nexus = None
+        self._fitter = None
+        self._fit_param_names = None
+        self._model_function = None
+        self._cost_function = None
+
     # -- private methods
 
     def _new_data_container(self, *args, **kwargs):
@@ -176,6 +185,62 @@ class FitBase(object):
         :param param_value_list: list of parameter values (mind the order)
         """
         return self._fitter.set_all_fit_parameter_values(param_value_list)
+
+    def get_matching_errors(self, matching_criteria=None, matching_type='equal'):
+        """
+        Return a list of uncertainty objects fulfilling the specified
+        matching criteria.
+
+        Valid keys for ``matching_criteria``:
+
+            * ``name`` (the unique error name)
+            * ``type`` (either ``'simple'`` or ``'matrix'``)
+            * ``correlated`` (bool, only matches simple errors!)
+            * ``reference`` (either ``'model'`` or ``'data'``)
+
+        NOTE: The error objects contained in the dictionary are not copies,
+        but the original error objects.
+        Modifying them is possible, but not recommended. If you do modify any
+        of them, the changes will not be reflected in the total error calculation
+        until the error cache is cleared. This can be done by calling the
+        private method
+        :py:meth:`~kafe.fit._base.container.DataContainerBase._clear_total_error_cache`.
+
+        :param matching_criteria: key-value pairs specifying matching criteria.
+                                  The resulting error array will only contain
+                                  error objects matching *all* provided criteria.
+                                  If ``None``, all error objects are returned.
+        :type matching_criteria: dict or ``None``
+        :param matching_type: how to perform the matching. If ``'equal'``, the
+                              value in ``matching_criteria`` is checked for equality
+                              against the stored value. If ``'regex', the
+                              value in ``matching_criteria`` is interpreted as a regular
+                              expression and is matched against the stored value.
+        :type matching_type: ``'equal'`` or ``'regex'``
+        :return: list of error objects
+        :rtype: dict mapping error name to `~kafe.core.error.GausianErrorBase`-derived
+        """
+        if matching_criteria is not None:
+            _crit_ref_value = matching_criteria.pop('reference', None)
+            if _crit_ref_value == 'data':
+                return self._data_container.get_matching_errors(matching_criteria, matching_type=matching_type)
+            elif _crit_ref_value == 'model':
+                return self._param_model.get_matching_errors(matching_criteria, matching_type=matching_type)
+            elif _crit_ref_value is None:
+                pass  # don't raise, continue evaluation below
+            else:
+                raise ValueError("Unknown value '{}' for matching "
+                                 "criterion 'reference'. Valid: 'data', 'model' or None".format(_crit_ref_value))
+
+        _result = self._data_container.get_matching_errors(matching_criteria, matching_type=matching_type)
+        _result_model = self._param_model.get_matching_errors(matching_criteria, matching_type=matching_type)
+
+        # be paranoid about collisions
+        for _k in _result_model:
+            assert _k not in _result # FATAL: there is an error with the same name in the data and model containers
+            _result[_k] = _result_model[_k]
+
+        return _result
 
     def add_simple_error(self, err_val, name=None, correlation=0, relative=False, reference='data', **kwargs):
         """
