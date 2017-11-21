@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+import six
 
 from scipy import stats
 
@@ -149,3 +150,14 @@ class TestFittersHist(unittest.TestCase):
             self.hist_fit.cost_function_value,
             self.hist_fit._cost_function(self.hist_fit.data, self._ref_model_estimates),
         )
+
+    def test_report_before_fit(self):
+        _buffer = six.StringIO()
+        self.hist_fit.report(output_stream=_buffer)
+        self.assertNotEquals(_buffer.getvalue(), "")
+
+    def test_report_after_fit(self):
+        _buffer = six.StringIO()
+        self.hist_fit.do_fit()
+        self.hist_fit.report(output_stream=_buffer)
+        self.assertNotEquals(_buffer.getvalue(), "")

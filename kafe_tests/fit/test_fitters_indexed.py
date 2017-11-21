@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+import six
 
 from kafe.config import kc
 from kafe.fit import IndexedFit
@@ -417,3 +418,14 @@ class TestFittersIndexedChi2WithError(unittest.TestCase):
                 rtol=1e-2
             )
         )
+
+    def test_report_before_fit(self):
+        _buffer = six.StringIO()
+        self.idx_fit.report(output_stream=_buffer)
+        self.assertNotEquals(_buffer.getvalue(), "")
+
+    def test_report_after_fit(self):
+        _buffer = six.StringIO()
+        self.idx_fit.do_fit()
+        self.idx_fit.report(output_stream=_buffer)
+        self.assertNotEquals(_buffer.getvalue(), "")

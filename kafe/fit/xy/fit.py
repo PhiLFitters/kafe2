@@ -969,11 +969,11 @@ class XYFit(FitBase):
 
             """))
             _data_table_dict = OrderedDict()
-            _data_table_dict['X Data'] = self.x
+            _data_table_dict['X Data'] = self.x_data
             if self._data_container.has_x_errors:
-                _data_table_dict['X Data Error'] = self.x_error
-                #_data_table_dict['X Data Total Covariance Matrix'] = self.x_cov_mat
-                _data_table_dict['X Data Total Correlation Matrix'] = self.x_cov_mat
+                _data_table_dict['X Data Error'] = self.x_data_error
+                #_data_table_dict['X Data Total Covariance Matrix'] = self.x_data_cov_mat
+                _data_table_dict['X Data Total Correlation Matrix'] = self.x_data_cor_mat
 
             print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=1)
             output_stream.write('\n')
@@ -1009,14 +1009,15 @@ class XYFit(FitBase):
             )
             output_stream.write('\n\n\n')
 
-            # FIXME: x model
-            # _data_table_dict = OrderedDict()
-            # _data_table_dict['X Model'] = self.x
-            # _data_table_dict['X Model Error'] = self.x_error
-            # _data_table_dict['X Model Total Covariance Matrix'] = self.x_cov_mat
+            _data_table_dict = OrderedDict()
+            _data_table_dict['X Model'] = self.x_model
+            if self.has_model_errors:
+                _data_table_dict['X Model Error'] = self.x_model_error
+                #_data_table_dict['X Model Total Covariance Matrix'] = self.x_model_cor_mat
+                _data_table_dict['X Model Total Correlation Matrix'] = self.x_model_cor_mat
 
-            # print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=1)
-            # output_stream.write('\n')
+            print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=1)
+            output_stream.write('\n')
 
             _data_table_dict = OrderedDict()
             _data_table_dict['Y Model'] = self.y_model
