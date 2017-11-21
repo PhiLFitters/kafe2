@@ -91,8 +91,8 @@ class XYContainer(IndexedContainer):
                 _tmp_uncor_cov_mat+=_err.cov_mat_uncor
         return np.matrix(_tmp_uncor_cov_mat)
 
-    def _calculate_nuisance_y_cor_error_cov_mat(self):
-        """calculate the y correlated covariance matrix for chi-square with nuisance parameters"""
+    def _calculate_y_nuisance_cor_design_matrix(self):
+        """calculate the design matrix containing the correlated parts of all y uncertainties"""
 
         _y_cor_errors = self.get_matching_errors(
             matching_criteria=dict(
@@ -110,29 +110,26 @@ class XYContainer(IndexedContainer):
 
         return np.matrix(_nuisance_ycor_design_matrix)
 
-
-    # def _calculate_nuisance_x_cor_error_cov_mat(self):
-    #     # calculate the x correlated covariance matrix for Chisquare with Nuisance Parameters
-    #     #TODO: correlated x-errors
+    # def _calculate_x_nuisance_cor_design_matrix(self):
+    #     """calculate the design matrix containing the correlated parts of all x uncertainties"""
+    #
+    #     _x_cor_errors = self.get_matching_errors(
+    #         matching_criteria=dict(
+    #             axis=0,
+    #             enabled=True,
+    #             correlated=True
+    #         )
+    #     )
+    #
     #     _data_size = self.size
-    #     _err_size = self.x_simple_error_size
-    #     _tmp_cor_cov_mat = np.zeros((_err_size, _data_size))
-    #     _col = 0
-    #     for _err_dict in self._error_dicts.values():
-    #         if not _err_dict['enabled']:
-    #             continue
-    #         if not _err_dict['axis'] == 0:
-    #             continue
-    #         _err = _err_dict["err"]
-    #         if isinstance(_err, SimpleGaussianError):
-    #          #    if not _err.corr_coeff:
-    #          #        continue
-    #          _tmp_cor_cov_mat[_col, :] = _err.error_cor
-    #          _col += 1
-    #     return np.matrix(_tmp_cor_cov_mat)
+    #     _err_size = len(_x_cor_errors)
+    #     _nuisance_xcor_design_matrix = np.zeros((_err_size, _data_size))
+    #     for _col, (_err_name, _err) in enumerate(six.iteritems(_x_cor_errors)):
+    #         _nuisance_xcor_design_matrix[_col, :] = _err.error_cor
+    #
+    #     return np.matrix(_nuisance_xcor_design_matrix)
 
-
-        # -- public properties
+    # -- public properties
 
     @property
     def size(self):
@@ -262,9 +259,9 @@ class XYContainer(IndexedContainer):
         return self.y_uncor_cov_mat.I
 
     @property
-    def nuisance_y_cor_cov_mat (self):
-        #y correlated covariance matrix (nuisanse)
-         _nuisance_y_cor_cov_mat = self._calculate_nuisance_y_cor_error_cov_mat()
+    def _y_nuisance_cor_design_mat(self):
+         """design matrix containing the correlated parts of all y uncertainties"""
+         _nuisance_y_cor_cov_mat = self._calculate_y_nuisance_cor_design_matrix()
          return _nuisance_y_cor_cov_mat
 
     @property
@@ -280,7 +277,7 @@ class XYContainer(IndexedContainer):
 
     # @property TODO: correlated x-errors
     # def nuisance_x_cor_cov_mat(self):
-    #     # x correlated covariance matrix (nuisanse)
+    #      """design matrix containing the correlated parts of all x uncertainties"""
     #     _nuisance_x_cor_cov_mat = self._calculate_nuisance_x_cor_error_cov_mat()
     #     return _nuisance_x_cor_cov_mat
 

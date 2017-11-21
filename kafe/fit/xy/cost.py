@@ -375,52 +375,52 @@ class XYCostFunction_NegLogLikelihoodRatio(CostFunctionBase_NegLogLikelihoodRati
 
 class XYCostFunction_Chi2_Nuisance(CostFunctionBase_Chi2_Nuisance):
 
-    def __init__(self, axes_to_use='xy', errors_to_use='covariance', fall_back_on_singular=True):
+    def __init__(self, axes_to_use='xy', errors_to_use='covariance', fallback_on_singular=True):
 
         """
-              Built-in least-squares cost function with nuisanceparameters for *xy* data.
+        Built-in least-squares cost function with nuisanceparameters for *xy* data.
 
-              :param errors_to_use: which errors to use when calculating :math:`\chi^2`
-              :type errors_to_use: ``'covariance'``, ``'pointwise'`` or ``None``
-              :param axes_to_use: take into account errors for which axes
-              :type axes_to_use: ``'y'`` or ``'xy'``
-              """
+        :param errors_to_use: which errors to use when calculating :math:`\chi^2`
+        :type errors_to_use: ``'covariance'``, ``'pointwise'`` or ``None``
+        :param axes_to_use: take into account errors for which axes
+        :type axes_to_use: ``'y'`` or ``'xy'``
+        """
 
         if errors_to_use==None:
             _chi2_nui = self.chi2_no_error
 
         elif errors_to_use == 'covariance':
             if axes_to_use == 'y':
-                if fall_back_on_singular:
-                    _chi2_nui = self.chi2_nui_cov_fall_y
+                if fallback_on_singular:
+                    _chi2_nui = self.chi2_nui_cov_fallback_y
                 else:
                     _chi2_nui = self.chi2_nui_cov_y
             elif axes_to_use == 'x':
-                if fall_back_on_singular:
-                    _chi2_nui = self.chi2_nui_cov_fall_x
+                if fallback_on_singular:
+                    _chi2_nui = self.chi2_nui_cov_fallback_x
                 else:
                     _chi2_nui = self.chi2_nui_cov_x
             elif axes_to_use == 'xy':
-                if fall_back_on_singular:
-                    _chi2_nui = self.chi2_nui_cov_fall_xy
+                if fallback_on_singular:
+                    _chi2_nui = self.chi2_nui_cov_fallback_xy
                 else:
                     _chi2_nui = self.chi2_nui_cov_xy
             else:
                 raise CostFunctionException("Unknown value '%s' for 'axes_to_use': must be one of ('xy', 'y', 'x')")
         elif errors_to_use == 'pointwise':
             if axes_to_use == 'y':
-                if fall_back_on_singular:
-                    _chi2_nui = self.chi2_nui_pointwise_fall_y
+                if fallback_on_singular:
+                    _chi2_nui = self.chi2_nui_pointwise_fallback_y
                 else:
                     _chi2_nui = self.chi2_nui_pointwise_y
             elif axes_to_use == 'x':
-                if fall_back_on_singular:
-                    _chi2_nui = self.chi2_nui_pointwise_fall_x
+                if fallback_on_singular:
+                    _chi2_nui = self.chi2_nui_pointwise_fallback_x
                 else:
                     _chi2_nui = self.chi2_nui_pointwise_x
             elif axes_to_use == 'xy':
-                if fall_back_on_singular:
-                    _chi2_nui = self.chi2_nui_pointwise_fall_xy
+                if fallback_on_singular:
+                    _chi2_nui = self.chi2_nui_pointwise_fallback_xy
                 else:
                     _chi2_nui = self.chi2_nui_pointwise_xy
             else:
@@ -476,16 +476,20 @@ class XYCostFunction_Chi2_Nuisance(CostFunctionBase_Chi2_Nuisance):
     @staticmethod
     def chi2_nui_cov_y(y_data, y_model, y_total_uncor_cov_mat_inverse, nuisance_y_total_cor_cov_mat, y_nuisance_vector):
 
-        r"""a Chisquare costfunction which uses y-nuisance parameters
-                the costfunction is given by:
+        r"""A least-squares cost function which uses nuisance parameters to account for correlated
+        'y' uncertainties.
 
-                C = \chi^2({\bf yd}, {\bf ym} = ({\bf yd} - {\bf ym})*{\bf cor_cov} * {\bf ynui}) {\bf y_uncor_cov_inverse} *
-               ({\bf yd} - {\bf ym})*{\bf cor_cov}{\bf ynui}) +  {\bf ynui}^2
+        The cost function is given by:
+
+        .. TODO: check formula
+
+                C = \chi^2({\bf yd}, {\bf ym} = ({\bf yd} - {\bf ym})*{\bf G} * {\bf b}) {\bf y_uncor_cov_inverse} *
+               ({\bf yd} - {\bf ym})*{\bf G}{\bf b}) +  {\bf b}^2
 
         In the above, :math:`{\bf yd}` are the measurements and :math:`{\bf ym}` are the model
-        predictions, :math:{\bf cor_cov} is the total nuisance correlated covariance matrix and
-        :math:{\bf y_uncor_cov}} is the inverse of the total uncorrelated 'y'covariance matrix
-        :mathe:{\bf ynui} is the Y Nuisance-vector
+        predictions, :math:`{\bf G}` is the design matrix containing the correlated parts of all 'y'
+        uncertainties and :math:`{\bf y_uncor_cov}` is the inverse of the total uncorrelated 'y' covariance matrix
+        :math:`{\bf b}` is the vector of nuisance parameters.
 
                 :param: y_data: measurement data
                 :param: y_model model values
@@ -501,17 +505,16 @@ class XYCostFunction_Chi2_Nuisance(CostFunctionBase_Chi2_Nuisance):
                                                        nuisance_vector=y_nuisance_vector)
 
     @staticmethod
-    def chi2_nui_cov_fall_y(y_data, y_model, y_total_uncor_cov_mat_inverse, nuisance_y_total_cor_cov_mat, y_nuisance_vector):
-        return CostFunctionBase_Chi2_Nuisance.chi2_nui_cov_fall(data=y_data, model=y_model,
+    def chi2_nui_cov_fallback_y(y_data, y_model, y_total_uncor_cov_mat_inverse, nuisance_y_total_cor_cov_mat, y_nuisance_vector):
+        return CostFunctionBase_Chi2_Nuisance.chi2_nui_cov_fallback(data=y_data, model=y_model,
                                                   total_uncor_cov_mat_inverse=y_total_uncor_cov_mat_inverse,
                                                   nuisance_total_cor_cov_mat=nuisance_y_total_cor_cov_mat,
                                                   nuisance_vector=y_nuisance_vector)
 
     @staticmethod
     def chi2_nui_cov_x(y_data, y_model, x_total_uncor_cov_mat_inverse, x_model, x_data):
-
-        r"""a Chisquare costfunction which uses x-nuisance parameters
-         the costfunction is given by:
+        r"""A least-squared cost function which uses 'x' nuisance parameters
+         the cost function is given by:
 
                C = \chi^2 = ({\bf yd} - {\bf ym}) * ({\bf d} - {\bf ym}) +
                {\bf xd} - {\bf xm}) * {\bf x_uncor_cov_inverse}*{\bf xd} - {\bf xm})
@@ -535,7 +538,7 @@ class XYCostFunction_Chi2_Nuisance(CostFunctionBase_Chi2_Nuisance):
                                                     fail_on_no_x_matrix=True)
 
     @staticmethod
-    def chi2_nui_cov_fall_x(y_data, y_model, x_total_uncor_cov_mat_inverse, x_model, x_data):
+    def chi2_nui_cov_fallback_x(y_data, y_model, x_total_uncor_cov_mat_inverse, x_model, x_data):
         return _generic_xy_chi2_nuisance_covaraince(x_model=x_model, y_model=y_model, x_data=x_data, y_data=y_data,
                                          x_uncor_cov_mat_inverse=x_total_uncor_cov_mat_inverse, fail_on_no_y_matrix=False,
                                          fail_on_no_x_matrix=False)
@@ -543,16 +546,16 @@ class XYCostFunction_Chi2_Nuisance(CostFunctionBase_Chi2_Nuisance):
     @staticmethod
     def chi2_nui_cov_xy(y_data, y_model, y_total_uncor_cov_mat_inverse, nuisance_y_total_cor_cov_mat, y_nuisance_vector,
                 x_total_uncor_cov_mat_inverse, x_model, x_data):
-        r"""a Chisquare costfunction which uses x- and y-nuisance parameters
-        the costfunction is given by:
+        r"""A Chisquare costfunction which uses 'x' and 'y' nuisance parameters
+        the cost function is given by:
 
                C = ({\bf yd} - {\bf ym})*{\bf cor_cov}) * {\bf y_uncor_cov_inverse} *
                ({\bf yd} - {\bf ym})*{\bf cor_cov})) +
                {\bf xd} - {\bf xm}) * {\bf x_uncor_cov_inverse}*{\bf xd} - {\bf xm})
 
-        In the above, :math:`{\bf yd}` are the ymeasurements and :math:`{\bf ym}` are the ymodel
+        In the above, :math:`{\bf yd}` are the 'y' measurements and :math:`{\bf ym}` are the 'y' model
         predictions, :math:{\bf cor_cov} is the total nuisance correlated covariance matrix and
-        math:`{\bf xd}` are the xmeasurements and :math:`{\bf xm}` are the xmodel
+        math:`{\bf xd}` are the 'x' measurements and :math:`{\bf xm}` are the 'x' model
         :math:{\bf x_cor_cov_inverse} is the total uncorrelated X covariance matrix
 
                 :param: y_data: measurement data
@@ -573,7 +576,7 @@ class XYCostFunction_Chi2_Nuisance(CostFunctionBase_Chi2_Nuisance):
                                          fail_on_no_y_matrix=True)
 
     @staticmethod
-    def chi2_nui_cov_fall_xy(y_data, y_model, y_total_uncor_cov_mat_inverse, nuisance_y_total_cor_cov_mat, y_nuisance_vector,
+    def chi2_nui_cov_fallback_xy(y_data, y_model, y_total_uncor_cov_mat_inverse, nuisance_y_total_cor_cov_mat, y_nuisance_vector,
                         x_total_uncor_cov_mat_inverse, x_model, x_data):
 
         return _generic_xy_chi2_nuisance_covaraince(y_data=y_data, y_model=y_model, x_data=x_data, x_model=x_model,
@@ -585,8 +588,6 @@ class XYCostFunction_Chi2_Nuisance(CostFunctionBase_Chi2_Nuisance):
 
     @staticmethod
     def chi2_nui_pointwise_y(y_data, y_model, y_total_error):
-
-
          r"""A least-squares cost function calculated from 'y' data and model values,
             considering pointwise (uncorrelated) uncertainties for each data point:
 
@@ -606,9 +607,9 @@ class XYCostFunction_Chi2_Nuisance(CostFunctionBase_Chi2_Nuisance):
                                                                   total_error=y_total_error)
 
     @staticmethod
-    def chi2_nui_pointwise_fall_y(y_data, y_model, y_total_error):
-        return CostFunctionBase_Chi2_Nuisance.chi2_nui_pointwise_fall(data=y_data, model=y_model,
-                                                                      total_error=y_total_error)
+    def chi2_nui_pointwise_fallback_y(y_data, y_model, y_total_error):
+        return CostFunctionBase_Chi2_Nuisance.chi2_nui_pointwise_fallback(data=y_data, model=y_model,
+                                                                          total_error=y_total_error)
 
     @staticmethod
     def chi2_nui_pointwise_x(y_data, y_model, x_total_error, x_model, x_data):
@@ -631,7 +632,7 @@ class XYCostFunction_Chi2_Nuisance(CostFunctionBase_Chi2_Nuisance):
                                                    x_total_error=x_total_error, fail_on_zeros=True)
 
     @staticmethod
-    def chi2_nui_pointwise_fall_x(y_data, y_model, x_total_error, x_model, x_data):
+    def chi2_nui_pointwise_fallback_x(y_data, y_model, x_total_error, x_model, x_data):
         return _generic_xy_chi2_nuisance_pointwise(x_model=x_model, y_model=y_model, x_data=x_data, y_data=y_data,
                                         x_total_error=x_total_error, fail_on_zeros=False)
 
@@ -659,7 +660,7 @@ class XYCostFunction_Chi2_Nuisance(CostFunctionBase_Chi2_Nuisance):
                                                    y_total_error=y_total_error)
 
     @staticmethod
-    def chi2_nui_pointwise_fall_xy(y_data, y_model, x_total_error, x_model, x_data, y_total_error):
+    def chi2_nui_pointwise_fallback_xy(y_data, y_model, x_total_error, x_model, x_data, y_total_error):
         return _generic_xy_chi2_nuisance_pointwise(x_model=x_model, y_model=y_model, x_data=x_data, y_data=y_data,
                                      x_total_error=x_total_error, fail_on_zeros=False, y_total_error=y_total_error)
 

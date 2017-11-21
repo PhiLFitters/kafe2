@@ -223,9 +223,9 @@ class XYFit(FitBase):
         self._nexus.new_function(lambda: self.y_total_cov_mat_inverse, function_name='y_total_cov_mat_inverse')
 
         #correlated error matrix (for cor-nuisance approach)
-        self._nexus.new_function(lambda: self.nuisance_y_data_cor_cov_mat, function_name='nuisance_y_data_cor_cov_mat')
-        self._nexus.new_function(lambda: self.nuisance_y_model_cor_cov_mat, function_name='nuisance_y_model_cor_cov_mat')
-        self._nexus.new_function(lambda: self.nuisance_y_total_cor_cov_mat,function_name='nuisance_y_total_cor_cov_mat')
+        self._nexus.new_function(lambda: self._y_data_nuisance_cor_design_mat, function_name='_y_data_nuisance_cor_design_mat')
+        self._nexus.new_function(lambda: self._y_model_nuisance_cor_design_mat, function_name='_y_model_nuisance_cor_design_mat')
+        self._nexus.new_function(lambda: self._y_total_nuisance_cor_design_mat, function_name='_y_total_nuisance_cor_design_mat')
 
         #uncorrelated y error cov matrix
         self._nexus.new_function(lambda: self.y_data_uncor_cov_mat, function_name='y_data_uncor_cov_mat')
@@ -280,7 +280,7 @@ class XYFit(FitBase):
         self.__cache_y_error_band = None
         self.__cache_y_total_uncor_cov_mat = None
         self.__cache_y_total_uncor_cov_mat_inverse = None
-        self.__cache_nuisance_y_total_cor_cov_mat = None
+        self.__cache_y_total_nuisance_cor_design_mat = None
         self.__cache_x_total_uncor_cov_mat = None
         self.__cache_x_total_uncor_cov_mat_inverse = None
         # self.__cache_nuisance_x_total_uncor_cov_mat = None
@@ -315,18 +315,18 @@ class XYFit(FitBase):
         self._nexus.get_by_name('y_data_uncor_cov_mat_inverse').mark_for_update()
         self._nexus.get_by_name('y_model_uncor_cov_mat_inverse').mark_for_update()
         self._nexus.get_by_name('y_total_uncor_cov_mat_inverse').mark_for_update()
-        self._nexus.get_by_name('nuisance_y_data_cor_cov_mat').mark_for_update()
-        self._nexus.get_by_name('nuisance_y_model_cor_cov_mat').mark_for_update()
-        self._nexus.get_by_name('nuisance_y_total_cor_cov_mat').mark_for_update()
+        self._nexus.get_by_name('_y_data_nuisance_cor_design_mat').mark_for_update()
+        self._nexus.get_by_name('_y_model_nuisance_cor_design_mat').mark_for_update()
+        self._nexus.get_by_name('_y_total_nuisance_cor_design_mat').mark_for_update()
         self._nexus.get_by_name('x_data_uncor_cov_mat').mark_for_update()
         self._nexus.get_by_name('x_model_uncor_cov_mat').mark_for_update()
         self._nexus.get_by_name('x_total_uncor_cov_mat').mark_for_update()
         self._nexus.get_by_name('x_data_uncor_cov_mat_inverse').mark_for_update()
         self._nexus.get_by_name('x_model_uncor_cov_mat_inverse').mark_for_update()
         self._nexus.get_by_name('x_total_uncor_cov_mat_inverse').mark_for_update()
-        # self._nexus.get_by_name('nuisance_x_data_cor_cov_mat').mark_for_update()
-        # self._nexus.get_by_name('nuisance_x_model_cor_cov_mat').mark_for_update()
-        # self._nexus.get_by_name('nuisance_x_total_cor_cov_mat').mark_for_update()
+        # self._nexus.get_by_name('_x_data_nuisance_cor_design_mat').mark_for_update()
+        # self._nexus.get_by_name('_x_model_nuisance_cor_design_mat').mark_for_update()
+        # self._nexus.get_by_name('_x_total_nuisance_cor_design_mat').mark_for_update()
         # #self._nexus.get_by_name('x_cor_nuisance_vector').mark_for_update() TODO: uncorrelated x-errors
         self._nexus.get_by_name('y_nuisance_vector').mark_for_update()
         self._nexus.get_by_name('x_uncor_nuisance_vector').mark_for_update()
@@ -452,9 +452,9 @@ class XYFit(FitBase):
         return self._data_container.y_uncor_cov_mat_inverse
 
     @property
-    def nuisance_y_data_cor_cov_mat(self):
+    def _y_data_nuisance_cor_design_mat(self):
         """matrix containing the correlated parts of all data uncertainties for all data points"""
-        return self._data_container.nuisance_y_cor_cov_mat
+        return self._data_container._y_nuisance_cor_design_mat
 
     @property
     def x_data_uncor_cov_mat(self):
@@ -468,7 +468,7 @@ class XYFit(FitBase):
 
     # TODO: correlated x-errors
     # @property
-    # def nuisance_x_data_cor_cov_mat(self):
+    # def _x_data_nuisance_cor_design_mat(self):
     #     # date x correlated matrix (nuisance)
     #     return self._data_container.nuisance_y_cor_cov_mat
 
@@ -555,11 +555,11 @@ class XYFit(FitBase):
         return self._param_model.x_uncor_cov_mat_inverse
 
     @property
-    def nuisance_y_model_cor_cov_mat(self):
+    def _y_model_nuisance_cor_design_mat(self):
         """matrix containing the correlated parts of all model uncertainties for all data points"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
-        return self._param_model.nuisance_y_cor_cov_mat
+        return self._param_model._y_nuisance_cor_design_mat
 
     @property
     def x_model_cor_mat(self):
@@ -569,7 +569,7 @@ class XYFit(FitBase):
         return self._param_model.y_cor_mat
 
     # @property TODO: correlated x-errors
-    # def nuisance_x_model_cor_cov_mat(self):
+    # def _x_model_nuisance_cor_design_mat(self):
     #     """model *x*  correlated covariance matrix (nuisance) (or ``None`` if singular)"""
     #     self._param_model.parameters = self.poi_values  # this is lazy, so just do it
     #     self._param_model.x = self.x_with_errors
@@ -722,15 +722,15 @@ class XYFit(FitBase):
         return self.__cache_y_total_uncor_cov_mat_inverse
 
     @property
-    def nuisance_y_total_cor_cov_mat(self):
+    def _y_total_nuisance_cor_design_mat(self):
         """matrix containing the correlated parts of all model uncertainties for all total points"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
-        if self.__cache_nuisance_y_total_cor_cov_mat is None:
-            _tmp = self.nuisance_y_data_cor_cov_mat
+        if self.__cache_y_total_nuisance_cor_design_mat is None:
+            _tmp = self._y_data_nuisance_cor_design_mat
             # _tmp += self.nuisance_y_model_cor_cov_mat
-            self.__cache_nuisance_y_total_cor_cov_mat = _tmp
-        return self.__cache_nuisance_y_total_cor_cov_mat
+            self.__cache_y_total_nuisance_cor_design_mat = _tmp
+        return self.__cache_y_total_nuisance_cor_design_mat
 
     @property
     def x_total_uncor_cov_mat(self):
@@ -930,7 +930,7 @@ class XYFit(FitBase):
         :rtype: ``numpy.array``
         """
         _uncor_cov_mat_inverse = self.y_data_uncor_cov_mat_inverse
-        _cor_cov_mat = self.nuisance_y_data_cor_cov_mat
+        _cor_cov_mat = self._y_data_nuisance_cor_design_mat
         _y_data = self.y_data
         _y_model = self.eval_model_function(x=self.x_model)
 
