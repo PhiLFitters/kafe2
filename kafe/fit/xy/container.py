@@ -1,4 +1,5 @@
 import numpy as np
+import six
 
 from ...core.error import MatrixGaussianError, SimpleGaussianError
 from ..indexed import IndexedContainer
@@ -92,22 +93,22 @@ class XYContainer(IndexedContainer):
 
     def _calculate_nuisance_y_cor_error_cov_mat(self):
         """calculate the y correlated covariance matrix for chi-square with nuisance parameters"""
+
+        _y_cor_errors = self.get_matching_errors(
+            matching_criteria=dict(
+                axis=1,
+                enabled=True,
+                correlated=True
+            )
+        )
+
         _data_size = self.size
-        _err_size = self.y_simple_error_size
-        _tmp_cor_cov_mat = np.zeros((_err_size, _data_size))
-        _col = 0
-        for _err_dict in self._error_dicts.values():
-            if not _err_dict['enabled']:
-                continue
-            if not _err_dict['axis'] == 1:
-                continue
-            _err = _err_dict["err"]
-            if isinstance(_err, SimpleGaussianError):
-                if not _err.corr_coeff:
-                    continue
-                _tmp_cor_cov_mat[_col, :] = _err.error_cor
-                _col += 1
-        return np.matrix(_tmp_cor_cov_mat)
+        _err_size = len(_y_cor_errors)
+        _nuisance_ycor_design_matrix = np.zeros((_err_size, _data_size))
+        for _col, (_err_name, _err) in enumerate(six.iteritems(_y_cor_errors)):
+            _nuisance_ycor_design_matrix[_col, :] = _err.error_cor
+
+        return np.matrix(_nuisance_ycor_design_matrix)
 
 
     # def _calculate_nuisance_x_cor_error_cov_mat(self):
