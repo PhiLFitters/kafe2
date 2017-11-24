@@ -62,7 +62,7 @@ def _generic_chi2(data, model,
     # return sum of squared residuals
     return np.sum(_res ** 2)
 
-def _generic_chi2_nuisance(data, model, nuisance_vector=np.array([]), nuisance_cor_cov_mat=None, uncor_cov_mat_inverse=None,
+def _generic_chi2_nuisance(data, model, nuisance_vector=np.array([]), nuisance_cor_design_mat=None, uncor_cov_mat_inverse=None,
                            fail_on_no_matrix=False):
 
     data = np.asarray(data)
@@ -74,7 +74,7 @@ def _generic_chi2_nuisance(data, model, nuisance_vector=np.array([]), nuisance_c
 
     #if a uncorrelated cov-mat is given use it
     if uncor_cov_mat_inverse is not None:
-        _inner_sum = np.squeeze(np.asarray(nuisance_vector.dot(nuisance_cor_cov_mat)))
+        _inner_sum = np.squeeze(np.asarray(nuisance_vector.dot(nuisance_cor_design_mat)))
         _penalties = nuisance_vector.dot(nuisance_vector)
         _chisquare = (data - model - _inner_sum).dot(uncor_cov_mat_inverse).dot(data - model - _inner_sum)[0, 0]
         return _chisquare + _penalties
@@ -547,7 +547,7 @@ class CostFunctionBase_Chi2_Nuisance(CostFunctionBase_Chi2):
         self._formatter.description = "chi-square (with nuisance parameters for correlated uncertainties)"
 
     @staticmethod
-    def chi2_nui_cov(data, model, total_uncor_cov_mat_inverse, nuisance_total_cor_cov_mat, nuisance_vector):
+    def chi2_nui_cov(data, model, total_uncor_cov_mat_inverse, total_nuisance_cor_design_mat, nuisance_vector):
         r"""A least-squares cost function that accounts for correlated uncertainties through nuisance parameters. The nuisance parameters are fitted.
 
         The cost function is given by:
@@ -563,17 +563,17 @@ class CostFunctionBase_Chi2_Nuisance(CostFunctionBase_Chi2):
         :param data: measurement data
         :param model model values
         :param total_uncor_cov_mat_inverse: inverse of the uncorrelated part of the total covariance matrix
-        :param: nuisance_total_cor_cov_mat: matrix containing the correlated parts of each uncertainty source for each data point
+        :param: total_nuisance_cor_design_mat: matrix containing the correlated parts of each uncertainty source for each data point
         :param: nuisance_vector: vector containing nuisance parameters
 
         :return: cost function value
         """
         return _generic_chi2_nuisance(data=data, model=model, uncor_cov_mat_inverse=total_uncor_cov_mat_inverse,
-                                      nuisance_cor_cov_mat=nuisance_total_cor_cov_mat, nuisance_vector=nuisance_vector,
+                                      nuisance_cor_design_mat=total_nuisance_cor_design_mat, nuisance_vector=nuisance_vector,
                                       fail_on_no_matrix=True)
 
     @staticmethod
-    def chi2_nui_cov_fallback(data, model, total_uncor_cov_mat_inverse, nuisance_total_cor_cov_mat, nuisance_vector):
+    def chi2_nui_cov_fallback(data, model, total_uncor_cov_mat_inverse, total_nuisance_cor_design_mat, nuisance_vector):
         r"""A least-squares cost function that accounts for correlated uncertainties through nuisance parameters. The nuisance parameters are fitted.
 
         .. TODO: describe fallback behavior
@@ -591,13 +591,13 @@ class CostFunctionBase_Chi2_Nuisance(CostFunctionBase_Chi2):
         :param data: measurement data
         :param model model values
         :param total_uncor_cov_mat_inverse: inverse of the uncorrelated part of the total covariance matrix
-        :param: nuisance_total_cor_cov_mat: matrix containing the correlated parts of each uncertainty source for each data point
+        :param: total_nuisance_cor_design_mat: matrix containing the correlated parts of each uncertainty source for each data point
         :param: nuisance_vector: vector containing nuisance parameters
 
         :return: cost function value
         """
         return _generic_chi2_nuisance(data=data, model=model, uncor_cov_mat_inverse=total_uncor_cov_mat_inverse,
-                                      nuisance_cor_cov_mat=nuisance_total_cor_cov_mat, nuisance_vector=nuisance_vector,
+                                      nuisance_cor_design_mat=total_nuisance_cor_design_mat, nuisance_vector=nuisance_vector,
                                       fail_on_no_matrix=False)
 
     @staticmethod

@@ -51,7 +51,7 @@ def _generic_xy_chi2_nuisance_pointwise(x_data, x_model, y_model, y_data, y_tota
     return _y_res.dot(_y_res)
 
 def _generic_xy_chi2_nuisance_covaraince(x_data, x_model,  y_data, y_model,
-                  x_uncor_cov_mat_inverse=None, y_uncor_cov_mat_inverse=None, y_nuisance_cor_cov_mat=None, y_nuisance_vector=np.array([]),
+                  x_uncor_cov_mat_inverse=None, y_uncor_cov_mat_inverse=None, y_nuisance_cor_design_mat=None, y_nuisance_vector=np.array([]),
                   fail_on_no_y_matrix=False, fail_on_no_x_matrix=False):
     """calculates the cost function values for ChiSquare with Nuisanceparameters for pointwise errors."""
 
@@ -80,9 +80,9 @@ def _generic_xy_chi2_nuisance_covaraince(x_data, x_model,  y_data, y_model,
 
             else:
                 #with y-errors but without x-errors
-                _inner_sum = np.squeeze(np.asarray(y_nuisance_vector.dot(y_nuisance_cor_cov_mat)))
+                _inner_sum = np.squeeze(np.asarray(y_nuisance_vector.dot(y_nuisance_cor_design_mat)))
                 _y_penalties = y_nuisance_vector.dot(y_nuisance_vector)
-                _chisquare = (_y_res - _inner_sum).dot(y_uncor_cov_mat_inverse).dot(_y_res - _inner_sum)[0, 0]
+                _chisquare = (_y_res - _inner_sum).dot(y_uncor_cov_mat_inverse).dot(_y_res - _inner_sum)
                 return (_y_penalties + _chisquare)[0, 0]
 
     else:
@@ -101,7 +101,7 @@ def _generic_xy_chi2_nuisance_covaraince(x_data, x_model,  y_data, y_model,
 
         else:
                 #with x- and y-errors
-                _inner_sum = np.squeeze(np.asarray(y_nuisance_vector.dot(y_nuisance_cor_cov_mat)))
+                _inner_sum = np.squeeze(np.asarray(y_nuisance_vector.dot(y_nuisance_cor_design_mat)))
                 _y_penalties = y_nuisance_vector.dot(y_nuisance_vector)
                 _chi2 = (_y_res - _inner_sum).dot(y_uncor_cov_mat_inverse).dot(_y_res- _inner_sum)[0, 0]
                 return (_chi2 + _x_penalties + _y_penalties)[0, 0]
@@ -474,7 +474,7 @@ class XYCostFunction_Chi2_Nuisance(CostFunctionBase_Chi2_Nuisance):
         return CostFunctionBase_Chi2.chi2_no_errors(data=y_data, model=y_model)
 
     @staticmethod
-    def chi2_nui_cov_y(y_data, y_model, y_total_uncor_cov_mat_inverse, nuisance_y_total_cor_cov_mat, y_nuisance_vector):
+    def chi2_nui_cov_y(y_data, y_model, y_total_uncor_cov_mat_inverse, _y_total_nuisance_cor_design_mat, y_nuisance_vector):
 
         r"""A least-squares cost function which uses nuisance parameters to account for correlated
         'y' uncertainties.
@@ -494,21 +494,21 @@ class XYCostFunction_Chi2_Nuisance(CostFunctionBase_Chi2_Nuisance):
                 :param: y_data: measurement data
                 :param: y_model model values
                 :param: y_total_uncor_cov_mat_inverse: invserse of the uncorrelated covariance matrix
-                :param: nuisance_y_total_cor_cov_mat: correlated covariance matrix
+                :param: _y_total_nuisance_cor_design_mat: correlated covariance matrix
                 :param: y_nuisance_vector: y_nuisance paramters
 
                :return: cost function value
               """
         return CostFunctionBase_Chi2_Nuisance.chi2_nui_cov(data=y_data, model=y_model,
                                                        total_uncor_cov_mat_inverse=y_total_uncor_cov_mat_inverse,
-                                                       nuisance_total_cor_cov_mat=nuisance_y_total_cor_cov_mat,
+                                                       total_nuisance_cor_design_mat=_y_total_nuisance_cor_design_mat,
                                                        nuisance_vector=y_nuisance_vector)
 
     @staticmethod
-    def chi2_nui_cov_fallback_y(y_data, y_model, y_total_uncor_cov_mat_inverse, nuisance_y_total_cor_cov_mat, y_nuisance_vector):
+    def chi2_nui_cov_fallback_y(y_data, y_model, y_total_uncor_cov_mat_inverse, _y_total_nuisance_cor_design_mat, y_nuisance_vector):
         return CostFunctionBase_Chi2_Nuisance.chi2_nui_cov_fallback(data=y_data, model=y_model,
                                                   total_uncor_cov_mat_inverse=y_total_uncor_cov_mat_inverse,
-                                                  nuisance_total_cor_cov_mat=nuisance_y_total_cor_cov_mat,
+                                                  total_nuisance_cor_design_mat=_y_total_nuisance_cor_design_mat,
                                                   nuisance_vector=y_nuisance_vector)
 
     @staticmethod
@@ -544,7 +544,7 @@ class XYCostFunction_Chi2_Nuisance(CostFunctionBase_Chi2_Nuisance):
                                          fail_on_no_x_matrix=False)
 
     @staticmethod
-    def chi2_nui_cov_xy(y_data, y_model, y_total_uncor_cov_mat_inverse, nuisance_y_total_cor_cov_mat, y_nuisance_vector,
+    def chi2_nui_cov_xy(y_data, y_model, y_total_uncor_cov_mat_inverse, _y_total_nuisance_cor_design_mat, y_nuisance_vector,
                 x_total_uncor_cov_mat_inverse, x_model, x_data):
         r"""A Chisquare costfunction which uses 'x' and 'y' nuisance parameters
         the cost function is given by:
@@ -564,7 +564,7 @@ class XYCostFunction_Chi2_Nuisance(CostFunctionBase_Chi2_Nuisance):
                 :param: x_model x_model values
                 :param: x_total_uncor_cov_mat_inverse: invserse of the uncorrelated  'x' covariance matrix
                 :param: y_total_uncor_cov_mat_inverse: invserse of the uncorrelated  'y' covariance matrix
-                :param: nuisance_y_total_cor_cov_mat: correlated covariance matrix
+                :param: _y_total_nuisance_cor_design_mat: correlated covariance matrix
                 :param: y_nuisance_vector: y_nuisance paramters
 
                :return: cost function value
@@ -572,18 +572,18 @@ class XYCostFunction_Chi2_Nuisance(CostFunctionBase_Chi2_Nuisance):
         return _generic_xy_chi2_nuisance_covaraince(y_data=y_data, y_model=y_model, x_data=x_data, x_model=x_model,
                                          y_uncor_cov_mat_inverse=y_total_uncor_cov_mat_inverse, y_nuisance_vector=y_nuisance_vector,
                                          x_uncor_cov_mat_inverse=x_total_uncor_cov_mat_inverse,
-                                         y_nuisance_cor_cov_mat=nuisance_y_total_cor_cov_mat, fail_on_no_x_matrix=True,
+                                         y_nuisance_cor_design_mat=_y_total_nuisance_cor_design_mat, fail_on_no_x_matrix=True,
                                          fail_on_no_y_matrix=True)
 
     @staticmethod
-    def chi2_nui_cov_fallback_xy(y_data, y_model, y_total_uncor_cov_mat_inverse, nuisance_y_total_cor_cov_mat, y_nuisance_vector,
+    def chi2_nui_cov_fallback_xy(y_data, y_model, y_total_uncor_cov_mat_inverse, _y_total_nuisance_cor_design_mat, y_nuisance_vector,
                         x_total_uncor_cov_mat_inverse, x_model, x_data):
 
         return _generic_xy_chi2_nuisance_covaraince(y_data=y_data, y_model=y_model, x_data=x_data, x_model=x_model,
                                          y_uncor_cov_mat_inverse=y_total_uncor_cov_mat_inverse,
                                          y_nuisance_vector=y_nuisance_vector,
                                          x_uncor_cov_mat_inverse=x_total_uncor_cov_mat_inverse,
-                                         y_nuisance_cor_cov_mat=nuisance_y_total_cor_cov_mat, fail_on_no_x_matrix=False,
+                                         y_nuisance_cor_design_mat=_y_total_nuisance_cor_design_mat, fail_on_no_x_matrix=False,
                                          fail_on_no_y_matrix=False)
 
     @staticmethod
