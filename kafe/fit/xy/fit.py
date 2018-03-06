@@ -48,7 +48,7 @@ class XYFit(FitBase):
         :param xy_data: the x and y measurement values
         :type xy_data: (2, N)-array of float
         :param model_function: the model function
-        :type model_function: :py:class:`~kafe.fit.indexed.XYModelFunction` or unwrapped native Python function
+        :type model_function: :py:class:`~kafe.fit.xy.XYModelFunction` or unwrapped native Python function
         :param cost_function: the cost function
         :type cost_function: :py:class:`~kafe.fit._base.CostFunctionBase`-derived or unwrapped native Python function
         """
