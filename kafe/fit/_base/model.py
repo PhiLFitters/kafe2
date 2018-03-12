@@ -28,8 +28,8 @@ class ParametricModelBaseMixin(object):
         """
         Mixin constructor: Sets and initializes the model function.
 
-        :param model_func: The handle of the model function (a Python function)
-        :param model_parameters: An iterable of initial parameter values for the model function
+        :param model_func: the handle of the model function (a Python function)
+        :param model_parameters: an iterable of initial parameter values for the model function
         """
         self._model_function_handle = model_func
         self.parameters = model_parameters

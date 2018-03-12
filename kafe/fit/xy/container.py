@@ -24,11 +24,11 @@ class XYContainer(IndexedContainer):
         """
         Construct a container for *xy* data:
 
-        :param x_data: A one-dimensional array of measurement *x* values
-        :type x_data: An iterable of type <dtype>
-        :param y_data: A one-dimensional array of measurement *y* values
-        :type y_data: An iterable of type <dtype>
-        :param dtype: The data type of the measurements
+        :param x_data: a one-dimensional array of measurement *x* values
+        :type x_data: an iterable of type <dtype>
+        :param y_data: a one-dimensional array of measurement *y* values
+        :type y_data: an iterable of type <dtype>
+        :param dtype: the data type of the measurements
         :type dtype: type
         """
         # TODO: check user input (?)
@@ -73,7 +73,7 @@ class XYContainer(IndexedContainer):
 
     def _clear_total_error_cache(self):
         """
-        Clears cached values for the total error.
+        Clear cached values for the total error.
         They will be recalculated the next time they are needed.
         """
         self._xy_total_errors = None
@@ -95,7 +95,7 @@ class XYContainer(IndexedContainer):
         return np.matrix(_tmp_uncor_cov_mat)
 
     def _calculate_y_nuisance_cor_design_matrix(self):
-        """Calculates the design matrix containing the correlated parts of all y uncertainties"""
+        """Calculate the design matrix containing the correlated parts of all y uncertainties"""
 
         _y_cor_errors = self.get_matching_errors(
             matching_criteria=dict(
@@ -136,12 +136,12 @@ class XYContainer(IndexedContainer):
 
     @property
     def size(self):
-        """The number of data points"""
+        """the number of data points"""
         return self._xy_data.shape[1]
 
     @property
     def data(self):
-        """Container data (both *x* and *y*, two-dimensional :py:obj:`numpy.ndarray`)"""
+        """the container data (both *x* and *y*, two-dimensional :py:obj:`numpy.ndarray`)"""
         return self._xy_data.copy()  # copy to ensure no modification by user
 
     @data.setter
@@ -160,7 +160,7 @@ class XYContainer(IndexedContainer):
 
     @property
     def x(self):
-        """The container *x* data (one-dimensional :py:obj:`numpy.ndarray`)"""
+        """the container *x* data (one-dimensional :py:obj:`numpy.ndarray`)"""
         return self._get_data_for_axis(0)
 
     @x.setter
@@ -176,25 +176,25 @@ class XYContainer(IndexedContainer):
 
     @property
     def x_err(self):
-        """The absolute total data *x*-uncertainties (one-dimensional :py:obj:`numpy.ndarray`)"""
+        """the absolute total data *x*-uncertainties (one-dimensional :py:obj:`numpy.ndarray`)"""
         _total_error_x = self.get_total_error(axis=0)
         return _total_error_x.error
 
     @property
     def x_cov_mat(self):
-        """The absolute data *x* covariance matrix (:py:obj:`numpy.matrix`)"""
+        """the absolute data *x* covariance matrix (:py:obj:`numpy.matrix`)"""
         _total_error_x = self.get_total_error(axis=0)
         return _total_error_x.cov_mat
 
     @property
     def x_cov_mat_inverse(self):
-        """The inverse of the absolute data *x* covariance matrix (:py:obj:`numpy.matrix`), or ``None`` if singular"""
+        """the inverse of the absolute data *x* covariance matrix (:py:obj:`numpy.matrix`), or ``None`` if singular"""
         _total_error_x = self.get_total_error(axis=0)
         return _total_error_x.cov_mat_inverse
 
     @property
     def x_cor_mat(self):
-        """The absolute data *x* correlation matrix (:py:obj:`numpy.matrix`)"""
+        """the absolute data *x* correlation matrix (:py:obj:`numpy.matrix`)"""
         _total_error_x = self.get_total_error(axis=0)
         return _total_error_x.cor_mat
 
@@ -204,7 +204,7 @@ class XYContainer(IndexedContainer):
 
     @y.setter
     def y(self, new_y):
-        """The container *y* data (one-dimensional :py:obj:`numpy.ndarray`)"""
+        """the container *y* data (one-dimensional :py:obj:`numpy.ndarray`)"""
         _new_y_data = np.squeeze(np.array(new_y))
         if len(_new_y_data.shape) > 1:
             raise XYContainerException("XYContainer 'y' data must be a 1-d array of floats! Got shape: %r..." % (_new_y_data.shape,))
@@ -216,37 +216,37 @@ class XYContainer(IndexedContainer):
 
     @property
     def y_err(self):
-        """The absolute total data *y*-uncertainties (one-dimensional :py:obj:`numpy.ndarray`)"""
+        """the absolute total data *y*-uncertainties (one-dimensional :py:obj:`numpy.ndarray`)"""
         _total_error_y = self.get_total_error(axis=1)
         return _total_error_y.error
 
     @property
     def y_cov_mat(self):
-        """The absolute data *y* covariance matrix (:py:obj:`numpy.matrix`)"""
+        """the absolute data *y* covariance matrix (:py:obj:`numpy.matrix`)"""
         _total_error_y = self.get_total_error(axis=1)
         return _total_error_y.cov_mat
 
     @property
     def y_cov_mat_inverse(self):
-        """The inverse of the absolute data *y* covariance matrix (:py:obj:`numpy.matrix`), or ``None`` if singular"""
+        """the inverse of the absolute data *y* covariance matrix (:py:obj:`numpy.matrix`), or ``None`` if singular"""
         _total_error_y = self.get_total_error(axis=1)
         return _total_error_y.cov_mat_inverse
 
     @property
     def y_cor_mat(self):
-        """The absolute data *y* correlation matrix (:py:obj:`numpy.matrix`)"""
+        """the absolute data *y* correlation matrix (:py:obj:`numpy.matrix`)"""
         _total_error_y = self.get_total_error(axis=1)
         return _total_error_y.cor_mat
 
     @property
     def x_range(self):
-        """Calculates the x data range"""
+        """the x data range"""
         _x = self.x
         return np.min(_x), np.max(_x)
 
     @property
     def y_range(self):
-        """Calculates the y data range"""
+        """the y data range"""
         _y = self.y
         return np.min(_y), np.max(_y)
 
@@ -263,7 +263,7 @@ class XYContainer(IndexedContainer):
 
     @property
     def _y_nuisance_cor_design_mat(self):
-         """The design matrix containing the correlated parts of all y uncertainties"""
+         """the design matrix containing the correlated parts of all y uncertainties"""
          _nuisance_y_cor_cov_mat = self._calculate_y_nuisance_cor_design_matrix()
          return _nuisance_y_cor_cov_mat
 
@@ -288,21 +288,21 @@ class XYContainer(IndexedContainer):
 
     def add_simple_error(self, axis, err_val, name=None, correlation=0, relative=False):
         """
-        Adds a simple uncertainty source for the given axis to the data container.
+        Add a simple uncertainty source for the given axis to the data container.
         Returns an error name which uniquely identifies the created error source.
 
         :param axis: ``'x'``/``0`` or ``'y'``/``1``
         :type axis: str or int
-        :param err_val: The pointwise uncertainty/uncertainties for all data points
+        :param err_val: the pointwise uncertainty/uncertainties for all data points
         :type err_val: float or iterable of float
-        :param name: The unique name for this uncertainty source. If ``None``, the name
+        :param name: the unique name for this uncertainty source. If ``None``, the name
                      of the error source will be set to a random alphanumeric string.
         :type name: str or ``None``
-        :param correlation: The correlation coefficient between any two distinct data points
+        :param correlation: the correlation coefficient between any two distinct data points
         :type correlation: float
-        :param relative: If set to ``True``, **err_val** will be interpreted as a *relative* uncertainty
+        :param relative: if ``True``, **err_val** will be interpreted as a *relative* uncertainty
         :type relative: bool
-        :return: The error name
+        :return: the error name
         :rtype: str
         """
         _axis = self._find_axis_raise(axis)
@@ -321,23 +321,23 @@ class XYContainer(IndexedContainer):
 
     def add_matrix_error(self, axis, err_matrix, matrix_type, name=None, err_val=None, relative=False):
         """
-        Adds a matrix uncertainty source for the given axis to the data container.
+        Add a matrix uncertainty source for the given axis to the data container.
         Returns an error name which uniquely identifies the created error source.
 
         :param axis: ``'x'``/``0`` or ``'y'``/``1``
         :type axis: str or int
         :param err_matrix: covariance or correlation matrix
         :type err_matrix: numpy.matrix
-        :param matrix_type: One of ``'covariance'``/``'cov'`` or ``'correlation'``/``'cor'``
+        :param matrix_type: one of ``'covariance'``/``'cov'`` or ``'correlation'``/``'cor'``
         :type matrix_type: str
-        :param name: The unique name for this uncertainty source. If ``None``, the name
+        :param name: the unique name for this uncertainty source. If ``None``, the name
                      of the error source will be set to a random alphanumeric string.
         :type name: str or ``None``
-        :param err_val: The pointwise uncertainties (mandatory if only a correlation matrix is given)
+        :param err_val: the pointwise uncertainties (mandatory if only a correlation matrix is given)
         :type err_val: iterable of float
-        :param relative: If set to ``True``, **err_val** will be interpreted as a *relative* uncertainty
+        :param relative: if ``True``, the covariance matrix and/or **err_val** will be interpreted as a *relative* uncertainty
         :type relative: bool
-        :return: The error name
+        :return: the error name
         :rtype: str
         """
         _axis = self._find_axis_raise(axis)
@@ -350,12 +350,12 @@ class XYContainer(IndexedContainer):
 
     def get_total_error(self, axis):
         """
-        Returns the error object representing the total uncertainty for an axis.
+        Get the error object representing the total uncertainty for an axis.
 
         :param axis: ``'x'``/``0`` or ``'y'``/``1``
         :type axis: str or int
 
-        :return: The error object representing the total uncertainty
+        :return: the error object representing the total uncertainty
         :rtype: :py:class:`~kafe.core.error.MatrixGaussianError`
         """
         _axis = self._find_axis_raise(axis)
