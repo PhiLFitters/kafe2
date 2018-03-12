@@ -131,16 +131,21 @@ class PlotContainerBase(object):
 
     FIT_TYPE = None
 
-    def __init__(self, fit_object):
+    def __init__(self, fit_object, model_index=0):
         """
         Construct a :py:obj:`PlotContainer` for a :py:obj:`Fit` object:
 
         :param fit_object: an object derived from :py:obj:`~kafe.fit._base.FitBase`
         """
+        #TODO: update documentation
         if not isinstance(fit_object, self.__class__.FIT_TYPE):
             raise PlotContainerException("PlotContainer of type '%s' is incompatible with Fit of type '%s'"
                                          % (self.__class__, fit_object.__class__))
+        if fit_object.model_count <= model_index:
+            raise PlotContainerException("Received %s as model index but fit object only has %s models"
+                                         % (fit_object.model_count, model_index))
         self._fitter = fit_object
+        self._model_index = model_index
 
     # -- properties
 
@@ -255,6 +260,12 @@ class PlotContainerBase(object):
         """
         pass
 
+    def get_formatted_model_function(self, **kwargs):
+        return _fitter._model_function.formatter.get_formatted(**kwargs)
+
+    @property
+    def argument_formatters(self, **kwargs):
+        return self._fitter._model_function.argument_formatters
 
 # -- must come last!
 
@@ -328,9 +339,10 @@ class PlotFigureBase(object):
             fit_objects = (fit_objects,)
 
         for _fit in fit_objects:
-            _pdc = self.__class__.PLOT_CONTAINER_TYPE(_fit)
-            self._plot_data_containers.append(_pdc)
-            self._artist_store.append(dict())
+            for _i in range(_fit.model_count):
+                _pdc = self.__class__.PLOT_CONTAINER_TYPE(_fit, model_index=_i)
+                self._plot_data_containers.append(_pdc)
+                self._artist_store.append(dict())
 
         self._plot_range_x = None
         self._plot_range_y = None
@@ -422,12 +434,12 @@ class PlotFigureBase(object):
             _y_inc_counter += 1
 
             _y = _y_inc_offset - _y_inc_size * _y_inc_counter
-            _formatted_string = _pdc._fitter._model_function.formatter.get_formatted(
+            _formatted_string = _pdc.get_formatted_model_function(
                 with_par_values=False, n_significant_digits=2, format_as_latex=format_as_latex, with_expression=True)
             target_figure.text(_fig_ls[2] + .025, _y, _formatted_string, **kwargs)
             _y_inc_counter += 1
 
-            for _pi, _pf in enumerate(_pdc._fitter._model_function.argument_formatters):
+            for _pi, _pf in enumerate(_pdc.argument_formatters):
                 _y = _y_inc_offset - _y_inc_size * _y_inc_counter
                 _formatted_string = _pf.get_formatted(with_name=True, with_value=True, with_errors=True, format_as_latex=format_as_latex)
                 target_figure.text(_fig_ls[2]+.05, _y, _formatted_string, **kwargs)
