@@ -20,15 +20,15 @@ class XYModelFunction(ModelFunctionBase):
 
     def __init__(self, model_function):
         """
-        Construct :py:class:`XYModelFunction` object (a wrapper for a native Python function):
+        Constructs a :py:class:`XYModelFunction` object (a wrapper for a native Python function):
 
-        :param model_function: function handle
+        :param model_function: Python function handle
         """
         self._x_name = 'x'
         super(XYModelFunction, self).__init__(model_function=model_function)
 
     def _validate_model_function_raise(self):
-        # require 'xy' model function agruments to include 'x'
+        # require 'xy' model function arguments to include 'x'
         if self.x_name not in self.argspec.args:
             raise self.__class__.EXCEPTION_TYPE(
                 "Model function '%r' must have independent variable '%s' among its arguments!"
@@ -55,7 +55,7 @@ class XYModelFunction(ModelFunctionBase):
 
     @property
     def x_name(self):
-        """the name of the independent variable"""
+        """The name of the independent variable"""
         return self._x_name
 
 
@@ -68,9 +68,9 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
         """
         Construct an :py:obj:`XYParametricModel` object:
 
-        :param x_data: array containing the *x* values supporting the model
-        :param model_func: handle of Python function (the model function)
-        :param model_parameters: iterable of parameter values with which the model function should be initialized
+        :param x_data: An array containing the *x* values supporting the model
+        :param model_func: The handle of the model function (a Python function)
+        :param model_parameters: An iterable of initial parameter values for the model function
         """
         # print "XYParametricModel.__init__(x_data=%r, model_func=%r, model_parameters=%r)" % (x_data, model_func, model_parameters)
         _y_data = model_func(x_data, *model_parameters)
@@ -127,11 +127,11 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
         """
         Evaluate the model function.
 
-        :param x: *x* values of the support points (if ``None``, the model *x* values are used)
+        :param x: The *x* values of the support points (if ``None``, the model *x* values are used)
         :type x: list or ``None``
-        :param model_parameters: values of the model parameters (if ``None``, the current values are used)
+        :param model_parameters: The values of the model parameters (if ``None``, the current values are used)
         :type model_parameters: list or ``None``
-        :return: value(s) of the model function for the given parameters
+        :return: The value(s) of the model function for the given parameters
         :rtype: :py:obj:`numpy.ndarray`
         """
         _x = x if x is not None else self.x
@@ -142,13 +142,13 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
         """
         Evaluate the derivative of the model function with respect to the model parameters.
 
-        :param x: *x* values of the support points (if ``None``, the model *x* values are used)
+        :param x: The *x* values of the support points (if ``None``, the model *x* values are used)
         :type x: list or ``None``
-        :param model_parameters: values of the model parameters (if ``None``, the current values are used)
+        :param model_parameters: The values of the model parameters (if ``None``, the current values are used)
         :type model_parameters: list or ``None``
-        :param par_dx: step size for numeric differentiation
+        :param par_dx: The step size for numeric differentiation
         :type par_dx: float
-        :return: value(s) of the model function derivative for the given parameters
+        :return: The value(s) of the model function derivative for the given parameters
         :rtype: :py:obj:`numpy.ndarray`
         """
         _x = x if x is not None else self.x
@@ -171,13 +171,13 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
         """
         Evaluate the derivative of the model function with respect to the independent variable (*x*).
 
-        :param x: *x* values of the support points (if ``None``, the model *x* values are used)
+        :param x: The *x* values of the support points (if ``None``, the model *x* values are used)
         :type x: list or ``None``
-        :param model_parameters: values of the model parameters (if ``None``, the current values are used)
+        :param model_parameters: The values of the model parameters (if ``None``, the current values are used)
         :type model_parameters: list or ``None``
-        :param dx: step size for numeric differentiation
+        :param dx: The step size for numeric differentiation
         :type dx: float
-        :return: value(s) of the model function derivative
+        :return: The value(s) of the model function derivative for the given parameters
         :rtype: :py:obj:`numpy.ndarray`
         """
         _x = x if x is not None else self.x

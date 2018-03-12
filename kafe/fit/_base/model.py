@@ -26,10 +26,10 @@ class ParametricModelBaseMixin(object):
     """
     def __init__(self, model_func, model_parameters, *args, **kwargs):
         """
-        Mixin constructor: sets and initialized the model function.
+        Mixin constructor: Sets and initializes the model function.
 
-        :param model_func: handle of Python function (the model function)
-        :param model_parameters: iterable of parameter values with which the model function should be initialized
+        :param model_func: The handle of the model function (a Python function)
+        :param model_parameters: An iterable of initial parameter values for the model function
         """
         self._model_function_handle = model_func
         self.parameters = model_parameters
@@ -60,13 +60,14 @@ class ModelFunctionBase(object):
     model functions.
 
     In order to be used as a model function, a native Python function must be wrapped
-    by an object whose class derives from this base class.
+    by an object whose class is derived from this base class.
     There is a dedicated :py:class:`ModelFunction` specialization for each type of
     data container.
 
     This class provides the basic functionality used by all :py:class:`ModelFunction` objects.
-    These use introspection (:py:mod:`inspect`) for determining the parameter structure of the
-    model function and to ensure the function can be used as a model function (validation).
+    These objects use introspection (:py:mod:`inspect`) to determine the parameter 
+    structure of the model function and to ensure that the function can be used as a 
+    model function (validation).
 
     """
     __metaclass__ = abc.ABCMeta
@@ -78,7 +79,7 @@ class ModelFunctionBase(object):
         """
         Construct :py:class:`ModelFunction` object (a wrapper for a native Python function):
 
-        :param model_function: function handle
+        :param model_function: Python function handle to be used as a model
         """
         self._model_function_handle = model_function
         self._model_function_argspec = inspect.getargspec(self._model_function_handle)

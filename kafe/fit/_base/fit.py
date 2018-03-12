@@ -340,7 +340,7 @@ class FitBase(object):
 
     def do_fit(self):
         """
-        Perform the minimization of the cost function.
+        Performs the minimization of the cost function.
         """
         self._fitter.do_fit()
         # update parameter formatters

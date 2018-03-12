@@ -43,13 +43,13 @@ class XYFit(FitBase):
                  cost_function=XYCostFunction_Chi2(axes_to_use='xy', errors_to_use='covariance'),
                  minimizer=None, minimizer_kwargs=None):
         """
-        Construct a fit of a model to *xy* data.
+        Constructs a fit object for a given model function and *xy* data points.
 
-        :param xy_data: the x and y measurement values
+        :param xy_data: The x and y measurement values
         :type xy_data: (2, N)-array of float
-        :param model_function: the model function
+        :param model_function: The model function
         :type model_function: :py:class:`~kafe.fit.xy.XYModelFunction` or unwrapped native Python function
-        :param cost_function: the cost function
+        :param cost_function: The cost function
         :type cost_function: :py:class:`~kafe.fit._base.CostFunctionBase`-derived or unwrapped native Python function
         """
         # set the data
@@ -358,7 +358,7 @@ class XYFit(FitBase):
 
     @property
     def x_data(self):
-        """array of measurement *x* values"""
+        """The array of measurement *x* values"""
         return self._data_container.x
 
     @property
@@ -371,22 +371,22 @@ class XYFit(FitBase):
 
     @property
     def x_error(self):
-        """array of pointwise *x* uncertainties"""
+        """The array of pointwise *x* uncertainties"""
         return self._data_container.x_err
 
     @property
     def x_cov_mat(self):
-        """the *x* covariance matrix"""
+        """The *x* covariance matrix"""
         return self._data_container.x_cov_mat
 
     @property
     def y_data(self):
-        """array of measurement data *y* values"""
+        """The array of measurement data *y* values"""
         return self._data_container.y
 
     @property
     def data(self):
-        """(2, N)-array containing *x* and *y* measurement values"""
+        """(2, N)-array containing the *x* and *y* measurement values"""
         return self._data_container.data
 
     @data.setter
@@ -408,52 +408,52 @@ class XYFit(FitBase):
 
     @property
     def x_data_error(self):
-        """array of pointwise *x* data uncertainties"""
+        """The array of pointwise *x* data uncertainties"""
         return self._data_container.x_err
 
     @property
     def y_data_error(self):
-        """array of pointwise *y* data uncertainties"""
+        """The array of pointwise *y* data uncertainties"""
         return self._data_container.y_err
 
     @property
     def x_data_cov_mat(self):
-        """the data *x* covariance matrix"""
+        """The data *x* covariance matrix"""
         return self._data_container.x_cov_mat
 
     @property
     def y_data_cov_mat(self):
-        """the data *y* covariance matrix"""
+        """The data *y* covariance matrix"""
         return self._data_container.y_cov_mat
 
     @property
     def x_data_cov_mat_inverse(self):
-        """inverse of the data *x* covariance matrix (or ``None`` if singular)"""
+        """The inverse of the data *x* covariance matrix (or ``None`` if singular)"""
         return self._data_container.x_cov_mat_inverse
 
     @property
     def y_data_cov_mat_inverse(self):
-        """inverse of the data *y* covariance matrix (or ``None`` if singular)"""
+        """The inverse of the data *y* covariance matrix (or ``None`` if singular)"""
         return self._data_container.y_cov_mat_inverse
 
     @property
     def x_data_cor_mat(self):
-        """the data *x* correlation matrix"""
+        """The data *x* correlation matrix"""
         return self._data_container.x_cor_mat
 
     @property
     def y_data_uncor_cov_mat(self):
-        """uncorrelated part of the data *y* covariance matrix (or ``None`` if singular)"""
+        """The uncorrelated part of the data *y* covariance matrix (or ``None`` if singular)"""
         return self._data_container.y_uncor_cov_mat
 
     @property
     def y_data_uncor_cov_mat_inverse(self):
-        """inverse of the uncorrelated part of the data *y* covariance matrix (or ``None`` if singular)"""
+        """The inverse of the uncorrelated part of the data *y* covariance matrix (or ``None`` if singular)"""
         return self._data_container.y_uncor_cov_mat_inverse
 
     @property
     def _y_data_nuisance_cor_design_mat(self):
-        """matrix containing the correlated parts of all data uncertainties for all data points"""
+        """The matrix containing the correlated parts of all data uncertainties for all data points"""
         return self._data_container._y_nuisance_cor_design_mat
 
     @property
@@ -474,96 +474,96 @@ class XYFit(FitBase):
 
     @property
     def y_data_cor_mat(self):
-        """the data *y* correlation matrix"""
+        """The data *y* correlation matrix"""
         return self._data_container.y_cor_mat
 
     @property
     def y_model(self):
-        """array of *y* model predictions for the data points"""
+        """The array of *y* model predictions for the data points"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.y
 
     @property
     def x_model_error(self):
-        """array of pointwise model *x* uncertainties"""
+        """The array of pointwise model *x* uncertainties"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.x_err
 
     @property
     def y_model_error(self):
-        """array of pointwise model *y* uncertainties"""
+        """The array of pointwise model *y* uncertainties"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.y_err
 
     @property
     def x_model_cov_mat(self):
-        """the model *x* covariance matrix"""
+        """The model *x* covariance matrix"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.x_cov_mat
 
     @property
     def y_model_cov_mat(self):
-        """the model *y* covariance matrix"""
+        """The model *y* covariance matrix"""
         self._param_model.parameters = self.poi_values # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.y_cov_mat
 
     @property
     def x_model_cov_mat_inverse(self):
-        """inverse of the model *x* covariance matrix (or ``None`` if singular)"""
+        """The inverse of the model *x* covariance matrix (or ``None`` if singular)"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.x_cov_mat_inverse
 
     @property
     def y_model_cov_mat_inverse(self):
-        """inverse of the model *y* covariance matrix (or ``None`` if singular)"""
+        """The inverse of the model *y* covariance matrix (or ``None`` if singular)"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.y_cov_mat_inverse
 
     @property
     def y_model_uncor_cov_mat(self):
-        """uncorrelated part the model *y* covariance matrix"""
+        """The uncorrelated part the model *y* covariance matrix"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.y_uncor_cov_mat
 
     @property
     def y_model_uncor_cov_mat_inverse(self):
-        """inverse of the uncorrelated part the model *y* covariance matrix (or ``None`` if singular)"""
+        """The inverse of the uncorrelated part the model *y* covariance matrix (or ``None`` if singular)"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.y_uncor_cov_mat_inverse
 
     @property
     def x_model_uncor_cov_mat(self):
-        """the model *x* uncorrelated covariance matrix"""
+        """The model *x* uncorrelated covariance matrix"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.x_uncor_cov_mat
 
     @property
     def x_model_uncor_cov_mat_inverse(self):
-        """inverse of the model *x*  uncorrelated covariance matrix (or ``None`` if singular)"""
+        """The inverse of the model *x*  uncorrelated covariance matrix (or ``None`` if singular)"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.x_uncor_cov_mat_inverse
 
     @property
     def _y_model_nuisance_cor_design_mat(self):
-        """matrix containing the correlated parts of all model uncertainties for all data points"""
+        """The matrix containing the correlated parts of all model uncertainties for all data points"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model._y_nuisance_cor_design_mat
 
     @property
     def x_model_cor_mat(self):
-        """the model *x* correlation matrix"""
+        """The the model *x* correlation matrix"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.y_cor_mat
@@ -577,14 +577,14 @@ class XYFit(FitBase):
 
     @property
     def y_model_cor_mat(self):
-        """the model *y* correlation matrix"""
+        """The model *y* correlation matrix"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.y_cor_mat
 
     @property
     def x_total_error(self):
-        """array of pointwise total *x* uncertainties"""
+        """The array of pointwise total *x* uncertainties"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         if self.__cache_x_total_error is None:
@@ -595,7 +595,7 @@ class XYFit(FitBase):
 
     @property
     def y_total_error(self):
-        """array of pointwise total *y* uncertainties"""
+        """The array of pointwise total *y* uncertainties"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         if self.__cache_y_total_error is None:
@@ -606,7 +606,11 @@ class XYFit(FitBase):
 
     @property
     def projected_xy_total_error(self):
-        """array of pointwise total *y* with the x uncertainties projected on top of them"""
+        """
+        The array of pointwise total *y* uncertainties with the *x* uncertainties projected on top of them.
+        The projection utilizes a linear approximation of the model function by evaluating the derivative 
+        at the data points .
+        """
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         if np.count_nonzero(self._data_container.x_err) == 0:
@@ -620,7 +624,7 @@ class XYFit(FitBase):
 
     @property
     def x_total_cov_mat(self):
-        """the total *x* covariance matrix"""
+        """The total *x* covariance matrix"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         if self.__cache_x_total_cov_mat is None:
@@ -631,7 +635,7 @@ class XYFit(FitBase):
 
     @property
     def y_total_cov_mat(self):
-        """the total *y* covariance matrix"""
+        """The total *y* covariance matrix"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         if self.__cache_y_total_cov_mat is None:
@@ -642,6 +646,11 @@ class XYFit(FitBase):
 
     @property
     def projected_xy_total_cov_mat(self):
+        """
+        The total *y* covariance matrix with the *x* covariance matrix projected on top of it.
+        The projection utilizes a linear approximation of the model function by evaluating the derivative 
+        at the data points .
+        """
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         if np.count_nonzero(self._data_container.x_err) == 0:
@@ -657,7 +666,7 @@ class XYFit(FitBase):
 
     @property
     def x_total_cov_mat_inverse(self):
-        """inverse of the total *x* covariance matrix (or ``None`` if singular)"""
+        """The inverse of the total *x* covariance matrix (or ``None`` if singular)"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         if self.__cache_x_total_cov_mat_inverse is None:
@@ -671,7 +680,7 @@ class XYFit(FitBase):
 
     @property
     def y_total_cov_mat_inverse(self):
-        """inverse of the total *y* covariance matrix (or ``None`` if singular)"""
+        """The inverse of the total *y* covariance matrix (or ``None`` if singular)"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         if self.__cache_y_total_cov_mat_inverse is None:
@@ -685,6 +694,11 @@ class XYFit(FitBase):
 
     @property
     def projected_xy_total_cov_mat_inverse(self):
+        """
+        The inverse of the total *y* covariance matrix with the *x* covariance matrix projected on top of it.
+        The projection utilizes a linear approximation of the model function by evaluating the derivative 
+        at the data points .
+        """
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         if self.__cache_projected_xy_total_cov_mat_inverse is None:
@@ -698,7 +712,7 @@ class XYFit(FitBase):
 
     @property
     def y_total_uncor_cov_mat(self):
-        """the total *y* uncorrelated covariance matrix"""
+        """The total *y* uncorrelated covariance matrix"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         if self.__cache_y_total_uncor_cov_mat is None:
@@ -709,7 +723,7 @@ class XYFit(FitBase):
 
     @property
     def y_total_uncor_cov_mat_inverse(self):
-        """inverse of the uncorrelated part of the total *y* covariance matrix (or ``None`` if singular)"""
+        """The inverse of the uncorrelated part of the total *y* covariance matrix (or ``None`` if singular)"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         if self.__cache_y_total_uncor_cov_mat_inverse is None:
@@ -723,7 +737,7 @@ class XYFit(FitBase):
 
     @property
     def _y_total_nuisance_cor_design_mat(self):
-        """matrix containing the correlated parts of all model uncertainties for all total points"""
+        """The matrix containing the correlated parts of all model uncertainties for all total points"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         if self.__cache_y_total_nuisance_cor_design_mat is None:
@@ -734,7 +748,7 @@ class XYFit(FitBase):
 
     @property
     def x_total_uncor_cov_mat(self):
-        """the total *x* uncorrelated covariance matrix"""
+        """The total *x* uncorrelated covariance matrix"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         if self.__cache_x_total_uncor_cov_mat is None:
@@ -745,7 +759,7 @@ class XYFit(FitBase):
 
     @property
     def x_total_uncor_cov_mat_inverse(self):
-        """inverse of the total *x* uncorrelated covariance matrix (or ``None`` if singular)"""
+        """The inverse of the total *x* uncorrelated covariance matrix (or ``None`` if singular)"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         if self.__cache_x_total_uncor_cov_mat_inverse is None:
@@ -770,7 +784,7 @@ class XYFit(FitBase):
 
     @property
     def y_error_band(self):
-        """one-dimensional array representing the uncertainty band around the model function"""
+        """The one-dimensional array representing the uncertainty band around the model function"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         if self.__cache_y_error_band is None:
@@ -779,12 +793,12 @@ class XYFit(FitBase):
 
     @property
     def x_range(self):
-        """range of the *x* measurement data"""
+        """Calculates the range of the *x* measurement data"""
         return self._data_container.x_range
 
     @property
     def y_range(self):
-        """range of the *y* measurement data"""
+        """Calculates the range of the *y* measurement data"""
         return self._data_container.y_range
 
     @property
@@ -797,7 +811,7 @@ class XYFit(FitBase):
 
     @property
     def x_uncor_nuisance_values(self):
-        """gives the x uncorrelated nuisance vector"""
+        """The *x* uncorrelated nuisance vector"""
         _values = []
         for _name in self._x_uncor_nuisance_names:
             _values.append(self.parameter_name_value_dict[_name])
@@ -808,21 +822,21 @@ class XYFit(FitBase):
     def add_simple_error(self, axis, err_val,
                          name=None, correlation=0, relative=False, reference='data'):
         """
-        Add a simple uncertainty source for axis to the data container.
-        Returns an error id which uniquely identifies the created error source.
+        Adds a simple uncertainty source for the given axis to the data container.
+        Returns an error name which uniquely identifies the created error source.
 
         :param axis: ``'x'``/``0`` or ``'y'``/``1``
         :type axis: str or int
-        :param err_val: pointwise uncertainty/uncertainties for all data points
+        :param err_val: The pointwise uncertainty/uncertainties for all data points
         :type err_val: float or iterable of float
-        :param correlation: correlation coefficient between any two distinct data points
+        :param correlation: The correlation coefficient between any two distinct data points
         :type correlation: float
-        :param relative: if ``True``, **err_val** will be interpreted as a *relative* uncertainty
+        :param relative: If set to ``True``, **err_val** will be interpreted as a *relative* uncertainty
         :type relative: bool
-        :param reference: which reference values to use when calculating absolute errors from relative errors
+        :param reference: The reference values to use when calculating absolute errors from relative errors
         :type reference: 'data' or 'model'
-        :return: error id
-        :rtype: int
+        :return: The error name
+        :rtype: str
         """
         _ret = super(XYFit, self).add_simple_error(err_val=err_val,
                                                    name=name,
@@ -842,22 +856,23 @@ class XYFit(FitBase):
     def add_matrix_error(self, axis, err_matrix, matrix_type,
                          name=None, err_val=None, relative=False, reference='data'):
         """
-        Add a matrix uncertainty source for an axis to the data container.
-        Returns an error id which uniquely identifies the created error source.
+        Adds a matrix uncertainty source for the given axis to the data container.
+        Returns an error name which uniquely identifies the created error source.
 
         :param axis: ``'x'``/``0`` or ``'y'``/``1``
         :type axis: str or int
-        :param err_matrix: covariance or correlation matrix
-        :param matrix_type: one of ``'covariance'``/``'cov'`` or ``'correlation'``/``'cor'``
+        :param err_matrix: The covariance or correlation matrix
+        :type err_matrix: numpy.matrix
+        :param matrix_type: One of ``'covariance'``/``'cov'`` or ``'correlation'``/``'cor'``
         :type matrix_type: str
-        :param err_val: the pointwise uncertainties (mandatory if only a correlation matrix is given)
+        :param err_val: The pointwise uncertainties (mandatory if only a correlation matrix is given)
         :type err_val: iterable of float
-        :param relative: if ``True``, the covariance matrix and/or **err_val** will be interpreted as a *relative* uncertainty
+        :param relative: If set to ``True``, **err_val** will be interpreted as a *relative* uncertainty
         :type relative: bool
         :param reference: which reference values to use when calculating absolute errors from relative errors
         :type reference: 'data' or 'model'
-        :return: error id
-        :rtype: int
+        :return: The error name
+        :rtype: str
         """
         _ret = super(XYFit, self).add_matrix_error(err_matrix=err_matrix,
                                                    matrix_type=matrix_type,
@@ -873,19 +888,24 @@ class XYFit(FitBase):
         return _ret
 
     def set_poi_values(self, param_values):
-        """set the start values of all parameters of interests"""
+        """Sets the initial values for all parameters of interests"""
         _param_names = self._poi_names
         #test list length
         if not len(param_values) == len(_param_names):
-            raise XYFitException("Cannot set all fit parameter values: %d fit parameters declared, "
-                                       "but %d provided!"
+            raise XYFitException("Cannot set all parameter of interest values: %d parameters of interest"
+                                       " declared, but %d provided!"
                                        % (len(_param_names), len(param_values)))
         # set values in nexus
         _par_val_dict = {_pn: _pv for _pn, _pv in zip(_param_names, param_values)}
         self.set_parameter_values(**_par_val_dict)
 
     def do_fit(self):
-        """Perform the fit."""
+        """
+        Performs the minimization of the cost function.
+        If the data has *x* uncertainties fits will be iteratively performed until the change in
+        cost function value falls below fit:x_error_fit_convergence_limit.
+        A maximum of fit:max_x_error_fit_iterations minimizations will be performed.
+        """
         if not self._data_container.has_x_errors:
             super(XYFit, self).do_fit()
         else:
@@ -906,13 +926,13 @@ class XYFit(FitBase):
 
     def eval_model_function(self, x=None, model_parameters=None):
         """
-        Evaluate the model function.
+        Evaluates the model function.
 
-        :param x: values of *x* at which to evaluate the model function (if ``None``, the data *x* values are used)
+        :param x: The values of *x* at which to evaluate the model function (if ``None``, the data *x* values are used)
         :type x: iterable of float
-        :param model_parameters: the model parameter values (if ``None``, the current values are used)
+        :param model_parameters: The model parameter values (if ``None``, the current values are used)
         :type model_parameters: iterable of float
-        :return: model function values
+        :return: The calculated model function values
         :rtype: :py:class:`numpy.ndarray`
         """
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
@@ -921,12 +941,12 @@ class XYFit(FitBase):
 
     def calculate_nuisance_parameters(self):
         """
-        Calculate and return the nuisance parameter values.
+        Calculates and returns the nuisance parameter values.
 
-        NOTE: currently only works for calculating nuisance parameters
-        for correlated 'y' uncertainties.
+        NOTE: Currently only works for calculating nuisance parameters
+        for correlated *y* uncertainties.
 
-        :return: vector containing the nuisance parameter values
+        :return: An array containing the nuisance parameter values
         :rtype: ``numpy.array``
         """
         _uncor_cov_mat_inverse = self.y_data_uncor_cov_mat_inverse
@@ -956,7 +976,7 @@ class XYFit(FitBase):
     def report(self, output_stream=sys.stdout,
                show_data=True,
                show_model=True):
-        """Print a summary of the fit state and/or results."""
+        """Prints a summary of the fit state and/or results."""
         _result_dict = self.get_result_dict()
 
         _indent = ' ' * 4
