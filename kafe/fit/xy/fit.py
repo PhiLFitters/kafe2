@@ -563,7 +563,7 @@ class XYFit(FitBase):
 
     @property
     def x_model_cor_mat(self):
-        """the the model *x* correlation matrix"""
+        """the model *x* correlation matrix"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.y_cor_mat
@@ -856,7 +856,7 @@ class XYFit(FitBase):
     def add_matrix_error(self, axis, err_matrix, matrix_type,
                          name=None, err_val=None, relative=False, reference='data'):
         """
-        Adds a matrix uncertainty source for the given axis to the data container.
+        Add a matrix uncertainty source for the given axis to the data container.
         Returns an error name which uniquely identifies the created error source.
 
         :param axis: ``'x'``/``0`` or ``'y'``/``1``
