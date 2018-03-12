@@ -1,0 +1,32 @@
+{% extends '!layout.html' %}
+
+{% block footer %}
+    {{super()}}
+    <!-- <div class="footer">
+        © Copyright 2013, Daniel Savoiu.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>-->
+{% endblock %}
+
+{% block sidebarsourcelink %}
+{% endblock %}
+
+{% block sidebarsearch %}
+    {{ super() }}
+    <div id="impressum" style="text-align: justify;">
+        <h3>Project Info and Contact</h3>
+        <p style="font-size: 90%">
+        This project originated at the <a href="http://www.ekp.kit.edu/english/index.php">Institute of Experimental Nuclear Physics</a> (IENP) at the <a href="http://www.kit.edu/english/index.php">Karlsruhe Insitute of Technology</a> (KIT). The software was developed as part of a Bachelor's Thesis in Physics.
+        </p>
+        <p style="font-size: 90%">
+        The author may be contacted at:
+        </p>
+        <p style="font-size: 90%;">
+            <div style="padding: 0 10% 7% 10%;"><b>Daniel Săvoiu</b></div>
+            <div style="padding: 0 10%; text-align: right !important;">
+                <i>daniel</i> (dot) <i>savoiu</i><br />(at)<br /><i>student</i> (dot) <i>kit</i> (dot) <i>edu</i>
+            </div>
+        </p>
+    </div>
+{% endblock %}
+
