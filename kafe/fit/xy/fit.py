@@ -796,6 +796,12 @@ class XYFit(FitBase):
         return _poi_values
 
     @property
+    def poi_errors(self):
+        """gives the errors of the model_function_parameters"""
+        _poi_errors = self.parameter_errors[0:len(self._poi_names)]
+        return _poi_errors
+
+    @property
     def x_uncor_nuisance_values(self):
         """gives the x uncorrelated nuisance vector"""
         _values = []
