@@ -32,6 +32,8 @@ class XYContainer(IndexedContainer):
         :type dtype: type
         """
         # TODO: check user input (?)
+        if len(x_data) != len(y_data):
+            raise XYContainerException("x_data and y_data must have the same length!")
         self._xy_data = np.array([x_data, y_data], dtype=dtype)
         self._error_dicts = {}
         self._xy_total_errors = None
