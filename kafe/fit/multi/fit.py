@@ -12,10 +12,10 @@ from ...core.error import MatrixGaussianError, SimpleGaussianError
 from ...config import kc
 from .._base import (FitException, FitBase, DataContainerBase,
                      ModelParameterFormatter, CostFunctionBase)
-from .container import XYContainer
-from .cost import XYCostFunction_Chi2, XYCostFunction_UserDefined
-from .format import XYModelFunctionFormatter
-from .model import XYParametricModel, XYModelFunction
+from kafe.fit.xy.container import XYContainer
+from kafe.fit.xy.cost import XYCostFunction_Chi2, XYCostFunction_UserDefined
+from kafe.fit.xy.format import XYModelFunctionFormatter
+from kafe.fit.xy.model import XYParametricModel, XYModelFunction
 
 
 __all__ = ["XYFit"]
@@ -52,12 +52,13 @@ class XYFit(FitBase):
         :param cost_function: the cost function
         :type cost_function: :py:class:`~kafe.fit._base.CostFunctionBase`-derived or unwrapped native Python function
         """
+        
+        print "MultiFit"
+        
         # set the data
         self.data = xy_data
         self._minimizer = minimizer
         self._minimizer_kwargs = minimizer_kwargs
-        
-        print "XYFIT"
 
         # set/construct the model function object
         if isinstance(model_function, self.__class__.MODEL_FUNCTION_TYPE):

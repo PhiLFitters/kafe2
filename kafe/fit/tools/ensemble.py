@@ -436,9 +436,10 @@ class EnsembleVariablePlotter(object):
     """
 
     _DEFAULT_PLOT_PDF_KWARGS = dict(marker='')
-    _DEFAULT_PLOT_EXPECTED_MEAN_KWARGS = dict(linewidth=1, marker='', linestyle='--',
-                                              # use second color in default color cycle
-                                              color=mpl.rcParams['axes.prop_cycle'].by_key()['color'][1])
+#    _DEFAULT_PLOT_EXPECTED_MEAN_KWARGS = dict(linewidth=1, marker='', linestyle='--',
+#                                              # use second color in default color cycle
+#                                              color=mpl.rcParams['axes.prop_cycle'].by_key()['color'][1])
+    _DEFAULT_PLOT_EXPECTED_MEAN_KWARGS = None
     _DEFAULT_PLOT_OBSERVED_MEAN_KWARGS = dict(linewidth=1, marker='', color='k')
     _DEFAULT_PLOT_ONE_SIGMA_BAND_MEAN_KWARGS = dict(color='k', alpha=0.1)
 
