@@ -139,7 +139,7 @@ class PlotContainerBase(object):
         """
         if not isinstance(fit_object, self.__class__.FIT_TYPE):
             raise PlotContainerException("PlotContainer of type '%s' is incompatible with Fit of type '%s'"
-                                         % self.__class__, self.__class__.FIT_TYPE)
+                                         % (self.__class__, self.__class__.FIT_TYPE))
         self._fitter = fit_object
 
     # -- properties
