@@ -12,10 +12,10 @@ from ...core.error import MatrixGaussianError, SimpleGaussianError
 from ...config import kc
 from .._base import (FitException, FitBase, DataContainerBase,
                      ModelParameterFormatter, CostFunctionBase)
-from kafe.fit.xy.container import XYContainer
-from kafe.fit.xy.cost import XYCostFunction_Chi2, XYCostFunction_UserDefined
-from kafe.fit.xy.format import XYModelFunctionFormatter
-from kafe.fit.xy.model import XYParametricModel, XYModelFunction
+from .container import XYContainer
+from .cost import XYCostFunction_Chi2, XYCostFunction_UserDefined
+from .format import XYModelFunctionFormatter
+from .model import XYParametricModel, XYModelFunction
 
 
 __all__ = ["XYFit"]

@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from kafe.fit.xy import *
-from kafe.fit.multi import XYFit
+from kafe.fit.multi import *
 
 # a simple quadratic 'xy' model (3 parameters)
 def quad_model(x, a, b, c):
