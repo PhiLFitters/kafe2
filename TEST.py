@@ -28,7 +28,7 @@ def example_xy_fit():
     fits = []  # store our kafe 'Fit' objects here
 
     # initialize an 'IndexedFit'
-    f = XYFit(xy_data=xydata0,
+    f = XYFit(xy_data=[[np.arange(10), np.arange(10)], [idx_data0, idx_data1]],
               model_function=quad_model)
 
     # give parameters (trivial) LaTeX names

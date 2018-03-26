@@ -32,7 +32,17 @@ class XYContainer(IndexedContainer):
         :type dtype: type
         """
         # TODO: check user input (?)
-        self._xy_data = np.array([x_data, y_data], dtype=dtype)
+        self._data_indices = [0]
+        _current_index = 0
+        try:
+            for _x_dataset in x_data:
+                _current_index += len(_x_dataset)
+                self._data_indices.append(_current_index)
+        except TypeError:
+            self._data_indices = [0, len(x_data)]
+        _x_data = np.array(x_data, dtype=dtype).flatten()
+        _y_data = np.array(y_data, dtype=dtype).flatten()
+        self._xy_data = np.array([_x_data, _y_data])
         self._error_dicts = {}
         self._xy_total_errors = None
 
