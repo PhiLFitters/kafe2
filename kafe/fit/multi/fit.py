@@ -87,7 +87,7 @@ class XYFit(FitBase):
         # initialize the Fitter
         self._initialize_fitter(minimizer, minimizer_kwargs)
         # create the child ParametricModel object
-        self._param_model = self._new_parametric_model(self.x_model, self._model_function.func,
+        self._param_model = self._new_parametric_model(self.x_model, self._model_function,
                                                        self.poi_values)
 
         # TODO: check where to update this (set/release/etc.)
@@ -341,15 +341,20 @@ class XYFit(FitBase):
         self._mark_errors_for_update()
         self._invalidate_total_error_cache()
 
-    def _calculate_y_error_band(self):
-        _xmin, _xmax = self._data_container.x_range
-        _band_x = np.linspace(_xmin, _xmax, 100)  # TODO: config
-        _f_deriv_by_params = self._param_model.eval_model_function_derivative_by_parameters(x=_band_x, model_parameters=self.poi_values)
+    def _calculate_y_error_band(self, num_points = 50):
+        # TODO: config for num_points
+        _band_x = np.empty(self.model_function_count * num_points, dtype=float)
+        for _i in range(self.model_function_count):
+            _xmin, _xmax = self.get_x_range(_i)
+            _band_x[_i * num_points : (_i + 1) * num_points] = np.linspace(_xmin, _xmax, num_points)
+        _f_deriv_by_params = self._param_model.eval_model_function_derivative_by_parameters(x=_band_x, 
+                                x_indices=range(0, self.model_function_count * num_points + 1, num_points), 
+                                model_parameters=self.poi_values)
         # here: df/dp[par_idx]|x=x[x_idx] = _f_deriv_by_params[par_idx][x_idx]
 
         _f_deriv_by_params = _f_deriv_by_params.T
         # here: df/dp[par_idx]|x=x[x_idx] = _f_deriv_by_params[x_idx][par_idx]
-
+        
         _band_y = np.zeros_like(_band_x)
         _n_poi = len(self.poi_values)
         for _x_idx, _x_val in enumerate(_band_x):
@@ -786,6 +791,10 @@ class XYFit(FitBase):
         """range of the *x* measurement data"""
         return self._data_container.x_range
 
+    def get_x_range(self, index):
+        """range of the *x* measurement data for one spcific model"""
+        return self._data_container.get_x_range(index)
+
     @property
     def y_range(self):
         """range of the *y* measurement data"""
@@ -806,6 +815,10 @@ class XYFit(FitBase):
         for _name in self._x_uncor_nuisance_names:
             _values.append(self.parameter_name_value_dict[_name])
         return np.asarray(_values)
+
+    @property
+    def model_function_count(self):
+        return self._model_function.model_function_count
 
     # -- public methods
 

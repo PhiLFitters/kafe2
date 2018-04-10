@@ -106,6 +106,21 @@ class XYModelFunction(ModelFunctionBase):
         """The model function name (a valid Python identifier)"""
         return self._eval.__name__
 
+    @property
+    def model_function_count(self):
+        """The number of model functions"""
+        return len(self._model_function_handle)
+    
+    @property
+    def model_function_list(self):
+        """The list of model functions"""
+        return self._model_function_handle
+    
+    @property
+    def data_indices(self):
+        """The indices by which the data is spliced and distributed to the individual models"""
+        return self._data_indices
+
 class XYParametricModelException(XYContainerException):
     pass
 
@@ -119,10 +134,11 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
         :param model_func: handle of Python function (the model function)
         :param model_parameters: iterable of parameter values with which the model function should be initialized
         """
+        #TODO update documentation
         # print "XYParametricModel.__init__(x_data=%r, model_func=%r, model_parameters=%r)" % (x_data, model_func, model_parameters)
-        print model_parameters
-        _y_data = model_func(x_data, *model_parameters)
+        _y_data = model_func.func(x_data, *model_parameters)
         super(XYParametricModel, self).__init__(model_func, model_parameters, x_data, _y_data)
+        self._data_indices = model_func.data_indices
 
     # -- private methods
 
@@ -184,9 +200,9 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
         """
         _x = x if x is not None else self.x
         _pars = model_parameters if model_parameters is not None else self._model_parameters
-        return self._model_function_handle(_x, *_pars)
+        return self._model_function_handle.func(_x, *_pars)
 
-    def eval_model_function_derivative_by_parameters(self, x=None, model_parameters=None, par_dx=None):
+    def eval_model_function_derivative_by_parameters(self, x=None, x_indices=None, model_parameters=None, par_dx=None):
         """
         Evaluate the derivative of the model function with respect to the model parameters.
 
@@ -199,27 +215,68 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
         :return: value(s) of the model function derivative for the given parameters
         :rtype: :py:obj:`numpy.ndarray`
         """
+        if x is not None and x_indices is None:
+            raise XYParametricModelException('When x is specified x_indices also has to be specified!')
+        
         _x = x if x is not None else self.x
+        _x_indices = x_indices if x_indices is not None else self._data_indices
         _pars = model_parameters if model_parameters is not None else self._model_parameters
         _pars = np.asarray(_pars)
         _par_dxs = par_dx if par_dx is not None else 1e-2 * (np.abs(_pars) + 1.0/(1.0+np.abs(_pars)))
 
-        _ret = []
-        for _par_idx, (_par_val, _par_dx) in enumerate(zip(_pars, _par_dxs)):
-            def _chipped_func(par):
-                _chipped_pars = _pars.copy()
-                _chipped_pars[_par_idx] = par
-                return self._model_function_handle(_x, *_chipped_pars)
+        try:
+            iter(_par_dxs)
+            if len(_pars) != len(_par_dxs):
+                raise XYParametricModelException('When providing an iterable of par_dx values it must have the same length as model_parameters!')
+        except TypeError:
+            _par_dxs = np.ones_like(_pars)*_par_dxs
 
-            _der_val = derivative(_chipped_func, _par_val, dx=_par_dx)
-            _ret.append(_der_val)
-        return np.array(_ret)
+        _derivatives = []
+        for _par in _pars:
+            _derivatives.append([])
+        for _i, (_model_function, _par_indices) in enumerate(zip(self._model_function_handle.model_function_list, self._model_function_handle._model_arg_indices)):
+            _x_splice = _x[_x_indices[_i]:_x_indices[_i + 1]]
+            _par_sublist = []
+            for _par_index in _par_indices:
+                _par_sublist.append(_pars[_par_index])
+            _par_sublist = np.array(_par_sublist)
+            _skipped_pars = 0
+            for _j, (_par_val, _par_dx) in enumerate(zip(_pars, _par_dxs)):
+                #if a model function does not have a parameter, 
+                #the derivative for that parameter is 0
+                if _j not in _par_indices:
+                    _derivatives[_j].append(np.zeros_like(_x_splice))
+                    _skipped_pars += 1
+                    continue
+                def _chipped_func(par):
+                    _chipped_pars = _par_sublist.copy()
+                    _chipped_pars[_j - _skipped_pars] = par
+                    return _model_function(_x_splice, *_chipped_pars)
+                _derivatives[_j].append(derivative(_chipped_func, _par_val, dx=_par_dx))
+        
+        _flattened_derivatives = []
+        for _derivative in _derivatives:
+            _flattened_derivatives.append(np.append(*_derivative))
+        return np.array(_flattened_derivatives)
+        #_ret = []
+        #for _par_idx, (_par_val, _par_dx) in enumerate(zip(_pars, _par_dxs)):
+        #    def _chipped_func(par):
+        #        _chipped_pars = _pars.copy()
+        #        _chipped_pars[_par_idx] = par
+        #        return self._model_function_handle.func(_x, *_chipped_pars)
+        #
+        #    _der_val = derivative(_chipped_func, _par_val, dx=_par_dx)
+        #    _ret.append(_der_val)
+        #return np.array(_ret)
 
-    def eval_model_function_derivative_by_x(self, x=None, model_parameters=None, dx=None):
+    def eval_model_function_derivative_by_x(self, x=None, x_indices=None, model_parameters=None, dx=None):
         """
         Evaluate the derivative of the model function with respect to the independent variable (*x*).
 
         :param x: *x* values of the support points (if ``None``, the model *x* values are used)
+        :type x: list or ``None``
+        :param x_indices: indices for slicing *x* values for distributing them to the model functions.
+            Has to be specified if x is specified.
         :type x: list or ``None``
         :param model_parameters: values of the model parameters (if ``None``, the current values are used)
         :type model_parameters: list or ``None``
@@ -228,19 +285,31 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
         :return: value(s) of the model function derivative
         :rtype: :py:obj:`numpy.ndarray`
         """
+        if x is not None and x_indices is None:
+            raise XYParametricModelException('When x is specified x_indices also has to be specified!')
+        
         _x = x if x is not None else self.x
+        _x_indices = x_indices if x_indices is not None else self._data_indices
         _pars = model_parameters if model_parameters is not None else self._model_parameters
         _dxs = dx if dx is not None else 1e-2 * (np.abs(_x) + 1.0/(1.0+np.abs(_x)))
         try:
             iter(_dxs)
+            if len(_x) != len(_dxs):
+                raise XYParametricModelException('When providing an iterable of dx values it must have the same length as x!')
         except TypeError:
             _dxs = np.ones_like(_x)*_dxs
 
-        _ret = []
-        for _x_idx, (_x_val, _dx) in enumerate(zip(_x, _dxs)):
+        _derivatives = []
+        for _i, (_model_function, _par_indices) in enumerate(zip(self._model_function_handle.model_function_list, self._model_function_handle._model_arg_indices)):
+            _par_sublist = []
+            for _par_index in _par_indices:
+                _par_sublist.append(_pars[_par_index])
+            
             def _chipped_func(x):
-                return self._model_function_handle(x, *_pars)
-
-            _der_val = derivative(_chipped_func, _x_val, dx=_dx)
-            _ret.append(_der_val)
-        return np.array(_ret)
+                return _model_function(x, *_par_sublist)
+            
+            for _j in range(_x_indices[_i], _x_indices[_i + 1]):
+                _derivatives.append(derivative(_chipped_func, _x[_j], dx=_dxs[_j]))
+                            
+        return np.array(_derivatives)
+    

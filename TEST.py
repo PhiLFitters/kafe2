@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from kafe.fit.multi import *
 
-NUM_POINTS = 10
+NUM_POINTS = 12
 
 # a simple quadratic 'xy' model (3 parameters)
 def quad_model(x, b, c, d):
@@ -22,11 +22,11 @@ def example_xy_fit():
     a0, b0, c0, d0 = 0.5, 0.6, 0.7, 0.8
 
     # compute pseudo-data for 'xy' model: same as 'Indexed', but 'x' is part of data!
-    idx_data0 = quad_model(np.arange(NUM_POINTS), b0, c0, d0) + np.random.normal(0, 0.01, NUM_POINTS)
-    xydata0 = np.array([np.arange(NUM_POINTS), idx_data0])
+    x0 = np.arange(NUM_POINTS)
+    idx_data0 = quad_model(x0, b0, c0, d0) + np.random.normal(0, 0.01, NUM_POINTS)
+    x1 = np.arange(NUM_POINTS) + 0.5
     #idx_data1 = quad_model2(np.arange(NUM_POINTS), b0, c0, d0) + np.random.normal(0, 0.001, NUM_POINTS)
-    idx_data1 = cube_model(np.arange(NUM_POINTS), a0, b0, c0, d0) + np.random.normal(0, 0.01, NUM_POINTS)
-    xydata1 = np.array([np.arange(NUM_POINTS), idx_data1])
+    idx_data1 = cube_model(x1, a0, b0, c0, d0) + np.random.normal(0, 0.01, NUM_POINTS)
 
 
     # -- do some kafe fits: XYFit
@@ -34,7 +34,7 @@ def example_xy_fit():
     fits = []  # store our kafe 'Fit' objects here
 
     # initialize an 'IndexedFit'
-    f = XYFit(xy_data=[[np.arange(NUM_POINTS), np.arange(NUM_POINTS)], [idx_data0, idx_data1]],
+    f = XYFit(xy_data=[[x0, x1], [idx_data0, idx_data1]],
               model_function=[quad_model, cube_model])
 #    f = XYFit(xy_data=[[np.arange(NUM_POINTS)], [idx_data0]],
 #              model_function=[quad_model])
@@ -47,8 +47,8 @@ def example_xy_fit():
     f.assign_model_function_latex_expression(r"{0}\,{x}^2 + {1}\,{x} + {2}")
 
     # add an error source to the 'Fit' object error model
-    f.add_simple_error('y', 0.1, correlation=0.0)  # all points have a (Gaussian) uncertainty in 'y' of +/-1.0
-    #f.add_simple_error('x', 0.25, correlation=0.01)
+    f.add_simple_error('y', 0.01, correlation=0.0)  # all points have a (Gaussian) uncertainty in 'y' of +/-1.0
+    f.add_simple_error('x', 0.01, correlation=0.0)
 
     # do the fit
     f.do_fit()

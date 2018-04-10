@@ -110,17 +110,17 @@ class ModelFunctionBase(object):
                                                         arg_formatters=self._arg_formatters)
 
     def __call__(self, *args, **kwargs):
-        self._model_function_handle(*args, **kwargs)
+        self._model_function_handle.func(*args, **kwargs)
 
     @property
     def name(self):
         """The model function name (a valid Python identifier)"""
-        return self._model_function_handle.__name__
+        return self._model_function_handle.func.__name__
 
     @property
     def func(self):
         """The model function handle"""
-        return self._model_function_handle
+        return self._model_function_handle.func
 
     @property
     def argspec(self):

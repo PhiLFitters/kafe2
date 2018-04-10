@@ -39,8 +39,7 @@ class XYContainer(IndexedContainer):
         try:
             for _x_dataset, _y_dataset in zip(x_data, y_data):
                 if len(_x_dataset) != len(_y_dataset):
-                    #TODO error message
-                    raise XYContainerException()
+                    raise XYContainerException('Corresponding elements of x_data and y_data must have the same length!')
                 _current_index += len(_x_dataset)
                 self._data_indices.append(_current_index)
         except TypeError:
@@ -254,6 +253,11 @@ class XYContainer(IndexedContainer):
     def x_range(self):
         """x data range"""
         _x = self.x
+        return np.min(_x), np.max(_x)
+
+    def get_x_range(self, index):
+        """x data range"""
+        _x = self.x[self.data_indices[index] : self.data_indices[index + 1]]
         return np.min(_x), np.max(_x)
 
     @property
