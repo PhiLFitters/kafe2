@@ -64,7 +64,8 @@ class XYFit(FitBase):
         if isinstance(model_function, self.__class__.MODEL_FUNCTION_TYPE):
             self._model_function = model_function
         else:
-            self._model_function = self.__class__.MODEL_FUNCTION_TYPE(model_function)
+            self._model_function = self.__class__.MODEL_FUNCTION_TYPE(model_function,
+                                        self._data_container.data_indices)
 
         # validate the model function for this fit
         self._validate_model_function_for_fit_raise()

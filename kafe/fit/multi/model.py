@@ -18,14 +18,42 @@ class XYModelFunction(ModelFunctionBase):
     EXCEPTION_TYPE = XYModelFunctionException
     FORMATTER_TYPE = XYModelFunctionFormatter
 
-    def __init__(self, model_function):
+    def __init__(self, model_function, data_indices):
         """
         Construct :py:class:`XYModelFunction` object (a wrapper for a native Python function):
 
         :param model_function: function handle
         """
         self._x_name = 'x'
-        super(XYModelFunction, self).__init__(model_function=model_function)
+        self._data_indices = data_indices
+        self._parameter_occurences = []
+        _args = []
+        #TODO implement
+        _varargs = None
+        _keywords = None
+        _defaults = None
+        i = 0
+        for _model_function in model_function:
+            _argspec = inspect.getargspec(_model_function)
+            for _arg_name in _argspec[0]:
+                if _arg_name is self._x_name:
+                    continue
+                if _arg_name not in _args:
+                    _args.append(_arg_name)
+                    self._parameter_occurences.append([i])
+                else:
+                    self._parameter_occurences[_args.index(_arg_name)].append(i)
+            i += 1
+        _args.insert(0, self._x_name)
+        self._model_function_argspec = inspect.ArgSpec(_args, _varargs, _keywords, _defaults)
+        self._model_count = len(model_function)
+        self._model_function_handle = model_function
+        self._model_function_argcount = len(_args)
+        self._validate_model_function_raise()
+        self._assign_parameter_formatters()
+        self._assign_function_formatter()
+
+        #super(XYModelFunction, self).__init__(model_function=model_function)
 
     def _validate_model_function_raise(self):
         # require 'xy' model function agruments to include 'x'
@@ -58,6 +86,30 @@ class XYModelFunction(ModelFunctionBase):
         """the name of the independent variable"""
         return self._x_name
 
+    def _eval(self, x, *kwargs):
+        _y = np.empty(x.size)
+        _arg_lists = []
+        for i in range(self._model_count):
+            _arg_lists.append([])
+        i = 0
+        for _model_function_list in self._parameter_occurences:
+            for index in _model_function_list:
+                _arg_lists[index].append(kwargs[i])
+            i += 1
+        for i in range(self._model_count):
+            _x = x[self._data_indices[i]:self._data_indices[i + 1]]
+            _y[self._data_indices[i]:self._data_indices[i + 1]] = self._model_function_handle[i](_x, *_arg_lists[i])
+        return _y
+
+    @property
+    def func(self):
+        """The model function handle"""
+        return self._eval
+
+    @property
+    def name(self):
+        """The model function name (a valid Python identifier)"""
+        return self._eval.__name__
 
 class XYParametricModelException(XYContainerException):
     pass
@@ -73,6 +125,7 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
         :param model_parameters: iterable of parameter values with which the model function should be initialized
         """
         # print "XYParametricModel.__init__(x_data=%r, model_func=%r, model_parameters=%r)" % (x_data, model_func, model_parameters)
+        print model_parameters
         _y_data = model_func(x_data, *model_parameters)
         super(XYParametricModel, self).__init__(model_func, model_parameters, x_data, _y_data)
 

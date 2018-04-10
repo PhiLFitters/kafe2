@@ -2,9 +2,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 from kafe.fit.multi import *
 
+NUM_POINTS = 10
+
 # a simple quadratic 'xy' model (3 parameters)
-def quad_model(x, a, b, c):
-    return a * x ** 2 + b * x + c
+def quad_model(x, b, c, d):
+    return b * x ** 2 + c * x + d
+
+def quad_model2(x, b, c, d):
+    return b * x ** 2 + c * x + d + 20.0
 
 def cube_model(x, a, b, c, d):
     return a * x ** 3 + b * x ** 2 + c * x + d
@@ -14,13 +19,14 @@ def example_xy_fit():
     """Workflow for a kafe fit to an 'XY' data set"""
 
     # set the quadratic model parameters to numeric values
-    a0, b0, c0, d0 = 0.1, 0.2, 3.3, 2.4
+    a0, b0, c0, d0 = 0.5, 0.6, 0.7, 0.8
 
     # compute pseudo-data for 'xy' model: same as 'Indexed', but 'x' is part of data!
-    idx_data0 = quad_model(np.arange(10), a0, b0, c0) + np.random.normal(0, 1, 10)
-    xydata0 = np.array([np.arange(10), idx_data0])
-    idx_data1 = cube_model(np.arange(10), a0, b0, c0, d0) + np.random.normal(0, 1, 10)
-    xydata1 = np.array([np.arange(10), idx_data1])
+    idx_data0 = quad_model(np.arange(NUM_POINTS), b0, c0, d0) + np.random.normal(0, 0.1, NUM_POINTS)
+    xydata0 = np.array([np.arange(NUM_POINTS), idx_data0])
+    #idx_data1 = quad_model2(np.arange(NUM_POINTS), b0, c0, d0) + np.random.normal(0, 0.001, NUM_POINTS)
+    idx_data1 = cube_model(np.arange(NUM_POINTS), a0, b0, c0, d0) + np.random.normal(0, 0.1, NUM_POINTS)
+    xydata1 = np.array([np.arange(NUM_POINTS), idx_data1])
 
 
     # -- do some kafe fits: XYFit
@@ -28,8 +34,10 @@ def example_xy_fit():
     fits = []  # store our kafe 'Fit' objects here
 
     # initialize an 'IndexedFit'
-    f = XYFit(xy_data=[[np.arange(10), np.arange(10)], [idx_data0, idx_data1]],
-              model_function=quad_model)
+#    f = XYFit(xy_data=[[np.arange(NUM_POINTS), np.arange(NUM_POINTS)], [idx_data0, idx_data1]],
+#              model_function=[quad_model, cube_model])
+    f = XYFit(xy_data=[[np.arange(NUM_POINTS)], [idx_data0]],
+              model_function=[quad_model])
 
     # give parameters (trivial) LaTeX names
     f.assign_parameter_latex_names(a='a', b='b', c='c')
@@ -39,8 +47,8 @@ def example_xy_fit():
     f.assign_model_function_latex_expression(r"{0}\,{x}^2 + {1}\,{x} + {2}")
 
     # add an error source to the 'Fit' object error model
-    f.add_simple_error('y', 0.25, correlation=0.01)  # all points have a (Gaussian) uncertainty in 'y' of +/-1.0
-    f.add_simple_error('x', 0.25, correlation=0.01)
+    f.add_simple_error('y', 0.1, correlation=0.0)  # all points have a (Gaussian) uncertainty in 'y' of +/-1.0
+    #f.add_simple_error('x', 0.25, correlation=0.01)
 
     # do the fit
     f.do_fit()

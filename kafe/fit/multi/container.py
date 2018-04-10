@@ -32,10 +32,15 @@ class XYContainer(IndexedContainer):
         :type dtype: type
         """
         # TODO: check user input (?)
+        if len(x_data) != len(y_data):
+            raise XYContainerException("Must provide equal numer of x_data and y_data!")
         self._data_indices = [0]
         _current_index = 0
         try:
-            for _x_dataset in x_data:
+            for _x_dataset, _y_dataset in zip(x_data, y_data):
+                if len(_x_dataset) != len(_y_dataset):
+                    #TODO error message
+                    raise XYContainerException()
                 _current_index += len(_x_dataset)
                 self._data_indices.append(_current_index)
         except TypeError:
@@ -394,3 +399,6 @@ class XYContainer(IndexedContainer):
         return False
 
 
+    @property
+    def data_indices(self):
+        return self._data_indices
