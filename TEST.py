@@ -22,10 +22,10 @@ def example_xy_fit():
     a0, b0, c0, d0 = 0.5, 0.6, 0.7, 0.8
 
     # compute pseudo-data for 'xy' model: same as 'Indexed', but 'x' is part of data!
-    idx_data0 = quad_model(np.arange(NUM_POINTS), b0, c0, d0) + np.random.normal(0, 0.1, NUM_POINTS)
+    idx_data0 = quad_model(np.arange(NUM_POINTS), b0, c0, d0) + np.random.normal(0, 0.01, NUM_POINTS)
     xydata0 = np.array([np.arange(NUM_POINTS), idx_data0])
     #idx_data1 = quad_model2(np.arange(NUM_POINTS), b0, c0, d0) + np.random.normal(0, 0.001, NUM_POINTS)
-    idx_data1 = cube_model(np.arange(NUM_POINTS), a0, b0, c0, d0) + np.random.normal(0, 0.1, NUM_POINTS)
+    idx_data1 = cube_model(np.arange(NUM_POINTS), a0, b0, c0, d0) + np.random.normal(0, 0.01, NUM_POINTS)
     xydata1 = np.array([np.arange(NUM_POINTS), idx_data1])
 
 
@@ -34,10 +34,10 @@ def example_xy_fit():
     fits = []  # store our kafe 'Fit' objects here
 
     # initialize an 'IndexedFit'
-#    f = XYFit(xy_data=[[np.arange(NUM_POINTS), np.arange(NUM_POINTS)], [idx_data0, idx_data1]],
-#              model_function=[quad_model, cube_model])
-    f = XYFit(xy_data=[[np.arange(NUM_POINTS)], [idx_data0]],
-              model_function=[quad_model])
+    f = XYFit(xy_data=[[np.arange(NUM_POINTS), np.arange(NUM_POINTS)], [idx_data0, idx_data1]],
+              model_function=[quad_model, cube_model])
+#    f = XYFit(xy_data=[[np.arange(NUM_POINTS)], [idx_data0]],
+#              model_function=[quad_model])
 
     # give parameters (trivial) LaTeX names
     f.assign_parameter_latex_names(a='a', b='b', c='c')

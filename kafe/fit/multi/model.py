@@ -26,24 +26,23 @@ class XYModelFunction(ModelFunctionBase):
         """
         self._x_name = 'x'
         self._data_indices = data_indices
-        self._parameter_occurences = []
+        self._model_arg_indices = []
         _args = []
         #TODO implement
         _varargs = None
         _keywords = None
         _defaults = None
-        i = 0
         for _model_function in model_function:
+            _model_arg_indices = []
             _argspec = inspect.getargspec(_model_function)
             for _arg_name in _argspec[0]:
                 if _arg_name is self._x_name:
                     continue
                 if _arg_name not in _args:
                     _args.append(_arg_name)
-                    self._parameter_occurences.append([i])
-                else:
-                    self._parameter_occurences[_args.index(_arg_name)].append(i)
-            i += 1
+                _model_arg_indices.append(_args.index(_arg_name))
+            self._model_arg_indices.append(_model_arg_indices)
+                
         _args.insert(0, self._x_name)
         self._model_function_argspec = inspect.ArgSpec(_args, _varargs, _keywords, _defaults)
         self._model_count = len(model_function)
@@ -86,19 +85,15 @@ class XYModelFunction(ModelFunctionBase):
         """the name of the independent variable"""
         return self._x_name
 
-    def _eval(self, x, *kwargs):
+    def _eval(self, x, *args):
         _y = np.empty(x.size)
         _arg_lists = []
         for i in range(self._model_count):
-            _arg_lists.append([])
-        i = 0
-        for _model_function_list in self._parameter_occurences:
-            for index in _model_function_list:
-                _arg_lists[index].append(kwargs[i])
-            i += 1
-        for i in range(self._model_count):
             _x = x[self._data_indices[i]:self._data_indices[i + 1]]
-            _y[self._data_indices[i]:self._data_indices[i + 1]] = self._model_function_handle[i](_x, *_arg_lists[i])
+            _arg_list = []
+            for _index in self._model_arg_indices[i]:
+                _arg_list.append(args[_index])
+            _y[self._data_indices[i]:self._data_indices[i + 1]] = self._model_function_handle[i](_x, *_arg_list)
         return _y
 
     @property
