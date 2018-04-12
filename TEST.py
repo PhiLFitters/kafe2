@@ -2,7 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from kafe.fit.multi import *
 
-NUM_POINTS = 12
+NUM_POINTS = 10
+a0, b0, c0, d0 = 0.25, 0.6, 0.7, -10.0
+Y_ERR = 1.0
+X_ERR = 0.1
 
 # a simple quadratic 'xy' model (3 parameters)
 def quad_model(x, b, c, d):
@@ -19,14 +22,13 @@ def example_xy_fit():
     """Workflow for a kafe fit to an 'XY' data set"""
 
     # set the quadratic model parameters to numeric values
-    a0, b0, c0, d0 = 0.5, 0.6, 0.7, 0.8
 
     # compute pseudo-data for 'xy' model: same as 'Indexed', but 'x' is part of data!
     x0 = np.arange(NUM_POINTS)
-    idx_data0 = quad_model(x0, b0, c0, d0) + np.random.normal(0, 0.01, NUM_POINTS)
+    idx_data0 = quad_model(x0 + np.random.normal(0, X_ERR, NUM_POINTS), b0, c0, d0) + np.random.normal(0, Y_ERR, NUM_POINTS)
     x1 = np.arange(NUM_POINTS) + 0.5
     #idx_data1 = quad_model2(np.arange(NUM_POINTS), b0, c0, d0) + np.random.normal(0, 0.001, NUM_POINTS)
-    idx_data1 = cube_model(x1, a0, b0, c0, d0) + np.random.normal(0, 0.01, NUM_POINTS)
+    idx_data1 = cube_model(x1 + np.random.normal(0, X_ERR, NUM_POINTS), a0, b0, c0, d0) + np.random.normal(0, Y_ERR, NUM_POINTS)
 
 
     # -- do some kafe fits: XYFit
@@ -47,8 +49,8 @@ def example_xy_fit():
     f.assign_model_function_latex_expression(r"{0}\,{x}^2 + {1}\,{x} + {2}")
 
     # add an error source to the 'Fit' object error model
-    f.add_simple_error('y', 0.01, correlation=0.0)  # all points have a (Gaussian) uncertainty in 'y' of +/-1.0
-    f.add_simple_error('x', 0.01, correlation=0.0)
+    f.add_simple_error('y', Y_ERR, correlation=0.0)  # all points have a (Gaussian) uncertainty in 'y' of +/-1.0
+    f.add_simple_error('x', X_ERR, correlation=0.0)
 
     # do the fit
     f.do_fit()

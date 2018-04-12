@@ -341,14 +341,14 @@ class XYFit(FitBase):
         self._mark_errors_for_update()
         self._invalidate_total_error_cache()
 
-    def _calculate_y_error_band(self, num_points = 50):
+    def _calculate_y_error_band(self, num_points = 100):
         # TODO: config for num_points
-        _band_x = np.empty(self.model_function_count * num_points, dtype=float)
-        for _i in range(self.model_function_count):
+        _band_x = np.empty(self.model_count * num_points, dtype=float)
+        for _i in range(self.model_count):
             _xmin, _xmax = self.get_x_range(_i)
             _band_x[_i * num_points : (_i + 1) * num_points] = np.linspace(_xmin, _xmax, num_points)
         _f_deriv_by_params = self._param_model.eval_model_function_derivative_by_parameters(x=_band_x, 
-                                x_indices=range(0, self.model_function_count * num_points + 1, num_points), 
+                                x_indices=range(0, self.model_count * num_points + 1, num_points), 
                                 model_parameters=self.poi_values)
         # here: df/dp[par_idx]|x=x[x_idx] = _f_deriv_by_params[par_idx][x_idx]
 
@@ -786,6 +786,12 @@ class XYFit(FitBase):
             self._calculate_y_error_band()
         return self.__cache_y_error_band
 
+    def get_y_error_band(self, index):
+        #TODO documentation
+        #TODO num_points config
+        num_points = 100
+        return self.y_error_band[index * num_points : (index + 1) * num_points]
+
     @property
     def x_range(self):
         """range of the *x* measurement data"""
@@ -817,7 +823,8 @@ class XYFit(FitBase):
         return np.asarray(_values)
 
     @property
-    def model_function_count(self):
+    def model_count(self):
+        """the number of model functions contained in the fit"""
         return self._model_function.model_function_count
 
     # -- public methods
@@ -921,7 +928,7 @@ class XYFit(FitBase):
                 _fpf.value = _pv
                 _fpf.error = _pe
 
-    def eval_model_function(self, x=None, model_parameters=None):
+    def eval_model_function(self, x=None, model_parameters=None, model_index=None):
         """
         Evaluate the model function.
 
@@ -932,9 +939,14 @@ class XYFit(FitBase):
         :return: model function values
         :rtype: :py:class:`numpy.ndarray`
         """
+        #TODO update documentation
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
-        return self._param_model.eval_model_function(x=x, model_parameters=model_parameters)
+        return self._param_model.eval_model_function(
+            x=x, 
+            model_parameters=model_parameters, 
+            model_index=model_index
+        )
 
     def calculate_nuisance_parameters(self):
         """
@@ -1046,3 +1058,10 @@ class XYFit(FitBase):
             print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=1)
 
         super(XYFit, self).report()
+
+    def get_splice(self, data, index):
+        return self._data_container.get_splice(data, index)
+    
+    def get_model_function(self, index):
+        return self._model_function.get_underlying_model_function(index)
+    

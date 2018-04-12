@@ -131,16 +131,21 @@ class PlotContainerBase(object):
 
     FIT_TYPE = None
 
-    def __init__(self, fit_object):
+    def __init__(self, fit_object, model_index=0):
         """
         Construct a :py:obj:`PlotContainer` for a :py:obj:`Fit` object:
 
         :param fit_object: an object derived from :py:obj:`~kafe.fit._base.FitBase`
         """
+        #TODO: update documentation
         if not isinstance(fit_object, self.__class__.FIT_TYPE):
             raise PlotContainerException("PlotContainer of type '%s' is incompatible with Fit of type '%s'"
                                          % (self.__class__, fit_object.__class__))
+        if fit_object.model_count <= model_index:
+            raise PlotContainerException("Received %s as model index but fit object only has %s models"
+                                         % (fit_object.model_count, model_index))
         self._fitter = fit_object
+        self._model_index = model_index
 
     # -- properties
 
@@ -328,9 +333,10 @@ class PlotFigureBase(object):
             fit_objects = (fit_objects,)
 
         for _fit in fit_objects:
-            _pdc = self.__class__.PLOT_CONTAINER_TYPE(_fit)
-            self._plot_data_containers.append(_pdc)
-            self._artist_store.append(dict())
+            for _i in range(_fit.model_count):
+                _pdc = self.__class__.PLOT_CONTAINER_TYPE(_fit, model_index=_i)
+                self._plot_data_containers.append(_pdc)
+                self._artist_store.append(dict())
 
         self._plot_range_x = None
         self._plot_range_y = None

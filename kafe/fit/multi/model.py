@@ -85,14 +85,14 @@ class XYModelFunction(ModelFunctionBase):
         """the name of the independent variable"""
         return self._x_name
 
-    def _eval(self, x, *args):
+    def _eval(self, x, *args, **kwargs):
         _y = np.empty(x.size)
         _arg_lists = []
+        _x_indices = kwargs.get("x_indices")
+        _x_indices = _x_indices if _x_indices is not None else self._data_indices
         for i in range(self._model_count):
-            _x = x[self._data_indices[i]:self._data_indices[i + 1]]
-            _arg_list = []
-            for _index in self._model_arg_indices[i]:
-                _arg_list.append(args[_index])
+            _x = x[_x_indices[i]:_x_indices[i + 1]]
+            _arg_list = self._construct_arg_list(args, i)
             _y[self._data_indices[i]:self._data_indices[i + 1]] = self._model_function_handle[i](_x, *_arg_list)
         return _y
 
@@ -115,6 +115,16 @@ class XYModelFunction(ModelFunctionBase):
     def model_function_list(self):
         """The list of model functions"""
         return self._model_function_handle
+    
+    def _construct_arg_list(self, args, model_index):
+        _arg_list = []
+        for _arg_index in self._model_arg_indices[model_index]:
+            _arg_list.append(args[_arg_index])
+        return _arg_list
+
+    def eval_underlying_model_function(self, x, args, model_index):
+        #TODO documentation
+        return self.model_function_list[model_index](x, *self._construct_arg_list(args, model_index))
     
     @property
     def data_indices(self):
@@ -187,7 +197,7 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
 
     # -- public methods
 
-    def eval_model_function(self, x=None, model_parameters=None):
+    def eval_model_function(self, x=None, model_parameters=None, model_index=None):
         """
         Evaluate the model function.
 
@@ -198,9 +208,13 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
         :return: value(s) of the model function for the given parameters
         :rtype: :py:obj:`numpy.ndarray`
         """
+        #TODO update documentation
         _x = x if x is not None else self.x
         _pars = model_parameters if model_parameters is not None else self._model_parameters
-        return self._model_function_handle.func(_x, *_pars)
+        if model_index is None:
+            return self._model_function_handle.func(_x, *_pars)
+        else:
+            return self._model_function_handle.eval_underlying_model_function(_x, _pars, model_index)
 
     def eval_model_function_derivative_by_parameters(self, x=None, x_indices=None, model_parameters=None, par_dx=None):
         """
@@ -215,6 +229,7 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
         :return: value(s) of the model function derivative for the given parameters
         :rtype: :py:obj:`numpy.ndarray`
         """
+        #TODO update documentation
         if x is not None and x_indices is None:
             raise XYParametricModelException('When x is specified x_indices also has to be specified!')
         

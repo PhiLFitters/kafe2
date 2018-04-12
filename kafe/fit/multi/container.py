@@ -406,3 +406,7 @@ class XYContainer(IndexedContainer):
     @property
     def data_indices(self):
         return self._data_indices
+    
+    def get_splice(self, data, index):
+        return data[self.data_indices[index] : self.data_indices[index + 1]]
+    

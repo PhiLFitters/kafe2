@@ -167,6 +167,11 @@ class FitBase(object):
         """``True`` if at least one uncertainty source is defined for either the data or the model"""
         return True if self.has_data_errors or self.has_model_errors else False
 
+    @property
+    def model_count(self):
+        """the number of model functions contained in the fit, 1 by default"""
+        return 1
+
     # -- public methods
 
     def set_parameter_values(self, **param_name_value_dict):

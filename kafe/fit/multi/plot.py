@@ -13,13 +13,16 @@ __all__ = ["XYPlot", "XYPlotContainer"]
 class XYPlotContainer(PlotContainerBase):
     FIT_TYPE = XYFit
 
-    def __init__(self, xy_fit_object, n_plot_points_model=100):
+    def __init__(self, xy_fit_object, model_index, n_plot_points_model=100):
         """
         Construct an :py:obj:`XYPlotContainer` for a :py:obj:`~kafe.fit.xy.XYFit` object:
 
         :param fit_object: an :py:obj:`~kafe.fit.xy.XYFit` object
         """
-        super(XYPlotContainer, self).__init__(fit_object=xy_fit_object)
+        super(XYPlotContainer, self).__init__(
+            fit_object=xy_fit_object, 
+            model_index=model_index
+        )
         self._n_plot_points_model = n_plot_points_model
 
         self._plot_range_x = None
@@ -29,7 +32,7 @@ class XYPlotContainer(PlotContainerBase):
     def _compute_plot_range_x(self, pad_coeff=1.1, additional_pad=None):
         if additional_pad is None:
             additional_pad = (0, 0)
-        _xmin, _xmax = self._fitter.x_range
+        _xmin, _xmax = self._fitter.get_x_range(self._model_index)
         _w = _xmax - _xmin
         self._plot_range_x = (
             0.5 * (_xmin + _xmax - _w * pad_coeff) - additional_pad[0],
@@ -41,22 +44,22 @@ class XYPlotContainer(PlotContainerBase):
     @property
     def data_x(self):
         """data x values"""
-        return self._fitter.x_data
+        return self._fitter.get_splice(self._fitter.x_data, self._model_index)
 
     @property
     def data_y(self):
         """data y values"""
-        return self._fitter.y_data
+        return self._fitter.get_splice(self._fitter.y_data, self._model_index)
 
     @property
     def data_xerr(self):
         """x error bars for data: ``None`` for :py:obj:`IndexedPlotContainer`"""
-        return self._fitter.x_error
+        return self._fitter.get_splice(self._fitter.x_error, self._model_index)
 
     @property
     def data_yerr(self):
         """y error bars for data: total data uncertainty"""
-        return self._fitter.y_data_error
+        return self._fitter.get_splice(self._fitter.y_data_error, self._model_index)
 
     @property
     def model_x(self):
@@ -67,7 +70,7 @@ class XYPlotContainer(PlotContainerBase):
     @property
     def model_y(self):
         """y values at support points for model function"""
-        return self._fitter.eval_model_function(x=self.model_x)
+        return self._fitter.eval_model_function(x=self.model_x, model_index=self._model_index)
 
     @property
     def model_xerr(self):
@@ -134,7 +137,7 @@ class XYPlotContainer(PlotContainerBase):
         :param kwargs: keyword arguments accepted by the ``matplotlib`` ``fill_between`` method
         :return: plot handle(s)
         """
-        _band_y = self._fitter.y_error_band
+        _band_y = self._fitter.get_y_error_band(self._model_index)
         _y = self.model_y
         if self._fitter.has_errors:
             return target_axis.fill_between(
