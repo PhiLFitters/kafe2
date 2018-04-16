@@ -94,7 +94,14 @@ class XYPlotContainer(PlotContainerBase):
         """y plot range: ``None`` for :py:obj:`XYPlotContainer`"""
         return None
 
+    @property
+    def argument_formatters(self):
+        return self._fitter._model_function.get_argument_formatters(self._model_index)
+
     # public methods
+
+    def get_formatted_model_function(self, **kwargs):
+        return self._fitter._model_function.formatter[self._model_index].get_formatted(**kwargs)
 
     def plot_data(self, target_axis, **kwargs):
         """

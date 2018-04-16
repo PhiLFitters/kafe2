@@ -42,11 +42,13 @@ def example_xy_fit():
 #              model_function=[quad_model])
 
     # give parameters (trivial) LaTeX names
-    f.assign_parameter_latex_names(a='a', b='b', c='c')
+    f.assign_parameter_latex_names(a='a', b='b', c='c', d='d')
 
     # assign strings for the function expression
-    f.assign_model_function_expression("{0}*{x}^2 + {1}*{x} + {2}")
-    f.assign_model_function_latex_expression(r"{0}\,{x}^2 + {1}\,{x} + {2}")
+    f.assign_model_function_expression("{0}*{x}^2 + {1}*{x} + {2}", 0)
+    f.assign_model_function_latex_expression(r"{0}\,{x}^2 + {1}\,{x} + {2}", 0)
+    f.assign_model_function_expression("{0}*{x}^3 + {1}*{x}^2 + {2}*{x} + {3}", 1)
+    f.assign_model_function_latex_expression(r"{0}\,{x}^3 + {1}\,{x}^2 + {2}\,{x} + {3}", 1)
 
     # add an error source to the 'Fit' object error model
     f.add_simple_error('y', Y_ERR, correlation=0.0)  # all points have a (Gaussian) uncertainty in 'y' of +/-1.0

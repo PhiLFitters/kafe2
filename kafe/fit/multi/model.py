@@ -76,14 +76,18 @@ class XYModelFunction(ModelFunctionBase):
                                 for _pn, _pv in zip(self.argspec.args[_start_at_arg:], self.argvals[_start_at_arg:])]
 
     def _assign_function_formatter(self):
-        self._formatter = self.__class__.FORMATTER_TYPE(self.name,
-                                                        arg_formatters=self._arg_formatters,
-                                                        x_name=self.x_name)
+        self._formatter = []
+        for _model_index, _model_function in enumerate(self.model_function_list):
+            self._formatter.append(self.__class__.FORMATTER_TYPE(
+                _model_function.__name__,
+                arg_formatters=self._construct_arg_list(self._arg_formatters, _model_index),
+                x_name=self.x_name))
 
-    @property
-    def x_name(self):
-        """the name of the independent variable"""
-        return self._x_name
+    def _construct_arg_list(self, args, model_index):
+        _arg_list = []
+        for _arg_index in self._model_arg_indices[model_index]:
+            _arg_list.append(args[_arg_index])
+        return _arg_list
 
     def _eval(self, x, *args, **kwargs):
         _y = np.empty(x.size)
@@ -95,6 +99,11 @@ class XYModelFunction(ModelFunctionBase):
             _arg_list = self._construct_arg_list(args, i)
             _y[self._data_indices[i]:self._data_indices[i + 1]] = self._model_function_handle[i](_x, *_arg_list)
         return _y
+
+    @property
+    def x_name(self):
+        """the name of the independent variable"""
+        return self._x_name
 
     @property
     def func(self):
@@ -116,21 +125,19 @@ class XYModelFunction(ModelFunctionBase):
         """The list of model functions"""
         return self._model_function_handle
     
-    def _construct_arg_list(self, args, model_index):
-        _arg_list = []
-        for _arg_index in self._model_arg_indices[model_index]:
-            _arg_list.append(args[_arg_index])
-        return _arg_list
-
-    def eval_underlying_model_function(self, x, args, model_index):
-        #TODO documentation
-        return self.model_function_list[model_index](x, *self._construct_arg_list(args, model_index))
-    
     @property
     def data_indices(self):
         """The indices by which the data is spliced and distributed to the individual models"""
         return self._data_indices
 
+    def eval_underlying_model_function(self, x, args, model_index):
+        #TODO documentation
+        return self.model_function_list[model_index](x, *self._construct_arg_list(args, model_index))
+    
+    def get_argument_formatters(self, model_index):
+        #TODO documentation
+        return self._construct_arg_list(self.argument_formatters, model_index)
+    
 class XYParametricModelException(XYContainerException):
     pass
 

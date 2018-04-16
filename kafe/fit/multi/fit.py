@@ -53,8 +53,6 @@ class XYFit(FitBase):
         :type cost_function: :py:class:`~kafe.fit._base.CostFunctionBase`-derived or unwrapped native Python function
         """
         
-        print "MultiFit"
-        
         # set the data
         self.data = xy_data
         self._minimizer = minimizer
@@ -927,6 +925,14 @@ class XYFit(FitBase):
             for _fpf, _pv, _pe in zip(self._model_function.argument_formatters, self.parameter_values, self.parameter_errors):
                 _fpf.value = _pv
                 _fpf.error = _pe
+
+    def assign_model_function_expression(self, expression_format_string, model_index):
+        """Assign a plain-text-formatted expression string to the model function."""
+        self._model_function.formatter[model_index].expression_format_string = expression_format_string
+
+    def assign_model_function_latex_expression(self, latex_expression_format_string, model_index):
+        """Assign a LaTeX-formatted expression string to the model function."""
+        self._model_function.formatter[model_index].latex_expression_format_string = latex_expression_format_string
 
     def eval_model_function(self, x=None, model_parameters=None, model_index=None):
         """
