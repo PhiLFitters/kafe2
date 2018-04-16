@@ -56,7 +56,7 @@ class XYFit(FitBase):
         self.data = xy_data
         self._minimizer = minimizer
         self._minimizer_kwargs = minimizer_kwargs
-        
+
         # set/construct the model function object
         if isinstance(model_function, self.__class__.MODEL_FUNCTION_TYPE):
             self._model_function = model_function
