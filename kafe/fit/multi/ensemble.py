@@ -6,7 +6,7 @@ from ...core.error import CovMat
 from .._base import FitEnsembleBase, FitEnsembleException
 from ..tools.ensemble import EnsembleVariable, EnsembleVariablePlotter
 from .cost import MultiCostFunction_Chi2
-from .fit import XYFit
+from .fit import MultiFit
 
 import matplotlib as mpl
 from matplotlib import pyplot as plt
@@ -46,7 +46,7 @@ class MultiFitEnsemble(FitEnsembleBase):
     specified uncertainty model.
 
     After constructing an :py:obj:`~kafe.fit.MultiFitEnsemble` object, an error model should be added
-    to it. This is done as for :py:obj:`~kafe.fit.XYFit` objects by using the
+    to it. This is done as for :py:obj:`~kafe.fit.multi.MultiFit` objects by using the
     :py:meth:`~kafe.fit.MultiFitEnsemble.add_simple_error` or :py:meth:`~kafe.fit.MultiFitEnsemble.add_matrix_error`
     methods.
 
@@ -61,7 +61,7 @@ class MultiFitEnsemble(FitEnsembleBase):
 
     .. TODO Expand section
     """
-    FIT_TYPE = XYFit
+    FIT_TYPE = MultiFit
 
     AVAILABLE_STATISTICS = {
         'mean': EnsembleVariable.mean,
@@ -100,12 +100,12 @@ class MultiFitEnsemble(FitEnsembleBase):
         self._cost_function = cost_function
         self._n_par = len(self._model_parameters)
 
-        # initialize an `XYFit` object for performing the toy fits
+        # initialize an `MultiFit` object for performing the toy fits
         # need some dummy initial data values in order to initialize a Fit object
         self._ref_y_data = self._model_function(self._ref_x_data, *self._model_parameters)
 
         # initialize Fit object used for fitting the pseudo-data
-        self._toy_fit = XYFit(xy_data=[self._ref_x_data, self._ref_y_data],
+        self._toy_fit = MultiFit(xy_data=[self._ref_x_data, self._ref_y_data],
                               model_function=self._model_function,
                               cost_function=self._cost_function)
 
@@ -349,7 +349,7 @@ class MultiFitEnsemble(FitEnsembleBase):
         self._update_reference_quantities_from_toy_fit()  # recompute reference errors
 
     # "inherit" docstring
-    add_simple_error.__doc__ = XYFit.add_simple_error.__doc__
+    add_simple_error.__doc__ = MultiFit.add_simple_error.__doc__
 
     def add_matrix_error(self, axis, err_matrix, matrix_type, name=None, err_val=None, relative=False, reference='data'):
         self._toy_fit.add_matrix_error(axis=axis, err_matrix=err_matrix,
@@ -358,7 +358,7 @@ class MultiFitEnsemble(FitEnsembleBase):
         self._update_reference_quantities_from_toy_fit()  # recompute reference errors
 
     # "inherit" docstring
-    add_matrix_error.__doc__ = XYFit.add_matrix_error.__doc__
+    add_matrix_error.__doc__ = MultiFit.add_matrix_error.__doc__
 
     def run(self):
         """Perform the pseudo-experiments. Retrieve and store the requested fit result variables."""

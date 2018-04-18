@@ -36,7 +36,7 @@ def example_xy_fit():
     fits = []  # store our kafe 'Fit' objects here
 
     # initialize an 'IndexedFit'
-    f = XYFit(xy_data=[[x0, x1], [idx_data0, idx_data1]],
+    f = MultiFit(xy_data=[[x0, x1], [idx_data0, idx_data1]],
               model_function=[quad_model, cube_model])
 #    f = XYFit(xy_data=[[np.arange(NUM_POINTS)], [idx_data0]],
 #              model_function=[quad_model])
