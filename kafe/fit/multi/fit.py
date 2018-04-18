@@ -14,7 +14,6 @@ from .._base import (FitException, FitBase, DataContainerBase,
                      ModelParameterFormatter, CostFunctionBase)
 from .container import MultiContainer
 from .cost import MultiCostFunction_Chi2, MultiCostFunction_UserDefined
-from .format import XYModelFunctionFormatter
 from .model import MultiParametricModel, MultiModelFunction
 
 

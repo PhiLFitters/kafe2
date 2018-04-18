@@ -5,7 +5,7 @@ from scipy.misc import derivative
 
 from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException, ModelParameterFormatter
 from .container import MultiContainer, MultiContainerException
-from .format import XYModelFunctionFormatter
+from .format import MultiModelFunctionFormatter
 
 
 __all__ = ["MultiParametricModel", "MultiModelFunction"]
@@ -16,7 +16,7 @@ class MultiModelFunctionException(ModelFunctionException):
 
 class MultiModelFunction(ModelFunctionBase):
     EXCEPTION_TYPE = MultiModelFunctionException
-    FORMATTER_TYPE = XYModelFunctionFormatter
+    FORMATTER_TYPE = MultiModelFunctionFormatter
 
     def __init__(self, model_function, data_indices):
         """
