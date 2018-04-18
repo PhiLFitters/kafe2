@@ -13,7 +13,7 @@ from ...config import kc
 from .._base import (FitException, FitBase, DataContainerBase,
                      ModelParameterFormatter, CostFunctionBase)
 from .container import MultiContainer
-from .cost import XYCostFunction_Chi2, XYCostFunction_UserDefined
+from .cost import MultiCostFunction_Chi2, MultiCostFunction_UserDefined
 from .format import XYModelFunctionFormatter
 from .model import MultiParametricModel, MultiModelFunction
 
@@ -40,7 +40,7 @@ class XYFit(FitBase):
                            'nuisance_para', 'y_nuisance_vector'}
 
     def __init__(self, xy_data, model_function,
-                 cost_function=XYCostFunction_Chi2(axes_to_use='xy', errors_to_use='covariance'),
+                 cost_function=MultiCostFunction_Chi2(axes_to_use='xy', errors_to_use='covariance'),
                  minimizer=None, minimizer_kwargs=None):
         """
         Construct a fit of a model to *xy* data.
@@ -72,7 +72,7 @@ class XYFit(FitBase):
         if isinstance(cost_function, CostFunctionBase):
             self._cost_function = cost_function
         else:
-            self._cost_function = XYCostFunction_UserDefined(cost_function)
+            self._cost_function = MultiCostFunction_UserDefined(cost_function)
             #self._validate_cost_function_raise()
             # TODO: validate user-defined cost function? how?
 
