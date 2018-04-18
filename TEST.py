@@ -62,7 +62,7 @@ def example_xy_fit():
 
 
     # create the plots
-    p = XYPlot(fit_objects=fits)
+    p = MultiPlot(fit_objects=fits)
     p.plot()
     p.show_fit_info_box(format_as_latex=True)
 
