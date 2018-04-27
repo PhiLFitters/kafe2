@@ -24,6 +24,12 @@ class MultiModelFunction(ModelFunctionBase):
 
         :param model_function: function handle
         """
+        try: 
+            iter(model_function)
+        except:
+            model_function = [model_function]
+        if len(model_function) != len(data_indices) - 1:
+            raise MultiModelFunctionException("Length of model_function must be equal to length of data_indices - 1")
         self._x_name = 'x'
         self._data_indices = data_indices
         self._model_arg_indices = []
@@ -93,11 +99,11 @@ class MultiModelFunction(ModelFunctionBase):
         _y = np.empty(x.size)
         _arg_lists = []
         _x_indices = kwargs.get("x_indices")
-        _x_indices = _x_indices if _x_indices is not None else self._data_indices
+        _x_indices = _x_indices if _x_indices is not None else self.data_indices
         for i in range(self._model_count):
             _x = x[_x_indices[i]:_x_indices[i + 1]]
             _arg_list = self._construct_arg_list(args, i)
-            _y[self._data_indices[i]:self._data_indices[i + 1]] = self._model_function_handle[i](_x, *_arg_list)
+            _y[self.data_indices[i]:self.data_indices[i + 1]] = self._model_function_handle[i](_x, *_arg_list)
         return _y
 
     @property
@@ -130,6 +136,10 @@ class MultiModelFunction(ModelFunctionBase):
         """The indices by which the data is spliced and distributed to the individual models"""
         return self._data_indices
 
+    @data_indices.setter
+    def data_indices(self, new_data_indices):
+        self._data_indices = new_data_indices
+
     def eval_underlying_model_function(self, x, args, model_index):
         #TODO documentation
         return self.model_function_list[model_index](x, *self._construct_arg_list(args, model_index))
@@ -155,7 +165,7 @@ class MultiParametricModel(ParametricModelBaseMixin, MultiContainer):
         # print "MultiParametricModel.__init__(x_data=%r, model_func=%r, model_parameters=%r)" % (x_data, model_func, model_parameters)
         _y_data = model_func.func(x_data, *model_parameters)
         super(MultiParametricModel, self).__init__(model_func, model_parameters, x_data, _y_data)
-        self._data_indices = model_func.data_indices
+        self._model_func = model_func
 
     # -- private methods
 
@@ -186,6 +196,18 @@ class MultiParametricModel(ParametricModelBaseMixin, MultiContainer):
     @x.setter
     def x(self, new_x):
         # resetting 'x' -> must reset entire data array
+        if len(new_x) != len(self.x):
+            raise MultiParametricModelException("When setting a new x for an XYMultiParametricModel, the length must stay the same!",
+                                                "To change the length, simultaneously provide a new set of data indices via set_x!")
+        self._xy_data = np.zeros((2, len(new_x)))
+        self._xy_data[0] = new_x
+        self._pm_calculation_stale = True
+        self._clear_total_error_cache()
+
+    def set_x(self, new_x, new_data_indices):
+        if len(self._data_indices) != len(new_data_indices):
+            raise MultiParametricModelException("When assigning new data indices the length cannot change!")
+        self.data_indices = new_data_indices
         self._xy_data = np.zeros((2, len(new_x)))
         self._xy_data[0] = new_x
         self._pm_calculation_stale = True
@@ -201,7 +223,15 @@ class MultiParametricModel(ParametricModelBaseMixin, MultiContainer):
     @y.setter
     def y(self, new_y):
         raise MultiParametricModelException("Parametric model data cannot be set!")
+    
+    @property
+    def data_indices(self):
+        return self._model_func.data_indices
 
+    @data_indices.setter
+    def data_indices(self, new_data_indices):
+        self._model_func.data_indices = new_data_indices
+    
     # -- public methods
 
     def eval_model_function(self, x=None, model_parameters=None, model_index=None):
@@ -241,7 +271,7 @@ class MultiParametricModel(ParametricModelBaseMixin, MultiContainer):
             raise MultiParametricModelException('When x is specified x_indices also has to be specified!')
         
         _x = x if x is not None else self.x
-        _x_indices = x_indices if x_indices is not None else self._data_indices
+        _x_indices = x_indices if x_indices is not None else self.data_indices
         _pars = model_parameters if model_parameters is not None else self._model_parameters
         _pars = np.asarray(_pars)
         _par_dxs = par_dx if par_dx is not None else 1e-2 * (np.abs(_pars) + 1.0/(1.0+np.abs(_pars)))
@@ -278,7 +308,10 @@ class MultiParametricModel(ParametricModelBaseMixin, MultiContainer):
         
         _flattened_derivatives = []
         for _derivative in _derivatives:
-            _flattened_derivatives.append(np.append(*_derivative))
+            if len(_derivative) > 1:
+                _flattened_derivatives.append(np.append(*_derivative))
+            else: 
+                _flattened_derivatives.append(*_derivative)
         return np.array(_flattened_derivatives)
         #_ret = []
         #for _par_idx, (_par_val, _par_dx) in enumerate(zip(_pars, _par_dxs)):
@@ -311,7 +344,7 @@ class MultiParametricModel(ParametricModelBaseMixin, MultiContainer):
             raise MultiParametricModelException('When x is specified x_indices also has to be specified!')
         
         _x = x if x is not None else self.x
-        _x_indices = x_indices if x_indices is not None else self._data_indices
+        _x_indices = x_indices if x_indices is not None else self.data_indices
         _pars = model_parameters if model_parameters is not None else self._model_parameters
         _dxs = dx if dx is not None else 1e-2 * (np.abs(_x) + 1.0/(1.0+np.abs(_x)))
         try:
