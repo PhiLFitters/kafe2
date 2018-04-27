@@ -360,6 +360,16 @@ class MultiFit(FitBase):
 
         self.__cache_y_error_band = np.sqrt(_band_y)
 
+    def _get_model_report_dict_entry(self):
+        _formatted_list = []
+        for _formatter in self._model_function.formatter:
+            _formatted_list.append(_formatter.get_formatted(
+                with_par_values=False,
+                n_significant_digits=2,
+                format_as_latex=False,
+                with_expression=True))
+        return _formatted_list
+
     # -- public properties
 
     @property
@@ -991,7 +1001,8 @@ class MultiFit(FitBase):
                show_data=True,
                show_model=True):
         """Print a summary of the fit state and/or results."""
-        _result_dict = self.get_result_dict()
+        #TODO _result_dict is never used. intentional?
+        #_result_dict = self.get_result_dict()
 
         _indent = ' ' * 4
 
@@ -1030,18 +1041,20 @@ class MultiFit(FitBase):
             """))
 
             #output_stream.write(_indent)
-            output_stream.write(_indent + "Model Function\n")
-            output_stream.write(_indent + "==============\n\n")
-            output_stream.write(_indent * 2)
-            output_stream.write(
-                self._model_function.formatter.get_formatted(
-                    with_par_values=False,
-                    n_significant_digits=2,
-                    format_as_latex=False,
-                    with_expression=True
+            for _i in range(self.model_count):
+                output_stream.write(_indent + "Model Function %s\n" % _i)
+                output_stream.write(_indent + "==============\n\n")
+                output_stream.write(_indent * 2)
+                output_stream.write(
+                    self._model_function.formatter[_i].get_formatted(
+                        with_par_values=False,
+                        n_significant_digits=2,
+                        format_as_latex=False,
+                        with_expression=True
+                    )
                 )
-            )
-            output_stream.write('\n\n\n')
+                output_stream.write('\n\n')
+            output_stream.write('\n')
 
             _data_table_dict = OrderedDict()
             _data_table_dict['X Model'] = self.x_model
