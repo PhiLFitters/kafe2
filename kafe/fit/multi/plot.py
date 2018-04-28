@@ -7,19 +7,19 @@ from . import XYMultiFit
 
 
 
-__all__ = ["MultiPlot", "MultiPlotContainer"]
+__all__ = ["XYMultiPlot", "XYMultiPlotContainer"]
 
 
-class MultiPlotContainer(PlotContainerBase):
+class XYMultiPlotContainer(PlotContainerBase):
     FIT_TYPE = XYMultiFit
 
     def __init__(self, xy_fit_object, model_index, n_plot_points_model=100):
         """
-        Construct an :py:obj:`MultiPlotContainer` for a :py:obj:`~kafe.fit.multi.XYMultiFit` object:
+        Construct an :py:obj:`XYMultiPlotContainer` for a :py:obj:`~kafe.fit.multi.XYMultiFit` object:
 
         :param fit_object: an :py:obj:`~kafe.fit.multi.XYMultiFit` object
         """
-        super(MultiPlotContainer, self).__init__(
+        super(XYMultiPlotContainer, self).__init__(
             fit_object=xy_fit_object, 
             model_index=model_index
         )
@@ -91,7 +91,7 @@ class MultiPlotContainer(PlotContainerBase):
 
     @property
     def y_range(self):
-        """y plot range: ``None`` for :py:obj:`MultiPlotContainer`"""
+        """y plot range: ``None`` for :py:obj:`XYMultiPlotContainer`"""
         return None
 
     @property
@@ -155,9 +155,9 @@ class MultiPlotContainer(PlotContainerBase):
             return None  # don't plot error band if fitter input data has no errors...
 
 
-class MultiPlot(PlotFigureBase):
+class XYMultiPlot(PlotFigureBase):
 
-    PLOT_CONTAINER_TYPE = MultiPlotContainer
+    PLOT_CONTAINER_TYPE = XYMultiPlotContainer
     PLOT_STYLE_CONFIG_DATA_TYPE = 'xy'
 
     PLOT_SUBPLOT_TYPES = PlotFigureBase.PLOT_SUBPLOT_TYPES.copy()  # don't change original class variable
@@ -166,5 +166,5 @@ class MultiPlot(PlotFigureBase):
     )
 
     def __init__(self, fit_objects):
-        super(MultiPlot, self).__init__(fit_objects=fit_objects)
+        super(XYMultiPlot, self).__init__(fit_objects=fit_objects)
         self._plot_range_x = None
