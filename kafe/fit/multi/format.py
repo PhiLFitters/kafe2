@@ -1,10 +1,10 @@
 from .._base import ModelFunctionFormatter
 
 
-__all__ = ["MultiModelFunctionFormatter"]
+__all__ = ["XYMultiModelFunctionFormatter"]
 
 
-class MultiModelFunctionFormatter(ModelFunctionFormatter):
+class XYMultiModelFunctionFormatter(ModelFunctionFormatter):
     def __init__(self, name, latex_name=None, x_name='x', latex_x_name=None,
                  arg_formatters=None, expression_string=None, latex_expression_string=None):
         """
@@ -24,14 +24,14 @@ class MultiModelFunctionFormatter(ModelFunctionFormatter):
         if self._latex_x_name is None:
             self._latex_x_name = self._latexify_ascii(self._x_name)
 
-        super(MultiModelFunctionFormatter, self).__init__(
+        super(XYMultiModelFunctionFormatter, self).__init__(
             name, latex_name=latex_name, arg_formatters=arg_formatters,
             expression_string=expression_string,
             latex_expression_string=latex_expression_string
         )
 
     def _get_format_kwargs(self, format_as_latex=False):
-        _dct = super(MultiModelFunctionFormatter, self)._get_format_kwargs(format_as_latex=format_as_latex)
+        _dct = super(XYMultiModelFunctionFormatter, self)._get_format_kwargs(format_as_latex=format_as_latex)
         if format_as_latex:
             _dct.update(x=self._latex_x_name)
         else:
