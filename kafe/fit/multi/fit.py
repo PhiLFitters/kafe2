@@ -13,7 +13,7 @@ from ...config import kc
 from .._base import (FitException, FitBase, DataContainerBase,
                      ModelParameterFormatter, CostFunctionBase)
 from .container import XYMultiContainer
-from .cost import MultiCostFunction_Chi2, MultiCostFunction_UserDefined
+from .cost import XYMultiCostFunction_Chi2, XYMultiCostFunction_UserDefined
 from .model import MultiParametricModel, MultiModelFunction
 
 
@@ -39,7 +39,7 @@ class MultiFit(FitBase):
                            'nuisance_para', 'y_nuisance_vector'}
 
     def __init__(self, xy_data, model_function,
-                 cost_function=MultiCostFunction_Chi2(axes_to_use='xy', errors_to_use='covariance'),
+                 cost_function=XYMultiCostFunction_Chi2(axes_to_use='xy', errors_to_use='covariance'),
                  minimizer=None, minimizer_kwargs=None):
         """
         Construct a fit of a model to *xy* data.

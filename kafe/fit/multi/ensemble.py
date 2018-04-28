@@ -5,7 +5,7 @@ import six
 from ...core.error import CovMat
 from .._base import FitEnsembleBase, FitEnsembleException
 from ..tools.ensemble import EnsembleVariable, EnsembleVariablePlotter
-from .cost import MultiCostFunction_Chi2
+from .cost import XYMultiCostFunction_Chi2
 from .fit import MultiFit
 
 import matplotlib as mpl
@@ -75,7 +75,7 @@ class MultiFitEnsemble(FitEnsembleBase):
     _DEFAULT_STATISTICS = {'mean', 'std'}
 
     def __init__(self, n_experiments, x_support, model_function, model_parameters,
-                 cost_function=MultiCostFunction_Chi2(axes_to_use='y', errors_to_use='covariance'),
+                 cost_function=XYMultiCostFunction_Chi2(axes_to_use='y', errors_to_use='covariance'),
                  requested_results=None):
         """
         Construct an :py:obj:`~kafe.fit.MultiFitEnsemble` object.

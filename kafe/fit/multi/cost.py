@@ -2,7 +2,7 @@ from .._base import CostFunctionBase, CostFunctionBase_Chi2, CostFunctionBase_Ne
 from kafe.fit._base.cost import CostFunctionBase_Chi2_Nuisance
 import numpy as np
 
-__all__ = ["MultiCostFunction_UserDefined", "MultiCostFunction_Chi2", "MultiCostFunction_NegLogLikelihood"]
+__all__ = ["XYMultiCostFunction_UserDefined", "XYMultiCostFunction_Chi2", "XYMultiCostFunction_NegLogLikelihood"]
 
 def _generic_xy_chi2_nuisance_pointwise(x_data, x_model, y_model, y_data, y_total_error=None, x_total_error=None, fail_on_zeros=False):
 # calculates the costfunction values for ChiSquare with Nuisanceparameters for pointwise errors.
@@ -107,7 +107,7 @@ def _generic_xy_chi2_nuisance_covaraince(x_data, x_model,  y_data, y_model,
                 return (_chi2 + _x_penalties + _y_penalties)[0, 0]
 
 
-class MultiCostFunction_UserDefined(CostFunctionBase):
+class XYMultiCostFunction_UserDefined(CostFunctionBase):
     def __init__(self, user_defined_cost_function):
         """
         User-defined cost function for fits to *xy* data.
@@ -119,10 +119,10 @@ class MultiCostFunction_UserDefined(CostFunctionBase):
             The names of the function arguments must be valid reserved
             names for the associated fit type (:py:obj:`~kafe.fit.XYFit`)!
         """
-        super(MultiCostFunction_UserDefined, self).__init__(cost_function=user_defined_cost_function)
+        super(XYMultiCostFunction_UserDefined, self).__init__(cost_function=user_defined_cost_function)
 
 
-class MultiCostFunction_Chi2(CostFunctionBase_Chi2):
+class XYMultiCostFunction_Chi2(CostFunctionBase_Chi2):
     def __init__(self, errors_to_use='covariance', fallback_on_singular=True, axes_to_use='xy'):
         """
         Built-in least-squares cost function for *xy* data.
@@ -134,7 +134,7 @@ class MultiCostFunction_Chi2(CostFunctionBase_Chi2):
         """
 
         if axes_to_use.lower() == 'y':
-            super(MultiCostFunction_Chi2, self).__init__(errors_to_use=errors_to_use, fallback_on_singular=fallback_on_singular)
+            super(XYMultiCostFunction_Chi2, self).__init__(errors_to_use=errors_to_use, fallback_on_singular=fallback_on_singular)
         elif axes_to_use.lower() == 'xy':
             _cost_function_description = "chi-square with projected x errors"
             if errors_to_use is None:
@@ -241,7 +241,7 @@ class MultiCostFunction_Chi2(CostFunctionBase_Chi2):
         return CostFunctionBase_Chi2.chi2_covariance_fallback(data=y_data, model=y_model, total_cov_mat_inverse=projected_xy_total_cov_mat_inverse)
 
 
-class MultiCostFunction_NegLogLikelihood(CostFunctionBase_NegLogLikelihood):
+class XYMultiCostFunction_NegLogLikelihood(CostFunctionBase_NegLogLikelihood):
     def __init__(self, data_point_distribution='poisson'):
         r"""
         Built-in negative log-likelihood cost function for *xy* data.
@@ -258,7 +258,7 @@ class MultiCostFunction_NegLogLikelihood(CostFunctionBase_NegLogLikelihood):
         :param data_point_distribution: which type of statistics to use for modelling the distribution of individual data points
         :type data_point_distribution: ``'poisson'`` or ``'gaussian'``
         """
-        super(MultiCostFunction_NegLogLikelihood, self).__init__(data_point_distribution=data_point_distribution)
+        super(XYMultiCostFunction_NegLogLikelihood, self).__init__(data_point_distribution=data_point_distribution)
 
     @staticmethod
     def nll_gaussian(y_data, y_model, y_total_error):
@@ -307,7 +307,7 @@ class MultiCostFunction_NegLogLikelihood(CostFunctionBase_NegLogLikelihood):
         return CostFunctionBase_NegLogLikelihood.nll_poisson(data=y_data, model=y_model)
 
 
-class MultiCostFunction_NegLogLikelihoodRatio(CostFunctionBase_NegLogLikelihoodRatio):
+class XYMultiCostFunction_NegLogLikelihoodRatio(CostFunctionBase_NegLogLikelihoodRatio):
     def __init__(self, data_point_distribution='poisson'):
         r"""
         Built-in negative log-likelihood cost function for *xy* data.
@@ -324,7 +324,7 @@ class MultiCostFunction_NegLogLikelihoodRatio(CostFunctionBase_NegLogLikelihoodR
         :param data_point_distribution: which type of statistics to use for modelling the distribution of individual data points
         :type data_point_distribution: ``'poisson'`` or ``'gaussian'``
         """
-        super(MultiCostFunction_NegLogLikelihoodRatio, self).__init__(data_point_distribution=data_point_distribution)
+        super(XYMultiCostFunction_NegLogLikelihoodRatio, self).__init__(data_point_distribution=data_point_distribution)
 
     @staticmethod
     def nllr_gaussian(y_data, y_model, y_total_error):
@@ -373,7 +373,7 @@ class MultiCostFunction_NegLogLikelihoodRatio(CostFunctionBase_NegLogLikelihoodR
         # "translate" the argument names
         return CostFunctionBase_NegLogLikelihoodRatio.nllr_poisson(data=y_data, model=y_model)
 
-class MultiCostFunction_Chi2_Nuisance(CostFunctionBase_Chi2_Nuisance):
+class XYMultiCostFunction_Chi2_Nuisance(CostFunctionBase_Chi2_Nuisance):
 
     def __init__(self, axes_to_use='xy', errors_to_use='covariance', fallback_on_singular=True):
 
