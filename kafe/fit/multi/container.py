@@ -6,14 +6,14 @@ from ..indexed import IndexedContainer
 from ..indexed.container import IndexedContainerException
 
 
-__all__ = ["MultiContainer"]
+__all__ = ["XYMultiContainer"]
 
 
-class MultiContainerException(IndexedContainerException):
+class XYMultiContainerException(IndexedContainerException):
     pass
 
 
-class MultiContainer(IndexedContainer):
+class XYMultiContainer(IndexedContainer):
     """
     This object is a specialized data container for *xy* data.
 
@@ -33,13 +33,13 @@ class MultiContainer(IndexedContainer):
         """
         # TODO: check user input (?)
         if len(x_data) != len(y_data):
-            raise MultiContainerException("Must provide equal numer of x_data and y_data!")
+            raise XYMultiContainerException("Must provide equal numer of x_data and y_data!")
         self._data_indices = [0]
         _current_index = 0
         try:
             for _x_dataset, _y_dataset in zip(x_data, y_data):
                 if len(_x_dataset) != len(_y_dataset):
-                    raise MultiContainerException('Corresponding elements of x_data and y_data must have the same length!')
+                    raise XYMultiContainerException('Corresponding elements of x_data and y_data must have the same length!')
                 _current_index += len(_x_dataset)
                 self._data_indices.append(_current_index)
         except TypeError:
@@ -60,9 +60,9 @@ class MultiContainer(IndexedContainer):
         except AttributeError:
             # integers have no .lower() method
             pass
-        _axis_id = MultiContainer._AXIS_SPEC_DICT.get(axis_spec, None)
+        _axis_id = XYMultiContainer._AXIS_SPEC_DICT.get(axis_spec, None)
         if _axis_id is None:
-            raise MultiContainerException("No axis with id %r!" % (axis_spec,))
+            raise XYMultiContainerException("No axis with id %r!" % (axis_spec,))
         return _axis_id
 
     def _get_data_for_axis(self, axis_id):
@@ -159,14 +159,14 @@ class MultiContainer(IndexedContainer):
     def data(self, new_data):
         _new_data = np.asarray(new_data)
         if _new_data.ndim != 2:
-            raise MultiContainerException("MultiContainer data must be 2-d array of floats! Got shape: %r..." % (_new_data.shape,))
+            raise XYMultiContainerException("XYMultiContainer data must be 2-d array of floats! Got shape: %r..." % (_new_data.shape,))
         if _new_data.shape[0] == 2:
             self._xy_data = _new_data.copy()
         elif _new_data.shape[1] == 2:
             self._xy_data = _new_data.T.copy()
         else:
-            raise MultiContainerException(
-                "MultiContainer data length must be 2 in at least one axis! Got shape: %r..." % (_new_data.shape,))
+            raise XYMultiContainerException(
+                "XYMultiContainer data length must be 2 in at least one axis! Got shape: %r..." % (_new_data.shape,))
         self._clear_total_error_cache()
 
     @property
@@ -178,7 +178,7 @@ class MultiContainer(IndexedContainer):
     def x(self, new_x):
         _new_x_data = np.squeeze(np.array(new_x))
         if len(_new_x_data.shape) > 1:
-            raise MultiContainerException("MultiContainer 'x' data must be 1-d array of floats! Got shape: %r..." % (_new_x_data.shape,))
+            raise XYMultiContainerException("XYMultiContainer 'x' data must be 1-d array of floats! Got shape: %r..." % (_new_x_data.shape,))
         self._xy_data[0,:] = new_x
         for _err_dict in self._error_dicts.values():
             if _err_dict['axis'] == 0:
@@ -218,7 +218,7 @@ class MultiContainer(IndexedContainer):
         """container *y* data (one-dimensional :py:obj:`numpy.ndarray`)"""
         _new_y_data = np.squeeze(np.array(new_y))
         if len(_new_y_data.shape) > 1:
-            raise MultiContainerException("MultiContainer 'y' data must be 1-d array of floats! Got shape: %r..." % (_new_y_data.shape,))
+            raise XYMultiContainerException("XYMultiContainer 'y' data must be 1-d array of floats! Got shape: %r..." % (_new_y_data.shape,))
         self._xy_data[1,:] = new_y
         for _err_dict in self._error_dicts.values():
             if _err_dict['axis'] == 1:

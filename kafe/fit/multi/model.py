@@ -4,7 +4,7 @@ import numpy as np
 from scipy.misc import derivative
 
 from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException, ModelParameterFormatter
-from .container import MultiContainer, MultiContainerException
+from .container import XYMultiContainer, XYMultiContainerException
 from .format import MultiModelFunctionFormatter
 
 
@@ -173,11 +173,11 @@ class MultiModelFunction(ModelFunctionBase):
         #TODO documentation
         return self._construct_arg_list(self.argument_formatters, model_index)
     
-class MultiParametricModelException(MultiContainerException):
+class MultiParametricModelException(XYMultiContainerException):
     pass
 
 
-class MultiParametricModel(ParametricModelBaseMixin, MultiContainer):
+class MultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
     def __init__(self, x_data, model_func, model_parameters):
         """
         Construct an :py:obj:`MultiParametricModel` object:
@@ -196,7 +196,7 @@ class MultiParametricModel(ParametricModelBaseMixin, MultiContainer):
 
     def _recalculate(self):
         # use parent class setter for 'y'
-        MultiContainer.y.fset(self, self.eval_model_function())
+        XYMultiContainer.y.fset(self, self.eval_model_function())
         self._pm_calculation_stale = False
 
 

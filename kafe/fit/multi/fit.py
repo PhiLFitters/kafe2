@@ -12,7 +12,7 @@ from ...core.error import MatrixGaussianError, SimpleGaussianError
 from ...config import kc
 from .._base import (FitException, FitBase, DataContainerBase,
                      ModelParameterFormatter, CostFunctionBase)
-from .container import MultiContainer
+from .container import XYMultiContainer
 from .cost import MultiCostFunction_Chi2, MultiCostFunction_UserDefined
 from .model import MultiParametricModel, MultiModelFunction
 
@@ -25,7 +25,7 @@ class MultiFitException(FitException):
 
 
 class MultiFit(FitBase):
-    CONTAINER_TYPE = MultiContainer
+    CONTAINER_TYPE = XYMultiContainer
     MODEL_TYPE = MultiParametricModel
     MODEL_FUNCTION_TYPE = MultiModelFunction
     EXCEPTION_TYPE = MultiFitException
