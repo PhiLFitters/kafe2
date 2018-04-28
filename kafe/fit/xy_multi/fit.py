@@ -12,23 +12,23 @@ from ...core.error import MatrixGaussianError, SimpleGaussianError
 from ...config import kc
 from .._base import (FitException, FitBase, DataContainerBase,
                      ModelParameterFormatter, CostFunctionBase)
-from .container import MultiContainer
-from .cost import MultiCostFunction_Chi2, MultiCostFunction_UserDefined
-from .model import MultiParametricModel, MultiModelFunction
+from .container import XYMultiContainer
+from .cost import XYMultiCostFunction_Chi2, XYMultiCostFunction_UserDefined
+from .model import XYMultiParametricModel, XYMultiModelFunction
 
 
-__all__ = ["MultiFit"]
+__all__ = ["XYMultiFit"]
 
 
-class MultiFitException(FitException):
+class XYMultiFitException(FitException):
     pass
 
 
-class MultiFit(FitBase):
-    CONTAINER_TYPE = MultiContainer
-    MODEL_TYPE = MultiParametricModel
-    MODEL_FUNCTION_TYPE = MultiModelFunction
-    EXCEPTION_TYPE = MultiFitException
+class XYMultiFit(FitBase):
+    CONTAINER_TYPE = XYMultiContainer
+    MODEL_TYPE = XYMultiParametricModel
+    MODEL_FUNCTION_TYPE = XYMultiModelFunction
+    EXCEPTION_TYPE = XYMultiFitException
     RESERVED_NODE_NAMES = {'y_data', 'y_model', 'cost',
                            'x_error', 'y_data_error', 'y_model_error', 'total_error',
                            'x_cov_mat', 'y_data_cov_mat', 'y_model_cov_mat', 'total_cov_mat',
@@ -39,7 +39,7 @@ class MultiFit(FitBase):
                            'nuisance_para', 'y_nuisance_vector'}
 
     def __init__(self, xy_data, model_function,
-                 cost_function=MultiCostFunction_Chi2(axes_to_use='xy', errors_to_use='covariance'),
+                 cost_function=XYMultiCostFunction_Chi2(axes_to_use='xy', errors_to_use='covariance'),
                  minimizer=None, minimizer_kwargs=None):
         """
         Construct a fit of a model to *xy* data.
@@ -47,7 +47,7 @@ class MultiFit(FitBase):
         :param xy_data: the x and y measurement values
         :type xy_data: (2, N)-array of float
         :param model_function: the model function
-        :type model_function: :py:class:`~kafe.fit.multi.MultiModelFunction` or unwrapped native Python function
+        :type model_function: :py:class:`~kafe.fit.multi.XYMultiModelFunction` or unwrapped native Python function
         :param cost_function: the cost function
         :type cost_function: :py:class:`~kafe.fit._base.CostFunctionBase`-derived or unwrapped native Python function
         """
@@ -71,7 +71,7 @@ class MultiFit(FitBase):
         if isinstance(cost_function, CostFunctionBase):
             self._cost_function = cost_function
         else:
-            self._cost_function = MultiCostFunction_UserDefined(cost_function)
+            self._cost_function = XYMultiCostFunction_UserDefined(cost_function)
             #self._validate_cost_function_raise()
             # TODO: validate user-defined cost function? how?
 
@@ -410,7 +410,7 @@ class MultiFit(FitBase):
         if isinstance(new_data, self.CONTAINER_TYPE):
             self._data_container = deepcopy(new_data)
         elif isinstance(new_data, DataContainerBase):
-            raise MultiFitException("Incompatible container type '%s' (expected '%s')"
+            raise XYMultiFitException("Incompatible container type '%s' (expected '%s')"
                                       % (type(new_data), self.CONTAINER_TYPE))
         else:
             _x_data = new_data[0]
@@ -855,7 +855,7 @@ class MultiFit(FitBase):
         :return: error id
         :rtype: int
         """
-        _ret = super(MultiFit, self).add_simple_error(err_val=err_val,
+        _ret = super(XYMultiFit, self).add_simple_error(err_val=err_val,
                                                    name=name,
                                                    correlation=correlation,
                                                    relative=relative,
@@ -890,7 +890,7 @@ class MultiFit(FitBase):
         :return: error id
         :rtype: int
         """
-        _ret = super(MultiFit, self).add_matrix_error(err_matrix=err_matrix,
+        _ret = super(XYMultiFit, self).add_matrix_error(err_matrix=err_matrix,
                                                    matrix_type=matrix_type,
                                                    name=name,
                                                    err_val=err_val,
@@ -908,7 +908,7 @@ class MultiFit(FitBase):
         _param_names = self._poi_names
         #test list length
         if not len(param_values) == len(_param_names):
-            raise MultiFitException("Cannot set all fit parameter values: %d fit parameters declared, "
+            raise XYMultiFitException("Cannot set all fit parameter values: %d fit parameters declared, "
                                        "but %d provided!"
                                        % (len(_param_names), len(param_values)))
         # set values in nexus
@@ -918,7 +918,7 @@ class MultiFit(FitBase):
     def do_fit(self):
         """Perform the fit."""
         if not self._data_container.has_x_errors:
-            super(MultiFit, self).do_fit()
+            super(XYMultiFit, self).do_fit()
         else:
             self._fitter.do_fit()
             _convergence_limit = float(kc('fit', 'x_error_fit_convergence_limit'))
@@ -1075,7 +1075,7 @@ class MultiFit(FitBase):
 
             print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=1)
 
-        super(MultiFit, self).report()
+        super(XYMultiFit, self).report()
 
     def get_splice(self, data, index):
         return self._data_container.get_splice(data, index)

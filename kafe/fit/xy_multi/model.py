@@ -4,23 +4,23 @@ import numpy as np
 from scipy.misc import derivative
 
 from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException, ModelParameterFormatter
-from .container import MultiContainer, MultiContainerException
-from .format import MultiModelFunctionFormatter
+from .container import XYMultiContainer, XYMultiContainerException
+from .format import XYMultiModelFunctionFormatter
 
 
-__all__ = ["MultiParametricModel", "MultiModelFunction"]
+__all__ = ["XYMultiParametricModel", "XYMultiModelFunction"]
 
 
-class MultiModelFunctionException(ModelFunctionException):
+class XYMultiModelFunctionException(ModelFunctionException):
     pass
 
-class MultiModelFunction(ModelFunctionBase):
-    EXCEPTION_TYPE = MultiModelFunctionException
-    FORMATTER_TYPE = MultiModelFunctionFormatter
+class XYMultiModelFunction(ModelFunctionBase):
+    EXCEPTION_TYPE = XYMultiModelFunctionException
+    FORMATTER_TYPE = XYMultiModelFunctionFormatter
 
     def __init__(self, model_function, data_indices):
         """
-        Construct :py:class:`MultiModelFunction` object (a wrapper for a native Python function):
+        Construct :py:class:`XYMultiModelFunction` object (a wrapper for a native Python function):
 
         :param model_function: function handle
         """
@@ -29,7 +29,7 @@ class MultiModelFunction(ModelFunctionBase):
         except:
             model_function = [model_function]
         if len(model_function) != len(data_indices) - 1:
-            raise MultiModelFunctionException("Length of model_function must be equal to length of data_indices - 1")
+            raise XYMultiModelFunctionException("Length of model_function must be equal to length of data_indices - 1")
         self._x_name = 'x'
         self._data_indices = data_indices
         self._model_arg_indices = []
@@ -54,7 +54,7 @@ class MultiModelFunction(ModelFunctionBase):
                     _defaults_index += 1
                 elif _arg_name in _defaults_dict and _defaults_dict[_arg_name] != _model_function_defaults[_defaults_index]:
                     #TODO Exception or Warning?
-                     raise MultiModelFunctionException("Model functions have conflicting defaults for parameter %s" % _arg_name)
+                     raise XYMultiModelFunctionException("Model functions have conflicting defaults for parameter %s" % _arg_name)
                 _model_arg_indices.append(_args.index(_arg_name))
             self._model_arg_indices.append(_model_arg_indices)
         
@@ -68,7 +68,7 @@ class MultiModelFunction(ModelFunctionBase):
         self._assign_parameter_formatters()
         self._assign_function_formatter()
 
-        #super(MultiModelFunction, self).__init__(model_function=model_function)
+        #super(XYMultiModelFunction, self).__init__(model_function=model_function)
 
     def _validate_model_function_raise(self):
         for _model_function in self._model_function_handle:
@@ -86,7 +86,7 @@ class MultiModelFunction(ModelFunctionBase):
                     % (self.func, self.x_name))
 
             # evaluate general model function requirements
-            #super(MultiModelFunction, self)._validate_model_function_raise()
+            #super(XYMultiModelFunction, self)._validate_model_function_raise()
             if _argspec.varargs and self._model_function_argspec.keywords:
                 raise self.__class__.EXCEPTION_TYPE("Model function with variable arguments (*%s, **%s) is not supported"
                                                 % (self._model_function_argspec.varargs,
@@ -173,30 +173,30 @@ class MultiModelFunction(ModelFunctionBase):
         #TODO documentation
         return self._construct_arg_list(self.argument_formatters, model_index)
     
-class MultiParametricModelException(MultiContainerException):
+class XYMultiParametricModelException(XYMultiContainerException):
     pass
 
 
-class MultiParametricModel(ParametricModelBaseMixin, MultiContainer):
+class XYMultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
     def __init__(self, x_data, model_func, model_parameters):
         """
-        Construct an :py:obj:`MultiParametricModel` object:
+        Construct an :py:obj:`XYMultiParametricModel` object:
 
         :param x_data: array containing the *x* values supporting the model
         :param model_func: handle of Python function (the model function)
         :param model_parameters: iterable of parameter values with which the model function should be initialized
         """
         #TODO update documentation
-        # print "MultiParametricModel.__init__(x_data=%r, model_func=%r, model_parameters=%r)" % (x_data, model_func, model_parameters)
+        # print "XYMultiParametricModel.__init__(x_data=%r, model_func=%r, model_parameters=%r)" % (x_data, model_func, model_parameters)
         _y_data = model_func.func(x_data, *model_parameters)
-        super(MultiParametricModel, self).__init__(model_func, model_parameters, x_data, _y_data)
+        super(XYMultiParametricModel, self).__init__(model_func, model_parameters, x_data, _y_data)
         self._model_func = model_func
 
     # -- private methods
 
     def _recalculate(self):
         # use parent class setter for 'y'
-        MultiContainer.y.fset(self, self.eval_model_function())
+        XYMultiContainer.y.fset(self, self.eval_model_function())
         self._pm_calculation_stale = False
 
 
@@ -207,22 +207,22 @@ class MultiParametricModel(ParametricModelBaseMixin, MultiContainer):
         """model predictions (one-dimensional :py:obj:`numpy.ndarray`)"""
         if self._pm_calculation_stale:
             self._recalculate()
-        return super(MultiParametricModel, self).data
+        return super(XYMultiParametricModel, self).data
 
     @data.setter
     def data(self, new_data):
-        raise MultiParametricModelException("Parametric model data cannot be set!")
+        raise XYMultiParametricModelException("Parametric model data cannot be set!")
 
     @property
     def x(self):
         """model *x* support values"""
-        return super(MultiParametricModel, self).x
+        return super(XYMultiParametricModel, self).x
 
     @x.setter
     def x(self, new_x):
         # resetting 'x' -> must reset entire data array
         if len(new_x) != len(self.x):
-            raise MultiParametricModelException("When setting a new x for an XYMultiParametricModel, the length must stay the same!",
+            raise XYMultiParametricModelException("When setting a new x for an XYMultiParametricModel, the length must stay the same!",
                                                 "To change the length, simultaneously provide a new set of data indices via set_x!")
         self._xy_data = np.zeros((2, len(new_x)))
         self._xy_data[0] = new_x
@@ -231,7 +231,7 @@ class MultiParametricModel(ParametricModelBaseMixin, MultiContainer):
 
     def set_x(self, new_x, new_data_indices):
         if len(self._data_indices) != len(new_data_indices):
-            raise MultiParametricModelException("When assigning new data indices the length cannot change!")
+            raise XYMultiParametricModelException("When assigning new data indices the length cannot change!")
         self.data_indices = new_data_indices
         self._xy_data = np.zeros((2, len(new_x)))
         self._xy_data[0] = new_x
@@ -243,11 +243,11 @@ class MultiParametricModel(ParametricModelBaseMixin, MultiContainer):
         """model *y* values"""
         if self._pm_calculation_stale:
             self._recalculate()
-        return super(MultiParametricModel, self).y
+        return super(XYMultiParametricModel, self).y
 
     @y.setter
     def y(self, new_y):
-        raise MultiParametricModelException("Parametric model data cannot be set!")
+        raise XYMultiParametricModelException("Parametric model data cannot be set!")
     
     @property
     def data_indices(self):
@@ -293,7 +293,7 @@ class MultiParametricModel(ParametricModelBaseMixin, MultiContainer):
         """
         #TODO update documentation
         if x is not None and x_indices is None:
-            raise MultiParametricModelException('When x is specified x_indices also has to be specified!')
+            raise XYMultiParametricModelException('When x is specified x_indices also has to be specified!')
         
         _x = x if x is not None else self.x
         _x_indices = x_indices if x_indices is not None else self.data_indices
@@ -304,7 +304,7 @@ class MultiParametricModel(ParametricModelBaseMixin, MultiContainer):
         try:
             iter(_par_dxs)
             if len(_pars) != len(_par_dxs):
-                raise MultiParametricModelException('When providing an iterable of par_dx values it must have the same length as model_parameters!')
+                raise XYMultiParametricModelException('When providing an iterable of par_dx values it must have the same length as model_parameters!')
         except TypeError:
             _par_dxs = np.ones_like(_pars)*_par_dxs
 
@@ -366,7 +366,7 @@ class MultiParametricModel(ParametricModelBaseMixin, MultiContainer):
         :rtype: :py:obj:`numpy.ndarray`
         """
         if x is not None and x_indices is None:
-            raise MultiParametricModelException('When x is specified x_indices also has to be specified!')
+            raise XYMultiParametricModelException('When x is specified x_indices also has to be specified!')
         
         _x = x if x is not None else self.x
         _x_indices = x_indices if x_indices is not None else self.data_indices
@@ -375,7 +375,7 @@ class MultiParametricModel(ParametricModelBaseMixin, MultiContainer):
         try:
             iter(_dxs)
             if len(_x) != len(_dxs):
-                raise MultiParametricModelException('When providing an iterable of dx values it must have the same length as x!')
+                raise XYMultiParametricModelException('When providing an iterable of dx values it must have the same length as x!')
         except TypeError:
             _dxs = np.ones_like(_x)*_dxs
 
