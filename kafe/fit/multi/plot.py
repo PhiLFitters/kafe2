@@ -3,7 +3,7 @@ import numpy as np
 from ...config import kc
 from .._base import PlotContainerBase, PlotFigureBase, kc_plot_style
 from .._aux import step_fill_between
-from . import MultiFit
+from . import XYMultiFit
 
 
 
@@ -11,13 +11,13 @@ __all__ = ["MultiPlot", "MultiPlotContainer"]
 
 
 class MultiPlotContainer(PlotContainerBase):
-    FIT_TYPE = MultiFit
+    FIT_TYPE = XYMultiFit
 
     def __init__(self, xy_fit_object, model_index, n_plot_points_model=100):
         """
-        Construct an :py:obj:`MultiPlotContainer` for a :py:obj:`~kafe.fit.multi.MultiFit` object:
+        Construct an :py:obj:`MultiPlotContainer` for a :py:obj:`~kafe.fit.multi.XYMultiFit` object:
 
-        :param fit_object: an :py:obj:`~kafe.fit.multi.MultiFit` object
+        :param fit_object: an :py:obj:`~kafe.fit.multi.XYMultiFit` object
         """
         super(MultiPlotContainer, self).__init__(
             fit_object=xy_fit_object, 
