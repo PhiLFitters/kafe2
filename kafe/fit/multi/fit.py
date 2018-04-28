@@ -14,7 +14,7 @@ from .._base import (FitException, FitBase, DataContainerBase,
                      ModelParameterFormatter, CostFunctionBase)
 from .container import XYMultiContainer
 from .cost import XYMultiCostFunction_Chi2, XYMultiCostFunction_UserDefined
-from .model import MultiParametricModel, MultiModelFunction
+from .model import XYMultiParametricModel, XYMultiModelFunction
 
 
 __all__ = ["XYMultiFit"]
@@ -26,8 +26,8 @@ class XYMultiFitException(FitException):
 
 class XYMultiFit(FitBase):
     CONTAINER_TYPE = XYMultiContainer
-    MODEL_TYPE = MultiParametricModel
-    MODEL_FUNCTION_TYPE = MultiModelFunction
+    MODEL_TYPE = XYMultiParametricModel
+    MODEL_FUNCTION_TYPE = XYMultiModelFunction
     EXCEPTION_TYPE = XYMultiFitException
     RESERVED_NODE_NAMES = {'y_data', 'y_model', 'cost',
                            'x_error', 'y_data_error', 'y_model_error', 'total_error',
@@ -47,7 +47,7 @@ class XYMultiFit(FitBase):
         :param xy_data: the x and y measurement values
         :type xy_data: (2, N)-array of float
         :param model_function: the model function
-        :type model_function: :py:class:`~kafe.fit.multi.MultiModelFunction` or unwrapped native Python function
+        :type model_function: :py:class:`~kafe.fit.multi.XYMultiModelFunction` or unwrapped native Python function
         :param cost_function: the cost function
         :type cost_function: :py:class:`~kafe.fit._base.CostFunctionBase`-derived or unwrapped native Python function
         """
