@@ -37,18 +37,28 @@ class MultiModelFunction(ModelFunctionBase):
         #TODO implement
         _varargs = None
         _keywords = None
-        _defaults = None
+        _defaults_dict = dict()
         for _model_function in model_function:
             _model_arg_indices = []
             _argspec = inspect.getargspec(_model_function)
+            _model_function_defaults =  _argspec[3] if _argspec[3] else []
+            _defaults_index = len(_model_function_defaults) - len(_argspec[0])
             for _arg_name in _argspec[0]:
                 if _arg_name is self._x_name:
+                    _defaults_index += 1
                     continue
                 if _arg_name not in _args:
                     _args.append(_arg_name)
+                    if _defaults_index >= 0:
+                        _defaults_dict[_arg_name] = _model_function_defaults[_defaults_index]
+                    _defaults_index += 1
+                elif _arg_name in _defaults_dict and _defaults_dict[_arg_name] != _model_function_defaults[_defaults_index]:
+                    #TODO Exception or Warning?
+                     raise MultiModelFunctionException("Model functions have conflicting defaults for parameter %s" % _arg_name)
                 _model_arg_indices.append(_args.index(_arg_name))
             self._model_arg_indices.append(_model_arg_indices)
-                
+        
+        _defaults = [_defaults_dict.get(_arg_name, 1.0) for _arg_name in _args]
         _args.insert(0, self._x_name)
         self._model_function_argspec = inspect.ArgSpec(_args, _varargs, _keywords, _defaults)
         self._model_count = len(model_function)
@@ -61,20 +71,35 @@ class MultiModelFunction(ModelFunctionBase):
         #super(MultiModelFunction, self).__init__(model_function=model_function)
 
     def _validate_model_function_raise(self):
-        # require 'xy' model function agruments to include 'x'
-        if self.x_name not in self.argspec.args:
-            raise self.__class__.EXCEPTION_TYPE(
-                "Model function '%r' must have independent variable '%s' among its arguments!"
-                % (self.func, self.x_name))
+        for _model_function in self._model_function_handle:
+            _argspec = inspect.getargspec(_model_function)
+            # require 'xy' model function agruments to include 'x'
+            if self.x_name not in _argspec.args:
+                raise self.__class__.EXCEPTION_TYPE(
+                    "Model function '%r' must have independent variable '%s' among its arguments!"
+                    % (self.func, self.x_name))
 
-        # require 'xy' model functions to have at least two arguments
-        if self.argcount < 2:
-            raise self.__class__.EXCEPTION_TYPE(
-                "Model function '%r' needs at least one parameter beside independent variable '%s'!"
-                % (self.func, self.x_name))
+            # require 'xy' model functions to have at least two arguments
+            if len(_argspec.args) < 2:
+                raise self.__class__.EXCEPTION_TYPE(
+                    "Model function '%r' needs at least one parameter beside independent variable '%s'!"
+                    % (self.func, self.x_name))
 
-        # evaluate general model function requirements
-        super(MultiModelFunction, self)._validate_model_function_raise()
+            # evaluate general model function requirements
+            #super(MultiModelFunction, self)._validate_model_function_raise()
+            if _argspec.varargs and self._model_function_argspec.keywords:
+                raise self.__class__.EXCEPTION_TYPE("Model function with variable arguments (*%s, **%s) is not supported"
+                                                % (self._model_function_argspec.varargs,
+                                                   self._model_function_argspec.keywords))
+            elif _argspec.varargs:
+                raise self.__class__.EXCEPTION_TYPE(
+                    "Model function with variable arguments (*%s) is not supported"
+                    % (self._model_function_argspec.varargs,))
+            elif _argspec.keywords:
+                raise self.__class__.EXCEPTION_TYPE(
+                    "Model function with variable arguments (**%s) is not supported"
+                    % (self._model_function_argspec.keywords,))
+
 
     def _assign_parameter_formatters(self):
         _start_at_arg = 1

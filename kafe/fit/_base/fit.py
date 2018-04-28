@@ -82,6 +82,13 @@ class FitBase(object):
     def _mark_errors_for_update(self):
         pass
 
+    def _get_model_report_dict_entry(self):
+        return self._model_function.formatter.get_formatted(
+            with_par_values=False,
+            n_significant_digits=2,
+            format_as_latex=False,
+            with_expression=True)
+
     # -- public properties
 
     @abc.abstractproperty
@@ -384,11 +391,7 @@ class FitBase(object):
         _result_dict['ndf'] = _ndf
         _result_dict['cost/ndf'] = "{}/{} = {}".format(_rounded_cost, _ndf, round(_cost/_ndf, 3))
 
-        _result_dict['model function'] = self._model_function.formatter.get_formatted(
-            with_par_values=False,
-            n_significant_digits=2,
-            format_as_latex=False,
-            with_expression=True)
+        _result_dict['model function'] = self._get_model_report_dict_entry()
 
         _result_dict['formatted fit parameters'] = dict()
         for _pf in self._model_function.argument_formatters:
