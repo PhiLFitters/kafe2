@@ -71,7 +71,7 @@ class XYMultiFit(FitBase):
         if isinstance(cost_function, CostFunctionBase):
             self._cost_function = cost_function
         else:
-            self._cost_function = MultiCostFunction_UserDefined(cost_function)
+            self._cost_function = XYMultiCostFunction_UserDefined(cost_function)
             #self._validate_cost_function_raise()
             # TODO: validate user-defined cost function? how?
 

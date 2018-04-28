@@ -3,9 +3,9 @@ import numpy as np
 import six
 
 from kafe.config import kc
-from kafe.fit import MultiFit
-from kafe.fit.multi.fit import MultiFitException
-from kafe.fit.multi.model import MultiModelFunctionException
+from kafe.fit import XYMultiFit
+from kafe.fit.xy_multi.fit import XYMultiFitException
+from kafe.fit.xy_multi.model import XYMultiModelFunctionException
 
 CONFIG_PARAMETER_DEFAULT_VALUE = kc('core', 'default_initial_parameter_value')
 
@@ -63,15 +63,15 @@ class TestFittersXY(unittest.TestCase):
         self._ref_y_data = self._ref_y_model_values + self._ref_data_jitter
         self._ref_xy_data = np.array([self._ref_x, self._ref_y_data])
 
-        self.xy_fit = MultiFit(xy_data=self._ref_xy_data,
+        self.xy_fit = XYMultiFit(xy_data=self._ref_xy_data,
                             model_function=self.xy_model,
                             cost_function=self.simple_chi2)
-        self.xy_fit_explicit_model_name_in_chi2 = MultiFit(
+        self.xy_fit_explicit_model_name_in_chi2 = XYMultiFit(
             xy_data=self._ref_xy_data,
             model_function=self.xy_model,
             cost_function=self.simple_chi2_explicit_model_name
             )
-        self.xy_fit_default_cost_function = MultiFit(xy_data=self._ref_xy_data,
+        self.xy_fit_default_cost_function = XYMultiFit(xy_data=self._ref_xy_data,
                                                   model_function=self.xy_model)
 
         self._ref_parameter_value_estimates = [1.1351433845831516, 2.137441531781195, 2.3405503488535118]
@@ -170,7 +170,7 @@ class TestFittersXY(unittest.TestCase):
         )
 
     def test_model_nodefaults(self):
-        xy_fit = MultiFit(xy_data=self._ref_xy_data,
+        xy_fit = XYMultiFit(xy_data=self._ref_xy_data,
                              model_function=self.xy_model_nodefaults,
                              cost_function=self.simple_chi2)
         self.assertTrue(
@@ -182,7 +182,7 @@ class TestFittersXY(unittest.TestCase):
         )
 
     def test_model_partialdefaults(self):
-        xy_fit = MultiFit(xy_data=self._ref_xy_data,
+        xy_fit = XYMultiFit(xy_data=self._ref_xy_data,
                              model_function=self.xy_model_partialdefaults,
                              cost_function=self.simple_chi2)
         self.assertTrue(
@@ -194,29 +194,29 @@ class TestFittersXY(unittest.TestCase):
         )
 
     def test_raise_reserved_parameter_names_in_model(self):
-        with self.assertRaises(MultiFitException):
-            xy_fit_reserved_names = MultiFit(
+        with self.assertRaises(XYMultiFitException):
+            xy_fit_reserved_names = XYMultiFit(
                             xy_data=self._ref_xy_data,
                             model_function=self.xy_model_reserved_names,
                             cost_function=self.simple_chi2)
 
     def test_raise_varargs_in_model(self):
-        with self.assertRaises(MultiModelFunctionException):
-            xy_fit_reserved_names = MultiFit(
+        with self.assertRaises(XYMultiModelFunctionException):
+            xy_fit_reserved_names = XYMultiFit(
                             xy_data=self._ref_xy_data,
                             model_function=self.xy_model_varargs,
                             cost_function=self.simple_chi2)
 
     def test_raise_varkwargs_in_model(self):
-        with self.assertRaises(MultiModelFunctionException):
-            xy_fit_reserved_names = MultiFit(
+        with self.assertRaises(XYMultiModelFunctionException):
+            xy_fit_reserved_names = XYMultiFit(
                             xy_data=self._ref_xy_data,
                             model_function=self.xy_model_varkwargs,
                             cost_function=self.simple_chi2)
 
     def test_raise_varargs_and_varkwargs_in_model(self):
-        with self.assertRaises(MultiModelFunctionException):
-            xy_fit_reserved_names = MultiFit(
+        with self.assertRaises(XYMultiModelFunctionException):
+            xy_fit_reserved_names = XYMultiFit(
                             xy_data=self._ref_xy_data,
                             model_function=self.xy_model_varargs_and_varkwargs,
                             cost_function=self.simple_chi2)
@@ -258,7 +258,7 @@ class TestFittersXYChi2WithError(unittest.TestCase):
         self._ref_y_data_error = np.ones_like(self._ref_y_data) * 1.0
         self._ref_y_model_error = 1.0
 
-        self.xy_fit = MultiFit(xy_data=self._ref_xy_data,
+        self.xy_fit = XYMultiFit(xy_data=self._ref_xy_data,
                                   model_function=self.xy_model,
                                   cost_function=self.chi2_with_error)
 
@@ -328,7 +328,7 @@ class TestFittersXYChi2WithError(unittest.TestCase):
 
     def test_compare_fit_chi2_errors_chi2_cov_mat(self):
         self.xy_fit.do_fit()
-        self.xy_fit_chi2_with_cov_mat = MultiFit(
+        self.xy_fit_chi2_with_cov_mat = XYMultiFit(
                                   xy_data=self._ref_xy_data,
                                   model_function=self.xy_model,
                                   cost_function=self.chi2_with_cov_mat)

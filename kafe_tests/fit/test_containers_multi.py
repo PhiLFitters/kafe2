@@ -1,10 +1,10 @@
 import unittest
 import numpy as np
 
-from kafe.fit import MultiContainer, MultiModelFunction, MultiParametricModel
+from kafe.fit import XYMultiContainer, XYMultiModelFunction, XYMultiParametricModel
 from kafe.fit._base import DataContainerException
-from kafe.fit.multi.container import MultiContainerException
-from kafe.fit.multi.model import MultiParametricModelException
+from kafe.fit.xy_multi.container import XYMultiContainerException
+from kafe.fit.xy_multi.model import XYMultiParametricModelException
 from kafe.core.error import cov_mat_from_float_list
 
 
@@ -14,7 +14,7 @@ class TestDatastoreXY(unittest.TestCase):
     def setUp(self):
         self._ref_x_data = [0, 1, 2, 3, 4]
         self._ref_y_data = [3.3, 5.5, 2.2, 8.5, 10.2]
-        self.data_xy = MultiContainer(x_data=self._ref_x_data, y_data=self._ref_y_data)
+        self.data_xy = XYMultiContainer(x_data=self._ref_x_data, y_data=self._ref_y_data)
 
         self._ref_x_err_abs_singlevalue = 0.1
         self._ref_y_err_abs_singlevalue = 1.2
@@ -188,8 +188,8 @@ class TestDatastoreXYParametricModel(unittest.TestCase):
         self._ref_params = (1.2, 3.3)
         self._ref_data = self._ref_model_func(self._ref_x, *self._ref_params)
 
-        _model_func = MultiModelFunction(self._ref_model_func, [0, 11])
-        self.xy_param_model = MultiParametricModel(x_data=self._ref_x, model_func=_model_func, model_parameters=self._ref_params)
+        _model_func = XYMultiModelFunction(self._ref_model_func, [0, 11])
+        self.xy_param_model = XYMultiParametricModel(x_data=self._ref_x, model_func=_model_func, model_parameters=self._ref_params)
 
         self._test_params = (3.4, -5.23)
         self._ref_data_ref_x_test_params =  self._ref_model_func(self._ref_x, *self._test_params)
@@ -225,7 +225,7 @@ class TestDatastoreXYParametricModel(unittest.TestCase):
         self.assertTrue(np.allclose(self.xy_param_model.y, self._ref_data_ref_x_test_params))
 
     def test_change_x_test_data_parameter_check(self):
-        with self.assertRaises(MultiParametricModelException):
+        with self.assertRaises(XYMultiParametricModelException):
             self.xy_param_model.x = self._test_x
 
     def test_change_x_test_data(self):
@@ -243,9 +243,9 @@ class TestDatastoreXYParametricModel(unittest.TestCase):
         self.assertTrue(np.allclose(self.xy_param_model.y, self._ref_data_test_x_test_params))
 
     def test_raise_set_data(self):
-        with self.assertRaises(MultiParametricModelException):
+        with self.assertRaises(XYMultiParametricModelException):
             self.xy_param_model.data = self._ref_data_ref_x_test_params
 
     def test_raise_set_y(self):
-        with self.assertRaises(MultiParametricModelException):
+        with self.assertRaises(XYMultiParametricModelException):
             self.xy_param_model.y = self._ref_data_ref_x_test_params
