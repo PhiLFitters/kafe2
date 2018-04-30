@@ -6,6 +6,7 @@ from kafe.config import kc
 from kafe.fit import XYMultiFit
 from kafe.fit.xy_multi.fit import XYMultiFitException
 from kafe.fit.xy_multi.model import XYMultiModelFunctionException
+from external.six_archive.six import assertRaisesRegex
 
 CONFIG_PARAMETER_DEFAULT_VALUE = kc('core', 'default_initial_parameter_value')
 
@@ -13,9 +14,16 @@ CONFIG_PARAMETER_DEFAULT_VALUE = kc('core', 'default_initial_parameter_value')
 class TestFittersXYMulti(unittest.TestCase):
 
     @staticmethod
-    def xy_model_0(x, a=1.1, b=2.2, c=3.3):
-        return a * x ** 2 + b * x + c
+    def xy_model_0(x, b=1.1, c=2.2, d=3.3):
+        return b * x ** 2 + c * x + d
 
+    @staticmethod
+    def xy_model_1(x, a=0.5, b=1.1, c=2.2, d=3.3):
+        return a * x ** 3 + b * x ** 2 + c * x + d
+
+    @staticmethod
+    def xy_model_1_conflicting_defaults(x, a=0.5, b=1.1, c=1.0, d=3.3):
+        return a * x ** 3 + b * x ** 2 + c * x + d
 
     @staticmethod
     def xy_model_nodefaults(x, a, b, c):
@@ -51,21 +59,42 @@ class TestFittersXYMulti(unittest.TestCase):
 
     def setUp(self):
         self._ref_parameter_values_0 = 1.1, 2.2, 3.3
+        self._ref_parameter_values_1 = 0.5, 1.1, 2.2, 3.3
+        self._ref_parameter_values_multi = 1.1, 2.2, 3.3, 0.5
+        self._ref_parameter_values_multi_reversed = 0.5, 1.1, 2.2, 3.3
         self._ref_parameter_values_partialdefault = (CONFIG_PARAMETER_DEFAULT_VALUE, CONFIG_PARAMETER_DEFAULT_VALUE, 3.3)
         self._ref_parameter_values_default = (CONFIG_PARAMETER_DEFAULT_VALUE, CONFIG_PARAMETER_DEFAULT_VALUE, CONFIG_PARAMETER_DEFAULT_VALUE)
 
         self._ref_x = np.arange(10)
         self._ref_y_model_values_0 = self.xy_model_0(self._ref_x, *self._ref_parameter_values_0)
+        self._ref_y_model_values_1 = self.xy_model_1(self._ref_x, *self._ref_parameter_values_1)
         self._ref_data_jitter_0 = np.array([-0.3193475 , -1.2404198 , -1.4906926 , -0.78832446,
                                           -1.7638106,   0.36664261,  0.49433821,  0.0719646,
                                            1.95670326,  0.31200215])
+        np.random.seed(42)
+        self._ref_data_jitter_1 = np.random.normal(loc=0.0, scale=1.0, size=10)
 
         self._ref_y_data_0 = self._ref_y_model_values_0 + self._ref_data_jitter_0
         self._ref_xy_data_0 = np.array([self._ref_x, self._ref_y_data_0])
+        self._ref_y_data_1 = self._ref_y_model_values_1 + self._ref_data_jitter_1
+        self._ref_xy_data_1 = np.array([np.arange(10), self._ref_y_data_1])
 
-        self.xy_fit = XYMultiFit(xy_data=self._ref_xy_data_0,
-                            model_function=self.xy_model_0,
-                            cost_function=self.simple_chi2)
+        self.xy_fit = XYMultiFit(
+            xy_data=self._ref_xy_data_0,
+            model_function=self.xy_model_0,
+            cost_function=self.simple_chi2
+        )
+        self.xy_multi_fit = XYMultiFit(
+            xy_data=[self._ref_xy_data_0, self._ref_xy_data_1],
+            model_function=[self.xy_model_0, self.xy_model_1],
+            cost_function=self.simple_chi2
+        )
+        self.xy_multi_fit_reversed = XYMultiFit(
+            xy_data=[self._ref_xy_data_1, self._ref_xy_data_0],
+            model_function=[self.xy_model_1, self.xy_model_0],
+            cost_function=self.simple_chi2
+        )
+
         self.xy_fit_explicit_model_name_in_chi2 = XYMultiFit(
             xy_data=self._ref_xy_data_0,
             model_function=self.xy_model_0,
@@ -77,6 +106,13 @@ class TestFittersXYMulti(unittest.TestCase):
         self._ref_parameter_value_estimates = [1.1351433845831516, 2.137441531781195, 2.3405503488535118]
         self._ref_y_model_value_estimates = self.xy_model_0(self._ref_x, *self._ref_parameter_value_estimates)
 
+    def test_conflicting_defaults_raise(self):
+        with self.assertRaises(XYMultiModelFunctionException):
+            _conflicting_defaults_fit = XYMultiFit(
+                xy_data=[self._ref_xy_data_0, self._ref_xy_data_1],
+                model_function=[self.xy_model_0, self.xy_model_1_conflicting_defaults],
+                cost_function=self.simple_chi2
+            )
 
     def test_before_fit_compare_parameter_values(self):
         self.assertTrue(
@@ -87,11 +123,55 @@ class TestFittersXYMulti(unittest.TestCase):
             )
         )
 
+    def test_before_fit_compare_parameter_values_multi(self):
+        self.assertTrue(
+            np.allclose(
+                self.xy_multi_fit.parameter_values,
+                self._ref_parameter_values_multi,
+                rtol=1e-3
+            )
+        )
+
+    def test_before_fit_compare_parameter_values_multi_reversed(self):
+        self.assertTrue(
+            np.allclose(
+                self.xy_multi_fit_reversed.parameter_values,
+                self._ref_parameter_values_multi_reversed,
+                rtol=1e-3
+            )
+        )
+
     def test_before_fit_compare_model_values(self):
         self.assertTrue(
             np.allclose(
                 self.xy_fit.y_model,
                 self._ref_y_model_values_0,
+                rtol=1e-2
+            )
+        )
+
+    def test_before_fit_compare_model_values_multi(self):
+        _expected_model_values = np.concatenate((
+                self._ref_y_model_values_0,
+                self._ref_y_model_values_1,
+            ))
+        self.assertTrue(
+            np.allclose(
+                self.xy_multi_fit.y_model,
+                _expected_model_values,
+                rtol=1e-2
+            )
+        )
+
+    def test_before_fit_compare_model_values_multi_reversed(self):
+        _expected_model_values = np.concatenate((
+                self._ref_y_model_values_1,
+                self._ref_y_model_values_0,
+            ))
+        self.assertTrue(
+            np.allclose(
+                self.xy_multi_fit_reversed.y_model,
+                _expected_model_values,
                 rtol=1e-2
             )
         )
@@ -252,6 +332,7 @@ class TestFittersXYMultiChi2WithError(unittest.TestCase):
         self._ref_parameter_values_0 = 1.1, 2.2, 3.3
         self._ref_parameter_values_1 = 0.5, 1.1, 2.2, 3.3
         self._ref_parameter_values_multi = 1.1, 2.2, 3.3, 0.5
+        self._ref_parameter_values_multi_reversed = 0.5, 1.1, 2.2, 3.3
         self._ref_x = np.arange(10)
 
         self._ref_y_model_values_0 = self.xy_model_0(self._ref_x, *self._ref_parameter_values_0)
