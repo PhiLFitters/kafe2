@@ -20,33 +20,41 @@ class XYMultiContainer(IndexedContainer):
     """
     _AXIS_SPEC_DICT = {0:0, 1:1, '0':0, '1':1, 'x':0, 'y':1}
 
-    def __init__(self, x_data, y_data, dtype=float):
+    def __init__(self, xy_data, dtype=float):
         """
         Construct a container for *xy* data:
 
-        :param x_data: a one-dimensional array of measurement *x* values
-        :type x_data: iterable of type <dtype>
-        :param y_data: a one-dimensional array of measurement *y* values
-        :type y_data: iterable of type <dtype>
+        :param xy_data: arrays containing measurement *x* values and measurement *y* values
+        :type xy_data: 2xn iterable of type <dtype>, or an iterable thereof, n can vary
         :param dtype: data type of the measurements
         :type dtype: type
         """
-        # TODO: check user input (?)
-        if len(x_data) != len(y_data):
-            raise XYMultiContainerException("Must provide equal numer of x_data and y_data!")
-        self._data_indices = [0]
-        _current_index = 0
+        
         try:
-            for _x_dataset, _y_dataset in zip(x_data, y_data):
-                if len(_x_dataset) != len(_y_dataset):
-                    raise XYMultiContainerException('Corresponding elements of x_data and y_data must have the same length!')
-                _current_index += len(_x_dataset)
-                self._data_indices.append(_current_index)
-        except TypeError:
-            self._data_indices = [0, len(x_data)]
-        _x_data = np.array(x_data, dtype=dtype).flatten()
-        _y_data = np.array(y_data, dtype=dtype).flatten()
-        self._xy_data = np.array([_x_data, _y_data])
+            xy_data[0][0] #raises IndexError if xy_data has < 2 dimensions
+        except (IndexError, TypeError):
+            raise XYMultiContainerException("xy_data has to have at least 2 dimensions!")
+        try:
+            xy_data[0][0][0] #raises IndexError if xy_data has 2 dimensions
+        except (IndexError, TypeError):
+            xy_data = [xy_data]
+        _xy_datasets = []
+        _total_length = 0
+        self._data_indices = [0]
+        for _index, _xy_dataset in enumerate(xy_data):
+            _xy_dataset = np.array(_xy_dataset, dtype=dtype)
+            if _xy_dataset.ndim != 2 or _xy_dataset.shape[0] != 2:
+                raise XYMultiContainerException("xy dataset with index %s cannot be converted into a 2xn numpy array!" % _index)
+            _xy_datasets.append(_xy_dataset)
+            _total_length += _xy_dataset.shape[1]
+            self._data_indices.append(_total_length)
+        self._xy_data = np.empty((2, _total_length), dtype=dtype)
+        for _index, _xy_dataset in enumerate(_xy_datasets):
+            _upper = self._data_indices[_index + 1]
+            _lower = self._data_indices[_index]
+            self._xy_data[0][_lower : _upper] = _xy_dataset[0]
+            self._xy_data[1][_lower : _upper] = _xy_dataset[1]
+
         self._error_dicts = {}
         self._xy_total_errors = None
 

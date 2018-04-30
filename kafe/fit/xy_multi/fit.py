@@ -413,9 +413,7 @@ class XYMultiFit(FitBase):
             raise XYMultiFitException("Incompatible container type '%s' (expected '%s')"
                                       % (type(new_data), self.CONTAINER_TYPE))
         else:
-            _x_data = new_data[0]
-            _y_data = new_data[1]
-            self._data_container = self._new_data_container(_x_data, _y_data, dtype=float)
+            self._data_container = self._new_data_container(new_data, dtype=float)
 
     @property
     def model(self):

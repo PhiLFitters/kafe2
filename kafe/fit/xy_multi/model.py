@@ -189,8 +189,10 @@ class XYMultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
         """
         #TODO update documentation
         # print "XYMultiParametricModel.__init__(x_data=%r, model_func=%r, model_parameters=%r)" % (x_data, model_func, model_parameters)
-        _y_data = model_func.func(x_data, *model_parameters)
-        super(XYMultiParametricModel, self).__init__(model_func, model_parameters, x_data, _y_data)
+        _xy_data = np.empty([2, x_data.size])
+        _xy_data[0] = x_data
+        _xy_data[1] = model_func.func(x_data, *model_parameters)
+        super(XYMultiParametricModel, self).__init__(model_func, model_parameters, _xy_data)
         self._model_func = model_func
 
     # -- private methods
