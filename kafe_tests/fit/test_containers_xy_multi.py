@@ -9,12 +9,12 @@ from kafe.core.error import cov_mat_from_float_list
 
 
 
-class TestDatastoreXY(unittest.TestCase):
+class TestDatastoreXYMulti(unittest.TestCase):
 
     def setUp(self):
         self._ref_x_data = [0, 1, 2, 3, 4]
         self._ref_y_data = [3.3, 5.5, 2.2, 8.5, 10.2]
-        self.data_xy = XYMultiContainer(x_data=self._ref_x_data, y_data=self._ref_y_data)
+        self.data_xy = XYMultiContainer(xy_data=[self._ref_x_data, self._ref_y_data])
 
         self._ref_x_err_abs_singlevalue = 0.1
         self._ref_y_err_abs_singlevalue = 1.2
@@ -33,6 +33,18 @@ class TestDatastoreXY(unittest.TestCase):
                                                       correlation=self._ref_x_err_corr_coeff).mat
         self._ref_y_cov_mat = cov_mat_from_float_list(self._ref_y_err_abs_valuearray,
                                                       correlation=self._ref_y_err_corr_coeff).mat
+
+    def test_1_dim_xy_data_raise(self):
+        with self.assertRaises(XYMultiContainerException):
+            XYMultiContainer(xy_data=np.zeros(2))
+
+    def test_z_dim_xy_data_raise(self):
+        with self.assertRaises(XYMultiContainerException):
+            XYMultiContainer(xy_data=np.zeros([3, 3, 3]))
+
+    def test_4_dim_xy_data_raise(self):
+        with self.assertRaises(XYMultiContainerException):
+            XYMultiContainer(xy_data=np.zeros([2, 2, 2, 2]))
 
     def test_get_matching_error_all_empty_dict(self):
         _errs = self.data_xy.get_matching_errors(matching_criteria=dict())

@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from kafe.fit.multi import *
+from kafe.fit.xy_multi import *
 
 NUM_POINTS = 10
 a0, b0, c0, d0 = 0.25, 0.6, 0.7, -10.0
@@ -25,10 +25,10 @@ def example_xy_fit():
 
     # compute pseudo-data for 'xy' model: same as 'Indexed', but 'x' is part of data!
     x0 = np.arange(NUM_POINTS)
-    idx_data0 = quad_model(x0 + np.random.normal(0, X_ERR, NUM_POINTS), b0, c0, d0) + np.random.normal(0, Y_ERR, NUM_POINTS)
+    y0 = quad_model(x0 + np.random.normal(0, X_ERR, NUM_POINTS), b0, c0, d0) + np.random.normal(0, Y_ERR, NUM_POINTS)
     x1 = np.arange(NUM_POINTS) + 0.5
     #idx_data1 = quad_model2(np.arange(NUM_POINTS), b0, c0, d0) + np.random.normal(0, 0.001, NUM_POINTS)
-    idx_data1 = cube_model(x1 + np.random.normal(0, X_ERR, NUM_POINTS), a0, b0, c0, d0) + np.random.normal(0, Y_ERR, NUM_POINTS)
+    y1 = cube_model(x1 + np.random.normal(0, X_ERR, NUM_POINTS), a0, b0, c0, d0) + np.random.normal(0, Y_ERR, NUM_POINTS)
 
 
     # -- do some kafe fits: XYFit
@@ -36,7 +36,7 @@ def example_xy_fit():
     fits = []  # store our kafe 'Fit' objects here
 
     # initialize an 'IndexedFit'
-    f = XYMultiFit(xy_data=[[x0, x1], [idx_data0, idx_data1]],
+    f = XYMultiFit(xy_data=[[x0, y0], [x1, y1]],
               model_function=[quad_model, cube_model])
 #    f = XYFit(xy_data=[[np.arange(NUM_POINTS)], [idx_data0]],
 #              model_function=[quad_model])
@@ -67,5 +67,5 @@ def example_xy_fit():
     p.plot()
     p.show_fit_info_box(format_as_latex=True)
 
-example_xy_fit()
-plt.show()
+#example_xy_fit()
+#plt.show()

@@ -115,6 +115,7 @@ class TestFittersXY(unittest.TestCase):
             )
         )
 
+    #TODO this test case seems redundant. Should it be removed?
     def test_do_fit_explicit_model_name_in_chi2_compare_parameter_values(self):
         self.xy_fit.do_fit()
         self.assertTrue(

@@ -39,11 +39,11 @@ class XYMultiModelFunction(ModelFunctionBase):
         _keywords = None
         _defaults_dict = dict()
         for _model_function in model_function:
-            _model_arg_indices = []
+            _partial_model_arg_indices = [] #indices of the model function parameters in the shared input
             _argspec = inspect.getargspec(_model_function)
-            _model_function_defaults =  _argspec[3] if _argspec[3] else []
-            _defaults_index = len(_model_function_defaults) - len(_argspec[0])
-            for _arg_name in _argspec[0]:
+            _model_function_defaults =  _argspec.defaults if _argspec.defaults else []
+            _defaults_index = len(_model_function_defaults) - len(_argspec.args)
+            for _arg_name in _argspec.args:
                 if _arg_name is self._x_name:
                     _defaults_index += 1
                     continue
@@ -51,12 +51,13 @@ class XYMultiModelFunction(ModelFunctionBase):
                     _args.append(_arg_name)
                     if _defaults_index >= 0:
                         _defaults_dict[_arg_name] = _model_function_defaults[_defaults_index]
-                    _defaults_index += 1
                 elif _arg_name in _defaults_dict and _defaults_dict[_arg_name] != _model_function_defaults[_defaults_index]:
                     #TODO Exception or Warning?
-                     raise XYMultiModelFunctionException("Model functions have conflicting defaults for parameter %s" % _arg_name)
-                _model_arg_indices.append(_args.index(_arg_name))
-            self._model_arg_indices.append(_model_arg_indices)
+                     raise XYMultiModelFunctionException("Model functions have conflicting defaults for parameter %s: %s <-> %s" % 
+                                                         (_arg_name, _defaults_dict[_arg_name], _model_function_defaults[_defaults_index]))
+                _defaults_index += 1
+                _partial_model_arg_indices.append(_args.index(_arg_name))
+            self._model_arg_indices.append(_partial_model_arg_indices)
         
         _defaults = [_defaults_dict.get(_arg_name, 1.0) for _arg_name in _args]
         _args.insert(0, self._x_name)
@@ -188,8 +189,10 @@ class XYMultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
         """
         #TODO update documentation
         # print "XYMultiParametricModel.__init__(x_data=%r, model_func=%r, model_parameters=%r)" % (x_data, model_func, model_parameters)
-        _y_data = model_func.func(x_data, *model_parameters)
-        super(XYMultiParametricModel, self).__init__(model_func, model_parameters, x_data, _y_data)
+        _xy_data = np.empty([2, x_data.size])
+        _xy_data[0] = x_data
+        _xy_data[1] = model_func.func(x_data, *model_parameters)
+        super(XYMultiParametricModel, self).__init__(model_func, model_parameters, _xy_data)
         self._model_func = model_func
 
     # -- private methods
