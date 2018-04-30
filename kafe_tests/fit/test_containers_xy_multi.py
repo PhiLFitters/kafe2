@@ -9,7 +9,7 @@ from kafe.core.error import cov_mat_from_float_list
 
 
 
-class TestDatastoreXY(unittest.TestCase):
+class TestDatastoreXYMulti(unittest.TestCase):
 
     def setUp(self):
         self._ref_x_data = [0, 1, 2, 3, 4]

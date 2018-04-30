@@ -837,7 +837,7 @@ class XYMultiFit(FitBase):
     # -- public methods
 
     def add_simple_error(self, axis, err_val,
-                         name=None, correlation=0, relative=False, reference='data'):
+                         model_index=None, name=None, correlation=0, relative=False, reference='data'):
         """
         Add a simple uncertainty source for axis to the data container.
         Returns an error id which uniquely identifies the created error source.
@@ -855,7 +855,30 @@ class XYMultiFit(FitBase):
         :return: error id
         :rtype: int
         """
-        _ret = super(XYMultiFit, self).add_simple_error(err_val=err_val,
+        #TODO update documentation
+        #TODO None good default value for model_index?
+        if model_index is None:
+            _err = err_val
+        else:
+            if model_index < 0 or model_index >= self.model_count:
+                raise XYMultiFitException("There is no corresponding model for index %s" % model_index)
+             #TODO model and data have to be same size, but perhaps there is a better way?
+            _err = np.zeros(self._data_container.size)
+            _lower, _upper = self._data_container.get_data_bounds(model_index)
+            
+            try:
+                err_val.ndim   # will raise if simple float
+            except AttributeError:
+                err_val = np.asarray(err_val, dtype=float)
+
+            if err_val.ndim == 0:  # if dimensionless numpy array (i.e. float64), add a dimension
+                err_val = np.ones(_upper - _lower) * err_val
+            elif err_val.size != _upper - _lower:
+                raise XYMultiFitException("Model %s has %s data points but err_val has size %s" % 
+                                          (model_index, err_val.size ,_upper - _lower))
+            _err[_lower : _upper] = err_val
+            
+        _ret = super(XYMultiFit, self).add_simple_error(err_val=_err,
                                                    name=name,
                                                    correlation=correlation,
                                                    relative=relative,

@@ -407,6 +407,9 @@ class XYMultiContainer(IndexedContainer):
     def data_indices(self):
         return self._data_indices
     
+    def get_data_bounds(self, index):
+        return self.data_indices[index], self.data_indices[index + 1]
+    
     def get_splice(self, data, index):
         return data[self.data_indices[index] : self.data_indices[index + 1]]
     

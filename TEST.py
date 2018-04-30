@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from kafe.fit.multi import *
+from kafe.fit.xy_multi import *
 
 NUM_POINTS = 10
 a0, b0, c0, d0 = 0.25, 0.6, 0.7, -10.0
@@ -67,5 +67,5 @@ def example_xy_fit():
     p.plot()
     p.show_fit_info_box(format_as_latex=True)
 
-example_xy_fit()
-plt.show()
+#example_xy_fit()
+#plt.show()
