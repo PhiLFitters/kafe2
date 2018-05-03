@@ -6,7 +6,6 @@ from kafe.config import kc
 from kafe.fit import XYMultiFit
 from kafe.fit.xy_multi.fit import XYMultiFitException
 from kafe.fit.xy_multi.model import XYMultiModelFunctionException
-from external.six_archive.six import assertRaisesRegex
 
 CONFIG_PARAMETER_DEFAULT_VALUE = kc('core', 'default_initial_parameter_value')
 
