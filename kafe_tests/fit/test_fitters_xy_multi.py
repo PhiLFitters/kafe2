@@ -70,8 +70,9 @@ class TestFittersXYMulti(unittest.TestCase):
         self._ref_data_jitter_0 = np.array([-0.3193475 , -1.2404198 , -1.4906926 , -0.78832446,
                                           -1.7638106,   0.36664261,  0.49433821,  0.0719646,
                                            1.95670326,  0.31200215])
-        np.random.seed(42)
-        self._ref_data_jitter_1 = np.random.normal(loc=0.0, scale=1.0, size=10)
+        self._ref_data_jitter_1 = np.array([ 0.49671415, -0.1382643,   0.64768854,  1.52302986,
+                                            -0.23415337, -0.23413696, 1.57921282,  0.76743473,
+                                            -0.46947439,  0.54256004])
 
         self._ref_y_data_0 = self._ref_y_model_values_0 + self._ref_data_jitter_0
         self._ref_xy_data_0 = np.array([self._ref_x, self._ref_y_data_0])
@@ -336,13 +337,12 @@ class TestFittersXYMultiChi2WithError(unittest.TestCase):
 
         self._ref_y_model_values_0 = self.xy_model_0(self._ref_x, *self._ref_parameter_values_0)
         self._ref_y_model_values_1 = self.xy_model_1(self._ref_x, *self._ref_parameter_values_1)
-        #TODO change original unit test to a seeded array as well?
-        np.random.seed(42)
-        self._ref_data_jitter_0 = np.random.normal(loc=0.0, scale=1.0, size=10)
         self._ref_data_jitter_0 = np.array([-0.3193475 , -1.2404198 , -1.4906926 , -0.78832446,
                                           -1.7638106,   0.36664261,  0.49433821,  0.0719646,
                                            1.95670326,  0.31200215])
-        self._ref_data_jitter_1 = np.random.normal(loc=0.0, scale=1.0, size=10)
+        self._ref_data_jitter_1 = np.array([ 0.49671415, -0.1382643,   0.64768854,  1.52302986,
+                                            -0.23415337, -0.23413696, 1.57921282,  0.76743473,
+                                            -0.46947439,  0.54256004])
         
         self._ref_y_data_0 = self._ref_y_model_values_0 + self._ref_data_jitter_0
         self._ref_xy_data_0 = np.array([self._ref_x, self._ref_y_data_0])
