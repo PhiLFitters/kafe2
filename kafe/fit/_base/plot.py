@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 from matplotlib import gridspec as gs
 
 
-__all__ = ["PlotContainerBase", "PlotFigureBase", "PlotContainerException", "PlotFigureException",
+__all__ = ["PlotContainerBase", "PlotFigureBase", "MultiPlotBase", "PlotContainerException", "PlotFigureException",
            "kc_plot_style"]
 
 
@@ -282,6 +282,7 @@ class PlotFigureBase(object):
 
     It controls the overall figure layout and is responsible for axes, subplot and legend management.
     """
+    #TODO update documentation
     __metaclass__ = abc.ABCMeta  # TODO: check if needed
 
     PLOT_CONTAINER_TYPE = None
@@ -297,7 +298,7 @@ class PlotFigureBase(object):
         ),
     )
 
-    def __init__(self, fit_objects):
+    def __init__(self, fit_objects, model_start_index):
         self._fig = plt.figure()  # defaults from matplotlibrc
         # self._figsize = (self._fig.get_figwidth()*self._fig.dpi, self._fig.get_figheight()*self._fig.dpi)
         self._outer_gs = gs.GridSpec(nrows=1,
@@ -338,11 +339,10 @@ class PlotFigureBase(object):
         except TypeError:
             fit_objects = (fit_objects,)
 
-        for _fit in fit_objects:
-            for _i in range(_fit.model_count):
-                _pdc = self.__class__.PLOT_CONTAINER_TYPE(_fit, model_index=_i)
-                self._plot_data_containers.append(_pdc)
-                self._artist_store.append(dict())
+        for _i, _fit in enumerate(fit_objects):
+            _pdc = self.__class__.PLOT_CONTAINER_TYPE(_fit, model_index=model_start_index + _i)
+            self._plot_data_containers.append(_pdc)
+            self._artist_store.append(dict())
 
         self._plot_range_x = None
         self._plot_range_y = None
@@ -554,3 +554,34 @@ class PlotFigureBase(object):
         :type format_as_latex: bool
         """
         self._render_parameter_info_box(self._fig, format_as_latex=format_as_latex)
+
+
+class MultiPlotBase(object):
+    
+    SINGULAR_PLOT_TYPE = None
+    
+    #TODO add documentation
+    def __init__(self, fit_objects, separate_plots=True):
+        self._underlying_plots = []
+        if separate_plots:
+            for _fit_object in fit_objects:
+                for _i in range(_fit_object.model_count):
+                    self._underlying_plots.append(self.__class__.SINGULAR_PLOT_TYPE(_fit_object, model_start_index=_i))
+        else:
+            for _fit_object in fit_objects:
+                _fit_object_list = [] 
+                for _i in range(_fit_object.model_count):
+                    _fit_object_list.append(_fit_object)
+                self._underlying_plots.append(self.__class__.SINGULAR_PLOT_TYPE(_fit_object_list, model_start_index=0))
+
+    def get_figure(self, plot_index):
+        return self._underlying_plots[plot_index].figure
+    
+    def plot(self):
+        for _plot in self._underlying_plots:
+            _plot.plot()
+    
+    def show_fit_info_box(self, format_as_latex=False):
+        for _plot in self._underlying_plots:
+            _plot.show_fit_info_box(format_as_latex=format_as_latex)
+        
