@@ -310,7 +310,7 @@ class XYMultiContainer(IndexedContainer):
 
     # -- public methods
 
-    def add_simple_error(self, axis, err_val, name=None, correlation=0, relative=False):
+    def add_simple_error(self, axis, err_val, name=None, model_index=None, correlation=0, relative=False):
         """
         Add a simple uncertainty source for an axis to the data container.
         Returns an error id which uniquely identifies the created error source.
@@ -329,6 +329,7 @@ class XYMultiContainer(IndexedContainer):
         :return: error id
         :rtype: int
         """
+        #TODO update documentation
         _axis = self._find_axis_raise(axis)
         try:
             err_val.ndim   # will raise if simple float
@@ -340,7 +341,7 @@ class XYMultiContainer(IndexedContainer):
 
         _err = SimpleGaussianError(err_val=err_val, corr_coeff=correlation,
                                    relative=relative, reference=self._get_data_for_axis(_axis))
-        _name = self._add_error_object(name=name, error_object=_err, axis=_axis)
+        _name = self._add_error_object(name=name, model_index=model_index, error_object=_err, axis=_axis)
         return _name
 
     def add_matrix_error(self, axis, err_matrix, matrix_type, name=None, err_val=None, relative=False):

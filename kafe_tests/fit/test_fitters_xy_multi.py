@@ -104,7 +104,17 @@ class TestFittersXYMulti(unittest.TestCase):
                                                   model_function=self.xy_model_0)
 
         self._ref_parameter_value_estimates = [1.1351433845831516, 2.137441531781195, 2.3405503488535118]
+        self._ref_parameter_value_estimates_multi = [1.1143123505697918, 2.216862250281803, 2.9800759409541806, 0.4994086448422639]
+        self._ref_parameter_value_estimates_multi_reversed = [0.49940864485321074, 1.1143123504315096, 2.216862249916337, 2.9800759487215562]
         self._ref_y_model_value_estimates = self.xy_model_0(self._ref_x, *self._ref_parameter_value_estimates)
+        self._ref_y_model_value_estimates_multi = np.append(
+            self.xy_model_0(self._ref_x, *self._ref_parameter_value_estimates_multi[0:3]),
+            self.xy_model_1(self._ref_x, self._ref_parameter_value_estimates_multi[3], *self._ref_parameter_value_estimates_multi[0:3]),            
+        )
+        self._ref_y_model_value_estimates_multi_reversed = np.append(
+            self.xy_model_1(self._ref_x, *self._ref_parameter_value_estimates_multi_reversed),            
+            self.xy_model_0(self._ref_x, *self._ref_parameter_value_estimates_multi_reversed[1:4]),
+        )
 
     def test_conflicting_defaults_raise(self):
         with self.assertRaises(XYMultiModelFunctionException):
@@ -186,6 +196,26 @@ class TestFittersXYMulti(unittest.TestCase):
             )
         )
 
+    def test_do_fit_compare_parameter_values_multi(self):
+        self.xy_multi_fit.do_fit()
+        self.assertTrue(
+            np.allclose(
+                self.xy_multi_fit.parameter_values,
+                self._ref_parameter_value_estimates_multi,
+                rtol=1e-3
+            )
+        )
+
+    def test_do_fit_compare_parameter_values_multi_reversed(self):
+        self.xy_multi_fit_reversed.do_fit()
+        self.assertTrue(
+            np.allclose(
+                self.xy_multi_fit_reversed.parameter_values,
+                self._ref_parameter_value_estimates_multi_reversed,
+                rtol=1e-3
+            )
+        )
+
     def test_do_fit_compare_model_values(self):
         self.xy_fit.do_fit()
         self.assertTrue(
@@ -196,6 +226,27 @@ class TestFittersXYMulti(unittest.TestCase):
             )
         )
 
+    def test_do_fit_compare_model_values_multi(self):
+        self.xy_multi_fit.do_fit()
+        self.assertTrue(
+            np.allclose(
+                self.xy_multi_fit.y_model,
+                self._ref_y_model_value_estimates_multi,
+                rtol=1e-2
+            )
+        )
+
+    def test_do_fit_compare_model_values_multi_reversed(self):
+        self.xy_multi_fit_reversed.do_fit()
+        self.assertTrue(
+            np.allclose(
+                self.xy_multi_fit_reversed.y_model,
+                self._ref_y_model_value_estimates_multi_reversed,
+                rtol=1e-2
+            )
+        )
+
+    #TODO this test case seems redundant. Should it be removed?    
     def test_do_fit_explicit_model_name_in_chi2_compare_parameter_values(self):
         self.xy_fit.do_fit()
         self.assertTrue(
@@ -369,10 +420,12 @@ class TestFittersXYMultiChi2WithError(unittest.TestCase):
 
         self.xy_multi_fit.add_simple_error('y', self._ref_y_data_error_0,
                                            model_index=0, name="MyYDataError_0", correlation=0, relative=False, reference='data')
+        self.xy_multi_fit.add_simple_error('y', self._ref_y_model_error_1,
+                                           model_index=0, name="MyYModelError_0", correlation=0, relative=False, reference='model')
         self.xy_multi_fit.add_simple_error('y', self._ref_y_data_error_1,
                                            model_index=1, name="MyYDataError_1", correlation=0, relative=False, reference='data')
         self.xy_multi_fit.add_simple_error('y', self._ref_y_model_error_1,
-                                           name="MyYModelError", correlation=0, relative=False, reference='model')
+                                           model_index=1, name="MyYModelError_1", correlation=0, relative=False, reference='model')
 
         self._ref_y_total_error = np.sqrt(self._ref_y_data_error_0 ** 2 + self._ref_y_model_error_0 ** 2)
 
@@ -422,6 +475,17 @@ class TestFittersXYMultiChi2WithError(unittest.TestCase):
         self.assertEqual(len(_errs), 2)
         self.assertIs(self.xy_fit._data_container._error_dicts['MyYDataError']['err'], _errs['MyYDataError'])
         self.assertIs(self.xy_fit._param_model._error_dicts['MyYModelError']['err'], _errs['MyYModelError'])
+
+    def test_get_matching_error_model_index(self):
+        _errs = self.xy_multi_fit.get_matching_errors(matching_criteria=dict(model_index=0))
+        self.assertEqual(len(_errs), 2)
+        self.assertIs(self.xy_multi_fit._data_container._error_dicts['MyYDataError_0']['err'], _errs['MyYDataError_0'])
+        self.assertIs(self.xy_multi_fit._param_model._error_dicts['MyYModelError_0']['err'], _errs['MyYModelError_0'])
+        
+        _errs = self.xy_multi_fit.get_matching_errors(matching_criteria=dict(model_index=1))
+        self.assertEqual(len(_errs), 2)
+        self.assertIs(self.xy_multi_fit._data_container._error_dicts['MyYDataError_1']['err'], _errs['MyYDataError_1'])
+        self.assertIs(self.xy_multi_fit._param_model._error_dicts['MyYModelError_1']['err'], _errs['MyYModelError_1'])
 
     def test_get_matching_error_reference_data(self):
         _errs = self.xy_fit.get_matching_errors(matching_criteria=dict(reference='data'))

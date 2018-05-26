@@ -878,6 +878,7 @@ class XYMultiFit(FitBase):
             
         _ret = super(XYMultiFit, self).add_simple_error(err_val=_err,
                                                    name=name,
+                                                   model_index=model_index,
                                                    correlation=correlation,
                                                    relative=relative,
                                                    reference=reference,
