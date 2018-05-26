@@ -1,12 +1,14 @@
 import numpy as np
 
-from .._base import PlotContainerBase, PlotFigureBase
+from .._base import PlotContainerBase, PlotContainerException, PlotFigureBase
 from .._aux import step_fill_between
 from . import HistFit
 
 
 __all__ = ["HistPlot", "HistPlotContainer"]
 
+class HistPlotContainerException(PlotContainerException):
+    pass
 
 class HistPlotContainer(PlotContainerBase):
     FIT_TYPE = HistFit

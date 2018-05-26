@@ -1,7 +1,7 @@
 import numpy as np
 
 from ...config import kc
-from .._base import PlotContainerBase, PlotFigureBase, kc_plot_style
+from .._base import PlotContainerBase, PlotContainerException, PlotFigureBase, kc_plot_style
 from .._aux import step_fill_between
 from . import XYFit
 
@@ -9,11 +9,13 @@ from . import XYFit
 
 __all__ = ["XYPlot", "XYPlotContainer"]
 
+class XYPlotContainerException(PlotContainerException):
+    pass
 
 class XYPlotContainer(PlotContainerBase):
     FIT_TYPE = XYFit
 
-    def __init__(self, xy_fit_object, n_plot_points_model=100):
+    def __init__(self, xy_fit_object, model_index=0, n_plot_points_model=100):
         """
         Construct an :py:obj:`XYPlotContainer` for a :py:obj:`~kafe.fit.xy.XYFit` object:
 

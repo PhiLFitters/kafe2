@@ -1,13 +1,13 @@
 import numpy as np
 
 from ...config import kc
-from .._base import PlotContainerBase, PlotFigureBase, kc_plot_style
+from .._base import PlotContainerBase, PlotFigureBase, MultiPlotBase, kc_plot_style
 from .._aux import step_fill_between
 from . import XYMultiFit
 
 
 
-__all__ = ["XYMultiPlot", "XYMultiPlotContainer"]
+__all__ = ["XYMultiPlotSingular", "XYMultiPlot","XYMultiPlotContainer"]
 
 
 class XYMultiPlotContainer(PlotContainerBase):
@@ -155,7 +155,7 @@ class XYMultiPlotContainer(PlotContainerBase):
             return None  # don't plot error band if fitter input data has no errors...
 
 
-class XYMultiPlot(PlotFigureBase):
+class XYMultiPlotSingular(PlotFigureBase):
 
     PLOT_CONTAINER_TYPE = XYMultiPlotContainer
     PLOT_STYLE_CONFIG_DATA_TYPE = 'xy'
@@ -164,7 +164,15 @@ class XYMultiPlot(PlotFigureBase):
     PLOT_SUBPLOT_TYPES['model_error_band'] = dict(
         plot_container_method='plot_model_error_band',
     )
+    IS_MULTI_PLOT = True
 
-    def __init__(self, fit_objects):
-        super(XYMultiPlot, self).__init__(fit_objects=fit_objects)
+    def __init__(self, fit_objects, model_start_index):
+        super(XYMultiPlotSingular, self).__init__(fit_objects=fit_objects, model_start_index=model_start_index)
         self._plot_range_x = None
+
+class XYMultiPlot(MultiPlotBase):
+    
+    SINGULAR_PLOT_TYPE = XYMultiPlotSingular
+    
+    def __init__(self, fit_objects, separate_plots=True):
+        super(XYMultiPlot, self).__init__(fit_objects, separate_plots=separate_plots)
