@@ -82,6 +82,7 @@ class FitBase(object):
     def _mark_errors_for_update(self):
         pass
 
+    #Gets overwritten by multi models
     def _get_model_report_dict_entry(self):
         return self._model_function.formatter.get_formatted(
             with_par_values=False,
