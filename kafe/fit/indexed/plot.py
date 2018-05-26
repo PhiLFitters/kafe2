@@ -1,22 +1,27 @@
 import numpy as np
 
-from .._base import PlotContainerBase, PlotFigureBase
+from .._base import PlotContainerBase, PlotContainerException, PlotFigureBase
 from .._aux import step_fill_between
 from . import IndexedFit
 
 
 __all__ = ["IndexedPlot", "IndexedPlotContainer"]
 
+class IndexedPlotContainerException(PlotContainerException):
+    pass
 
 class IndexedPlotContainer(PlotContainerBase):
     FIT_TYPE = IndexedFit
 
-    def __init__(self, indexed_fit_object):
+    def __init__(self, indexed_fit_object, model_index=0):
         """
         Construct an :py:obj:`IndexedPlotContainer` for a :py:obj:`~kafe.fit.indexed.IndexedFit` object:
 
         :param fit_object: an :py:obj:`~kafe.fit.indexed.IndexedFit` object
         """
+        #TODO update documentation
+        if model_index is not 0:
+            raise IndexedPlotContainerException("Received a model_index != 0, but IndexedPlotContainer always has exactly 1 model!")
         super(IndexedPlotContainer, self).__init__(fit_object=indexed_fit_object)
 
     @property
