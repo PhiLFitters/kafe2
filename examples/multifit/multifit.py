@@ -67,6 +67,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # empirical model for T(U): a parabola
+# independent variable MUST be named x!
 def empirical_T_U_model(x, p2=1.0, p1=1.0, p0=0.0):
     # use quadratic model as empirical temerature dependence T(U)
     return p2 * x**2 + p1 * x + p0
@@ -74,6 +75,7 @@ def empirical_T_U_model(x, p2=1.0, p1=1.0, p0=0.0):
 
 
 # model of current-voltage dependence I(U) for a heating resistor
+# independent variable MUST be named x!
 def I_U_model(x, R0=1., alph=0.004, p2=1.0, p1=1.0, p0=0.0):
     # use quadratic model as empirical temerature dependence T(U)
     _temperature = empirical_T_U_model(x, p2, p1, p0)
@@ -109,7 +111,15 @@ fit.add_simple_error(axis='y', err_val=sigI, model_index=1)
 #kMultifit_I_T_U_empirical.autolink_parameters()
 
 
-# Step 3: do the fit
+# Step 3 (optional): Assign names for models and parameters
+fit.assign_parameter_latex_names(x='U', p2='p_2', p1='p_1', p0='p_0', R0='R_0', alph=r'\alpha_\mathrm{T}')
+
+fit.assign_model_function_expression('{0}*{x}^2 + {1}*{x} + {2}', model_index=0)
+fit.assign_model_function_latex_expression(r'{0}\,{x}^2 + {1}\,{x} + {2}', model_index=0)
+fit.assign_model_function_expression('{x} / ({0} * (1 + ({2}*{x}^2 + {3}*{x} + {4}) * {1}))', model_index=1)
+fit.assign_model_function_latex_expression(r'\frac{{{x}}}{{{0} * (1 + ({2}*{x}^2 + {3}*{x} + {4}) * {1})}}', model_index=1)
+
+# Step 4: do the fit
 fit.do_fit()
 
 #(Optional) print the results
