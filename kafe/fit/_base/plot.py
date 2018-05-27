@@ -261,7 +261,7 @@ class PlotContainerBase(object):
         pass
 
     def get_formatted_model_function(self, **kwargs):
-        return _fitter._model_function.formatter.get_formatted(**kwargs)
+        return self._fitter._model_function.formatter.get_formatted(**kwargs)
 
     @property
     def argument_formatters(self, **kwargs):
