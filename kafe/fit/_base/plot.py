@@ -300,7 +300,7 @@ class PlotFigureBase(object):
 
     IS_MULTI_PLOT = False
 
-    def __init__(self, fit_objects, model_start_index):
+    def __init__(self, fit_objects, model_start_index=0):
         self._fig = plt.figure()  # defaults from matplotlibrc
         # self._figsize = (self._fig.get_figwidth()*self._fig.dpi, self._fig.get_figheight()*self._fig.dpi)
         self._outer_gs = gs.GridSpec(nrows=1,
