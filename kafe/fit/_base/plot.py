@@ -581,6 +581,10 @@ class MultiPlotBase(object):
     #TODO add documentation
     def __init__(self, fit_objects, separate_plots=True):
         self._underlying_plots = []
+        try:
+            iter(fit_objects)
+        except:
+            fit_objects=[fit_objects]
         if separate_plots:
             for _fit_object in fit_objects:
                 for _i in range(_fit_object.model_count):

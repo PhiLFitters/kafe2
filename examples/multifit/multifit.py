@@ -62,39 +62,23 @@ parameter constraints, which is demonstrated in example 11.
 """
 
 
-import kafe
+from kafe.fit import XYMultiFit, XYMultiPlot
 import numpy as np
 import matplotlib.pyplot as plt
 
-# need to import some tools from kafe explicitly
-from kafe import ASCII, LaTeX, FitFunction
-from kafe.numeric_tools import cov_to_cor  # needed to obtain parameter correlations
-
-# -- Start by defining our models
-
 # empirical model for T(U): a parabola
-@ASCII(expression='p2*U^2 + p1*U + p0')
-@LaTeX(name='T',
-       parameter_names=('p_2', 'p_1', 'p_0'),
-       expression=r'p_2 U^2 + p_1 U + p_0')
-@FitFunction
-def empirical_T_U_model(U, p2=1.0, p1=1.0, p0=0.0):
+def empirical_T_U_model(x, p2=1.0, p1=1.0, p0=0.0):
     # use quadratic model as empirical temerature dependence T(U)
-    return p2 * U**2 + p1 * U + p0
+    return p2 * x**2 + p1 * x + p0
 
 
 
 # model of current-voltage dependence I(U) for a heating resistor
-@ASCII(expression='U/(R0 * (1 + t(p2, p1, p0) * alpha_T)')
-@LaTeX(name='I',
-       parameter_names=(r'R_0', r'\alpha_T','p_2','p_1','p_0'),
-       expression=r'U / \left( R_0 (1 + t(p_i) \cdot \alpha_T) \right)')
-@FitFunction
-def I_U_model(U, R0=1., alph=0.004, p2=1.0, p1=1.0, p0=0.0):
+def I_U_model(x, R0=1., alph=0.004, p2=1.0, p1=1.0, p0=0.0):
     # use quadratic model as empirical temerature dependence T(U)
-    _temperature = empirical_T_U_model(U, p2, p1, p0)
+    _temperature = empirical_T_U_model(x, p2, p1, p0)
     # plug the temperature into the model
-    return U / (R0 * (1.0 + _temperature * alph))
+    return x / (R0 * (1.0 + _temperature * alph))
 
 
 # -- Next, read the data from an external file
@@ -104,53 +88,35 @@ U, I, T = np.loadtxt('OhmsLawExperiment.dat', unpack=True)  # data
 sigU, sigI, sigT = 0.1, 0.1, 0.1  # uncertainties
 
 T0 = 273.15  # 0 degrees C as absolute Temperature (in Kelvin)
-
+T -= T0 #Measurements are in Kelvin, convert to °C
 
 # -- Finally, go through the fitting procedure
 
-# Step 1:  construct a kafe dataset for the T-U data
-kData_T_U = kafe.Dataset(
-              data=(U, T-T0),
-              basename='u-t-data',
-              title='Temperature vs. Voltage',
-              axis_labels=['U [V]', r"T [$^\circ$C]"])
+# Step 1:  construct an XYMultiFit object
+fit = XYMultiFit(xy_data=[[U, T], [U, I]],
+                 model_function=[empirical_T_U_model, I_U_model])
 
 # declare errors on U and T
-kData_T_U.add_error_source('x', 'simple', sigU)
-kData_T_U.add_error_source('y', 'simple', sigT)
-
-
-# Step 2:  construct a kafe dataset for the U-I data
-kData_I_U = kafe.Dataset(
-              data=(U, I),
-              basename='u-i-data',
-              title='Current vs. Voltage',
-              axis_labels=['U [V]', 'I [A]'])
+fit.add_simple_error(axis='x', err_val=sigU, model_index=0)
+fit.add_simple_error(axis='y', err_val=sigT, model_index=0)
 
 # declare errors on U and I
-kData_I_U.add_error_source('x', 'simple', sigU)
-kData_I_U.add_error_source('y', 'simple', sigI)
-
-
-
-# Step 3:  construct and do the multi-model fit
-kMultifit_I_T_U_empirical = kafe.Multifit([
-                               (kData_T_U, empirical_T_U_model),
-                               (kData_I_U, I_U_model)],   
-                               fit_name='i-t-u-multifit-empirical')
+fit.add_simple_error(axis='x', err_val=sigU, model_index=1)
+fit.add_simple_error(axis='y', err_val=sigI, model_index=1)
 
 # identify and link parameters and data which are the same
-kMultifit_I_T_U_empirical.autolink_datasets()
-kMultifit_I_T_U_empirical.autolink_parameters()
-
-# do the fit
-kMultifit_I_T_U_empirical.do_fit()
-
-# plot the results
-kPlot_I_U_empirical = kafe.Multiplot(kMultifit_I_T_U_empirical)
-kPlot_I_U_empirical.plot_all()
+#kMultifit_I_T_U_empirical.autolink_datasets()
+#kMultifit_I_T_U_empirical.autolink_parameters()
 
 
-# save and show the resulting fit
-kPlot_I_U_empirical.save_all('kafe_example_TU.png', 'kafe_example_IU.png')
+# Step 3: do the fit
+fit.do_fit()
+
+#(Optional) print the results
+fit.report()
+
+#(Optional) plot the results
+plot = XYMultiPlot(fit)
+plot.plot()
+plot.show_fit_info_box(format_as_latex=True)
 plt.show()
