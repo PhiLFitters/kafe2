@@ -15,7 +15,7 @@ class XYMultiContainerException(IndexedContainerException):
 
 class XYMultiContainer(IndexedContainer):
     """
-    This object is a specialized data container for *xy* data.
+    This object is a specialized data container for *xy* data associated with 1 or more datasets.
 
     """
     _AXIS_SPEC_DICT = {0:0, 1:1, '0':0, '1':1, 'x':0, 'y':1}
@@ -155,7 +155,7 @@ class XYMultiContainer(IndexedContainer):
 
     @property
     def size(self):
-        """number of data points"""
+        """total number of data points"""
         return self._xy_data.shape[1]
 
     @property
@@ -165,6 +165,7 @@ class XYMultiContainer(IndexedContainer):
 
     @data.setter
     def data(self, new_data):
+        #TODO new_data and data_indices can be inconsistent
         _new_data = np.asarray(new_data)
         if _new_data.ndim != 2:
             raise XYMultiContainerException("XYMultiContainer data must be 2-d array of floats! Got shape: %r..." % (_new_data.shape,))
@@ -259,18 +260,18 @@ class XYMultiContainer(IndexedContainer):
 
     @property
     def x_range(self):
-        """x data range"""
+        """x data range across all datasets"""
         _x = self.x
         return np.min(_x), np.max(_x)
 
     def get_x_range(self, index):
-        """x data range"""
+        """x data range for the dataset with the specified index"""
         _x = self.x[self.data_indices[index] : self.data_indices[index + 1]]
         return np.min(_x), np.max(_x)
 
     @property
     def y_range(self):
-        """y data range"""
+        """y data range across all datasets"""
         _y = self.y
         return np.min(_y), np.max(_y)
 
@@ -287,9 +288,9 @@ class XYMultiContainer(IndexedContainer):
 
     @property
     def _y_nuisance_cor_design_mat(self):
-         """design matrix containing the correlated parts of all y uncertainties"""
-         _nuisance_y_cor_cov_mat = self._calculate_y_nuisance_cor_design_matrix()
-         return _nuisance_y_cor_cov_mat
+        """design matrix containing the correlated parts of all y uncertainties"""
+        _nuisance_y_cor_cov_mat = self._calculate_y_nuisance_cor_design_matrix()
+        return _nuisance_y_cor_cov_mat
 
     @property
     def x_uncor_cov_mat(self):
@@ -313,7 +314,7 @@ class XYMultiContainer(IndexedContainer):
     def add_simple_error(self, axis, err_val, name=None, model_index=None, correlation=0, relative=False):
         """
         Add a simple uncertainty source for an axis to the data container.
-        Returns an error id which uniquely identifies the created error source.
+        Returns an error name which uniquely identifies the created error source.
 
         :param axis: ``'x'``/``0`` or ``'y'``/``1``
         :type axis: str or int
@@ -322,14 +323,16 @@ class XYMultiContainer(IndexedContainer):
         :param name: unique name for this uncertainty source. If ``None``, the name
                      of the error source will be set to a random alphanumeric string.
         :type name: str or ``None``
+        :param model_index: the index of the dataset/model with which the error will be associated (only relevant for
+                    the error dictionary)
+        :type model_index: int
         :param correlation: correlation coefficient between any two distinct data points
         :type correlation: float
         :param relative: if ``True``, **err_val** will be interpreted as a *relative* uncertainty
         :type relative: bool
-        :return: error id
-        :rtype: int
+        :return: error name
+        :rtype: str
         """
-        #TODO update documentation
         _axis = self._find_axis_raise(axis)
         try:
             err_val.ndim   # will raise if simple float
@@ -346,8 +349,8 @@ class XYMultiContainer(IndexedContainer):
 
     def add_matrix_error(self, axis, err_matrix, matrix_type, name=None, err_val=None, relative=False):
         """
-        Add a matrix uncertainty source for an axis to the data container.
-        Returns an error id which uniquely identifies the created error source.
+        Add a matrix uncertainty source for an axis and for one specific dataset to the data container.
+        Returns an error name which uniquely identifies the created error source.
 
         :param axis: ``'x'``/``0`` or ``'y'``/``1``
         :type axis: str or int
@@ -361,8 +364,8 @@ class XYMultiContainer(IndexedContainer):
         :type err_val: iterable of float
         :param relative: if ``True``, the covariance matrix and/or **err_val** will be interpreted as a *relative* uncertainty
         :type relative: bool
-        :return: error id
-        :rtype: int
+        :return: error name
+        :rtype: str
         """
         _axis = self._find_axis_raise(axis)
         _err = MatrixGaussianError(
@@ -414,20 +417,26 @@ class XYMultiContainer(IndexedContainer):
 
     @property
     def data_indices(self):
+        """the indices at which the *xy* datasets start/stop, the nth dataset starts at the nth data index and stops at the
+        (n + 1)th data index"""
         return self._data_indices
     
     @property
     def num_datasets(self):
+        """the number of datasets in this container"""
         return len(self._data_indices) - 1
     
     def get_data_bounds(self, index):
+        """the bounds of the dataset with the specified index"""
         return self.data_indices[index], self.data_indices[index + 1]
     
     def get_splice(self, data, index):
+        """utility function that splices the given data according to the dataset bounds of the specified index"""
         return data[self.data_indices[index] : self.data_indices[index + 1]]
     
     @property
     def all_datasets_same_size(self):
+        """True if all datasets contain the same number of *xy* points"""
         _lower, _upper = self.get_data_bounds(0)
         _diff = _upper - _lower
         for _i in range(1, self.num_datasets):

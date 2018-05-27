@@ -20,16 +20,20 @@ class XYMultiModelFunction(ModelFunctionBase):
 
     def __init__(self, model_function, data_indices):
         """
-        Construct :py:class:`XYMultiModelFunction` object (a wrapper for a native Python function):
+        Construct :py:class:`XYMultiModelFunction` object (a wrapper for an iterable of native Python function):
 
-        :param model_function: function handle
+        :param model_function: function handles
+        :type model_function: native Python function or iterable thereof
+        :param data_indices: the indices at which iterables of *x* values should be split between the functions, 
+               length must be length of model_funtion + 1
+        :type iterable of int
         """
         try: 
             iter(model_function)
         except:
             model_function = [model_function]
         if len(model_function) != len(data_indices) - 1:
-            raise XYMultiModelFunctionException("Length of model_function must be equal to length of data_indices - 1")
+            raise XYMultiModelFunctionException("Must provide the same number of models and datasets, i.e. len(model_function == len(data_indices) - 1)!")
         self._x_name = 'x'
         self._data_indices = data_indices
         self._model_arg_indices = []
@@ -53,7 +57,7 @@ class XYMultiModelFunction(ModelFunctionBase):
                         _defaults_dict[_arg_name] = _model_function_defaults[_defaults_index]
                 elif _arg_name in _defaults_dict and _defaults_dict[_arg_name] != _model_function_defaults[_defaults_index]:
                     #TODO Exception or Warning?
-                     raise XYMultiModelFunctionException("Model functions have conflicting defaults for parameter %s: %s <-> %s" % 
+                    raise XYMultiModelFunctionException("Model functions have conflicting defaults for parameter %s: %s <-> %s" % 
                                                          (_arg_name, _defaults_dict[_arg_name], _model_function_defaults[_defaults_index]))
                 _defaults_index += 1
                 _partial_model_arg_indices.append(_args.index(_arg_name))
@@ -167,11 +171,27 @@ class XYMultiModelFunction(ModelFunctionBase):
         self._data_indices = new_data_indices
 
     def eval_underlying_model_function(self, x, args, model_index):
-        #TODO documentation
+        """
+        evaluate one of the underlying model functions
+        :param x: the *x* values passed on the model function
+        :type x: float or :py:obj:`numpy.ndarray` of float
+        :param args: an iterable of all parameters used between all model functions
+        :type args: iterable of float
+        :param model_index: the index of the model function to be evaluated
+        :type model_index: int
+        :return: y-values of the specified model function at the given *x* values
+        :rtype: float of :py:obj:`numpy.ndarray` of float
+        """
         return self.model_function_list[model_index](x, *self._construct_arg_list(args, model_index))
     
     def get_argument_formatters(self, model_index):
-        #TODO documentation
+        """
+        return the argument formatters for a single underlying model function
+        :param model_index: the index of the model function whose parameter formatters to return
+        :type model_index: int
+        :return: the list of argument formatters corresponding to the specified model function
+        :rtype: :py:obj:`Formatter`
+        """
         return self._construct_arg_list(self.argument_formatters, model_index)
     
 class XYMultiParametricModelException(XYMultiContainerException):
@@ -183,11 +203,13 @@ class XYMultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
         """
         Construct an :py:obj:`XYMultiParametricModel` object:
 
-        :param x_data: array containing the *x* values supporting the model
-        :param model_func: handle of Python function (the model function)
-        :param model_parameters: iterable of parameter values with which the model function should be initialized
+        :param x_data: array containing the *x* values supporting the models
+        :type x_data: :py:obj:`numpy.ndarray`
+        :param model_func: the model functions for the multi model encapsulated in a kafe2 model function object
+        :type model_func: :py:obj:`XYMultiModelFunction`
+        :param model_parameters: iterable of parameter values with which the model functions should be initialized
+        :type model_parameters: iterable of float
         """
-        #TODO update documentation
         # print "XYMultiParametricModel.__init__(x_data=%r, model_func=%r, model_parameters=%r)" % (x_data, model_func, model_parameters)
         _xy_data = np.empty([2, x_data.size])
         _xy_data[0] = x_data
@@ -264,16 +286,19 @@ class XYMultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
 
     def eval_model_function(self, x=None, model_parameters=None, model_index=None):
         """
-        Evaluate the model function.
+        Evaluate all model functions or just one of them.
 
         :param x: *x* values of the support points (if ``None``, the model *x* values are used)
         :type x: list or ``None``
-        :param model_parameters: values of the model parameters (if ``None``, the current values are used)
+        :param model_parameters: values of the model parameters used between all model functions
+                                 (if ``None``, the current values are used)
         :type model_parameters: list or ``None``
+        :param model_index: the index of the model function to be evaluated (if ``None``, the *x* 
+                            values are distributed according to `data_indices`)
+        :type model_index: int
         :return: value(s) of the model function for the given parameters
         :rtype: :py:obj:`numpy.ndarray`
         """
-        #TODO update documentation
         _x = x if x is not None else self.x
         _pars = model_parameters if model_parameters is not None else self._model_parameters
         if model_index is None:
@@ -287,17 +312,17 @@ class XYMultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
 
         :param x: *x* values of the support points (if ``None``, the model *x* values are used)
         :type x: list or ``None``
-        :param model_parameters: values of the model parameters (if ``None``, the current values are used)
+        :param x_indices: the indices at which the *x* values should be split when distributing
+                          them to the model functions (if ``None``, `data_indices` is used)
+        :type x_indices: iterable of int
+        :param model_parameters: values of the model parameters between all model functions
+                                 (if ``None``, the current values are used)
         :type model_parameters: list or ``None``
-        :param par_dx: step size for numeric differentiation
-        :type par_dx: float
+        :param par_dx: step size for numeric differentiation for the parameters
+        :type par_dx: float or `numpy.ndarray` of float
         :return: value(s) of the model function derivative for the given parameters
         :rtype: :py:obj:`numpy.ndarray`
         """
-        #TODO update documentation
-        if x is not None and x_indices is None:
-            raise XYMultiParametricModelException('When x is specified x_indices also has to be specified!')
-        
         _x = x if x is not None else self.x
         _x_indices = x_indices if x_indices is not None else self.data_indices
         _pars = model_parameters if model_parameters is not None else self._model_parameters

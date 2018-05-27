@@ -42,14 +42,22 @@ class XYMultiFit(FitBase):
                  cost_function=XYMultiCostFunction_Chi2(axes_to_use='xy', errors_to_use='covariance'),
                  minimizer=None, minimizer_kwargs=None):
         """
-        Construct a fit of a model to *xy* data.
+        Construct a fit of one or more pairs of models and *xy* datasets.
+        To specify more than one such pair, xy_data and model_function must be iterables of the same length.
+        The model function at each index is associated with the dataset at the same index.
 
         :param xy_data: the x and y measurement values
-        :type xy_data: (2, N)-array of float
+        :type xy_data: (2, N)-array of float or an iterable thereof
         :param model_function: the model function
-        :type model_function: :py:class:`~kafe.fit.multi.XYMultiModelFunction` or unwrapped native Python function
+        :type model_function: :py:class:`~kafe.fit.multi.XYMultiModelFunction` or unwrapped native Python function or an 
+            iterable of those
         :param cost_function: the cost function
         :type cost_function: :py:class:`~kafe.fit._base.CostFunctionBase`-derived or unwrapped native Python function
+        :param minimizer: the minimizer to be used for the fit, 'root', or 'tminuit' for TMinuit, 'iminuit' for IMinuit, or 'scipy' for SciPy. 
+            If None, the minimizer will be chosen according to config (TMinuit > IMinuit > SciPy by default)
+        :type str
+        :param minimizer_kwargs: kwargs provided to the minimizer constructor
+        :type minimizer_kwargs: native Python dictionary
         """
         
         # set the data
@@ -893,7 +901,24 @@ class XYMultiFit(FitBase):
         return _ret
 
     def add_simple_shared_x_error(self, err_val, name=None, correlation=0, relative=False, reference='data'):
-        #TODO documentation, move to container?
+        """
+        Add a simple uncertainty source for the *x*-axis to all datasets or models.
+        The correlation between different datasets/models is set to 1.0.
+        This method is designed for datasets which contain the same *x*-data.
+        Returns an error name which uniquely identifies the created error source.
+
+        :param err_val: pointwise uncertainty/uncertainties for all data points
+        :type err_val: float or iterable of float
+        :param correlation: correlation coefficient between any two distinct data points
+        :type correlation: float
+        :param relative: if ``True``, **err_val** will be interpreted as a *relative* uncertainty
+        :type relative: bool
+        :param reference: which reference values to use when calculating absolute errors from relative errors
+        :type reference: 'data' or 'model'
+        :return: error name
+        :rtype: str
+        """
+        #TODO move to container?
         if not self._data_container.all_datasets_same_size:
             raise XYMultiFitException("You can only add a shared x error if all datasets are of the same size!")
         _lower, _upper = self._data_container.get_data_bounds(0)
@@ -997,6 +1022,8 @@ class XYMultiFit(FitBase):
         :type x: iterable of float
         :param model_parameters: the model parameter values (if ``None``, the current values are used)
         :type model_parameters: iterable of float
+        :param model_index: the index of the model function to be evaluated
+        :type model_index: int
         :return: model function values
         :rtype: :py:class:`numpy.ndarray`
         """
@@ -1124,8 +1151,24 @@ class XYMultiFit(FitBase):
         super(XYMultiFit, self).report()
 
     def get_splice(self, data, index):
+        """
+        Utility function to splice an iterable according to the container data indices.
+        Specifically, this method splices consecutive data for all models to just the data
+        of the model with the given index.
+        :param data: the data to be spliced
+        :type data: iterable
+        :param index: the index of the model whose data will be spliced out
+        :type int:
+        :return the spliced data
+        """
         return self._data_container.get_splice(data, index)
     
     def get_model_function(self, index):
+        """
+        Returns the specified native Phython function which is used as a model function.
+        :param index: the index of the model function to be returned
+        :type int:
+        :return the model function with the specified index
+        """
         return self._model_function.get_underlying_model_function(index)
     
