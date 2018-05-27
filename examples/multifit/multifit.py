@@ -52,13 +52,13 @@ the other in some way.
 Approach 2: multi-model fit
 ---------------------------
 
-There are several ways to achieve this with *kafe*. The method chosen
-here is to use the :py:object:`~kafe.multifit.Multifit` functionality
+There are several ways to achieve this with *kafe2*. The method chosen
+here is to use the :py:object:`~kafe.fit.xy_multi.XYMultifit` functionality
 to fit both models simultaneously to the :math:`T(U)` and :math:`I(U)`
 datasets.
 
 In general, this approach yields different results than the one using
-parameter constraints, which is demonstrated in example 11.
+parameter constraints, which is demonstrated in the example called constraints.
 """
 
 
