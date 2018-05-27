@@ -98,12 +98,13 @@ T -= T0 #Measurements are in Kelvin, convert to °C
 fit = XYMultiFit(xy_data=[[U, T], [U, I]],
                  model_function=[empirical_T_U_model, I_U_model])
 
-# declare errors on U and T
-fit.add_simple_error(axis='x', err_val=sigU, model_index=0)
+# declare errors on U
+fit.add_simple_shared_x_error(err_val=sigU, correlation=0, relative=False)
+
+# declare errors on T
 fit.add_simple_error(axis='y', err_val=sigT, model_index=0)
 
-# declare errors on U and I
-fit.add_simple_error(axis='x', err_val=sigU, model_index=1)
+# declare errors on I
 fit.add_simple_error(axis='y', err_val=sigI, model_index=1)
 
 

@@ -416,9 +416,22 @@ class XYMultiContainer(IndexedContainer):
     def data_indices(self):
         return self._data_indices
     
+    @property
+    def num_datasets(self):
+        return len(self._data_indices) - 1
+    
     def get_data_bounds(self, index):
         return self.data_indices[index], self.data_indices[index + 1]
     
     def get_splice(self, data, index):
         return data[self.data_indices[index] : self.data_indices[index + 1]]
     
+    @property
+    def all_datasets_same_size(self):
+        _lower, _upper = self.get_data_bounds(0)
+        _diff = _upper - _lower
+        for _i in range(1, self.num_datasets):
+            _lower, _upper = self.get_data_bounds(0)
+            if _upper - _lower != _diff:
+                return False
+        return True

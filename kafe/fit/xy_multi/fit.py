@@ -892,6 +892,30 @@ class XYMultiFit(FitBase):
 
         return _ret
 
+    def add_simple_shared_x_error(self, err_val, name=None, correlation=0, relative=False, reference='data'):
+        #TODO documentation, move to container?
+        if not self._data_container.all_datasets_same_size:
+            raise XYMultiFitException("You can only add a shared x error if all datasets are of the same size!")
+        _lower, _upper = self._data_container.get_data_bounds(0)
+        _x_size = _upper - _lower
+        try:
+            err_val.ndim   # will raise if simple float
+        except AttributeError:
+            err_val = np.asarray(err_val, dtype=float)
+
+        if err_val.ndim == 0:  # if dimensionless numpy array (i.e. float64), add a dimension
+            err_val = np.ones(_x_size) * err_val
+        elif err_val.size != _x_size:
+            raise XYMultiFitException("Expected to receive %s error values but received %s instead!" % 
+                                    (_x_size, err_val.size))
+        _total_err_val = np.tile(err_val, 2)
+        _correlation_matrix = np.maximum(np.eye(_x_size), np.ones((_x_size, _x_size)) * correlation)
+        _total_correlation_matrix = np.tile(_correlation_matrix, 
+                                            (self._data_container.num_datasets, self._data_container.num_datasets))
+        return self.add_matrix_error('x', err_matrix=_total_correlation_matrix, matrix_type='cor', 
+                                     name=name, err_val=_total_err_val, relative=relative, reference=reference)
+        
+
     def add_matrix_error(self, axis, err_matrix, matrix_type,
                          name=None, err_val=None, relative=False, reference='data'):
         """
