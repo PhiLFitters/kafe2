@@ -15,7 +15,7 @@ class XYPlotContainerException(PlotContainerException):
 class XYPlotContainer(PlotContainerBase):
     FIT_TYPE = XYFit
 
-    def __init__(self, xy_fit_object, model_index=0, n_plot_points_model=100):
+    def __init__(self, xy_fit_object, n_plot_points_model=100):
         """
         Construct an :py:obj:`XYPlotContainer` for a :py:obj:`~kafe.fit.xy.XYFit` object:
 
