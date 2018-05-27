@@ -327,30 +327,18 @@ class XYMultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
                 if _j not in _par_indices:
                     _derivatives[_j].append(np.zeros_like(_x_splice))
                     _skipped_pars += 1
-                    continue
-                def _chipped_func(par):
-                    _chipped_pars = _par_sublist.copy()
-                    _chipped_pars[_j - _skipped_pars] = par
-                    return _model_function(_x_splice, *_chipped_pars)
-                _derivatives[_j].append(derivative(_chipped_func, _par_val, dx=_par_dx))
+                else:
+                    _par_sublist_index = _par_indices.index(_j)
+                    def _chipped_func(par):
+                        _chipped_pars = _par_sublist.copy()
+                        _chipped_pars[_par_sublist_index] = par
+                        return _model_function(_x_splice, *_chipped_pars)
+                    _derivatives[_j].append(derivative(_chipped_func, _par_val, dx=_par_dx))
         
         _flattened_derivatives = []
         for _derivative in _derivatives:
-            if len(_derivative) > 1:
-                _flattened_derivatives.append(np.append(*_derivative))
-            else: 
-                _flattened_derivatives.append(*_derivative)
+            _flattened_derivatives.append(np.append(np.array([]), _derivative))
         return np.array(_flattened_derivatives)
-        #_ret = []
-        #for _par_idx, (_par_val, _par_dx) in enumerate(zip(_pars, _par_dxs)):
-        #    def _chipped_func(par):
-        #        _chipped_pars = _pars.copy()
-        #        _chipped_pars[_par_idx] = par
-        #        return self._model_function_handle.func(_x, *_chipped_pars)
-        #
-        #    _der_val = derivative(_chipped_func, _par_val, dx=_par_dx)
-        #    _ret.append(_der_val)
-        #return np.array(_ret)
 
     def eval_model_function_derivative_by_x(self, x=None, x_indices=None, model_parameters=None, dx=None):
         """
