@@ -106,10 +106,6 @@ fit.add_simple_error(axis='y', err_val=sigT, model_index=0)
 fit.add_simple_error(axis='x', err_val=sigU, model_index=1)
 fit.add_simple_error(axis='y', err_val=sigI, model_index=1)
 
-# identify and link parameters and data which are the same
-#kMultifit_I_T_U_empirical.autolink_datasets()
-#kMultifit_I_T_U_empirical.autolink_parameters()
-
 
 # Step 3 (optional): Assign names for models and parameters
 fit.assign_parameter_latex_names(x='U', p2='p_2', p1='p_1', p0='p_0', R0='R_0', alph=r'\alpha_\mathrm{T}')
