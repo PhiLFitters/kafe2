@@ -298,6 +298,8 @@ class PlotFigureBase(object):
         ),
     )
 
+    IS_MULTI_PLOT = False
+
     def __init__(self, fit_objects, model_start_index):
         self._fig = plt.figure()  # defaults from matplotlibrc
         # self._figsize = (self._fig.get_figwidth()*self._fig.dpi, self._fig.get_figheight()*self._fig.dpi)
@@ -445,15 +447,28 @@ class PlotFigureBase(object):
                 target_figure.text(_fig_ls[2]+.05, _y, _formatted_string, **kwargs)
                 _y_inc_counter += 1
 
-            # print info about cost function per degree of freedom
+            if not self.__class__.IS_MULTI_PLOT:
+                # print info about cost function per degree of freedom
+                _y = _y_inc_offset - _y_inc_size * _y_inc_counter
+                _pf = _pdc._fitter._cost_function._formatter
+                _formatted_string = _pf.get_formatted(value=_pdc._fitter.cost_function_value,
+                                                n_degrees_of_freedom=_pdc._fitter._cost_function.ndf, # TODO: public interface
+                                                with_value_per_ndf=True,
+                                                format_as_latex=format_as_latex)
+                target_figure.text(_fig_ls[2] + .05, _y, _formatted_string, **kwargs)
+                _y_inc_counter += 1
+        if self.__class__.IS_MULTI_PLOT:
+            _y_inc_counter += 1
+            _pdc = self._plot_data_containers[0]
             _y = _y_inc_offset - _y_inc_size * _y_inc_counter
             _pf = _pdc._fitter._cost_function._formatter
             _formatted_string = _pf.get_formatted(value=_pdc._fitter.cost_function_value,
-                                                  n_degrees_of_freedom=_pdc._fitter._cost_function.ndf, # TODO: public interface
-                                                  with_value_per_ndf=True,
-                                                  format_as_latex=format_as_latex)
-            target_figure.text(_fig_ls[2] + .05, _y, _formatted_string, **kwargs)
+                                            n_degrees_of_freedom=_pdc._fitter._cost_function.ndf, # TODO: public interface
+                                            with_value_per_ndf=True,
+                                            format_as_latex=format_as_latex)
+            target_figure.text(_fig_ls[2], _y, _formatted_string, **kwargs)
             _y_inc_counter += 1
+
 
 
     def _render_legend(self, target_axis, **kwargs):

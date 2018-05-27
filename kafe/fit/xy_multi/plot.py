@@ -164,6 +164,7 @@ class XYMultiPlotSingular(PlotFigureBase):
     PLOT_SUBPLOT_TYPES['model_error_band'] = dict(
         plot_container_method='plot_model_error_band',
     )
+    IS_MULTI_PLOT = True
 
     def __init__(self, fit_objects, model_start_index):
         super(XYMultiPlotSingular, self).__init__(fit_objects=fit_objects, model_start_index=model_start_index)
