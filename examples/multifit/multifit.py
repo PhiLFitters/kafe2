@@ -113,7 +113,7 @@ fit.assign_parameter_latex_names(x='U', p2='p_2', p1='p_1', p0='p_0', R0='R_0', 
 fit.assign_model_function_expression('{0}*{x}^2 + {1}*{x} + {2}', model_index=0)
 fit.assign_model_function_latex_expression(r'{0}\,{x}^2 + {1}\,{x} + {2}', model_index=0)
 fit.assign_model_function_expression('{x} / ({0} * (1 + ({2}*{x}^2 + {3}*{x} + {4}) * {1}))', model_index=1)
-fit.assign_model_function_latex_expression(r'\frac{{{x}}}{{{0} * (1 + ({2}*{x}^2 + {3}*{x} + {4}) * {1})}}', model_index=1)
+fit.assign_model_function_latex_expression(r'\frac{{{x}}}{{{0} \cdot (1 + ({2}{x}^2 + {3}{x} + {4}) \cdot {1})}}', model_index=1)
 
 # Step 4: do the fit
 fit.do_fit()
