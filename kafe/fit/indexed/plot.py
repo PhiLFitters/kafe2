@@ -13,15 +13,12 @@ class IndexedPlotContainerException(PlotContainerException):
 class IndexedPlotContainer(PlotContainerBase):
     FIT_TYPE = IndexedFit
 
-    def __init__(self, indexed_fit_object, model_index=0):
+    def __init__(self, indexed_fit_object):
         """
         Construct an :py:obj:`IndexedPlotContainer` for a :py:obj:`~kafe.fit.indexed.IndexedFit` object:
 
         :param fit_object: an :py:obj:`~kafe.fit.indexed.IndexedFit` object
         """
-        #TODO update documentation
-        if model_index is not 0:
-            raise IndexedPlotContainerException("Received a model_index != 0, but IndexedPlotContainer always has exactly 1 model!")
         super(IndexedPlotContainer, self).__init__(fit_object=indexed_fit_object)
 
     @property

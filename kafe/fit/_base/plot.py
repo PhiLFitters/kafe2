@@ -342,7 +342,10 @@ class PlotFigureBase(object):
             fit_objects = (fit_objects,)
 
         for _i, _fit in enumerate(fit_objects):
-            _pdc = self.__class__.PLOT_CONTAINER_TYPE(_fit, model_index=model_start_index + _i)
+            if self.__class__.IS_MULTI_PLOT:
+                _pdc = self.__class__.PLOT_CONTAINER_TYPE(_fit, model_index=model_start_index + _i)
+            else:
+                _pdc = self.__class__.PLOT_CONTAINER_TYPE(_fit)                
             self._plot_data_containers.append(_pdc)
             self._artist_store.append(dict())
 

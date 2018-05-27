@@ -13,16 +13,13 @@ class HistPlotContainerException(PlotContainerException):
 class HistPlotContainer(PlotContainerBase):
     FIT_TYPE = HistFit
 
-    def __init__(self, hist_fit_object, n_plot_points_model_density=100, model_index=0):
+    def __init__(self, hist_fit_object, n_plot_points_model_density=100):
         """
         Construct an :py:obj:`HistPlotContainer` for a :py:obj:`~kafe.fit.histogram.HistFit` object:
 
         :param fit_object: an :py:obj:`~kafe.fit.histogram.HistFit` object
         :param n_plot_points_model_density: number of plot points to use for plotting the model density
         """
-        #TODO update documentation
-        if model_index is not 0:
-            raise HistPlotContainerException("Received a model_index != 0, but HistPlotContainer always has exactly 1 model!")
         super(HistPlotContainer, self).__init__(fit_object=hist_fit_object)
         self._n_plot_points_model_density = n_plot_points_model_density
 

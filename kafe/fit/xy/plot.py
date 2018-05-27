@@ -21,9 +21,6 @@ class XYPlotContainer(PlotContainerBase):
 
         :param fit_object: an :py:obj:`~kafe.fit.xy.XYFit` object
         """
-        #TODO update documentation
-        if model_index is not 0:
-            raise XYPlotContainerException("Received a model_index != 0, but XYPlotContainer always has exactly 1 model!")
         super(XYPlotContainer, self).__init__(fit_object=xy_fit_object)
         self._n_plot_points_model = n_plot_points_model
 
