@@ -301,6 +301,7 @@ class PlotFigureBase(object):
     IS_MULTI_PLOT = False
 
     def __init__(self, fit_objects, model_start_index=0):
+        self._model_start_index = model_start_index
         self._fig = plt.figure()  # defaults from matplotlibrc
         # self._figsize = (self._fig.get_figwidth()*self._fig.dpi, self._fig.get_figheight()*self._fig.dpi)
         self._outer_gs = gs.GridSpec(nrows=1,
@@ -343,7 +344,7 @@ class PlotFigureBase(object):
 
         for _i, _fit in enumerate(fit_objects):
             if self.__class__.IS_MULTI_PLOT:
-                _pdc = self.__class__.PLOT_CONTAINER_TYPE(_fit, model_index=model_start_index + _i)
+                _pdc = self.__class__.PLOT_CONTAINER_TYPE(_fit, model_index=self._model_start_index + _i)
             else:
                 _pdc = self.__class__.PLOT_CONTAINER_TYPE(_fit)                
             self._plot_data_containers.append(_pdc)
@@ -408,7 +409,7 @@ class PlotFigureBase(object):
     def _call_plot_method_for_plot_type(self, subplot_id, plot_type, target_axis):
         _pdc = self._plot_data_containers[subplot_id]
         _plot_method_handle = self._get_plot_handle_for_plot_type(plot_type, _pdc)
-        _artist = _plot_method_handle(target_axis, **self._get_subplot_kwargs(subplot_id, plot_type))
+        _artist = _plot_method_handle(target_axis, **self._get_subplot_kwargs(self._model_start_index + subplot_id, plot_type))
         # TODO: warn if plot function does not return artist (?)
         # store the artist returned by the plot method
         self._artist_store[subplot_id][plot_type] = _artist
@@ -435,7 +436,7 @@ class PlotFigureBase(object):
         _y_inc_counter = 0
         for _id, _pdc in enumerate(self._plot_data_containers):
             _y = _y_inc_offset - _y_inc_size*_y_inc_counter
-            target_figure.text(_fig_ls[2], _y, r"Model %d" % (_id,), fontdict={'weight': 'bold'}, **kwargs)
+            target_figure.text(_fig_ls[2], _y, r"Model %d" % (self._model_start_index + _id,), fontdict={'weight': 'bold'}, **kwargs)
             _y_inc_counter += 1
 
             _y = _y_inc_offset - _y_inc_size * _y_inc_counter
