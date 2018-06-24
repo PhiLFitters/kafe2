@@ -195,9 +195,9 @@ class XYMultiPlot(MultiPlotBase):
         
         :param fit_objects: the fit objects for which plots should be created
         :type fit_objects: `XYMultiFit` or an iterable thereof
-        :param separate_plots: if true, will create separate plots for each model
-                               within each fit object, if false will create one plot
-                               for each fir object
+        :param separate_plots: if ``True``, will create separate plots for each model
+                               within each fit object, if ``False`` will create one plot
+                               for each fit object
         :type separate_plots: bool
         """
         super(XYMultiPlot, self).__init__(fit_objects, separate_plots=separate_plots)

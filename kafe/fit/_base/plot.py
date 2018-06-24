@@ -593,9 +593,9 @@ class MultiPlotBase(object):
         
         :param fit_objects: the fit objects for which plots should be created
         :type fit_objects: specified by subclass
-        :param separate_plots: if true, will create separate plots for each model
-                               within each fit object, if false will create one plot
-                               for each fir object
+        :param separate_plots: if ``True``, will create separate plots for each model
+                               within each fit object, if ``False`` will create one plot
+                               for each fit object
         :type separate_plots: bool
         """
         self._underlying_plots = []
