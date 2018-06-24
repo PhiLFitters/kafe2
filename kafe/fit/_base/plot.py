@@ -264,7 +264,7 @@ class PlotContainerBase(object):
         return self._fitter._model_function.formatter.get_formatted(**kwargs)
 
     @property
-    def argument_formatters(self, **kwargs):
+    def model_function_argument_formatters(self):
         return self._fitter._model_function.argument_formatters
 
 # -- must come last!
@@ -445,7 +445,7 @@ class PlotFigureBase(object):
             target_figure.text(_fig_ls[2] + .025, _y, _formatted_string, **kwargs)
             _y_inc_counter += 1
 
-            for _pi, _pf in enumerate(_pdc.argument_formatters):
+            for _pi, _pf in enumerate(_pdc.model_function_argument_formatters):
                 _y = _y_inc_offset - _y_inc_size * _y_inc_counter
                 _formatted_string = _pf.get_formatted(with_name=True, with_value=True, with_errors=True, format_as_latex=format_as_latex)
                 target_figure.text(_fig_ls[2]+.05, _y, _formatted_string, **kwargs)

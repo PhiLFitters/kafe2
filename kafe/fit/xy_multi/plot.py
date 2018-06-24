@@ -95,7 +95,7 @@ class XYMultiPlotContainer(PlotContainerBase):
         return None
 
     @property
-    def argument_formatters(self):
+    def model_function_argument_formatters(self):
         return self._fitter._model_function.get_argument_formatters(self._model_index)
 
     # public methods
