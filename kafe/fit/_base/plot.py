@@ -260,11 +260,15 @@ class PlotContainerBase(object):
         """
         pass
 
+    #Overridden by multi plot containers
     def get_formatted_model_function(self, **kwargs):
+        """return model function string"""
         return self._fitter._model_function.formatter.get_formatted(**kwargs)
 
+    #Overridden by multi plot containers
     @property
     def model_function_argument_formatters(self):
+        """return model function argument formatters"""
         return self._fitter._model_function.argument_formatters
 
 # -- must come last!
