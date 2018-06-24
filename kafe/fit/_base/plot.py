@@ -300,8 +300,12 @@ class PlotFigureBase(object):
 
     IS_MULTI_PLOT = False
 
-    def __init__(self, fit_objects, model_start_index=0):
-        self._model_start_index = model_start_index
+    def __init__(self, fit_objects, model_indices=0):
+        try:
+            iter(model_indices)
+        except:
+            model_indices = [model_indices]
+        self._model_indices = model_indices
         self._fig = plt.figure()  # defaults from matplotlibrc
         # self._figsize = (self._fig.get_figwidth()*self._fig.dpi, self._fig.get_figheight()*self._fig.dpi)
         self._outer_gs = gs.GridSpec(nrows=1,
@@ -344,7 +348,7 @@ class PlotFigureBase(object):
 
         for _i, _fit in enumerate(fit_objects):
             if self.__class__.IS_MULTI_PLOT:
-                _pdc = self.__class__.PLOT_CONTAINER_TYPE(_fit, model_index=self._model_start_index + _i)
+                _pdc = self.__class__.PLOT_CONTAINER_TYPE(_fit, model_index=self._model_indices[_i])
             else:
                 _pdc = self.__class__.PLOT_CONTAINER_TYPE(_fit)                
             self._plot_data_containers.append(_pdc)
@@ -409,7 +413,7 @@ class PlotFigureBase(object):
     def _call_plot_method_for_plot_type(self, subplot_id, plot_type, target_axis):
         _pdc = self._plot_data_containers[subplot_id]
         _plot_method_handle = self._get_plot_handle_for_plot_type(plot_type, _pdc)
-        _artist = _plot_method_handle(target_axis, **self._get_subplot_kwargs(self._model_start_index + subplot_id, plot_type))
+        _artist = _plot_method_handle(target_axis, **self._get_subplot_kwargs(self._model_indices[subplot_id], plot_type))
         # TODO: warn if plot function does not return artist (?)
         # store the artist returned by the plot method
         self._artist_store[subplot_id][plot_type] = _artist
@@ -436,7 +440,7 @@ class PlotFigureBase(object):
         _y_inc_counter = 0
         for _id, _pdc in enumerate(self._plot_data_containers):
             _y = _y_inc_offset - _y_inc_size*_y_inc_counter
-            target_figure.text(_fig_ls[2], _y, r"Model %d" % (self._model_start_index + _id,), fontdict={'weight': 'bold'}, **kwargs)
+            target_figure.text(_fig_ls[2], _y, r"Model %d" % (self._model_indices[_id],), fontdict={'weight': 'bold'}, **kwargs)
             _y_inc_counter += 1
 
             _y = _y_inc_offset - _y_inc_size * _y_inc_counter
@@ -576,11 +580,20 @@ class PlotFigureBase(object):
 
 
 class MultiPlotBase(object):
-    
+    """Abstract class for making plots from multi fits"""
     SINGULAR_PLOT_TYPE = None
     
-    #TODO add documentation
     def __init__(self, fit_objects, separate_plots=True):
+        """
+        Parent constructor for multi plots
+        
+        :param fit_objects: the fit objects for which plots should be created
+        :type fit_objects: specified by subclass
+        :param separate_plots: if true, will create separate plots for each model
+                               within each fit object, if false will create one plot
+                               for each fir object
+        :type separate_plots: bool
+        """
         self._underlying_plots = []
         try:
             iter(fit_objects)
@@ -589,22 +602,31 @@ class MultiPlotBase(object):
         if separate_plots:
             for _fit_object in fit_objects:
                 for _i in range(_fit_object.model_count):
-                    self._underlying_plots.append(self.__class__.SINGULAR_PLOT_TYPE(_fit_object, model_start_index=_i))
+                    self._underlying_plots.append(self.__class__.SINGULAR_PLOT_TYPE(_fit_object, model_indices=_i))
         else:
             for _fit_object in fit_objects:
                 _fit_object_list = [] 
+                _model_indices = []
                 for _i in range(_fit_object.model_count):
                     _fit_object_list.append(_fit_object)
-                self._underlying_plots.append(self.__class__.SINGULAR_PLOT_TYPE(_fit_object_list, model_start_index=0))
+                    _model_indices.append(_i)
+                self._underlying_plots.append(self.__class__.SINGULAR_PLOT_TYPE(_fit_object_list, model_indices=_model_indices))
 
     def get_figure(self, plot_index):
+        """return the figure with the specified index"""
         return self._underlying_plots[plot_index].figure
     
     def plot(self):
+        """Plot data, model (and other subplots) for all child :py:obj:`Fit` objects, and show legend."""
         for _plot in self._underlying_plots:
             _plot.plot()
     
     def show_fit_info_box(self, format_as_latex=False):
+        """Render text information about each plot on the figure.
+
+        :param format_as_latex: if ``True``, the infobox text will be formatted as a LaTeX string
+        :type format_as_latex: bool
+        """
         for _plot in self._underlying_plots:
             _plot.show_fit_info_box(format_as_latex=format_as_latex)
         
