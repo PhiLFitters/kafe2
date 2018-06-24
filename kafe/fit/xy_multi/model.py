@@ -345,13 +345,11 @@ class XYMultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
             for _par_index in _par_indices:
                 _par_sublist.append(_pars[_par_index])
             _par_sublist = np.array(_par_sublist)
-            _skipped_pars = 0
             for _j, (_par_val, _par_dx) in enumerate(zip(_pars, _par_dxs)):
                 #if a model function does not have a parameter, 
                 #the derivative for that parameter is 0
                 if _j not in _par_indices:
                     _derivatives[_j].append(np.zeros_like(_x_splice))
-                    _skipped_pars += 1
                 else:
                     _par_sublist_index = _par_indices.index(_j)
                     def _chipped_func(par):

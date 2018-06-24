@@ -13,14 +13,19 @@ __all__ = ["XYMultiPlotSingular", "XYMultiPlot","XYMultiPlotContainer"]
 class XYMultiPlotContainer(PlotContainerBase):
     FIT_TYPE = XYMultiFit
 
-    def __init__(self, xy_fit_object, model_index, n_plot_points_model=100):
+    def __init__(self, xy_multi_fit_object, model_index, n_plot_points_model=100):
         """
         Construct an :py:obj:`XYMultiPlotContainer` for a :py:obj:`~kafe.fit.multi.XYMultiFit` object:
 
-        :param fit_object: an :py:obj:`~kafe.fit.multi.XYMultiFit` object
+        :param xy_multi_fit_object: an :py:obj:`~kafe.fit.multi.XYMultiFit` object
+        :type xy_multi_fit_object: :py:obj:`XYMultiFit`
+        :param model_index: the index of the underlying model with which this container is associated
+        :type model_index: int
+        :param n_plot_points_model: the number of points used for the plot
+        :tape n_plot_points_model: 100
         """
         super(XYMultiPlotContainer, self).__init__(
-            fit_object=xy_fit_object, 
+            fit_object=xy_multi_fit_object, 
             model_index=model_index
         )
         self._n_plot_points_model = n_plot_points_model
@@ -95,12 +100,14 @@ class XYMultiPlotContainer(PlotContainerBase):
         return None
 
     @property
-    def argument_formatters(self):
+    def model_function_argument_formatters(self):
+        """return model function argument formatters"""
         return self._fitter._model_function.get_argument_formatters(self._model_index)
 
     # public methods
 
     def get_formatted_model_function(self, **kwargs):
+        """return the formatted model function string"""
         return self._fitter._model_function.formatter[self._model_index].get_formatted(**kwargs)
 
     def plot_data(self, target_axis, **kwargs):
@@ -166,8 +173,17 @@ class XYMultiPlotSingular(PlotFigureBase):
     )
     IS_MULTI_PLOT = True
 
-    def __init__(self, fit_objects, model_start_index):
-        super(XYMultiPlotSingular, self).__init__(fit_objects=fit_objects, model_start_index=model_start_index)
+    def __init__(self, fit_objects, model_indices):
+        """
+        Creates a new `XYMultiPlotSingular` figure containing one or more models.
+        
+        :param fit_objects: the kafe fit objects to be shown in the figure
+        :type fit_objects: `XYMultiFit` or iterable thereof
+        :param model_indices: the indices of the underlying model functions that the fit_objects
+                              are associated with
+        :type model_indices: iterable of int
+        """
+        super(XYMultiPlotSingular, self).__init__(fit_objects=fit_objects, model_indices=model_indices)
         self._plot_range_x = None
 
 class XYMultiPlot(MultiPlotBase):
@@ -175,4 +191,14 @@ class XYMultiPlot(MultiPlotBase):
     SINGULAR_PLOT_TYPE = XYMultiPlotSingular
     
     def __init__(self, fit_objects, separate_plots=True):
+        """
+        Creates a new `XYMultiPlot` object for one or more `XYMultiFit` objects
+        
+        :param fit_objects: the fit objects for which plots should be created
+        :type fit_objects: `XYMultiFit` or an iterable thereof
+        :param separate_plots: if ``True``, will create separate plots for each model
+                               within each fit object, if ``False`` will create one plot
+                               for each fit object
+        :type separate_plots: bool
+        """
         super(XYMultiPlot, self).__init__(fit_objects, separate_plots=separate_plots)

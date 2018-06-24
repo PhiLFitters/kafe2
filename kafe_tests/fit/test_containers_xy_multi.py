@@ -175,7 +175,7 @@ class TestDatastoreXYMulti(unittest.TestCase):
             self.data_xy.get_error("MyInexistentYError")
 
 
-class TestDatastoreXYParametricModel(unittest.TestCase):
+class TestDatastoreXYMultiParametricModel(unittest.TestCase):
 
     @staticmethod
     def _ref_model_func(x, slope, intercept):
