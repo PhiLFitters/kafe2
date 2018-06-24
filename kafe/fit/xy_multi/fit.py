@@ -933,7 +933,7 @@ class XYMultiFit(FitBase):
         elif err_val.size != _x_size:
             raise XYMultiFitException("Expected to receive %s error values but received %s instead!" % 
                                     (_x_size, err_val.size))
-        _total_err_val = np.tile(err_val, 2)
+        _total_err_val = np.tile(err_val, self._data_container.num_datasets)
         _correlation_matrix = np.maximum(np.eye(_x_size), np.ones((_x_size, _x_size)) * correlation)
         _total_correlation_matrix = np.tile(_correlation_matrix, 
                                             (self._data_container.num_datasets, self._data_container.num_datasets))
