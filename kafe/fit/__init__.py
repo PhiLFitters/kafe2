@@ -132,6 +132,7 @@ from ._base.profile import *   # just for `ContoursProfiler` -> better way?
 
 from .indexed import *
 from .histogram import *
+from .tools import *
 from .xy import *
 from .xy_multi import *
 
