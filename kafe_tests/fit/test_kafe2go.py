@@ -1,10 +1,16 @@
 import unittest
 import numpy as np
+import logging
+import sys
 from kafe.fit.tools import kafe2go
 
 class TestYAMLToFitObject(unittest.TestCase):
     
     def setUp(self):
+        logger = logging.getLogger()
+        logger.level = logging.DEBUG
+        stream_handler = logging.StreamHandler(sys.stdout)
+        logger.addHandler(stream_handler)
         kafe2go.add_constructors()
     
     def test_string_to_fit_object(self):
@@ -13,7 +19,7 @@ class TestYAMLToFitObject(unittest.TestCase):
         xy_data: [[0.0, 1.0, 2.0, 3.0, 4.0, 5.0], [-1.0, 1.0, 3.0, 5.0, 7.0, 9.0]]
         model_function:
             >
-            def model_function(x, a , b):
+            def linear_model(x, a , b):
                 return a * x + b
         """
         _xy_fit = kafe2go.yaml_to_fit(_input_string)
