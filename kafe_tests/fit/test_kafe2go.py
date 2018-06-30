@@ -65,3 +65,36 @@ class TestYAMLToFitObject(unittest.TestCase):
                 rtol=1e-3
             )
         )
+
+class TestInputSanitization(unittest.TestCase):
+    
+    def setUp(self):
+        kafe2go.add_constructors()
+        self._input_string_import_token="""
+        !xyfit
+        xy_data: [[0.0, 1.0, 2.0, 3.0, 4.0, 5.0], [-1.0, 1.0, 3.0, 5.0, 7.0, 9.0]]
+        model_function:
+            >
+            def linear_model(x, a , b):
+                return a * x + b
+            import os
+        """
+        self._input_string_import_builtin="""
+        !xyfit
+        xy_data: [[0.0, 1.0, 2.0, 3.0, 4.0, 5.0], [-1.0, 1.0, 3.0, 5.0, 7.0, 9.0]]
+        model_function:
+            >
+            def linear_model(x, a , b):
+                return a * x + b
+            os = __import__("os")
+        """
+
+    
+    def test_import(self):
+        with self.assertRaises(ImportError):
+            kafe2go.yaml_to_fit(self._input_string_import_token)
+    
+    def test_import_builtin(self):
+        with self.assertRaises(NameError):
+            kafe2go.yaml_to_fit(self._input_string_import_builtin)
+        
