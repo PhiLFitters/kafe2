@@ -16,6 +16,7 @@ _FILE_FORMAT_ALIAS_RESOLVDICT = dict(yml='yaml')
 
 from ._base import DReprError
 from .container import *
+from .model import *
 
 
 def _get_representer(object_type_name, role, file_format):
