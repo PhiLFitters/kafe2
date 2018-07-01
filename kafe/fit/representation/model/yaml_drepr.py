@@ -26,6 +26,10 @@ class ModelFunctionYamlWriter(DReprWriterMixin, ModelFunctionDReprBase):
             raise DReprError("Model function unknown or not supported: {}".format(type(self._container)))
         _yaml['type'] = _type
         
+        #TODO implrement
+        _yaml['parameter_formatters'] = ""
+        _yaml['function_formatter'] = ""
+        
         _python_code = inspect.getsource(self._model_function.func)
         _python_code = textwrap.dedent(_python_code) #remove indentation
         _python_code = _python_code.replace("@staticmethod\n","") #remove @staticmethod decorator
@@ -81,10 +85,14 @@ class ModelFunctionYamlReader(DReprReaderMixin, ModelFunctionDReprBase):
         _model_function_type = _yaml['type']
         _class = self.__class__._MODEL_FUNCTION_TYPE_NAME_TO_CLASS.get(_model_function_type, None)
         if _class is None:
-            raise DReprError("Container type unknown or not supported: {}".format(_model_function_type))
+            raise DReprError("Model function type unknown or not supported: {}".format(_model_function_type))
         _python_function = self._parse_model_function(_yaml["python_code"])
 
-        return _class(_python_function)
+        _model_function_object = _class(_python_function)
+        
+        #TODO construct model function formatter, argument formatters
+        
+        return _model_function_object
     
     def read(self):
         with self._ihandle as _h:

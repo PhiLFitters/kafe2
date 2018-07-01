@@ -232,6 +232,7 @@ class ModelFunctionFormatter(object):
         :param expression_string:  a plain-text-formatted string indicating the function expression
         :param latex_expression_string:  a LaTeX-formatted string indicating the function expression
         """
+        #TODO should name be allowed to be None?
         self._name = name
         self._arg_formatters = arg_formatters
         self.expression_format_string = expression_string
