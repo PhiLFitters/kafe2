@@ -10,14 +10,14 @@ __all__ = ["ModelFunctionDReprBase", "ParametricModelDReprBase"]
 
 class ModelFunctionDReprBase(GenericDReprBase):
     __metaclass__ = abc.ABCMeta
-    OBJECT_TYPE_NAME = 'modelfunction'
+    OBJECT_TYPE_NAME = 'model_function'
 
-    _CONTAINER_CLASS_TO_TYPE_NAME = {
+    _MODEL_FUNCTION_CLASS_TO_TYPE_NAME = {
         IndexedModelFunction: 'indexed',
         XYModelFunction: 'xy',
         HistModelFunction: 'histogram'
     }
-    _CONTAINER_TYPE_NAME_TO_CLASS = {
+    _MODEL_FUNCTION_TYPE_NAME_TO_CLASS = {
         'indexed': IndexedModelFunction,
         'xy': XYModelFunction,
         'histogram': HistModelFunction
@@ -31,12 +31,12 @@ class ParametricModelDReprBase(GenericDReprBase):
     __metaclass__ = abc.ABCMeta
     OBJECT_TYPE_NAME = 'model'
 
-    _CONTAINER_CLASS_TO_TYPE_NAME = {
+    _MODEL_CLASS_TO_TYPE_NAME = {
         IndexedParametricModel: 'indexed',
         XYParametricModel: 'xy',
         HistParametricModel: 'histogram'
     }
-    _CONTAINER_TYPE_NAME_TO_CLASS = {
+    _MODEL_TYPE_NAME_TO_CLASS = {
         'indexed': IndexedParametricModel,
         'xy': XYParametricModel,
         'histogram': HistParametricModel
