@@ -12,12 +12,12 @@ class ModelFunctionFormatterDReprBase(GenericDReprBase):
     __metaclass__ = abc.ABCMeta
     OBJECT_TYPE_NAME = 'model_function_formatter'
 
-    _MODEL_FUNCTION_CLASS_TO_TYPE_NAME = {
+    _MODEL_FUNCTION_FORMATTER_CLASS_TO_TYPE_NAME = {
         IndexedModelFunctionFormatter: 'indexed',
         XYModelFunctionFormatter: 'xy',
         HistModelDensityFunctionFormatter: 'histogram'
     }
-    _MODEL_FUNCTION_TYPE_NAME_TO_CLASS = {
+    _MODEL_FUNCTION_FORMATTER_TYPE_NAME_TO_CLASS = {
         'indexed': IndexedModelFunctionFormatter,
         'xy': XYModelFunctionFormatter,
         'histogram': HistModelDensityFunctionFormatter
