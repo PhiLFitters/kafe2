@@ -303,8 +303,9 @@ class ModelFunctionFormatter(object):
         try:
             self._get_formatted_expression(format_as_latex=False)
         except:
-            raise FormatterException("Expression string does not match argument structure: %s"
-                                     % (expression_format_string,))
+            _af_names = [_af.name for _af in self._arg_formatters] if self._arg_formatters else None
+            raise FormatterException("Expression string %s does not match argument structure %s"
+                                     % (expression_format_string, _af_names))
 
     @property
     def latex_expression_format_string(self):
@@ -317,8 +318,9 @@ class ModelFunctionFormatter(object):
         try:
             self._get_formatted_expression(format_as_latex=True)
         except:
-            raise FormatterException("LaTeX expression string does not match argument structure: %s"
-                                     % (latex_expression_format_string,))
+            _af_latex_names = [_af.latex_name for _af in self._arg_formatters] if self._arg_formatters else None
+            raise FormatterException("LaTeX expression string %s does not match argument structure %s"
+                                     % (latex_expression_format_string, _af_latex_names))
 
     @property
     def name(self):
