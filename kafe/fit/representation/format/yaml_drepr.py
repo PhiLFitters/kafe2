@@ -27,7 +27,11 @@ class ModelFunctionFormatterYamlWriter(DReprWriterMixin, ModelFunctionFormatterD
         
         _yaml['name'] = self._model_function_formatter.name
         _yaml['latex_name'] = self._model_function_formatter.latex_name
-        _yaml['arg_formatters'] = self._model_function_formatter._arg_formatters #TODO should there be a property?
+        
+        #TODO should there be a property for _arg_formatters?
+        _yaml['arg_formatters'] = [ModelParameterFormatterYamlWriter._make_representation(_arg_formatter) 
+                                   for _arg_formatter in self._model_function_formatter._arg_formatters]
+        
         #TODO resolve inconsistent naming
         _yaml['expression_string'] = self._model_function_formatter.expression_format_string
         _yaml['latex_expression_string'] = self._model_function_formatter.latex_expression_format_string
@@ -71,7 +75,7 @@ class ModelFunctionFormatterYamlReader(DReprReaderMixin, ModelFunctionFormatterD
         if _class is None:
             raise DReprError("Model function formatter type unknown or not supported: {}".format(_model_function_formatter_type))
 
-        _kwarg_list = ['name', 'latex_name', 'arg_formatters', 'expression_string', 'latex_expression_string']
+        _kwarg_list = ['name', 'latex_name', 'expression_string', 'latex_expression_string']
         if _class in (HistModelDensityFunctionFormatter, XYModelFunctionFormatter):
             _kwarg_list.append('x_name')
             _kwarg_list.append('latex_x_name')
@@ -79,6 +83,10 @@ class ModelFunctionFormatterYamlReader(DReprReaderMixin, ModelFunctionFormatterD
             _kwarg_list.append('index_name')
             _kwarg_list.append('latex_index_name')
         _arg_dict = {key: _yaml.get(key, None) for key in _kwarg_list}
+        
+        _arg_dict['arg_formatters'] = [ModelParameterFormatterYamlReader._make_object(_representation)
+                                       for _representation in _yaml.get('arg_formatters', [])]
+        
         _model_function_formatter_object = _class(**_arg_dict)
         
         return _model_function_formatter_object
@@ -97,18 +105,19 @@ class ModelParameterFormatterYamlWriter(DReprWriterMixin, ModelParameterFormatte
             output_io_handle=output_io_handle,
             model_parameter_formatter=model_parameter_formatter)
     
-    def _make_representation(self):
+    @staticmethod
+    def _make_representation(_model_parameter_formatter):
         _yaml = dict()
         
-        _yaml['name'] = self._model_parameter_formatter.name
-        _yaml['value'] = self._model_parameter_formatter.value
-        _yaml['error'] = self._model_parameter_formatter.error
-        _yaml['latex_name'] = self._model_parameter_formatter.latex_name
+        _yaml['name'] = _model_parameter_formatter.name
+        _yaml['value'] = _model_parameter_formatter.value
+        _yaml['error'] = _model_parameter_formatter.error
+        _yaml['latex_name'] = _model_parameter_formatter.latex_name
 
         return dict(model_parameter_formatter=_yaml) # wrap inner yaml inside a 'model_parameter_formatter' namespace
     
     def write(self):
-        self._yaml = self._make_representation()
+        self._yaml = self._make_representation(self._model_parameter_formatter)
         with self._ohandle as _h:
             try:
                 # try to truncate the file to 0 bytes
@@ -127,8 +136,9 @@ class ModelParameterFormatterYamlReader(DReprReaderMixin, ModelParameterFormatte
             input_io_handle=input_io_handle,
             model_parameter_formatter=None)
 
-    def _make_object(self):
-        _yaml = self._yaml["model_parameter_formatter"]
+    @staticmethod
+    def _make_object(yaml):
+        _yaml = yaml["model_parameter_formatter"]
 
         _kwarg_list = ['name', 'value', 'error', 'latex_name']
         _arg_dict = {key: _yaml.get(key, None) for key in _kwarg_list}
@@ -139,7 +149,7 @@ class ModelParameterFormatterYamlReader(DReprReaderMixin, ModelParameterFormatte
     def read(self):
         with self._ihandle as _h:
             self._yaml = yaml.load(_h)
-        return self._make_object()
+        return self._make_object(self._yaml)
 
 # register the above classes in the module-level dictionary
 ModelFunctionFormatterYamlReader._register_class(_AVAILABLE_REPRESENTATIONS)
