@@ -17,37 +17,38 @@ class ModelFunctionFormatterYamlWriter(DReprWriterMixin, ModelFunctionFormatterD
             output_io_handle=output_io_handle,
             model_function_formatter=model_function_formatter)
     
-    def _make_representation(self):
+    @staticmethod
+    def _make_representation(model_function_formatter):
         _yaml = dict()
         
-        _type = self.__class__._MODEL_FUNCTION_FORMATTER_CLASS_TO_TYPE_NAME.get(self._model_function_formatter.__class__, None)
+        _type = ModelFunctionFormatterYamlWriter._MODEL_FUNCTION_FORMATTER_CLASS_TO_TYPE_NAME.get(model_function_formatter.__class__, None)
         if _type is None:
-            raise DReprError("Model function formatter unknown or not supported: {}".format(type(self._container)))
+            raise DReprError("Model function formatter unknown or not supported: %s" % model_function_formatter.__class__)
         _yaml['type'] = _type
         
-        _yaml['name'] = self._model_function_formatter.name
-        _yaml['latex_name'] = self._model_function_formatter.latex_name
+        _yaml['name'] = model_function_formatter.name
+        _yaml['latex_name'] = model_function_formatter.latex_name
         
         #TODO should there be a property for _arg_formatters?
         _yaml['arg_formatters'] = [ModelParameterFormatterYamlWriter._make_representation(_arg_formatter) 
-                                   for _arg_formatter in self._model_function_formatter._arg_formatters]
+                                   for _arg_formatter in model_function_formatter._arg_formatters]
         
         #TODO resolve inconsistent naming
-        _yaml['expression_string'] = self._model_function_formatter.expression_format_string
-        _yaml['latex_expression_string'] = self._model_function_formatter.latex_expression_format_string
+        _yaml['expression_string'] = model_function_formatter.expression_format_string
+        _yaml['latex_expression_string'] = model_function_formatter.latex_expression_format_string
 
         #TODO should there be properties for these calls?
         if _type in ('hist', 'xy'):
-            _yaml['x_name'] = self._model_function_formatter._x_name
-            _yaml['latex_x_name'] = self._model_function_formatter._latex_x_name
+            _yaml['x_name'] = model_function_formatter._x_name
+            _yaml['latex_x_name'] = model_function_formatter._latex_x_name
         if _type is 'indexed':
-            _yaml['index_name'] = self._model_function_formatter._x_name
-            _yaml['latex_index_name'] = self._model_function_formatter._latex_x_name
+            _yaml['index_name'] = model_function_formatter._x_name
+            _yaml['latex_index_name'] = model_function_formatter._latex_x_name
         
         return dict(model_function_formatter=_yaml) # wrap inner yaml inside a 'model_function_formatter' namespace
     
     def write(self):
-        self._yaml = self._make_representation()
+        self._yaml = self._make_representation(self._model_function_formatter)
         with self._ohandle as _h:
             try:
                 # try to truncate the file to 0 bytes
@@ -66,12 +67,13 @@ class ModelFunctionFormatterYamlReader(DReprReaderMixin, ModelFunctionFormatterD
             input_io_handle=input_io_handle,
             model_function_formatter=None)
 
-    def _make_object(self):
-        _yaml = self._yaml["model_function_formatter"]
+    @staticmethod
+    def _make_object(yaml):
+        _yaml = yaml["model_function_formatter"]
 
         # -- determine model function formatter class from type
         _model_function_formatter_type = _yaml['type']
-        _class = self.__class__._MODEL_FUNCTION_FORMATTER_TYPE_NAME_TO_CLASS.get(_model_function_formatter_type, None)
+        _class = ModelFunctionFormatterYamlReader._MODEL_FUNCTION_FORMATTER_TYPE_NAME_TO_CLASS.get(_model_function_formatter_type, None)
         if _class is None:
             raise DReprError("Model function formatter type unknown or not supported: {}".format(_model_function_formatter_type))
 
@@ -94,7 +96,7 @@ class ModelFunctionFormatterYamlReader(DReprReaderMixin, ModelFunctionFormatterD
     def read(self):
         with self._ihandle as _h:
             self._yaml = yaml.load(_h)
-        return self._make_object()
+        return self._make_object(self._yaml)
 
 class ModelParameterFormatterYamlWriter(DReprWriterMixin, ModelParameterFormatterDReprBase):
     DREPR_FLAVOR_NAME = 'yaml'
@@ -106,13 +108,13 @@ class ModelParameterFormatterYamlWriter(DReprWriterMixin, ModelParameterFormatte
             model_parameter_formatter=model_parameter_formatter)
     
     @staticmethod
-    def _make_representation(_model_parameter_formatter):
+    def _make_representation(model_parameter_formatter):
         _yaml = dict()
         
-        _yaml['name'] = _model_parameter_formatter.name
-        _yaml['value'] = _model_parameter_formatter.value
-        _yaml['error'] = _model_parameter_formatter.error
-        _yaml['latex_name'] = _model_parameter_formatter.latex_name
+        _yaml['name'] = model_parameter_formatter.name
+        _yaml['value'] = model_parameter_formatter.value
+        _yaml['error'] = model_parameter_formatter.error
+        _yaml['latex_name'] = model_parameter_formatter.latex_name
 
         return dict(model_parameter_formatter=_yaml) # wrap inner yaml inside a 'model_parameter_formatter' namespace
     
