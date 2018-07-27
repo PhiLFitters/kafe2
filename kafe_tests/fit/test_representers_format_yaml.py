@@ -17,6 +17,14 @@ model_function_formatter:
     latex_expression_string: {0}{x}^2 + {1}{x} + {2} 
 """
 
+TEST_MODEL_PARAMETER_FORMATTER = """
+model_parameter_formatter:
+    name: phi
+    value 1.571
+    error: 0.1
+    latex_name: \phi
+"""
+
 class TestXYModelFunctionFormatterYamlRepresenter(unittest.TestCase):
 
     def setUp(self):

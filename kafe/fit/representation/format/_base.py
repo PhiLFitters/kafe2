@@ -31,7 +31,7 @@ class ModelParameterFormatterDReprBase(GenericDReprBase):
     __metaclass__ = abc.ABCMeta
     OBJECT_TYPE_NAME = 'model_parameter_formatter'
 
-    def __init__(self, model=None):
-        self._model = model
+    def __init__(self, model_parameter_formatter=None):
+        self._model_parameter_formatter = model_parameter_formatter
         super(ModelParameterFormatterDReprBase, self).__init__()
 
