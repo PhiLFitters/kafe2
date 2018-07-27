@@ -1,7 +1,7 @@
 import yaml
 
 from .._base import DReprError, DReprWriterMixin, DReprReaderMixin
-from ._base import ModelFunctionFormatterDReprBase
+from ._base import ModelFunctionFormatterDReprBase, ModelParameterFormatterDReprBase
 from .. import _AVAILABLE_REPRESENTATIONS
 from kafe.fit._base import ModelParameterFormatter
 from kafe.fit.xy.format import XYModelFunctionFormatter
@@ -88,12 +88,12 @@ class ModelFunctionFormatterYamlReader(DReprReaderMixin, ModelFunctionFormatterD
             self._yaml = yaml.load(_h)
         return self._make_object()
 
-class ModelParameterFormatterYamlWriter(DReprWriterMixin, ModelFunctionFormatterDReprBase):
+class ModelParameterFormatterYamlWriter(DReprWriterMixin, ModelParameterFormatterDReprBase):
     DREPR_FLAVOR_NAME = 'yaml'
     DREPR_ROLE_NAME = 'writer'
     
     def __init__(self, model_parameter_formatter, output_io_handle):
-        super(ModelFunctionFormatterYamlWriter, self).__init__(
+        super(ModelParameterFormatterYamlWriter, self).__init__(
             output_io_handle=output_io_handle,
             model_parameter_formatter=model_parameter_formatter)
     
@@ -118,14 +118,14 @@ class ModelParameterFormatterYamlWriter(DReprWriterMixin, ModelFunctionFormatter
                 pass
             yaml.dump(self._yaml, _h, default_flow_style=False)
 
-class ModelParameterFormatterYamlReader(DReprReaderMixin, ModelFunctionFormatterDReprBase):
+class ModelParameterFormatterYamlReader(DReprReaderMixin, ModelParameterFormatterDReprBase):
     DREPR_FLAVOR_NAME = 'yaml'
     DREPR_ROLE_NAME = 'reader'
     
     def __init__(self, input_io_handle):
-        super(ModelFunctionFormatterYamlReader, self).__init__(
+        super(ModelParameterFormatterYamlReader, self).__init__(
             input_io_handle=input_io_handle,
-            model_function_formatter=None)
+            model_parameter_formatter=None)
 
     def _make_object(self):
         _yaml = self._yaml["model_parameter_formatter"]
