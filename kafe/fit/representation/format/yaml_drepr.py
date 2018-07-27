@@ -12,23 +12,24 @@ class ModelFunctionFormatterYamlWriter(DReprWriterMixin, ModelFunctionFormatterD
     DREPR_ROLE_NAME = 'writer'
     
     def __init__(self, model_function_formatter, output_io_handle):
-        super(ModelFunctionFormatterDReprBase, self).__init__(
+        super(ModelFunctionFormatterYamlWriter, self).__init__(
             output_io_handle=output_io_handle,
             model_function_formatter=model_function_formatter)
     
     def _make_representation(self):
         _yaml = dict()
         
-        _type = self.__class__._MODEL_FUNCTION_FORMATTER_CLASS_TO_TYPE_NAME.get(self._model_function.__class__, None)
+        _type = self.__class__._MODEL_FUNCTION_FORMATTER_CLASS_TO_TYPE_NAME.get(self._model_function_formatter.__class__, None)
         if _type is None:
             raise DReprError("Model function formatter unknown or not supported: {}".format(type(self._container)))
         _yaml['type'] = _type
         
         _yaml['name'] = self._model_function_formatter.name
         _yaml['latex_name'] = self._model_function_formatter.latex_name
-        _yaml['arg_formatters'] = self._model_function_formatter.arg_formatters
-        _yaml['expression_string'] = self._model_function_formatter.expression_string
-        _yaml['latex_expression_string'] = self._model_function_formatter.latex_expression_string
+        _yaml['arg_formatters'] = self._model_function_formatter._arg_formatters #TODO should there be a property?
+        #TODO resolve inconsistent naming
+        _yaml['expression_string'] = self._model_function_formatter.expression_format_string
+        _yaml['latex_expression_string'] = self._model_function_formatter.latex_expression_format_string
 
         #TODO should there be properties for these calls?
         if _type in ('hist', 'xy'):
@@ -58,7 +59,7 @@ class ModelFunctionFormatterYamlReader(DReprReaderMixin, ModelFunctionFormatterD
     def __init__(self, input_io_handle):
         super(ModelFunctionFormatterYamlReader, self).__init__(
             input_io_handle=input_io_handle,
-            model_function=None)
+            model_function_formatter=None)
 
     def _make_object(self):
         _yaml = self._yaml["model_function_formatter"]

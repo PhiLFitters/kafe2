@@ -23,8 +23,8 @@ class ModelFunctionFormatterDReprBase(GenericDReprBase):
         'histogram': HistModelDensityFunctionFormatter
     }
 
-    def __init__(self, model_function=None):
-        self._model_function = model_function
+    def __init__(self, model_function_formatter=None):
+        self._model_function_formatter = model_function_formatter
         super(ModelFunctionFormatterDReprBase, self).__init__()
 
 class ModelParameterFormatterDReprBase(GenericDReprBase):
