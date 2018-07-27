@@ -38,7 +38,7 @@ class ModelFunctionFormatterYamlWriter(DReprWriterMixin, ModelFunctionFormatterD
             _yaml['index_name'] = self._model_function_formatter._x_name
             _yaml['latex_index_name'] = self._model_function_formatter._latex_x_name
         
-        return dict(model_function_formatter=_yaml) # wrap inner yaml inside a 'model_function_formater' namespace
+        return dict(model_function_formatter=_yaml) # wrap inner yaml inside a 'model_function_formatter' namespace
     
     def write(self):
         self._yaml = self._make_representation()
