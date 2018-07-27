@@ -39,13 +39,13 @@ class DReprWriterMixin(object):
         self._representation = None
         super(DReprWriterMixin, self).__init__(*args, **kwargs)
 
-    @abc.abstractmethod
-    def _make_representation(self):
+    @staticmethod
+    def _make_representation(kafe_object):
         """Implement this method for the different data formats"""
         pass
 
     def write(self):
-        self._representation = self._make_representation()
+        self._representation = self._make_representation(self._kafe_object)
         with self._ohandle as _h:
             _h.write(self._representation)
 
@@ -68,16 +68,16 @@ class DReprReaderMixin(object):
         :type input_io_handle: :py:class:`~kafe.fit.io.IOStreamHandle`-derived
         """
         self._ihandle = input_io_handle
-        self._representation = None
+        self._object = None
         super(DReprReaderMixin, self).__init__(*args, **kwargs)
 
-    @abc.abstractmethod
-    def _make_object(self):
+    @staticmethod
+    def _make_object(representation):
         """Implement this method for the different data formats"""
         pass
 
     def read(self):
         with self._ihandle as _h:
             self._representation = _h.read()
-        return self._make_object()
+        return self._make_object(self._representation)
 

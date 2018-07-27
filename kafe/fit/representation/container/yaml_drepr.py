@@ -92,15 +92,16 @@ class DataContainerYamlWriter(DReprWriterMixin, DataContainerDReprBase):
         super(DataContainerYamlWriter, self).__init__(output_io_handle=output_io_handle,
                                                       data_container=data_container)
 
-    def _write_errors_to_yaml(self, yaml_struct):
+    @staticmethod
+    def _write_errors_to_yaml(container, yaml_struct):
         # TODO: create public error retrieval interface
-        for _err_name, _err_dict in self._container._error_dicts.items():
+        for _err_name, _err_dict in container._error_dicts.items():
 
             _err_obj = _err_dict['err']
             _err_axis = _err_dict.get('axis', None)
 
             # get the relevant error section for the current axis, creating it if necessary
-            _yaml_section = yaml_struct.setdefault(self.__class__._yaml_error_section_for_axis[_err_axis], [])
+            _yaml_section = yaml_struct.setdefault(DataContainerYamlWriter._yaml_error_section_for_axis[_err_axis], [])
 
             # -- check for relative errors
             _is_relative = _err_obj.relative
@@ -145,36 +146,37 @@ class DataContainerYamlWriter(DReprWriterMixin, DataContainerDReprBase):
             else:
                 raise DReprError("No representation for error type {} "
                                  "implemented!".format(type(_err_obj)))
-
-    def _make_representation(self):
+    
+    @staticmethod
+    def _make_representation(container):
         _yaml = dict()
 
         # -- determine container type
-        _type = self.__class__._CONTAINER_CLASS_TO_TYPE_NAME.get(self._container.__class__, None)
+        _type = DataContainerYamlWriter._CONTAINER_CLASS_TO_TYPE_NAME.get(container.__class__, None)
         if _type is None:
-            raise DReprError("Container unknown or not supported: {}".format(type(self._container)))
+            raise DReprError("Container unknown or not supported: %s" % container.__class__)
         _yaml['type'] = _type
 
         # -- write representation for container types
         if _type == 'indexed':
-            _yaml['data'] = self._container.data.tolist()
+            _yaml['data'] = container.data.tolist()
         elif _type == 'xy':
-            _yaml['x_data'] = self._container.x.tolist()
-            _yaml['y_data'] = self._container.y.tolist()
+            _yaml['x_data'] = container.x.tolist()
+            _yaml['y_data'] = container.y.tolist()
         elif _type == 'histogram':
-            _yaml['bin_edges'] = self._container.bin_edges.tolist()
-            _yaml['raw_data'] = list(map(float, self._container.raw_data))  # float64 -> float
+            _yaml['bin_edges'] = container.bin_edges.tolist()
+            _yaml['raw_data'] = list(map(float, container.raw_data))  # float64 -> float
         else:
             raise NotImplemented("Container type unknown or not supported: {}".format(_type))
 
         # -- write error representation for all container types
-        if self._container.has_errors:
-            self._write_errors_to_yaml(_yaml)
+        if container.has_errors:
+            DataContainerYamlWriter._write_errors_to_yaml(container, _yaml)
 
         return dict(dataset=_yaml) # wrap inner yaml inside a 'dataset' namespace
 
     def write(self):
-        self._yaml = self._make_representation()
+        self._yaml = self._make_representation(self._container)
         with self._ohandle as _h:
             try:
                 # try to truncate the file to 0 bytes
@@ -204,12 +206,13 @@ class DataContainerYamlReader(DReprReaderMixin, DataContainerDReprBase):
             raise DReprError("Unknown error type '{}'. "
                              "Valid: {}".format(err_type, ('simple', 'matrix')))
 
-    def _make_object(self):
-        _yaml = self._yaml['dataset']
+    @staticmethod
+    def _make_object(yaml):
+        _yaml = yaml['dataset']
 
         # -- determine container class from type
         _container_type = _yaml['type']
-        _class = self.__class__._CONTAINER_TYPE_NAME_TO_CLASS.get(_container_type, None)
+        _class = DataContainerYamlReader._CONTAINER_TYPE_NAME_TO_CLASS.get(_container_type, None)
         if _class is None:
             raise DReprError("Container type unknown or not supported: {}".format(_container_type))
 
@@ -268,8 +271,7 @@ class DataContainerYamlReader(DReprReaderMixin, DataContainerDReprBase):
                     _add_kwargs['axis'] = _axis
             except KeyError as e:
                 # KeyErrors mean the YAML is incomplete -> raise
-                raise DReprError("Missing required key '{}' while reading error specification "
-                                 "for data container from: {}".format(e.args[0], self._ihandle))
+                raise DReprError("Missing required key '%s' for error specification" % e.args[0])
 
             # add error to data container
             DataContainerYamlReader._add_error_to_container(_err_type, _container_obj, **_add_kwargs)
@@ -279,7 +281,7 @@ class DataContainerYamlReader(DReprReaderMixin, DataContainerDReprBase):
     def read(self):
         with self._ihandle as _h:
             self._yaml = yaml.load(_h, _DataContainerYamlLoader)
-        return self._make_object()
+        return self._make_object(self._yaml)
 
 
 # register the above classes in the module-level dictionary
