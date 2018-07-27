@@ -5,7 +5,7 @@ from kafe.fit.xy import XYModelFunctionFormatter
 from kafe.fit.histogram import HistModelDensityFunctionFormatter
 from kafe.fit.representation._base import GenericDReprBase
 
-__all__ = ["ModelFunctionDReprBase", "ParametricModelDReprBase"]
+__all__ = ["ModelFunctionFormatterDReprBase", "ModelParameterFormatterDReprBase"]
 
 
 class ModelFunctionFormatterDReprBase(GenericDReprBase):
@@ -27,11 +27,11 @@ class ModelFunctionFormatterDReprBase(GenericDReprBase):
         self._model_function = model_function
         super(ModelFunctionFormatterDReprBase, self).__init__()
 
-class ModelParameterDReprBase(GenericDReprBase):
+class ModelParameterFormatterDReprBase(GenericDReprBase):
     __metaclass__ = abc.ABCMeta
     OBJECT_TYPE_NAME = 'model_parameter_formatter'
 
     def __init__(self, model=None):
         self._model = model
-        super(ModelParameterDReprBase, self).__init__()
+        super(ModelParameterFormatterDReprBase, self).__init__()
 
