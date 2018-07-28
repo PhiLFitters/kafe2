@@ -13,17 +13,17 @@ model_function_formatter:
     name: quadratic_model
     latex_name: quadratic model
     x_name: x
-    latex_x_name: x
+    latex_x_name: X
     arg_formatters:
         - model_parameter_formatter:
             name: a
-            latex_name: a
+            latex_name: A
         - model_parameter_formatter:
             name: b
-            latex_name: b
+            latex_name: B
         - model_parameter_formatter:
             name: c
-            latex_name: c
+            latex_name: C
     expression_string: '{0} * {x} ** 2 + {1} * {x} + {2}'
     latex_expression_string: '{0}{x}^2 + {1}{x} + {2}' 
 """
@@ -43,9 +43,9 @@ class TestXYModelFunctionFormatterYamlRepresenter(unittest.TestCase):
                 x_name='x',
                 latex_x_name='x',
                 arg_formatters=[
-                    ModelParameterFormatter(name='a', value=1.1, error=0.1, latex_name='a'),
-                    ModelParameterFormatter(name='b', value=2.2, error=0.1, latex_name='b'),
-                    ModelParameterFormatter(name='c', value=3.3, error=0.1, latex_name='c')
+                    ModelParameterFormatter(name='a', value=1.1, error=0.1, latex_name='A'),
+                    ModelParameterFormatter(name='b', value=2.2, error=0.1, latex_name='B'),
+                    ModelParameterFormatter(name='c', value=3.3, error=0.1, latex_name='C')
                 ],
                 expression_string='{0} * {x} ** 2 + {1} * {x} + {2}',
                 latex_expression_string='{0}{x}^2 + {1}{x} + {2}' 

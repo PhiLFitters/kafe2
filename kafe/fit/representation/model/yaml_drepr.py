@@ -5,8 +5,11 @@ import tokenize
 import yaml
 
 from .._base import DReprError, DReprWriterMixin, DReprReaderMixin
+from ..format import ModelFunctionFormatterYamlWriter, ModelFunctionFormatterYamlReader
 from ._base import ModelFunctionDReprBase
 from .. import _AVAILABLE_REPRESENTATIONS
+
+__all__ = ['ModelFunctionYamlWriter', 'ModelFunctionYamlReader']
 
 class ModelFunctionYamlWriter(DReprWriterMixin, ModelFunctionDReprBase):
     DREPR_FLAVOR_NAME = 'yaml'
@@ -27,9 +30,7 @@ class ModelFunctionYamlWriter(DReprWriterMixin, ModelFunctionDReprBase):
             raise DReprError("Model function unknown or not supported: %s" % model_function.__class__)
         _yaml['type'] = _type
         
-        #TODO implrement
-        _yaml['parameter_formatters'] = ""
-        _yaml['function_formatter'] = ""
+        _yaml['model_function_formatter'] = ModelFunctionFormatterYamlWriter._make_representation(model_function.formatter)
         
         _python_code = inspect.getsource(model_function.func)
         _python_code = textwrap.dedent(_python_code) #remove indentation
@@ -93,7 +94,9 @@ class ModelFunctionYamlReader(DReprReaderMixin, ModelFunctionDReprBase):
 
         _model_function_object = _class(_python_function)
         
-        #TODO construct model function formatter, argument formatters
+        #construct model function formatter if specified
+        if 'model_function_formatter' in _yaml:
+            _model_function_object._formatter = ModelFunctionFormatterYamlReader._make_object(_yaml)
         
         return _model_function_object
     

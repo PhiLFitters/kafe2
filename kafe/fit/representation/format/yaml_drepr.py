@@ -8,6 +8,9 @@ from kafe.fit.xy.format import XYModelFunctionFormatter
 from kafe.fit.histogram.format import HistModelDensityFunctionFormatter
 from kafe.fit.indexed.format import IndexedModelFunctionFormatter
 
+__all__ = ['ModelFunctionFormatterYamlWriter', 'ModelFunctionFormatterYamlReader', 
+           'ModelParameterFormatterYamlWriter', 'ModelParameterFormatterYamlReader']
+
 class ModelFunctionFormatterYamlWriter(DReprWriterMixin, ModelFunctionFormatterDReprBase):
     DREPR_FLAVOR_NAME = 'yaml'
     DREPR_ROLE_NAME = 'writer'
