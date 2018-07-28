@@ -70,9 +70,9 @@ class XYMultiModelFunction(ModelFunctionBase):
         self._model_function_handle = model_function
         self._model_function_argcount = len(_args)
         self._validate_model_function_raise()
-        self._assign_parameter_formatters()
         self._assign_function_formatter()
 
+        #TODO fix cunstructor hierarchy
         #super(XYMultiModelFunction, self).__init__(model_function=model_function)
 
     def _validate_model_function_raise(self):
@@ -106,17 +106,19 @@ class XYMultiModelFunction(ModelFunctionBase):
                     % (self._model_function_argspec.keywords,))
 
 
-    def _assign_parameter_formatters(self):
+    def _get_parameter_formatters(self):
         _start_at_arg = 1
-        self._arg_formatters = [ModelParameterFormatter(name=_pn, value=_pv, error=None)
-                                for _pn, _pv in zip(self.argspec.args[_start_at_arg:], self.argvals[_start_at_arg:])]
+        return [ModelParameterFormatter(name=_pn, value=_pv, error=None)
+                for _pn, _pv in zip(self.argspec.args[_start_at_arg:], self.argvals[_start_at_arg:])]
 
     def _assign_function_formatter(self):
         self._formatter = []
         for _model_index, _model_function in enumerate(self.model_function_list):
             self._formatter.append(self.__class__.FORMATTER_TYPE(
                 _model_function.__name__,
-                arg_formatters=self._construct_arg_list(self._arg_formatters, _model_index),
+                arg_formatters=self._construct_arg_list(
+                    self._get_parameter_formatters(), 
+                    _model_index),
                 x_name=self.x_name))
 
     def _construct_arg_list(self, args, model_index):

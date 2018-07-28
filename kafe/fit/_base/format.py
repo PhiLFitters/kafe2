@@ -352,6 +352,14 @@ class ModelFunctionFormatter(object):
         # TODO: validate
         self._description = new_description
 
+    @property
+    def arg_formatters(self):
+        """
+        the list of :py:obj:`ModelParameterFormatter`-derived objects used for formatting
+        model function arguments
+        """
+        return self._arg_formatters
+
     def get_formatted(self, with_par_values=True, n_significant_digits=2, format_as_latex=False, with_expression=False):
         """
         Get a formatted string representing this model function.

@@ -43,14 +43,14 @@ class XYModelFunction(ModelFunctionBase):
         # evaluate general model function requirements
         super(XYModelFunction, self)._validate_model_function_raise()
 
-    def _assign_parameter_formatters(self):
+    def _get_parameter_formatters(self):
         _start_at_arg = 1
-        self._arg_formatters = [ModelParameterFormatter(name=_pn, value=_pv, error=None)
-                                for _pn, _pv in zip(self.argspec.args[_start_at_arg:], self.argvals[_start_at_arg:])]
+        return [ModelParameterFormatter(name=_pn, value=_pv, error=None)
+                for _pn, _pv in zip(self.argspec.args[_start_at_arg:], self.argvals[_start_at_arg:])]
 
     def _assign_function_formatter(self):
         self._formatter = self.__class__.FORMATTER_TYPE(self.name,
-                                                        arg_formatters=self._arg_formatters,
+                                                        arg_formatters=self._get_parameter_formatters(),
                                                         x_name=self.x_name)
 
     @property
