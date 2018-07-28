@@ -112,3 +112,8 @@ class TestXYModelFunctionYamlRepresenter(unittest.TestCase):
                 _read_model_function.func(self._test_x, self._test_a, self._test_b)
             )
         )
+
+class TestXYParametricModelYamlRepresenter(unittest.TestCase):
+    
+    def setup(self):
+        pass

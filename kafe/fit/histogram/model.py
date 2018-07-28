@@ -84,6 +84,7 @@ class HistParametricModelException(HistContainerException):
 
 
 class HistParametricModel(ParametricModelBaseMixin, HistContainer):
+    #TODO n_bins, bin_range, bin_edges contain redundant information, should the arguments for HistParametricModel be refactored?
     def __init__(self, n_bins, bin_range, model_density_func, model_parameters, bin_edges=None, model_density_func_antiderivative=None):
         # print "IndexedParametricModel.__init__(model_func=%r, model_parameters=%r)" % (model_func, model_parameters)
         self._model_density_func_antider_handle = model_density_func_antiderivative

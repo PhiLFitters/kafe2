@@ -19,7 +19,9 @@ class XYContainer(IndexedContainer):
 
     """
     _AXIS_SPEC_DICT = {0:0, 1:1, '0':0, '1':1, 'x':0, 'y':1}
-
+    
+    #TODO Why does the XYContainer constructor require data while
+    #     HistContainer and IndexedContainer don't?
     def __init__(self, x_data, y_data, dtype=float):
         """
         Construct a container for *xy* data:
