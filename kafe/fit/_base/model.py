@@ -84,7 +84,6 @@ class ModelFunctionBase(object):
         self._model_function_argspec = inspect.getargspec(self._model_function_handle)
         self._model_function_argcount = self._model_function_handle.__code__.co_argcount
         self._validate_model_function_raise()
-        self._assign_parameter_formatters()
         self._assign_function_formatter()
 
     def _validate_model_function_raise(self):
@@ -101,13 +100,13 @@ class ModelFunctionBase(object):
                 "Model function with variable arguments (**%s) is not supported"
                 % (self._model_function_argspec.keywords,))
 
-    def _assign_parameter_formatters(self):
-        self._arg_formatters = [ModelParameterFormatter(name=_pn, value=_pv, error=None)
-                                for _pn, _pv in zip(self.argspec.args, self.argvals)]
+    def _get_parameter_formatters(self):
+        return [ModelParameterFormatter(name=_pn, value=_pv, error=None)
+                for _pn, _pv in zip(self.argspec.args, self.argvals)]
 
     def _assign_function_formatter(self):
-        self._formatter = self.__class__.FORMATTER_TYPE(self.name,
-                                                        arg_formatters=self._arg_formatters)
+        self._formatter = self.__class__.FORMATTER_TYPE(
+            self.name, arg_formatters=self._get_parameter_formatters())
 
     def __call__(self, *args, **kwargs):
         self._model_function_handle(*args, **kwargs)
@@ -141,10 +140,10 @@ class ModelFunctionBase(object):
 
     @property
     def formatter(self):
-        """The :py:obj:`Formatter` object for this function"""
+        """The :py:obj:`ModelFunctionFormatter`-derived object for this function"""
         return self._formatter
 
     @property
     def argument_formatters(self):
-        """The :py:obj:`Formatter` objects for the function arguments"""
-        return self._arg_formatters
+        """The :py:obj:`ModelParameterFormatter`-derived objects for the function arguments"""
+        return self._formatter.arg_formatters
