@@ -26,7 +26,7 @@ class ModelParameterFormatter(object):
 
     The formatted string is obtained by calling the :py:meth:`~ModelParameterFormatter.get_formatted` method.
     """
-    def __init__(self, name, value, error=None, latex_name=None):
+    def __init__(self, name, value=None, error=None, latex_name=None):
         """
 
         Construct a :py:obj:`Formatter` for a model function:
