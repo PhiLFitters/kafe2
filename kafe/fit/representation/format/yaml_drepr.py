@@ -112,8 +112,10 @@ class ModelParameterFormatterYamlWriter(DReprWriterMixin, ModelParameterFormatte
         _yaml = dict()
         
         _yaml['name'] = model_parameter_formatter.name
-        _yaml['value'] = model_parameter_formatter.value
-        _yaml['error'] = model_parameter_formatter.error
+        # parameter value and error are not part of the serialization
+        # because they belong to the parametric model
+        #_yaml['value'] = model_parameter_formatter.value
+        #_yaml['error'] = model_parameter_formatter.error
         _yaml['latex_name'] = model_parameter_formatter.latex_name
 
         return dict(model_parameter_formatter=_yaml) # wrap inner yaml inside a 'model_parameter_formatter' namespace
@@ -141,8 +143,10 @@ class ModelParameterFormatterYamlReader(DReprReaderMixin, ModelParameterFormatte
     @staticmethod
     def _make_object(yaml):
         _yaml = yaml["model_parameter_formatter"]
-
-        _kwarg_list = ['name', 'value', 'error', 'latex_name']
+        
+        # value and error are not part of the deserialization
+        # because they belong to the parametric model
+        _kwarg_list = ['name', 'latex_name']
         _arg_dict = {key: _yaml.get(key, None) for key in _kwarg_list}
         _model_parameter_formatter_object = ModelParameterFormatter(**_arg_dict)
         

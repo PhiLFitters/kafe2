@@ -17,18 +17,12 @@ model_function_formatter:
     arg_formatters:
         - model_parameter_formatter:
             name: a
-            value: 1.1
-            error: 0.1
             latex_name: a
         - model_parameter_formatter:
             name: b
-            value: 2.2
-            error: 0.1
             latex_name: b
         - model_parameter_formatter:
             name: c
-            value: 3.3
-            error: 0.1
             latex_name: c
     expression_string: '{0} * {x} ** 2 + {1} * {x} + {2}'
     latex_expression_string: '{0}{x}^2 + {1}{x} + {2}' 
@@ -37,8 +31,6 @@ model_function_formatter:
 TEST_MODEL_PARAMETER_FORMATTER = """
 model_parameter_formatter:
     name: phi
-    value: 1.571
-    error: 0.1
     latex_name: \phi
 """
 
@@ -79,8 +71,8 @@ class TestXYModelFunctionFormatterYamlRepresenter(unittest.TestCase):
         for _read_arg_formatter, _given_arg_formatter in zip(_read_model_function_formatter._arg_formatters, 
                                                              self._model_function_formatter._arg_formatters):
             self.assertTrue(_read_arg_formatter.name == _given_arg_formatter.name)
-            self.assertTrue(_read_arg_formatter.value == _given_arg_formatter.value)
-            self.assertTrue(_read_arg_formatter.error == _given_arg_formatter.error)
+            self.assertTrue(_read_arg_formatter.value == None)
+            self.assertTrue(_read_arg_formatter.error == None)
             self.assertTrue(_read_arg_formatter.latex_name == _given_arg_formatter.latex_name)
         self.assertTrue(_read_model_function_formatter.expression_format_string == self._model_function_formatter.expression_format_string)
         self.assertTrue(_read_model_function_formatter.latex_expression_format_string == self._model_function_formatter.latex_expression_format_string)
@@ -97,8 +89,8 @@ class TestXYModelFunctionFormatterYamlRepresenter(unittest.TestCase):
         for _read_arg_formatter, _given_arg_formatter in zip(_read_model_function_formatter._arg_formatters, 
                                                              self._model_function_formatter._arg_formatters):
             self.assertTrue(_read_arg_formatter.name == _given_arg_formatter.name)
-            self.assertTrue(_read_arg_formatter.value == _given_arg_formatter.value)
-            self.assertTrue(_read_arg_formatter.error == _given_arg_formatter.error)
+            self.assertTrue(_read_arg_formatter.value == None)
+            self.assertTrue(_read_arg_formatter.error == None)
             self.assertTrue(_read_arg_formatter.latex_name == _given_arg_formatter.latex_name)
         self.assertTrue(_read_model_function_formatter.expression_format_string == self._model_function_formatter.expression_format_string)
         self.assertTrue(_read_model_function_formatter.latex_expression_format_string == self._model_function_formatter.latex_expression_format_string)
@@ -128,8 +120,8 @@ class TestXYArgumentFormatterYamlRepresenter(unittest.TestCase):
         self.assertTrue(isinstance(_read_model_parameter_formatter, ModelParameterFormatter))
         
         self.assertTrue(_read_model_parameter_formatter.name == self._model_parameter_formatter.name)
-        self.assertTrue(_read_model_parameter_formatter.value == self._model_parameter_formatter.value)
-        self.assertTrue(_read_model_parameter_formatter.error == self._model_parameter_formatter.error)
+        self.assertTrue(_read_model_parameter_formatter.value == None)
+        self.assertTrue(_read_model_parameter_formatter.error == None)
         self.assertTrue(_read_model_parameter_formatter.latex_name == self._model_parameter_formatter.latex_name)
 
     def test_round_trip_with_stringstream(self):
@@ -139,6 +131,6 @@ class TestXYArgumentFormatterYamlRepresenter(unittest.TestCase):
         self.assertTrue(isinstance(_read_parameter_formatter, ModelParameterFormatter))
 
         self.assertTrue(_read_parameter_formatter.name == self._model_parameter_formatter.name)
-        self.assertTrue(_read_parameter_formatter.value == self._model_parameter_formatter.value)
-        self.assertTrue(_read_parameter_formatter.error == self._model_parameter_formatter.error)
+        self.assertTrue(_read_parameter_formatter.value == None)
+        self.assertTrue(_read_parameter_formatter.error == None)
         self.assertTrue(_read_parameter_formatter.latex_name == self._model_parameter_formatter.latex_name)
