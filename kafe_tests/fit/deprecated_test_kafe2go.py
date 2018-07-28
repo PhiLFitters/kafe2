@@ -42,9 +42,9 @@ class TestYAMLToFitObject(unittest.TestCase):
         """
 
     
-    def test_string_to_hist_fit(self):
-        _hist_fit = kafe2go.yaml_to_fit(self._input_string_hist)
-        self.assertTrue(isinstance(_hist_fit, HistFit))
+#    def test_string_to_hist_fit(self):
+#        _hist_fit = kafe2go.yaml_to_fit(self._input_string_hist)
+#        self.assertTrue(isinstance(_hist_fit, HistFit))
     
     def test_string_to_indexed_fit(self):
         _indexed_fit = kafe2go.yaml_to_fit(self._input_string_indexed)

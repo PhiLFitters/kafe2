@@ -87,12 +87,12 @@ class ModelFunctionFormatterYamlReader(DReprReaderMixin, ModelFunctionFormatterD
         if _class is IndexedModelFunctionFormatter:
             _kwarg_list.append('index_name')
             _kwarg_list.append('latex_index_name')
-        _arg_dict = {key: _yaml.get(key, None) for key in _kwarg_list}
+        _constructor_kwargs = {key: _yaml.get(key, None) for key in _kwarg_list}
         
-        _arg_dict['arg_formatters'] = [ModelParameterFormatterYamlReader._make_object(_representation)
-                                       for _representation in _yaml.get('arg_formatters', [])]
+        _constructor_kwargs['arg_formatters'] = [ModelParameterFormatterYamlReader._make_object(_representation)
+                                                 for _representation in _yaml.get('arg_formatters', [])]
         
-        _model_function_formatter_object = _class(**_arg_dict)
+        _model_function_formatter_object = _class(**_constructor_kwargs)
         
         return _model_function_formatter_object
     

@@ -84,6 +84,7 @@ class HistParametricModelException(HistContainerException):
 
 
 class HistParametricModel(ParametricModelBaseMixin, HistContainer):
+    #TODO n_bins, bin_range, bin_edges contain redundant information, should the arguments for HistParametricModel be refactored?
     def __init__(self, n_bins, bin_range, model_density_func, model_parameters, bin_edges=None, model_density_func_antiderivative=None):
         # print "IndexedParametricModel.__init__(model_func=%r, model_parameters=%r)" % (model_func, model_parameters)
         self._model_density_func_antider_handle = model_density_func_antiderivative
@@ -103,7 +104,7 @@ class HistParametricModel(ParametricModelBaseMixin, HistContainer):
             _int_val = np.asarray(_fval_antider_bs) - np.asarray(_fval_antider_as)
         else:
             import scipy.integrate as integrate
-            _integrand_func = lambda x: self._model_function_handle(x, *self._model_parameters)
+            _integrand_func = lambda x: self._model_function_object.func(x, *self._model_parameters)
             # TODO: find more efficient alternative
             _int_val = np.zeros(self.size)
             for _i, (_a, _b) in enumerate(zip(_as, _bs)):
@@ -143,7 +144,7 @@ class HistParametricModel(ParametricModelBaseMixin, HistContainer):
         :rtype: :py:obj:`numpy.ndarray`
         """
         _pars = model_parameters if model_parameters is not None else self._model_parameters
-        return self._model_function_handle(x, *_pars)
+        return self._model_function_object.func(x, *_pars)
 
     def fill(self, entries):
         raise HistParametricModelException("Parametric model of histogram cannot be filled!")

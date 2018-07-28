@@ -57,9 +57,9 @@ class IndexedParametricModel(ParametricModelBaseMixin, IndexedContainer):
         # print "IndexedParametricModel.__init__(model_func=%r, model_parameters=%r)" % (model_func, model_parameters)
         if shape_like is not None:
             _data = np.zeros_like(shape_like)
-            _data[:] = model_func(*model_parameters)
+            _data[:] = model_func.func(*model_parameters)
         else:
-            _data = model_func(*model_parameters)
+            _data = model_func.func(*model_parameters)
         super(IndexedParametricModel, self).__init__(model_func, model_parameters, _data)
 
     # -- private methods
@@ -101,7 +101,7 @@ class IndexedParametricModel(ParametricModelBaseMixin, IndexedContainer):
         :rtype: :py:obj:`numpy.ndarray`
         """
         _pars = model_parameters if model_parameters is not None else self._model_parameters
-        return self._model_function_handle(*_pars)
+        return self._model_function_object.func(*_pars)
 
     def eval_model_function_derivative_by_parameters(self, model_parameters=None, par_dx=None):
         """
@@ -123,7 +123,7 @@ class IndexedParametricModel(ParametricModelBaseMixin, IndexedContainer):
             def _chipped_func(par):
                 _chipped_pars = _pars.copy()
                 _chipped_pars[_par_idx] = par
-                return self._model_function_handle(*_chipped_pars)
+                return self._model_function_object.func(*_chipped_pars)
 
             _der_val = derivative(_chipped_func, _par_val, dx=_par_dx)
             _ret.append(_der_val)
