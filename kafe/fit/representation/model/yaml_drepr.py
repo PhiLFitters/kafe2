@@ -187,6 +187,7 @@ class ParametricModelYamlReader(DReprReaderMixin, ParametricModelDReprBase):
             _kwarg_list.append('n_bins')
             _kwarg_list.append('bin_range')
             _kwarg_list.append('bin_edges')
+            #TODO implement parsing
             _kwarg_list.append('model_density_func_antiderivative')
         elif _parametric_model_type == 'indexed':
             _kwarg_list.append('shape_like')
