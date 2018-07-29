@@ -1,4 +1,5 @@
 import inspect
+import numpy as np
 import StringIO
 import textwrap
 import tokenize
@@ -137,7 +138,10 @@ class ParametricModelYamlWriter(DReprWriterMixin, ParametricModelDReprBase):
         else:
             raise NotImplemented("Container type unknown or not supported: {}".format(_type))
 
-        _yaml['model_parameters'] = parametric_model.parameters
+        _parameters = parametric_model.parameters
+        if isinstance(_parameters, np.ndarray):
+            _parameters = _parameters.tolist() #better readability in file
+        _yaml['model_parameters'] = _parameters
 
         # -- write error representation for all container types
         if parametric_model.has_errors:

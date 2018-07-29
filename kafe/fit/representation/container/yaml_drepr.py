@@ -117,6 +117,7 @@ class DataContainerYamlWriter(DReprWriterMixin, DataContainerDReprBase):
                 _err_val = _err_val.tolist()
 
             # -- handle different error types
+            #TODO shouldn't each error be wrapped inside an 'error' namespace?
             if _err_obj.__class__ is SimpleGaussianError:
                 _yaml_section.append(dict(
                     name=_err_name,
