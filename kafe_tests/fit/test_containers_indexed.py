@@ -4,7 +4,8 @@ import numpy as np
 from kafe.fit import IndexedContainer, IndexedParametricModel
 from kafe.fit._base import DataContainerException
 from kafe.fit.indexed.container import IndexedContainerException
-from kafe.fit.indexed.model import IndexedParametricModelException
+from kafe.fit.indexed.model import IndexedParametricModelException,\
+    IndexedModelFunction
 from kafe.core.error import cov_mat_from_float_list
 
 
@@ -137,7 +138,9 @@ class TestDatastoreIndexedParametricModel(unittest.TestCase):
         self._ref_params = (1.2, 3.3)
         self._ref_data = self._ref_model_func(*self._ref_params)
 
-        self.idx_param_model = IndexedParametricModel(model_func=self._ref_model_func, model_parameters=self._ref_params)
+        self.idx_param_model = IndexedParametricModel(
+            model_func=IndexedModelFunction(self._ref_model_func), 
+            model_parameters=self._ref_params)
 
         self._test_params = (3.4, -5.23)
         self._ref_test_data = self._ref_model_func(*self._test_params)

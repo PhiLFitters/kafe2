@@ -5,7 +5,8 @@ import scipy.stats as stats
 from kafe.fit import HistContainer, HistParametricModel
 from kafe.fit._base import DataContainerException
 from kafe.fit.histogram.container import HistContainerException
-from kafe.fit.histogram.model import HistParametricModelException
+from kafe.fit.histogram.model import HistParametricModelException,\
+    HistModelFunction
 
 
 class TestDatastoreHistogram(unittest.TestCase):
@@ -155,8 +156,10 @@ class TestDatastoreHistParametricModel(unittest.TestCase):
         self.hist_param_model_no_antider = HistParametricModel(
             n_bins=self._ref_n_bins,
             bin_range=self._ref_n_bin_range,
-            model_density_func=self._ref_model_func, model_parameters=self._ref_params,
-            bin_edges=None, model_density_func_antiderivative=None)
+            model_density_func=HistModelFunction(self._ref_model_func), 
+            model_parameters=self._ref_params,
+            bin_edges=None, 
+            model_density_func_antiderivative=None)
 
         self.hist_param_model_with_antider = HistParametricModel(
             n_bins=self._ref_n_bins,

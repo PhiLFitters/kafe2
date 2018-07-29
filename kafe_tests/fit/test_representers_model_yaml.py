@@ -4,8 +4,9 @@ from six import StringIO
 
 from kafe.fit.xy import XYModelFunction, XYModelFunctionFormatter
 from kafe.fit.representation import ModelFunctionYamlWriter, ModelFunctionYamlReader
+from kafe.fit.representation import ParametricModelYamlWriter, ParametricModelYamlReader
 from kafe.fit.io.handle import IOStreamHandle
-from __builtin__ import isinstance
+from kafe.fit.xy.model import XYParametricModel
 
 TEST_MODEL_FUNCTION_XY="""
 model_function:
@@ -38,6 +39,18 @@ model_function:
         expression_string: '{0} * {x} + {1}'
         latex_expression_string: '{0}{x} + {1}' 
         
+"""
+
+TEST_PARAMETRIC_MODEL_XY="""
+parametric_model:
+    type: xy
+    x_data: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+    model_function:
+        type: xy
+        python_code: |
+            def linear_model(x, a, b):
+                return a * x + b
+    model_parameters: [1.0, 1.0]
 """
 
 class TestXYModelFunctionYamlRepresenter(unittest.TestCase):
@@ -114,6 +127,71 @@ class TestXYModelFunctionYamlRepresenter(unittest.TestCase):
         )
 
 class TestXYParametricModelYamlRepresenter(unittest.TestCase):
+
+    @staticmethod
+    def linear_model(x, a, b):
+        return a * x + b
+   
+    def setUp(self):
+        self._test_x = np.array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0])
+        self._test_model_parameters = np.array([1.0, 1.0])
+        self._test_parametric_model = XYParametricModel(
+            self._test_x, 
+            XYModelFunction(TestXYParametricModelYamlRepresenter.linear_model),
+            self._test_model_parameters
+        )
+
+        self._test_parametric_model_with_errors = XYParametricModel(
+            self._test_x, 
+            XYModelFunction(TestXYParametricModelYamlRepresenter.linear_model),
+            self._test_model_parameters
+        )
+        
+        self._roundtrip_stringstream = IOStreamHandle(StringIO())
+        self._testfile_stringstream = IOStreamHandle(StringIO(TEST_PARAMETRIC_MODEL_XY))
+        
+        self._roundtrip_streamreader = ParametricModelYamlReader(self._roundtrip_stringstream)
+        self._roundtrip_streamwriter = ParametricModelYamlWriter(self._test_parametric_model, self._roundtrip_stringstream)
+        self._testfile_streamreader = ParametricModelYamlReader(self._testfile_stringstream)
+
+    def test_write_to_roundtrip_stringstream(self):
+        self._roundtrip_streamwriter.write()
+
+    def test_read_from_testfile_stream(self):
+        _read_parametric_model = self._testfile_streamreader.read()
+        self.assertTrue(isinstance(_read_parametric_model, XYParametricModel))
+        
+        self.assertTrue(
+            np.allclose(
+                _read_parametric_model.parameters,
+                self._test_model_parameters
+            )
+        )
+        _read_parametric_model.x = np.array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0])
+        self.assertTrue(
+            np.allclose(
+                _read_parametric_model.y,
+                self._test_parametric_model.y
+            )
+        )
+        
+    def test_round_trip_with_stringstream(self):
+        self._roundtrip_streamwriter.write()
+        self._roundtrip_stringstream.seek(0)  # return to beginning
+        _read_parametric_model = self._roundtrip_streamreader.read()
+        self.assertTrue(isinstance(_read_parametric_model, XYParametricModel))
+        
+        self.assertTrue(
+            np.allclose(
+                _read_parametric_model.parameters,
+                self._test_model_parameters
+            )
+        )
+        _read_parametric_model.x = np.array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0])
+        self.assertTrue(
+            np.allclose(
+                _read_parametric_model.y,
+                self._test_parametric_model.y
+            )
+        )
     
-    def setup(self):
-        pass

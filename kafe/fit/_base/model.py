@@ -31,7 +31,7 @@ class ParametricModelBaseMixin(object):
         :param model_func: handle of Python function (the model function)
         :param model_parameters: iterable of parameter values with which the model function should be initialized
         """
-        self._model_function_handle = model_func
+        self._model_function_object = model_func
         self.parameters = model_parameters
         super(ParametricModelBaseMixin, self).__init__(*args, **kwargs)
 

@@ -304,9 +304,9 @@ class XYMultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
         _x = x if x is not None else self.x
         _pars = model_parameters if model_parameters is not None else self._model_parameters
         if model_index is None:
-            return self._model_function_handle.func(_x, *_pars)
+            return self._model_function_object.func(_x, *_pars)
         else:
-            return self._model_function_handle.eval_underlying_model_function(_x, _pars, model_index)
+            return self._model_function_object.eval_underlying_model_function(_x, _pars, model_index)
 
     def eval_model_function_derivative_by_parameters(self, x=None, x_indices=None, model_parameters=None, par_dx=None):
         """
@@ -341,7 +341,7 @@ class XYMultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
         _derivatives = []
         for _par in _pars:
             _derivatives.append([])
-        for _i, (_model_function, _par_indices) in enumerate(zip(self._model_function_handle.model_function_list, self._model_function_handle._model_arg_indices)):
+        for _i, (_model_function, _par_indices) in enumerate(zip(self._model_function_object.model_function_list, self._model_function_object._model_arg_indices)):
             _x_splice = _x[_x_indices[_i]:_x_indices[_i + 1]]
             _par_sublist = []
             for _par_index in _par_indices:
@@ -396,7 +396,7 @@ class XYMultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
             _dxs = np.ones_like(_x)*_dxs
 
         _derivatives = []
-        for _i, (_model_function, _par_indices) in enumerate(zip(self._model_function_handle.model_function_list, self._model_function_handle._model_arg_indices)):
+        for _i, (_model_function, _par_indices) in enumerate(zip(self._model_function_object.model_function_list, self._model_function_object._model_arg_indices)):
             _par_sublist = []
             for _par_index in _par_indices:
                 _par_sublist.append(_pars[_par_index])

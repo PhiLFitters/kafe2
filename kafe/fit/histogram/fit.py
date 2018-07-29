@@ -80,10 +80,12 @@ class HistFit(FitBase):
         self._param_model = self._new_parametric_model(
             self._data_container.size,
             self._data_container.bin_range,
-            self._model_function.func,
+            self._model_function,
             self.parameter_values,
             self._data_container.bin_edges,
             model_density_func_antiderivative=self._model_function.antiderivative)
+        #TODO now that the model takes a kafe model function object as argument,
+        #     has the antiderivative argument become obsolete?
 
         # TODO: check where to update this (set/release/etc.)
         # FIXME: nicer way than len()?

@@ -75,7 +75,7 @@ class IndexedFit(FitBase):
         # initialize the Fitter
         self._initialize_fitter(minimizer, minimizer_kwargs)
         # create the child ParametricModel objet
-        self._param_model = self._new_parametric_model(self._model_function.func, self.parameter_values, shape_like=self.data)
+        self._param_model = self._new_parametric_model(self._model_function, self.parameter_values, shape_like=self.data)
 
         # TODO: check where to update this (set/release/etc.)
         # FIXME: nicer way than len()?

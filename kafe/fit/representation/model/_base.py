@@ -31,18 +31,18 @@ class ParametricModelDReprBase(GenericDReprBase):
     __metaclass__ = abc.ABCMeta
     OBJECT_TYPE_NAME = 'model'
 
-    _MODEL_CLASS_TO_TYPE_NAME = {
+    _PARAMETRIC_MODEL_CLASS_TO_TYPE_NAME = {
         IndexedParametricModel: 'indexed',
         XYParametricModel: 'xy',
         HistParametricModel: 'histogram'
     }
-    _MODEL_TYPE_NAME_TO_CLASS = {
+    _PARAMETRIC_MODEL_TYPE_NAME_TO_CLASS = {
         'indexed': IndexedParametricModel,
         'xy': XYParametricModel,
         'histogram': HistParametricModel
     }
 
-    def __init__(self, model=None):
-        self._model = model
+    def __init__(self, parametric_model=None):
+        self._parametric_model = parametric_model
         super(ParametricModelDReprBase, self).__init__()
 

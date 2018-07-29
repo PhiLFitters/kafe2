@@ -83,7 +83,7 @@ class XYFit(FitBase):
         # initialize the Fitter
         self._initialize_fitter(minimizer, minimizer_kwargs)
         # create the child ParametricModel object
-        self._param_model = self._new_parametric_model(self.x_model, self._model_function.func,
+        self._param_model = self._new_parametric_model(self.x_model, self._model_function,
                                                        self.poi_values)
 
         # TODO: check where to update this (set/release/etc.)

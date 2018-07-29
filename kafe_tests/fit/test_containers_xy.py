@@ -4,7 +4,7 @@ import numpy as np
 from kafe.fit import XYContainer, XYParametricModel
 from kafe.fit._base import DataContainerException
 from kafe.fit.xy.container import XYContainerException
-from kafe.fit.xy.model import XYParametricModelException
+from kafe.fit.xy.model import XYParametricModelException, XYModelFunction
 from kafe.core.error import cov_mat_from_float_list
 
 
@@ -188,7 +188,10 @@ class TestDatastoreXYParametricModel(unittest.TestCase):
         self._ref_params = (1.2, 3.3)
         self._ref_data = self._ref_model_func(self._ref_x, *self._ref_params)
 
-        self.xy_param_model = XYParametricModel(x_data=self._ref_x, model_func=self._ref_model_func, model_parameters=self._ref_params)
+        self.xy_param_model = XYParametricModel(
+            x_data=self._ref_x, 
+            model_func=XYModelFunction(self._ref_model_func), 
+            model_parameters=self._ref_params)
 
         self._test_params = (3.4, -5.23)
         self._ref_data_ref_x_test_params =  self._ref_model_func(self._ref_x, *self._test_params)
