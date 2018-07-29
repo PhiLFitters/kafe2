@@ -46,6 +46,7 @@ class HistFit(FitBase):
 
         # set/construct the model function object
         if isinstance(model_density_function, self.__class__.MODEL_FUNCTION_TYPE):
+            #TODO shouldn't this Exception only be raised if the kafe model function already has an antiderivative?
             if model_density_antiderivative is not None:
                 raise HistFitException("Antiderivative (%r) provided in constructor for %r, "
                                        "but histogram model function object (%r) already constructed!"
