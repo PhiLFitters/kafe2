@@ -75,34 +75,36 @@ class FitYamlReader(DReprReaderMixin, FitDReprBase):
 
         # -- determine model function class from type
         _fit_type = _yaml['type']
-        _class = FitYamlReader._MODEL_FUNCTION_TYPE_NAME_TO_CLASS.get(_fit_type, None)
+        _class = FitYamlReader._FIT_TYPE_NAME_TO_CLASS.get(_fit_type, None)
         if _class is None:
             raise DReprError("Model function type unknown or not supported: {}".format(_fit_type))
         
         _data = DataContainerYamlReader._make_object(_yaml)
         _parametric_model = ParametricModelYamlReader._make_object(_yaml)
         #TODO cost function
+        _minimizer = _yaml.get('minimizer', None)
+        _minimizer_kwargs = _yaml.get('minimizer_kwargs', None)
         if _fit_type == 'histogram':
             _fit_object = HistFit(
                 data=_data,
                 model_density_function=_parametric_model._model_function_object,
                 model_density_antiderivative=None,
-                minimizer=_yaml['minimizer'],
-                minimizer_kwargs=_yaml['minimizer_kwargs']
+                minimizer=_minimizer,
+                minimizer_kwargs=_minimizer_kwargs
             )
         elif _fit_type == 'indexed':
             _fit_object = IndexedFit(
                 data=_data,
                 model_function=_parametric_model._model_function_object,
-                minimizer=_yaml['minimizer'],
-                minimizer_kwargs=_yaml['minimizer_kwargs']                
+                minimizer=_minimizer,
+                minimizer_kwargs=_minimizer_kwargs                
             )
         elif _fit_type == 'xy':
             _fit_object = XYFit(
                 xy_data=_data,
                 model_function=_parametric_model._model_function_object,
-                minimizer=_yaml['minimizer'],
-                minimizer_kwargs=_yaml['minimizer_kwargs']
+                minimizer=_minimizer,
+                minimizer_kwargs=_minimizer_kwargs
             )
         _fit_object._param_model = _parametric_model
         return _fit_object
