@@ -2,6 +2,7 @@ import abc
 import inspect
 
 from .format import ModelParameterFormatter, ModelFunctionFormatter
+from kafe.fit.io.file import FileIOMixin
 
 
 __all__ = ["ParametricModelBaseMixin", "ModelFunctionBase", "ModelFunctionException"]
@@ -35,6 +36,14 @@ class ParametricModelBaseMixin(object):
         self.parameters = model_parameters
         super(ParametricModelBaseMixin, self).__init__(*args, **kwargs)
 
+    @classmethod
+    def _get_base_class(cls):
+        return ParametricModelBaseMixin
+
+    @classmethod
+    def _get_object_type_name(cls):
+        return 'parametric_model'
+
     @property
     def parameters(self):
         """Model parameter values"""
@@ -54,7 +63,7 @@ class ModelFunctionException(Exception):
     pass
 
 
-class ModelFunctionBase(object):
+class ModelFunctionBase(FileIOMixin, object):
     """
     This is a purely abstract class implementing the minimal interface required by all
     model functions.
@@ -85,6 +94,15 @@ class ModelFunctionBase(object):
         self._model_function_argcount = self._model_function_handle.__code__.co_argcount
         self._validate_model_function_raise()
         self._assign_function_formatter()
+        super(ModelFunctionBase, self).__init__()
+        
+    @classmethod
+    def _get_base_class(cls):
+        return ModelFunctionBase
+
+    @classmethod
+    def _get_object_type_name(cls):
+        return 'model_function'
 
     def _validate_model_function_raise(self):
         if self._model_function_argspec.varargs and self._model_function_argspec.keywords:

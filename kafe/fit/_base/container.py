@@ -8,7 +8,7 @@ from copy import copy
 
 from ...tools import random_alphanumeric
 from ...core.error import SimpleGaussianError, MatrixGaussianError
-from ..io import InputFileHandle, OutputFileHandle
+from kafe.fit.io.file import FileIOMixin
 
 __all__ = ["DataContainerBase", "DataContainerException"]
 
@@ -17,7 +17,7 @@ class DataContainerException(Exception):
     pass
 
 
-class DataContainerBase(object):
+class DataContainerBase(FileIOMixin, object):
     """
     This is a purely abstract class implementing the minimal interface required by all
     types of data containers.
@@ -29,8 +29,17 @@ class DataContainerBase(object):
     def __init__(self):
         self._error_dicts = dict()
         self._total_error = None
+        super(DataContainerBase, self).__init__()
 
     # -- private methods
+    
+    @classmethod
+    def _get_base_class(cls):
+        return DataContainerBase
+
+    @classmethod
+    def _get_object_type_name(cls):
+        return 'container'
 
     @abc.abstractmethod
     def _calculate_total_error(self):
@@ -291,50 +300,3 @@ class DataContainerBase(object):
         if self._total_error is None:
             self._calculate_total_error()
         return self._total_error
-
-    # IO-related methods
-
-    @classmethod
-    def from_file(cls, filename, format=None):
-        """Read container from file"""
-        from ..representation import get_reader
-
-        _basename_ext = filename.split('.')
-        if len(_basename_ext) > 1:
-            _basename, _ext = _basename_ext[:-1], _basename_ext[-1]
-        else:
-            _basename, _ext = _basename_ext[0], None
-
-        if format is None and _ext is None:
-            raise DataContainerException("Cannot detect file format from "
-                                         "filename '{}' and no format specified!".format(filename))
-        else:
-            _format = format or _ext  # choose 'format' if specified, otherwise use filename extension
-
-        _reader_class = get_reader('container', _format)
-        _container = _reader_class(InputFileHandle(filename=filename)).read()
-
-        # check if the container is the right type (do not check if calling from DataContainerBase)
-        if not _container.__class__ == cls and not cls == DataContainerBase:
-            raise DataContainerException("Cannot import '{}' from file '{}': file contains wrong container "
-                                         "type '{}'!".format(cls.__name__, filename, _container.__class__.__name__))
-        return _container
-
-    def to_file(self, filename, format=None):
-        """Write container to file"""
-        from ..representation import get_writer
-
-        _basename_ext = filename.split('.')
-        if len(_basename_ext) > 1:
-            _basename, _ext = _basename_ext[:-1], _basename_ext[-1]
-        else:
-            _basename, _ext = _basename_ext[0], None
-
-        if format is None and _ext is None:
-            raise DataContainerException("Cannot detect file format from "
-                                         "filename '{}' and no format specified!".format(filename))
-        else:
-            _format = format or _ext  # choose 'format' if specified, otherwise use filename extension
-
-        _writer_class = get_writer('container', _format)
-        _writer_class(self, OutputFileHandle(filename=filename)).write()

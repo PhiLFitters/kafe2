@@ -2,6 +2,7 @@ import re
 import string
 
 import numpy as np
+from kafe.fit.io.file import FileIOMixin
 
 
 __all__ = ["ModelParameterFormatter", "ModelFunctionFormatter", "CostFunctionFormatter", "FormatterException"]
@@ -13,7 +14,7 @@ class FormatterException(Exception):
     pass
 
 
-class ModelParameterFormatter(object):
+class ModelParameterFormatter(FileIOMixin, object):
     """
     :py:obj:`Formatter` class for model parameter objects.
 
@@ -52,6 +53,16 @@ class ModelParameterFormatter(object):
         self._latex_name = latex_name
         if self._latex_name is None:
             self._latex_name = self._latexify_ascii(self._name)
+        super(ModelParameterFormatter, self).__init__()
+
+    @classmethod
+    def _get_base_class(cls):
+        return ModelParameterFormatter
+
+    @classmethod
+    def _get_object_type_name(cls):
+        return 'model_parameter_formatter'
+
 
     @staticmethod
     def _latexify_ascii(ascii_string):
@@ -202,7 +213,7 @@ class ModelParameterFormatter(object):
         return _display_string
 
 
-class ModelFunctionFormatter(object):
+class ModelFunctionFormatter(FileIOMixin, object):
     """
     Base class for model function :py:obj:`Formatter` objects. Requires further specialization for
     each type of model function.
@@ -243,6 +254,15 @@ class ModelFunctionFormatter(object):
             self._latex_name = self._latexify_ascii(self._name)
 
         self._description = None
+        super(ModelFunctionFormatter, self).__init__()
+
+    @classmethod
+    def _get_base_class(cls):
+        return ModelFunctionFormatter
+
+    @classmethod
+    def _get_object_type_name(cls):
+        return 'model_function_formatter'
 
     @staticmethod
     def _latexify_ascii(ascii_string):

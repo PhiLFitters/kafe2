@@ -7,6 +7,7 @@ import string
 from .format import ModelParameterFormatter, CostFunctionFormatter
 
 from scipy.stats import poisson, norm
+from kafe.fit.io.file import FileIOMixin
 
 
 __all__ = ["CostFunctionBase",
@@ -95,7 +96,7 @@ class CostFunctionException(Exception):
     pass
 
 
-class CostFunctionBase(object):
+class CostFunctionBase(FileIOMixin, object):
     """
     This is a purely abstract class implementing the minimal interface required by all
     cost functions.
@@ -133,6 +134,15 @@ class CostFunctionBase(object):
 
         self._flags = {}
         self._ndf = None
+        super(CostFunctionBase, self).__init__()
+
+    @classmethod
+    def _get_base_class(cls):
+        return CostFunctionBase
+
+    @classmethod
+    def _get_object_type_name(cls):
+        return 'cost_function'
 
     def _validate_cost_function_raise(self):
         self._cost_func_argspec = inspect.getargspec(self._cost_function_handle)

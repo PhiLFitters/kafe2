@@ -12,6 +12,7 @@ from ...tools import print_dict_as_table
 from ...core import get_minimizer, NexusFitter
 from ...tools import print_dict_recursive
 from .container import DataContainerException
+from kafe.fit.io.file import FileIOMixin
 
 __all__ = ["FitBase", "FitException"]
 
@@ -20,7 +21,7 @@ class FitException(Exception):
     pass
 
 
-class FitBase(object):
+class FitBase(FileIOMixin, object):
     """
     This is a purely abstract class implementing the minimal interface required by all
     types of fitters.
@@ -40,8 +41,17 @@ class FitBase(object):
         self._fit_param_names = None
         self._model_function = None
         self._cost_function = None
+        super(FitBase, self).__init__()
 
     # -- private methods
+
+    @classmethod
+    def _get_base_class(cls):
+        return FitBase
+
+    @classmethod
+    def _get_object_type_name(cls):
+        return 'fit'
 
     def _new_data_container(self, *args, **kwargs):
         """create a DataContainer of the right type for this fit"""
