@@ -380,6 +380,10 @@ class ModelFunctionFormatter(FileIOMixin, object):
         """
         return self._arg_formatters
 
+    @arg_formatters.setter
+    def arg_formatters(self, arg_formatters):
+        self._arg_formatters = arg_formatters
+
     def get_formatted(self, with_par_values=True, n_significant_digits=2, format_as_latex=False, with_expression=False):
         """
         Get a formatted string representing this model function.

@@ -369,14 +369,12 @@ class XYMultiFit(FitBase):
         self.__cache_y_error_band = np.sqrt(_band_y)
 
     def _get_model_report_dict_entry(self):
-        _formatted_list = []
-        for _formatter in self._model_function.formatter:
-            _formatted_list.append(_formatter.get_formatted(
-                with_par_values=False,
-                n_significant_digits=2,
-                format_as_latex=False,
-                with_expression=True))
-        return _formatted_list
+        return [self._param_model._model_function_object.formatter.get_formatted(
+            model_index=_i,
+            with_par_values=False,
+            n_significant_digits=2,
+            format_as_latex=False,
+            with_expression=True) for _i in range(self.model_count)]
 
     # -- public properties
 
@@ -1119,7 +1117,8 @@ class XYMultiFit(FitBase):
                 output_stream.write(_indent + "==============\n\n")
                 output_stream.write(_indent * 2)
                 output_stream.write(
-                    self._model_function.formatter[_i].get_formatted(
+                    self._model_function.formatter.get_formatted(
+                        model_index=_i,
                         with_par_values=False,
                         n_significant_digits=2,
                         format_as_latex=False,

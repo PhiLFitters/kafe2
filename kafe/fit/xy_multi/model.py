@@ -6,6 +6,8 @@ from scipy.misc import derivative
 from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException, ModelParameterFormatter
 from .container import XYMultiContainer, XYMultiContainerException
 from .format import XYMultiModelFunctionFormatter
+from kafe.fit.xy.model import XYModelFunction
+from collections import OrderedDict
 
 
 __all__ = ["XYMultiParametricModel", "XYMultiModelFunction"]
@@ -18,7 +20,7 @@ class XYMultiModelFunction(ModelFunctionBase):
     EXCEPTION_TYPE = XYMultiModelFunctionException
     FORMATTER_TYPE = XYMultiModelFunctionFormatter
 
-    def __init__(self, model_function, data_indices):
+    def __init__(self, model_function_list, data_indices):
         """
         Construct :py:class:`XYMultiModelFunction` object (a wrapper for an iterable of native Python function):
 
@@ -29,66 +31,71 @@ class XYMultiModelFunction(ModelFunctionBase):
         :type iterable of int
         """
         try: 
-            iter(model_function)
+            iter(model_function_list)
         except:
-            model_function = [model_function]
-        if len(model_function) != len(data_indices) - 1:
-            raise XYMultiModelFunctionException("Must provide the same number of models and datasets, i.e. len(model_function == len(data_indices) - 1)!")
+            model_function_list = [model_function_list]
+        if len(model_function_list) != len(data_indices) - 1:
+            raise XYMultiModelFunctionException("Must provide the same number of models and datasets, i.e. len(model_function_list == len(data_indices) - 1)!")
         self._x_name = 'x'
         self._data_indices = data_indices
+        self._singular_model_functions = [XYModelFunction(_model_function) 
+                                          for _model_function in model_function_list]
+        super(XYMultiModelFunction, self).__init__(model_function=self._eval)
+
+    #in this case also assigns self._model_arg_indices
+    def _assign_model_function_argspec_and_argcount(self):
+        #stores the location of singular model function arguments in the
+        #combined multi model function argument list
         self._model_arg_indices = []
-        _args = []
         #TODO implement
         _varargs = None
         _keywords = None
-        _defaults_dict = dict()
-        for _model_function in model_function:
-            _partial_model_arg_indices = [] #indices of the model function parameters in the shared input
-            _argspec = inspect.getargspec(_model_function)
-            _model_function_defaults =  _argspec.defaults if _argspec.defaults else []
-            _defaults_index = len(_model_function_defaults) - len(_argspec.args)
-            for _arg_name in _argspec.args:
-                if _arg_name is self._x_name:
-                    _defaults_index += 1
-                    continue
-                if _arg_name not in _args:
-                    _args.append(_arg_name)
-                    if _defaults_index >= 0:
-                        _defaults_dict[_arg_name] = _model_function_defaults[_defaults_index]
-                elif _arg_name in _defaults_dict and _defaults_dict[_arg_name] != _model_function_defaults[_defaults_index]:
+        _args_with_defaults = OrderedDict() #the combined args
+        for _model_function in self._singular_model_functions:
+            _args = _model_function.argspec.args[1:] #index 0 reserved for x
+            _defaults = _model_function.argspec.defaults
+            _defaults = () if _defaults is None else _defaults
+            #insert None defaults because kwargs come after args
+            _defaults = (None,) * (len(_args) - len(_defaults)) + _defaults
+            #add singular model function arg names and defaults to the combined lists
+            for _arg_name, _default_value in zip(_args, _defaults):
+                #None is dummy default value, replace
+                if _arg_name not in _args_with_defaults or _args_with_defaults[_arg_name] is None:
+                    _args_with_defaults[_arg_name] = _default_value
+                elif _args_with_defaults[_arg_name] != _default_value:
                     #TODO Exception or Warning?
-                    raise XYMultiModelFunctionException("Model functions have conflicting defaults for parameter %s: %s <-> %s" % 
-                                                         (_arg_name, _defaults_dict[_arg_name], _model_function_defaults[_defaults_index]))
-                _defaults_index += 1
-                _partial_model_arg_indices.append(_args.index(_arg_name))
-            self._model_arg_indices.append(_partial_model_arg_indices)
-        
-        _defaults = [_defaults_dict.get(_arg_name, 1.0) for _arg_name in _args]
-        _args.insert(0, self._x_name)
-        self._model_function_argspec = inspect.ArgSpec(_args, _varargs, _keywords, _defaults)
-        self._model_count = len(model_function)
-        self._model_function_handle = model_function
-        self._model_function_argcount = len(_args)
-        self._validate_model_function_raise()
-        self._assign_function_formatter()
-
-        #TODO fix cunstructor hierarchy
-        #super(XYMultiModelFunction, self).__init__(model_function=model_function)
+                    raise XYMultiModelFunctionException(
+                        "Model functions have conflicting defaults for parameter %s: %s <-> %s" % 
+                        (_arg_name, _args_with_defaults[_arg_name], _default_value))
+            #save the locations of singular args in the combined list
+            _keys = _args_with_defaults.keys()
+            self._model_arg_indices.append([_keys.index(_arg_name) for _arg_name in _args])
+        _combined_args = _args_with_defaults.keys()
+        _combined_defaults = []
+        for _arg_name in _combined_args:
+            _default = _args_with_defaults.get(_arg_name)
+            if _default is None:
+                _combined_defaults.append(1.0)
+            else:
+                _combined_defaults.append(_default)
+        _combined_args.insert(0, self._x_name)
+        self._model_function_argspec = inspect.ArgSpec(_combined_args, _varargs, _keywords, _combined_defaults)
+        self._model_function_argcount = len(_combined_args)
 
     def _validate_model_function_raise(self):
-        for _model_function in self._model_function_handle:
-            _argspec = inspect.getargspec(_model_function)
+        for _model_function in self.singular_model_functions:
+            _argspec = inspect.getargspec(_model_function.func)
             # require 'xy' model function agruments to include 'x'
             if self.x_name not in _argspec.args:
                 raise self.__class__.EXCEPTION_TYPE(
                     "Model function '%r' must have independent variable '%s' among its arguments!"
-                    % (self.func, self.x_name))
+                    % (_model_function.func, self.x_name))
 
             # require 'xy' model functions to have at least two arguments
             if len(_argspec.args) < 2:
                 raise self.__class__.EXCEPTION_TYPE(
                     "Model function '%r' needs at least one parameter beside independent variable '%s'!"
-                    % (self.func, self.x_name))
+                    % (_model_function.func, self.x_name))
 
             # evaluate general model function requirements
             #super(XYMultiModelFunction, self)._validate_model_function_raise()
@@ -112,14 +119,16 @@ class XYMultiModelFunction(ModelFunctionBase):
                 for _pn, _pv in zip(self.argspec.args[_start_at_arg:], self.argvals[_start_at_arg:])]
 
     def _assign_function_formatter(self):
-        self._formatter = []
-        for _model_index, _model_function in enumerate(self.model_function_list):
-            self._formatter.append(self.__class__.FORMATTER_TYPE(
-                _model_function.__name__,
-                arg_formatters=self._construct_arg_list(
-                    self._get_parameter_formatters(), 
-                    _model_index),
-                x_name=self.x_name))
+        _singular_formatters=[_model_function.formatter 
+            for _model_function in self._singular_model_functions]
+        _parameter_formatters = self._get_parameter_formatters()
+        for _i in range(self.model_function_count):
+            _singular_formatters[_i].arg_formatters = self._construct_arg_list(
+                _parameter_formatters, _i)
+        self._formatter=self.__class__.FORMATTER_TYPE(
+            singular_formatters=_singular_formatters,
+            arg_formatters=_parameter_formatters
+        )
 
     def _construct_arg_list(self, args, model_index):
         _arg_list = []
@@ -132,10 +141,10 @@ class XYMultiModelFunction(ModelFunctionBase):
         _arg_lists = []
         _x_indices = kwargs.get("x_indices")
         _x_indices = _x_indices if _x_indices is not None else self.data_indices
-        for i in range(self._model_count):
-            _x = x[_x_indices[i]:_x_indices[i + 1]]
-            _arg_list = self._construct_arg_list(args, i)
-            _y[self.data_indices[i]:self.data_indices[i + 1]] = self._model_function_handle[i](_x, *_arg_list)
+        for _i, _model_function in enumerate(self._singular_model_functions):
+            _x = x[_x_indices[_i]:_x_indices[_i + 1]]
+            _arg_list = self._construct_arg_list(args, _i)
+            _y[self.data_indices[_i]:self.data_indices[_i + 1]] = _model_function.func(_x, *_arg_list)
         return _y
 
     @property
@@ -144,24 +153,14 @@ class XYMultiModelFunction(ModelFunctionBase):
         return self._x_name
 
     @property
-    def func(self):
-        """The model function handle"""
-        return self._eval
-
-    @property
-    def name(self):
-        """The model function name (a valid Python identifier)"""
-        return self._eval.__name__
-
-    @property
     def model_function_count(self):
         """The number of model functions"""
-        return len(self._model_function_handle)
+        return len(self._singular_model_functions)
     
     @property
-    def model_function_list(self):
-        """The list of model functions"""
-        return self._model_function_handle
+    def singular_model_functions(self):
+        """The list of singular model functions"""
+        return self._singular_model_functions
     
     @property
     def data_indices(self):
@@ -184,7 +183,7 @@ class XYMultiModelFunction(ModelFunctionBase):
         :return: y-values of the specified model function at the given *x* values
         :rtype: float of :py:obj:`numpy.ndarray` of float
         """
-        return self.model_function_list[model_index](x, *self._construct_arg_list(args, model_index))
+        return self.singular_model_functions[model_index].func(x, *self._construct_arg_list(args, model_index))
     
     def get_argument_formatters(self, model_index):
         """
@@ -217,7 +216,6 @@ class XYMultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
         _xy_data[0] = x_data
         _xy_data[1] = model_func.func(x_data, *model_parameters)
         super(XYMultiParametricModel, self).__init__(model_func, model_parameters, _xy_data)
-        self._model_func = model_func
 
     # -- private methods
 
@@ -278,11 +276,11 @@ class XYMultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
     
     @property
     def data_indices(self):
-        return self._model_func.data_indices
+        return self._model_function_object.data_indices
 
     @data_indices.setter
     def data_indices(self, new_data_indices):
-        self._model_func.data_indices = new_data_indices
+        self._model_function_object.data_indices = new_data_indices
     
     # -- public methods
 
@@ -341,7 +339,9 @@ class XYMultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
         _derivatives = []
         for _par in _pars:
             _derivatives.append([])
-        for _i, (_model_function, _par_indices) in enumerate(zip(self._model_function_object.model_function_list, self._model_function_object._model_arg_indices)):
+        for _i, (_model_function, _par_indices) in enumerate(zip(
+                self._model_function_object.singular_model_functions, 
+                self._model_function_object._model_arg_indices)):
             _x_splice = _x[_x_indices[_i]:_x_indices[_i + 1]]
             _par_sublist = []
             for _par_index in _par_indices:
@@ -357,7 +357,7 @@ class XYMultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
                     def _chipped_func(par):
                         _chipped_pars = _par_sublist.copy()
                         _chipped_pars[_par_sublist_index] = par
-                        return _model_function(_x_splice, *_chipped_pars)
+                        return _model_function.func(_x_splice, *_chipped_pars)
                     _derivatives[_j].append(derivative(_chipped_func, _par_val, dx=_par_dx))
         
         _flattened_derivatives = []
@@ -396,13 +396,15 @@ class XYMultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
             _dxs = np.ones_like(_x)*_dxs
 
         _derivatives = []
-        for _i, (_model_function, _par_indices) in enumerate(zip(self._model_function_object.model_function_list, self._model_function_object._model_arg_indices)):
+        for _i, (_model_function, _par_indices) in enumerate(zip(
+                self._model_function_object.singular_model_functions, 
+                self._model_function_object._model_arg_indices)):
             _par_sublist = []
             for _par_index in _par_indices:
                 _par_sublist.append(_pars[_par_index])
             
             def _chipped_func(x):
-                return _model_function(x, *_par_sublist)
+                return _model_function.func(x, *_par_sublist)
             
             for _j in range(_x_indices[_i], _x_indices[_i + 1]):
                 _derivatives.append(derivative(_chipped_func, _x[_j], dx=_dxs[_j]))

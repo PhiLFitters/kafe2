@@ -6,6 +6,7 @@ from kafe.config import kc
 from kafe.fit import XYMultiFit
 from kafe.fit.xy_multi.fit import XYMultiFitException
 from kafe.fit.xy_multi.model import XYMultiModelFunctionException
+from kafe.fit.xy.model import XYModelFunctionException
 
 CONFIG_PARAMETER_DEFAULT_VALUE = kc('core', 'default_initial_parameter_value')
 
@@ -332,21 +333,21 @@ class TestFittersXYMulti(unittest.TestCase):
                             cost_function=self.simple_chi2)
 
     def test_raise_varargs_in_model(self):
-        with self.assertRaises(XYMultiModelFunctionException):
+        with self.assertRaises(XYModelFunctionException):
             xy_fit_reserved_names = XYMultiFit(
                             xy_data=self._ref_xy_data_0,
                             model_function=self.xy_model_varargs,
                             cost_function=self.simple_chi2)
 
     def test_raise_varkwargs_in_model(self):
-        with self.assertRaises(XYMultiModelFunctionException):
+        with self.assertRaises(XYModelFunctionException):
             xy_fit_reserved_names = XYMultiFit(
                             xy_data=self._ref_xy_data_0,
                             model_function=self.xy_model_varkwargs,
                             cost_function=self.simple_chi2)
 
     def test_raise_varargs_and_varkwargs_in_model(self):
-        with self.assertRaises(XYMultiModelFunctionException):
+        with self.assertRaises(XYModelFunctionException):
             xy_fit_reserved_names = XYMultiFit(
                             xy_data=self._ref_xy_data_0,
                             model_function=self.xy_model_varargs_and_varkwargs,

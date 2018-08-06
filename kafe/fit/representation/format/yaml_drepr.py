@@ -4,9 +4,10 @@ from .._base import DReprError, DReprWriterMixin, DReprReaderMixin
 from ._base import ModelFunctionFormatterDReprBase, ModelParameterFormatterDReprBase
 from .. import _AVAILABLE_REPRESENTATIONS
 from kafe.fit._base import ModelParameterFormatter
-from kafe.fit.xy.format import XYModelFunctionFormatter
 from kafe.fit.histogram.format import HistModelDensityFunctionFormatter
 from kafe.fit.indexed.format import IndexedModelFunctionFormatter
+from kafe.fit.xy.format import XYModelFunctionFormatter
+from kafe.fit.xy_multi.format import XYMultiModelFunctionFormatter
 
 __all__ = ['ModelFunctionFormatterYamlWriter', 'ModelFunctionFormatterYamlReader', 
            'ModelParameterFormatterYamlWriter', 'ModelParameterFormatterYamlReader']
@@ -23,30 +24,41 @@ class ModelFunctionFormatterYamlWriter(DReprWriterMixin, ModelFunctionFormatterD
     @staticmethod
     def _make_representation(model_function_formatter):
         _yaml = dict()
+        _class = model_function_formatter.__class__
         
-        _type = ModelFunctionFormatterYamlWriter._MODEL_FUNCTION_FORMATTER_CLASS_TO_TYPE_NAME.get(model_function_formatter.__class__, None)
+        _type = ModelFunctionFormatterYamlWriter._MODEL_FUNCTION_FORMATTER_CLASS_TO_TYPE_NAME.get(_class, None)
         if _type is None:
-            raise DReprError("Model function formatter unknown or not supported: %s" % model_function_formatter.__class__)
+            raise DReprError("Model function formatter unknown or not supported: %s" % _class)
         _yaml['type'] = _type
-        
-        _yaml['name'] = model_function_formatter.name
-        _yaml['latex_name'] = model_function_formatter.latex_name
         
         #TODO should there be a property for _arg_formatters?
         _yaml['arg_formatters'] = [ModelParameterFormatterYamlWriter._make_representation(_arg_formatter) 
                                    for _arg_formatter in model_function_formatter._arg_formatters]
         
-        #TODO resolve inconsistent naming
-        _yaml['expression_string'] = model_function_formatter.expression_format_string
-        _yaml['latex_expression_string'] = model_function_formatter.latex_expression_format_string
+        if _class is XYMultiModelFunctionFormatter:
+            _singular_formatters_yaml = [
+                ModelFunctionFormatterYamlWriter._make_representation(_singular_formatter)
+                for _singular_formatter in model_function_formatter._singular_formatters
+            ]
+            for _singular_formatter_yaml in _singular_formatters_yaml:
+                #arg formatters are already stored in the multi formatter
+                del _singular_formatter_yaml['model_function_formatter']['arg_formatters']
+            _yaml['singular_formatters'] = _singular_formatters_yaml
+        else:
+            _yaml['name'] = model_function_formatter.name
+            _yaml['latex_name'] = model_function_formatter.latex_name
+        
+            #TODO resolve inconsistent naming
+            _yaml['expression_string'] = model_function_formatter.expression_format_string
+            _yaml['latex_expression_string'] = model_function_formatter.latex_expression_format_string
 
-        #TODO should there be properties for these calls?
-        if _type in ('hist', 'xy'):
-            _yaml['x_name'] = model_function_formatter._x_name
-            _yaml['latex_x_name'] = model_function_formatter._latex_x_name
-        if _type is 'indexed':
-            _yaml['index_name'] = model_function_formatter._x_name
-            _yaml['latex_index_name'] = model_function_formatter._latex_x_name
+            #TODO should there be properties for these calls?
+            if _class in (HistModelDensityFunctionFormatter, XYModelFunctionFormatter):
+                _yaml['x_name'] = model_function_formatter._x_name
+                _yaml['latex_x_name'] = model_function_formatter._latex_x_name
+            if _class is IndexedModelFunctionFormatter:
+                _yaml['index_name'] = model_function_formatter._index_name
+                _yaml['latex_index_name'] = model_function_formatter._latex_index_name
         
         return dict(model_function_formatter=_yaml) # wrap inner yaml inside a 'model_function_formatter' namespace
     
@@ -75,23 +87,35 @@ class ModelFunctionFormatterYamlReader(DReprReaderMixin, ModelFunctionFormatterD
         _yaml = yaml["model_function_formatter"]
 
         # -- determine model function formatter class from type
-        _model_function_formatter_type = _yaml['type']
-        _class = ModelFunctionFormatterYamlReader._MODEL_FUNCTION_FORMATTER_TYPE_NAME_TO_CLASS.get(_model_function_formatter_type, None)
+        _type = _yaml['type']
+        _class = ModelFunctionFormatterYamlReader._MODEL_FUNCTION_FORMATTER_TYPE_NAME_TO_CLASS.get(_type, None)
         if _class is None:
-            raise DReprError("Model function formatter type unknown or not supported: {}".format(_model_function_formatter_type))
+            raise DReprError("Model function formatter type unknown or not supported: {}".format(_type))
 
-        _kwarg_list = ['name', 'latex_name', 'expression_string', 'latex_expression_string']
-        if _class in (HistModelDensityFunctionFormatter, XYModelFunctionFormatter):
-            _kwarg_list.append('x_name')
-            _kwarg_list.append('latex_x_name')
-        if _class is IndexedModelFunctionFormatter:
-            _kwarg_list.append('index_name')
-            _kwarg_list.append('latex_index_name')
-        _constructor_kwargs = {key: _yaml.get(key, None) for key in _kwarg_list}
+        if _class is XYMultiModelFunctionFormatter:
+            _constructor_kwargs = dict()
+            _singular_formatters_yaml = _yaml['singular_formatters']
+            if not isinstance(_singular_formatters_yaml, list):
+                _singular_formatters_yaml = [_singular_formatters_yaml]
+            #TODO validate input
+            #TODO implicit sub-object type
+            _constructor_kwargs['singular_formatters'] = []
+            for _singular_formatter_yaml in _singular_formatters_yaml:
+                _singular_formatter_yaml['model_function_formatter']['arg_formatters'] = _yaml['arg_formatters']
+                ModelFunctionFormatterYamlReader._make_object(_singular_formatter_yaml)
+            
+        else:
+            _kwarg_list = ['name', 'latex_name', 'expression_string', 'latex_expression_string']
+            if _class in (HistModelDensityFunctionFormatter, XYModelFunctionFormatter):
+                _kwarg_list.append('x_name')
+                _kwarg_list.append('latex_x_name')
+            if _class is IndexedModelFunctionFormatter:
+                _kwarg_list.append('index_name')
+                _kwarg_list.append('latex_index_name')
+            _constructor_kwargs = {key: _yaml.get(key, None) for key in _kwarg_list}
         
         _constructor_kwargs['arg_formatters'] = [ModelParameterFormatterYamlReader._make_object(_representation)
                                                  for _representation in _yaml.get('arg_formatters', [])]
-        
         _model_function_formatter_object = _class(**_constructor_kwargs)
         
         return _model_function_formatter_object

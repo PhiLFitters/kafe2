@@ -90,8 +90,7 @@ class ModelFunctionBase(FileIOMixin, object):
         :param model_function: function handle
         """
         self._model_function_handle = model_function
-        self._model_function_argspec = inspect.getargspec(self._model_function_handle)
-        self._model_function_argcount = self._model_function_handle.__code__.co_argcount
+        self._assign_model_function_argspec_and_argcount()
         self._validate_model_function_raise()
         self._assign_function_formatter()
         super(ModelFunctionBase, self).__init__()
@@ -103,6 +102,10 @@ class ModelFunctionBase(FileIOMixin, object):
     @classmethod
     def _get_object_type_name(cls):
         return 'model_function'
+
+    def _assign_model_function_argspec_and_argcount(self):
+        self._model_function_argspec = inspect.getargspec(self._model_function_handle)
+        self._model_function_argcount = self._model_function_handle.__code__.co_argcount
 
     def _validate_model_function_raise(self):
         if self._model_function_argspec.varargs and self._model_function_argspec.keywords:
