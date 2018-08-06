@@ -119,14 +119,14 @@ class XYMultiModelFunction(ModelFunctionBase):
                 for _pn, _pv in zip(self.argspec.args[_start_at_arg:], self.argvals[_start_at_arg:])]
 
     def _assign_function_formatter(self):
-        _singular_function_formatters=[_model_function.formatter 
+        _singular_formatters=[_model_function.formatter 
             for _model_function in self._singular_model_functions]
         _parameter_formatters = self._get_parameter_formatters()
         for _i in range(self.model_function_count):
-            _singular_function_formatters[_i].arg_formatters = self._construct_arg_list(
+            _singular_formatters[_i].arg_formatters = self._construct_arg_list(
                 _parameter_formatters, _i)
         self._formatter=self.__class__.FORMATTER_TYPE(
-            singular_function_formatters=_singular_function_formatters,
+            singular_formatters=_singular_formatters,
             arg_formatters=_parameter_formatters
         )
 

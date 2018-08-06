@@ -5,7 +5,7 @@ __all__ = ["XYMultiModelFunctionFormatter"]
 
 
 class XYMultiModelFunctionFormatter(ModelFunctionFormatter):
-    def __init__(self, singular_function_formatters, arg_formatters):
+    def __init__(self, singular_formatters, arg_formatters):
         """
         Construct a :py:obj:`Formatter` for a model function for *xy* data:
 
@@ -18,7 +18,8 @@ class XYMultiModelFunctionFormatter(ModelFunctionFormatter):
         :param expression_string:  a plain-text-formatted string indicating the function expression
         :param latex_expression_string:  a LaTeX-formatted string indicating the function expression
         """
-        self._singular_function_formatters = singular_function_formatters
+        #TODO update documentation
+        self._singular_formatters = singular_formatters
         self._arg_formatters = arg_formatters
         
         #super(XYMultiModelFunctionFormatter, self).__init__()
@@ -37,7 +38,7 @@ class XYMultiModelFunctionFormatter(ModelFunctionFormatter):
         :param with_expression: if ``True``, the returned string will include the expression assigned to the function
         :return: string
         """
-        return self._singular_function_formatters[model_index].get_formatted(
+        return self._singular_formatters[model_index].get_formatted(
             with_par_values=with_par_values,
             n_significant_digits=n_significant_digits,
             format_as_latex=format_as_latex,
