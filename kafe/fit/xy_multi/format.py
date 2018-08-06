@@ -5,8 +5,7 @@ __all__ = ["XYMultiModelFunctionFormatter"]
 
 
 class XYMultiModelFunctionFormatter(ModelFunctionFormatter):
-    def __init__(self, name, latex_name=None, x_name='x', latex_x_name=None,
-                 arg_formatters=None, expression_string=None, latex_expression_string=None):
+    def __init__(self, singular_function_formatters, arg_formatters):
         """
         Construct a :py:obj:`Formatter` for a model function for *xy* data:
 
@@ -19,29 +18,17 @@ class XYMultiModelFunctionFormatter(ModelFunctionFormatter):
         :param expression_string:  a plain-text-formatted string indicating the function expression
         :param latex_expression_string:  a LaTeX-formatted string indicating the function expression
         """
-        self._x_name = x_name
-        self._latex_x_name = latex_x_name
-        if self._latex_x_name is None:
-            self._latex_x_name = self._latexify_ascii(self._x_name)
+        self._singular_function_formatters = singular_function_formatters
+        self._arg_formatters = arg_formatters
+        
+        #super(XYMultiModelFunctionFormatter, self).__init__()
 
-        super(XYMultiModelFunctionFormatter, self).__init__(
-            name, latex_name=latex_name, arg_formatters=arg_formatters,
-            expression_string=expression_string,
-            latex_expression_string=latex_expression_string
-        )
-
-    def _get_format_kwargs(self, format_as_latex=False):
-        _dct = super(XYMultiModelFunctionFormatter, self)._get_format_kwargs(format_as_latex=format_as_latex)
-        if format_as_latex:
-            _dct.update(x=self._latex_x_name)
-        else:
-            _dct.update(x=self._x_name)
-        return _dct
-
-    def get_formatted(self, with_par_values=True, n_significant_digits=2, format_as_latex=False, with_expression=False):
+    def get_formatted(self, model_index, with_par_values=True, n_significant_digits=2, format_as_latex=False, with_expression=False):
         """
         Get a formatted string representing this model function.
 
+        :param model_index: determines the index of the model function to be formatted
+        :type model_index: int
         :param with_par_values: if ``True``, output will include the value of each function parameter
                                 (e.g. ``f_i(a=1, b=2, ...)``)
         :param n_significant_digits: number of significant digits for rounding
@@ -50,20 +37,9 @@ class XYMultiModelFunctionFormatter(ModelFunctionFormatter):
         :param with_expression: if ``True``, the returned string will include the expression assigned to the function
         :return: string
         """
-        _par_strings = self._get_formatted_args(with_par_values=with_par_values,
-                                                n_significant_digits=n_significant_digits,
-                                                format_as_latex=format_as_latex)
-        _par_expr_string = ""
-        if with_expression:
-            _par_expr_string = self._get_formatted_expression(format_as_latex=format_as_latex)
-
-        if format_as_latex:
-            _out_string = r"%s\left(%s;%s\right)" % (self._latex_name, self._latex_x_name, ", ".join(_par_strings))
-            if _par_expr_string:
-                _out_string += " = " + _par_expr_string
-            _out_string = "$%s$" % (_out_string,)
-        else:
-            _out_string = "%s(%s; %s)" % (self._name, self._x_name, ", ".join(_par_strings))
-            if _par_expr_string:
-                _out_string += " = " + _par_expr_string
-        return _out_string
+        return self._singular_function_formatters[model_index].get_formatted(
+            with_par_values=with_par_values,
+            n_significant_digits=n_significant_digits,
+            format_as_latex=format_as_latex,
+            with_expression=with_expression
+        )
