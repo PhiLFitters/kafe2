@@ -233,6 +233,14 @@ model_function_formatter:
     singular_formatters:
         model_function_formatter:
             type: xy
+            name: linear_model
+            latex_name: linear model
+            x_name: x
+            latex_x_name: X
+            expression_string: '{0} * {x} + {1}'
+            latex_expression_string: '{0}{x} + {1}' 
+        model_function_formatter:
+            type: xy
             name: quadratic_model
             latex_name: quadratic model
             x_name: x
@@ -253,6 +261,42 @@ model_function_formatter:
 
 class TestXYMultiModelFunctionFormatterYamlRepresenter(unittest.TestCase):
 
+    def setUp(self):
+        _arg_formatters=[
+            ModelParameterFormatter(name='a', value=1.1, error=0.1, latex_name='A'),
+            ModelParameterFormatter(name='b', value=2.2, error=0.1, latex_name='B'),
+            ModelParameterFormatter(name='c', value=3.3, error=0.1, latex_name='C')
+        ]
+        self._singular_formatter_1 = XYModelFunctionFormatter(
+            name='linear_model',
+            latex_name='linear model',
+            x_name='x',
+            latex_x_name='X',
+            arg_formatters=_arg_formatters,
+            expression_string='{0} * {x} + {1}',
+            latex_expression_string='{0}{x}+ {1}' 
+        )
+        self._singular_formatter_2 = XYModelFunctionFormatter(
+            name='quadratic_model',
+            latex_name='quadratic model',
+            x_name='x',
+            latex_x_name='X',
+            arg_formatters=_arg_formatters,
+            expression_string='{0} * {x} ** 2 + {1} * {x} + {2}',
+            latex_expression_string='{0}{x}^2 + {1}{x} + {2}' 
+        )
+        self._model_function_formatter = XYMultiModelFunctionFormatter(
+            singular_formatters=[self._singular_formatter_1, self._singular_formatter_2],
+            arg_formatters=_arg_formatters
+        )
+        
+        self._roundtrip_stringstream = IOStreamHandle(StringIO())
+        self._testfile_stringstream = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_FORMATTER_XY_MULTI))
+
+        self._roundtrip_streamreader = ModelFunctionFormatterYamlReader(self._roundtrip_stringstream)
+        self._roundtrip_streamwriter = ModelFunctionFormatterYamlWriter(self._model_function_formatter, self._roundtrip_stringstream)
+        self._testfile_streamreader = ModelFunctionFormatterYamlReader(self._testfile_stringstream)
+    
     def _assert_model_function_formatters_equal(self, formatter_1, formatter_2):
         for _arg_formatter_1, _arg_formatter_2 in zip(
                 formatter_1._arg_formatters, formatter_2._arg_formatters):
@@ -267,33 +311,6 @@ class TestXYMultiModelFunctionFormatterYamlRepresenter(unittest.TestCase):
             self.assertTrue(_singular_formatter_1.expression_format_string == _singular_formatter_2.expression_format_string)
             self.assertTrue(_singular_formatter_1.latex_expression_format_string == _singular_formatter_2.latex_expression_format_string)
 
-    def setUp(self):
-        _arg_formatters=[
-            ModelParameterFormatter(name='a', value=1.1, error=0.1, latex_name='A'),
-            ModelParameterFormatter(name='b', value=2.2, error=0.1, latex_name='B'),
-            ModelParameterFormatter(name='c', value=3.3, error=0.1, latex_name='C')
-        ]
-        self._singular_formatter = XYModelFunctionFormatter(
-            name='quadratic_model',
-            latex_name='quadratic model',
-            x_name='x',
-            latex_x_name='X',
-            arg_formatters=_arg_formatters,
-            expression_string='{0} * {x} ** 2 + {1} * {x} + {2}',
-            latex_expression_string='{0}{x}^2 + {1}{x} + {2}' 
-        )
-        self._model_function_formatter = XYMultiModelFunctionFormatter(
-            singular_formatters=[self._singular_formatter],
-            arg_formatters=_arg_formatters
-        )
-        
-        self._roundtrip_stringstream = IOStreamHandle(StringIO())
-        self._testfile_stringstream = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_FORMATTER_XY_MULTI))
-
-        self._roundtrip_streamreader = ModelFunctionFormatterYamlReader(self._roundtrip_stringstream)
-        self._roundtrip_streamwriter = ModelFunctionFormatterYamlWriter(self._model_function_formatter, self._roundtrip_stringstream)
-        self._testfile_streamreader = ModelFunctionFormatterYamlReader(self._testfile_stringstream)
-    
     def test_write_to_roundtrip_stringstream(self):
         self._roundtrip_streamwriter.write()
 
