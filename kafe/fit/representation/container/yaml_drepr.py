@@ -3,7 +3,7 @@ import re
 import yaml
 
 from ....core.error import SimpleGaussianError, MatrixGaussianError
-from ....fit import IndexedContainer, XYContainer, HistContainer
+from ....fit import HistContainer, IndexedContainer, XYContainer, XYMultiContainer
 from .. import _AVAILABLE_REPRESENTATIONS
 from ._base import DataContainerDReprBase
 from .._base import DReprError, DReprWriterMixin, DReprReaderMixin
@@ -151,24 +151,30 @@ class DataContainerYamlWriter(DReprWriterMixin, DataContainerDReprBase):
     @staticmethod
     def _make_representation(container):
         _yaml = dict()
+        _class = container.__class__
 
         # -- determine container type
-        _type = DataContainerYamlWriter._CONTAINER_CLASS_TO_TYPE_NAME.get(container.__class__, None)
+        _type = DataContainerYamlWriter._CONTAINER_CLASS_TO_TYPE_NAME.get(_class, None)
         if _type is None:
-            raise DReprError("Container unknown or not supported: %s" % container.__class__)
+            raise DReprError("Container unknown or not supported: %s" % _class)
         _yaml['type'] = _type
 
         # -- write representation for container types
-        if _type == 'indexed':
-            _yaml['data'] = container.data.tolist()
-        elif _type == 'xy':
-            _yaml['x_data'] = container.x.tolist()
-            _yaml['y_data'] = container.y.tolist()
-        elif _type == 'histogram':
+        if _class is HistContainer:
             _yaml['bin_edges'] = container.bin_edges.tolist()
             _yaml['raw_data'] = list(map(float, container.raw_data))  # float64 -> float
+        elif _class is IndexedContainer:
+            _yaml['data'] = container.data.tolist()
+        elif _class is XYContainer:
+            _yaml['x_data'] = container.x.tolist()
+            _yaml['y_data'] = container.y.tolist()
+        elif _class is XYMultiContainer:
+            for _i in range(container.num_datasets):
+                _xy_data_i = container.get_splice(container.data, _i)
+                _yaml['x_data_%s' % _i] = _xy_data_i[0].tolist()
+                _yaml['y_data_%s' % _i] = _xy_data_i[1].tolist()
         else:
-            raise NotImplemented("Container type unknown or not supported: {}".format(_type))
+            raise DReprError("Container type unknown or not supported: {}".format(_type))
 
         # -- write error representation for all container types
         if container.has_errors:
@@ -218,25 +224,40 @@ class DataContainerYamlReader(DReprReaderMixin, DataContainerDReprBase):
             raise DReprError("Container type unknown or not supported: {}".format(_container_type))
 
         # -- read in representation for container types
-        if _container_type == 'indexed':
-            _data = _yaml['data']
-            _container_obj = IndexedContainer(_data)
-        elif _container_type == 'xy':
-            _x_data = _yaml['x_data']
-            _y_data = _yaml['y_data']
-            _container_obj = XYContainer(_x_data, _y_data)
-        elif _container_type == 'histogram':
+        if _class is HistContainer:
             _bin_edges = _yaml['bin_edges']
             _raw_data = _yaml['raw_data']
             _container_obj = HistContainer(n_bins=len(_bin_edges) - 1,
                                            bin_range=(_bin_edges[0], _bin_edges[-1]),
                                            bin_edges=_bin_edges,
                                            fill_data=_raw_data)
+        elif _class is IndexedContainer:
+            _data = _yaml['data']
+            _container_obj = IndexedContainer(_data)
+        elif _class is XYContainer:
+            _x_data = _yaml['x_data']
+            _y_data = _yaml['y_data']
+            _container_obj = XYContainer(_x_data, _y_data)
+        elif _class is XYContainer:
+            _x_data = _yaml['x_data']
+            _y_data = _yaml['y_data']
+            _container_obj = XYContainer(_x_data, _y_data)
+        elif _class is XYMultiContainer:
+            _xy_data = []
+            _i = 0 #xy dataset index
+            _x_data_i = _yaml.get('x_data_%s' % _i, None)
+            _y_data_i = _yaml.get('y_data_%s' % _i, None)
+            while _x_data_i is not None and _y_data_i is not None:
+                _xy_data.append([_x_data_i, _y_data_i])
+                _i += 1
+                _x_data_i = _yaml.get('x_data_%s' % _i, None)
+                _y_data_i = _yaml.get('y_data_%s' % _i, None)
+            _container_obj = XYMultiContainer(_xy_data)
         else:
-            raise NotImplemented("Container type unknown or not supported: {}".format(_container_type))
+            raise DReprError("Container type unknown or not supported: {}".format(_container_type))
 
         # -- process error sources
-        if _container_type == 'xy':
+        if _class in  (XYContainer, XYMultiContainer):
             _xerrs = _yaml.get('x_errors', [])
             _yerrs = _yaml.get('y_errors', [])
             _errs = _xerrs + _yerrs
