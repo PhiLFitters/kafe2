@@ -339,10 +339,26 @@ class XYMultiContainer(IndexedContainer):
         except AttributeError:
             err_val = np.asarray(err_val, dtype=float)
 
-        if err_val.ndim == 0:  # if dimensionless numpy array (i.e. float64), add a dimension
-            err_val = np.ones(self.size) * err_val
-
-        _err = SimpleGaussianError(err_val=err_val, corr_coeff=correlation,
+        
+        if model_index is None:
+            if err_val.ndim == 0:  # if dimensionless numpy array (i.e. float64), add a dimension
+                _err_all_datasets = np.ones(self.size) * err_val
+        else:
+            if model_index < 0 or model_index >= self.num_datasets:
+                raise XYMultiContainerException("There is no corresponding dataset for index %s" % model_index)
+            _lower, _upper = self.get_data_bounds(model_index)
+            if err_val.ndim == 0:  # if dimensionless numpy array (i.e. float64), add a dimension
+                _partial_err = np.ones(_upper - _lower) * err_val
+            elif err_val.size == _upper - _lower:
+                _partial_err = err_val
+            else:
+                raise XYMultiContainerException("Dataset %s has %s data points but err_val has size %s" % 
+                                                (model_index, _upper - _lower, err_val.size))
+            #Error for all datasets 0 except for the one specified
+            _err_all_datasets = np.zeros(self.size)
+            _err_all_datasets[_lower:_upper] = _partial_err
+                
+        _err = SimpleGaussianError(err_val=_err_all_datasets, corr_coeff=correlation,
                                    relative=relative, reference=self._get_data_for_axis(_axis))
         _name = self._add_error_object(name=name, model_index=model_index, error_object=_err, axis=_axis)
         return _name
