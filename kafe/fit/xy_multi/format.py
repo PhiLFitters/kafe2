@@ -7,18 +7,15 @@ __all__ = ["XYMultiModelFunctionFormatter"]
 class XYMultiModelFunctionFormatter(ModelFunctionFormatter):
     def __init__(self, singular_formatters, arg_formatters):
         """
-        Construct a :py:obj:`Formatter` for a model function for *xy* data:
-
-        :param name: a plain-text-formatted string indicating the function name
-        :param latex_name: a LaTeX-formatted string indicating the function name
-        :param x_name: a plain-text-formatted string representing the independent variable
-        :param latex_x_name: a LaTeX-formatted string representing the independent variable
-        :param arg_formatters: list of :py:obj:`ModelParameterFormatter`-derived objects,
-                               formatters for function arguments
-        :param expression_string:  a plain-text-formatted string indicating the function expression
-        :param latex_expression_string:  a LaTeX-formatted string indicating the function expression
+        Construct a :py:obj:`Formatter` for a multi model function for *xy* data:
+        
+        :param singular_formatters: the list of singular model function formatters to be contained in this
+            multi model function formatter, one per model function
+        :type singular_formatters: list of :py:obj:`XYModelFunctionFormatter`
+        :param arg_formatters: the combined list of argument formatters to be used by all singular 
+            model function formatters
+        :type arg_formatters: list of :py:obj:`ModelParameterFormatter`
         """
-        #TODO update documentation
         self._singular_formatters = singular_formatters
         self._arg_formatters = arg_formatters
         
