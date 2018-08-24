@@ -333,6 +333,7 @@ class XYMultiContainer(IndexedContainer):
         :return: error name
         :rtype: str
         """
+        #TODO update documentation
         _axis = self._find_axis_raise(axis)
         try:
             err_val.ndim   # will raise if simple float
@@ -341,8 +342,8 @@ class XYMultiContainer(IndexedContainer):
 
         
         if model_index is None:
-            if err_val.ndim == 0:  # if dimensionless numpy array (i.e. float64), add a dimension
-                _err_all_datasets = np.ones(self.size) * err_val
+            # if dimensionless numpy array (i.e. float64), add a dimension
+            _err_all_datasets = np.ones(self.size) * err_val if err_val.ndim == 0 else err_val
         else:
             if model_index < 0 or model_index >= self.num_datasets:
                 raise XYMultiContainerException("There is no corresponding dataset for index %s" % model_index)
@@ -363,7 +364,7 @@ class XYMultiContainer(IndexedContainer):
         _name = self._add_error_object(name=name, model_index=model_index, error_object=_err, axis=_axis)
         return _name
 
-    def add_matrix_error(self, axis, err_matrix, matrix_type, name=None, err_val=None, relative=False):
+    def add_matrix_error(self, axis, err_matrix, matrix_type, name=None, model_index=None, err_val=None, relative=False):
         """
         Add a matrix uncertainty source for an axis and for one specific dataset to the data container.
         Returns an error name which uniquely identifies the created error source.

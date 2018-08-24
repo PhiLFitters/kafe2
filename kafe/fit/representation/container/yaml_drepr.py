@@ -170,9 +170,8 @@ class DataContainerYamlWriter(DReprWriterMixin, DataContainerDReprBase):
             _yaml['y_data'] = container.y.tolist()
         elif _class is XYMultiContainer:
             for _i in range(container.num_datasets):
-                _xy_data_i = container.get_splice(container.data, _i)
-                _yaml['x_data_%s' % _i] = _xy_data_i[0].tolist()
-                _yaml['y_data_%s' % _i] = _xy_data_i[1].tolist()
+                _yaml['x_data_%s' % _i] = container.get_splice(container.x, _i).tolist()
+                _yaml['y_data_%s' % _i] = container.get_splice(container.y, _i).tolist()
         else:
             raise DReprError("Container type unknown or not supported: {}".format(_type))
 
@@ -247,6 +246,7 @@ class DataContainerYamlReader(DReprReaderMixin, DataContainerDReprBase):
             _i = 0 #xy dataset index
             _x_data_i = _yaml.get('x_data_%s' % _i, None)
             _y_data_i = _yaml.get('y_data_%s' % _i, None)
+            #TODO same procedure for errors?
             while _x_data_i is not None and _y_data_i is not None:
                 _xy_data.append([_x_data_i, _y_data_i])
                 _i += 1
@@ -287,6 +287,8 @@ class DataContainerYamlReader(DReprReaderMixin, DataContainerDReprBase):
                                      "Valid: {}".format(_err_type, ('simple', 'matrix')))
 
                 _add_kwargs['relative'] = _err['relative']
+                if _class is XYMultiContainer:
+                    _add_kwargs['model_index'] = _err.get('model_index', None)
 
                 # if needed, specify the axis (only for 'xy' containers)
                 if _axis is not None:

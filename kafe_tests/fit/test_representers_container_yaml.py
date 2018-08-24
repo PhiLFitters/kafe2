@@ -338,57 +338,92 @@ class TestXYContainerYamlRepresentation(unittest.TestCase):
 TEST_DATASET_XY_MULTI = """
 dataset:
   type: "xy_multi"
-  x_data: [5, 17]
-  y_data: [80.429, 80.339]
+  x_data_0: [5, 17]
+  y_data_0: [80.429, 80.339]
+  x_data_1: [5, 17]
+  y_data_1: [20.0, 44.0]
   y_errors:
   - matrix:
     - - 0.1
       - 0.0
+      - 0.0
+      - 0.0
     - - 0.0
+      - 0.1
+      - 0.0
+      - 0.0
+    - - 0.0
+      - 0.0
+      - 0.1
+      - 0.0
+    - - 0.0
+      - 0.0
+      - 0.0
       - 0.1
     name: YErrorOne
     matrix_type: covariance
     relative: false
     type: matrix
   - matrix: !matrix |
-      0.2   0.1
-      0.1   0.2
+      0.2   0.1   0.1   0.1
+      0.1   0.2   0.1   0.1
+      0.1   0.1   0.2   0.1
+      0.1   0.1   0.1   0.2
     name: YErrorTwo
     matrix_type: covariance
     relative: false
     type: matrix
+  - error_value: 0.31622776
+    correlation_coefficient: 0.0
+    name: YErrorThree
+    relative: false
+    type: simple
+    model_index: 0
   x_errors:
   - matrix: !symmetric_matrix |
       0.3
       0.1   0.3
+      0.1   0.1   0.3
+      0.1   0.1   0.1   0.3
     name: XErrorOne
     matrix_type: covariance
     relative: false
     type: matrix
   - matrix:
-      [[0.2,  0.1],
-       [0.1,  0.2]]
+      [[0.2, 0.1, 0.1, 0.1],
+       [0.1, 0.2, 0.1, 0.1],
+       [0.1, 0.1, 0.2, 0.1],
+       [0.1, 0.1, 0.1, 0.2]]
     name: XErrorTwo
     matrix_type: covariance
     relative: false
     type: matrix
+  - error_value: 0.31622776
+    correlation_coefficient: 0.0
+    name: XErrorThree
+    relative: false
+    type: simple
+    model_index: 1
 """
 
 
 class TestXYMultiContainerYamlRepresentation(unittest.TestCase):
 
     def setUp(self):
-        _data = [[0.0, .1, .3], [10, 24, 44]]
-        _ndat = len(_data[0])
+        _data = [[[0.0, .1, .3], [10, 24, 44]],
+                 [[0.0, .1, .3], [10.0, 10.2, 10.6]]]
+        _ndat = len(_data[0][0]) + len(_data[0][1])
         self._container = XYMultiContainer(xy_data=_data)
 
         self._container.add_simple_error(axis='y', name="ySUA", err_val=0.1, correlation=0.0, relative=False)
         self._container.add_simple_error(axis='y', name="ySUR", err_val=0.1, correlation=0.0, relative=True)
         self._container.add_simple_error(axis='y', name="ySCA", err_val=0.1, correlation=1.0, relative=False)
+        self._container.add_simple_error(axis='y', name="ySUA0", err_val=0.1, correlation=0.0, relative=False, model_index=0)
         self._container.add_matrix_error(axis='y', name="yMCov", err_matrix=np.eye(_ndat) * 0.1, relative=False, matrix_type='covariance')
         self._container.add_matrix_error(axis='y', name="yMCor", err_matrix=np.eye(_ndat), relative=False, matrix_type='correlation', err_val=0.1)
 
         self._container.add_simple_error(axis='x', name="xSUA", err_val=0.1, correlation=0.0, relative=False)
+        self._container.add_simple_error(axis='x', name="xSUA1", err_val=0.1, correlation=0.0, relative=False, model_index=1)
         self._container.add_simple_error(axis='x', name="xSUR", err_val=0.1, correlation=0.0, relative=True)
         self._container.add_matrix_error(axis='x', name="xMCov", err_matrix=np.eye(_ndat) * 0.1, relative=False, matrix_type='covariance')
 
@@ -397,19 +432,25 @@ class TestXYMultiContainerYamlRepresentation(unittest.TestCase):
         # self._container.add_matrix_error(axis='y', err_matrix=np.eye(8) * 0.1, relative=False, matrix_type='covariance')
 
         self._roundtrip_stringstream = IOStreamHandle(StringIO())
-        self._testfile_stringstream = IOStreamHandle(StringIO(TEST_DATASET_XY))
+        self._testfile_stringstream = IOStreamHandle(StringIO(TEST_DATASET_XY_MULTI))
 
         self._roundtrip_streamreader = DataContainerYamlReader(self._roundtrip_stringstream)
         self._roundtrip_streamwriter = DataContainerYamlWriter(self._container, self._roundtrip_stringstream)
         self._testfile_streamreader = DataContainerYamlReader(self._testfile_stringstream)
 
-        self._ref_testfile_x_data = [5, 17]
-        self._ref_testfile_y_data = [80.429, 80.339]
-        self._ref_testfile_x_err = [0.70710678,  0.70710678]
-        self._ref_testfile_y_err = [0.54772256,  0.54772256]
-        self._ref_testfile_y_cov_mat = np.matrix([[0.3, 0.1], [0.1, 0.3]])
-        self._ref_testfile_x_cov_mat = np.matrix([[0.5, 0.2], [0.2, 0.5]])
-        self._ref_testfile_error_names = {'XErrorOne', 'XErrorTwo', 'YErrorOne', 'YErrorTwo'}
+        self._ref_testfile_x_data = [5, 17, 5, 17]
+        self._ref_testfile_y_data = [80.429, 80.339, 20.0, 44.0]
+        self._ref_testfile_x_err = [0.70710678,  0.70710678,  0.77459667,  0.77459667]
+        self._ref_testfile_y_err = [0.63245553,  0.63245553,  0.54772256,  0.54772256]
+        self._ref_testfile_y_cov_mat = np.matrix([[0.4, 0.1, 0.1, 0.1], 
+                                                  [0.1, 0.4, 0.1, 0.1],
+                                                  [0.1, 0.1, 0.3, 0.1],
+                                                  [0.1, 0.1, 0.1, 0.3]])
+        self._ref_testfile_x_cov_mat = np.matrix([[0.5, 0.2, 0.2, 0.2],
+                                                  [0.2, 0.5, 0.2, 0.2],
+                                                  [0.2, 0.2, 0.6, 0.2],
+                                                  [0.2, 0.2, 0.2, 0.6]])
+        self._ref_testfile_error_names = {'XErrorOne', 'XErrorTwo', 'XErrorThree', 'YErrorOne', 'YErrorTwo', 'YErrorThree'}
 
 
     def test_write_to_roundtrip_stringstream(self):
@@ -418,7 +459,7 @@ class TestXYMultiContainerYamlRepresentation(unittest.TestCase):
 
     def test_read_from_testfile_stream(self):
         _read_container = self._testfile_streamreader.read()
-        self.assertTrue(isinstance(_read_container, XYContainer))
+        self.assertTrue(isinstance(_read_container, XYMultiContainer))
         self.assertTrue(
             np.allclose(
                 _read_container.x,
@@ -632,8 +673,6 @@ class TestHistContainerYamlRepresentation(unittest.TestCase):
         self._roundtrip_stringstream.seek(0)  # return to beginning
         _read_container = self._roundtrip_streamreader.read()
         self.assertTrue(isinstance(_read_container, HistContainer))
-
-        print(self._roundtrip_streamwriter._container)
 
         # compare data members
         self.assertTrue(
