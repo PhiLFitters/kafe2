@@ -29,26 +29,26 @@ class FitYamlWriter(DReprWriterMixin, FitDReprBase):
     
     @staticmethod
     def _make_representation(fit):
-        _yaml = dict()
+        _yaml_doc = dict()
 
         # -- determine model function type
         _type = FitYamlWriter._FIT_CLASS_TO_TYPE_NAME.get(fit.__class__, None)
         if _type is None:
             raise DReprError("Model function unknown or not supported: %s" % fit.__class__)
-        _yaml['type'] = _type
+        _yaml_doc['type'] = _type
         
-        _yaml['dataset'] = DataContainerYamlWriter._make_representation(fit._data_container)
-        _yaml['parametric_model'] = ParametricModelYamlWriter._make_representation(fit._param_model)
+        _yaml_doc['dataset'] = DataContainerYamlWriter._make_representation(fit._data_container)
+        _yaml_doc['parametric_model'] = ParametricModelYamlWriter._make_representation(fit._param_model)
         
         #TODO cost function
         
-        _yaml['minimizer'] = fit._minimizer
-        _yaml['minimizer_kwargs'] = fit._minimizer_kwargs
+        _yaml_doc['minimizer'] = fit._minimizer
+        _yaml_doc['minimizer_kwargs'] = fit._minimizer_kwargs
         
-        return dict(fit=_yaml) # wrap inner yaml inside a 'fit' namespace
+        return _yaml_doc
     
     def write(self):
-        self._yaml = self._make_representation(self._fit)
+        self._yaml_doc = self._make_representation(self._fit)
         with self._ohandle as _h:
             try:
                 # try to truncate the file to 0 bytes
@@ -56,7 +56,7 @@ class FitYamlWriter(DReprWriterMixin, FitDReprBase):
             except IOError:
                 # if truncate not available, ignore
                 pass
-            yaml.dump(self._yaml, _h, default_flow_style=False)
+            yaml.dump(self._yaml_doc, _h, default_flow_style=False)
 
 class FitYamlReader(DReprReaderMixin, FitDReprBase):
     DREPR_FLAVOR_NAME = 'yaml'
@@ -70,20 +70,18 @@ class FitYamlReader(DReprReaderMixin, FitDReprBase):
             fit=None)
 
     @staticmethod
-    def _make_object(yaml):
-        _yaml = yaml["fit"]
-
+    def _make_object(yaml_doc):
         # -- determine model function class from type
-        _fit_type = _yaml['type']
+        _fit_type = yaml_doc['type']
         _class = FitYamlReader._FIT_TYPE_NAME_TO_CLASS.get(_fit_type, None)
         if _class is None:
             raise DReprError("Model function type unknown or not supported: {}".format(_fit_type))
         
-        _data = DataContainerYamlReader._make_object(_yaml['dataset'])
-        _parametric_model = ParametricModelYamlReader._make_object(_yaml['parametric_model'])
+        _data = DataContainerYamlReader._make_object(yaml_doc['dataset'])
+        _parametric_model = ParametricModelYamlReader._make_object(yaml_doc['parametric_model'])
         #TODO cost function
-        _minimizer = _yaml.get('minimizer', None)
-        _minimizer_kwargs = _yaml.get('minimizer_kwargs', None)
+        _minimizer = yaml_doc.get('minimizer', None)
+        _minimizer_kwargs = yaml_doc.get('minimizer_kwargs', None)
         if _fit_type == 'histogram':
             _fit_object = HistFit(
                 data=_data,
@@ -111,8 +109,8 @@ class FitYamlReader(DReprReaderMixin, FitDReprBase):
     
     def read(self):
         with self._ihandle as _h:
-            self._yaml = yaml.load(_h)
-        return self._make_object(self._yaml)
+            self._yaml_doc = yaml.load(_h)
+        return self._make_object(self._yaml_doc)
 
 # register the above classes in the module-level dictionary
 FitYamlReader._register_class(_AVAILABLE_REPRESENTATIONS)

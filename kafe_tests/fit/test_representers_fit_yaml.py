@@ -7,28 +7,27 @@ from kafe.fit.io.handle import IOStreamHandle
 from kafe.fit.xy import XYFit
 
 TEST_FIT_XY="""
-fit:
+type: xy
+dataset:
     type: xy
-    dataset:
+    x_data: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
+    y_data: [ -1.0804945, 0.97336504, 2.75769933, 4.91093935, 6.98511206,
+             9.15059627, 10.9665515, 13.06741151, 14.95081026, 16.94404467]
+    y_errors:
+      - correlation_coefficient: 0.0
+        error_value: 0.1
+        name: test_y_error
+        relative: false
+        type: simple
+parametric_model:
+    type: xy
+    x_data: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
+    model_function:
         type: xy
-        x_data: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
-        y_data: [ -1.0804945, 0.97336504, 2.75769933, 4.91093935, 6.98511206,
-                9.15059627, 10.9665515, 13.06741151, 14.95081026, 16.94404467]
-        y_errors:
-            - correlation_coefficient: 0.0
-              error_value: 0.1
-              name: test_y_error
-              relative: false
-              type: simple
-    parametric_model:
-        type: xy
-        x_data: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
-        model_function:
-            type: xy
-            python_code: |
-                def linear_model(x, a, b):
-                    return a * x + b
-        model_parameters: [1.0, 1.0]
+        python_code: |
+            def linear_model(x, a, b):
+                return a * x + b
+    model_parameters: [1.0, 1.0]
 """
 
 class TestXYFitYamlRepresenter(unittest.TestCase):
