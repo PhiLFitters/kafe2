@@ -98,7 +98,7 @@ class ModelFunctionYamlReader(DReprReaderMixin, ModelFunctionDReprBase):
         
         #construct model function formatter if specified
         if 'model_function_formatter' in _yaml:
-            _model_function_object._formatter = ModelFunctionFormatterYamlReader._make_object(_yaml)
+            _model_function_object._formatter = ModelFunctionFormatterYamlReader._make_object(_yaml['model_function_formatter'])
         
         return _model_function_object
     

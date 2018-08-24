@@ -30,15 +30,12 @@ model_function:
         x_name: r
         latex_x_name: r
         arg_formatters:
-            - model_parameter_formatter:
-                name: alpha
-                latex_name: \alpha
-            - model_parameter_formatter:
-                name: beta
-                latex_name: \beta
+          - name: alpha
+            latex_name: \alpha
+          - name: beta
+            latex_name: \beta
         expression_string: '{0} * {x} + {1}'
         latex_expression_string: '{0}{x} + {1}' 
-        
 """
 
 class TestXYModelFunctionYamlRepresenter(unittest.TestCase):
