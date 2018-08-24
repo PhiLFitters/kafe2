@@ -10,6 +10,7 @@ from ..container import DataContainerYamlWriter, DataContainerYamlReader
 from ..format import ModelFunctionFormatterYamlWriter, ModelFunctionFormatterYamlReader
 from ._base import ModelFunctionDReprBase, ParametricModelDReprBase
 from .. import _AVAILABLE_REPRESENTATIONS
+from kafe.fit.xy_multi.model import XYMultiModelFunction
 
 __all__ = ['ModelFunctionYamlWriter', 'ModelFunctionYamlReader', 'ParametricModelYamlWriter', 'ParametricModelYamlReader']
 
@@ -27,18 +28,28 @@ class ModelFunctionYamlWriter(DReprWriterMixin, ModelFunctionDReprBase):
         _yaml_doc = dict()
 
         # -- determine model function type
-        _type = ModelFunctionYamlWriter._MODEL_FUNCTION_CLASS_TO_TYPE_NAME.get(model_function.__class__, None)
+        _class = model_function.__class__
+        _type = ModelFunctionYamlWriter._MODEL_FUNCTION_CLASS_TO_TYPE_NAME.get(_class, None)
         if _type is None:
-            raise DReprError("Model function unknown or not supported: %s" % model_function.__class__)
+            raise DReprError("Model function unknown or not supported: %s" % _class)
         _yaml_doc['type'] = _type
-        
         _yaml_doc['model_function_formatter'] = ModelFunctionFormatterYamlWriter._make_representation(model_function.formatter)
-        
-        _python_code = inspect.getsource(model_function.func)
-        _python_code = textwrap.dedent(_python_code) #remove indentation
-        _python_code = _python_code.replace("@staticmethod\n","") #remove @staticmethod decorator
-        #TODO what about other decorators?
-        _yaml_doc['python_code'] = _python_code
+
+        if _class is XYMultiModelFunction:
+            _python_code_list = []
+            for _singular_model_function in model_function.singular_model_functions:
+                _python_code = inspect.getsource(_singular_model_function.func)
+                _python_code = textwrap.dedent(_python_code) #remove indentation
+                _python_code = _python_code.replace("@staticmethod\n","") #remove @staticmethod decorator
+                _python_code_list.append(_python_code)
+            _yaml_doc['python_code'] = _python_code_list
+            _yaml_doc['data_indices'] = model_function.data_indices
+        else:
+            _python_code = inspect.getsource(model_function.func)
+            _python_code = textwrap.dedent(_python_code) #remove indentation
+            _python_code = _python_code.replace("@staticmethod\n","") #remove @staticmethod decorator
+            #TODO what about other decorators?
+            _yaml_doc['python_code'] = _python_code
         
         return _yaml_doc
     
@@ -90,9 +101,20 @@ class ModelFunctionYamlReader(DReprReaderMixin, ModelFunctionDReprBase):
         _class = ModelFunctionYamlReader._MODEL_FUNCTION_TYPE_NAME_TO_CLASS.get(_model_function_type, None)
         if _class is None:
             raise DReprError("Model function type unknown or not supported: {}".format(_model_function_type))
-        _python_function = ModelFunctionYamlReader._parse_model_function(yaml_doc["python_code"])
-
-        _model_function_object = _class(_python_function)
+        
+        if _class is XYMultiModelFunction:
+            _python_code_list = yaml_doc["python_code"]
+            if isinstance(_python_code_list, str): #check if only one model function is given
+                _python_code_list = [_python_code_list]
+            _python_function_list = [
+                ModelFunctionYamlReader._parse_model_function(_python_code)
+                for _python_code in _python_code_list
+            ]
+            _data_indices = yaml_doc["data_indices"]
+            _model_function_object = XYMultiModelFunction(_python_function_list, _data_indices)
+        else:
+            _python_function = ModelFunctionYamlReader._parse_model_function(yaml_doc["python_code"])
+            _model_function_object = _class(_python_function)
         
         #construct model function formatter if specified
         if 'model_function_formatter' in yaml_doc:
