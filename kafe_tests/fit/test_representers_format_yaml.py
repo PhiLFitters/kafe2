@@ -12,24 +12,20 @@ from kafe.fit.io.handle import IOStreamHandle
 
 
 TEST_MODEL_FUNCTION_FORMATTER_HISTOGRAM="""
-model_function_formatter:
-    type: histogram
-    name: quadratic_model
-    latex_name: quadratic model
-    x_name: x
-    latex_x_name: X
-    arg_formatters:
-        - model_parameter_formatter:
-            name: a
-            latex_name: A
-        - model_parameter_formatter:
-            name: b
-            latex_name: B
-        - model_parameter_formatter:
-            name: c
-            latex_name: C
-    expression_string: '{0} * {x} ** 2 + {1} * {x} + {2}'
-    latex_expression_string: '{0}{x}^2 + {1}{x} + {2}' 
+type: histogram
+name: quadratic_model
+latex_name: quadratic model
+x_name: x
+latex_x_name: X
+arg_formatters:
+  - name: a
+    latex_name: A
+  - name: b
+    latex_name: B
+  - name: c
+    latex_name: C
+expression_string: '{0} * {x} ** 2 + {1} * {x} + {2}'
+latex_expression_string: '{0}{x}^2 + {1}{x} + {2}' 
 """
 
 class TestHistModelFunctionFormatterYamlRepresenter(unittest.TestCase):
@@ -84,24 +80,20 @@ class TestHistModelFunctionFormatterYamlRepresenter(unittest.TestCase):
         self._assert_model_function_formatters_equal(_read_model_function_formatter, self._model_function_formatter)
 
 TEST_MODEL_FUNCTION_FORMATTER_INDEXED="""
-model_function_formatter:
-    type: indexed
-    name: quadratic_model
-    latex_name: quadratic model
-    index_name: x
-    latex_index_name: X
-    arg_formatters:
-        - model_parameter_formatter:
-            name: a
-            latex_name: A
-        - model_parameter_formatter:
-            name: b
-            latex_name: B
-        - model_parameter_formatter:
-            name: c
-            latex_name: C
-    expression_string: '{0} * {x} ** 2 + {1} * {x} + {2}'
-    latex_expression_string: '{0}{x}^2 + {1}{x} + {2}' 
+type: indexed
+name: quadratic_model
+latex_name: quadratic model
+index_name: x
+latex_index_name: X
+arg_formatters:
+  - name: a
+    latex_name: A
+  - name: b
+    latex_name: B
+  - name: c
+    latex_name: C
+expression_string: '{0} * {x} ** 2 + {1} * {x} + {2}'
+latex_expression_string: '{0}{x}^2 + {1}{x} + {2}' 
 """
 
 class TestIndexedModelFunctionFormatterYamlRepresenter(unittest.TestCase):
@@ -156,24 +148,20 @@ class TestIndexedModelFunctionFormatterYamlRepresenter(unittest.TestCase):
         self._assert_model_function_formatters_equal(_read_model_function_formatter, self._model_function_formatter)
 
 TEST_MODEL_FUNCTION_FORMATTER_XY="""
-model_function_formatter:
-    type: xy
-    name: quadratic_model
-    latex_name: quadratic model
-    x_name: x
-    latex_x_name: X
-    arg_formatters:
-        - model_parameter_formatter:
-            name: a
-            latex_name: A
-        - model_parameter_formatter:
-            name: b
-            latex_name: B
-        - model_parameter_formatter:
-            name: c
-            latex_name: C
-    expression_string: '{0} * {x} ** 2 + {1} * {x} + {2}'
-    latex_expression_string: '{0}{x}^2 + {1}{x} + {2}' 
+type: xy
+name: quadratic_model
+latex_name: quadratic model
+x_name: x
+latex_x_name: X
+arg_formatters:
+  - name: a
+    latex_name: A
+  - name: b
+    latex_name: B
+  - name: c
+    latex_name: C
+expression_string: '{0} * {x} ** 2 + {1} * {x} + {2}'
+latex_expression_string: '{0}{x}^2 + {1}{x} + {2}' 
 """
 
 class TestXYModelFunctionFormatterYamlRepresenter(unittest.TestCase):
@@ -228,35 +216,29 @@ class TestXYModelFunctionFormatterYamlRepresenter(unittest.TestCase):
         self._assert_model_function_formatters_equal(_read_model_function_formatter, self._model_function_formatter)
 
 TEST_MODEL_FUNCTION_FORMATTER_XY_MULTI="""
-model_function_formatter:
-    type: xy_multi
-    singular_formatters:
-        model_function_formatter:
-            type: xy
-            name: linear_model
-            latex_name: linear model
-            x_name: x
-            latex_x_name: X
-            expression_string: '{0} * {x} + {1}'
-            latex_expression_string: '{0}{x} + {1}' 
-        model_function_formatter:
-            type: xy
-            name: quadratic_model
-            latex_name: quadratic model
-            x_name: x
-            latex_x_name: X
-            expression_string: '{0} * {x} ** 2 + {1} * {x} + {2}'
-            latex_expression_string: '{0}{x}^2 + {1}{x} + {2}' 
-    arg_formatters:
-        - model_parameter_formatter:
-            name: a
-            latex_name: A
-        - model_parameter_formatter:
-            name: b
-            latex_name: B
-        - model_parameter_formatter:
-            name: c
-            latex_name: C
+type: xy_multi
+singular_formatters:
+  - type: xy
+    name: linear_model
+    latex_name: linear model
+    x_name: x
+    latex_x_name: X
+    expression_string: '{0} * {x} + {1}'
+    latex_expression_string: '{0}{x} + {1}' 
+  - type: xy
+    name: quadratic_model
+    latex_name: quadratic model
+    x_name: x
+    latex_x_name: X
+    expression_string: '{0} * {x} ** 2 + {1} * {x} + {2}'
+    latex_expression_string: '{0}{x}^2 + {1}{x} + {2}' 
+arg_formatters:
+  - name: a
+    latex_name: A
+  - name: b
+    latex_name: B
+  - name: c
+    latex_name: C
 """
 
 class TestXYMultiModelFunctionFormatterYamlRepresenter(unittest.TestCase):
@@ -274,7 +256,7 @@ class TestXYMultiModelFunctionFormatterYamlRepresenter(unittest.TestCase):
             latex_x_name='X',
             arg_formatters=_arg_formatters,
             expression_string='{0} * {x} + {1}',
-            latex_expression_string='{0}{x}+ {1}' 
+            latex_expression_string='{0}{x} + {1}' 
         )
         self._singular_formatter_2 = XYModelFunctionFormatter(
             name='quadratic_model',
@@ -302,6 +284,7 @@ class TestXYMultiModelFunctionFormatterYamlRepresenter(unittest.TestCase):
                 formatter_1._arg_formatters, formatter_2._arg_formatters):
             self.assertTrue(_arg_formatter_1.name == _arg_formatter_2.name)
             self.assertTrue(_arg_formatter_1.latex_name == _arg_formatter_2.latex_name)
+        self.assertTrue(len(formatter_1._singular_formatters) == len(formatter_2._singular_formatters))
         for _singular_formatter_1, _singular_formatter_2 in zip(
                 formatter_1._singular_formatters, formatter_2._singular_formatters):
             self.assertTrue(_singular_formatter_1.name == _singular_formatter_2.name)
@@ -327,9 +310,8 @@ class TestXYMultiModelFunctionFormatterYamlRepresenter(unittest.TestCase):
         self._assert_model_function_formatters_equal(_read_model_function_formatter, self._model_function_formatter)
 
 TEST_MODEL_PARAMETER_FORMATTER = """
-model_parameter_formatter:
-    name: phi
-    latex_name: \phi
+name: phi
+latex_name: \phi
 """
 
 class TestModelParameterFormatterYamlRepresenter(unittest.TestCase):

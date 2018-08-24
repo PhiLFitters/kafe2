@@ -9,36 +9,30 @@ from kafe.fit.io.handle import IOStreamHandle
 from kafe.fit.xy.model import XYParametricModel
 
 TEST_MODEL_FUNCTION_XY="""
-model_function:
-    type: xy
-    python_code: |
-        def linear_model(x, a, b):
-            return a * x + b
-        
+type: xy
+python_code: |
+    def linear_model(x, a, b):
+        return a * x + b
 """
 
 TEST_MODEL_FUNCTION_XY_WITH_FORMATTER=r"""
-model_function:
+type: xy
+python_code: |
+    def linear_model(x, a, b):
+        return a * x + b
+model_function_formatter:
     type: xy
-    python_code: |
-        def linear_model(x, a, b):
-            return a * x + b
-    model_function_formatter:
-        type: xy
-        name: linear_model
-        latex_name: linear model
-        x_name: r
-        latex_x_name: r
-        arg_formatters:
-            - model_parameter_formatter:
-                name: alpha
-                latex_name: \alpha
-            - model_parameter_formatter:
-                name: beta
-                latex_name: \beta
-        expression_string: '{0} * {x} + {1}'
-        latex_expression_string: '{0}{x} + {1}' 
-        
+    name: linear_model
+    latex_name: linear model
+    x_name: r
+    latex_x_name: r
+    arg_formatters:
+      - name: alpha
+        latex_name: \alpha
+      - name: beta
+        latex_name: \beta
+    expression_string: '{0} * {x} + {1}'
+    latex_expression_string: '{0}{x} + {1}' 
 """
 
 class TestXYModelFunctionYamlRepresenter(unittest.TestCase):
@@ -133,33 +127,31 @@ class TestXYModelFunctionYamlRepresenter(unittest.TestCase):
         self.assertTrue(_read_formatter.latex_expression_format_string ==  _given_formatter.latex_expression_format_string)
 
 TEST_PARAMETRIC_MODEL_XY="""
-parametric_model:
+type: xy
+x_data: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+model_function:
     type: xy
-    x_data: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
-    model_function:
-        type: xy
-        python_code: |
-            def linear_model(x, a, b):
-                return a * x + b
-    model_parameters: [1.0, 1.0]
+    python_code: |
+        def linear_model(x, a, b):
+            return a * x + b
+model_parameters: [1.0, 1.0]
 """
 
 TEST_PARAMETRIC_MODEL_XY_WITH_ERRORS="""
-parametric_model:
+type: xy
+x_data: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+x_errors:
+  - correlation_coefficient: 0.0
+    error_value: 0.1
+    name: test_x_error
+    relative: false
+    type: simple
+model_function:
     type: xy
-    x_data: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
-    x_errors:
-    - correlation_coefficient: 0.0
-      error_value: 0.1
-      name: test_x_error
-      relative: false
-      type: simple
-    model_function:
-        type: xy
-        python_code: |
-            def linear_model(x, a, b):
-                return a * x + b
-    model_parameters: [1.0, 1.0]
+    python_code: |
+        def linear_model(x, a, b):
+            return a * x + b
+model_parameters: [1.0, 1.0]
 """
 
 class TestXYParametricModelYamlRepresenter(unittest.TestCase):
