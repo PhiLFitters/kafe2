@@ -441,7 +441,8 @@ class XYMultiContainer(IndexedContainer):
     @property
     def num_datasets(self):
         """the number of datasets in this container"""
-        return len(self._data_indices) - 1
+        #call property instead of self._data_indices because models override it
+        return len(self.data_indices) - 1
     
     def get_data_bounds(self, index):
         """the bounds of the dataset with the specified index"""

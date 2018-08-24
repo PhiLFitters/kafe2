@@ -68,6 +68,7 @@ class XYMultiFit(FitBase):
         # set/construct the model function object
         if isinstance(model_function, self.__class__.MODEL_FUNCTION_TYPE):
             self._model_function = model_function
+            self._model_function.data_indices = self._data_container.data_indices
         else:
             self._model_function = self.__class__.MODEL_FUNCTION_TYPE(model_function,
                                         self._data_container.data_indices)
