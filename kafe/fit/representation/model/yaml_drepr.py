@@ -24,26 +24,26 @@ class ModelFunctionYamlWriter(DReprWriterMixin, ModelFunctionDReprBase):
     
     @staticmethod
     def _make_representation(model_function):
-        _yaml = dict()
+        _yaml_doc = dict()
 
         # -- determine model function type
         _type = ModelFunctionYamlWriter._MODEL_FUNCTION_CLASS_TO_TYPE_NAME.get(model_function.__class__, None)
         if _type is None:
             raise DReprError("Model function unknown or not supported: %s" % model_function.__class__)
-        _yaml['type'] = _type
+        _yaml_doc['type'] = _type
         
-        _yaml.update(ModelFunctionFormatterYamlWriter._make_representation(model_function.formatter))
+        _yaml_doc['model_function_formatter'] = ModelFunctionFormatterYamlWriter._make_representation(model_function.formatter)
         
         _python_code = inspect.getsource(model_function.func)
         _python_code = textwrap.dedent(_python_code) #remove indentation
         _python_code = _python_code.replace("@staticmethod\n","") #remove @staticmethod decorator
         #TODO what about other decorators?
-        _yaml['python_code'] = _python_code
+        _yaml_doc['python_code'] = _python_code
         
-        return dict(model_function=_yaml) # wrap inner yaml inside a 'model_function' namespace
+        return _yaml_doc
     
     def write(self):
-        self._yaml = self._make_representation(self._model_function)
+        self._yaml_doc = self._make_representation(self._model_function)
         with self._ohandle as _h:
             try:
                 # try to truncate the file to 0 bytes
@@ -51,7 +51,7 @@ class ModelFunctionYamlWriter(DReprWriterMixin, ModelFunctionDReprBase):
             except IOError:
                 # if truncate not available, ignore
                 pass
-            yaml.dump(self._yaml, _h, default_flow_style=False)
+            yaml.dump(self._yaml_doc, _h, default_flow_style=False)
 
 class ModelFunctionYamlReader(DReprReaderMixin, ModelFunctionDReprBase):
     DREPR_FLAVOR_NAME = 'yaml'
@@ -84,28 +84,26 @@ class ModelFunctionYamlReader(DReprReaderMixin, ModelFunctionDReprBase):
         return _locals.values()[0] #TODO adjust for multifits
         
     @staticmethod
-    def _make_object(yaml):
-        _yaml = yaml["model_function"]
-
+    def _make_object(yaml_doc):
         # -- determine model function class from type
-        _model_function_type = _yaml['type']
+        _model_function_type = yaml_doc['type']
         _class = ModelFunctionYamlReader._MODEL_FUNCTION_TYPE_NAME_TO_CLASS.get(_model_function_type, None)
         if _class is None:
             raise DReprError("Model function type unknown or not supported: {}".format(_model_function_type))
-        _python_function = ModelFunctionYamlReader._parse_model_function(_yaml["python_code"])
+        _python_function = ModelFunctionYamlReader._parse_model_function(yaml_doc["python_code"])
 
         _model_function_object = _class(_python_function)
         
         #construct model function formatter if specified
-        if 'model_function_formatter' in _yaml:
-            _model_function_object._formatter = ModelFunctionFormatterYamlReader._make_object(_yaml['model_function_formatter'])
+        if 'model_function_formatter' in yaml_doc:
+            _model_function_object._formatter = ModelFunctionFormatterYamlReader._make_object(yaml_doc['model_function_formatter'])
         
         return _model_function_object
     
     def read(self):
         with self._ihandle as _h:
-            self._yaml = yaml.load(_h)
-        return self._make_object(self._yaml)
+            self._yaml_doc = yaml.load(_h)
+        return self._make_object(self._yaml_doc)
 
 class ParametricModelYamlWriter(DReprWriterMixin, ParametricModelDReprBase):
     DREPR_FLAVOR_NAME = 'yaml'
@@ -118,41 +116,41 @@ class ParametricModelYamlWriter(DReprWriterMixin, ParametricModelDReprBase):
     
     @staticmethod
     def _make_representation(parametric_model):
-        _yaml = dict()
+        _yaml_doc = dict()
 
         # -- determine model function type
         _type = ParametricModelYamlWriter._PARAMETRIC_MODEL_CLASS_TO_TYPE_NAME.get(parametric_model.__class__, None)
         if _type is None:
             raise DReprError("Parametric model unknown or not supported: %s" % parametric_model.__class__)
-        _yaml['type'] = _type
+        _yaml_doc['type'] = _type
         
                 # -- write representation for container types
         if _type == 'indexed':
-            _yaml['data'] = parametric_model.data.tolist()
+            _yaml_doc['data'] = parametric_model.data.tolist()
         elif _type == 'xy':
-            _yaml['x_data'] = parametric_model.x.tolist()
-            _yaml['y_data'] = parametric_model.y.tolist()
+            _yaml_doc['x_data'] = parametric_model.x.tolist()
+            _yaml_doc['y_data'] = parametric_model.y.tolist()
         elif _type == 'histogram':
-            _yaml['bin_edges'] = parametric_model.bin_edges.tolist()
-            _yaml['raw_data'] = list(map(float, parametric_model.raw_data))  # float64 -> float
+            _yaml_doc['bin_edges'] = parametric_model.bin_edges.tolist()
+            _yaml_doc['raw_data'] = list(map(float, parametric_model.raw_data))  # float64 -> float
         else:
             raise NotImplemented("Container type unknown or not supported: {}".format(_type))
 
         _parameters = parametric_model.parameters
         if isinstance(_parameters, np.ndarray):
             _parameters = _parameters.tolist() #better readability in file
-        _yaml['model_parameters'] = _parameters
+        _yaml_doc['model_parameters'] = _parameters
 
         # -- write error representation for all container types
         if parametric_model.has_errors:
-            DataContainerYamlWriter._write_errors_to_yaml(parametric_model, _yaml)
+            DataContainerYamlWriter._write_errors_to_yaml(parametric_model, _yaml_doc)
         
-        _yaml.update(ModelFunctionYamlWriter._make_representation(parametric_model._model_function_object))
+        _yaml_doc['model_function'] = ModelFunctionYamlWriter._make_representation(parametric_model._model_function_object)
         
-        return dict(parametric_model=_yaml) # wrap inner yaml inside a 'parametric_model' namespace
+        return _yaml_doc
     
     def write(self):
-        self._yaml = self._make_representation(self._parametric_model)
+        self._yaml_doc = self._make_representation(self._parametric_model)
         with self._ohandle as _h:
             try:
                 # try to truncate the file to 0 bytes
@@ -160,7 +158,7 @@ class ParametricModelYamlWriter(DReprWriterMixin, ParametricModelDReprBase):
             except IOError:
                 # if truncate not available, ignore
                 pass
-            yaml.dump(self._yaml, _h, default_flow_style=False)
+            yaml.dump(self._yaml_doc, _h, default_flow_style=False)
 
 class ParametricModelYamlReader(DReprReaderMixin, ParametricModelDReprBase):
     DREPR_FLAVOR_NAME = 'yaml'
@@ -173,11 +171,9 @@ class ParametricModelYamlReader(DReprReaderMixin, ParametricModelDReprBase):
 
         
     @staticmethod
-    def _make_object(yaml):
-        _yaml = yaml["parametric_model"]
-
+    def _make_object(yaml_doc):
         # -- determine model function class from type
-        _parametric_model_type = _yaml['type']
+        _parametric_model_type = yaml_doc['type']
         _class = ParametricModelYamlReader._PARAMETRIC_MODEL_TYPE_NAME_TO_CLASS.get(_parametric_model_type, None)
         if _class is None:
             raise DReprError("Model function type unknown or not supported: {}".format(_parametric_model_type))
@@ -193,21 +189,21 @@ class ParametricModelYamlReader(DReprReaderMixin, ParametricModelDReprBase):
             _kwarg_list.append('shape_like')
         elif _parametric_model_type == 'xy':
             _kwarg_list.append('x_data')
-        _constructor_kwargs = {key: _yaml.get(key, None) for key in _kwarg_list}
+        _constructor_kwargs = {key: yaml_doc.get(key, None) for key in _kwarg_list}
         if _parametric_model_type is 'histogram':
-            _constructor_kwargs['model_density_func'] = ModelFunctionYamlReader._make_object(_yaml)
+            _constructor_kwargs['model_density_func'] = ModelFunctionYamlReader._make_object(yaml_doc['model_density_function'])
         elif _parametric_model_type in ('indexed', 'xy'):
-            _constructor_kwargs['model_func'] = ModelFunctionYamlReader._make_object(_yaml)
+            _constructor_kwargs['model_func'] = ModelFunctionYamlReader._make_object(yaml_doc['model_function'])
         _parametric_model_object = _class(**_constructor_kwargs)
         
         # -- process error sources
         if _parametric_model_type == 'xy':
-            _xerrs = _yaml.get('x_errors', [])
-            _yerrs = _yaml.get('y_errors', [])
+            _xerrs = yaml_doc.get('x_errors', [])
+            _yerrs = yaml_doc.get('y_errors', [])
             _errs = _xerrs + _yerrs
             _axes = [0] * len(_xerrs) + [1] * len(_yerrs)  # 0 for 'x', 1 for 'y'
         else:
-            _errs = _yaml.get('errors', [])
+            _errs = yaml_doc.get('errors', [])
             _axes = [None] * len(_errs)
 
         # add error sources, if any
@@ -246,8 +242,8 @@ class ParametricModelYamlReader(DReprReaderMixin, ParametricModelDReprBase):
     
     def read(self):
         with self._ihandle as _h:
-            self._yaml = yaml.load(_h)
-        return self._make_object(self._yaml)
+            self.yaml_doc = yaml.load(_h)
+        return self._make_object(self.yaml_doc)
 
 # register the above classes in the module-level dictionary
 ModelFunctionYamlReader._register_class(_AVAILABLE_REPRESENTATIONS)
