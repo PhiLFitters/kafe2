@@ -37,7 +37,7 @@ class FitYamlWriter(DReprWriterMixin, FitDReprBase):
             raise DReprError("Model function unknown or not supported: %s" % fit.__class__)
         _yaml['type'] = _type
         
-        _yaml.update(DataContainerYamlWriter._make_representation(fit._data_container))
+        _yaml['dataset'] = DataContainerYamlWriter._make_representation(fit._data_container)
         _yaml.update(ParametricModelYamlWriter._make_representation(fit._param_model))
         
         #TODO cost function
@@ -79,7 +79,7 @@ class FitYamlReader(DReprReaderMixin, FitDReprBase):
         if _class is None:
             raise DReprError("Model function type unknown or not supported: {}".format(_fit_type))
         
-        _data = DataContainerYamlReader._make_object(_yaml)
+        _data = DataContainerYamlReader._make_object(_yaml['dataset'])
         _parametric_model = ParametricModelYamlReader._make_object(_yaml)
         #TODO cost function
         _minimizer = _yaml.get('minimizer', None)

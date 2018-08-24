@@ -12,40 +12,39 @@ from kafe.fit.io.handle import IOStreamHandle
 
 
 TEST_DATASET_INDEXED = """
-dataset:
-  type: "indexed"
-  data: [80.429, 80.339]
-  errors:
-  - matrix:
-    - - 0.1
-      - 0.0
-    - - 0.0
-      - 0.1
-    name: ErrorOne
-    matrix_type: covariance
-    relative: false
-    type: matrix
-  - matrix: !matrix |
-      0.2   0.1
-      0.1   0.2
-    name: ErrorTwo
-    matrix_type: covariance
-    relative: false
-    type: matrix
-  - matrix: !symmetric_matrix |
-      0.3
-      0.1   0.3
-    name: ErrorThree
-    matrix_type: covariance
-    relative: false
-    type: matrix
-  - matrix:
-      [[0.2,  0.1],
-       [0.1,  0.2]]
-    name: ErrorFour
-    matrix_type: covariance
-    relative: false
-    type: matrix
+type: "indexed"
+data: [80.429, 80.339]
+errors:
+- matrix:
+  - - 0.1
+    - 0.0
+  - - 0.0
+    - 0.1
+  name: ErrorOne
+  matrix_type: covariance
+  relative: false
+  type: matrix
+- matrix: !matrix |
+    0.2   0.1
+    0.1   0.2
+  name: ErrorTwo
+  matrix_type: covariance
+  relative: false
+  type: matrix
+- matrix: !symmetric_matrix |
+    0.3
+    0.1   0.3
+  name: ErrorThree
+  matrix_type: covariance
+  relative: false
+  type: matrix
+- matrix:
+    [[0.2,  0.1],
+     [0.1,  0.2]]
+  name: ErrorFour
+  matrix_type: covariance
+  relative: false
+  type: matrix
 """
 
 
@@ -154,42 +153,41 @@ class TestIndexedContainerYamlRepresentation(unittest.TestCase):
 
 
 TEST_DATASET_XY = """
-dataset:
-  type: "xy"
-  x_data: [5, 17]
-  y_data: [80.429, 80.339]
-  y_errors:
-  - matrix:
-    - - 0.1
-      - 0.0
-    - - 0.0
-      - 0.1
-    name: YErrorOne
-    matrix_type: covariance
-    relative: false
-    type: matrix
-  - matrix: !matrix |
-      0.2   0.1
-      0.1   0.2
-    name: YErrorTwo
-    matrix_type: covariance
-    relative: false
-    type: matrix
-  x_errors:
-  - matrix: !symmetric_matrix |
-      0.3
-      0.1   0.3
-    name: XErrorOne
-    matrix_type: covariance
-    relative: false
-    type: matrix
-  - matrix:
-      [[0.2,  0.1],
-       [0.1,  0.2]]
-    name: XErrorTwo
-    matrix_type: covariance
-    relative: false
-    type: matrix
+type: "xy"
+x_data: [5, 17]
+y_data: [80.429, 80.339]
+y_errors:
+- matrix:
+  - - 0.1
+    - 0.0
+  - - 0.0
+    - 0.1
+  name: YErrorOne
+  matrix_type: covariance
+  relative: false
+  type: matrix
+- matrix: !matrix |
+    0.2   0.1
+    0.1   0.2
+  name: YErrorTwo
+  matrix_type: covariance
+  relative: false
+  type: matrix
+x_errors:
+- matrix: !symmetric_matrix |
+    0.3
+    0.1   0.3
+  name: XErrorOne
+  matrix_type: covariance
+  relative: false
+  type: matrix
+- matrix:
+    [[0.2,  0.1],
+     [0.1,  0.2]]
+  name: XErrorTwo
+  matrix_type: covariance
+  relative: false
+  type: matrix
 """
 
 
@@ -336,74 +334,73 @@ class TestXYContainerYamlRepresentation(unittest.TestCase):
         )
 
 TEST_DATASET_XY_MULTI = """
-dataset:
-  type: "xy_multi"
-  x_data_0: [5, 17]
-  y_data_0: [80.429, 80.339]
-  x_data_1: [5, 17]
-  y_data_1: [20.0, 44.0]
-  y_errors:
-  - matrix:
-    - - 0.1
-      - 0.0
-      - 0.0
-      - 0.0
-    - - 0.0
-      - 0.1
-      - 0.0
-      - 0.0
-    - - 0.0
-      - 0.0
-      - 0.1
-      - 0.0
-    - - 0.0
-      - 0.0
-      - 0.0
-      - 0.1
-    name: YErrorOne
-    matrix_type: covariance
-    relative: false
-    type: matrix
-  - matrix: !matrix |
-      0.2   0.1   0.1   0.1
-      0.1   0.2   0.1   0.1
-      0.1   0.1   0.2   0.1
-      0.1   0.1   0.1   0.2
-    name: YErrorTwo
-    matrix_type: covariance
-    relative: false
-    type: matrix
-  - error_value: 0.31622776
-    correlation_coefficient: 0.0
-    name: YErrorThree
-    relative: false
-    type: simple
-    model_index: 0
-  x_errors:
-  - matrix: !symmetric_matrix |
-      0.3
-      0.1   0.3
-      0.1   0.1   0.3
-      0.1   0.1   0.1   0.3
-    name: XErrorOne
-    matrix_type: covariance
-    relative: false
-    type: matrix
-  - matrix:
-      [[0.2, 0.1, 0.1, 0.1],
-       [0.1, 0.2, 0.1, 0.1],
-       [0.1, 0.1, 0.2, 0.1],
-       [0.1, 0.1, 0.1, 0.2]]
-    name: XErrorTwo
-    matrix_type: covariance
-    relative: false
-    type: matrix
-  - error_value: 0.31622776
-    correlation_coefficient: 0.0
-    name: XErrorThree
-    relative: false
-    type: simple
-    model_index: 1
+type: "xy_multi"
+x_data_0: [5, 17]
+y_data_0: [80.429, 80.339]
+x_data_1: [5, 17]
+y_data_1: [20.0, 44.0]
+y_errors:
+- matrix:
+  - - 0.1
+    - 0.0
+    - 0.0
+    - 0.0
+  - - 0.0
+    - 0.1
+    - 0.0
+    - 0.0
+  - - 0.0
+    - 0.0
+    - 0.1
+    - 0.0
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 0.1
+  name: YErrorOne
+  matrix_type: covariance
+  relative: false
+  type: matrix
+- matrix: !matrix |
+    0.2   0.1   0.1   0.1
+    0.1   0.2   0.1   0.1
+    0.1   0.1   0.2   0.1
+    0.1   0.1   0.1   0.2
+  name: YErrorTwo
+  matrix_type: covariance
+  relative: false
+  type: matrix
+- error_value: 0.31622776
+  correlation_coefficient: 0.0
+  name: YErrorThree
+  relative: false
+  type: simple
+  model_index: 0
+x_errors:
+- matrix: !symmetric_matrix |
+    0.3
+    0.1   0.3
+    0.1   0.1   0.3
+    0.1   0.1   0.1   0.3
+  name: XErrorOne
+  matrix_type: covariance
+  relative: false
+  type: matrix
+- matrix:
+    [[0.2, 0.1, 0.1, 0.1],
+     [0.1, 0.2, 0.1, 0.1],
+     [0.1, 0.1, 0.2, 0.1],
+     [0.1, 0.1, 0.1, 0.2]]
+  name: XErrorTwo
+  matrix_type: covariance
+  relative: false
+  type: matrix
+- error_value: 0.31622776
+  correlation_coefficient: 0.0
+  name: XErrorThree
+  relative: false
+  type: simple
+  model_index: 1
 """
 
 
@@ -560,51 +557,49 @@ class TestXYMultiContainerYamlRepresentation(unittest.TestCase):
 
 
 TEST_DATASET_HIST = """
-dataset:
-  bin_edges:
-  - 1.0
-  - 2.0
-  - 3.0
-  raw_data:
-  - 4
-  - 5
-  - 3
-  - 3
-  - 2
-  - 1
-  errors:
-  - matrix:
-    - - 0.1
-      - 0.0
-    - - 0.0
-      - 0.2
-    name: ErrorOne
-    matrix_type: covariance
-    relative: false
-    type: matrix
-  - matrix: !matrix |
-      0.2   0.1
-      0.1   0.3
-    name: ErrorTwo
-    matrix_type: covariance
-    relative: false
-    type: matrix
-  - matrix: !symmetric_matrix |
-      0.3
-      0.1   0.4
-    name: ErrorThree
-    matrix_type: covariance
-    relative: false
-    type: matrix
-  - matrix:
-      [[0.2,  0.1],
-       [0.1,  0.1]]
-    name: ErrorFour
-    matrix_type: covariance
-    relative: false
-    type: matrix
-  
-  type: histogram
+bin_edges:
+- 1.0
+- 2.0
+- 3.0
+raw_data:
+- 4
+- 5
+- 3
+- 3
+- 2
+- 1
+errors:
+- matrix:
+  - - 0.1
+    - 0.0
+  - - 0.0
+    - 0.2
+  name: ErrorOne
+  matrix_type: covariance
+  relative: false
+  type: matrix
+- matrix: !matrix |
+    0.2   0.1
+    0.1   0.3
+  name: ErrorTwo
+  matrix_type: covariance
+  relative: false
+  type: matrix
+- matrix: !symmetric_matrix |
+    0.3
+    0.1   0.4
+  name: ErrorThree
+  matrix_type: covariance
+  relative: false
+  type: matrix
+- matrix:
+    [[0.2,  0.1],
+     [0.1,  0.1]]
+  name: ErrorFour
+  matrix_type: covariance
+  relative: false
+  type: matrix
+type: histogram
 """
 
 
