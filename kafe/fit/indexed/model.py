@@ -2,6 +2,7 @@ import numpy as np
 
 from scipy.misc import derivative
 
+import inspect
 from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException
 from .container import IndexedContainer, IndexedContainerException
 from .format import IndexedModelFunctionFormatter
@@ -34,6 +35,12 @@ class IndexedModelFunction(ModelFunctionBase):
                 % (self.func,))
 
         super(IndexedModelFunction, self)._validate_model_function_raise()
+
+    def _assign_model_function_argspec_and_argcount(self):
+        self._model_function_argspec = inspect.getargspec(self._model_function_handle)
+        self._model_function_argcount = self._model_function_handle.__code__.co_argcount
+        #for indexed model functions pars == args
+        self._model_function_parcount = self._model_function_argcount
 
     @property
     def index_name(self):

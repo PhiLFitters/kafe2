@@ -4,6 +4,7 @@ from kafe.fit.indexed import IndexedFit
 from kafe.fit.xy import XYFit
 from kafe.fit.histogram import HistFit
 from kafe.fit.representation._base import GenericDReprBase
+from kafe.fit.xy_multi.fit import XYMultiFit
 
 __all__ = ["FitDReprBase"]
 
@@ -13,14 +14,16 @@ class FitDReprBase(GenericDReprBase):
     OBJECT_TYPE_NAME = 'fit'
 
     _FIT_CLASS_TO_TYPE_NAME = {
+        HistFit: 'histogram',
         IndexedFit: 'indexed',
         XYFit: 'xy',
-        HistFit: 'histogram'
+        XYMultiFit: 'xy_multi'
     }
     _FIT_TYPE_NAME_TO_CLASS = {
+        'histogram': HistFit,
         'indexed': IndexedFit,
         'xy': XYFit,
-        'histogram': HistFit
+        'xy_multi': XYMultiFit
     }
 
     def __init__(self, fit=None):

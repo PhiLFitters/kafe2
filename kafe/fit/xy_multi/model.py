@@ -65,7 +65,7 @@ class XYMultiModelFunction(ModelFunctionBase):
                 #None is dummy default value, replace
                 if _arg_name not in _args_with_defaults or _args_with_defaults[_arg_name] is None:
                     _args_with_defaults[_arg_name] = _default_value
-                elif _args_with_defaults[_arg_name] != _default_value:
+                elif _default_value != None and _args_with_defaults[_arg_name] != _default_value:
                     #TODO Exception or Warning?
                     raise XYMultiModelFunctionException(
                         "Model functions have conflicting defaults for parameter %s: %s <-> %s" % 
@@ -84,6 +84,7 @@ class XYMultiModelFunction(ModelFunctionBase):
         _combined_args.insert(0, self._x_name)
         self._model_function_argspec = inspect.ArgSpec(_combined_args, _varargs, _keywords, _combined_defaults)
         self._model_function_argcount = len(_combined_args)
+        self._model_function_parcount = self._model_function_argcount - 1
 
     def _validate_model_function_raise(self):
         for _model_function in self.singular_model_functions:
@@ -197,7 +198,15 @@ class XYMultiModelFunction(ModelFunctionBase):
         :rtype: :py:obj:`Formatter`
         """
         return self._construct_arg_list(self.argument_formatters, model_index)
-    
+
+    def assign_model_function_expression(self, expression_format_string, model_index):
+        """Assign a plain-text-formatted expression string to the model function."""
+        self._formatter._singular_formatters[model_index].expression_format_string = expression_format_string
+
+    def assign_model_function_latex_expression(self, latex_expression_format_string, model_index):
+        """Assign a LaTeX-formatted expression string to the model function."""
+        self._formatter._singular_formatters[model_index].latex_expression_format_string = latex_expression_format_string
+        
 class XYMultiParametricModelException(XYMultiContainerException):
     pass
 
@@ -215,9 +224,10 @@ class XYMultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
         :type model_parameters: iterable of float
         """
         # print "XYMultiParametricModel.__init__(x_data=%r, model_func=%r, model_parameters=%r)" % (x_data, model_func, model_parameters)
-        _xy_data = np.empty([2, x_data.size])
-        _xy_data[0] = x_data
-        _xy_data[1] = model_func.func(x_data, *model_parameters)
+        _x_data_array = np.asarray(x_data)
+        _xy_data = np.empty([2, _x_data_array.size])
+        _xy_data[0] = _x_data_array
+        _xy_data[1] = model_func.func(_x_data_array, *model_parameters)
         super(XYMultiParametricModel, self).__init__(model_func, model_parameters, _xy_data)
 
     # -- private methods

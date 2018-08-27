@@ -71,6 +71,9 @@ class FitBase(FileIOMixin, object):
                 % (_invalid_args,))
 
     def _initialize_fitter(self, minimizer=None, minimizer_kwargs=None):
+        #save minimizer, minimizer_kwargs for serialization
+        self._minimizer = minimizer
+        self._minimizer_kwargs = minimizer_kwargs
         self._fitter = NexusFitter(nexus=self._nexus,
                                    parameters_to_fit=self._fit_param_names,
                                    parameter_to_minimize=self._cost_function.name,

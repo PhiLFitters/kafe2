@@ -108,7 +108,7 @@ class XYMultiPlotContainer(PlotContainerBase):
 
     def get_formatted_model_function(self, **kwargs):
         """return the formatted model function string"""
-        return self._fitter._model_function.formatter[self._model_index].get_formatted(**kwargs)
+        return self._fitter._model_function.formatter.get_formatted(model_index=self._model_index, **kwargs)
 
     def plot_data(self, target_axis, **kwargs):
         """

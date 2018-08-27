@@ -182,6 +182,11 @@ class HistContainer(IndexedContainer):
         return self._idx_data[0]
 
     @property
+    def n_bins(self):
+        """the number of bins"""
+        return len(self._bin_edges) - 1
+
+    @property
     def bin_edges(self):
         """a list of the bin edges (including the outermost ones)"""
         return self._bin_edges.copy()

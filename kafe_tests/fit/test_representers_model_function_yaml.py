@@ -130,15 +130,15 @@ class TestHistModelFunctionYamlRepresenter(unittest.TestCase):
 TEST_MODEL_FUNCTION_INDEXED="""
 type: indexed
 python_code: |
-    def linear_model(x, a, b):
-        return a * x + b
+    def linear_model(a, b):
+        return a * np.arange(10) + b
 """
 
 TEST_MODEL_FUNCTION_INDEXED_WITH_FORMATTER=r"""
 type: indexed
 python_code: |
-    def linear_model(x, a, b):
-        return a * x + b
+    def linear_model(a, b):
+        return a * np.arange(10) + b
 model_function_formatter:
     type: indexed
     name: linear_model
@@ -156,15 +156,18 @@ model_function_formatter:
 
 class TestIndexedModelFunctionYamlRepresenter(unittest.TestCase):
 
+    TEST_X = np.arange(10)
+
     @staticmethod
-    def linear_model(x, a, b):
-        return a * x + b
+    def linear_model(a, b):
+        #TODO handle
+        #return a * TestIndexedModelFunctionYamlRepresenter.TEST_X + b
+        return a * np.arange(10) + b
     
     def setUp(self):
-        self._test_x = np.arange(10)
         self._test_a = 2.0
         self._test_b = -1.0
-        self._test_y = self.linear_model(self._test_x, self._test_a, self._test_b)
+        self._test_y = self.linear_model(self._test_a, self._test_b)
         
         self._model_function = IndexedModelFunction(self.linear_model)
         
@@ -185,7 +188,7 @@ class TestIndexedModelFunctionYamlRepresenter(unittest.TestCase):
         self.assertTrue(isinstance(_read_model_function, IndexedModelFunction))
         self.assertTrue(
             np.allclose(
-                _read_model_function.func(self._test_x, self._test_a, self._test_b),
+                _read_model_function.func(self._test_a, self._test_b),
                 self._test_y
             )
         )
@@ -195,7 +198,7 @@ class TestIndexedModelFunctionYamlRepresenter(unittest.TestCase):
         self.assertTrue(isinstance(_read_model_function, IndexedModelFunction))
         self.assertTrue(
             np.allclose(
-                _read_model_function.func(self._test_x, self._test_a, self._test_b),
+                _read_model_function.func(self._test_a, self._test_b),
                 self._test_y
             )
         )
@@ -222,7 +225,7 @@ class TestIndexedModelFunctionYamlRepresenter(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self._test_y,
-                _read_model_function.func(self._test_x, self._test_a, self._test_b)
+                _read_model_function.func(self._test_a, self._test_b)
             )
         )
         
