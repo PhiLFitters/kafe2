@@ -215,9 +215,10 @@ class XYMultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
         :type model_parameters: iterable of float
         """
         # print "XYMultiParametricModel.__init__(x_data=%r, model_func=%r, model_parameters=%r)" % (x_data, model_func, model_parameters)
-        _xy_data = np.empty([2, x_data.size])
-        _xy_data[0] = x_data
-        _xy_data[1] = model_func.func(x_data, *model_parameters)
+        _x_data_array = np.asarray(x_data)
+        _xy_data = np.empty([2, _x_data_array.size])
+        _xy_data[0] = _x_data_array
+        _xy_data[1] = model_func.func(_x_data_array, *model_parameters)
         super(XYMultiParametricModel, self).__init__(model_func, model_parameters, _xy_data)
 
     # -- private methods

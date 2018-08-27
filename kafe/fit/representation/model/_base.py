@@ -35,14 +35,16 @@ class ParametricModelDReprBase(GenericDReprBase):
     OBJECT_TYPE_NAME = 'model'
 
     _PARAMETRIC_MODEL_CLASS_TO_TYPE_NAME = {
+        HistParametricModel: 'histogram',
         IndexedParametricModel: 'indexed',
         XYParametricModel: 'xy',
-        HistParametricModel: 'histogram'
+        XYMultiParametricModel: 'xy_multi'
     }
     _PARAMETRIC_MODEL_TYPE_NAME_TO_CLASS = {
+        'histogram': HistParametricModel,
         'indexed': IndexedParametricModel,
         'xy': XYParametricModel,
-        'histogram': HistParametricModel
+        'xy_multi': XYMultiParametricModel
     }
 
     def __init__(self, parametric_model=None):
