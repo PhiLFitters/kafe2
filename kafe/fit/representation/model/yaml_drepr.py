@@ -86,13 +86,26 @@ class ModelFunctionYamlReader(DReprReaderMixin, ModelFunctionDReprBase):
         if "__" in input_string:
             raise DReprError("Model function input must not contain '__'!")
     
+        _fixed_imports = ""
+        _model_function_index = 0
+        _fixed_imports += "import numpy as np\n" #import numpy
+        _model_function_index += 1
+        #import scipy if installed
+        try:
+            import scipy
+            _fixed_imports += "import scipy\n"
+            _model_function_index += 1
+        except:
+            pass
+        input_string = _fixed_imports + input_string
+        
         __locals_pointer = [None] #TODO better solution?
-        input_string += "\n__locals_pointer[0] = __locals()"
-        exec(input_string, {"__builtins__":{"__locals":locals}, "__locals_pointer":__locals_pointer})
+        input_string = input_string + "\n__locals_pointer[0] = __locals()"
+        exec(input_string, {"__builtins__":{"__locals":locals, "__import__":__import__}, "__locals_pointer":__locals_pointer})
         _locals = __locals_pointer[0]
         del _locals["__builtins__"]
         del _locals["__locals_pointer"]
-        return _locals.values()[0] #TODO adjust for multifits
+        return _locals.values()[_model_function_index] #0 is np
         
     @staticmethod
     def _make_object(yaml_doc):
