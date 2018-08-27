@@ -22,7 +22,7 @@ model_density_function:
     python_code: |
         def linear_model(x, a, b):
             return a * x + b
-model_parameters: [0.0, 0.4]
+model_parameters: [0.0, 0.08]
 """
 
 TEST_PARAMETRIC_MODEL_HIST_WITH_ERRORS="""
@@ -40,7 +40,7 @@ model_density_function:
     python_code: |
         def linear_model(x, a, b):
             return a * x + b
-model_parameters: [0.0, 0.4]
+model_parameters: [0.0, 0.08]
 """
 
 class TestHistParametricModelYamlRepresenter(unittest.TestCase):
@@ -53,7 +53,7 @@ class TestHistParametricModelYamlRepresenter(unittest.TestCase):
         self._test_n_bins = 5
         self._test_bin_range = (0,5)
         self._test_bin_edges = np.arange(6)
-        self._test_model_parameters = np.array([0.0, 0.4])
+        self._test_model_parameters = np.array([0.0, 0.08])
         self._test_x = np.linspace(start=0.0, stop=5.0, num=11, endpoint=True)
         self._test_parametric_model = HistParametricModel(
             n_bins=self._test_n_bins, 
