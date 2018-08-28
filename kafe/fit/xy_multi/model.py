@@ -65,7 +65,7 @@ class XYMultiModelFunction(ModelFunctionBase):
                 #None is dummy default value, replace
                 if _arg_name not in _args_with_defaults or _args_with_defaults[_arg_name] is None:
                     _args_with_defaults[_arg_name] = _default_value
-                elif _args_with_defaults[_arg_name] != _default_value:
+                elif _default_value != None and _args_with_defaults[_arg_name] != _default_value:
                     #TODO Exception or Warning?
                     raise XYMultiModelFunctionException(
                         "Model functions have conflicting defaults for parameter %s: %s <-> %s" % 
