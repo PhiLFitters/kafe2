@@ -227,8 +227,9 @@ class ParametricModelYamlReader(DReprReaderMixin, ParametricModelDReprBase):
         _class = ParametricModelYamlReader._PARAMETRIC_MODEL_TYPE_NAME_TO_CLASS.get(_parametric_model_type, None)
         if _class is None:
             raise DReprError("Model function type unknown or not supported: {}".format(_parametric_model_type))
-        
-        _kwarg_list = ['model_parameters'] #kwargs that directly correspond to unchanging scalar yaml entries
+
+        #_kwarg_list = kwargs that directly correspond to unchanging scalar yaml entries
+        _kwarg_list = ['model_parameters']         
         _constructor_kwargs = {}
         if _class is HistParametricModel:
             _kwarg_list.append('n_bins')
@@ -254,9 +255,13 @@ class ParametricModelYamlReader(DReprReaderMixin, ParametricModelDReprBase):
             _constructor_kwargs['x_data'] = _x_data
         _constructor_kwargs.update({key: yaml_doc.get(key, None) for key in _kwarg_list})
         if _class is HistParametricModel:
-            _constructor_kwargs['model_density_func'] = ModelFunctionYamlReader._make_object(yaml_doc['model_density_function'])
+            _model_density_func = ModelFunctionYamlReader._make_object(yaml_doc['model_density_function'])
+            _model_density_func.defaults = _constructor_kwargs['model_parameters']
+            _constructor_kwargs['model_density_func'] = _model_density_func
         elif _class in (IndexedParametricModel, XYParametricModel, XYMultiParametricModel):
-            _constructor_kwargs['model_func'] = ModelFunctionYamlReader._make_object(yaml_doc['model_function'])
+            _model_func = ModelFunctionYamlReader._make_object(yaml_doc['model_function'])
+            _model_func.defaults = _constructor_kwargs['model_parameters']
+            _constructor_kwargs['model_func'] = _model_func
         _parametric_model_object = _class(**_constructor_kwargs)
         
         # -- process error sources

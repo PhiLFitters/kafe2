@@ -3,6 +3,7 @@ import inspect
 
 from .format import ModelParameterFormatter, ModelFunctionFormatter
 from kafe.fit.io.file import FileIOMixin
+from inspect import ArgSpec
 
 
 __all__ = ["ParametricModelBaseMixin", "ModelFunctionBase", "ModelFunctionException"]
@@ -106,6 +107,8 @@ class ModelFunctionBase(FileIOMixin, object):
     def _assign_model_function_argspec_and_argcount(self):
         self._model_function_argspec = inspect.getargspec(self._model_function_handle)
         self._model_function_argcount = self._model_function_handle.__code__.co_argcount
+        #for most model function types there is exactly one argument that is not a parameter (x)
+        self._model_function_parcount = self._model_function_argcount - 1
 
     def _validate_model_function_raise(self):
         if self._model_function_argspec.varargs and self._model_function_argspec.keywords:
@@ -154,6 +157,11 @@ class ModelFunctionBase(FileIOMixin, object):
         return self._model_function_argcount
 
     @property
+    def parcount(self):
+        """The number of fitting parameters in the model function."""
+        return self._model_function_parcount
+
+    @property
     def argvals(self):
         """The current values of the function arguments (**not yet implemented**, returns an array of zeros)"""
         # TODO: decide whether to store these (that's actually what ParametricModelMixin is for...)
@@ -168,3 +176,21 @@ class ModelFunctionBase(FileIOMixin, object):
     def argument_formatters(self):
         """The :py:obj:`ModelParameterFormatter`-derived objects for the function arguments"""
         return self._formatter.arg_formatters
+    
+    @property
+    def defaults(self):
+        """The default values for model function parameters"""
+        return self.argspec.defaults
+    
+    @defaults.setter
+    def defaults(self, new_defaults):
+        if self.parcount != len(new_defaults): #first arg is x, but x is not a parameter
+            raise ModelFunctionException('Expected %s parameter defaults (1 per parameter), but received %s'
+                                         % (self.parcount, len(new_defaults)))
+        _new_argspec = ArgSpec(
+            self.argspec.args,
+            self.argspec.varargs,
+            self.argspec.keywords,
+            new_defaults
+        )
+        self._model_function_argspec = _new_argspec

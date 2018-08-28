@@ -84,6 +84,7 @@ class XYMultiModelFunction(ModelFunctionBase):
         _combined_args.insert(0, self._x_name)
         self._model_function_argspec = inspect.ArgSpec(_combined_args, _varargs, _keywords, _combined_defaults)
         self._model_function_argcount = len(_combined_args)
+        self._model_function_parcount = self._model_function_argcount - 1
 
     def _validate_model_function_raise(self):
         for _model_function in self.singular_model_functions:
