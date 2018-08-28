@@ -222,10 +222,15 @@ class DataContainerYamlReader(DReprReaderMixin, DataContainerDReprBase):
 
         # -- read in representation for container types
         if _class is HistContainer:
-            _bin_edges = yaml_doc['bin_edges']
+            _bin_edges = yaml_doc.get('bin_edges', None)
+            _n_bins = yaml_doc.get('n_bins', None)
+            _bin_range = yaml_doc.get('bin_range', None)
+            if _bin_edges:
+                _n_bins = len(_bin_edges) - 1
+                _bin_range = (_bin_edges[0], _bin_edges[-1])
             _raw_data = yaml_doc['raw_data']
-            _container_obj = HistContainer(n_bins=len(_bin_edges) - 1,
-                                           bin_range=(_bin_edges[0], _bin_edges[-1]),
+            _container_obj = HistContainer(n_bins=_n_bins,
+                                           bin_range=_bin_range,
                                            bin_edges=_bin_edges,
                                            fill_data=_raw_data)
         elif _class is IndexedContainer:

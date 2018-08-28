@@ -624,6 +624,9 @@ class TestHistContainerYamlRepresentation(unittest.TestCase):
         self._roundtrip_streamwriter = DataContainerYamlWriter(self._container, self._roundtrip_stringstream)
         self._testfile_streamreader = DataContainerYamlReader(self._testfile_stringstream)
 
+        self._ref_testfile_n_bins = 2
+        self._ref_testfile_bin_range = [1.0, 3.0]
+        self._ref_testfile_bin_edges = [1.0, 2.0, 3.0]
         self._ref_testfile_data = [1, 1]
         self._ref_testfile_err = [0.89442719,  1]
         self._ref_testfile_cov_mat = np.matrix([[0.8, 0.3], [0.3, 1.0]])
@@ -637,6 +640,20 @@ class TestHistContainerYamlRepresentation(unittest.TestCase):
     def test_read_from_testfile_stream(self):
         _read_container = self._testfile_streamreader.read()
         self.assertTrue(isinstance(_read_container, HistContainer))
+
+        self.assertTrue(_read_container.n_bins == self._ref_testfile_n_bins)
+        self.assertTrue(
+            np.allclose(
+                _read_container.bin_range,
+                self._ref_testfile_bin_range
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                _read_container.bin_edges,
+                self._ref_testfile_bin_edges
+            )
+        )
 
         self.assertTrue(
             np.allclose(
@@ -668,6 +685,20 @@ class TestHistContainerYamlRepresentation(unittest.TestCase):
         self._roundtrip_stringstream.seek(0)  # return to beginning
         _read_container = self._roundtrip_streamreader.read()
         self.assertTrue(isinstance(_read_container, HistContainer))
+
+        self.assertTrue(self._container.n_bins == _read_container.n_bins)
+        self.assertTrue(
+            np.allclose(
+                self._container.bin_range,
+                _read_container.bin_range
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                self._container.bin_edges,
+                _read_container.bin_edges
+            )
+        )
 
         # compare data members
         self.assertTrue(
