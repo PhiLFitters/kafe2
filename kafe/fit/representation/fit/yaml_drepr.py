@@ -34,7 +34,7 @@ class FitYamlWriter(DReprWriterMixin, FitDReprBase):
         # -- determine model function type
         _type = FitYamlWriter._FIT_CLASS_TO_TYPE_NAME.get(fit.__class__, None)
         if _type is None:
-            raise DReprError("Model function unknown or not supported: %s" % fit.__class__)
+            raise DReprError("Fit type unknown or not supported: %s" % fit.__class__)
         _yaml_doc['type'] = _type
         
         _yaml_doc['dataset'] = DataContainerYamlWriter._make_representation(fit._data_container)
@@ -75,7 +75,7 @@ class FitYamlReader(DReprReaderMixin, FitDReprBase):
         _fit_type = yaml_doc['type']
         _class = FitYamlReader._FIT_TYPE_NAME_TO_CLASS.get(_fit_type, None)
         if _class is None:
-            raise DReprError("Model function type unknown or not supported: {}".format(_fit_type))
+            raise DReprError("Fit type unknown or not supported: {}".format(_fit_type))
         
         _data = DataContainerYamlReader._make_object(yaml_doc['dataset'])
         _parametric_model = ParametricModelYamlReader._make_object(yaml_doc['parametric_model'])

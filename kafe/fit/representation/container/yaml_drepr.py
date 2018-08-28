@@ -156,7 +156,7 @@ class DataContainerYamlWriter(DReprWriterMixin, DataContainerDReprBase):
         # -- determine container type
         _type = DataContainerYamlWriter._CONTAINER_CLASS_TO_TYPE_NAME.get(_class, None)
         if _type is None:
-            raise DReprError("Container unknown or not supported: %s" % _class)
+            raise DReprError("Container type unknown or not supported: %s" % _class)
         _yaml_doc['type'] = _type
 
         # -- write representation for container types

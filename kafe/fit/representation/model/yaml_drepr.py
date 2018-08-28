@@ -34,7 +34,7 @@ class ModelFunctionYamlWriter(DReprWriterMixin, ModelFunctionDReprBase):
         _class = model_function.__class__
         _type = ModelFunctionYamlWriter._MODEL_FUNCTION_CLASS_TO_TYPE_NAME.get(_class, None)
         if _type is None:
-            raise DReprError("Model function unknown or not supported: %s" % _class)
+            raise DReprError("Model function type unknown or not supported: %s" % _class)
         _yaml_doc['type'] = _type
         _yaml_doc['model_function_formatter'] = ModelFunctionFormatterYamlWriter._make_representation(model_function.formatter)
 
@@ -160,7 +160,7 @@ class ParametricModelYamlWriter(DReprWriterMixin, ParametricModelDReprBase):
         _class = parametric_model.__class__
         _type = ParametricModelYamlWriter._PARAMETRIC_MODEL_CLASS_TO_TYPE_NAME.get(_class, None)
         if _type is None:
-            raise DReprError("Parametric model unknown or not supported: %s" % _class)
+            raise DReprError("Parametric model type unknown or not supported: %s" % _class)
         _yaml_doc['type'] = _type
         
         # -- write representation for model types
@@ -226,7 +226,7 @@ class ParametricModelYamlReader(DReprReaderMixin, ParametricModelDReprBase):
         _parametric_model_type = yaml_doc['type']
         _class = ParametricModelYamlReader._PARAMETRIC_MODEL_TYPE_NAME_TO_CLASS.get(_parametric_model_type, None)
         if _class is None:
-            raise DReprError("Model function type unknown or not supported: {}".format(_parametric_model_type))
+            raise DReprError("Parametric model type unknown or not supported: {}".format(_parametric_model_type))
 
         #_kwarg_list = kwargs that directly correspond to unchanging scalar yaml entries
         _kwarg_list = ['model_parameters']         
