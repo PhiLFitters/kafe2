@@ -148,13 +148,13 @@ class DataContainerYamlWriter(YamlWriterMixin, DataContainerDReprBase):
                 raise DReprError("No representation for error type {} "
                                  "implemented!".format(type(_err_obj)))
     
-    @staticmethod
-    def _make_representation(container):
+    @classmethod
+    def _make_representation(cls, container):
         _yaml_doc = dict()
         _class = container.__class__
 
         # -- determine container type
-        _type = DataContainerYamlWriter._CONTAINER_CLASS_TO_TYPE_NAME.get(_class, None)
+        _type = cls._CONTAINER_CLASS_TO_TYPE_NAME.get(_class, None)
         if _type is None:
             raise DReprError("Container type unknown or not supported: %s" % _class)
         _yaml_doc['type'] = _type
@@ -177,7 +177,7 @@ class DataContainerYamlWriter(YamlWriterMixin, DataContainerDReprBase):
 
         # -- write error representation for all container types
         if container.has_errors:
-            DataContainerYamlWriter._write_errors_to_yaml(container, _yaml_doc)
+            cls._write_errors_to_yaml(container, _yaml_doc)
 
         return _yaml_doc
 
@@ -199,11 +199,11 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
             raise DReprError("Unknown error type '{}'. "
                              "Valid: {}".format(err_type, ('simple', 'matrix')))
 
-    @staticmethod
-    def _make_object(yaml_doc):
+    @classmethod
+    def _make_object(cls, yaml_doc):
         # -- determine container class from type
         _container_type = yaml_doc['type']
-        _class = DataContainerYamlReader._CONTAINER_TYPE_NAME_TO_CLASS.get(_container_type, None)
+        _class = cls._CONTAINER_TYPE_NAME_TO_CLASS.get(_container_type, None)
         if _class is None:
             raise DReprError("Container type unknown or not supported: {}".format(_container_type))
 
@@ -288,7 +288,7 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
                 raise DReprError("Missing required key '%s' for error specification" % e.args[0])
 
             # add error to data container
-            DataContainerYamlReader._add_error_to_container(_err_type, _container_obj, **_add_kwargs)
+            cls._add_error_to_container(_err_type, _container_obj, **_add_kwargs)
 
         return _container_obj
 

@@ -20,12 +20,12 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
             output_io_handle=output_io_handle,
             fit=fit)
     
-    @staticmethod
-    def _make_representation(fit):
+    @classmethod
+    def _make_representation(cls, fit):
         _yaml_doc = dict()
 
         # -- determine model function type
-        _type = FitYamlWriter._FIT_CLASS_TO_TYPE_NAME.get(fit.__class__, None)
+        _type = cls._FIT_CLASS_TO_TYPE_NAME.get(fit.__class__, None)
         if _type is None:
             raise DReprError("Fit type unknown or not supported: %s" % fit.__class__)
         _yaml_doc['type'] = _type
@@ -47,11 +47,11 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
             input_io_handle=input_io_handle,
             fit=None)
 
-    @staticmethod
-    def _make_object(yaml_doc):
+    @classmethod
+    def _make_object(cls, yaml_doc):
         # -- determine model function class from type
         _fit_type = yaml_doc['type']
-        _class = FitYamlReader._FIT_TYPE_NAME_TO_CLASS.get(_fit_type, None)
+        _class = cls._FIT_TYPE_NAME_TO_CLASS.get(_fit_type, None)
         if _class is None:
             raise DReprError("Fit type unknown or not supported: {}".format(_fit_type))
         

@@ -18,12 +18,12 @@ class ModelFunctionFormatterYamlWriter(YamlWriterMixin, ModelFunctionFormatterDR
             output_io_handle=output_io_handle,
             model_function_formatter=model_function_formatter)
     
-    @staticmethod
-    def _make_representation(model_function_formatter):
+    @classmethod
+    def _make_representation(cls, model_function_formatter):
         _yaml_doc = dict()
         _class = model_function_formatter.__class__
         
-        _type = ModelFunctionFormatterYamlWriter._MODEL_FUNCTION_FORMATTER_CLASS_TO_TYPE_NAME.get(_class, None)
+        _type = cls._MODEL_FUNCTION_FORMATTER_CLASS_TO_TYPE_NAME.get(_class, None)
         if _type is None:
             raise DReprError("Model function formatter unknown or not supported: %s" % _class)
         _yaml_doc['type'] = _type
@@ -66,11 +66,11 @@ class ModelFunctionFormatterYamlReader(YamlReaderMixin, ModelFunctionFormatterDR
             input_io_handle=input_io_handle,
             model_function_formatter=None)
 
-    @staticmethod
-    def _make_object(yaml_doc):
+    @classmethod
+    def _make_object(cls, yaml_doc):
         # -- determine model function formatter class from type
         _type = yaml_doc['type']
-        _class = ModelFunctionFormatterYamlReader._MODEL_FUNCTION_FORMATTER_TYPE_NAME_TO_CLASS.get(_type, None)
+        _class = cls._MODEL_FUNCTION_FORMATTER_TYPE_NAME_TO_CLASS.get(_type, None)
         if _class is None:
             raise DReprError("Model function formatter type unknown or not supported: {}".format(_type))
 
@@ -112,8 +112,8 @@ class ModelParameterFormatterYamlWriter(YamlWriterMixin, ModelParameterFormatter
             output_io_handle=output_io_handle,
             model_parameter_formatter=model_parameter_formatter)
     
-    @staticmethod
-    def _make_representation(model_parameter_formatter):
+    @classmethod
+    def _make_representation(cls, model_parameter_formatter):
         _yaml_doc = dict()
         
         _yaml_doc['name'] = model_parameter_formatter.name
@@ -132,8 +132,8 @@ class ModelParameterFormatterYamlReader(YamlReaderMixin, ModelParameterFormatter
             input_io_handle=input_io_handle,
             model_parameter_formatter=None)
 
-    @staticmethod
-    def _make_object(yaml_doc):
+    @classmethod
+    def _make_object(cls, yaml_doc):
         # value and error are not part of the representation
         # because they belong to the parametric model
         _kwarg_list = ['name', 'latex_name']
