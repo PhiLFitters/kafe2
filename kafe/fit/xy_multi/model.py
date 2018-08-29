@@ -198,7 +198,15 @@ class XYMultiModelFunction(ModelFunctionBase):
         :rtype: :py:obj:`Formatter`
         """
         return self._construct_arg_list(self.argument_formatters, model_index)
-    
+
+    def assign_model_function_expression(self, expression_format_string, model_index):
+        """Assign a plain-text-formatted expression string to the model function."""
+        self._formatter._singular_formatters[model_index].expression_format_string = expression_format_string
+
+    def assign_model_function_latex_expression(self, latex_expression_format_string, model_index):
+        """Assign a LaTeX-formatted expression string to the model function."""
+        self._formatter._singular_formatters[model_index].latex_expression_format_string = latex_expression_format_string
+        
 class XYMultiParametricModelException(XYMultiContainerException):
     pass
 
