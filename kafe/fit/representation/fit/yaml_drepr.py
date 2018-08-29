@@ -62,8 +62,6 @@ class FitYamlWriter(DReprWriterMixin, FitDReprBase):
 class FitYamlReader(DReprReaderMixin, FitDReprBase):
     DREPR_FLAVOR_NAME = 'yaml'
     DREPR_ROLE_NAME = 'reader'
-    FORBIDDEN_TOKENS = ['eval', 'exec', 'execfile', 'file', 'global', 'import', '__import__', 'input', 
-                        'nonlocal', 'open', 'reload', 'self', 'super']
     
     def __init__(self, input_io_handle):
         super(FitYamlReader, self).__init__(
