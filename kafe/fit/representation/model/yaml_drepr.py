@@ -24,13 +24,13 @@ class ModelFunctionYamlWriter(YamlWriterMixin, ModelFunctionDReprBase):
             output_io_handle=output_io_handle,
             model_function=model_function)
     
-    @staticmethod
-    def _make_representation(model_function):
+    @classmethod
+    def _make_representation(cls, model_function):
         _yaml_doc = dict()
 
         # -- determine model function type
         _class = model_function.__class__
-        _type = ModelFunctionYamlWriter._MODEL_FUNCTION_CLASS_TO_TYPE_NAME.get(_class, None)
+        _type = cls._MODEL_FUNCTION_CLASS_TO_TYPE_NAME.get(_class, None)
         if _type is None:
             raise DReprError("Model function type unknown or not supported: %s" % _class)
         _yaml_doc['type'] = _type
@@ -96,11 +96,11 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
         del _locals["__locals_pointer"]
         return _locals.values()[_model_function_index] #0 is np
         
-    @staticmethod
-    def _make_object(yaml_doc):
+    @classmethod
+    def _make_object(cls, yaml_doc):
         # -- determine model function class from type
         _model_function_type = yaml_doc['type']
-        _class = ModelFunctionYamlReader._MODEL_FUNCTION_TYPE_NAME_TO_CLASS.get(_model_function_type, None)
+        _class = cls._MODEL_FUNCTION_TYPE_NAME_TO_CLASS.get(_model_function_type, None)
         if _class is None:
             raise DReprError("Model function type unknown or not supported: {}".format(_model_function_type))
         
@@ -131,13 +131,13 @@ class ParametricModelYamlWriter(YamlWriterMixin, ParametricModelDReprBase):
             output_io_handle=output_io_handle,
             parametric_model=parametric_model)
     
-    @staticmethod
-    def _make_representation(parametric_model):
+    @classmethod
+    def _make_representation(cls, parametric_model):
         _yaml_doc = dict()
 
         # -- determine model function type
         _class = parametric_model.__class__
-        _type = ParametricModelYamlWriter._PARAMETRIC_MODEL_CLASS_TO_TYPE_NAME.get(_class, None)
+        _type = cls._PARAMETRIC_MODEL_CLASS_TO_TYPE_NAME.get(_class, None)
         if _type is None:
             raise DReprError("Parametric model type unknown or not supported: %s" % _class)
         _yaml_doc['type'] = _type
@@ -186,11 +186,11 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
             parametric_model=None)
 
         
-    @staticmethod
-    def _make_object(yaml_doc):
+    @classmethod
+    def _make_object(cls, yaml_doc):
         # -- determine model function class from type
         _parametric_model_type = yaml_doc['type']
-        _class = ParametricModelYamlReader._PARAMETRIC_MODEL_TYPE_NAME_TO_CLASS.get(_parametric_model_type, None)
+        _class = cls._PARAMETRIC_MODEL_TYPE_NAME_TO_CLASS.get(_parametric_model_type, None)
         if _class is None:
             raise DReprError("Parametric model type unknown or not supported: {}".format(_parametric_model_type))
 
