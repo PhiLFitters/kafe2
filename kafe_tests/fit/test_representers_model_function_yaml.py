@@ -16,11 +16,7 @@ python_code: |
         return a * x + b
 """
 
-TEST_MODEL_FUNCTION_HIST_WITH_FORMATTER=r"""
-type: histogram
-python_code: |
-    def linear_model(x, a, b):
-        return a * x + b
+TEST_MODEL_FUNCTION_HIST_WITH_FORMATTER = TEST_MODEL_FUNCTION_HIST + r"""
 model_function_formatter:
     type: histogram
     name: linear_model
@@ -127,18 +123,14 @@ class TestHistModelFunctionYamlRepresenter(unittest.TestCase):
         self.assertTrue(_read_formatter.expression_format_string ==  _given_formatter.expression_format_string)
         self.assertTrue(_read_formatter.latex_expression_format_string ==  _given_formatter.latex_expression_format_string)
 
-TEST_MODEL_FUNCTION_INDEXED="""
+TEST_MODEL_FUNCTION_INDEXED = """
 type: indexed
 python_code: |
     def linear_model(a, b):
         return a * np.arange(10) + b
 """
 
-TEST_MODEL_FUNCTION_INDEXED_WITH_FORMATTER=r"""
-type: indexed
-python_code: |
-    def linear_model(a, b):
-        return a * np.arange(10) + b
+TEST_MODEL_FUNCTION_INDEXED_WITH_FORMATTER = TEST_MODEL_FUNCTION_INDEXED + r"""
 model_function_formatter:
     type: indexed
     name: linear_model
@@ -255,11 +247,7 @@ python_code: |
         return a * x + b
 """
 
-TEST_MODEL_FUNCTION_XY_WITH_FORMATTER=r"""
-type: xy
-python_code: |
-    def linear_model(x, a, b):
-        return a * x + b
+TEST_MODEL_FUNCTION_XY_WITH_FORMATTER = TEST_MODEL_FUNCTION_XY + r"""
 model_function_formatter:
     type: xy
     name: linear_model
@@ -378,16 +366,7 @@ python_code:
 data_indices: [0, 10, 20]
 """
 
-TEST_MODEL_FUNCTION_XY_MULTI_WITH_FORMATTER=r"""
-type: xy_multi
-python_code:
-  - |
-    def quadratic_model(x, a, b, c):
-        return a * x ** 2 + b * x + c
-  - |
-    def linear_model(x, b, c):
-        return b * x + c
-data_indices: [0, 10, 20]
+TEST_MODEL_FUNCTION_XY_MULTI_WITH_FORMATTER = TEST_MODEL_FUNCTION_XY_MULTI + r"""
 model_function_formatter:
     type: xy_multi
     singular_formatters:
