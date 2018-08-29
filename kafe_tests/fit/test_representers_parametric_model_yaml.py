@@ -25,22 +25,13 @@ model_density_function:
 model_parameters: [0.0, 0.08]
 """
 
-TEST_PARAMETRIC_MODEL_HIST_WITH_ERRORS="""
-type: histogram
-n_bins: 5
-bin_range: [0, 5]
+TEST_PARAMETRIC_MODEL_HIST_WITH_ERRORS = TEST_PARAMETRIC_MODEL_HIST + """
 errors:
   - correlation_coefficient: 0.0
     error_value: 0.1
     name: test_error
     relative: false
     type: simple
-model_density_function:
-    type: histogram
-    python_code: |
-        def linear_model(x, a, b):
-            return a * x + b
-model_parameters: [0.0, 0.08]
 """
 
 class TestHistParametricModelYamlRepresenter(unittest.TestCase):
@@ -255,20 +246,13 @@ model_function:
 model_parameters: [1.1, -1.5]
 """
 
-TEST_PARAMETRIC_MODEL_INDEXED_WITH_ERRORS="""
-type: indexed
+TEST_PARAMETRIC_MODEL_INDEXED_WITH_ERRORS = TEST_PARAMETRIC_MODEL_INDEXED + """
 errors:
   - correlation_coefficient: 0.0
     error_value: 0.1
     name: test_error
     relative: false
     type: simple
-model_function:
-    type: indexed
-    python_code: |
-        def linear_model(a, b):
-            return a * np.arange(6) + b
-model_parameters: [1.1, -1.5]
 """
 
 class TestIndexedParametricModelYamlRepresenter(unittest.TestCase):
@@ -426,21 +410,13 @@ model_function:
 model_parameters: [1.1, -1.5]
 """
 
-TEST_PARAMETRIC_MODEL_XY_WITH_ERRORS="""
-type: xy
-x_data: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+TEST_PARAMETRIC_MODEL_XY_WITH_ERRORS = TEST_PARAMETRIC_MODEL_XY + """
 x_errors:
   - correlation_coefficient: 0.0
     error_value: 0.1
     name: test_x_error
     relative: false
     type: simple
-model_function:
-    type: xy
-    python_code: |
-        def linear_model(x, a, b):
-            return a * x + b
-model_parameters: [1.1, -1.5]
 """
 
 class TestXYParametricModelYamlRepresenter(unittest.TestCase):
@@ -612,27 +588,13 @@ model_function:
 model_parameters: [0.5, 1.1, -1.5]
 """
 
-TEST_PARAMETRIC_MODEL_XY_MULTI_WITH_ERRORS="""
-type: xy_multi
-x_data_0: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
-x_data_1: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+TEST_PARAMETRIC_MODEL_XY_MULTI_WITH_ERRORS = TEST_PARAMETRIC_MODEL_XY_MULTI + """
 x_errors:
   - correlation_coefficient: 0.0
     error_value: 0.1
     name: test_x_error
     relative: false
     type: simple
-model_function:
-    type: xy_multi
-    python_code:
-      - |
-        def quadratic_model(x, a, b, c):
-            return a * x ** 2 + b * x + c
-      - |
-        def linear_model(x, b, c):
-            return b * x + c
-    data_indices: [0, 6, 12]
-model_parameters: [0.5, 1.1, -1.5]
 """
 
 class TestXYMultiParametricModelYamlRepresenter(unittest.TestCase):
