@@ -1,11 +1,5 @@
-import inspect
-import numpy as np
-import StringIO
-import textwrap
-import tokenize
-import yaml
-
-from .._base import DReprError, DReprWriterMixin, DReprReaderMixin
+from .._base import DReprError
+from kafe.fit.representation._yaml_base import  YamlWriterMixin, YamlReaderMixin
 from ._base import FitDReprBase
 from .. import _AVAILABLE_REPRESENTATIONS
 from kafe.fit.histogram.fit import HistFit
@@ -19,9 +13,7 @@ from kafe.fit.xy_multi.fit import XYMultiFit
 
 __all__ = ['FitYamlWriter', 'FitYamlReader']
 
-class FitYamlWriter(DReprWriterMixin, FitDReprBase):
-    DREPR_FLAVOR_NAME = 'yaml'
-    DREPR_ROLE_NAME = 'writer'
+class FitYamlWriter(YamlWriterMixin, FitDReprBase):
 
     def __init__(self, fit, output_io_handle):
         super(FitYamlWriter, self).__init__(
@@ -48,20 +40,7 @@ class FitYamlWriter(DReprWriterMixin, FitDReprBase):
         
         return _yaml_doc
     
-    def write(self):
-        self._yaml_doc = self._make_representation(self._fit)
-        with self._ohandle as _h:
-            try:
-                # try to truncate the file to 0 bytes
-                _h.truncate(0)
-            except IOError:
-                # if truncate not available, ignore
-                pass
-            yaml.dump(self._yaml_doc, _h, default_flow_style=False)
-
-class FitYamlReader(DReprReaderMixin, FitDReprBase):
-    DREPR_FLAVOR_NAME = 'yaml'
-    DREPR_ROLE_NAME = 'reader'
+class FitYamlReader(YamlReaderMixin, FitDReprBase):
     
     def __init__(self, input_io_handle):
         super(FitYamlReader, self).__init__(
@@ -113,11 +92,6 @@ class FitYamlReader(DReprReaderMixin, FitDReprBase):
         _fit_object._param_model = _parametric_model
         return _fit_object
     
-    def read(self):
-        with self._ihandle as _h:
-            self._yaml_doc = yaml.load(_h)
-        return self._make_object(self._yaml_doc)
-
 # register the above classes in the module-level dictionary
 FitYamlReader._register_class(_AVAILABLE_REPRESENTATIONS)
 FitYamlWriter._register_class(_AVAILABLE_REPRESENTATIONS)

@@ -28,7 +28,7 @@ class ModelFunctionFormatterDReprBase(GenericDReprBase):
     }
 
     def __init__(self, model_function_formatter=None):
-        self._model_function_formatter = model_function_formatter
+        self._kafe_object = model_function_formatter
         super(ModelFunctionFormatterDReprBase, self).__init__()
 
 class ModelParameterFormatterDReprBase(GenericDReprBase):
@@ -36,6 +36,6 @@ class ModelParameterFormatterDReprBase(GenericDReprBase):
     OBJECT_TYPE_NAME = 'model_parameter_formatter'
 
     def __init__(self, model_parameter_formatter=None):
-        self._model_parameter_formatter = model_parameter_formatter
+        self._kafe_object = model_parameter_formatter
         super(ModelParameterFormatterDReprBase, self).__init__()
 

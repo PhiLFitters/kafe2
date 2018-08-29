@@ -3,9 +3,9 @@ import numpy as np
 import StringIO
 import textwrap
 import tokenize
-import yaml
 
-from .._base import DReprError, DReprWriterMixin, DReprReaderMixin
+from .._base import DReprError
+from .._yaml_base import YamlWriterMixin, YamlReaderMixin
 from ..container import DataContainerYamlWriter, DataContainerYamlReader
 from ..format import ModelFunctionFormatterYamlWriter, ModelFunctionFormatterYamlReader
 from ._base import ModelFunctionDReprBase, ParametricModelDReprBase
@@ -17,9 +17,7 @@ from kafe.fit.xy.model import XYParametricModel
 
 __all__ = ['ModelFunctionYamlWriter', 'ModelFunctionYamlReader', 'ParametricModelYamlWriter', 'ParametricModelYamlReader']
 
-class ModelFunctionYamlWriter(DReprWriterMixin, ModelFunctionDReprBase):
-    DREPR_FLAVOR_NAME = 'yaml'
-    DREPR_ROLE_NAME = 'writer'
+class ModelFunctionYamlWriter(YamlWriterMixin, ModelFunctionDReprBase):
 
     def __init__(self, model_function, output_io_handle):
         super(ModelFunctionYamlWriter, self).__init__(
@@ -56,20 +54,8 @@ class ModelFunctionYamlWriter(DReprWriterMixin, ModelFunctionDReprBase):
         
         return _yaml_doc
     
-    def write(self):
-        self._yaml_doc = self._make_representation(self._model_function)
-        with self._ohandle as _h:
-            try:
-                # try to truncate the file to 0 bytes
-                _h.truncate(0)
-            except IOError:
-                # if truncate not available, ignore
-                pass
-            yaml.dump(self._yaml_doc, _h, default_flow_style=False)
+class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
 
-class ModelFunctionYamlReader(DReprReaderMixin, ModelFunctionDReprBase):
-    DREPR_FLAVOR_NAME = 'yaml'
-    DREPR_ROLE_NAME = 'reader'
     FORBIDDEN_TOKENS = ['eval', 'exec', 'execfile', 'file', 'global', 'import', '__import__', 'input', 
                         'nonlocal', 'open', 'reload', 'self', 'super']
     
@@ -138,14 +124,7 @@ class ModelFunctionYamlReader(DReprReaderMixin, ModelFunctionDReprBase):
         
         return _model_function_object
     
-    def read(self):
-        with self._ihandle as _h:
-            self._yaml_doc = yaml.load(_h)
-        return self._make_object(self._yaml_doc)
-
-class ParametricModelYamlWriter(DReprWriterMixin, ParametricModelDReprBase):
-    DREPR_FLAVOR_NAME = 'yaml'
-    DREPR_ROLE_NAME = 'writer'
+class ParametricModelYamlWriter(YamlWriterMixin, ParametricModelDReprBase):
 
     def __init__(self, parametric_model, output_io_handle):
         super(ParametricModelYamlWriter, self).__init__(
@@ -199,20 +178,7 @@ class ParametricModelYamlWriter(DReprWriterMixin, ParametricModelDReprBase):
         
         return _yaml_doc
     
-    def write(self):
-        self._yaml_doc = self._make_representation(self._parametric_model)
-        with self._ohandle as _h:
-            try:
-                # try to truncate the file to 0 bytes
-                _h.truncate(0)
-            except IOError:
-                # if truncate not available, ignore
-                pass
-            yaml.dump(self._yaml_doc, _h, default_flow_style=False)
-
-class ParametricModelYamlReader(DReprReaderMixin, ParametricModelDReprBase):
-    DREPR_FLAVOR_NAME = 'yaml'
-    DREPR_ROLE_NAME = 'reader'
+class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
     
     def __init__(self, input_io_handle):
         super(ParametricModelYamlReader, self).__init__(
@@ -308,11 +274,6 @@ class ParametricModelYamlReader(DReprReaderMixin, ParametricModelDReprBase):
         
         return _parametric_model_object
     
-    def read(self):
-        with self._ihandle as _h:
-            self.yaml_doc = yaml.load(_h)
-        return self._make_object(self.yaml_doc)
-
 # register the above classes in the module-level dictionary
 ModelFunctionYamlReader._register_class(_AVAILABLE_REPRESENTATIONS)
 ModelFunctionYamlWriter._register_class(_AVAILABLE_REPRESENTATIONS)

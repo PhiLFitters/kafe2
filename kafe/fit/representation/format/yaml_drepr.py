@@ -1,6 +1,5 @@
-import yaml
-
-from .._base import DReprError, DReprWriterMixin, DReprReaderMixin
+from .._base import DReprError
+from .._yaml_base import YamlWriterMixin, YamlReaderMixin
 from ._base import ModelFunctionFormatterDReprBase, ModelParameterFormatterDReprBase
 from .. import _AVAILABLE_REPRESENTATIONS
 from kafe.fit._base import ModelParameterFormatter
@@ -12,9 +11,7 @@ from kafe.fit.xy_multi.format import XYMultiModelFunctionFormatter
 __all__ = ['ModelFunctionFormatterYamlWriter', 'ModelFunctionFormatterYamlReader', 
            'ModelParameterFormatterYamlWriter', 'ModelParameterFormatterYamlReader']
 
-class ModelFunctionFormatterYamlWriter(DReprWriterMixin, ModelFunctionFormatterDReprBase):
-    DREPR_FLAVOR_NAME = 'yaml'
-    DREPR_ROLE_NAME = 'writer'
+class ModelFunctionFormatterYamlWriter(YamlWriterMixin, ModelFunctionFormatterDReprBase):
     
     def __init__(self, model_function_formatter, output_io_handle):
         super(ModelFunctionFormatterYamlWriter, self).__init__(
@@ -62,20 +59,7 @@ class ModelFunctionFormatterYamlWriter(DReprWriterMixin, ModelFunctionFormatterD
         
         return _yaml_doc
     
-    def write(self):
-        self._yaml_doc = self._make_representation(self._model_function_formatter)
-        with self._ohandle as _h:
-            try:
-                # try to truncate the file to 0 bytes
-                _h.truncate(0)
-            except IOError:
-                # if truncate not available, ignore
-                pass
-            yaml.dump(self._yaml_doc, _h, default_flow_style=False)
-
-class ModelFunctionFormatterYamlReader(DReprReaderMixin, ModelFunctionFormatterDReprBase):
-    DREPR_FLAVOR_NAME = 'yaml'
-    DREPR_ROLE_NAME = 'reader'
+class ModelFunctionFormatterYamlReader(YamlReaderMixin, ModelFunctionFormatterDReprBase):
     
     def __init__(self, input_io_handle):
         super(ModelFunctionFormatterYamlReader, self).__init__(
@@ -121,14 +105,7 @@ class ModelFunctionFormatterYamlReader(DReprReaderMixin, ModelFunctionFormatterD
         
         return _model_function_formatter_object
     
-    def read(self):
-        with self._ihandle as _h:
-            self._yaml_doc = yaml.load(_h)
-        return self._make_object(self._yaml_doc)
-
-class ModelParameterFormatterYamlWriter(DReprWriterMixin, ModelParameterFormatterDReprBase):
-    DREPR_FLAVOR_NAME = 'yaml'
-    DREPR_ROLE_NAME = 'writer'
+class ModelParameterFormatterYamlWriter(YamlWriterMixin, ModelParameterFormatterDReprBase):
     
     def __init__(self, model_parameter_formatter, output_io_handle):
         super(ModelParameterFormatterYamlWriter, self).__init__(
@@ -148,20 +125,7 @@ class ModelParameterFormatterYamlWriter(DReprWriterMixin, ModelParameterFormatte
 
         return _yaml_doc
     
-    def write(self):
-        self._yaml_doc = self._make_representation(self._model_parameter_formatter)
-        with self._ohandle as _h:
-            try:
-                # try to truncate the file to 0 bytes
-                _h.truncate(0)
-            except IOError:
-                # if truncate not available, ignore
-                pass
-            yaml.dump(self._yaml_doc, _h, default_flow_style=False)
-
-class ModelParameterFormatterYamlReader(DReprReaderMixin, ModelParameterFormatterDReprBase):
-    DREPR_FLAVOR_NAME = 'yaml'
-    DREPR_ROLE_NAME = 'reader'
+class ModelParameterFormatterYamlReader(YamlReaderMixin, ModelParameterFormatterDReprBase):
     
     def __init__(self, input_io_handle):
         super(ModelParameterFormatterYamlReader, self).__init__(
@@ -178,11 +142,6 @@ class ModelParameterFormatterYamlReader(DReprReaderMixin, ModelParameterFormatte
         
         return _model_parameter_formatter_object
     
-    def read(self):
-        with self._ihandle as _h:
-            self._yaml = yaml.load(_h)
-        return self._make_object(self._yaml)
-
 # register the above classes in the module-level dictionary
 ModelFunctionFormatterYamlReader._register_class(_AVAILABLE_REPRESENTATIONS)
 ModelFunctionFormatterYamlWriter._register_class(_AVAILABLE_REPRESENTATIONS)

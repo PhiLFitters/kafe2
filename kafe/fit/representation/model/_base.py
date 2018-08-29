@@ -27,7 +27,7 @@ class ModelFunctionDReprBase(GenericDReprBase):
     }
 
     def __init__(self, model_function=None):
-        self._model_function = model_function
+        self._kafe_object = model_function
         super(ModelFunctionDReprBase, self).__init__()
 
 class ParametricModelDReprBase(GenericDReprBase):
@@ -48,6 +48,6 @@ class ParametricModelDReprBase(GenericDReprBase):
     }
 
     def __init__(self, parametric_model=None):
-        self._parametric_model = parametric_model
+        self._kafe_object = parametric_model
         super(ParametricModelDReprBase, self).__init__()
 
