@@ -27,5 +27,5 @@ class DataContainerDReprBase(GenericDReprBase):
     }
 
     def __init__(self, data_container=None):
-        self._container = data_container
+        self._kafe_object = data_container
         super(DataContainerDReprBase, self).__init__()

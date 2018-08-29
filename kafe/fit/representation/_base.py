@@ -19,6 +19,9 @@ class GenericDReprBase(object):
 
 
 class DReprWriterMixin(object):
+    
+    DREPR_ROLE_NAME = 'writer'
+
     """
     A "mixin" class for representing a data representation writer.
     Inheriting from this class in addition to a DRepr class for
@@ -51,6 +54,9 @@ class DReprWriterMixin(object):
 
 
 class DReprReaderMixin(object):
+    
+    DREPR_ROLE_NAME = 'reader'
+    
     """
     A "mixin" class for representing a data representation writer.
     Inheriting from this class in addition to a DRepr class for

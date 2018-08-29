@@ -6,7 +6,8 @@ from ....core.error import SimpleGaussianError, MatrixGaussianError
 from ....fit import HistContainer, IndexedContainer, XYContainer, XYMultiContainer
 from .. import _AVAILABLE_REPRESENTATIONS
 from ._base import DataContainerDReprBase
-from .._base import DReprError, DReprWriterMixin, DReprReaderMixin
+from .._base import DReprError
+from .._yaml_base import YamlWriterMixin, YamlReaderMixin
 
 __all__ = ["DataContainerYamlReader", "DataContainerYamlWriter"]
 
@@ -80,9 +81,8 @@ class _DataContainerYamlDumper(yaml.Dumper):
 _DataContainerYamlDumper.add_representer(np.matrix, _DataContainerYamlDumper.matrix)
 
 
-class DataContainerYamlWriter(DReprWriterMixin, DataContainerDReprBase):
-    DREPR_FLAVOR_NAME = 'yaml'
-    DREPR_ROLE_NAME = 'writer'
+class DataContainerYamlWriter(YamlWriterMixin, DataContainerDReprBase):
+    DUMPER = _DataContainerYamlDumper
 
     _yaml_error_section_for_axis = {0: 'x_errors',
                                     1: 'y_errors',
@@ -181,21 +181,8 @@ class DataContainerYamlWriter(DReprWriterMixin, DataContainerDReprBase):
 
         return _yaml_doc
 
-    def write(self):
-        self._yaml_doc = self._make_representation(self._container)
-        with self._ohandle as _h:
-            try:
-                # try to truncate the file to 0 bytes
-                _h.truncate(0)
-            except IOError:
-                # if truncate not available, ignore
-                pass
-            yaml.dump(self._yaml_doc, _h, _DataContainerYamlDumper, default_flow_style=False)
-
-
-class DataContainerYamlReader(DReprReaderMixin, DataContainerDReprBase):
-    DREPR_FLAVOR_NAME = 'yaml'
-    DREPR_ROLE_NAME = 'reader'
+class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
+    LOADER = _DataContainerYamlLoader
 
     def __init__(self, input_io_handle):
         super(DataContainerYamlReader, self).__init__(input_io_handle=input_io_handle,
@@ -304,12 +291,6 @@ class DataContainerYamlReader(DReprReaderMixin, DataContainerDReprBase):
             DataContainerYamlReader._add_error_to_container(_err_type, _container_obj, **_add_kwargs)
 
         return _container_obj
-
-    def read(self):
-        with self._ihandle as _h:
-            self._yaml_doc = yaml.load(_h, _DataContainerYamlLoader)
-        return self._make_object(self._yaml_doc)
-
 
 # register the above classes in the module-level dictionary
 DataContainerYamlReader._register_class(_AVAILABLE_REPRESENTATIONS)

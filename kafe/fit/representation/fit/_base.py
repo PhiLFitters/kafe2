@@ -27,5 +27,5 @@ class FitDReprBase(GenericDReprBase):
     }
 
     def __init__(self, fit=None):
-        self._fit = fit
+        self._kafe_object = fit
         super(FitDReprBase, self).__init__()
