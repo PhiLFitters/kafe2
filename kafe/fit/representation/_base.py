@@ -23,9 +23,9 @@ class DReprWriterMixin(object):
     DREPR_ROLE_NAME = 'writer'
 
     """
-    A "mixin" class for representing a data representation writer.
+    A "mixin" class for creating a data representation writer.
     Inheriting from this class in addition to a DRepr class for
-    a particular object type adds method for writing to
+    a particular object type adds methods for writing to
     an output stream.
 
     Derived classes should inherit from :py:class:`DReprWriterMixin` and the
@@ -58,12 +58,12 @@ class DReprReaderMixin(object):
     DREPR_ROLE_NAME = 'reader'
     
     """
-    A "mixin" class for representing a data representation writer.
+    A "mixin" class for creating a data representation writer.
     Inheriting from this class in addition to a DRepr class for
-    a particular object type adds method for writing to
-    an output stream.
+    a particular object type adds methods for reading from
+    an input stream.
 
-    Derived classes should inherit from :py:class:`DReprWriterMixin` and the
+    Derived classes should inherit from :py:class:`DReprReaderMixin` and the
     relevant ``DRepr`` class (in that order).
     """
     def __init__(self, input_io_handle, *args, **kwargs):
@@ -79,7 +79,10 @@ class DReprReaderMixin(object):
 
     @staticmethod
     def _make_object(representation):
-        """Implement this method for the different data formats"""
+        """
+        this method is supposed to create and return an object from the representation.
+        It has to be implemented by subclasses.
+        """
         pass
 
     def read(self):
