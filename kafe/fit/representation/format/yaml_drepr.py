@@ -72,12 +72,9 @@ class ModelFunctionFormatterYamlReader(YamlReaderMixin, ModelFunctionFormatterDR
 
     @classmethod
     def _get_required_keywords(cls, yaml_doc, formatter_class):
-        if formatter_class in (HistModelDensityFunctionFormatter, XYModelFunctionFormatter):
-            return ['name', 'latex_name', 'x_name', 'latex_x_name',
-                     'expression_string', 'latex_expression_string']
-        elif formatter_class is IndexedModelFunctionFormatter:
-            return ['name', 'latex_name', 'index_name', 'latex_index_name',
-                     'expression_string', 'latex_expression_string']
+        if formatter_class in (HistModelDensityFunctionFormatter, 
+                XYModelFunctionFormatter, IndexedModelFunctionFormatter):
+            return ['name']
         elif formatter_class is XYMultiModelFunctionFormatter:
             return ['singular_formatters']
         else:
@@ -158,14 +155,14 @@ class ModelParameterFormatterYamlReader(YamlReaderMixin, ModelParameterFormatter
 
     @classmethod
     def _get_required_keywords(cls, yaml_doc, kafe_object_class):
-        return ['name', 'latex_name']
+        return ['name']
 
     @classmethod
     def _convert_yaml_doc_to_object(cls, yaml_doc):
         # value and error are not part of the representation
         # because they belong to the parametric model
         _name = yaml_doc.pop('name')
-        _latex_name = yaml_doc.pop('latex_name')
+        _latex_name = yaml_doc.pop('latex_name', None)
         _model_parameter_formatter_object = ModelParameterFormatter(name=_name, latex_name=_latex_name)
         
         return _model_parameter_formatter_object, yaml_doc

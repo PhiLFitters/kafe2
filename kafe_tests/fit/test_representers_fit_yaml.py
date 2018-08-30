@@ -10,6 +10,7 @@ from kafe.fit.indexed import IndexedFit
 from kafe.fit.xy import XYFit
 from kafe.fit.xy_multi import XYMultiFit
 from kafe.fit.histogram.container import HistContainer
+from kafe.fit.representation._yaml_base import YamlReaderException
 
 TEST_FIT_HIST="""
 type: histogram
@@ -48,6 +49,24 @@ parametric_model:
             def hist_model_density(x, mu, sigma):
                 return np.exp(-0.5 * ((x - mu) / sigma) ** 2) / np.sqrt(2 * np.pi * sigma ** 2)
     model_parameters: [0.1, 1.0]
+"""
+
+TEST_FIT_HIST_MISSING_KEYWORD="""
+type: histogram
+parametric_model:
+    type: histogram
+    n_bins: 8
+    bin_range: [-2.0, 2.0]
+    model_density_function:
+        type: histogram
+        python_code: |
+            def hist_model_density(x, mu, sigma):
+                return np.exp(-0.5 * ((x - mu) / sigma) ** 2) / np.sqrt(2 * np.pi * sigma ** 2)
+    model_parameters: [0.1, 1.0]
+"""
+
+TEST_FIT_HIST_EXTRA_KEYWORD = TEST_FIT_HIST + """
+extra_keyword: 3.14
 """
 
 class TestHistFitYamlRepresenter(unittest.TestCase):
@@ -101,6 +120,11 @@ class TestHistFitYamlRepresenter(unittest.TestCase):
         self._roundtrip_streamwriter = FitYamlWriter(self._fit, self._roundtrip_stringstream)
         self._testfile_streamreader = FitYamlReader(self._testfile_stringstream)
 
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_FIT_HIST_MISSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_FIT_HIST_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = FitYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = FitYamlReader(self._testfile_stringstream_extra_keyword)
+
     def test_write_to_roundtrip_stringstream(self):
         self._roundtrip_streamwriter.write()
 
@@ -136,6 +160,14 @@ class TestHistFitYamlRepresenter(unittest.TestCase):
         #        _read_fit.eval_model_function_density(self._test_x)
         #    )
         #)
+
+    def test_read_from_testfile_stream_missing_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_missing_keyword.read()
+
+    def test_read_from_testfile_stream_extra_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_extra_keyword.read()
 
     def test_round_trip_with_stringstream(self):
         self._roundtrip_streamwriter.write()
@@ -194,6 +226,24 @@ parametric_model:
     model_parameters: [1.5, -0.5]
 """
 
+TEST_FIT_INDEXED_MISSING_KEYWORD="""
+type: indexed
+dataset:
+    type: indexed
+    data: [ -1.0804945, 0.97336504, 2.75769933, 4.91093935, 6.98511206,
+           9.15059627, 10.9665515, 13.06741151, 14.95081026, 16.94404467]
+    errors:
+      - correlation_coefficient: 0.0
+        error_value: 0.1
+        name: test_error
+        relative: false
+        type: simple
+"""
+
+TEST_FIT_INDEXED_EXTRA_KEYWORD = TEST_FIT_INDEXED + """
+extra_keyword: 3.14
+"""
+
 class TestIndexedFitYamlRepresenter(unittest.TestCase):
 
     @staticmethod
@@ -222,6 +272,11 @@ class TestIndexedFitYamlRepresenter(unittest.TestCase):
         self._roundtrip_streamreader = FitYamlReader(self._roundtrip_stringstream)
         self._roundtrip_streamwriter = FitYamlWriter(self._fit, self._roundtrip_stringstream)
         self._testfile_streamreader = FitYamlReader(self._testfile_stringstream)
+
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_FIT_INDEXED_MISSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_FIT_INDEXED_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = FitYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = FitYamlReader(self._testfile_stringstream_extra_keyword)
 
     def test_write_to_roundtrip_stringstream(self):
         self._roundtrip_streamwriter.write()
@@ -256,6 +311,14 @@ class TestIndexedFitYamlRepresenter(unittest.TestCase):
                 _read_fit.model
             )
         )
+
+    def test_read_from_testfile_stream_missing_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_missing_keyword.read()
+
+    def test_read_from_testfile_stream_extra_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_extra_keyword.read()
 
     def test_round_trip_with_stringstream(self):
         self._roundtrip_streamwriter.write()
@@ -315,6 +378,23 @@ parametric_model:
     model_parameters: [1.5, -0.5]
 """
 
+TEST_FIT_XY_MISSING_KEYWORD="""
+type: xy
+parametric_model:
+    type: xy
+    x_data: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
+    model_function:
+        type: xy
+        python_code: |
+            def linear_model(x, a, b):
+                return a * x + b
+    model_parameters: [1.5, -0.5]
+"""
+
+TEST_FIT_XY_EXTRA_KEYWORD = TEST_FIT_XY + """
+extra_keyword: 3.14
+"""
+
 class TestXYFitYamlRepresenter(unittest.TestCase):
 
     @staticmethod
@@ -343,6 +423,11 @@ class TestXYFitYamlRepresenter(unittest.TestCase):
         self._roundtrip_streamreader = FitYamlReader(self._roundtrip_stringstream)
         self._roundtrip_streamwriter = FitYamlWriter(self._fit, self._roundtrip_stringstream)
         self._testfile_streamreader = FitYamlReader(self._testfile_stringstream)
+
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_FIT_XY_MISSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_FIT_XY_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = FitYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = FitYamlReader(self._testfile_stringstream_extra_keyword)
 
     def test_write_to_roundtrip_stringstream(self):
         self._roundtrip_streamwriter.write()
@@ -377,6 +462,14 @@ class TestXYFitYamlRepresenter(unittest.TestCase):
                 _read_fit.y_model
             )
         )
+
+    def test_read_from_testfile_stream_missing_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_missing_keyword.read()
+
+    def test_read_from_testfile_stream_extra_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_extra_keyword.read()
 
     def test_round_trip_with_stringstream(self):
         self._roundtrip_streamwriter.write()
@@ -445,6 +538,28 @@ parametric_model:
     model_parameters: [0.25, 1.5, -0.5]
 """
 
+TEST_FIT_XY_MULTI_MISSING_KEYWORD="""
+type: xy_multi
+dataset:
+    type: xy_multi
+    x_data_0: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
+    y_data_0: [ -1.19026065,  1.51271632,  5.06403348,  9.53506975, 15.07931631,
+                21.54634241, 29.04433804, 37.50568252, 46.99345912, 57.43629710]
+    x_data_1: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
+    y_data_1: [-1.06964365,  1.05016488,  2.70494708,  5.03116094,  6.92949725,
+                8.98510957, 11.00178593, 13.00748810, 15.12334609, 16.90640188]
+    y_errors:
+      - correlation_coefficient: 0.0
+        error_value: 0.1
+        name: test_y_error
+        relative: false
+        type: simple
+"""
+
+TEST_FIT_XY_MULTI_EXTRA_KEYWORD = TEST_FIT_XY_MULTI + """
+extra_keyword: 3.14
+"""
+
 class TestXYMultiFitYamlRepresenter(unittest.TestCase):
 
     @staticmethod
@@ -484,6 +599,11 @@ class TestXYMultiFitYamlRepresenter(unittest.TestCase):
         self._roundtrip_streamwriter = FitYamlWriter(self._fit, self._roundtrip_stringstream)
         self._testfile_streamreader = FitYamlReader(self._testfile_stringstream)
 
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_FIT_XY_MULTI_MISSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_FIT_XY_MULTI_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = FitYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = FitYamlReader(self._testfile_stringstream_extra_keyword)
+
     def test_write_to_roundtrip_stringstream(self):
         self._roundtrip_streamwriter.write()
 
@@ -517,6 +637,14 @@ class TestXYMultiFitYamlRepresenter(unittest.TestCase):
                 _read_fit.y_model
             )
         )
+
+    def test_read_from_testfile_stream_missing_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_missing_keyword.read()
+
+    def test_read_from_testfile_stream_extra_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_extra_keyword.read()
 
     def test_round_trip_with_stringstream(self):
         self._roundtrip_streamwriter.write()

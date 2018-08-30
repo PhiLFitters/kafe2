@@ -4,9 +4,10 @@ import numpy as np
 from six import StringIO
 
 from kafe.fit import IndexedContainer, XYContainer, XYMultiContainer, HistContainer
-from kafe.fit._base.container import DataContainerException
 from kafe.fit.representation import DataContainerYamlWriter, DataContainerYamlReader, DReprError
 from kafe.fit.io.handle import IOStreamHandle
+from kafe.fit.representation._yaml_base import YamlReaderException
+
 
 # TODO: check that DReprError is raised when appropriate...
 
@@ -47,6 +48,44 @@ errors:
   type: matrix
 """
 
+TEST_DATASET_INDEXED_MISSING_KEYWORD = """
+type: "indexed"
+errors:
+- matrix:
+  - - 0.1
+    - 0.0
+  - - 0.0
+    - 0.1
+  name: ErrorOne
+  matrix_type: covariance
+  relative: false
+  type: matrix
+- matrix: !matrix |
+    0.2   0.1
+    0.1   0.2
+  name: ErrorTwo
+  matrix_type: covariance
+  relative: false
+  type: matrix
+- matrix: !symmetric_matrix |
+    0.3
+    0.1   0.3
+  name: ErrorThree
+  matrix_type: covariance
+  relative: false
+  type: matrix
+- matrix:
+    [[0.2,  0.1],
+     [0.1,  0.2]]
+  name: ErrorFour
+  matrix_type: covariance
+  relative: false
+  type: matrix
+"""
+
+TEST_DATASET_INDEXED_EXTRA_KEYWORD = TEST_DATASET_INDEXED + """
+extra_keyword: 3.14
+"""
 
 class TestIndexedContainerYamlRepresentation(unittest.TestCase):
 
@@ -81,6 +120,11 @@ class TestIndexedContainerYamlRepresentation(unittest.TestCase):
         self._ref_testfile_cov_mat = np.matrix([[0.8, 0.3], [0.3, 0.8]])
         self._ref_testfile_error_names = {'ErrorOne', 'ErrorTwo', 'ErrorThree', 'ErrorFour'}
 
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_DATASET_INDEXED_MISSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_DATASET_INDEXED_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = DataContainerYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = DataContainerYamlReader(self._testfile_stringstream_extra_keyword)
+
 
     def test_write_to_roundtrip_stringstream(self):
         self._roundtrip_streamwriter.write()
@@ -114,6 +158,14 @@ class TestIndexedContainerYamlRepresentation(unittest.TestCase):
             self._ref_testfile_error_names
         )
 
+
+    def test_read_from_testfile_stream_missing_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_missing_keyword.read()
+
+    def test_read_from_testfile_stream_extra_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_extra_keyword.read()
 
     def test_round_trip_with_stringstream(self):
         self._roundtrip_streamwriter.write()
@@ -190,6 +242,47 @@ x_errors:
   type: matrix
 """
 
+TEST_DATASET_XY_MISSING_KEYWORD = """
+type: "xy"
+y_data: [80.429, 80.339]
+y_errors:
+- matrix:
+  - - 0.1
+    - 0.0
+  - - 0.0
+    - 0.1
+  name: YErrorOne
+  matrix_type: covariance
+  relative: false
+  type: matrix
+- matrix: !matrix |
+    0.2   0.1
+    0.1   0.2
+  name: YErrorTwo
+  matrix_type: covariance
+  relative: false
+  type: matrix
+x_errors:
+- matrix: !symmetric_matrix |
+    0.3
+    0.1   0.3
+  name: XErrorOne
+  matrix_type: covariance
+  relative: false
+  type: matrix
+- matrix:
+    [[0.2,  0.1],
+     [0.1,  0.2]]
+  name: XErrorTwo
+  matrix_type: covariance
+  relative: false
+  type: matrix
+"""
+
+TEST_DATASET_XY_EXTRA_KEYWORD = TEST_DATASET_XY + """
+extra_keyword: 3.14
+"""
+
 
 class TestXYContainerYamlRepresentation(unittest.TestCase):
 
@@ -218,6 +311,11 @@ class TestXYContainerYamlRepresentation(unittest.TestCase):
         self._roundtrip_streamreader = DataContainerYamlReader(self._roundtrip_stringstream)
         self._roundtrip_streamwriter = DataContainerYamlWriter(self._container, self._roundtrip_stringstream)
         self._testfile_streamreader = DataContainerYamlReader(self._testfile_stringstream)
+
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_DATASET_XY_MISSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_DATASET_XY_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = DataContainerYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = DataContainerYamlReader(self._testfile_stringstream_extra_keyword)
 
         self._ref_testfile_x_data = [5, 17]
         self._ref_testfile_y_data = [80.429, 80.339]
@@ -278,6 +376,14 @@ class TestXYContainerYamlRepresentation(unittest.TestCase):
             self._ref_testfile_error_names
         )
 
+
+    def test_read_from_testfile_stream_missing_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_missing_keyword.read()
+
+    def test_read_from_testfile_stream_extra_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_extra_keyword.read()
 
     def test_round_trip_with_stringstream(self):
         self._roundtrip_streamwriter.write()
@@ -403,6 +509,33 @@ x_errors:
   model_index: 1
 """
 
+TEST_DATASET_XY_MULTI_MSSING_KEYWORD = """
+type: "xy_multi"
+y_data_0: [80.429, 80.339]
+x_data_1: [5, 17]
+y_data_1: [20.0, 44.0]
+y_errors:
+- error_value: 0.31622776
+  correlation_coefficient: 0.0
+  name: YErrorThree
+  relative: false
+  type: simple
+  model_index: 0
+x_errors:
+- matrix: !symmetric_matrix |
+    0.3
+    0.1   0.3
+    0.1   0.1   0.3
+    0.1   0.1   0.1   0.3
+  name: XErrorOne
+  matrix_type: covariance
+  relative: false
+  type: matrix
+"""
+
+TEST_DATASET_XY_MULTI_EXTRA_KEYWORD = TEST_DATASET_XY_MULTI + """
+extra_keyword: 3.14
+"""
 
 class TestXYMultiContainerYamlRepresentation(unittest.TestCase):
 
@@ -434,6 +567,11 @@ class TestXYMultiContainerYamlRepresentation(unittest.TestCase):
         self._roundtrip_streamreader = DataContainerYamlReader(self._roundtrip_stringstream)
         self._roundtrip_streamwriter = DataContainerYamlWriter(self._container, self._roundtrip_stringstream)
         self._testfile_streamreader = DataContainerYamlReader(self._testfile_stringstream)
+
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_DATASET_XY_MULTI_MSSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_DATASET_XY_MULTI_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = DataContainerYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = DataContainerYamlReader(self._testfile_stringstream_extra_keyword)
 
         self._ref_testfile_x_data = [5, 17, 5, 17]
         self._ref_testfile_y_data = [80.429, 80.339, 20.0, 44.0]
@@ -500,6 +638,14 @@ class TestXYMultiContainerYamlRepresentation(unittest.TestCase):
             self._ref_testfile_error_names
         )
 
+
+    def test_read_from_testfile_stream_missing_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_missing_keyword.read()
+
+    def test_read_from_testfile_stream_extra_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_extra_keyword.read()
 
     def test_round_trip_with_stringstream(self):
         self._roundtrip_streamwriter.write()
@@ -602,6 +748,48 @@ errors:
 type: histogram
 """
 
+TEST_DATASET_HIST_MSSING_KEYWORD = """
+bin_edges:
+- 1.0
+- 2.0
+- 3.0
+errors:
+- matrix:
+  - - 0.1
+    - 0.0
+  - - 0.0
+    - 0.2
+  name: ErrorOne
+  matrix_type: covariance
+  relative: false
+  type: matrix
+- matrix: !matrix |
+    0.2   0.1
+    0.1   0.3
+  name: ErrorTwo
+  matrix_type: covariance
+  relative: false
+  type: matrix
+- matrix: !symmetric_matrix |
+    0.3
+    0.1   0.4
+  name: ErrorThree
+  matrix_type: covariance
+  relative: false
+  type: matrix
+- matrix:
+    [[0.2,  0.1],
+     [0.1,  0.1]]
+  name: ErrorFour
+  matrix_type: covariance
+  relative: false
+  type: matrix
+type: histogram
+"""
+
+TEST_DATASET_HIST_EXTRA_KEYWORD = TEST_DATASET_HIST + """
+extra_keyword: 3.14
+"""
 
 class TestHistContainerYamlRepresentation(unittest.TestCase):
 
@@ -623,6 +811,11 @@ class TestHistContainerYamlRepresentation(unittest.TestCase):
         self._roundtrip_streamreader = DataContainerYamlReader(self._roundtrip_stringstream)
         self._roundtrip_streamwriter = DataContainerYamlWriter(self._container, self._roundtrip_stringstream)
         self._testfile_streamreader = DataContainerYamlReader(self._testfile_stringstream)
+
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_DATASET_HIST_MSSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_DATASET_HIST_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = DataContainerYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = DataContainerYamlReader(self._testfile_stringstream_extra_keyword)
 
         self._ref_testfile_n_bins = 2
         self._ref_testfile_bin_range = [1.0, 3.0]
@@ -679,6 +872,14 @@ class TestHistContainerYamlRepresentation(unittest.TestCase):
             set(_read_container._error_dicts.keys()),
             self._ref_testfile_error_names
         )
+
+    def test_read_from_testfile_stream_missing_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_missing_keyword.read()
+
+    def test_read_from_testfile_stream_extra_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_extra_keyword.read()
 
     def test_round_trip_with_stringstream(self):
         self._roundtrip_streamwriter.write()

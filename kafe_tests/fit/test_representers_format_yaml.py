@@ -9,6 +9,7 @@ from kafe.fit.xy_multi import XYMultiModelFunctionFormatter
 from kafe.fit.representation import ModelFunctionFormatterYamlWriter, ModelFunctionFormatterYamlReader
 from kafe.fit.representation import ModelParameterFormatterYamlWriter, ModelParameterFormatterYamlReader
 from kafe.fit.io.handle import IOStreamHandle
+from kafe.fit.representation._yaml_base import YamlReaderException
 
 
 TEST_MODEL_FUNCTION_FORMATTER_HISTOGRAM="""
@@ -26,6 +27,26 @@ arg_formatters:
     latex_name: C
 expression_string: '{0} * {x} ** 2 + {1} * {x} + {2}'
 latex_expression_string: '{0}{x}^2 + {1}{x} + {2}' 
+"""
+
+TEST_MODEL_FUNCTION_FORMATTER_HISTOGRAM_MISSING_KEYWORD="""
+type: histogram
+latex_name: quadratic model
+x_name: x
+latex_x_name: X
+arg_formatters:
+  - name: a
+    latex_name: A
+  - name: b
+    latex_name: B
+  - name: c
+    latex_name: C
+expression_string: '{0} * {x} ** 2 + {1} * {x} + {2}'
+latex_expression_string: '{0}{x}^2 + {1}{x} + {2}' 
+"""
+
+TEST_MODEL_FUNCTION_FORMATTER_HISTOGRAM_EXTRA_KEYWORD = TEST_MODEL_FUNCTION_FORMATTER_HISTOGRAM + """
+extra_keyword: 3.14
 """
 
 class TestHistModelFunctionFormatterYamlRepresenter(unittest.TestCase):
@@ -51,6 +72,11 @@ class TestHistModelFunctionFormatterYamlRepresenter(unittest.TestCase):
         self._roundtrip_streamreader = ModelFunctionFormatterYamlReader(self._roundtrip_stringstream)
         self._roundtrip_streamwriter = ModelFunctionFormatterYamlWriter(self._model_function_formatter, self._roundtrip_stringstream)
         self._testfile_streamreader = ModelFunctionFormatterYamlReader(self._testfile_stringstream)
+
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_FORMATTER_HISTOGRAM_MISSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_FORMATTER_HISTOGRAM_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = ModelFunctionFormatterYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = ModelFunctionFormatterYamlReader(self._testfile_stringstream_extra_keyword)
     
     def _assert_model_function_formatters_equal(self, formatter1, formatter2):
         self.assertTrue(formatter1.name == formatter2.name)
@@ -71,6 +97,14 @@ class TestHistModelFunctionFormatterYamlRepresenter(unittest.TestCase):
         _read_model_function_formatter = self._testfile_streamreader.read()
         self.assertTrue(isinstance(_read_model_function_formatter, HistModelDensityFunctionFormatter))
         self._assert_model_function_formatters_equal(_read_model_function_formatter, self._model_function_formatter)
+
+    def test_read_from_testfile_stream_missing_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_missing_keyword.read()
+
+    def test_read_from_testfile_stream_extra_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_extra_keyword.read()
 
     def test_round_trip_with_stringstream(self):
         self._roundtrip_streamwriter.write()
@@ -96,6 +130,26 @@ expression_string: '{0} * {x} ** 2 + {1} * {x} + {2}'
 latex_expression_string: '{0}{x}^2 + {1}{x} + {2}' 
 """
 
+TEST_MODEL_FUNCTION_FORMATTER_INDEXED_MISSING_KEYWORD="""
+type: indexed
+latex_name: quadratic model
+index_name: x
+latex_index_name: X
+arg_formatters:
+  - name: a
+    latex_name: A
+  - name: b
+    latex_name: B
+  - name: c
+    latex_name: C
+expression_string: '{0} * {x} ** 2 + {1} * {x} + {2}'
+latex_expression_string: '{0}{x}^2 + {1}{x} + {2}' 
+"""
+
+TEST_MODEL_FUNCTION_FORMATTER_INDEXED_EXTRA_KEYWORD = TEST_MODEL_FUNCTION_FORMATTER_INDEXED + """
+extra_keyword: 3.14
+"""
+
 class TestIndexedModelFunctionFormatterYamlRepresenter(unittest.TestCase):
 
     def setUp(self):
@@ -119,6 +173,11 @@ class TestIndexedModelFunctionFormatterYamlRepresenter(unittest.TestCase):
         self._roundtrip_streamreader = ModelFunctionFormatterYamlReader(self._roundtrip_stringstream)
         self._roundtrip_streamwriter = ModelFunctionFormatterYamlWriter(self._model_function_formatter, self._roundtrip_stringstream)
         self._testfile_streamreader = ModelFunctionFormatterYamlReader(self._testfile_stringstream)
+
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_FORMATTER_INDEXED_MISSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_FORMATTER_INDEXED_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = ModelFunctionFormatterYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = ModelFunctionFormatterYamlReader(self._testfile_stringstream_extra_keyword)
     
     def _assert_model_function_formatters_equal(self, formatter1, formatter2):
         self.assertTrue(formatter1.name == formatter2.name)
@@ -139,6 +198,14 @@ class TestIndexedModelFunctionFormatterYamlRepresenter(unittest.TestCase):
         _read_model_function_formatter = self._testfile_streamreader.read()
         self.assertTrue(isinstance(_read_model_function_formatter, IndexedModelFunctionFormatter))
         self._assert_model_function_formatters_equal(_read_model_function_formatter, self._model_function_formatter)
+
+    def test_read_from_testfile_stream_missing_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_missing_keyword.read()
+
+    def test_read_from_testfile_stream_extra_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_extra_keyword.read()
 
     def test_round_trip_with_stringstream(self):
         self._roundtrip_streamwriter.write()
@@ -162,6 +229,26 @@ arg_formatters:
     latex_name: C
 expression_string: '{0} * {x} ** 2 + {1} * {x} + {2}'
 latex_expression_string: '{0}{x}^2 + {1}{x} + {2}' 
+"""
+
+TEST_MODEL_FUNCTION_FORMATTER_XY_MISSING_KEYWORD="""
+type: xy
+latex_name: quadratic model
+x_name: x
+latex_x_name: X
+arg_formatters:
+  - name: a
+    latex_name: A
+  - name: b
+    latex_name: B
+  - name: c
+    latex_name: C
+expression_string: '{0} * {x} ** 2 + {1} * {x} + {2}'
+latex_expression_string: '{0}{x}^2 + {1}{x} + {2}' 
+"""
+
+TEST_MODEL_FUNCTION_FORMATTER_XY_EXTRA_KEYWORD = TEST_MODEL_FUNCTION_FORMATTER_XY + """
+extra_keyword: 3.14
 """
 
 class TestXYModelFunctionFormatterYamlRepresenter(unittest.TestCase):
@@ -199,6 +286,11 @@ class TestXYModelFunctionFormatterYamlRepresenter(unittest.TestCase):
         self._roundtrip_streamreader = ModelFunctionFormatterYamlReader(self._roundtrip_stringstream)
         self._roundtrip_streamwriter = ModelFunctionFormatterYamlWriter(self._model_function_formatter, self._roundtrip_stringstream)
         self._testfile_streamreader = ModelFunctionFormatterYamlReader(self._testfile_stringstream)
+
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_FORMATTER_XY_MISSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_FORMATTER_XY_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = ModelFunctionFormatterYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = ModelFunctionFormatterYamlReader(self._testfile_stringstream_extra_keyword)
     
     def test_write_to_roundtrip_stringstream(self):
         self._roundtrip_streamwriter.write()
@@ -207,6 +299,14 @@ class TestXYModelFunctionFormatterYamlRepresenter(unittest.TestCase):
         _read_model_function_formatter = self._testfile_streamreader.read()
         self.assertTrue(isinstance(_read_model_function_formatter, XYModelFunctionFormatter))
         self._assert_model_function_formatters_equal(_read_model_function_formatter, self._model_function_formatter)
+
+    def test_read_from_testfile_stream_missing_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_missing_keyword.read()
+
+    def test_read_from_testfile_stream_extra_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_extra_keyword.read()
 
     def test_round_trip_with_stringstream(self):
         self._roundtrip_streamwriter.write()
@@ -239,6 +339,21 @@ arg_formatters:
     latex_name: B
   - name: c
     latex_name: C
+"""
+
+TEST_MODEL_FUNCTION_FORMATTER_XY_MULTI_MISSING_KEYWORD="""
+type: xy_multi
+arg_formatters:
+  - name: a
+    latex_name: A
+  - name: b
+    latex_name: B
+  - name: c
+    latex_name: C
+"""
+
+TEST_MODEL_FUNCTION_FORMATTER_XY_MULTI_EXTRA_KEYWORD = TEST_MODEL_FUNCTION_FORMATTER_XY_MULTI + """
+extra_keyword: 3.14
 """
 
 class TestXYMultiModelFunctionFormatterYamlRepresenter(unittest.TestCase):
@@ -278,6 +393,11 @@ class TestXYMultiModelFunctionFormatterYamlRepresenter(unittest.TestCase):
         self._roundtrip_streamreader = ModelFunctionFormatterYamlReader(self._roundtrip_stringstream)
         self._roundtrip_streamwriter = ModelFunctionFormatterYamlWriter(self._model_function_formatter, self._roundtrip_stringstream)
         self._testfile_streamreader = ModelFunctionFormatterYamlReader(self._testfile_stringstream)
+
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_FORMATTER_XY_MULTI_MISSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_FORMATTER_XY_MULTI_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = ModelFunctionFormatterYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = ModelFunctionFormatterYamlReader(self._testfile_stringstream_extra_keyword)
     
     def _assert_model_function_formatters_equal(self, formatter_1, formatter_2):
         for _arg_formatter_1, _arg_formatter_2 in zip(
@@ -302,6 +422,14 @@ class TestXYMultiModelFunctionFormatterYamlRepresenter(unittest.TestCase):
         self.assertTrue(isinstance(_read_model_function_formatter, XYMultiModelFunctionFormatter))
         self._assert_model_function_formatters_equal(_read_model_function_formatter, self._model_function_formatter)
 
+    def test_read_from_testfile_stream_missing_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_missing_keyword.read()
+
+    def test_read_from_testfile_stream_extra_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_extra_keyword.read()
+
     def test_round_trip_with_stringstream(self):
         self._roundtrip_streamwriter.write()
         self._roundtrip_stringstream.seek(0)  # return to beginning
@@ -312,6 +440,16 @@ class TestXYMultiModelFunctionFormatterYamlRepresenter(unittest.TestCase):
 TEST_MODEL_PARAMETER_FORMATTER = """
 name: phi
 latex_name: \phi
+"""
+
+TEST_MODEL_PARAMETER_FORMATTER_MISSING_KEYWORD = """
+latex_name: \phi
+"""
+
+TEST_MODEL_PARAMETER_FORMATTER_EXTRA_KEYWORD = """
+name: phi
+latex_name: \phi
+extra_keyword: 3.14
 """
 
 class TestModelParameterFormatterYamlRepresenter(unittest.TestCase):
@@ -331,6 +469,11 @@ class TestModelParameterFormatterYamlRepresenter(unittest.TestCase):
         self._roundtrip_streamwriter = ModelParameterFormatterYamlWriter(self._model_parameter_formatter, self._roundtrip_stringstream)
         self._testfile_streamreader = ModelParameterFormatterYamlReader(self._testfile_stringstream)
 
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_MODEL_PARAMETER_FORMATTER_MISSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_MODEL_PARAMETER_FORMATTER_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = ModelParameterFormatterYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = ModelParameterFormatterYamlReader(self._testfile_stringstream_extra_keyword)
+
     def test_write_to_roundtrip_stringstream(self):
         self._roundtrip_streamwriter.write()
 
@@ -342,6 +485,14 @@ class TestModelParameterFormatterYamlRepresenter(unittest.TestCase):
         self.assertTrue(_read_model_parameter_formatter.value == None)
         self.assertTrue(_read_model_parameter_formatter.error == None)
         self.assertTrue(_read_model_parameter_formatter.latex_name == self._model_parameter_formatter.latex_name)
+
+    def test_read_from_testfile_stream_missing_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_missing_keyword.read()
+
+    def test_read_from_testfile_stream_extra_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_extra_keyword.read()
 
     def test_round_trip_with_stringstream(self):
         self._roundtrip_streamwriter.write()

@@ -8,12 +8,21 @@ from kafe.fit.xy import XYModelFunction, XYModelFunctionFormatter
 from kafe.fit.xy_multi import XYMultiModelFunction, XYMultiModelFunctionFormatter
 from kafe.fit.representation import ModelFunctionYamlWriter, ModelFunctionYamlReader
 from kafe.fit.io.handle import IOStreamHandle
+from kafe.fit.representation._yaml_base import YamlReaderException
 
 TEST_MODEL_FUNCTION_HIST="""
 type: histogram
 python_code: |
     def linear_model(x, a, b):
         return a * x + b
+"""
+
+TEST_MODEL_FUNCTION_HIST_MISSING_KEYWORD="""
+type: histogram
+"""
+
+TEST_MODEL_FUNCTION_HIST_EXTRA_KEYWORD = TEST_MODEL_FUNCTION_HIST + """
+extra_keyword: 3.14
 """
 
 TEST_MODEL_FUNCTION_HIST_WITH_FORMATTER = TEST_MODEL_FUNCTION_HIST + r"""
@@ -55,6 +64,11 @@ class TestHistModelFunctionYamlRepresenter(unittest.TestCase):
         self._testfile_streamreader = ModelFunctionYamlReader(self._testfile_stringstream)
         self._testfile_streamreader_with_formatter = ModelFunctionYamlReader(self._testfile_stringstream_with_formatter)
 
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_HIST_MISSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_HIST_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = ModelFunctionYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = ModelFunctionYamlReader(self._testfile_stringstream_extra_keyword)
+
     def test_write_to_roundtrip_stringstream(self):
         self._roundtrip_streamwriter.write()
 
@@ -67,6 +81,14 @@ class TestHistModelFunctionYamlRepresenter(unittest.TestCase):
                 self._test_y
             )
         )
+
+    def test_read_from_testfile_stream_missing_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_missing_keyword.read()
+
+    def test_read_from_testfile_stream_extra_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_extra_keyword.read()
 
     def test_read_from_testfile_stream_with_formatter(self):
         _read_model_function = self._testfile_streamreader_with_formatter.read()
@@ -130,6 +152,14 @@ python_code: |
         return a * np.arange(10) + b
 """
 
+TEST_MODEL_FUNCTION_INDEXED_MISSING_KEYWORD = """
+type: indexed
+"""
+
+TEST_MODEL_FUNCTION_INDEXED_EXTRA_KEYWORD = TEST_MODEL_FUNCTION_INDEXED + """
+extra_keyword: 3.14
+"""
+
 TEST_MODEL_FUNCTION_INDEXED_WITH_FORMATTER = TEST_MODEL_FUNCTION_INDEXED + r"""
 model_function_formatter:
     type: indexed
@@ -172,6 +202,11 @@ class TestIndexedModelFunctionYamlRepresenter(unittest.TestCase):
         self._testfile_streamreader = ModelFunctionYamlReader(self._testfile_stringstream)
         self._testfile_streamreader_with_formatter = ModelFunctionYamlReader(self._testfile_stringstream_with_formatter)
 
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_INDEXED_MISSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_INDEXED_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = ModelFunctionYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = ModelFunctionYamlReader(self._testfile_stringstream_extra_keyword)
+
     def test_write_to_roundtrip_stringstream(self):
         self._roundtrip_streamwriter.write()
 
@@ -184,6 +219,14 @@ class TestIndexedModelFunctionYamlRepresenter(unittest.TestCase):
                 self._test_y
             )
         )
+
+    def test_read_from_testfile_stream_missing_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_missing_keyword.read()
+
+    def test_read_from_testfile_stream_extra_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_extra_keyword.read()
 
     def test_read_from_testfile_stream_with_formatter(self):
         _read_model_function = self._testfile_streamreader_with_formatter.read()
@@ -247,6 +290,14 @@ python_code: |
         return a * x + b
 """
 
+TEST_MODEL_FUNCTION_XY_MISSING_KEYWORD="""
+type: xy
+"""
+
+TEST_MODEL_FUNCTION_XY_EXTRA_KEYWORD = TEST_MODEL_FUNCTION_XY + """
+extra_keyword: 3.14
+"""
+
 TEST_MODEL_FUNCTION_XY_WITH_FORMATTER = TEST_MODEL_FUNCTION_XY + r"""
 model_function_formatter:
     type: xy
@@ -286,6 +337,11 @@ class TestXYModelFunctionYamlRepresenter(unittest.TestCase):
         self._testfile_streamreader = ModelFunctionYamlReader(self._testfile_stringstream)
         self._testfile_streamreader_with_formatter = ModelFunctionYamlReader(self._testfile_stringstream_with_formatter)
 
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_XY_MISSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_XY_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = ModelFunctionYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = ModelFunctionYamlReader(self._testfile_stringstream_extra_keyword)
+
     def test_write_to_roundtrip_stringstream(self):
         self._roundtrip_streamwriter.write()
 
@@ -298,6 +354,14 @@ class TestXYModelFunctionYamlRepresenter(unittest.TestCase):
                 self._test_y
             )
         )
+
+    def test_read_from_testfile_stream_missing_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_missing_keyword.read()
+
+    def test_read_from_testfile_stream_extra_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_extra_keyword.read()
 
     def test_read_from_testfile_stream_with_formatter(self):
         _read_model_function = self._testfile_streamreader_with_formatter.read()
@@ -366,6 +430,21 @@ python_code:
 data_indices: [0, 10, 20]
 """
 
+TEST_MODEL_FUNCTION_XY_MULTI_MISSING_KEYWORD="""
+type: xy_multi
+python_code:
+  - |
+    def quadratic_model(x, a, b, c):
+        return a * x ** 2 + b * x + c
+  - |
+    def linear_model(x, b, c):
+        return b * x + c
+"""
+
+TEST_MODEL_FUNCTION_XY_MULTI_EXTRA_KEYWORD = TEST_MODEL_FUNCTION_XY_MULTI + """
+extra_keyword: 3.14
+"""
+
 TEST_MODEL_FUNCTION_XY_MULTI_WITH_FORMATTER = TEST_MODEL_FUNCTION_XY_MULTI + r"""
 model_function_formatter:
     type: xy_multi
@@ -428,6 +507,11 @@ class TestXYMultiModelFunctionYamlRepresenter(unittest.TestCase):
         self._testfile_streamreader = ModelFunctionYamlReader(self._testfile_stringstream)
         self._testfile_streamreader_with_formatter = ModelFunctionYamlReader(self._testfile_stringstream_with_formatter)
 
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_XY_MULTI_MISSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_XY_MULTI_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = ModelFunctionYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = ModelFunctionYamlReader(self._testfile_stringstream_extra_keyword)
+
     def test_write_to_roundtrip_stringstream(self):
         self._roundtrip_streamwriter.write()
 
@@ -440,6 +524,14 @@ class TestXYMultiModelFunctionYamlRepresenter(unittest.TestCase):
                 self._test_y
             )
         )
+
+    def test_read_from_testfile_stream_missing_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_missing_keyword.read()
+
+    def test_read_from_testfile_stream_extra_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_extra_keyword.read()
 
     def test_read_from_testfile_stream_with_formatter(self):
         _read_model_function = self._testfile_streamreader_with_formatter.read()

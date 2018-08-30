@@ -12,6 +12,7 @@ from kafe.fit.indexed.model import IndexedParametricModel
 from kafe.fit.xy.model import XYParametricModel
 from kafe.fit.xy_multi.model import XYMultiParametricModel
 from kafe.fit.io.handle import IOStreamHandle
+from kafe.fit.representation._yaml_base import YamlReaderException
 
 TEST_PARAMETRIC_MODEL_HIST="""
 type: histogram
@@ -23,6 +24,17 @@ model_density_function:
         def linear_model(x, a, b):
             return a * x + b
 model_parameters: [0.0, 0.08]
+"""
+
+TEST_PARAMETRIC_MODEL_HIST_MISSING_KEYWORD="""
+type: histogram
+n_bins: 5
+bin_range: [0, 5]
+model_parameters: [0.0, 0.08]
+"""
+
+TEST_PARAMETRIC_MODEL_HIST_EXTRA_KEYWORD = TEST_PARAMETRIC_MODEL_HIST + """
+extra_keyword: 3.14
 """
 
 TEST_PARAMETRIC_MODEL_HIST_WITH_ERRORS = TEST_PARAMETRIC_MODEL_HIST + """
@@ -84,6 +96,11 @@ class TestHistParametricModelYamlRepresenter(unittest.TestCase):
         self._testfile_streamreader = ParametricModelYamlReader(self._testfile_stringstream)
         self._testfile_streamreader_with_errors = ParametricModelYamlReader(self._testfile_stringstream_with_errors)
 
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_PARAMETRIC_MODEL_HIST_MISSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_PARAMETRIC_MODEL_HIST_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = ParametricModelYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = ParametricModelYamlReader(self._testfile_stringstream_extra_keyword)
+
     def test_write_to_roundtrip_stringstream(self):
         self._roundtrip_streamwriter.write()
 
@@ -120,6 +137,14 @@ class TestHistParametricModelYamlRepresenter(unittest.TestCase):
             )
         )
         
+    def test_read_from_testfile_stream_missing_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_missing_keyword.read()
+
+    def test_read_from_testfile_stream_extra_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_extra_keyword.read()
+
     def test_read_from_testfile_stream_with_errors(self):
         _read_parametric_model = self._testfile_streamreader_with_errors.read()
         self.assertTrue(isinstance(_read_parametric_model, HistParametricModel))
@@ -246,6 +271,15 @@ model_function:
 model_parameters: [1.1, -1.5]
 """
 
+TEST_PARAMETRIC_MODEL_INDEXED_MISSING_KEYWORD="""
+type: indexed
+model_parameters: [1.1, -1.5]
+"""
+
+TEST_PARAMETRIC_MODEL_INDEXED_EXTRA_KEYWORD = TEST_PARAMETRIC_MODEL_INDEXED + """
+extra_keyword: 3.14
+"""
+
 TEST_PARAMETRIC_MODEL_INDEXED_WITH_ERRORS = TEST_PARAMETRIC_MODEL_INDEXED + """
 errors:
   - correlation_coefficient: 0.0
@@ -299,6 +333,11 @@ class TestIndexedParametricModelYamlRepresenter(unittest.TestCase):
         self._testfile_streamreader = ParametricModelYamlReader(self._testfile_stringstream)
         self._testfile_streamreader_with_errors = ParametricModelYamlReader(self._testfile_stringstream_with_errors)
 
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_PARAMETRIC_MODEL_INDEXED_MISSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_PARAMETRIC_MODEL_INDEXED_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = ParametricModelYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = ParametricModelYamlReader(self._testfile_stringstream_extra_keyword)
+
     def test_write_to_roundtrip_stringstream(self):
         self._roundtrip_streamwriter.write()
 
@@ -322,6 +361,14 @@ class TestIndexedParametricModelYamlRepresenter(unittest.TestCase):
             )
         )
         
+    def test_read_from_testfile_stream_missing_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_missing_keyword.read()
+
+    def test_read_from_testfile_stream_extra_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_extra_keyword.read()
+
     def test_read_from_testfile_stream_with_errors(self):
         _read_parametric_model = self._testfile_streamreader_with_errors.read()
         self.assertTrue(isinstance(_read_parametric_model, IndexedParametricModel))
@@ -410,6 +457,20 @@ model_function:
 model_parameters: [1.1, -1.5]
 """
 
+TEST_PARAMETRIC_MODEL_XY_MISSING_KEYWORD="""
+type: xy
+model_function:
+    type: xy
+    python_code: |
+        def linear_model(x, a, b):
+            return a * x + b
+model_parameters: [1.1, -1.5]
+"""
+
+TEST_PARAMETRIC_MODEL_XY_EXTRA_KEYWORD = TEST_PARAMETRIC_MODEL_XY + """
+extra_keyword: 3.14
+"""
+
 TEST_PARAMETRIC_MODEL_XY_WITH_ERRORS = TEST_PARAMETRIC_MODEL_XY + """
 x_errors:
   - correlation_coefficient: 0.0
@@ -465,6 +526,11 @@ class TestXYParametricModelYamlRepresenter(unittest.TestCase):
         self._testfile_streamreader = ParametricModelYamlReader(self._testfile_stringstream)
         self._testfile_streamreader_with_errors = ParametricModelYamlReader(self._testfile_stringstream_with_errors)
 
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_PARAMETRIC_MODEL_XY_MULTI_MISSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_PARAMETRIC_MODEL_XY_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = ParametricModelYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = ParametricModelYamlReader(self._testfile_stringstream_extra_keyword)
+
     def test_write_to_roundtrip_stringstream(self):
         self._roundtrip_streamwriter.write()
 
@@ -489,6 +555,14 @@ class TestXYParametricModelYamlRepresenter(unittest.TestCase):
             )
         )
         
+    def test_read_from_testfile_stream_missing_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_missing_keyword.read()
+
+    def test_read_from_testfile_stream_extra_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_extra_keyword.read()
+
     def test_read_from_testfile_stream_with_errors(self):
         _read_parametric_model = self._testfile_streamreader_with_errors.read()
         self.assertTrue(isinstance(_read_parametric_model, XYParametricModel))
@@ -588,6 +662,26 @@ model_function:
 model_parameters: [0.5, 1.1, -1.5]
 """
 
+TEST_PARAMETRIC_MODEL_XY_MULTI_MISSING_KEYWORD="""
+type: xy_multi
+x_data_1: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+model_function:
+    type: xy_multi
+    python_code:
+      - |
+        def quadratic_model(x, a, b, c):
+            return a * x ** 2 + b * x + c
+      - |
+        def linear_model(x, b, c):
+            return b * x + c
+    data_indices: [0, 6, 12]
+model_parameters: [0.5, 1.1, -1.5]
+"""
+
+TEST_PARAMETRIC_MODEL_XY_MULTI_EXTRA_KEYWORD = TEST_PARAMETRIC_MODEL_XY_MULTI + """
+extra_keyword: 3.14
+"""
+
 TEST_PARAMETRIC_MODEL_XY_MULTI_WITH_ERRORS = TEST_PARAMETRIC_MODEL_XY_MULTI + """
 x_errors:
   - correlation_coefficient: 0.0
@@ -661,6 +755,11 @@ class TestXYMultiParametricModelYamlRepresenter(unittest.TestCase):
         self._testfile_streamreader = ParametricModelYamlReader(self._testfile_stringstream)
         self._testfile_streamreader_with_errors = ParametricModelYamlReader(self._testfile_stringstream_with_errors)
 
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_PARAMETRIC_MODEL_XY_MULTI_MISSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_PARAMETRIC_MODEL_XY_MULTI_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = ParametricModelYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = ParametricModelYamlReader(self._testfile_stringstream_extra_keyword)
+
     def test_write_to_roundtrip_stringstream(self):
         self._roundtrip_streamwriter.write()
 
@@ -691,6 +790,14 @@ class TestXYMultiParametricModelYamlRepresenter(unittest.TestCase):
             )
         )
         
+    def test_read_from_testfile_stream_missing_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_missing_keyword.read()
+
+    def test_read_from_testfile_stream_extra_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_extra_keyword.read()
+
     def test_read_from_testfile_stream_with_errors(self):
         _read_parametric_model = self._testfile_streamreader_with_errors.read()
         self.assertTrue(isinstance(_read_parametric_model, XYMultiParametricModel))
