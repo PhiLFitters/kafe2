@@ -7,6 +7,8 @@ from kafe.fit.histogram.format import HistModelDensityFunctionFormatter
 from kafe.fit.indexed.format import IndexedModelFunctionFormatter
 from kafe.fit.xy.format import XYModelFunctionFormatter
 from kafe.fit.xy_multi.format import XYMultiModelFunctionFormatter
+from kafe.fit.representation._yaml_base import YamlReaderException,\
+    YamlWriterException
 
 __all__ = ['ModelFunctionFormatterYamlWriter', 'ModelFunctionFormatterYamlReader', 
            'ModelParameterFormatterYamlWriter', 'ModelParameterFormatterYamlReader']
@@ -23,7 +25,7 @@ class ModelFunctionFormatterYamlWriter(YamlWriterMixin, ModelFunctionFormatterDR
         _yaml_doc = dict()
         _class = model_function_formatter.__class__
         
-        _type = cls._MODEL_FUNCTION_FORMATTER_CLASS_TO_TYPE_NAME.get(_class, None)
+        _type = cls._CLASS_TO_OBJECT_TYPE_NAME.get(_class, None)
         if _type is None:
             raise DReprError("Model function formatter unknown or not supported: %s" % _class)
         _yaml_doc['type'] = _type
@@ -53,9 +55,11 @@ class ModelFunctionFormatterYamlWriter(YamlWriterMixin, ModelFunctionFormatterDR
             if _class in (HistModelDensityFunctionFormatter, XYModelFunctionFormatter):
                 _yaml_doc['x_name'] = model_function_formatter._x_name
                 _yaml_doc['latex_x_name'] = model_function_formatter._latex_x_name
-            if _class is IndexedModelFunctionFormatter:
+            elif _class is IndexedModelFunctionFormatter:
                 _yaml_doc['index_name'] = model_function_formatter._index_name
                 _yaml_doc['latex_index_name'] = model_function_formatter._latex_index_name
+            else:
+                raise YamlWriterException("Unkonwn formatter type")
         
         return _yaml_doc
     
@@ -67,23 +71,34 @@ class ModelFunctionFormatterYamlReader(YamlReaderMixin, ModelFunctionFormatterDR
             model_function_formatter=None)
 
     @classmethod
-    def _make_object(cls, yaml_doc):
+    def _get_required_keywords(cls, yaml_doc, formatter_class):
+        if formatter_class in (HistModelDensityFunctionFormatter, 
+                XYModelFunctionFormatter, IndexedModelFunctionFormatter):
+            return ['name']
+        elif formatter_class is XYMultiModelFunctionFormatter:
+            return ['singular_formatters']
+        else:
+            raise YamlReaderException("Unknown formatter type")
+
+    @classmethod
+    def _convert_yaml_doc_to_object(cls, yaml_doc):
         # -- determine model function formatter class from type
-        _type = yaml_doc['type']
-        _class = cls._MODEL_FUNCTION_FORMATTER_TYPE_NAME_TO_CLASS.get(_type, None)
-        if _class is None:
-            raise DReprError("Model function formatter type unknown or not supported: {}".format(_type))
+        _type = yaml_doc.pop('type')
+        _class = cls._OBJECT_TYPE_NAME_TO_CLASS.get(_type)
 
         if _class is XYMultiModelFunctionFormatter:
             _constructor_kwargs = dict()
-            _singular_formatters_yaml = yaml_doc['singular_formatters']
+            _singular_formatters_yaml = yaml_doc.pop('singular_formatters')
             if not isinstance(_singular_formatters_yaml, list):
                 _singular_formatters_yaml = [_singular_formatters_yaml]
             #TODO validate input
             #TODO implicit sub-object type
             _singular_formatters_list = []
+            # don't pop arg_formatters, singular formatters only need a copy,
+            # will be popped by the multi formatter
+            _arg_formatters = yaml_doc.get('arg_formatters')
             for _singular_formatter_yaml in _singular_formatters_yaml:
-                _singular_formatter_yaml['arg_formatters'] = yaml_doc['arg_formatters']
+                _singular_formatter_yaml['arg_formatters'] = _arg_formatters
                 _singular_formatters_list.append(
                     ModelFunctionFormatterYamlReader._make_object(_singular_formatter_yaml)
                 )
@@ -94,16 +109,18 @@ class ModelFunctionFormatterYamlReader(YamlReaderMixin, ModelFunctionFormatterDR
             if _class in (HistModelDensityFunctionFormatter, XYModelFunctionFormatter):
                 _kwarg_list.append('x_name')
                 _kwarg_list.append('latex_x_name')
-            if _class is IndexedModelFunctionFormatter:
+            elif _class is IndexedModelFunctionFormatter:
                 _kwarg_list.append('index_name')
                 _kwarg_list.append('latex_index_name')
-            _constructor_kwargs = {key: yaml_doc.get(key, None) for key in _kwarg_list}
+            else:
+                raise YamlReaderException("Unkonwn formatter type")
+            _constructor_kwargs = {key: yaml_doc.pop(key, None) for key in _kwarg_list}
         
         _constructor_kwargs['arg_formatters'] = [ModelParameterFormatterYamlReader._make_object(_representation)
-                                                 for _representation in yaml_doc.get('arg_formatters', [])]
+                                                 for _representation in yaml_doc.pop('arg_formatters', [])]
         _model_function_formatter_object = _class(**_constructor_kwargs)
         
-        return _model_function_formatter_object
+        return _model_function_formatter_object, yaml_doc
     
 class ModelParameterFormatterYamlWriter(YamlWriterMixin, ModelParameterFormatterDReprBase):
     
@@ -133,14 +150,22 @@ class ModelParameterFormatterYamlReader(YamlReaderMixin, ModelParameterFormatter
             model_parameter_formatter=None)
 
     @classmethod
-    def _make_object(cls, yaml_doc):
+    def _type_required(cls):
+        return False
+
+    @classmethod
+    def _get_required_keywords(cls, yaml_doc, kafe_object_class):
+        return ['name']
+
+    @classmethod
+    def _convert_yaml_doc_to_object(cls, yaml_doc):
         # value and error are not part of the representation
         # because they belong to the parametric model
-        _kwarg_list = ['name', 'latex_name']
-        _arg_dict = {key: yaml_doc.get(key, None) for key in _kwarg_list}
-        _model_parameter_formatter_object = ModelParameterFormatter(**_arg_dict)
+        _name = yaml_doc.pop('name')
+        _latex_name = yaml_doc.pop('latex_name', None)
+        _model_parameter_formatter_object = ModelParameterFormatter(name=_name, latex_name=_latex_name)
         
-        return _model_parameter_formatter_object
+        return _model_parameter_formatter_object, yaml_doc
     
 # register the above classes in the module-level dictionary
 ModelFunctionFormatterYamlReader._register_class(_AVAILABLE_REPRESENTATIONS)

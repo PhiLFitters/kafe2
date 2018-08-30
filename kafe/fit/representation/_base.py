@@ -7,13 +7,13 @@ class DReprError(Exception):
 
 class GenericDReprBase(object):
     __metaclass__ = abc.ABCMeta
-    OBJECT_TYPE_NAME = None
+    BASE_OBJECT_TYPE_NAME = None
     DREPR_FLAVOR_NAME = None
     DREPR_ROLE_NAME = None
 
     @classmethod
     def _register_class(cls, global_dict):
-        _registered_roles = global_dict.setdefault(cls.OBJECT_TYPE_NAME, dict())
+        _registered_roles = global_dict.setdefault(cls.BASE_OBJECT_TYPE_NAME, dict())
         _registered_formats_for_role = _registered_roles.setdefault(cls.DREPR_ROLE_NAME, dict())
         _registered_formats_for_role[cls.DREPR_FLAVOR_NAME] = cls
 

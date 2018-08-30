@@ -11,15 +11,15 @@ __all__ = ["FitDReprBase"]
 
 class FitDReprBase(GenericDReprBase):
     __metaclass__ = abc.ABCMeta
-    OBJECT_TYPE_NAME = 'fit'
+    BASE_OBJECT_TYPE_NAME = 'fit'
 
-    _FIT_CLASS_TO_TYPE_NAME = {
+    _CLASS_TO_OBJECT_TYPE_NAME = {
         HistFit: 'histogram',
         IndexedFit: 'indexed',
         XYFit: 'xy',
         XYMultiFit: 'xy_multi'
     }
-    _FIT_TYPE_NAME_TO_CLASS = {
+    _OBJECT_TYPE_NAME_TO_CLASS = {
         'histogram': HistFit,
         'indexed': IndexedFit,
         'xy': XYFit,

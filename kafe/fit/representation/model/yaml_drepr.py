@@ -11,9 +11,11 @@ from ..format import ModelFunctionFormatterYamlWriter, ModelFunctionFormatterYam
 from ._base import ModelFunctionDReprBase, ParametricModelDReprBase
 from .. import _AVAILABLE_REPRESENTATIONS
 from kafe.fit.xy_multi.model import XYMultiModelFunction, XYMultiParametricModel
-from kafe.fit.histogram.model import HistParametricModel
-from kafe.fit.indexed.model import IndexedParametricModel
-from kafe.fit.xy.model import XYParametricModel
+from kafe.fit.histogram.model import HistModelFunction, HistParametricModel
+from kafe.fit.indexed.model import IndexedParametricModel, IndexedModelFunction
+from kafe.fit.xy.model import XYParametricModel, XYModelFunction
+from kafe.fit.representation._yaml_base import YamlWriterException,\
+    YamlReaderException
 
 __all__ = ['ModelFunctionYamlWriter', 'ModelFunctionYamlReader', 'ParametricModelYamlWriter', 'ParametricModelYamlReader']
 
@@ -30,7 +32,7 @@ class ModelFunctionYamlWriter(YamlWriterMixin, ModelFunctionDReprBase):
 
         # -- determine model function type
         _class = model_function.__class__
-        _type = cls._MODEL_FUNCTION_CLASS_TO_TYPE_NAME.get(_class, None)
+        _type = cls._CLASS_TO_OBJECT_TYPE_NAME.get(_class, None)
         if _type is None:
             raise DReprError("Model function type unknown or not supported: %s" % _class)
         _yaml_doc['type'] = _type
@@ -66,6 +68,7 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
 
     @staticmethod
     def _parse_model_function(input_string):
+        """converts a string of python code into a python function object"""
         _tokens = tokenize.generate_tokens(StringIO.StringIO(input_string).readline)
         for _toknum, _tokval, _spos, _epos, _line_string  in _tokens:
             if _tokval in ModelFunctionYamlReader.FORBIDDEN_TOKENS:
@@ -95,34 +98,43 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
         del _locals["__builtins__"]
         del _locals["__locals_pointer"]
         return _locals.values()[_model_function_index] #0 is np
+    
+    @classmethod
+    def _get_required_keywords(cls, yaml_doc, model_function_class):
+        if model_function_class in (HistModelFunction, IndexedModelFunction, XYModelFunction):
+            return ['python_code']
+        elif model_function_class is XYMultiModelFunction:
+            return ['python_code', 'data_indices']
+        else:
+            raise YamlReaderException("Unknown model function type")
         
     @classmethod
-    def _make_object(cls, yaml_doc):
+    def _convert_yaml_doc_to_object(cls, yaml_doc):
         # -- determine model function class from type
-        _model_function_type = yaml_doc['type']
-        _class = cls._MODEL_FUNCTION_TYPE_NAME_TO_CLASS.get(_model_function_type, None)
-        if _class is None:
-            raise DReprError("Model function type unknown or not supported: {}".format(_model_function_type))
+        _model_function_type = yaml_doc.pop('type')
+        _class = cls._OBJECT_TYPE_NAME_TO_CLASS.get(_model_function_type)
         
         if _class is XYMultiModelFunction:
-            _python_code_list = yaml_doc["python_code"]
+            _python_code_list = yaml_doc.pop("python_code")
             if isinstance(_python_code_list, str): #check if only one model function is given
                 _python_code_list = [_python_code_list]
             _python_function_list = [
                 ModelFunctionYamlReader._parse_model_function(_python_code)
                 for _python_code in _python_code_list
             ]
-            _data_indices = yaml_doc["data_indices"]
+            _data_indices = yaml_doc.pop("data_indices")
             _model_function_object = XYMultiModelFunction(_python_function_list, _data_indices)
         else:
-            _python_function = ModelFunctionYamlReader._parse_model_function(yaml_doc["python_code"])
+            _python_function = ModelFunctionYamlReader._parse_model_function(yaml_doc.pop("python_code"))
             _model_function_object = _class(_python_function)
         
         #construct model function formatter if specified
-        if 'model_function_formatter' in yaml_doc:
-            _model_function_object._formatter = ModelFunctionFormatterYamlReader._make_object(yaml_doc['model_function_formatter'])
+        _model_function_formatter_yaml = yaml_doc.pop('model_function_formatter', None)
+        if _model_function_formatter_yaml:
+            _model_function_object._formatter = ModelFunctionFormatterYamlReader._make_object(
+                _model_function_formatter_yaml)
         
-        return _model_function_object
+        return _model_function_object, yaml_doc
     
 class ParametricModelYamlWriter(YamlWriterMixin, ParametricModelDReprBase):
 
@@ -137,7 +149,7 @@ class ParametricModelYamlWriter(YamlWriterMixin, ParametricModelDReprBase):
 
         # -- determine model function type
         _class = parametric_model.__class__
-        _type = cls._PARAMETRIC_MODEL_CLASS_TO_TYPE_NAME.get(_class, None)
+        _type = cls._CLASS_TO_OBJECT_TYPE_NAME.get(_class, None)
         if _type is None:
             raise DReprError("Parametric model type unknown or not supported: %s" % _class)
         _yaml_doc['type'] = _type
@@ -151,7 +163,7 @@ class ParametricModelYamlWriter(YamlWriterMixin, ParametricModelDReprBase):
             _yaml_doc['bin_edges'] = parametric_model.bin_edges.tolist()
             _yaml_doc['model_density_func_antiderivative'] = None #TODO implement
         elif _class is IndexedParametricModel:
-            _yaml_doc['data'] = parametric_model.data.tolist()
+            _yaml_doc['shape_like'] = parametric_model.data.tolist()
             _yaml_doc['model_function'] = ModelFunctionYamlWriter._make_representation(
                 parametric_model._model_function_object)
         elif _class is XYParametricModel:
@@ -165,6 +177,8 @@ class ParametricModelYamlWriter(YamlWriterMixin, ParametricModelDReprBase):
                 _yaml_doc['y_data_%s' % _i] = parametric_model.get_splice(parametric_model.y, _i).tolist()
                 _yaml_doc['model_function'] = ModelFunctionYamlWriter._make_representation(
                     parametric_model._model_function_object)
+        else:
+            raise YamlWriterException("Unkonwn parametric model type")
         
         _parameters = parametric_model.parameters
         if isinstance(_parameters, np.ndarray):
@@ -185,59 +199,93 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
             input_io_handle=input_io_handle,
             parametric_model=None)
 
-        
     @classmethod
-    def _make_object(cls, yaml_doc):
+    def _get_required_keywords(cls, yaml_doc, parametric_model_class):
+        if parametric_model_class is HistParametricModel:
+            return ['model_density_function']
+        elif parametric_model_class is IndexedParametricModel:
+            return ['model_function']
+        elif parametric_model_class is XYParametricModel:
+            return ['x_data', 'model_function']
+        elif parametric_model_class is XYMultiParametricModel:
+            return ['x_data_0', 'model_function']
+    
+    @classmethod
+    def _convert_yaml_doc_to_object(cls, yaml_doc):
         # -- determine model function class from type
-        _parametric_model_type = yaml_doc['type']
-        _class = cls._PARAMETRIC_MODEL_TYPE_NAME_TO_CLASS.get(_parametric_model_type, None)
-        if _class is None:
-            raise DReprError("Parametric model type unknown or not supported: {}".format(_parametric_model_type))
+        _parametric_model_type = yaml_doc.pop('type')
+        _class = cls._OBJECT_TYPE_NAME_TO_CLASS.get(_parametric_model_type, None)
 
         #_kwarg_list = kwargs that directly correspond to unchanging scalar yaml entries
-        _kwarg_list = ['model_parameters']         
+        _kwarg_list = []         
         _constructor_kwargs = {}
         if _class is HistParametricModel:
-            _kwarg_list.append('n_bins')
-            _kwarg_list.append('bin_range')
-            _kwarg_list.append('bin_edges')
+            if 'bin_edges' in yaml_doc:
+                _bin_edges = yaml_doc.pop('bin_edges')
+                # bin_edges overrides n_bins and bin_range
+                yaml_doc.pop('n_bins', None)
+                yaml_doc.pop('bin_range', None)
+                _constructor_kwargs['bin_edges'] = _bin_edges
+                _constructor_kwargs['n_bins'] = len(_bin_edges) - 1
+                _constructor_kwargs['bin_range'] = [_bin_edges[0], _bin_edges[-1]]
+                
+            elif 'n_bins' in yaml_doc and 'bin_range' in yaml_doc:
+                _kwarg_list.append('n_bins')
+                _kwarg_list.append('bin_range')
+            else:
+                raise YamlReaderException("When reading in a histogram parametric model either "
+                                          "bin_edges or n_bins and bin_range have to be specified!")
             #TODO implement parsing
             _kwarg_list.append('model_density_func_antiderivative')
         elif _class is IndexedParametricModel:
             _kwarg_list.append('shape_like')
         elif _class is XYParametricModel:
             _kwarg_list.append('x_data')
+            yaml_doc.pop('y_data', None) # remove y_data from dict
         elif _class is XYMultiParametricModel:
             _x_data = []
             _i = 0 #xy dataset index
-            _x_data_i = yaml_doc.get('x_data_%s' % _i, None)
-            # y data not read, only written for human understanding
-            #_y_data_i = yaml_doc.get('y_data_%s' % _i, None)
+            _x_data_i = yaml_doc.pop('x_data_%s' % _i, None)
+            # y data is written by ParametricModelYamlWriter for human understanding
+            # it is popped here to remove it from yamkl_doc but it is not being used
+            _y_data_i = yaml_doc.pop('y_data_%s' % _i, None)
             while _x_data_i is not None:
                 _x_data += _x_data_i
                 _i += 1
-                _x_data_i = yaml_doc.get('x_data_%s' % _i, None)
-                #_y_data_i = yaml_doc.get('y_data_%s' % _i, None)
+                _x_data_i = yaml_doc.pop('x_data_%s' % _i, None)
+                _y_data_i = yaml_doc.pop('y_data_%s' % _i, None)
             _constructor_kwargs['x_data'] = _x_data
-        _constructor_kwargs.update({key: yaml_doc.get(key, None) for key in _kwarg_list})
+        else:
+            raise YamlReaderException("Unkonwn parametric model type")
+
         if _class is HistParametricModel:
-            _model_density_func = ModelFunctionYamlReader._make_object(yaml_doc['model_density_function'])
-            _model_density_func.defaults = _constructor_kwargs['model_parameters']
-            _constructor_kwargs['model_density_func'] = _model_density_func
+            _model_func = ModelFunctionYamlReader._make_object(yaml_doc.pop('model_density_function'))
+            _constructor_kwargs['model_density_func'] = _model_func
         elif _class in (IndexedParametricModel, XYParametricModel, XYMultiParametricModel):
-            _model_func = ModelFunctionYamlReader._make_object(yaml_doc['model_function'])
-            _model_func.defaults = _constructor_kwargs['model_parameters']
+            _model_func = ModelFunctionYamlReader._make_object(yaml_doc.pop('model_function'))
             _constructor_kwargs['model_func'] = _model_func
+
+        # if model parameters are given, apply those to the model function
+        # if not use model function defaults            
+        _given_parameters = yaml_doc.pop('model_parameters', None)
+        if _given_parameters:
+            _model_func.defaults = _given_parameters
+            _constructor_kwargs['model_parameters'] = _given_parameters
+        else:
+            _constructor_kwargs['model_parameters'] = _model_func.defaults
+        
+        
+        _constructor_kwargs.update({key: yaml_doc.pop(key, None) for key in _kwarg_list})
         _parametric_model_object = _class(**_constructor_kwargs)
         
         # -- process error sources
         if _class in (XYParametricModel, XYMultiParametricModel):
-            _xerrs = yaml_doc.get('x_errors', [])
-            _yerrs = yaml_doc.get('y_errors', [])
+            _xerrs = yaml_doc.pop('x_errors', [])
+            _yerrs = yaml_doc.pop('y_errors', [])
             _errs = _xerrs + _yerrs
             _axes = [0] * len(_xerrs) + [1] * len(_yerrs)  # 0 for 'x', 1 for 'y'
         else:
-            _errs = yaml_doc.get('errors', [])
+            _errs = yaml_doc.pop('errors', [])
             _axes = [None] * len(_errs)
 
         # add error sources, if any
@@ -272,7 +320,7 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
             # add error to parametric model
             DataContainerYamlReader._add_error_to_container(_err_type, _parametric_model_object, **_add_kwargs)
         
-        return _parametric_model_object
+        return _parametric_model_object, yaml_doc
     
 # register the above classes in the module-level dictionary
 ModelFunctionYamlReader._register_class(_AVAILABLE_REPRESENTATIONS)
