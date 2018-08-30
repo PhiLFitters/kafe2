@@ -25,7 +25,7 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
         _yaml_doc = dict()
 
         # -- determine model function type
-        _type = cls._FIT_CLASS_TO_TYPE_NAME.get(fit.__class__, None)
+        _type = cls._CLASS_TO_OBJECT_TYPE_NAME.get(fit.__class__, None)
         if _type is None:
             raise DReprError("Fit type unknown or not supported: %s" % fit.__class__)
         _yaml_doc['type'] = _type
@@ -48,18 +48,35 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
             fit=None)
 
     @classmethod
-    def _make_object(cls, yaml_doc):
+    def _get_required_keywords(cls, yaml_doc, fit_class):
+        _required_keywords = []
+        if 'dataset' not in yaml_doc:
+            _required_keywords += DataContainerYamlReader._get_required_keywords(
+                yaml_doc,
+                DataContainerYamlReader._OBJECT_TYPE_NAME_TO_CLASS.get(
+                    cls._CLASS_TO_OBJECT_TYPE_NAME.get(fit_class)
+                )
+            )
+        if 'parametric_model' not in yaml_doc:
+            _required_keywords += ParametricModelYamlReader._get_required_keywords(
+                yaml_doc,
+                ParametricModelYamlReader._OBJECT_TYPE_NAME_TO_CLASS.get(
+                    cls._CLASS_TO_OBJECT_TYPE_NAME.get(fit_class)
+                )
+            )
+        return _required_keywords
+    
+    @classmethod
+    def _convert_yaml_doc_to_object(cls, yaml_doc):
         # -- determine model function class from type
-        _fit_type = yaml_doc['type']
-        _class = cls._FIT_TYPE_NAME_TO_CLASS.get(_fit_type, None)
-        if _class is None:
-            raise DReprError("Fit type unknown or not supported: {}".format(_fit_type))
+        _fit_type = yaml_doc.pop('type')
+        _class = cls._OBJECT_TYPE_NAME_TO_CLASS.get(_fit_type, None)
         
-        _data = DataContainerYamlReader._make_object(yaml_doc['dataset'])
-        _parametric_model = ParametricModelYamlReader._make_object(yaml_doc['parametric_model'])
+        _data = DataContainerYamlReader._make_object(yaml_doc.pop('dataset'))
+        _parametric_model = ParametricModelYamlReader._make_object(yaml_doc.pop('parametric_model'))
         #TODO cost function
-        _minimizer = yaml_doc.get('minimizer', None)
-        _minimizer_kwargs = yaml_doc.get('minimizer_kwargs', None)
+        _minimizer = yaml_doc.pop('minimizer', None)
+        _minimizer_kwargs = yaml_doc.pop('minimizer_kwargs', None)
         if _class is HistFit:
             _fit_object = HistFit(
                 data=_data,
@@ -90,7 +107,7 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
                 minimizer_kwargs=_minimizer_kwargs
             )
         _fit_object._param_model = _parametric_model
-        return _fit_object
+        return _fit_object, yaml_doc
     
 # register the above classes in the module-level dictionary
 FitYamlReader._register_class(_AVAILABLE_REPRESENTATIONS)

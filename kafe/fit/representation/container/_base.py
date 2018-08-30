@@ -13,13 +13,13 @@ class DataContainerDReprBase(GenericDReprBase):
     __metaclass__ = abc.ABCMeta
     OBJECT_TYPE_NAME = 'container'
 
-    _CONTAINER_CLASS_TO_TYPE_NAME = {
+    _CLASS_TO_OBJECT_TYPE_NAME = {
         HistContainer: 'histogram',
         IndexedContainer: 'indexed',
         XYContainer: 'xy',
         XYMultiContainer: 'xy_multi'
     }
-    _CONTAINER_TYPE_NAME_TO_CLASS = {
+    _OBJECT_TYPE_NAME_TO_CLASS = {
         'histogram': HistContainer,
         'indexed': IndexedContainer,
         'xy': XYContainer,
