@@ -264,17 +264,36 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
             raise DReprError("Container type unknown or not supported: {}".format(_container_type))
 
         # -- process error sources
+        # errors can be specified as a single float, a list of floats, or a kafe error object
+        # lists of the above are also valid, if the error object is not a list
         if _class in  (XYContainer, XYMultiContainer):
             _xerrs = yaml_doc.pop('x_errors', [])
+            if not isinstance(_xerrs, list) or (len(_xerrs) > 0 and isinstance(_xerrs[0], float)):
+                _xerrs = [_xerrs]
             _yerrs = yaml_doc.pop('y_errors', [])
+            if not isinstance(_yerrs, list) or (len(_yerrs) > 0 and isinstance(_yerrs[0], float)):
+                _yerrs = [_yerrs]
             _errs = _xerrs + _yerrs
             _axes = [0] * len(_xerrs) + [1] * len(_yerrs)  # 0 for 'x', 1 for 'y'
         else:
             _errs = yaml_doc.pop('errors', [])
+            if not isinstance(_errs, list) or (len(_errs) > 0 and isinstance(_errs[0], float)):
+                _xerrs = [_errs]
             _axes = [None] * len(_errs)
 
         # add error sources, if any
         for _err, _axis in zip(_errs, _axes):
+            # if error is a float/int or a list thereof add it as a simple error and don't
+            # try to interpret it as a kafe error object
+            if isinstance(_err, float) or isinstance(_err, int) or isinstance(_err, list):
+                if _axis:
+                    cls._add_error_to_container('simple', _container_obj, err_val=_err, axis=_axis)
+                else:
+                    print _err
+                    cls._add_error_to_container('simple', _container_obj, err_val=_err)
+                    print 'OK'
+                continue
+            
             _add_kwargs = dict()
             # translate and check that all required keys are present
             try:
