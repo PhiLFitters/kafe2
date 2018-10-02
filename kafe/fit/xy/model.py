@@ -6,6 +6,7 @@ from scipy.misc import derivative
 from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException, ModelParameterFormatter
 from .container import XYContainer, XYContainerException
 from .format import XYModelFunctionFormatter
+from kafe.util import function_library
 
 
 __all__ = ["XYParametricModel", "XYModelFunction"]
@@ -18,7 +19,7 @@ class XYModelFunction(ModelFunctionBase):
     EXCEPTION_TYPE = XYModelFunctionException
     FORMATTER_TYPE = XYModelFunctionFormatter
 
-    def __init__(self, model_function):
+    def __init__(self, model_function=function_library.linear_model):
         """
         Construct :py:class:`XYModelFunction` object (a wrapper for a native Python function):
 

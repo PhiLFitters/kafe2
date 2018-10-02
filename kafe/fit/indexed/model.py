@@ -6,6 +6,7 @@ import inspect
 from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException
 from .container import IndexedContainer, IndexedContainerException
 from .format import IndexedModelFunctionFormatter
+from kafe.util import function_library
 
 
 __all__ = ["IndexedParametricModel", "IndexedModelFunction"]
@@ -18,7 +19,7 @@ class IndexedModelFunction(ModelFunctionBase):
     EXCEPTION_TYPE = IndexedModelFunctionException
     FORMATTER_TYPE = IndexedModelFunctionFormatter
 
-    def __init__(self, model_function):
+    def __init__(self, model_function=function_library.linear_model):
         """
         Construct :py:class:`IndexedModelFunction` object (a wrapper for a native Python function):
 

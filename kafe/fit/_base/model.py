@@ -4,6 +4,7 @@ import inspect
 from .format import ModelParameterFormatter, ModelFunctionFormatter
 from kafe.fit.io.file import FileIOMixin
 from inspect import ArgSpec
+from kafe.util import function_library
 
 
 __all__ = ["ParametricModelBaseMixin", "ModelFunctionBase", "ModelFunctionException"]
@@ -84,13 +85,13 @@ class ModelFunctionBase(FileIOMixin, object):
     EXCEPTION_TYPE = ModelFunctionException
     FORMATTER_TYPE = ModelFunctionFormatter
 
-    def __init__(self, model_function):
+    def __init__(self, model_function=function_library.linear_model):
         """
         Construct :py:class:`ModelFunction` object (a wrapper for a native Python function):
 
         :param model_function: function handle
         """
-        self._model_function_handle = model_function
+        self._model_function_handle = model_function if model_function else self._get_default()
         self._assign_model_function_argspec_and_argcount()
         self._validate_model_function_raise()
         self._assign_function_formatter()
@@ -103,6 +104,10 @@ class ModelFunctionBase(FileIOMixin, object):
     @classmethod
     def _get_object_type_name(cls):
         return 'model_function'
+    
+    @classmethod
+    def _get_default(cls):
+        return function_library.linear_model
 
     def _assign_model_function_argspec_and_argcount(self):
         self._model_function_argspec = inspect.getargspec(self._model_function_handle)

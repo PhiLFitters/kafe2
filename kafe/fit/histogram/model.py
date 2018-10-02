@@ -17,13 +17,14 @@ class HistModelFunction(ModelFunctionBase):
     EXCEPTION_TYPE = HistModelFunctionException
     FORMATTER_TYPE = HistModelDensityFunctionFormatter
 
-    def __init__(self, model_density_function, model_density_antiderivative=None):
+    def __init__(self, model_density_function=None, model_density_antiderivative=None):
         """
         Construct :py:class:`XYModelFunction` object (a wrapper for a native Python function):
 
         :param model_density_function: function handle
         :param model_density_antiderivative: function handle for model density antiderivative
         """
+        #TODO default model function
         self._x_name = 'x'
         super(HistModelFunction, self).__init__(model_function=model_density_function)
         self._antiderivative = model_density_antiderivative
