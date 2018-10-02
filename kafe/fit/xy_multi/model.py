@@ -30,6 +30,7 @@ class XYMultiModelFunction(ModelFunctionBase):
                length must be length of model_funtion + 1
         :type iterable of int
         """
+        #TODO default model function
         try: 
             iter(model_function_list)
         except:

@@ -16,6 +16,7 @@ from .container import XYContainer
 from .cost import XYCostFunction_Chi2, XYCostFunction_UserDefined
 from .format import XYModelFunctionFormatter
 from .model import XYParametricModel, XYModelFunction
+from kafe.util import function_library
 
 
 __all__ = ["XYFit"]
@@ -39,7 +40,7 @@ class XYFit(FitBase):
                            'nuisance_y_data_cor_cov_mat','nuisance_y_model_cor_cov_mat','nuisance_y_total_cor_cov_mat',
                            'nuisance_para', 'y_nuisance_vector'}
 
-    def __init__(self, xy_data, model_function,
+    def __init__(self, xy_data, model_function=function_library.linear_model,
                  cost_function=XYCostFunction_Chi2(axes_to_use='xy', errors_to_use='covariance'),
                  minimizer=None, minimizer_kwargs=None):
         """
