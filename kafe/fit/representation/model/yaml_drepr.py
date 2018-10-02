@@ -100,6 +100,45 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
         return _locals.values()[_model_function_index] #0 is np
     
     @classmethod
+    def _get_subspace_override_dict(cls, model_function_class):
+        _override_dict = {'arg_formatters':'model_function_formatter'}
+
+        if model_function_class is HistModelFunction:
+            _override_dict['model_density_function_name'] = 'model_function_formatter'
+            _override_dict['latex_model_density_function_name'] = 'model_function_formatter'
+            _override_dict['x_name'] = 'model_function_formatter'
+            _override_dict['latex_x_name'] = 'model_function_formatter'
+            _override_dict['expression_string'] = 'model_function_formatter'
+            _override_dict['latex_expression_string'] = 'model_function_formatter'
+        elif model_function_class is IndexedModelFunction:
+            _override_dict['model_function_name'] = 'model_function_formatter'
+            _override_dict['latex_model_function_name'] = 'model_function_formatter'
+            _override_dict['index_name'] = 'model_function_formatter'
+            _override_dict['latex_index_name'] = 'model_function_formatter'
+            _override_dict['expression_string'] = 'model_function_formatter'
+            _override_dict['latex_expression_string'] = 'model_function_formatter'
+        elif model_function_class is XYModelFunction:
+            _override_dict['model_function_name'] = 'model_function_formatter'
+            _override_dict['latex_model_function_name'] = 'model_function_formatter'
+            _override_dict['x_name'] = 'model_function_formatter'
+            _override_dict['latex_x_name'] = 'model_function_formatter'
+            _override_dict['expression_string'] = 'model_function_formatter'
+            _override_dict['latex_expression_string'] = 'model_function_formatter'
+        elif model_function_class is XYMultiModelFunction:
+            for _i in range(10):
+                _override_dict['model_function_name_%s' % _i] = 'model_function_formatter'
+                _override_dict['latex_model_function_name_%s' % _i] = 'model_function_formatter'
+                _override_dict['x_name_%s' % _i] = 'model_function_formatter'
+                _override_dict['latex_x_name_%s' % _i] = 'model_function_formatter'
+                _override_dict['expression_string_%s' % _i] = 'model_function_formatter'
+                _override_dict['latex_expression_string_%s' % _i] = 'model_function_formatter'
+            _override_dict['x_name'] = 'model_function'
+            _override_dict['latex_x_name'] = 'model_function'
+        else:
+            raise YamlReaderException("Unknown model function type")
+        return _override_dict
+
+    @classmethod
     def _get_required_keywords(cls, yaml_doc, model_function_class):
         if model_function_class in (HistModelFunction, IndexedModelFunction, XYModelFunction):
             return ['python_code']
@@ -199,6 +238,46 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
             input_io_handle=input_io_handle,
             parametric_model=None)
 
+    @classmethod
+    def _get_subspace_override_dict(cls, parametric_model_class):
+        _override_dict = {'arg_formatters':'model_function',
+                          'model_function_formatter':'model_function'}
+
+        if parametric_model_class is HistParametricModel:
+            _override_dict['model_density_function_name'] = 'model_function'
+            _override_dict['latex_model_density_function_name'] = 'model_function'
+            _override_dict['x_name'] = 'model_function'
+            _override_dict['latex_x_name'] = 'model_function'
+            _override_dict['expression_string'] = 'model_function'
+            _override_dict['latex_expression_string'] = 'model_function'
+        elif parametric_model_class is IndexedParametricModel:
+            _override_dict['model_function_name'] = 'model_function'
+            _override_dict['latex_model_function_name'] = 'model_function'
+            _override_dict['index_name'] = 'model_function'
+            _override_dict['latex_index_name'] = 'model_function'
+            _override_dict['expression_string'] = 'model_function'
+            _override_dict['latex_expression_string'] = 'model_function'
+        elif parametric_model_class is XYParametricModel:
+            _override_dict['model_function_name'] = 'model_function'
+            _override_dict['latex_model_function_name'] = 'model_function'
+            _override_dict['x_name'] = 'model_function'
+            _override_dict['latex_x_name'] = 'model_function'
+            _override_dict['expression_string'] = 'model_function'
+            _override_dict['latex_expression_string'] = 'model_function'
+        elif parametric_model_class is XYMultiParametricModel:
+            for _i in range(10):
+                _override_dict['model_function_name_%s' % _i] = 'model_function'
+                _override_dict['latex_model_function_name_%s' % _i] = 'model_function'
+                _override_dict['x_name_%s' % _i] = 'model_function'
+                _override_dict['latex_x_name_%s' % _i] = 'model_function'
+                _override_dict['expression_string_%s' % _i] = 'model_function'
+                _override_dict['latex_expression_string_%s' % _i] = 'model_function'
+            _override_dict['x_name'] = 'model_function'
+            _override_dict['latex_x_name'] = 'model_function'
+        else:
+            raise YamlReaderException("Unknown parametric model type")
+        return _override_dict
+    
     @classmethod
     def _get_required_keywords(cls, yaml_doc, parametric_model_class):
         if parametric_model_class is HistParametricModel:

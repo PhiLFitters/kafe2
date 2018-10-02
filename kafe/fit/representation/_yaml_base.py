@@ -49,30 +49,48 @@ class YamlReaderMixin(DReprReaderMixin):
     
     @classmethod
     def _make_object(cls, yaml_doc):
-        cls._check_required_keywords(yaml_doc)
-        _object, _leftover_yaml_doc = cls._convert_yaml_doc_to_object(yaml_doc.copy())
+        _overriden_yaml_doc = cls._check_required_keywords_and_override_subspaces(yaml_doc)
+        _object, _leftover_yaml_doc = cls._convert_yaml_doc_to_object(_overriden_yaml_doc.copy())
         if _leftover_yaml_doc:
             raise YamlReaderException("Received unknown or unsupported keywords for constructing a %s object: %s"
                                       % (cls.BASE_OBJECT_TYPE_NAME, _leftover_yaml_doc.keys()))
         return _object
     
     @classmethod
-    def _check_required_keywords(cls, yaml_doc):
+    def _check_required_keywords_and_override_subspaces(cls, yaml_doc):
         if cls._type_required():
-            _fit_type = yaml_doc.get('type', None)
-            if not _fit_type:
-                raise YamlReaderException("No type specified for %s object!" % cls.BASE_OBJECT_TYPE_NAME)
-            _kafe_object_class = cls._OBJECT_TYPE_NAME_TO_CLASS.get(_fit_type, None)
+            _object_type = yaml_doc.get('type', None)
+            if not _object_type:
+                _object_type = 'xy'
+                yaml_doc['type'] = _object_type
+                #TODO implicit object type, give out warning?
+                #raise YamlReaderException("No type specified for %s object!" % cls.BASE_OBJECT_TYPE_NAME)
+            _kafe_object_class = cls._OBJECT_TYPE_NAME_TO_CLASS.get(_object_type, None)
             if _kafe_object_class is None:
                 raise YamlReaderException("%s type unknown or not supported: %s" 
-                                          % (cls.BASE_OBJECT_TYPE_NAME, _fit_type))
+                                          % (cls.BASE_OBJECT_TYPE_NAME, _object_type))
         else:
             _kafe_object_class = None
+        
+        _override_dict = cls._get_subspace_override_dict(_kafe_object_class)
+        for _keyword in list(_override_dict.keys()):
+            _value = yaml_doc.pop(_keyword, None)
+            if _value:
+                _target_namespaces = _override_dict[_keyword]
+                if not isinstance(_target_namespaces, list):
+                    _target_namespaces = [_target_namespaces]
+                for _target_namespace in _target_namespaces:
+                    if _target_namespace not in yaml_doc:
+                        yaml_doc[_target_namespace] = dict()
+                    yaml_doc[_target_namespace][_keyword] = _value
+        
         _missing_keywords = [_keyword for _keyword in cls._get_required_keywords(yaml_doc, _kafe_object_class)
                              if _keyword not in yaml_doc]
         if _missing_keywords:
-            raise YamlReaderException("Missing required keywords for reading in a %s object: %s"
+            raise YamlReaderException("Missing required information for reading in a %s object: %s"
                                       % (cls.BASE_OBJECT_TYPE_NAME, _missing_keywords))
+            
+        return yaml_doc
     
     @classmethod
     def _type_required(cls):
@@ -85,6 +103,10 @@ class YamlReaderMixin(DReprReaderMixin):
     @classmethod
     def _convert_yaml_doc_to_object(cls, yaml_doc):
         return None, None #format: return <kafe object>, <leftover yaml doc>
+    
+    @classmethod
+    def _get_subspace_override_dict(cls, kafe_object_class):
+        return dict()
     
     def read(self):
         with self._ihandle as _h:
