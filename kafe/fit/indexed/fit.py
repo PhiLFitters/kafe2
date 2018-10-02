@@ -34,7 +34,7 @@ class IndexedFit(FitBase):
                           'data_cov_mat', 'model_cov_mat', 'total_cov_mat',
                           'data_cor_mat', 'model_cor_mat', 'total_cor_mat'}
 
-    def __init__(self, data, model_function=function_library.linear_model, cost_function=IndexedCostFunction_Chi2(errors_to_use='covariance', fallback_on_singular=True), minimizer=None, minimizer_kwargs=None):
+    def __init__(self, data, model_function, cost_function=IndexedCostFunction_Chi2(errors_to_use='covariance', fallback_on_singular=True), minimizer=None, minimizer_kwargs=None):
         """
         Construct a fit of a model to a series of indexed measurements.
 
@@ -52,7 +52,7 @@ class IndexedFit(FitBase):
         if isinstance(model_function, self.__class__.MODEL_FUNCTION_TYPE):
             self._model_function = model_function
         else:
-            self._model_function = self.__class__.MODEL_FUNCTION_TYPE(model_function)
+                self._model_function = self.__class__.MODEL_FUNCTION_TYPE(model_function)
 
         # validate the model function for this fit
         self._validate_model_function_for_fit_raise()

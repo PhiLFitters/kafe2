@@ -19,7 +19,7 @@ class IndexedModelFunction(ModelFunctionBase):
     EXCEPTION_TYPE = IndexedModelFunctionException
     FORMATTER_TYPE = IndexedModelFunctionFormatter
 
-    def __init__(self, model_function=function_library.linear_model):
+    def __init__(self, model_function):
         """
         Construct :py:class:`IndexedModelFunction` object (a wrapper for a native Python function):
 
