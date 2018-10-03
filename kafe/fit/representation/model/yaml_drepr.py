@@ -135,7 +135,7 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
             _override_dict['x_name'] = 'model_function'
             _override_dict['latex_x_name'] = 'model_function'
         else:
-            raise YamlReaderException("Unknown model function type")
+            raise YamlReaderException("Unknown model function class: %s" % model_function_class)
         return _override_dict
 
     @classmethod
@@ -145,8 +145,12 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
         elif model_function_class is XYMultiModelFunction:
             return ['python_code', 'data_indices']
         else:
-            raise YamlReaderException("Unknown model function type")
+            raise YamlReaderException("Unknown model function class: %s" % model_function_class)
         
+    @classmethod
+    def _process_string(cls, string_representation, default_type):
+        return dict(type=default_type, python_code=string_representation)
+    
     @classmethod
     def _convert_yaml_doc_to_object(cls, yaml_doc):
         # -- determine model function class from type
@@ -281,11 +285,11 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
     @classmethod
     def _get_required_keywords(cls, yaml_doc, parametric_model_class):
         if parametric_model_class is HistParametricModel:
-            return ['model_density_function']
+            return []
         elif parametric_model_class is IndexedParametricModel:
             return ['model_function']
         elif parametric_model_class is XYParametricModel:
-            return ['x_data', 'model_function']
+            return ['x_data']
         elif parametric_model_class is XYMultiParametricModel:
             return ['x_data_0', 'model_function']
     
@@ -338,11 +342,15 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
             raise YamlReaderException("Unkonwn parametric model type")
 
         if _class is HistParametricModel:
-            _model_func = ModelFunctionYamlReader._make_object(yaml_doc.pop('model_density_function'))
-            _constructor_kwargs['model_density_func'] = _model_func
+            _model_func_entry = yaml_doc.pop('model_density_function', None)
+            if _model_func_entry:
+                _model_func = ModelFunctionYamlReader._make_object(_model_func_entry, default_type=_parametric_model_type)
+                _constructor_kwargs['model_density_func'] = _model_func
         elif _class in (IndexedParametricModel, XYParametricModel, XYMultiParametricModel):
-            _model_func = ModelFunctionYamlReader._make_object(yaml_doc.pop('model_function'))
-            _constructor_kwargs['model_func'] = _model_func
+            _model_func_entry = yaml_doc.pop('model_function')
+            if _model_func_entry:
+                _model_func = ModelFunctionYamlReader._make_object(_model_func_entry, default_type=_parametric_model_type)
+                _constructor_kwargs['model_func'] = _model_func
 
         # if model parameters are given, apply those to the model function
         # if not use model function defaults            

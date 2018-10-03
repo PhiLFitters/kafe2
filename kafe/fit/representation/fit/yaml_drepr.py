@@ -50,7 +50,10 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
 
     @classmethod
     def _get_required_keywords(cls, yaml_doc, fit_class):
-        return ['dataset']
+        if fit_class in (HistFit, XYFit):
+            return ['dataset']
+        else:
+            return ['dataset', 'parametric_model']
     
     @classmethod
     def _get_subspace_override_dict(cls, fit_class):
@@ -118,10 +121,10 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
         _fit_type = yaml_doc.pop('type')
         _class = cls._OBJECT_TYPE_NAME_TO_CLASS.get(_fit_type, None)
         
-        _data = DataContainerYamlReader._make_object(yaml_doc.pop('dataset'))
+        _data = DataContainerYamlReader._make_object(yaml_doc.pop('dataset'), default_type=_fit_type)
         _parametric_model_entry = yaml_doc.pop('parametric_model', None)
         if _parametric_model_entry:
-            _read_parametric_model = ParametricModelYamlReader._make_object(_parametric_model_entry)
+            _read_parametric_model = ParametricModelYamlReader._make_object(_parametric_model_entry, default_type=_fit_type)
             _read_model_function = _read_parametric_model._model_function_object
         else:
             _read_parametric_model = None
