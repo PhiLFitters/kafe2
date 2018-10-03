@@ -4,6 +4,7 @@ import numpy as np
 from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException, ModelParameterFormatter
 from .container import HistContainer, HistContainerException
 from .format import HistModelDensityFunctionFormatter
+from kafe.fit.util import function_library
 
 
 __all__ = ["HistParametricModel", "HistModelFunction"]
@@ -86,7 +87,9 @@ class HistParametricModelException(HistContainerException):
 
 class HistParametricModel(ParametricModelBaseMixin, HistContainer):
     #TODO n_bins, bin_range, bin_edges contain redundant information, should the arguments for HistParametricModel be refactored?
-    def __init__(self, n_bins, bin_range, model_density_func, model_parameters, bin_edges=None, model_density_func_antiderivative=None):
+    def __init__(self, n_bins, bin_range, 
+                 model_density_func=HistModelFunction(function_library.normal_distribution_pdf), 
+                 model_parameters=[1.0, 1.0], bin_edges=None, model_density_func_antiderivative=None):
         # print "IndexedParametricModel.__init__(model_func=%r, model_parameters=%r)" % (model_func, model_parameters)
         self._model_density_func_antider_handle = model_density_func_antiderivative
         super(HistParametricModel, self).__init__(model_density_func, model_parameters, n_bins, bin_range,

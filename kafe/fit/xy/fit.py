@@ -16,7 +16,7 @@ from .container import XYContainer
 from .cost import XYCostFunction_Chi2, XYCostFunction_UserDefined
 from .format import XYModelFunctionFormatter
 from .model import XYParametricModel, XYModelFunction
-from kafe.util import function_library
+from kafe.fit.util import function_library
 
 
 __all__ = ["XYFit"]
@@ -951,6 +951,10 @@ class XYFit(FitBase):
         _nuisance_vector = np.linalg.solve(_left_side, np.transpose(_right_side))
 
         return _nuisance_vector
+
+    def generate_plot(self):
+        from kafe.fit.xy.plot import XYPlot
+        return XYPlot(self)
 
     def report(self, output_stream=sys.stdout,
                show_data=True,

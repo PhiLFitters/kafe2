@@ -128,6 +128,7 @@ class TestHistFitYamlRepresenter(unittest.TestCase):
         self._test_parameters_do_fit = np.array([2.0117809129092095, -1.090410559090481])
         self._test_x = np.array([-2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0])
         self._test_density_default = self.hist_model_density(self._test_x, *self._test_parameters_default)
+        self._test_density_default_simple = self.hist_model_density(self._test_x, *self._test_parameters_default_simple)
         self._test_density_do_fit = self.hist_model_density(self._test_x, *self._test_parameters)
         
         _data = HistContainer(n_bins=self._test_n_bins, bin_range=self._test_bin_range)

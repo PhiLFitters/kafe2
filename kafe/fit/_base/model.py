@@ -4,7 +4,7 @@ import inspect
 from .format import ModelParameterFormatter, ModelFunctionFormatter
 from kafe.fit.io.file import FileIOMixin
 from inspect import ArgSpec
-from kafe.util import function_library
+from kafe.fit.util import function_library
 
 
 __all__ = ["ParametricModelBaseMixin", "ModelFunctionBase", "ModelFunctionException"]

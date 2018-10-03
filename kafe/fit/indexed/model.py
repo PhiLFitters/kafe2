@@ -6,7 +6,7 @@ import inspect
 from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException
 from .container import IndexedContainer, IndexedContainerException
 from .format import IndexedModelFunctionFormatter
-from kafe.util import function_library
+from kafe.fit.util import function_library
 
 
 __all__ = ["IndexedParametricModel", "IndexedModelFunction"]

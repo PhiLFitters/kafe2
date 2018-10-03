@@ -6,7 +6,7 @@ from scipy.misc import derivative
 from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException, ModelParameterFormatter
 from .container import XYContainer, XYContainerException
 from .format import XYModelFunctionFormatter
-from kafe.util import function_library
+from kafe.fit.util import function_library
 
 
 __all__ = ["XYParametricModel", "XYModelFunction"]
@@ -66,7 +66,7 @@ class XYParametricModelException(XYContainerException):
 
 class XYParametricModel(ParametricModelBaseMixin, XYContainer):
     #TODO why does model_function get abbreviated as model_func?
-    def __init__(self, x_data, model_func, model_parameters):
+    def __init__(self, x_data, model_func=XYModelFunction(function_library.linear_model), model_parameters=[1.0, 1.0]):
         """
         Construct an :py:obj:`XYParametricModel` object:
 

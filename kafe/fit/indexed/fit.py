@@ -14,7 +14,7 @@ from .container import IndexedContainer
 from .cost import IndexedCostFunction_Chi2, IndexedCostFunction_UserDefined
 from .format import IndexedModelFunctionFormatter
 from .model import IndexedParametricModel, IndexedModelFunction
-from kafe.util import function_library
+from kafe.fit.util import function_library
 
 
 __all__ = ["IndexedFit"]
