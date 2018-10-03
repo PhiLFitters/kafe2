@@ -389,6 +389,9 @@ class FitBase(FileIOMixin, object):
             if _pln is not None:
                 _pf.latex_name = _pln
 
+    def generate_plot(self):
+        raise FitException('generate_plot has not been specified for %s' % self.__class__)
+
     def get_result_dict(self):
         """Return a structured dictionary of human-readable strings characterizing the fit result."""
         # TODO: warn if self._fitter.state_is_from_minimizer is False?

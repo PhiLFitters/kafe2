@@ -952,6 +952,10 @@ class XYFit(FitBase):
 
         return _nuisance_vector
 
+    def generate_plot(self):
+        from kafe.fit.xy.plot import XYPlot
+        return XYPlot(self)
+
     def report(self, output_stream=sys.stdout,
                show_data=True,
                show_model=True):
