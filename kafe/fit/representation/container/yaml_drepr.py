@@ -278,7 +278,7 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
         else:
             _errs = yaml_doc.pop('errors', [])
             if not isinstance(_errs, list) or (len(_errs) > 0 and isinstance(_errs[0], float)):
-                _xerrs = [_errs]
+                _errs = [_errs]
             _axes = [None] * len(_errs)
 
         # add error sources, if any
@@ -289,9 +289,7 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
                 if _axis:
                     cls._add_error_to_container('simple', _container_obj, err_val=_err, axis=_axis)
                 else:
-                    print _err
                     cls._add_error_to_container('simple', _container_obj, err_val=_err)
-                    print 'OK'
                 continue
             
             _add_kwargs = dict()

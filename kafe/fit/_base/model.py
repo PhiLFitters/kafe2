@@ -185,7 +185,12 @@ class ModelFunctionBase(FileIOMixin, object):
     @property
     def defaults(self):
         """The default values for model function parameters"""
-        return self.argspec.defaults
+        if not self.argspec.defaults:
+            _temp_defaults = ()
+        else:
+            _temp_defaults = self.argspec.defaults
+        #fill up unspecified defaults with 1.0
+        return (1.0,) * (self.parcount - len(_temp_defaults)) + _temp_defaults
     
     @defaults.setter
     def defaults(self, new_defaults):

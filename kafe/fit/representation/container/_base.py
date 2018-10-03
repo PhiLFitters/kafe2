@@ -11,7 +11,7 @@ __all__ = ["DataContainerDReprBase"]
 
 class DataContainerDReprBase(GenericDReprBase):
     __metaclass__ = abc.ABCMeta
-    OBJECT_TYPE_NAME = 'container'
+    BASE_OBJECT_TYPE_NAME = 'container'
 
     _CLASS_TO_OBJECT_TYPE_NAME = {
         HistContainer: 'histogram',

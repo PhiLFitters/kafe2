@@ -48,8 +48,11 @@ class YamlReaderMixin(DReprReaderMixin):
     """
     
     @classmethod
-    def _make_object(cls, yaml_doc):
-        _overriden_yaml_doc = cls._check_required_keywords_and_override_subspaces(yaml_doc)
+    def _make_object(cls, yaml_doc, default_type='xy'):
+        #strings may be used as shortcuts for frequently used functionality
+        if isinstance(yaml_doc, str):
+            yaml_doc = cls._process_string(yaml_doc, default_type)
+        _overriden_yaml_doc = cls._check_required_keywords_and_override_subspaces(yaml_doc, default_type)
         _object, _leftover_yaml_doc = cls._convert_yaml_doc_to_object(_overriden_yaml_doc.copy())
         if _leftover_yaml_doc:
             raise YamlReaderException("Received unknown or unsupported keywords for constructing a %s object: %s"
@@ -57,11 +60,13 @@ class YamlReaderMixin(DReprReaderMixin):
         return _object
     
     @classmethod
-    def _check_required_keywords_and_override_subspaces(cls, yaml_doc):
-        if cls._type_required():
+    def _check_required_keywords_and_override_subspaces(cls, yaml_doc, default_type='xy'):
+        if not cls._type_required():
+            _kafe_object_class = None
+        else:
             _object_type = yaml_doc.get('type', None)
             if not _object_type:
-                _object_type = 'xy'
+                _object_type = default_type
                 yaml_doc['type'] = _object_type
                 #TODO implicit object type, give out warning?
                 #raise YamlReaderException("No type specified for %s object!" % cls.BASE_OBJECT_TYPE_NAME)
@@ -69,8 +74,6 @@ class YamlReaderMixin(DReprReaderMixin):
             if _kafe_object_class is None:
                 raise YamlReaderException("%s type unknown or not supported: %s" 
                                           % (cls.BASE_OBJECT_TYPE_NAME, _object_type))
-        else:
-            _kafe_object_class = None
         
         _override_dict = cls._get_subspace_override_dict(_kafe_object_class)
         for _keyword in list(_override_dict.keys()):
@@ -95,6 +98,10 @@ class YamlReaderMixin(DReprReaderMixin):
     @classmethod
     def _type_required(cls):
         return True
+    
+    @classmethod
+    def _process_string(cls, string_representation, default_type):
+        return dict(type=default_type)
     
     @classmethod
     def _get_required_keywords(cls, yaml_doc, kafe_object_class):
