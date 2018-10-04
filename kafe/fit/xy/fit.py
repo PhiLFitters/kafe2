@@ -16,7 +16,7 @@ from .container import XYContainer
 from .cost import XYCostFunction_Chi2, XYCostFunction_UserDefined
 from .format import XYModelFunctionFormatter
 from .model import XYParametricModel, XYModelFunction
-from kafe.util import function_library
+from kafe.fit.util import function_library
 
 
 __all__ = ["XYFit"]

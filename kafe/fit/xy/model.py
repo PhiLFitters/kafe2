@@ -6,7 +6,7 @@ from scipy.misc import derivative
 from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException, ModelParameterFormatter
 from .container import XYContainer, XYContainerException
 from .format import XYModelFunctionFormatter
-from kafe.util import function_library
+from kafe.fit.util import function_library
 
 
 __all__ = ["XYParametricModel", "XYModelFunction"]
