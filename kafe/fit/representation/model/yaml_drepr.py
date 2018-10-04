@@ -341,6 +341,7 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
         else:
             raise YamlReaderException("Unkonwn parametric model type")
 
+        _model_func = None
         if _class is HistParametricModel:
             _model_func_entry = yaml_doc.pop('model_density_function', None)
             if _model_func_entry:
@@ -352,14 +353,15 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
                 _model_func = ModelFunctionYamlReader._make_object(_model_func_entry, default_type=_parametric_model_type)
                 _constructor_kwargs['model_func'] = _model_func
 
-        # if model parameters are given, apply those to the model function
-        # if not use model function defaults            
-        _given_parameters = yaml_doc.pop('model_parameters', None)
-        if _given_parameters:
-            _model_func.defaults = _given_parameters
-            _constructor_kwargs['model_parameters'] = _given_parameters
-        else:
-            _constructor_kwargs['model_parameters'] = _model_func.defaults
+        if _model_func:
+            # if model parameters are given, apply those to the model function
+            # if not use model function defaults            
+            _given_parameters = yaml_doc.pop('model_parameters', None)
+            if _given_parameters:
+                _model_func.defaults = _given_parameters
+                _constructor_kwargs['model_parameters'] = _given_parameters
+            else:
+                _constructor_kwargs['model_parameters'] = _model_func.defaults
         
         
         _constructor_kwargs.update({key: yaml_doc.pop(key, None) for key in _kwarg_list})

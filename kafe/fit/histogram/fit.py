@@ -11,6 +11,7 @@ from .container import HistContainer
 from .cost import HistCostFunction_NegLogLikelihood, HistCostFunction_UserDefined
 from .format import HistModelDensityFunctionFormatter
 from .model import HistParametricModel, HistModelFunction
+from kafe.fit.util import function_library
 
 
 __all__ = ["HistFit"]
@@ -30,7 +31,7 @@ class HistFit(FitBase):
                           'data_cov_mat', 'model_cov_mat', 'total_cov_mat',
                           'data_cor_mat', 'model_cor_mat', 'total_cor_mat'}
 
-    def __init__(self, data, model_density_function, cost_function=HistCostFunction_NegLogLikelihood(data_point_distribution='poisson'), model_density_antiderivative=None, minimizer=None, minimizer_kwargs=None):
+    def __init__(self, data, model_density_function=function_library.normal_distribution_pdf, cost_function=HistCostFunction_NegLogLikelihood(data_point_distribution='poisson'), model_density_antiderivative=None, minimizer=None, minimizer_kwargs=None):
         """
         Construct a fit of a model to a histogram.
 
