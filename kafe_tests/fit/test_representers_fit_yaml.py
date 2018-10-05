@@ -501,6 +501,7 @@ TEST_FIT_XY_SIMPLE="""
 x_data: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
 y_data: [ -1.0804945, 0.97336504, 2.75769933, 4.91093935, 6.98511206,
         9.15059627, 10.9665515, 13.06741151, 14.95081026, 16.94404467]
+model_function: linear
 y_errors: 0.1
 """
 
@@ -706,6 +707,22 @@ TEST_FIT_XY_MULTI_EXTRA_KEYWORD = TEST_FIT_XY_MULTI + """
 extra_keyword: 3.14
 """
 
+TEST_FIT_XY_MULTI_SIMPLE="""
+type: xy_multi
+x_data_0: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
+y_data_0: [ -1.19026065,  1.51271632,  5.06403348,  9.53506975, 15.07931631,
+            21.54634241, 29.04433804, 37.50568252, 46.99345912, 57.43629710]
+model_function_0: quadratic_model
+x_data_1: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
+y_data_1: [-1.06964365,  1.05016488,  2.70494708,  5.03116094,  6.92949725,
+            8.98510957, 11.00178593, 13.00748810, 15.12334609, 16.90640188]
+model_function_1: |
+    def linear_model(x, b, c):
+        return b * x + c
+y_errors: 0.1
+model_parameters: [0.25, 1.5, -0.5]
+"""
+
 class TestXYMultiFitYamlRepresenter(unittest.TestCase):
 
     @staticmethod
@@ -740,10 +757,12 @@ class TestXYMultiFitYamlRepresenter(unittest.TestCase):
         
         self._roundtrip_stringstream = IOStreamHandle(StringIO())
         self._testfile_stringstream = IOStreamHandle(StringIO(TEST_FIT_XY_MULTI))
+        self._testfile_stringstream_simple = IOStreamHandle(StringIO(TEST_FIT_XY_MULTI_SIMPLE))
         
         self._roundtrip_streamreader = FitYamlReader(self._roundtrip_stringstream)
         self._roundtrip_streamwriter = FitYamlWriter(self._fit, self._roundtrip_stringstream)
         self._testfile_streamreader = FitYamlReader(self._testfile_stringstream)
+        self._testfile_streamreader_simple = FitYamlReader(self._testfile_stringstream_simple)
 
         self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_FIT_XY_MULTI_MISSING_KEYWORD))
         self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_FIT_XY_MULTI_EXTRA_KEYWORD))
@@ -755,6 +774,37 @@ class TestXYMultiFitYamlRepresenter(unittest.TestCase):
 
     def test_read_from_testfile_stream(self):
         _read_fit = self._testfile_streamreader.read()
+        self.assertTrue(isinstance(_read_fit, XYMultiFit))
+        self.assertTrue(
+            np.allclose(
+                self._test_parameters_default,
+                _read_fit.poi_values
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                self._test_y_default_combined,
+                _read_fit.y_model
+            )
+        )
+        
+        _read_fit.do_fit()
+        
+        self.assertTrue(
+            np.allclose(
+                self._test_parameters_do_fit,
+                _read_fit.poi_values
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                self._test_y_do_fit,
+                _read_fit.y_model
+            )
+        )
+
+    def test_read_from_testfile_stream_simple(self):
+        _read_fit = self._testfile_streamreader_simple.read()
         self.assertTrue(isinstance(_read_fit, XYMultiFit))
         self.assertTrue(
             np.allclose(
