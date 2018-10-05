@@ -85,7 +85,7 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
             _override_dict['expression_string'] = 'parametric_model'
             _override_dict['latex_expression_string'] = 'parametric_model'
         elif fit_class is XYFit:
-            _override_dict['x_data'] = 'dataset'
+            _override_dict['x_data'] = ['dataset', 'parametric_model']
             _override_dict['y_data'] = 'dataset'
             _override_dict['x_errors'] = 'dataset'
             _override_dict['y_errors'] = 'dataset'
@@ -100,7 +100,7 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
             _override_dict['x_errors'] = 'dataset'
             _override_dict['y_errors'] = 'dataset'
             for _i in range(10): #TODO config
-                _override_dict['x_data_%s' % _i] = 'dataset'
+                _override_dict['x_data_%s' % _i] = ['dataset', 'parametric_model']
                 _override_dict['y_data_%s' % _i] = 'dataset'
                 _override_dict['model_function_%s' % _i] = 'parametric_model'
                 _override_dict['model_function_name_%s' % _i] = 'parametric_model'

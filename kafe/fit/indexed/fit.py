@@ -301,4 +301,4 @@ class IndexedFit(FitBase):
 
             print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=1)
 
-        super(IndexedFit, self).report()
+        super(IndexedFit, self).report(output_stream=output_stream)

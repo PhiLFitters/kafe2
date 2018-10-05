@@ -1127,7 +1127,7 @@ class XYMultiFit(FitBase):
 
             print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=1)
 
-        super(XYMultiFit, self).report()
+        super(XYMultiFit, self).report(output_stream=output_stream)
 
     def get_splice(self, data, index):
         """

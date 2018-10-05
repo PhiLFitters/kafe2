@@ -91,7 +91,12 @@ class ModelFunctionBase(FileIOMixin, object):
 
         :param model_function: function handle
         """
-        self._model_function_handle = model_function if model_function else self._get_default()
+        if isinstance(model_function, str):
+            self._model_function_handle = function_library.STRING_TO_FUNCTION.get(model_function, None)
+            if not self._model_function_handle:
+                raise self.__class__.EXCEPTION_TYPE('Unknown model function: %s' % model_function)
+        else:
+            self._model_function_handle = model_function if model_function else self._get_default()
         self._assign_model_function_argspec_and_argcount()
         self._validate_model_function_raise()
         self._assign_function_formatter()
