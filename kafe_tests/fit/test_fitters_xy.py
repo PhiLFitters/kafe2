@@ -281,7 +281,6 @@ class TestFittersXYChi2WithError(unittest.TestCase):
     def test_get_matching_error_all_None(self):
         _errs = self.xy_fit.get_matching_errors(matching_criteria=None)
         self.assertEqual(len(_errs), 2)
-        print(_errs)
         self.assertIs(self.xy_fit._data_container._error_dicts['MyYDataError']['err'], _errs['MyYDataError'])
         self.assertIs(self.xy_fit._param_model._error_dicts['MyYModelError']['err'], _errs['MyYModelError'])
 
