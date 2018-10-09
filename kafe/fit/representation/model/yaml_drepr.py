@@ -16,7 +16,6 @@ from kafe.fit.indexed.model import IndexedParametricModel, IndexedModelFunction
 from kafe.fit.xy.model import XYParametricModel, XYModelFunction
 from kafe.fit.representation._yaml_base import YamlWriterException,\
     YamlReaderException
-from bsddb.dbtables import _data
 from kafe.fit.util import function_library
 
 __all__ = ['ModelFunctionYamlWriter', 'ModelFunctionYamlReader', 'ParametricModelYamlWriter', 'ParametricModelYamlReader']
