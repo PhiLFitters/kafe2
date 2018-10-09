@@ -1,6 +1,6 @@
 import inspect
 import numpy as np
-import StringIO
+import six
 import textwrap
 import tokenize
 
@@ -70,7 +70,7 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
     @staticmethod
     def _parse_model_function(input_string):
         """converts a string of python code into a python function object"""
-        _tokens = tokenize.generate_tokens(StringIO.StringIO(input_string).readline)
+        _tokens = tokenize.generate_tokens(six.StringIO(input_string).readline)
         for _toknum, _tokval, _spos, _epos, _line_string  in _tokens:
             if _tokval in ModelFunctionYamlReader.FORBIDDEN_TOKENS:
                 raise DReprError("Encountered forbidden token '%s' in user-entered code on line '%s'."
