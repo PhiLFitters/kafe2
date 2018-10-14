@@ -98,7 +98,7 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
         _locals = __locals_pointer[0]
         del _locals["__builtins__"]
         del _locals["__locals_pointer"]
-        return _locals.values()[_model_function_index] #0 is np/numpy
+        return list(_locals.values())[_model_function_index] #0 is np/numpy
     
     @classmethod
     def _get_subspace_override_dict(cls, model_function_class):

@@ -72,9 +72,9 @@ class XYMultiModelFunction(ModelFunctionBase):
                         "Model functions have conflicting defaults for parameter %s: %s <-> %s" % 
                         (_arg_name, _args_with_defaults[_arg_name], _default_value))
             #save the locations of singular args in the combined list
-            _keys = _args_with_defaults.keys()
+            _keys = list(_args_with_defaults.keys())
             self._model_arg_indices.append([_keys.index(_arg_name) for _arg_name in _args])
-        _combined_args = _args_with_defaults.keys()
+        _combined_args = list(_args_with_defaults.keys())
         _combined_defaults = []
         for _arg_name in _combined_args:
             _default = _args_with_defaults.get(_arg_name)
