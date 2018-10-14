@@ -69,6 +69,7 @@ TEST_FIT_HIST_EXTRA_KEYWORD = TEST_FIT_HIST + """
 extra_keyword: 3.14
 """
 
+#FIXME something goes wrong when constructing the parametric model
 TEST_FIT_HIST_SIMPLE="""
 type: histogram
 n_bins: 8
