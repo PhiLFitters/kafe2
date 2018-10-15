@@ -304,11 +304,14 @@ class PlotFigureBase(object):
 
     IS_MULTI_PLOT = False
 
-    def __init__(self, fit_objects, model_indices=0):
-        try:
-            iter(model_indices)
-        except:
-            model_indices = [model_indices]
+    def __init__(self, fit_objects, model_indices=None):
+        if model_indices is None:
+            model_indices = range(len(fit_objects))
+        else:
+            try:
+                iter(model_indices)
+            except:
+                model_indices = [model_indices]
         self._model_indices = model_indices
         self._fig = plt.figure()  # defaults from matplotlibrc
         # self._figsize = (self._fig.get_figwidth()*self._fig.dpi, self._fig.get_figheight()*self._fig.dpi)
