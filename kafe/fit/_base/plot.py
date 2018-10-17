@@ -306,7 +306,10 @@ class PlotFigureBase(object):
 
     def __init__(self, fit_objects, model_indices=None):
         if model_indices is None:
-            model_indices = range(len(fit_objects))
+            try:
+                model_indices = range(len(fit_objects))
+            except TypeError:
+                model_indices = [0]
         else:
             try:
                 iter(model_indices)
