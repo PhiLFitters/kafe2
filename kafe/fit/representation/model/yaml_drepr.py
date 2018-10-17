@@ -359,7 +359,7 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
                 _model_func = ModelFunctionYamlReader._make_object(_model_func_entry, default_type=_parametric_model_type)
                 _constructor_kwargs['model_density_func'] = _model_func
         elif _class in (IndexedParametricModel, XYParametricModel):
-            _model_func_entry = yaml_doc.pop('model_function')
+            _model_func_entry = yaml_doc.pop('model_function', None)
             if _model_func_entry:
                 _model_func = ModelFunctionYamlReader._make_object(_model_func_entry, default_type=_parametric_model_type)
                 _constructor_kwargs['model_func'] = _model_func
