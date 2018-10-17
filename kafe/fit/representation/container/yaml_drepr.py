@@ -286,7 +286,7 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
             # if error is a float/int or a list thereof add it as a simple error and don't
             # try to interpret it as a kafe error object
             if isinstance(_err, float) or isinstance(_err, int) or isinstance(_err, list):
-                if _axis:
+                if _axis is not None:
                     cls._add_error_to_container('simple', _container_obj, err_val=_err, axis=_axis)
                 else:
                     cls._add_error_to_container('simple', _container_obj, err_val=_err)
