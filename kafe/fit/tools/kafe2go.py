@@ -24,6 +24,12 @@ def kafe2go():
     _parser.add_argument('--noband', 
       action='store_true',
       help="don't draw 1-sigma band around function")
+    _parser.add_argument('--noinfobox', 
+      action='store_true',
+      help="don't add model info boxes to plots")
+    _parser.add_argument('--nolatex', 
+      action='store_true',
+      help="don't format model functions and model parameters as LaTeX")
     _parser.add_argument('--noreport', 
       action='store_true',
       help="don't print fit report after fitting")
@@ -46,7 +52,9 @@ def kafe2go():
     _band = not _args.noband
     _contours = _args.contours
     _report = not _args.noreport
+    _infobox = not _args.noinfobox
     _input_format = _args.inputformat
+    _latex = not _args.nolatex
     _plot_format = _args.plotformat
     _save_plot = _args.saveplot
     _show_plot = not _args.noplot
@@ -65,6 +73,9 @@ def kafe2go():
         _plot.PLOT_SUBPLOT_TYPES.pop('model_error_band', None)
         
     _plot.plot()
+    
+    if _infobox:
+        _plot.show_fit_info_box(format_as_latex=_latex)
 
     if _save_plot:
         _basename = _filename[:_filename.rfind('.')]
