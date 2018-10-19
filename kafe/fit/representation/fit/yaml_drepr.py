@@ -56,6 +56,25 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
             return ['dataset', 'parametric_model']
     
     @classmethod
+    def _modify_yaml_doc(cls, yaml_doc, kafe_object_class):
+        if kafe_object_class is XYMultiFit:
+            if 'x_data' in yaml_doc.keys():
+                _x_data = yaml_doc.pop('x_data')
+                _i = 0
+                while 'model_function_%s' % _i in yaml_doc.keys():
+                    if 'x_data_%s' not in yaml_doc:
+                        yaml_doc['x_data_%s' % _i] = _x_data
+                    _i += 1
+            if 'y_data' in yaml_doc.keys():
+                _y_data = yaml_doc.pop('y_data')
+                _i = 0
+                while 'model_function_%s' % _i in yaml_doc.keys():
+                    if 'y_data_%s' not in yaml_doc:
+                        yaml_doc['y_data_%s' % _i] = _y_data
+                    _i += 1
+        return yaml_doc
+    
+    @classmethod
     def _get_subspace_override_dict(cls, fit_class):
         _override_dict = {'model_parameters':'parametric_model',
                           'arg_formatters':'parametric_model',
@@ -97,9 +116,11 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
             _override_dict['expression_string'] = 'parametric_model'
             _override_dict['latex_expression_string'] = 'parametric_model'
         elif fit_class is XYMultiFit:
+            _override_dict['x_data'] = ['dataset', 'parametric_model']
+            _override_dict['y_data'] = 'dataset'
             _override_dict['x_errors'] = 'dataset'
             _override_dict['y_errors'] = 'dataset'
-            for _i in range(10): #TODO config
+            for _i in range(20): #TODO config
                 _override_dict['x_data_%s' % _i] = ['dataset', 'parametric_model']
                 _override_dict['y_data_%s' % _i] = 'dataset'
                 _override_dict['model_function_%s' % _i] = 'parametric_model'

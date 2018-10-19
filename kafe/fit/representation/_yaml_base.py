@@ -74,6 +74,8 @@ class YamlReaderMixin(DReprReaderMixin):
             if _kafe_object_class is None:
                 raise YamlReaderException("%s type unknown or not supported: %s" 
                                           % (cls.BASE_OBJECT_TYPE_NAME, _object_type))
+
+        yaml_doc = cls._modify_yaml_doc(yaml_doc.copy(), _kafe_object_class)
         
         _override_dict = cls._get_subspace_override_dict(_kafe_object_class)
         for _keyword in list(_override_dict.keys()):
@@ -90,8 +92,9 @@ class YamlReaderMixin(DReprReaderMixin):
         _missing_keywords = [_keyword for _keyword in cls._get_required_keywords(yaml_doc, _kafe_object_class)
                              if _keyword not in yaml_doc]
         if _missing_keywords:
+            #TODO rework
             raise YamlReaderException("Missing required information for reading in a %s object: %s"
-                                      % (cls.BASE_OBJECT_TYPE_NAME, _missing_keywords))
+                                      % (_kafe_object_class, _missing_keywords))
             
         return yaml_doc
     
@@ -104,6 +107,10 @@ class YamlReaderMixin(DReprReaderMixin):
         return dict(type=default_type)
     
     @classmethod
+    def _modify_yaml_doc(cls, yaml_doc, kafe_object_class):
+        return yaml_doc
+    
+    @classmethod
     def _get_required_keywords(cls, yaml_doc, kafe_object_class):
         return []
     
@@ -111,6 +118,7 @@ class YamlReaderMixin(DReprReaderMixin):
     def _convert_yaml_doc_to_object(cls, yaml_doc):
         return None, None #format: return <kafe object>, <leftover yaml doc>
     
+    #TODO intergrate into _modify_yaml_doc
     @classmethod
     def _get_subspace_override_dict(cls, kafe_object_class):
         return dict()
