@@ -243,6 +243,10 @@ class IndexedFit(FitBase):
 
     ## add_error... methods inherited from FitBase ##
 
+    def generate_plot(self):
+        from kafe.fit.indexed import IndexedPlot
+        return IndexedPlot(self)
+
     def report(self, output_stream=sys.stdout,
                show_data=True,
                show_model=True):

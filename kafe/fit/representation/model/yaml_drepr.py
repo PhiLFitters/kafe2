@@ -59,8 +59,8 @@ class ModelFunctionYamlWriter(YamlWriterMixin, ModelFunctionDReprBase):
     
 class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
 
-    FORBIDDEN_TOKENS = ['eval', 'exec', 'execfile', 'file', 'global', 'import', '__import__', 'input', 
-                        'nonlocal', 'open', 'reload', 'self', 'super']
+    FORBIDDEN_TOKENS = ['compile', 'eval', 'exec', 'execfile', 'file', 'global', 'globals', 'import', '__import__', 
+                        'input', ' locals', 'nonlocal', 'open', 'reload', 'self', 'super']
     
     def __init__(self, input_io_handle):
         super(ModelFunctionYamlReader, self).__init__(
@@ -79,26 +79,37 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
         if "__" in input_string:
             raise DReprError("Model function input must not contain '__'!")
     
-        _fixed_imports = ""
-        _model_function_index = 0
-        _fixed_imports += "import numpy as np\n" #import numpy
-        _model_function_index += 1
+        _imports = ""
+        _imports += "import numpy as np\n" #import numpy
         #import scipy if installed
         try:
             import scipy
-            _fixed_imports += "import scipy\n"
-            _model_function_index += 1
+            _imports += "import scipy\n"
         except:
             pass
-        input_string = _fixed_imports + input_string
         
-        __locals_pointer = [None] #TODO better solution?
-        input_string = input_string + "\n__locals_pointer[0] = __locals()"
-        exec(input_string, {"__builtins__":{"__locals":locals, "__import__":__import__}, "__locals_pointer":__locals_pointer})
-        _locals = __locals_pointer[0]
-        del _locals["__builtins__"]
-        del _locals["__locals_pointer"]
-        return list(_locals.values())[_model_function_index] #0 is np/numpy
+        
+        __locals_pointer = [None, None] #TODO better solution?
+        #save locals before function definition
+        _exec_string = _imports + "__locals_pointer[0] = __locals().copy()\n" + input_string
+        #save locals after function definition
+        _exec_string = _exec_string + "\n__locals_pointer[1] = __locals().copy()"
+        _restricted_builtins = __builtins__.copy()
+        for _forbidden_token in ModelFunctionYamlReader.FORBIDDEN_TOKENS:
+            _restricted_builtins.pop(_forbidden_token, None)
+        _restricted_builtins['__import__'] = __import__
+        exec(_exec_string, {"__builtins__":_restricted_builtins, "__locals":locals, 
+                            "__locals_pointer":__locals_pointer})
+        _locals_pre, _locals_post = __locals_pointer[0].values(), __locals_pointer[1].values()
+        _new_references = []
+        for _post_reference in _locals_post:
+            if _post_reference not in _locals_pre:
+                _new_references.append(_post_reference)
+        if len(_new_references) != 1:
+            raise YamlReaderException(
+                "Expected to receive exactly one new reference as a model function but instead received %s in the following string:\n%s"
+                % (len(_new_references), input_string))
+        return _new_references[0]
     
     @classmethod
     def _get_subspace_override_dict(cls, model_function_class):

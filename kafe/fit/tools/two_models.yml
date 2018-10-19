@@ -1,3 +1,4 @@
+#TODO chi2/ndf is incorrect
 type: xy_multi
 x_data:
 - 9.574262e-01
