@@ -1048,6 +1048,10 @@ class XYMultiFit(FitBase):
 
         return _nuisance_vector
 
+    def generate_plot(self):
+        from kafe.fit.xy_multi import XYMultiPlot
+        return XYMultiPlot(self)
+
     def report(self, output_stream=sys.stdout,
                show_data=True,
                show_model=True):

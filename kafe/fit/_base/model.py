@@ -193,7 +193,7 @@ class ModelFunctionBase(FileIOMixin, object):
         if not self.argspec.defaults:
             _temp_defaults = ()
         else:
-            _temp_defaults = self.argspec.defaults
+            _temp_defaults = tuple(self.argspec.defaults)
         #fill up unspecified defaults with 1.0
         return (1.0,) * (self.parcount - len(_temp_defaults)) + _temp_defaults
     
