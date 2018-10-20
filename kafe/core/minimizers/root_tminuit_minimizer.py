@@ -1,5 +1,6 @@
 from __future__ import print_function
 from kafe.core.contour import ContourFactory
+import six
 try:
     from ROOT import TMinuit, Double, Long
     from ROOT import TMath  # for using ROOT's chi2prob function
