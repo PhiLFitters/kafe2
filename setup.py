@@ -4,7 +4,9 @@ import unittest
 import sys
 import os
 
-from setuptools import setup
+import kafe
+
+from setuptools import find_packages, setup
 
 
 def discover_kafe_tests():
@@ -20,14 +22,14 @@ def read_local(filename):
     else:
         return ""
 
-setup(name='kafe',
-      version='2.0.0',
-      description='Karlsruhe Fit Environment: a package for fitting and elementary data analysis',
+setup(name='kafe2',
+      version=kafe.__version__,
+      description='Karlsruhe Fit Environment 2: a package for fitting and elementary data analysis',
       long_description=read_local('README'),
       author='Daniel Savoiu',
       author_email='daniel.savoiu@cern.ch',
-      url='http://github.com/dsavoiu/kafe',
-      packages=['kafe'],
+      url='http://github.com/dsavoiu/kafe2',
+      packages=find_packages(),
       test_suite='setup.discover_kafe_tests',
       license='GPL3'
  )
