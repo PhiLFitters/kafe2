@@ -30,6 +30,8 @@ setup(name='kafe2',
       author_email='daniel.savoiu@cern.ch',
       url='http://github.com/dsavoiu/kafe2',
       packages=find_packages(),
+      package_data={'kafe': ['config/*.conf', 'config/*.yaml', 'config/*.yml', 'fit/tools/kafe2go']},
+      scripts=['kafe/fit/tools/kafe2go.py', 'kafe/fit/tools/kafe2go'],
       test_suite='setup.discover_kafe_tests',
       license='GPL3'
  )
