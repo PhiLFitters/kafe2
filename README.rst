@@ -1,7 +1,7 @@
 .. -*- mode: rst -*-
 
 *************************************
-*kafe2* - Karlsruhe Fit Environment 2
+kafe2 - Karlsruhe Fit Environment 2
 *************************************
 
 =====
@@ -10,7 +10,7 @@ About
 
 *kafe2* is an open-source Python package designed to provide a flexible 
 Python interface for the estimation of model parameters from measured
-data. It is the spiritual successor of the original *kafe* package.
+data. It is the spiritual successor to the original *kafe* package.
 
 *kafe2* offers support for several types of data formats (including series
 of indexed measurements, xy value pairs, and histograms) and data
@@ -30,14 +30,14 @@ Requirements
 *kafe2* needs some additional Python packages:
 
 * `NumPy <http://www.numpy.org>`_
-* `Numdifftools <https://pypi.org/project/Numdifftools/>`
+* `Numdifftools <https://pypi.org/project/Numdifftools/>`_
 * `SciPy <http://www.scipy.org>`_
 * `matplotlib <http://matplotlib.org>`_
 
 
 Since *kafe2* relies on *matplotlib* for graphics it might be necessary to install external programs:
 
-* `Tkinter <https://wiki.python.org/moin/TkInter>`, the default GUI used by *matplotlib*
+* `Tkinter <https://wiki.python.org/moin/TkInter>`_, the default GUI used by *matplotlib*
 
 
 Optionally, a function minimizer other than scipy.optimize.minimize can be used.
@@ -52,21 +52,23 @@ by default if they're installed:
 Installation notes
 ==========================
 
-The easiest way to install *kafe2* is via *pip <https://pypi.org/project/pip/>*, which is
+The easiest way to install *kafe2* is via `pip <https://pip.pypa.io/en/stable/>`_, which is
 already included for Python >= 2.7.9. Installing via *pip* will automatically install the minimal
 dependencies.
 
 For Python 2:
 
-    .. code:bash
+    .. code:: bash
     
         pip install kafe2
 
+
 For Python 3:
 
-    .. code:bash
+    .. code:: bash
     
         pip3 install kafe2
+
 
 You will also need to install *Tkinter* if it didn't already come with your Python distribution.
 
@@ -76,17 +78,20 @@ For Python 2, Ubuntu/Mint/Debian:
 	
 	sudo apt-get install python-tk
 
+
 For Python 2, Fedora/RHEL/CentOS::
 	
 	.. code:: bash
 	
 	sudo yum install tkinter
 
+
 For Python 3, Ubuntu/Mint/Debian:
 	
 	.. code:: bash
 	
 	sudo apt-get install python3-tk
+
 
 For Python 3, Fedora/RHEL/CentOS::
 	
