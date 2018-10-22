@@ -30,6 +30,7 @@ Requirements
 *kafe2* needs some additional Python packages:
 
 * `NumPy <http://www.numpy.org>`_
+* `Numdifftools <https://pypi.org/project/Numdifftools/>`
 * `SciPy <http://www.scipy.org>`_
 * `matplotlib <http://matplotlib.org>`_
 
@@ -48,38 +49,29 @@ Finally, *kafe2* requires a number of external programs:
   interactive frontend for matplotlib. Other frontends are not supported and may cause unexpected behavior.
 
 ==========================
-Installation notes (Linux)
+Installation notes
 ==========================
 
+The easiest way to install *kafe2* is via *pip <https://pypi.org/project/pip/>*, which is
+already included for Python >= 2.7.9. Installing via *pip* will automatically install the minimal
+dependencies.
 
-Most of the above packages and programs can be installed through the package manager on most Linux
-distributions.
+For Python 2:
 
-*kafe2* was developed for use on Linux desktop systems. Please note that all
-commands below should be run as root.
+    .. code:bash
+    
+        pip install kafe2
 
------------------------------------------
-Install *NumPy*, *SciPy* and *matplotlib*
------------------------------------------
+For Python 3:
 
-These packages should be available in the package manager.
-
-In Ubuntu/Mint/Debian:
-
-    .. code:: bash
-
-        apt-get install python-numpy python-scipy python-matplotlib
-
-In Fedora/RHEL/CentOS:
-
-    .. code:: bash
-
-        yum install numpy scipy python-matplotlib
+    .. code:bash
+    
+        pip3 install kafe2
 
 
---------------
-Install *ROOT*
---------------
+------------------------
+Optional: Install *ROOT*
+------------------------
 
 ROOT and its Python bindings can be obtained via the package manager in
 Ubuntu/Mint/Debian:
@@ -109,9 +101,9 @@ the following environment variables have to be set correctly (:
 For more info, refer to `<http://root.cern.ch/drupal/content/pyroot>`_.
 
 
------------------
-Install `iminuit`
------------------
+---------------------------
+Optional: Install `iminuit`
+---------------------------
 
 *iminuit* is a Python wrapper for the Minuit minimizer which is
 independent of ROOT. If compiling/installing ROOT is not possible,
