@@ -79,7 +79,7 @@ For Python 2, Ubuntu/Mint/Debian:
 	    sudo apt-get install python-tk
 
 
-For Python 2, Fedora/RHEL/CentOS::
+For Python 2, Fedora/RHEL/CentOS:
 	
 	.. code:: bash
 	
@@ -93,7 +93,7 @@ For Python 3, Ubuntu/Mint/Debian:
 	    sudo apt-get install python3-tk
 
 
-For Python 3, Fedora/RHEL/CentOS::
+For Python 3, Fedora/RHEL/CentOS:
 	
 	.. code:: bash
 	
