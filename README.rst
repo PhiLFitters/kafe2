@@ -35,6 +35,11 @@ Requirements
 * `matplotlib <http://matplotlib.org>`_
 
 
+Since *kafe2* relies on *matplotlib* for graphics it might be necessary to install external programs:
+
+* `Tkinter <https://wiki.python.org/moin/TkInter>`, the default GUI used by *matplotlib*
+
+
 Optionally, a function minimizer other than scipy.optimize.minimize can be used.
 *kafe2* implements interfaces to two function minimizers and will use them
 by default if they're installed:
@@ -42,11 +47,6 @@ by default if they're installed:
 * *MINUIT*, which is included in *CERN*'s data analysis package `ROOT <http://root.cern.ch>`_ (>= 5.34), or
 * `iminuit <https://github.com/iminuit/iminuit>`_ (>= 1.1.1), which is independent of ROOT
 
-
-Finally, *kafe2* requires a number of external programs:
-
-* Qt4 and the Python bindings PyQt4 are needed because *Qt* is the supported
-  interactive frontend for matplotlib. Other frontends are not supported and may cause unexpected behavior.
 
 ==========================
 Installation notes
@@ -67,6 +67,32 @@ For Python 3:
     .. code:bash
     
         pip3 install kafe2
+
+You will also need to install *Tkinter* if it didn't already come with your Python distribution.
+
+For Python 2, Ubuntu/Mint/Debian:
+	
+	.. code:: bash
+	
+	sudo apt-get install python-tk
+
+For Python 2, Fedora/RHEL/CentOS::
+	
+	.. code:: bash
+	
+	sudo yum install tkinter
+
+For Python 3, Ubuntu/Mint/Debian:
+	
+	.. code:: bash
+	
+	sudo apt-get install python3-tk
+
+For Python 3, Fedora/RHEL/CentOS::
+	
+	.. code:: bash
+	
+	sudo yum install python3-tkinter
 
 
 ------------------------
