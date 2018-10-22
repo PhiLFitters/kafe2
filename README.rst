@@ -54,7 +54,7 @@ Installation notes
 
 The easiest way to install *kafe2* is via `pip <https://pip.pypa.io/en/stable/>`_, which is
 already included for Python >= 2.7.9. Installing via *pip* will automatically install the minimal
-dependencies.
+dependencies. Please note that commands below should be run as root.
 
 For Python 2:
 
@@ -76,28 +76,28 @@ For Python 2, Ubuntu/Mint/Debian:
 	
 	.. code:: bash
 	
-	    sudo apt-get install python-tk
+	    apt-get install python-tk
 
 
 For Python 2, Fedora/RHEL/CentOS:
 	
 	.. code:: bash
 	
-	    sudo yum install tkinter
+	    yum install tkinter
 
 
 For Python 3, Ubuntu/Mint/Debian:
 	
 	.. code:: bash
 	
-	    sudo apt-get install python3-tk
+	    apt-get install python3-tk
 
 
 For Python 3, Fedora/RHEL/CentOS:
 	
 	.. code:: bash
 	
-	    sudo yum install python3-tkinter
+	    yum install python3-tkinter
 
 
 ------------------------
