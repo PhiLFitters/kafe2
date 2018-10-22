@@ -22,16 +22,37 @@ def read_local(filename):
     else:
         return ""
 
-setup(name='kafe2',
-      version=kafe.__version__,
-      description='Karlsruhe Fit Environment 2: a package for fitting and elementary data analysis',
-      long_description=read_local('README'),
-      author='Daniel Savoiu',
-      author_email='daniel.savoiu@cern.ch',
-      url='http://github.com/dsavoiu/kafe2',
-      packages=find_packages(),
-      package_data={'kafe': ['config/*.conf', 'config/*.yaml', 'config/*.yml', 'fit/tools/kafe2go']},
-      scripts=['kafe/fit/tools/kafe2go.py', 'kafe/fit/tools/kafe2go'],
-      test_suite='setup.discover_kafe_tests',
-      license='GPL3'
+setup(
+    name='kafe2',
+    version=kafe.__version__,
+    description='Karlsruhe Fit Environment 2: a package for fitting and elementary data analysis',
+    long_description=read_local('README'),
+    author='Daniel Savoiu',
+    author_email='daniel.savoiu@cern.ch',
+    url='http://github.com/dsavoiu/kafe2',
+    packages=find_packages(),
+    package_data={'kafe': ['config/*.conf', 'config/*.yaml', 'config/*.yml', 'fit/tools/kafe2go']},
+    scripts=['kafe/fit/tools/kafe2go.py', 'kafe/fit/tools/kafe2go'],
+    test_suite='setup.discover_kafe_tests',
+    keywords = "data analysis lab courses education students physics fitting minimization",
+    license='GPL3',
+    #TODO requirement versions
+    setup_requires=[
+        'NumPy',
+        'Scipy'
+        'matplotlib'
+    ],
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Education',
+        'Intended Audience :: Science/Research',
+        'Topic :: Education',
+        'Topic :: Scientific/Engineering',
+        'Topic :: Scientific/Engineering :: Physics',
+        'Topic :: Scientific/Engineering :: Information Analysis',
+        'Topic :: Scientific/Engineering :: Visualization',
+        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+    ],
  )
