@@ -76,28 +76,28 @@ For Python 2, Ubuntu/Mint/Debian:
 	
 	.. code:: bash
 	
-	sudo apt-get install python-tk
+	    sudo apt-get install python-tk
 
 
 For Python 2, Fedora/RHEL/CentOS::
 	
 	.. code:: bash
 	
-	sudo yum install tkinter
+	    sudo yum install tkinter
 
 
 For Python 3, Ubuntu/Mint/Debian:
 	
 	.. code:: bash
 	
-	sudo apt-get install python3-tk
+	    sudo apt-get install python3-tk
 
 
 For Python 3, Fedora/RHEL/CentOS::
 	
 	.. code:: bash
 	
-	sudo yum install python3-tkinter
+	    sudo yum install python3-tkinter
 
 
 ------------------------
