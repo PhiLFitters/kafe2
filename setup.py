@@ -4,10 +4,9 @@ import unittest
 import sys
 import os
 
-import kafe
-
 from setuptools import find_packages, setup
 
+__version__ = "2.0.0.dev0"
 
 def discover_kafe_tests():
     _tl = unittest.TestLoader()
@@ -24,7 +23,7 @@ def read_local(filename):
 
 setup(
     name='kafe2',
-    version=kafe.__version__,
+    version=__version__,
     description='Karlsruhe Fit Environment 2: a package for fitting and elementary data analysis',
     long_description=read_local('README'),
     author='Daniel Savoiu',
@@ -37,9 +36,10 @@ setup(
     keywords = "data analysis lab courses education students physics fitting minimization",
     license='GPL3',
     #TODO requirement versions
-    setup_requires=[
+    install_requires=[
         'NumPy',
-        'Scipy'
+        'Numdifftools',
+        'Scipy',
         'matplotlib'
     ],
     classifiers=[
