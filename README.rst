@@ -8,11 +8,11 @@
 About
 =====
 
-**kafe2** is an open-source Python package designed to provide a flexible 
+*kafe2* is an open-source Python package designed to provide a flexible 
 Python interface for the estimation of model parameters from measured
-data. It is the spiritual successor of the original **kafe** package.
+data. It is the spiritual successor of the original *kafe* package.
 
-kafe2 offers support for several types of data formats (including series
+*kafe2* offers support for several types of data formats (including series
 of indexed measurements, xy value pairs, and histograms) and data
 uncertainty models, as well as arbitrarily complex parametric
 models. The numeric aspects are handled using the scientific Python
@@ -29,20 +29,20 @@ Requirements
 
 *kafe2* needs some additional Python packages:
 
-* `SciPy <http://www.scipy.org>`_
 * `NumPy <http://www.numpy.org>`_
+* `SciPy <http://www.scipy.org>`_
 * `matplotlib <http://matplotlib.org>`_
 
 
-Additionally, a function minimizer is needed. *kafe* implements interfaces to two
-function minimizers and requires at least one of them to be installed:
+Optionally, a function minimizer other than scipy.optimize.minimize can be used.
+*kafe2* implements interfaces to two function minimizers and will use them
+by default if they're installed:
 
 * *MINUIT*, which is included in *CERN*'s data analysis package `ROOT <http://root.cern.ch>`_ (>= 5.34), or
 * `iminuit <https://github.com/iminuit/iminuit>`_ (>= 1.1.1), which is independent of ROOT
-* scipy.optimize.minimize, which is included with SciPy
 
 
-Finally, *kafe* requires a number of external programs:
+Finally, *kafe2* requires a number of external programs:
 
 * Qt4 and the Python bindings PyQt4 are needed because *Qt* is the supported
   interactive frontend for matplotlib. Other frontends are not supported and may cause unexpected behavior.
@@ -55,7 +55,7 @@ Installation notes (Linux)
 Most of the above packages and programs can be installed through the package manager on most Linux
 distributions.
 
-*kafe* was developed for use on Linux desktop systems. Please note that all
+*kafe2* was developed for use on Linux desktop systems. Please note that all
 commands below should be run as root.
 
 -----------------------------------------
