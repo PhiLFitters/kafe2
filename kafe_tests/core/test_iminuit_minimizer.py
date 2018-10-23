@@ -5,7 +5,7 @@ import numpy as np
 
 _cannot_import_IMinuit = False
 try:
-    from kafe.core.minimizers.iminuit_minimizer import MinimizerIMinuit
+    from kafe2.core.minimizers.iminuit_minimizer import MinimizerIMinuit
 except ImportError:
     _cannot_import_IMinuit = True
 

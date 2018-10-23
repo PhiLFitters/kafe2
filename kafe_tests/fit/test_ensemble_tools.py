@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 import scipy.stats
 
-from kafe.fit.tools.ensemble import (broadcast_to_shape,
+from kafe2.fit.tools.ensemble import (broadcast_to_shape,
                                      EnsembleVariable, EnsembleVariableProbabilityDistribution,
                                      EnsembleError)
 

@@ -4,9 +4,7 @@ kafe2 example: Fit a line
 =========================
 """
 
-import numpy as np
-
-from kafe.fit import XYFit, XYPlot
+from kafe2 import XYFit, XYPlot
 
 # import matplotlib *after* kafe2
 

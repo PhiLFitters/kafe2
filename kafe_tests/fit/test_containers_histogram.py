@@ -2,10 +2,10 @@ import unittest
 import numpy as np
 import scipy.stats as stats
 
-from kafe.fit import HistContainer, HistParametricModel
-from kafe.fit._base import DataContainerException
-from kafe.fit.histogram.container import HistContainerException
-from kafe.fit.histogram.model import HistParametricModelException,\
+from kafe2.fit import HistContainer, HistParametricModel
+from kafe2.fit._base import DataContainerException
+from kafe2.fit.histogram.container import HistContainerException
+from kafe2.fit.histogram.model import HistParametricModelException,\
     HistModelFunction
 
 

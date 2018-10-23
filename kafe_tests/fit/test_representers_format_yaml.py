@@ -1,15 +1,15 @@
 import unittest
 from six import StringIO
 
-from kafe.fit._base import ModelParameterFormatter
-from kafe.fit.histogram import HistModelDensityFunctionFormatter
-from kafe.fit.indexed import IndexedModelFunctionFormatter
-from kafe.fit.xy import XYModelFunctionFormatter
-from kafe.fit.xy_multi import XYMultiModelFunctionFormatter
-from kafe.fit.representation import ModelFunctionFormatterYamlWriter, ModelFunctionFormatterYamlReader
-from kafe.fit.representation import ModelParameterFormatterYamlWriter, ModelParameterFormatterYamlReader
-from kafe.fit.io.handle import IOStreamHandle
-from kafe.fit.representation._yaml_base import YamlReaderException
+from kafe2.fit._base import ModelParameterFormatter
+from kafe2.fit.histogram import HistModelDensityFunctionFormatter
+from kafe2.fit.indexed import IndexedModelFunctionFormatter
+from kafe2.fit.xy import XYModelFunctionFormatter
+from kafe2.fit.xy_multi import XYMultiModelFunctionFormatter
+from kafe2.fit.representation import ModelFunctionFormatterYamlWriter, ModelFunctionFormatterYamlReader
+from kafe2.fit.representation import ModelParameterFormatterYamlWriter, ModelParameterFormatterYamlReader
+from kafe2.fit.io.handle import IOStreamHandle
+from kafe2.fit.representation._yaml_base import YamlReaderException
 
 
 TEST_MODEL_FUNCTION_FORMATTER_HISTOGRAM="""

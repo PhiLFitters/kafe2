@@ -1,7 +1,7 @@
 import numpy as np
 
-from kafe.fit import XYFitEnsemble
-from kafe.tools import print_dict_recursive
+from kafe2 import XYFitEnsemble
+from kafe2.tools import print_dict_recursive
 
 import matplotlib.pyplot as plt
 

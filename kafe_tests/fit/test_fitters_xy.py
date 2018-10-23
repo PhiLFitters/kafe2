@@ -2,10 +2,10 @@ import unittest
 import numpy as np
 import six
 
-from kafe.config import kc
-from kafe.fit import XYFit
-from kafe.fit.xy.fit import XYFitException
-from kafe.fit.xy.model import XYModelFunctionException
+from kafe2.config import kc
+from kafe2.fit import XYFit
+from kafe2.fit.xy.fit import XYFitException
+from kafe2.fit.xy.model import XYModelFunctionException
 
 CONFIG_PARAMETER_DEFAULT_VALUE = kc('core', 'default_initial_parameter_value')
 

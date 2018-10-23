@@ -1,11 +1,11 @@
 import unittest
 import numpy as np
 
-from kafe.fit import XYContainer, XYParametricModel
-from kafe.fit._base import DataContainerException
-from kafe.fit.xy.container import XYContainerException
-from kafe.fit.xy.model import XYParametricModelException, XYModelFunction
-from kafe.core.error import cov_mat_from_float_list
+from kafe2.fit import XYContainer, XYParametricModel
+from kafe2.fit._base import DataContainerException
+from kafe2.fit.xy.container import XYContainerException
+from kafe2.fit.xy.model import XYParametricModelException, XYModelFunction
+from kafe2.core.error import cov_mat_from_float_list
 
 
 

@@ -3,7 +3,7 @@ import unittest
 
 import numpy as np
 
-from kafe.core.minimizers.scipy_optimize_minimizer import MinimizerScipyOptimize
+from kafe2.core.minimizers.scipy_optimize_minimizer import MinimizerScipyOptimize
 
 
 def fcn_3(x, y, z):

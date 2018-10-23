@@ -2,13 +2,13 @@ import unittest
 import numpy as np
 from six import StringIO
 
-from kafe.fit.histogram import HistModelFunction, HistModelDensityFunctionFormatter
-from kafe.fit.indexed import IndexedModelFunction, IndexedModelFunctionFormatter
-from kafe.fit.xy import XYModelFunction, XYModelFunctionFormatter
-from kafe.fit.xy_multi import XYMultiModelFunction, XYMultiModelFunctionFormatter
-from kafe.fit.representation import ModelFunctionYamlWriter, ModelFunctionYamlReader
-from kafe.fit.io.handle import IOStreamHandle
-from kafe.fit.representation._yaml_base import YamlReaderException
+from kafe2.fit.histogram import HistModelFunction, HistModelDensityFunctionFormatter
+from kafe2.fit.indexed import IndexedModelFunction, IndexedModelFunctionFormatter
+from kafe2.fit.xy import XYModelFunction, XYModelFunctionFormatter
+from kafe2.fit.xy_multi import XYMultiModelFunction, XYMultiModelFunctionFormatter
+from kafe2.fit.representation import ModelFunctionYamlWriter, ModelFunctionYamlReader
+from kafe2.fit.io.handle import IOStreamHandle
+from kafe2.fit.representation._yaml_base import YamlReaderException
 
 TEST_MODEL_FUNCTION_HIST="""
 type: histogram

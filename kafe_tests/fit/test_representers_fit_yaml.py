@@ -3,14 +3,14 @@ import numpy as np
 from scipy.stats import norm
 from six import StringIO
 
-from kafe.fit.representation import FitYamlWriter, FitYamlReader
-from kafe.fit.io.handle import IOStreamHandle
-from kafe.fit.histogram import HistFit
-from kafe.fit.indexed import IndexedFit
-from kafe.fit.xy import XYFit
-from kafe.fit.xy_multi import XYMultiFit
-from kafe.fit.histogram.container import HistContainer
-from kafe.fit.representation._yaml_base import YamlReaderException
+from kafe2.fit.representation import FitYamlWriter, FitYamlReader
+from kafe2.fit.io.handle import IOStreamHandle
+from kafe2.fit.histogram import HistFit
+from kafe2.fit.indexed import IndexedFit
+from kafe2.fit.xy import XYFit
+from kafe2.fit.xy_multi import XYMultiFit
+from kafe2.fit.histogram.container import HistContainer
+from kafe2.fit.representation._yaml_base import YamlReaderException
 
 TEST_FIT_HIST="""
 type: histogram

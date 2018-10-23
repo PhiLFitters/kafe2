@@ -4,10 +4,10 @@ import six
 
 from scipy import stats
 
-from kafe.config import kc
-from kafe.fit import HistContainer, HistFit
-from kafe.fit.histogram.fit import HistFitException
-from kafe.fit.histogram.model import HistModelFunctionException
+from kafe2.config import kc
+from kafe2.fit import HistContainer, HistFit
+from kafe2.fit.histogram.fit import HistFitException
+from kafe2.fit.histogram.model import HistModelFunctionException
 
 
 CONFIG_PARAMETER_DEFAULT_VALUE = kc('core', 'default_initial_parameter_value')

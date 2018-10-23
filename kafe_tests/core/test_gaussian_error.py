@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from kafe.core.error import MatrixGaussianError, SimpleGaussianError
+from kafe2.core.error import MatrixGaussianError, SimpleGaussianError
 
 
 class TestMatrixGaussianError(unittest.TestCase):

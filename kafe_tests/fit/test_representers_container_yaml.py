@@ -3,10 +3,10 @@ import numpy as np
 
 from six import StringIO
 
-from kafe.fit import IndexedContainer, XYContainer, XYMultiContainer, HistContainer
-from kafe.fit.representation import DataContainerYamlWriter, DataContainerYamlReader, DReprError
-from kafe.fit.io.handle import IOStreamHandle
-from kafe.fit.representation._yaml_base import YamlReaderException
+from kafe2.fit import IndexedContainer, XYContainer, XYMultiContainer, HistContainer
+from kafe2.fit.representation import DataContainerYamlWriter, DataContainerYamlReader, DReprError
+from kafe2.fit.io.handle import IOStreamHandle
+from kafe2.fit.representation._yaml_base import YamlReaderException
 
 
 # TODO: check that DReprError is raised when appropriate...

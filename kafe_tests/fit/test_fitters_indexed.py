@@ -2,10 +2,10 @@ import unittest
 import numpy as np
 import six
 
-from kafe.config import kc
-from kafe.fit import IndexedFit
-from kafe.fit.indexed.fit import IndexedFitException
-from kafe.fit.indexed.model import IndexedModelFunctionException
+from kafe2.config import kc
+from kafe2.fit import IndexedFit
+from kafe2.fit.indexed.fit import IndexedFitException
+from kafe2.fit.indexed.model import IndexedModelFunctionException
 
 
 CONFIG_PARAMETER_DEFAULT_VALUE = kc('core', 'default_initial_parameter_value')

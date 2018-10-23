@@ -1,12 +1,12 @@
 import unittest
 import numpy as np
 
-from kafe.fit import IndexedContainer, IndexedParametricModel
-from kafe.fit._base import DataContainerException
-from kafe.fit.indexed.container import IndexedContainerException
-from kafe.fit.indexed.model import IndexedParametricModelException,\
+from kafe2.fit import IndexedContainer, IndexedParametricModel
+from kafe2.fit._base import DataContainerException
+from kafe2.fit.indexed.container import IndexedContainerException
+from kafe2.fit.indexed.model import IndexedParametricModelException,\
     IndexedModelFunction
-from kafe.core.error import cov_mat_from_float_list
+from kafe2.core.error import cov_mat_from_float_list
 
 
 class TestDatastoreIndexed(unittest.TestCase):

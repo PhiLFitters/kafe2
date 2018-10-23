@@ -62,9 +62,10 @@ parameter constraints, which is demonstrated in the example called constraints.
 """
 
 
-from kafe.fit import XYMultiFit, XYMultiPlot
 import numpy as np
 import matplotlib.pyplot as plt
+
+from kafe2 import XYMultiFit, XYMultiPlot
 
 # empirical model for T(U): a parabola
 # independent variable MUST be named x!

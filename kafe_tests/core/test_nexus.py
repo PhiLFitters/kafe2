@@ -1,7 +1,7 @@
 import unittest
 
-from kafe.core.fitters import Nexus
-from kafe.core.fitters.nexus import NodeException, NexusException, NODE_VALUE_DEFAULT
+from kafe2.core.fitters import Nexus
+from kafe2.core.fitters.nexus import NodeException, NexusException, NODE_VALUE_DEFAULT
 
 class TestParameterFunction(unittest.TestCase):
     @staticmethod

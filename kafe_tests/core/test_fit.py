@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from kafe.core.fitters import Nexus, NexusFitter, NexusFitterException
+from kafe2.core.fitters import Nexus, NexusFitter, NexusFitterException
 
 
 # class TestNexusFitter(unittest.TestCase):

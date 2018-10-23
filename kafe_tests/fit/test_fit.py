@@ -1,4 +1,4 @@
-# import kafe.fit as kf
+# import kafe2.fit as kf
 #
 # @kf.XYModel
 # def f

@@ -2,17 +2,17 @@ import unittest
 import numpy as np
 from six import StringIO
 
-from kafe.fit.histogram import HistModelFunction
-from kafe.fit.indexed import IndexedModelFunction
-from kafe.fit.xy import XYModelFunction
-from kafe.fit.xy_multi import XYMultiModelFunction
-from kafe.fit.representation import ParametricModelYamlWriter, ParametricModelYamlReader
-from kafe.fit.histogram.model import HistParametricModel
-from kafe.fit.indexed.model import IndexedParametricModel
-from kafe.fit.xy.model import XYParametricModel
-from kafe.fit.xy_multi.model import XYMultiParametricModel
-from kafe.fit.io.handle import IOStreamHandle
-from kafe.fit.representation._yaml_base import YamlReaderException
+from kafe2.fit.histogram import HistModelFunction
+from kafe2.fit.indexed import IndexedModelFunction
+from kafe2.fit.xy import XYModelFunction
+from kafe2.fit.xy_multi import XYMultiModelFunction
+from kafe2.fit.representation import ParametricModelYamlWriter, ParametricModelYamlReader
+from kafe2.fit.histogram.model import HistParametricModel
+from kafe2.fit.indexed.model import IndexedParametricModel
+from kafe2.fit.xy.model import XYParametricModel
+from kafe2.fit.xy_multi.model import XYMultiParametricModel
+from kafe2.fit.io.handle import IOStreamHandle
+from kafe2.fit.representation._yaml_base import YamlReaderException
 
 TEST_PARAMETRIC_MODEL_HIST="""
 type: histogram

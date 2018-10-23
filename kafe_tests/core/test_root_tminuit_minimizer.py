@@ -5,7 +5,7 @@ import numpy as np
 
 _cannot_import_ROOT = False
 try:
-    from kafe.core.minimizers.root_tminuit_minimizer import MinimizerROOTTMinuit
+    from kafe2.core.minimizers.root_tminuit_minimizer import MinimizerROOTTMinuit
 except ImportError:
     _cannot_import_ROOT = True
 

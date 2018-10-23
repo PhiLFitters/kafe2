@@ -8,7 +8,7 @@ from __future__ import print_function
 
 import numpy as np
 
-from kafe.fit import IndexedFit, IndexedPlot
+from kafe2 import IndexedFit, IndexedPlot
 
 # import matplotlib *after* kafe2
 import matplotlib.pyplot as plt

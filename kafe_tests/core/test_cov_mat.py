@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from kafe.core.error import CovMat, cov_mat_from_float_list, cov_mat_from_float
+from kafe2.core.error import CovMat, cov_mat_from_float_list, cov_mat_from_float
 
 
 class TestCovMat(unittest.TestCase):
