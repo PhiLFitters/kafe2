@@ -1,18 +1,18 @@
 .. -*- mode: rst -*-
 
 *************************************
-*kafe2* - Karlsruhe Fit Environment 2
+kafe2 - Karlsruhe Fit Environment 2
 *************************************
 
 =====
 About
 =====
 
-**kafe2** is an open-source Python package designed to provide a flexible 
+*kafe2* is an open-source Python package designed to provide a flexible 
 Python interface for the estimation of model parameters from measured
-data. It is the spiritual successor of the original **kafe** package.
+data. It is the spiritual successor to the original *kafe* package.
 
-kafe2 offers support for several types of data formats (including series
+*kafe2* offers support for several types of data formats (including series
 of indexed measurements, xy value pairs, and histograms) and data
 uncertainty models, as well as arbitrarily complex parametric
 models. The numeric aspects are handled using the scientific Python
@@ -29,57 +29,80 @@ Requirements
 
 *kafe2* needs some additional Python packages:
 
-* `SciPy <http://www.scipy.org>`_
 * `NumPy <http://www.numpy.org>`_
+* `Numdifftools <https://pypi.org/project/Numdifftools/>`_
+* `SciPy <http://www.scipy.org>`_
 * `matplotlib <http://matplotlib.org>`_
 
 
-Additionally, a function minimizer is needed. *kafe* implements interfaces to two
-function minimizers and requires at least one of them to be installed:
+Since *kafe2* relies on *matplotlib* for graphics it might be necessary to install external programs:
+
+* `Tkinter <https://wiki.python.org/moin/TkInter>`_, the default GUI used by *matplotlib*
+
+
+Optionally, a function minimizer other than scipy.optimize.minimize can be used.
+*kafe2* implements interfaces to two function minimizers and will use them
+by default if they're installed:
 
 * *MINUIT*, which is included in *CERN*'s data analysis package `ROOT <http://root.cern.ch>`_ (>= 5.34), or
 * `iminuit <https://github.com/iminuit/iminuit>`_ (>= 1.1.1), which is independent of ROOT
-* scipy.optimize.minimize, which is included with SciPy
 
-
-Finally, *kafe* requires a number of external programs:
-
-* Qt4 and the Python bindings PyQt4 are needed because *Qt* is the supported
-  interactive frontend for matplotlib. Other frontends are not supported and may cause unexpected behavior.
 
 ==========================
-Installation notes (Linux)
+Installation notes
 ==========================
 
+The easiest way to install *kafe2* is via `pip <https://pip.pypa.io/en/stable/>`_, which is
+already included for Python >= 2.7.9. Installing via *pip* will automatically install the minimal
+dependencies. Please note that commands below should be run as root.
 
-Most of the above packages and programs can be installed through the package manager on most Linux
-distributions.
-
-*kafe* was developed for use on Linux desktop systems. Please note that all
-commands below should be run as root.
-
------------------------------------------
-Install *NumPy*, *SciPy* and *matplotlib*
------------------------------------------
-
-These packages should be available in the package manager.
-
-In Ubuntu/Mint/Debian:
+For Python 2:
 
     .. code:: bash
+    
+        pip install kafe2
 
-        apt-get install python-numpy python-scipy python-matplotlib
 
-In Fedora/RHEL/CentOS:
+For Python 3:
 
     .. code:: bash
+    
+        pip3 install kafe2
 
-        yum install numpy scipy python-matplotlib
+
+You will also need to install *Tkinter* if it didn't already come with your Python distribution.
+
+For Python 2, Ubuntu/Mint/Debian:
+	
+	.. code:: bash
+	
+	    apt-get install python-tk
 
 
---------------
-Install *ROOT*
---------------
+For Python 2, Fedora/RHEL/CentOS:
+	
+	.. code:: bash
+	
+	    yum install tkinter
+
+
+For Python 3, Ubuntu/Mint/Debian:
+	
+	.. code:: bash
+	
+	    apt-get install python3-tk
+
+
+For Python 3, Fedora/RHEL/CentOS:
+	
+	.. code:: bash
+	
+	    yum install python3-tkinter
+
+
+------------------------
+Optional: Install *ROOT*
+------------------------
 
 ROOT and its Python bindings can be obtained via the package manager in
 Ubuntu/Mint/Debian:
@@ -109,9 +132,9 @@ the following environment variables have to be set correctly (:
 For more info, refer to `<http://root.cern.ch/drupal/content/pyroot>`_.
 
 
------------------
-Install `iminuit`
------------------
+---------------------------
+Optional: Install `iminuit`
+---------------------------
 
 *iminuit* is a Python wrapper for the Minuit minimizer which is
 independent of ROOT. If compiling/installing ROOT is not possible,
