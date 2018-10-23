@@ -1,5 +1,5 @@
 .. meta::
-   :description lang=en: kafe - a general, Python-based approach to fit a
+   :description lang=en: kafe2 - a general, Python-based approach to fit a
       model function to two-dimensional data points with correlated
       uncertainties in both dimensions
    :robots: index, follow
@@ -16,10 +16,10 @@
    user_guide
    module_doc
 
-Welcome to *kafe*, the Karlsruhe Fit Environment
+Welcome to *kafe2*, the Karlsruhe Fit Environment
 ================================================
 
-   **kafe** is a data fitting framework designed for use in undergraduate
+   **kafe2** is a data fitting framework designed for use in undergraduate
    physics lab courses. It provides a basic Python toolkit for fitting
    models to data as well as visualisation of the data and the model function.
    It relies on Python packages such as :py:mod:`numpy` and :py:mod:`matplotlib`,

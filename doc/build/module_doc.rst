@@ -1,72 +1,72 @@
 .. meta::
-   :description lang=en: kafe - a general, Python-based approach to fit a
+   :description lang=en: kafe2 - a general, Python-based approach to fit a
       model function to two-dimensional data points with correlated
       uncertainties in both dimensions
    :robots: index, follow
 
 
 ****************
-*kafe* reference
+*kafe2* reference
 ****************
 
 This page contains documentation which was automatically extracted from
 docstrings in the source code. All major classes, methods and functions
-provided by *kafe* are documented here. For further information, or if in
+provided by *kafe2* are documented here. For further information, or if in
 doubt about the exact functionality, users are invited to consult the source
 code itself.
 
 
-*kafe* in a nutshell
+*kafe2* in a nutshell
 ====================
 
-.. automodule:: kafe.__init__
+.. automodule:: kafe2.__init__
     :members:
     :undoc-members:
     :show-inheritance:
     
 
 
-Parameter estimation tools: :py:mod:`~kafe.fit`
+Parameter estimation tools: :py:mod:`~kafe2.fit`
 ===============================================
 
-.. automodule:: kafe.fit
+.. automodule:: kafe2.fit
     
 
 
-Tools for fitting series of indexed measurements (:py:mod:`~kafe.fit.indexed`)
+Tools for fitting series of indexed measurements (:py:mod:`~kafe2.fit.indexed`)
 ------------------------------------------------------------------------------
 
-.. automodule:: kafe.fit.indexed
+.. automodule:: kafe2.fit.indexed
     :members:
     :undoc-members:
     :imported-members:
     :show-inheritance:
     
 
-Tools for fitting *xy* data (:py:mod:`~kafe.fit.xy`)
+Tools for fitting *xy* data (:py:mod:`~kafe2.fit.xy`)
 ----------------------------------------------------
 
-.. automodule:: kafe.fit.xy
+.. automodule:: kafe2.fit.xy
     :members:
     :undoc-members:
     :imported-members:
     :show-inheritance:
     
 
-Tools for fitting histograms (:py:mod:`~kafe.fit.histogram`)
+Tools for fitting histograms (:py:mod:`~kafe2.fit.histogram`)
 ------------------------------------------------------------
 
-.. automodule:: kafe.fit.histogram
+.. automodule:: kafe2.fit.histogram
     :members:
     :undoc-members:
     :imported-members:
     :show-inheritance:
     
 
-Abstract base classes (:py:mod:`~kafe.fit._base`)
+Abstract base classes (:py:mod:`~kafe2.fit._base`)
 -------------------------------------------------
 
-.. automodule:: kafe.fit._base
+.. automodule:: kafe2.fit._base
     :members:
     :undoc-members:
     :imported-members:
@@ -74,10 +74,10 @@ Abstract base classes (:py:mod:`~kafe.fit._base`)
     
 
 
-.. Core functionality: :py:mod:`~kafe.core`
+.. Core functionality: :py:mod:`~kafe2.core`
 .. ========================================
 .. 
-.. .. automodule:: kafe.core
+.. .. automodule:: kafe2.core
 ..     :members:
 ..     :undoc-members:
 ..     :show-inheritance:

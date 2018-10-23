@@ -8,11 +8,11 @@ User Guide
 ##########
 
 
-This user guide covers the basics of using *kafe* for
+This user guide covers the basics of using *kafe2* for
 fitting parametric models to data, including:
 
   * the basic math behind parameter estimation,
-  * the several types of data that *kafe* can work with,
+  * the several types of data that *kafe2* can work with,
   * various ways of defining uncertainties on the data
   * various ways of defining a metric for data-model agreement
     (*cost functions*)
