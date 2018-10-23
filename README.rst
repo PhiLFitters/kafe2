@@ -56,6 +56,8 @@ The easiest way to install *kafe2* is via `pip <https://pip.pypa.io/en/stable/>`
 already included for Python >= 2.7.9. Installing via *pip* will automatically install the minimal
 dependencies. Please note that commands below should be run as root.
 
+**Note: kafe2 has not yet been added to the Python Packaging Index. The instructions below do not yet work.**
+
 For Python 2:
 
     .. code:: bash
