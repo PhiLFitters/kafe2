@@ -5,19 +5,21 @@
    :robots: index, follow
 
 
-****************
+*****************
 *kafe2* reference
-****************
+*****************
 
 This page contains documentation which was automatically extracted from
-docstrings in the source code. All major classes, methods and functions
-provided by *kafe2* are documented here. For further information, or if in
-doubt about the exact functionality, users are invited to consult the source
-code itself.
+docstrings attached to the *kafe2* source code. All major classes, methods
+and functions provided by *kafe2* are documented here. For further information, 
+or if in doubt about the exact functionality, users are invited to consult the
+source code itself. If you notice a mistake in the *kafe2* documentation, or if
+you think that a particular part needs to be better documented, please open an
+issue on the `*kafe2 GitHub page <https://github.com/dsavoiu/kafe2>*`_.
 
 
 *kafe2* in a nutshell
-====================
+=====================
 
 .. automodule:: kafe2.__init__
     :members:
@@ -27,14 +29,14 @@ code itself.
 
 
 Parameter estimation tools: :py:mod:`~kafe2.fit`
-===============================================
+================================================
 
 .. automodule:: kafe2.fit
     
 
 
 Tools for fitting series of indexed measurements (:py:mod:`~kafe2.fit.indexed`)
-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 .. automodule:: kafe2.fit.indexed
     :members:
@@ -44,7 +46,7 @@ Tools for fitting series of indexed measurements (:py:mod:`~kafe2.fit.indexed`)
     
 
 Tools for fitting *xy* data (:py:mod:`~kafe2.fit.xy`)
-----------------------------------------------------
+-----------------------------------------------------
 
 .. automodule:: kafe2.fit.xy
     :members:
@@ -54,7 +56,7 @@ Tools for fitting *xy* data (:py:mod:`~kafe2.fit.xy`)
     
 
 Tools for fitting histograms (:py:mod:`~kafe2.fit.histogram`)
-------------------------------------------------------------
+-------------------------------------------------------------
 
 .. automodule:: kafe2.fit.histogram
     :members:
@@ -64,7 +66,7 @@ Tools for fitting histograms (:py:mod:`~kafe2.fit.histogram`)
     
 
 Abstract base classes (:py:mod:`~kafe2.fit._base`)
--------------------------------------------------
+--------------------------------------------------
 
 .. automodule:: kafe2.fit._base
     :members:
@@ -75,7 +77,7 @@ Abstract base classes (:py:mod:`~kafe2.fit._base`)
 
 
 .. Core functionality: :py:mod:`~kafe2.core`
-.. ========================================
+.. =========================================
 .. 
 .. .. automodule:: kafe2.core
 ..     :members:

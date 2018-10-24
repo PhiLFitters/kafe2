@@ -28,35 +28,41 @@ Measurements and theoretical models
 
 When measuring observable quantities, the results typically
 consist of a series of numeric measurement values: the **data**.
-Of course, no measurement is perfect, and the data is subject
-to measurement **uncertainties**, which can have a number of
-reasons.
+Since no measurement is perfect, the data will be subject to 
+**measurement uncertainties**. These uncertainties, also known
+as errors, are unavoidable and can be divided into two subtypes:
 
-A common type of uncertainty arises because of random
-fluctuations of the measurement values, either because of
-technical limitations of the experimental setup
-(e.g. electronic noise, mechanical vibrations) or because
-of the intrinsic statistical nature of the measured observable.
+**Statistical uncertainties**, also called random uncertainties,
+are caused because of random fluctuations in the measurement values, 
+either because of technical limitations of the experimental setup
+(electronic noise, mechanical vibrations) or because of the intrinsic 
+statistical nature of the measured observable (radioactive decay).
 
-Being of a random nature, such uncertainties do not correlate
-between different measurements and can be reduced by repeating
-the measurements a large number of times.
+When a measurement is performed more than once the statistical
+uncertainties of any two measurements will not be correlated.
+This means that the random distortion of the measurement data will
+be different for each measurement. If the measurement is repeated
+often enough the statistical uncertainties of the single measurements
+will cancel each other out and bring down the total statistical
+uncertainty of the end result. The measure of statistical uncertainty
+is called **precision**.
 
-However, distortions of the measurement can also arise due to
-non-random effects, such as the calibration of the
-tools used to perform the measurement. These
-typically affect the measurement in a systematic way,
-causing the measured observable value to deviate from the
-"true value".
-In this case, repeating the measurement a large number of times
-does not make the measurement more accurate.
+**Systematic uncertainties** arise due to non-random effects, that
+distort all measurements in the same way regardless of how many
+measurements are taken. Such uncertainties can for example be caused
+by imperfect measurement devices whose displayed values are always
+off by a small margin.
 
-It is an important part of the experimental process to estimate
-the magnitude and correlation of these effects, in order to
-make meaningful quantitative statements on the basis of the
-performed measurements.
+When a measurement is performed more than once the systematic
+uncertainties of any two measurements will be correlated. This
+means that the distortion of the measurement data will be the same
+for each measurement. As such, repeating a measurement will **not**
+reduce the statistical uncertainty of the end result. The measure of
+statistical uncertainty is called **accuracy**.
 
-
+In order to make meaningful quantitative statements based on measurement
+data it is essential to estimate the magnitude and correlation of the
+above mentioned uncertainties.
 
 
 Parameter estimation
@@ -66,36 +72,38 @@ In **parameter estimation**, the main goal is to obtain
 best estimates for the parameters of a theoretical model
 by comparing the model predictions to experimental measurements.
 
-This is typically done in a systematic way by defining
-a quantity which expresses how well the model predictions fit the
-available data. This quantity depends mainly on the measurement data,
-the theory predictions, and the measurement or model uncertainties.
-It is known by a number of names: the *objective function*,
-the *loss function*, or the **cost function** (the term used in *kafe*),
-and is defined in such a way that the agreement between the
-measurements :math:`d_i` and the corresponding predictions :math:`m_i`
-delivered by the model, is **best** when the cost function reaches
-its **global minimum**.
+This is typically done systematically by defining a quantity which 
+expresses how well the model predictions fit the available data.
+This quantity is usually called the *loss function*, or the 
+**cost function** (the term used in *kafe2* ).
+The value of a cost function depends mainly on the measurement data,
+the theory predictions, and the uncertainties of the measurements and
+the model. Cost functions are designed in such a way that the agreement 
+between the measurements :math:`d_i` and the corresponding predictions
+:math:`m_i` provided by the model is **best** when the cost function
+reaches its **global minimum**.
 
-Since the data :math:`{\bf d}` and the parametric form of the model
-:math:`{\bf m}` describing the data are known, the cost function
-:math:`C` actually only depends on the model parameters, denoted here
-as a vector :math:`{\bf p}` in parameter space.
+For a given experiment the data :math:`{\bf d}` and the parametric
+form of the model :math:`{\bf m}` describing the data are constant.
+This means that the cost function :math:`C` then only depends on the
+model parameters, denoted here as a vector :math:`{\bf p}` in parameter
+space.
 
     .. math::
 
         C = C\left({\bf d}, {\bf m}({\bf p})\right) =  C({\bf p})
 
-So, for the most part, parameter estimation boils down to finding the
-global minimimum of the cost function, with respect to the model parameters
-:math:`p_i`.
-In general, this is a multidimensional optimization problem which is
-typically handled numerically. For this, different algorithms and tools
-exist.
-One example is *iminuit* (a C++ reimplementation of the
-Fortran minimizer *MINUIT*), for which a Python package is also available.
-The *SciPy* package for Python also provides function minimization
-functionality through its ``scipy.optimize`` module.
+Therefore parameter estimation essentially boils down to finding the
+vector of model parameters :math:`{\hat{\bf p}}` for which the cost
+function :math:`C({\bf p})` is at its global minimum.
+In general this is a multidimensional optimization problem which is
+typically solved numerically. There are several algorithms and tools
+that can be used for this task:
+One example is the *SciPy* package for Python which provides function 
+minimization functionality through its ``scipy.optimize`` module.
+Another option is *iminuit* (a C++ reimplementation of the Fortran
+minimizer *MINUIT*) which can be accessed via the corresponding
+Python package.
  
 .. TODO: add link to future page with minimizer overview
 

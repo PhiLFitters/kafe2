@@ -40,7 +40,7 @@ Since *kafe2* relies on *matplotlib* for graphics it might be necessary to insta
 * `Tkinter <https://wiki.python.org/moin/TkInter>`_, the default GUI used by *matplotlib*
 
 
-Optionally, a function minimizer other than scipy.optimize.minimize can be used.
+Optionally, a function minimizer other than ``scipy.optimize.minimize`` can be used.
 *kafe2* implements interfaces to two function minimizers and will use them
 by default if they're installed:
 
@@ -49,7 +49,7 @@ by default if they're installed:
 
 
 ==========================
-Installation notes
+Installation notes (Linux)
 ==========================
 
 The easiest way to install *kafe2* is via `pip <https://pip.pypa.io/en/stable/>`_, which is
@@ -70,6 +70,29 @@ For Python 3:
     .. code:: bash
     
         pip3 install kafe2
+
+
+If you don't have *pip* installed, get it from the package manager.
+
+In Ubuntu/Mint/Debian, do:
+
+    .. code:: bash
+
+        apt-get install python-pip
+
+
+In Fedora/RHEL/CentOS, do:
+
+    .. code:: bash
+
+        yum install python-pip
+
+
+or use ``easy_install`` (included with `setuptools <https://pypi.python.org/pypi/setuptools>`_):
+
+    .. code:: bash
+
+        easy_install pip
 
 
 You will also need to install *Tkinter* if it didn't already come with your Python distribution.
@@ -148,26 +171,6 @@ To install the *iminuit* package for Python, the `Pip installer
     .. code:: bash
 
         pip install iminuit
-
-If you don't have *Pip* installed, get it from the package manager.
-
-In Ubuntu/Mint/Debian, do:
-
-    .. code:: bash
-
-        apt-get install python-pip
-
-In Fedora/RHEL/CentOS, do:
-
-    .. code:: bash
-
-        yum install python-pip
-
-or use ``easy_install`` (included with `setuptools <https://pypi.python.org/pypi/setuptools>`_):
-
-    .. code:: bash
-
-        easy_install pip
 
 You might also need to install the Python headers for *iminuit* to
 compile properly.

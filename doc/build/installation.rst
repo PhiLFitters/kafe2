@@ -5,69 +5,113 @@
    :robots: index, follow
 
 
-*****************
-Installing *kafe*
-*****************
+******************
+Installing *kafe2*
+******************
 
 Requirements
 ============
 
-*kafe* needs some additional Python packages. The recommended versions of these are
-as follows:
+*kafe2* needs some additional Python packages:
 
-* `SciPy <http://www.scipy.org>`_ >= 0.12.0
-* `NumPy <http://www.numpy.org>`_ >= 1.10.4
-* `matplotlib <http://matplotlib.org>`_ >= 1.5.0
+* `NumPy <http://www.numpy.org>`_
+* `Numdifftools <https://pypi.org/project/Numdifftools/>`_
+* `SciPy <http://www.scipy.org>`_
+* `matplotlib <http://matplotlib.org>`_
 
 
-Additionally, a function minimizer is needed. *kafe* implements interfaces to two
-function minimizers and requires at least one of them to be installed:
+Since *kafe2* relies on *matplotlib* for graphics it might be necessary to install external programs:
+
+* `Tkinter <https://wiki.python.org/moin/TkInter>`_, the default GUI used by *matplotlib*
+
+
+Optionally, a function minimizer other than ``scipy.optimize.minimize`` can be used.
+*kafe2* implements interfaces to two function minimizers and will use them
+by default if they're installed:
 
 * *MINUIT*, which is included in *CERN*'s data analysis package `ROOT <http://root.cern.ch>`_ (>= 5.34), or
-* `iminuit <https://github.com/iminuit/iminuit>`_ (>= 1.1.1), which is independent of ROOT (this is the default)
-
-
-Finally, *kafe* requires a number of external programs:
-
-* Qt4 (>= 4.8.5) and the Python bindings PyQt4 (>= 3.18.1) are needed because *Qt* is the supported
-  interactive frontend for matplotlib. Other frontends are not supported and may cause unexpected behavior.
-* A *LaTeX* distribution (tested with `TeX Live <https://www.tug.org/texlive/>`_), since *LaTeX* is
-  used by matplotlib for typesetting labels and mathematical expressions.
-* `dvipng <http://www.nongnu.org/dvipng/>`_ for converting DVI files to PNG graphics
+* `iminuit <https://github.com/iminuit/iminuit>`_ (>= 1.1.1), which is independent of ROOT
 
 
 Installation notes (Linux)
 ==========================
 
+The easiest way to install *kafe2* is via `pip <https://pip.pypa.io/en/stable/>`_, which is
+already included for Python >= 2.7.9. Installing via *pip* will automatically install the minimal
+dependencies. Please note that commands below should be run as root.
 
-Most of the above packages and programs can be installed through the package manager on most Linux
-distributions.
+**Note: kafe2 has not yet been added to the Python Packaging Index. The instructions below do not yet work.**
 
-*kafe* was developed for use on Linux desktop systems. Please note that all
-commands below should be run as root.
+For Python 2:
+
+    .. code:: bash
+    
+        pip install kafe2
 
 
-Install *NumPy*, *SciPy* and *matplotlib*
------------------------------------------
+For Python 3:
 
-These packages should be available in the package manager.
+    .. code:: bash
+    
+        pip3 install kafe2
 
-In Ubuntu/Mint/Debian:
+
+If you don't have *pip* installed, get it from the package manager.
+
+In Ubuntu/Mint/Debian, do:
 
     .. code:: bash
 
-        apt-get install python-numpy python-scipy python-matplotlib
+        apt-get install python-pip
 
-In Fedora/RHEL/CentOS:
+
+In Fedora/RHEL/CentOS, do:
 
     .. code:: bash
 
-        yum install numpy scipy python-matplotlib
+        yum install python-pip
 
 
+or use ``easy_install`` (included with `setuptools <https://pypi.python.org/pypi/setuptools>`_):
 
-Install *ROOT*
---------------
+    .. code:: bash
+
+        easy_install pip
+
+
+You will also need to install *Tkinter* if it didn't already come with your Python distribution.
+
+For Python 2, Ubuntu/Mint/Debian:
+	
+	.. code:: bash
+	
+	    apt-get install python-tk
+
+
+For Python 2, Fedora/RHEL/CentOS:
+	
+	.. code:: bash
+	
+	    yum install tkinter
+
+
+For Python 3, Ubuntu/Mint/Debian:
+	
+	.. code:: bash
+	
+	    apt-get install python3-tk
+
+
+For Python 3, Fedora/RHEL/CentOS:
+	
+	.. code:: bash
+	
+	    yum install python3-tkinter
+
+
+------------------------
+Optional: Install *ROOT*
+------------------------
 
 ROOT and its Python bindings can be obtained via the package manager in
 Ubuntu/Mint/Debian:
@@ -97,9 +141,9 @@ the following environment variables have to be set correctly (:
 For more info, refer to `<http://root.cern.ch/drupal/content/pyroot>`_.
 
 
-
-Install `iminuit`
------------------
+---------------------------
+Optional: Install `iminuit`
+---------------------------
 
 *iminuit* is a Python wrapper for the Minuit minimizer which is
 independent of ROOT. If compiling/installing ROOT is not possible,
@@ -111,26 +155,6 @@ To install the *iminuit* package for Python, the `Pip installer
     .. code:: bash
 
         pip install iminuit
-
-If you don't have *Pip* installed, get it from the package manager.
-
-In Ubuntu/Mint/Debian, do:
-
-    .. code:: bash
-
-        apt-get install python-pip
-
-In Fedora/RHEL/CentOS, do:
-
-    .. code:: bash
-
-        yum install python-pip
-
-or use ``easy_install`` (included with `setuptools <https://pypi.python.org/pypi/setuptools>`_):
-
-    .. code:: bash
-
-        easy_install pip
 
 You might also need to install the Python headers for *iminuit* to
 compile properly.
@@ -148,35 +172,7 @@ In Fedora/RHEL/CentOS, do:
         yum install python-devel
 
 
-Read the README file for more information on other dependencies
-(there should be adequate packages for your Linux distribution
-to satisfy these).
-
-
-Install *kafe*
---------------
-
-To install *kafe* using *Pip*, simply run the helper script as root:
-
-    .. code:: bash
-
-        ./install.sh
-
-To remove kafe using *Pip*, just run the helper script:
-
-    .. code:: bash
-
-        ./uninstall.sh
-
-
-Alternatively, installing using Python's *setuptools* also works, but may not
-provide a clean uninstall. Use this method if installing with *Pip* is not possible:
-
-    .. code:: bash
-
-        python setup.py install
-
-
+..TODO update
 Installation notes (Windows)
 ============================
 
