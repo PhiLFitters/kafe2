@@ -89,7 +89,7 @@ Defining a parametric model for histograms is not as straightforward as for *xy*
 Seeing as they keep track of the number of entries in different intervals of the continuum, the bin values
 can be interpreted using probability theory.
 
-As the number of entries goes to infinity, the number of entries :math:`n` in the bin covering an interval
+As the number of entries approaches infinity, the number of entries :math:`n` in the bin covering an interval
 :math:`[a, b)`, divided by the total number of entries :math:`N_{\rm E}`, will approach the probablity of an
 event landing in that bin:
 
