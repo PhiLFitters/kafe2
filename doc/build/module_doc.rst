@@ -15,7 +15,7 @@ and functions provided by *kafe2* are documented here. For further information,
 or if in doubt about the exact functionality, users are invited to consult the
 source code itself. If you notice a mistake in the *kafe2* documentation, or if
 you think that a particular part needs to be better documented, please open an
-issue on the `*kafe2 GitHub page <https://github.com/dsavoiu/kafe2>*`_.
+issue on the `kafe2 GitHub page <https://github.com/dsavoiu/kafe2>`_.
 
 
 *kafe2* in a nutshell
