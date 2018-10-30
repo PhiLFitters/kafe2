@@ -259,7 +259,7 @@ class MinimizerIMinuit(object):
             self.set(_pn, _pv)
 
     def fix(self, parameter_name):
-        self.__iminuit = None  # delete curent iminuit instance
+        self.__iminuit = None  # delete current iminuit instance
         self._minimizer_param_dict["fix_" + parameter_name] = True
 
     def fix_several(self, parameter_names):
@@ -267,7 +267,7 @@ class MinimizerIMinuit(object):
             self.fix(_pn)
 
     def release(self, parameter_name):
-        self.__iminuit = None  # delete curent iminuit instance
+        self.__iminuit = None  # delete current iminuit instance
         self._minimizer_param_dict["fix_" + parameter_name] = False
 
     def release_several(self, parameter_names):
@@ -275,15 +275,16 @@ class MinimizerIMinuit(object):
             self.release(_pn)
 
     def limit(self, parameter_name, parameter_bounds):
-        self.__iminuit = None  # delete curent iminuit instance
+        self.__iminuit = None  # delete current iminuit instance
         assert len(parameter_bounds) == 2
         self._minimizer_param_dict["limit_" + parameter_name] = (parameter_bounds[0], parameter_bounds[1])
 
     def unlimit(self, parameter_name):
-        self.__iminuit = None  # delete curent iminuit instance
+        self.__iminuit = None  # delete current iminuit instance
         self._minimizer_param_dict["limit_" + parameter_name] = None
 
     def minimize(self, max_calls=6000):
+        self.__iminuit = None  # delete current iminuit instance
         self._get_iminuit().migrad(ncall=max_calls)
 
         # invalidate cache
