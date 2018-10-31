@@ -250,7 +250,7 @@ class MinimizerIMinuit(object):
     def set(self, parameter_name, parameter_value):
         if parameter_name not in self._minimizer_param_dict:
             raise MinimizerIMinuitException("No parameter named '%s'!" % (parameter_name,))
-        self.__iminuit = None  # delete curent iminuit instance
+        self.__iminuit = None  # delete current iminuit instance
         self._minimizer_param_dict[parameter_name] = parameter_value
         self._invalidate_cache()
 
@@ -284,7 +284,6 @@ class MinimizerIMinuit(object):
         self._minimizer_param_dict["limit_" + parameter_name] = None
 
     def minimize(self, max_calls=6000):
-        self.__iminuit = None  # delete current iminuit instance
         self._get_iminuit().migrad(ncall=max_calls)
 
         # invalidate cache
