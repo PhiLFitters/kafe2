@@ -1,41 +1,41 @@
 #!/usr/bin/env python2
 """
-kafe2 example: Fit a line
-=========================
+kafe2 example: Linear Regression
+================================
+
+The simplest, and also the most common use case of a fitting framework
+lies in linear regression, also known as a line fit:
+A linear function of the form f(x) = a * x + b is made to align with
+a series of xy data points that have some uncertainty along the y-axis.
 """
 
 from kafe2 import XYFit, XYPlot
-
-# import matplotlib *after* kafe2
-
 import matplotlib.pyplot as plt
 
-###################
-# Model functions #
-###################
-def linear_model(x, a, b):
-    # our first model is a simple linear function
-    return a * x + b
+# Specify x_data and y_data for the three data points
+x_data = [1.0, 2.0, 3.0, 4.0]
+y_data = [2.3, 4.2, 7.5, 9.4]
+# x_data and y_data are combined depending on their order.
+# The above translates to the points (1.0, 2.3), (2.0, 4.2), and (4.0, 9.4)
 
-# create XYFits, specifying the measurement data and model function
-line_fit = XYFit(xy_data=[[1., 2., 4.], [2.3, 4.2, 9.4]], model_function=linear_model)
+# Pass the data on to a kafe2 fit object
+# By default, a linear function f=a*x+b will be used as the model function.
+line_fit = XYFit(xy_data=[x_data, y_data])
 
-# assign LaTeX strings to various quantities (for nice display)
-line_fit.assign_parameter_latex_names(a='a', b='b')
-line_fit.assign_model_function_latex_expression("{a}{x} + {b}")
+# Important: Specify y-uncertainties for the data
+line_fit.add_simple_error(axis='y', err_val=0.2)
 
-line_fit.report()
-
-# perform the fit
+# Perform the fit: Find values for a and b that minimize the
+#     difference between the model function and the data.
 line_fit.do_fit()
 
-# print out a report on the result of each fit
+# Optional: Print out a report on the fit results on the console
 line_fit.report()
 
-# to see the fit results, plot using XYPlot
-p = XYPlot(fit_objects=line_fit)
-p.plot()
-p.show_fit_info_box(format_as_latex=True)
+# Optional: Create a plot of the fit results using XYPlot
+plot = XYPlot(fit_objects=line_fit) # Create a kafe2 plot object
+plot.plot() # do the plot
+plot.show_fit_info_box() # Optional: Add numerical fit results to the image
 
 # show the fit result
 plt.show()
