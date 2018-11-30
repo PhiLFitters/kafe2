@@ -13,6 +13,7 @@
 
    self
    installation
+   mathematical_foundations
    user_guide
    module_doc
 
