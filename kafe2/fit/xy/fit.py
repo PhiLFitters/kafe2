@@ -258,8 +258,12 @@ class XYFit(FitBase):
 
         self._nexus.add_dependency(source='x_model', target="y_model")
         # self._nexus.add_dependency(source='x_uncor_nuisance_vector', target='y_model')
+        self._nexus.add_dependency(source="projected_xy_total_cov_mat", 
+                                   target="projected_xy_total_cov_mat_inverse")
         for _arg_name in self._poi_names:
             self._nexus.add_dependency(source=_arg_name, target="y_model")
+            self._nexus.add_dependency(source=_arg_name, target="projected_xy_total_cov_mat")
+            self._nexus.add_dependency(source=_arg_name, target="projected_xy_total_error")
 
     def _invalidate_total_error_cache(self):
         self.__cache_x_data_error = None
@@ -610,7 +614,8 @@ class XYFit(FitBase):
         if self.__cache_projected_xy_total_error is None:
             _x_errors = self.x_total_error
             _precision = 0.01 * np.min(_x_errors)
-            _derivatives = self._param_model.eval_model_function_derivative_by_x(dx=_precision)
+            _derivatives = self._param_model.eval_model_function_derivative_by_x(dx=_precision, 
+                                                                                 model_parameters=self.parameter_values)
             self.__cache_projected_xy_total_error = np.sqrt(self.y_total_error**2 + self.x_total_error**2 * _derivatives**2)
         return self.__cache_projected_xy_total_error
 
@@ -642,10 +647,10 @@ class XYFit(FitBase):
         self._param_model.x = self.x_model
         if np.count_nonzero(self._data_container.x_err) == 0:
             return self.y_total_cov_mat
-        if self.__cache_projected_xy_total_cov_mat is None:
+        if self.__cache_projected_xy_total_cov_mat is None or True:
             _x_errors = self.x_total_error
             _precision = 0.01 * np.min(_x_errors)
-            _derivatives = self._param_model.eval_model_function_derivative_by_x(dx=_precision)
+            _derivatives = self._param_model.eval_model_function_derivative_by_x(dx=_precision, model_parameters=self.parameter_values)
             _outer_product = np.outer(_derivatives, _derivatives)
             _projected_x_cov_mat = np.asarray(self.x_total_cov_mat) * _outer_product
             self.__cache_projected_xy_total_cov_mat = self.y_total_cov_mat + np.asmatrix(_projected_x_cov_mat)
@@ -683,7 +688,7 @@ class XYFit(FitBase):
     def projected_xy_total_cov_mat_inverse(self):
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
-        if self.__cache_projected_xy_total_cov_mat_inverse is None:
+        if self.__cache_projected_xy_total_cov_mat_inverse is None or True:
             _tmp = self.projected_xy_total_cov_mat
             try:
                 _tmp = _tmp.I

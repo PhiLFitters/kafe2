@@ -18,19 +18,19 @@ def linear_model(x, b, c):
 _a_0 = 1.5
 _b_0 = 1.5
 _c_0 = 1.5
-_x_err = 0.5
+_x_err = 0.2
 _y_err = 0.1
 
 _x_0 = np.arange(NUM_DATAPOINTS)
 _x_jitter = np.random.normal(loc=0, scale=_x_err, size=NUM_DATAPOINTS)
 
-#_y_0 = quadratic_model(_x_0 + _x_jitter, _a_0, _b_0, _c_0)
-_y_0 = linear_model(_x_0 + _x_jitter, _b_0, _c_0)
+_y_0 = quadratic_model(_x_0 + _x_jitter, _a_0, _b_0, _c_0)
+#_y_0 = linear_model(_x_0 + _x_jitter, _b_0, _c_0)
 #_y_0 = linear_model(_x_0, _b_0, _c_0)
 _y_jitter = np.random.normal(loc=0, scale=_y_err, size=NUM_DATAPOINTS)
 _y_data = _y_0 + _y_jitter
 
-_fit = XYFit(xy_data=[_x_0, _y_data], minimizer='scipy')
+_fit = XYFit(xy_data=[_x_0, _y_data], minimizer='iminuit', model_function='quadratic')
 
 _fit.add_simple_error('x', _x_err)
 _fit.add_simple_error('y', _y_err)
