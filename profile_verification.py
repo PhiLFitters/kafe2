@@ -48,7 +48,7 @@ else:
     plt.plot(_a_profile_iminuit[0], _a_profile_iminuit[1], '-', label='iminuit')
     plt.plot(_a_profile_scipy[0], _a_profile_scipy[1], '--', label='scipy')
     _a = _a_profile_scipy[0]
-    plt.plot(_a, 1 - 2.0 * _a / (1.0 + _a ** 2), '-', label='analytical')
+    plt.plot(_a, 1 - 2.0 * _a / (1.0 + _a ** 2), '.', label='analytical')
     plt.legend(loc='best')
 
 plt.show()
