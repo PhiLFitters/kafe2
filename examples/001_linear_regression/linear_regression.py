@@ -9,25 +9,25 @@ A linear function of the form f(x) = a * x + b is made to align with
 a series of xy data points that have some uncertainty along the y-axis.
 """
 
-from kafe2 import XYFit, XYPlot
+from kafe2 import XYContainer, XYFit, XYPlot
 import matplotlib.pyplot as plt
 
-# Specify x_data and y_data for the three data points
-x_data = [1.0, 2.0, 3.0, 4.0]
-y_data = [2.3, 4.2, 7.5, 9.4]
+# Create an XYContainer object to hold the xy data for the fit
+xy_data = XYContainer(x_data=[1.0, 2.0, 3.0, 4.0],
+                      y_data=[2.3, 4.2, 7.5, 9.4])
 # x_data and y_data are combined depending on their order.
 # The above translates to the points (1.0, 2.3), (2.0, 4.2), and (4.0, 9.4)
 
-# Pass the data on to a kafe2 fit object
-# By default, a linear function f=a*x+b will be used as the model function.
-line_fit = XYFit(xy_data=[x_data, y_data])
-
 # Important: Specify y-uncertainties for the data
-line_fit.add_simple_error(axis='y', err_val=0.2)
+xy_data.add_simple_error(axis='y', err_val=0.4)
+
+# Create an XYFit object from the xy data container
+# By default, a linear function f=a*x+b will be used as the model function.
+line_fit = XYFit(xy_data=xy_data)
 
 # Perform the fit: Find values for a and b that minimize the
 #     difference between the model function and the data.
-line_fit.do_fit()
+line_fit.do_fit() #This will throw an exception if no errors were specified
 
 # Optional: Print out a report on the fit results on the console
 line_fit.report()
