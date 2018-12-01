@@ -578,7 +578,7 @@ class PlotFigureBase(object):
         self._main_plot_axes.set_xlabel(kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'x'))
         self._main_plot_axes.set_ylabel(kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'y'))
 
-    def show_fit_info_box(self, format_as_latex=False):
+    def show_fit_info_box(self, format_as_latex=True):
         """Render text information about each plot on the figure.
 
         :param format_as_latex: if ``True``, the infobox text will be formatted as a LaTeX string
@@ -629,7 +629,7 @@ class MultiPlotBase(object):
         for _plot in self._underlying_plots:
             _plot.plot()
     
-    def show_fit_info_box(self, format_as_latex=False):
+    def show_fit_info_box(self, format_as_latex=True):
         """Render text information about each plot on the figure.
 
         :param format_as_latex: if ``True``, the infobox text will be formatted as a LaTeX string
