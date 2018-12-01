@@ -100,7 +100,7 @@ class ContoursProfiler(object):
     _DEFAULT_PLOT_FILL_CONTOUR_KWARGS = dict(alpha=0.3, linewidth=2)
 
     def __init__(self, fit_object,
-                 profile_points=100, profile_subtract_min=False, profile_bound=2,
+                 profile_points=100, profile_subtract_min=True, profile_bound=2,
                  contour_points=100, contour_sigma_values=(1.0, 2.0), contour_smoothing_sigma=0.0,
                  contour_method_kwargs=None):
         """
@@ -323,7 +323,8 @@ class ContoursProfiler(object):
             _err_span_artist = self._plot_error_span_on_profile(_axes, xmin=_xmin, xmax=_xmax, label="parameter error")
 
         _axes.set_xlabel(_par_formatted_name)
-        _axes.set_ylabel(self._cost_function_formatted_name)
+        _axes.set_ylabel(self._cost_function_formatted_name if not self._profile_kwargs['subtract_min']
+                         else '$\Delta$%s' % self._cost_function_formatted_name)
 
         if show_legend:
             _axes.legend(loc='best')
@@ -449,7 +450,7 @@ class ContoursProfiler(object):
     def plot_profiles_contours_matrix(self,
                                       parameters=None,
                                       show_grid_for=None,
-                                      show_ticks_for=None,
+                                      show_ticks_for='all',
                                       show_fit_minimum_for='contours',
                                       show_legend=True,
                                       show_parabolic_profiles=True,
