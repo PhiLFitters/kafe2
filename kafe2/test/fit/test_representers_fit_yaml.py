@@ -137,6 +137,7 @@ class TestHistFitYamlRepresenter(unittest.TestCase):
             data=_data,
             model_density_function=TestHistFitYamlRepresenter.hist_model_density
         )
+        self._fit.add_simple_error(err_val=1.0)
         
         self._roundtrip_stringstream = IOStreamHandle(StringIO())
         self._testfile_stringstream = IOStreamHandle(StringIO(TEST_FIT_HIST))
@@ -335,6 +336,7 @@ class TestIndexedFitYamlRepresenter(unittest.TestCase):
             data=self._test_y,
             model_function=TestIndexedFitYamlRepresenter.linear_model
         )
+        self._fit.add_simple_error(err_val=1.0)
         
         self._roundtrip_stringstream = IOStreamHandle(StringIO())
         self._testfile_stringstream = IOStreamHandle(StringIO(TEST_FIT_INDEXED))
@@ -529,6 +531,7 @@ class TestXYFitYamlRepresenter(unittest.TestCase):
             xy_data=[self._test_x, self._test_y],
             model_function=TestXYFitYamlRepresenter.linear_model
         )
+        self._fit.add_simple_error(axis='y', err_val=1.0)
         
         self._roundtrip_stringstream = IOStreamHandle(StringIO())
         self._testfile_stringstream = IOStreamHandle(StringIO(TEST_FIT_XY))
@@ -755,6 +758,7 @@ class TestXYMultiFitYamlRepresenter(unittest.TestCase):
             xy_data=[[self._test_x, self._test_y_0], [self._test_x, self._test_y_1]],
             model_function=[self.quadratic_model, self.linear_model]
         )
+        self._fit.add_simple_error(axis='y', err_val=1.0)
         
         self._roundtrip_stringstream = IOStreamHandle(StringIO())
         self._testfile_stringstream = IOStreamHandle(StringIO(TEST_FIT_XY_MULTI))

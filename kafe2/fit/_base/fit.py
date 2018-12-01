@@ -368,6 +368,8 @@ class FitBase(FileIOMixin, object):
         """
         Perform the minimization of the cost function.
         """
+        if not self._data_container.has_errors:
+            raise self.EXCEPTION_TYPE('Cannot perform a fit without specifying data errors first!')
         self._fitter.do_fit()
         # update parameter formatters
         for _fpf, _pv, _pe in zip(self._model_function.argument_formatters, self.parameter_values, self.parameter_errors):

@@ -75,9 +75,11 @@ class TestFittersHist(unittest.TestCase):
                                 model_density_function=self.hist_model_density,
                                 cost_function=self.simple_chi2,
                                 model_density_antiderivative=self.hist_model_density_antideriv)
+        self.hist_fit.add_simple_error(err_val=1.0)
         self.hist_fit_default_cost_function = HistFit(data=self._ref_hist_cont,
                                                       model_density_function=self.hist_model_density,
                                                       model_density_antiderivative=self.hist_model_density_antideriv)
+        self.hist_fit_default_cost_function.add_simple_error(err_val=1.0)
 
         self._ref_parameter_value_estimates = [13.828005427495496, 2.6276452391799703]
         self._ref_parameter_value_estimates_default_cost_function = [14.185468816590726, 3.0232973450410165]

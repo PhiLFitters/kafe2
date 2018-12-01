@@ -66,12 +66,15 @@ class TestFittersIndexed(unittest.TestCase):
         self.idx_fit = IndexedFit(data=self._ref_data_values,
                                   model_function=self.idx_model,
                                   cost_function=self.simple_chi2)
+        self.idx_fit.add_simple_error(err_val=1.0)
         self.idx_fit_explicit_model_name_in_chi2 = IndexedFit(
             data=self._ref_data_values,
             model_function=self.idx_model,
             cost_function=self.simple_chi2_explicit_model_name)
+        self.idx_fit_explicit_model_name_in_chi2.add_simple_error(err_val=1.0)
         self.idx_fit_default_cost_function = IndexedFit(data=self._ref_data_values,
                                                         model_function=self.idx_model)
+        self.idx_fit_default_cost_function.add_simple_error(err_val=1.0)
 
         self._ref_parameter_value_estimates = [1.1351433845831516, 2.137441531781195, 2.3405503488535118]
         self._ref_model_value_estimates = self.idx_model(*self._ref_parameter_value_estimates)

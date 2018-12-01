@@ -85,25 +85,30 @@ class TestFittersXYMulti(unittest.TestCase):
             model_function=self.xy_model_0,
             cost_function=self.simple_chi2
         )
+        self.xy_fit.add_simple_error(axis='y', err_val=1.0)
         self.xy_multi_fit = XYMultiFit(
             xy_data=[self._ref_xy_data_0, self._ref_xy_data_1],
             model_function=[self.xy_model_0, self.xy_model_1],
             cost_function=self.simple_chi2
         )
+        self.xy_multi_fit.add_simple_error(axis='y', err_val=1.0)
         self.xy_multi_fit_reversed = XYMultiFit(
             xy_data=[self._ref_xy_data_1, self._ref_xy_data_0],
             model_function=[self.xy_model_1, self.xy_model_0],
             cost_function=self.simple_chi2
         )
+        self.xy_multi_fit_reversed.add_simple_error(axis='y', err_val=1.0)
 
         self.xy_fit_explicit_model_name_in_chi2 = XYMultiFit(
             xy_data=self._ref_xy_data_0,
             model_function=self.xy_model_0,
             cost_function=self.simple_chi2_explicit_model_name
             )
+        self.xy_fit_explicit_model_name_in_chi2.add_simple_error(axis='y', err_val=1.0)
         self.xy_fit_default_cost_function = XYMultiFit(xy_data=self._ref_xy_data_0,
                                                   model_function=self.xy_model_0)
 
+        self.xy_fit_default_cost_function.add_simple_error(axis='y', err_val=1.0)
         self._ref_parameter_value_estimates = [1.1351433845831516, 2.137441531781195, 2.3405503488535118]
         self._ref_parameter_value_estimates_multi = [1.1143123505697918, 2.216862250281803, 2.9800759409541806, 0.4994086448422639]
         self._ref_parameter_value_estimates_multi_reversed = [0.49940864485321074, 1.1143123504315096, 2.216862249916337, 2.9800759487215562]
