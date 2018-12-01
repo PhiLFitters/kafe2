@@ -296,7 +296,7 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
             try:
                 _err_type = _err['type']
 
-                _add_kwargs['name'] = _err['name']
+                _add_kwargs['name'] = _err.get('name')
 
                 if _err_type == 'simple':
                     _add_kwargs['err_val']= _err['error_value']
@@ -309,7 +309,7 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
                     raise DReprError("Unknown error type '{}'. "
                                      "Valid: {}".format(_err_type, ('simple', 'matrix')))
 
-                _add_kwargs['relative'] = _err['relative']
+                _add_kwargs['relative'] = _err.get('relative', False)
                 if _class is XYMultiContainer:
                     _add_kwargs['model_index'] = _err.get('model_index', None)
 

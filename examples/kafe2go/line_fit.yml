@@ -1,39 +1,43 @@
-# Example 01: Line fit
+# Example 01: Liner regression
 # In this example a line f(x) = a * x + b is being fitted
-# to some data points with pointwise uncertainties
+# to some data points with pointwise uncertainties.
 
-# The minimal keywords needed to perform a fit are x_data and y_data.
-# Usually you will also want to define x_errors and y_errors
+# The minimal keywords needed to perform a fit are x_data, 
+# y_data, and y_errors.
+# You might also want to define x_errors.
 
 # Data is defined by lists:
-x_data: [1.0, 2.0, 4.0]
+x_data: [1.0, 2.0, 3.0, 4.0]
 
 # For errors lists describe pointwise uncertainties.
 # By default the errors will be uncorrelated.
-x_errors: [0.05, 0.1, 0.2]
+x_errors: [0.05, 0.10, 0.15, 0.20]
 
 # In total the following x data will be used for the fit:
-# x_0: 1.0 +- 0.1
-# x_1: 2.0 +- 0.2
-# x_2: 4.0 +- 0.4
+# x_0: 1.0 +- 0.05
+# x_1: 2.0 +- 0.10
+# x_2: 3.0 +- 0.15
+# x_3: 4.0 +- 0.20
 
 # In yaml lists can also be written out like this:
 y_data:
 - 2.3
 - 4.2
+- 7.5
 - 9.4
 
 # The above is equivalent to
-# y_data: [2.3, 4.2, 9.4]
+# y_data: [2.3, 4.2, 7.5, 9.4]
 
 # For errors a single float gives each data point
 # the same amount of uncertainty:
-y_errors: 0.5
+y_errors: 0.4
 
 # The above is equivalent to
-# y_errors: [0.5, 0.5, 0.5]
+# y_errors: [0.4, 0.4, 0.4, 0.4]
 
 # In total the following y data will be used for the fit:
-# y_0: 2.3 +- 0.5
-# y_1: 4.2 +- 0.5
-# y_2: 9.4 +- 0.5
+# y_0: 2.3 +- 0.4
+# y_1: 4.2 +- 0.4
+# y_2: 7.5 +- 0.4
+# y_3: 9.4 +- 0.4
