@@ -25,7 +25,20 @@ import os
 # on e.g. ReadTheDocs.org
 import mock
  
-MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot', 'scipy', 'scipy.stats', 'scipy.special', 'scipy.misc', 'scipy.linalg', 'ROOT', 'scipy.optimize']
+MOCK_MODULES = [
+    'matplotlib',
+    'matplotlib.pyplot',
+    'iminuit',
+    'numdifftools',
+    'numpy',
+    'ROOT',
+    'scipy',
+    'scipy.linalg',
+    'scipy.misc',
+    'scipy.optimize',
+    'scipy.special',
+    'scipy.stats',
+]
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.Mock()
 
