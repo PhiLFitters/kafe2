@@ -55,7 +55,7 @@ print 'kafe2 version:', kafe2.__version__
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-needs_sphinx = '1.3'  # needed for napoleon extension
+needs_sphinx = '1.4'  # needed for imgmath extension
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -65,7 +65,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.doctest',
     'sphinx.ext.coverage',
-    'sphinx.ext.pngmath',
+    'sphinx.ext.imgmath',
     'sphinx.ext.intersphinx',
     'sphinx.ext.inheritance_diagram'
 ]
