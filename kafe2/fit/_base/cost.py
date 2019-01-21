@@ -16,11 +16,13 @@ __all__ = ["CostFunctionBase",
            "CostFunctionBase_NegLogLikelihoodRatio",
            "CostFunctionException"]
 
+
 def _generic_chi2(data, model,
                   cov_mat_inverse=None,
                   err=None, err_relative_to=None,
                   fail_on_no_matrix=False,
-                  fail_on_zero_errors=False):
+                  fail_on_zero_errors=False,
+                  parameter_values=None, parameter_constraints=None):
 
     data = np.asarray(data)
     model = np.asarray(model)
@@ -29,16 +31,21 @@ def _generic_chi2(data, model,
         raise CostFunctionException("'data' and 'model' must have the same shape! Got %r and %r..."
                                     % (data.shape, model.shape))
 
+    _par_cost = 0.0
+    if parameter_constraints is not None:
+        for _par_constraint in parameter_constraints:
+            _par_cost += _par_constraint.cost(parameter_values)
+
     _res = (data - model)
 
     # if a covariance matrix inverse is given, use it
     if cov_mat_inverse is not None:
-        return _res.dot(cov_mat_inverse).dot(_res)[0, 0]
+        return _res.dot(cov_mat_inverse).dot(_res)[0, 0] + _par_cost
 
     if fail_on_no_matrix:
         raise np.linalg.LinAlgError("Covariance matrix is singular!")
 
-    # otherwise, if an array of pointwise errors is given, use that
+    # otherwise, if an array of point-wise errors is given, use that
     if err is not None:
         err = np.asarray(err)
         if err.shape != data.shape:
@@ -61,10 +68,15 @@ def _generic_chi2(data, model,
             _res = _res/err
 
     # return sum of squared residuals
-    return np.sum(_res ** 2)
+    return np.sum(_res ** 2) + _par_cost
 
-def _generic_chi2_nuisance(data, model, nuisance_vector=np.array([]), nuisance_cor_design_mat=None, uncor_cov_mat_inverse=None,
-                           fail_on_no_matrix=False):
+
+def _generic_chi2_nuisance(data, model,
+                           nuisance_vector=np.array([]),
+                           nuisance_cor_design_mat=None,
+                           uncor_cov_mat_inverse=None,
+                           fail_on_no_matrix=False,
+                           par_values=None, par_constraints=None):
 
     data = np.asarray(data)
     model = np.asarray(model)
@@ -73,23 +85,28 @@ def _generic_chi2_nuisance(data, model, nuisance_vector=np.array([]), nuisance_c
         raise CostFunctionException("'data' and 'model' must have the same shape! Got %r and %r..."
                                     % (data.shape, model.shape))
 
-    #if a uncorrelated cov-mat is given use it
+    _par_cost = 0.0
+    if par_constraints is not None:
+        for _par_constraint in par_constraints:
+            _par_cost += _par_constraint.cost(par_values)
+
+    # if an uncorrelated cov-mat is given use it
     if uncor_cov_mat_inverse is not None:
         _inner_sum = np.squeeze(np.asarray(nuisance_vector.dot(nuisance_cor_design_mat)))
-        _penalties = nuisance_vector.dot(nuisance_vector)
+        _nuisance_penalties = nuisance_vector.dot(nuisance_vector)
         _chisquare = (data - model - _inner_sum).dot(uncor_cov_mat_inverse).dot(data - model - _inner_sum)[0, 0]
-        return _chisquare + _penalties
+        return _chisquare + _nuisance_penalties + _par_cost
 
-    #raise if uncorrelaed matrix is None and the correlated is not None
+    # raise if uncorrelated matrix is None and the correlated is not None
     if nuisance_vector.all() == 0.0:
-        raise CostFunctionException('Is not working for only fullcorrelated y-errors')
+        raise CostFunctionException('y-errors must not be fully correlated!')
 
     if fail_on_no_matrix:
         raise np.linalg.LinAlgError("Uncorrelated Covariance matrix is singular!")
     else:
-        #chisquaere without errors
+        # chisquare without errors
         _chisquare = (data -model).dot(data-model)
-        return _chisquare
+        return _chisquare + _par_cost
 
 
 class CostFunctionException(Exception):
@@ -322,8 +339,11 @@ class CostFunctionBase_Chi2(CostFunctionBase):
         return _generic_chi2(data=data, model=model, cov_mat_inverse=None, err=total_error, fail_on_zero_errors=True)
 
     @staticmethod
-    def chi2_covariance_fallback(data, model, total_cov_mat_inverse):
-        return _generic_chi2(data=data, model=model, cov_mat_inverse=total_cov_mat_inverse, fail_on_no_matrix=False)
+    def chi2_covariance_fallback(data, model, total_cov_mat_inverse, parameter_values, parameter_constraints):
+        return _generic_chi2(
+            data=data, model=model, cov_mat_inverse=total_cov_mat_inverse, parameter_values=parameter_values,
+            parameter_constraints=parameter_constraints, fail_on_no_matrix=False
+        )
 
     @staticmethod
     def chi2_pointwise_errors_fallback(data, model, total_error):

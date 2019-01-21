@@ -219,28 +219,46 @@ class XYCostFunction_Chi2(CostFunctionBase_Chi2):
         return CostFunctionBase_Chi2.chi2_pointwise_errors(data=y_data, model=y_model, total_error=y_total_error)
 
     @staticmethod
-    def chi2_xy_covariance(y_data, y_model, projected_xy_total_cov_mat_inverse):
-        return CostFunctionBase_Chi2.chi2_covariance(data=y_data, model=y_model, total_cov_mat_inverse=projected_xy_total_cov_mat_inverse)
+    def chi2_xy_covariance(y_data, y_model, projected_xy_total_cov_mat_inverse, poi_values, parameter_constraints):
+        return CostFunctionBase_Chi2.chi2_covariance(
+            data=y_data, model=y_model, total_cov_mat_inverse=projected_xy_total_cov_mat_inverse,
+            par_values=poi_values, par_constraints=parameter_constraints
+        )
 
     @staticmethod
-    def chi2_xy_pointwise_errors(y_data, y_model, x_total_error, projected_xy_total_error):
-        return CostFunctionBase_Chi2.chi2_pointwise_errors(y_data, y_model, total_error=projected_xy_total_error)
+    def chi2_xy_pointwise_errors(y_data, y_model, projected_xy_total_error, poi_values, parameter_constraints):
+        return CostFunctionBase_Chi2.chi2_pointwise_errors(
+            y_data, y_model, total_error=projected_xy_total_error
+        )
 
     @staticmethod
-    def chi2_pointwise_errors_fallback(y_data, y_model, y_total_error):
-        return CostFunctionBase_Chi2.chi2_pointwise_errors_fallback(data=y_data, model=y_model, total_error=y_total_error)
+    def chi2_pointwise_errors_fallback(y_data, y_model, y_total_error, poi_values, parameter_constraints):
+        return CostFunctionBase_Chi2.chi2_pointwise_errors_fallback(
+            data=y_data, model=y_model, total_error=y_total_error,
+            par_values=poi_values, par_constraints=parameter_constraints
+        )
 
     @staticmethod
-    def chi2_covariance_fallback(y_data, y_model, y_total_cov_mat_inverse):
-        return CostFunctionBase_Chi2.chi2_covariance_fallback(data=y_data, model=y_model, total_cov_mat_inverse=y_total_cov_mat_inverse)
+    def chi2_covariance_fallback(y_data, y_model, y_total_cov_mat_inverse, poi_values, parameter_constraints):
+        return CostFunctionBase_Chi2.chi2_covariance_fallback(
+            data=y_data, model=y_model, total_cov_mat_inverse=y_total_cov_mat_inverse,
+            par_values=poi_values, par_constraints=parameter_constraints
+        )
 
     @staticmethod
-    def chi2_xy_pointwise_errors_fallback(y_data, y_model, projected_xy_total_error):
-        return CostFunctionBase_Chi2.chi2_pointwise_errors_fallback(y_data, y_model, total_error=projected_xy_total_error)
+    def chi2_xy_pointwise_errors_fallback(y_data, y_model, projected_xy_total_error, poi_values, parameter_constraints):
+        return CostFunctionBase_Chi2.chi2_pointwise_errors_fallback(
+            y_data, y_model, total_error=projected_xy_total_error,
+            par_values=poi_values, par_constraints=parameter_constraints
+        )
 
     @staticmethod
-    def chi2_xy_covariance_fallback(y_data, y_model, projected_xy_total_cov_mat_inverse):
-        return CostFunctionBase_Chi2.chi2_covariance_fallback(data=y_data, model=y_model, total_cov_mat_inverse=projected_xy_total_cov_mat_inverse)
+    def chi2_xy_covariance_fallback(y_data, y_model, projected_xy_total_cov_mat_inverse, poi_values,
+                                    parameter_constraints):
+        return CostFunctionBase_Chi2.chi2_covariance_fallback(
+            data=y_data, model=y_model, total_cov_mat_inverse=projected_xy_total_cov_mat_inverse,
+            parameter_values=poi_values, parameter_constraints=parameter_constraints
+        )
 
 
 class XYCostFunction_NegLogLikelihood(CostFunctionBase_NegLogLikelihood):

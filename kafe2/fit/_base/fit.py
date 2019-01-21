@@ -8,6 +8,8 @@ import sys
 import textwrap
 
 from collections import OrderedDict
+
+from kafe2.fit._base.constraint import GaussianParameterConstraint
 from ...tools import print_dict_as_table
 from ...core import get_minimizer, NexusFitter
 from ...tools import print_dict_recursive
@@ -39,6 +41,7 @@ class FitBase(FileIOMixin, object):
         self._nexus = None
         self._fitter = None
         self._fit_param_names = None
+        self._fit_param_constraints = None
         self._model_function = None
         self._cost_function = None
         super(FitBase, self).__init__()
@@ -71,7 +74,7 @@ class FitBase(FileIOMixin, object):
                 % (_invalid_args,))
 
     def _initialize_fitter(self, minimizer=None, minimizer_kwargs=None):
-        #save minimizer, minimizer_kwargs for serialization
+        # save minimizer, minimizer_kwargs for serialization
         self._minimizer = minimizer
         self._minimizer_kwargs = minimizer_kwargs
         self._fitter = NexusFitter(nexus=self._nexus,
@@ -79,7 +82,6 @@ class FitBase(FileIOMixin, object):
                                    parameter_to_minimize=self._cost_function.name,
                                    minimizer=minimizer,
                                    minimizer_kwargs=minimizer_kwargs)
-
 
     @staticmethod
     def _latexify_ascii(ascii_string):
@@ -95,7 +97,7 @@ class FitBase(FileIOMixin, object):
     def _mark_errors_for_update(self):
         pass
 
-    #Gets overwritten by multi models
+    # Gets overwritten by multi models
     def _get_model_report_dict_entry(self):
         return self._model_function.formatter.get_formatted(
             with_par_values=False,
@@ -164,6 +166,11 @@ class FitBase(FileIOMixin, object):
         return self._fitter.fit_parameter_values
 
     @property
+    def parameter_constraints(self):
+        """the gaussian constraints given for the fit parameters"""
+        return self._fit_param_constraints
+
+    @property
     def cost_function_value(self):
         """the current value of the cost function"""
         return self._fitter.parameter_to_minimize_value
@@ -211,6 +218,14 @@ class FitBase(FileIOMixin, object):
         :param param_value_list: list of parameter values (mind the order)
         """
         return self._fitter.set_all_fit_parameter_values(param_value_list)
+
+    def add_matrix_constraint(self, par_indices, par_means, par_cov_mat):
+        # TODO documentation
+        # TODO par_names instead of indices
+        # TODO check inputs valid
+        self._fit_param_constraints.append(GaussianParameterConstraint(
+            par_indices=par_indices, par_means=par_means, par_cov_mat=par_cov_mat
+        ))
 
     def get_matching_errors(self, matching_criteria=None, matching_type='equal'):
         """
