@@ -9,7 +9,7 @@ import textwrap
 
 from collections import OrderedDict
 
-from kafe2.fit._base.constraint import GaussianParameterConstraint
+from kafe2.fit._base.constraint import GaussianMatrixParameterConstraint, GaussianSimpleParameterConstraint
 from ...tools import print_dict_as_table
 from ...core import get_minimizer, NexusFitter
 from ...tools import print_dict_recursive
@@ -224,8 +224,17 @@ class FitBase(FileIOMixin, object):
         # TODO _fit_poi_names in XYFit
         # TODO check inputs valid
         _par_indices = list(map(self._fit_param_names.index, par_names))
-        self._fit_param_constraints.append(GaussianParameterConstraint(
+        self._fit_param_constraints.append(GaussianMatrixParameterConstraint(
             par_indices=_par_indices, par_means=par_means, par_cov_mat=par_cov_mat
+        ))
+
+    def add_simple_constraint(self, par_name, par_mean, par_uncertainty):
+        # TODO documentation
+        # TODO _fit_poi_names in XYFit
+        # TODO check inputs valid
+        _par_index = self._fit_param_names.index(par_name)
+        self._fit_param_constraints.append(GaussianSimpleParameterConstraint(
+            par_index=_par_index, par_mean=par_mean, par_uncertainty=par_uncertainty
         ))
 
     def get_matching_errors(self, matching_criteria=None, matching_type='equal'):

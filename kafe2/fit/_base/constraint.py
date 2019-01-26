@@ -20,8 +20,24 @@ class ParameterConstraint(FileIOMixin, object, metaclass=ABCMeta):
     def _get_object_type_name(self):
         return 'parameter_constraint'
 
+    def cost(self):
+        pass
 
-class GaussianParameterConstraint(ParameterConstraint):
+
+class GaussianSimpleParameterConstraint(ParameterConstraint):
+    # TODO documentation
+    # TODO check input valid
+    def __init__(self, par_index, par_mean, par_uncertainty):
+        self._par_index = par_index
+        self._par_mean = par_mean
+        self._par_uncertainty = par_uncertainty
+        super(GaussianSimpleParameterConstraint).__init__()
+
+    def cost(self, parameter_values):
+        return ((parameter_values[self._par_index] - self._par_mean) / self._par_uncertainty) ** 2
+
+
+class GaussianMatrixParameterConstraint(ParameterConstraint):
     # TODO documentation
     # TODO check input valid
     def __init__(self, par_indices, par_means, par_cov_mat):
@@ -29,7 +45,7 @@ class GaussianParameterConstraint(ParameterConstraint):
         self._par_means = np.array(par_means)
         self._par_cov_mat = np.array(par_cov_mat)
         self._par_cov_mat_inverse = None
-        super(GaussianParameterConstraint).__init__()
+        super(GaussianMatrixParameterConstraint).__init__()
 
     @property
     def par_cov_mat_inverse(self):
