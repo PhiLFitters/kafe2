@@ -1,9 +1,7 @@
 import unittest
 import numpy as np
-import matplotlib.pyplot as plt
 
 from kafe2.fit import XYContainer, XYFit
-from kafe2.fit._base.profile import ContoursProfiler
 from kafe2.fit._base.constraint import GaussianParameterConstraint
 
 
@@ -75,10 +73,10 @@ class TestParameterConstraintInXYFit(unittest.TestCase):
 
     def test_fit_profile_cov_mat_uncorrelated(self):
         _fit_with_constraint = XYFit(self._data_container, minimizer='scipy')
-        _fit_with_constraint.add_matrix_constraint([0, 1], self._means, self._cov_mat_uncor)
+        _fit_with_constraint.add_matrix_constraint(['a', 'b'], self._means, self._cov_mat_uncor)
         self._test_consistency(_fit_with_constraint, self._cov_mat_uncor)
 
     def test_fit_profile_cov_mat_correlated(self):
         _fit_with_constraint = XYFit(self._data_container, minimizer='scipy')
-        _fit_with_constraint.add_matrix_constraint([0, 1], self._means, self._cov_mat_cor)
+        _fit_with_constraint.add_matrix_constraint(['a', 'b'], self._means, self._cov_mat_cor)
         self._test_consistency(_fit_with_constraint, self._cov_mat_cor)

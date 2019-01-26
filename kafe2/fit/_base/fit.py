@@ -219,12 +219,13 @@ class FitBase(FileIOMixin, object):
         """
         return self._fitter.set_all_fit_parameter_values(param_value_list)
 
-    def add_matrix_constraint(self, par_indices, par_means, par_cov_mat):
+    def add_matrix_constraint(self, par_names, par_means, par_cov_mat):
         # TODO documentation
-        # TODO par_names instead of indices
+        # TODO _fit_poi_names in XYFit
         # TODO check inputs valid
+        _par_indices = list(map(self._fit_param_names.index, par_names))
         self._fit_param_constraints.append(GaussianParameterConstraint(
-            par_indices=par_indices, par_means=par_means, par_cov_mat=par_cov_mat
+            par_indices=_par_indices, par_means=par_means, par_cov_mat=par_cov_mat
         ))
 
     def get_matching_errors(self, matching_criteria=None, matching_type='equal'):
