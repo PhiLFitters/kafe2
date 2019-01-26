@@ -98,6 +98,8 @@ class XYMultiFit(FitBase):
         # FIXME: nicer way than len()?
         self._cost_function.ndf = self._data_container.size - len(self._param_model.parameters)
 
+        self._fit_param_constraints = []
+
     # -- private methods
 
     def _init_nexus(self):
@@ -135,6 +137,8 @@ class XYMultiFit(FitBase):
             self._poi_names.append(_arg_name)
 
         self._nexus.new(**_nexus_new_dict)  # Create nexus Nodes for function parameters
+        self._nexus.new_function(lambda: self.poi_values, function_name='poi_values')
+        self._nexus.new_function(lambda: self.parameter_constraints, function_name='parameter_constraints')
 
         # add the original function name as an alias to 'y_model'
         self._nexus.new_alias(**{self._model_function.name: 'y_model'})

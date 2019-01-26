@@ -228,7 +228,8 @@ class XYCostFunction_Chi2(CostFunctionBase_Chi2):
     @staticmethod
     def chi2_xy_pointwise_errors(y_data, y_model, projected_xy_total_error, poi_values, parameter_constraints):
         return CostFunctionBase_Chi2.chi2_pointwise_errors(
-            y_data, y_model, total_error=projected_xy_total_error
+            y_data, y_model, total_error=projected_xy_total_error,
+            par_values=poi_values, par_constraints=parameter_constraints
         )
 
     @staticmethod
