@@ -119,21 +119,21 @@ class TestParameterConstraintInXYFit(unittest.TestCase):
 
     def test_fit_profile_cov_mat_uncorrelated(self):
         _fit_with_constraint = XYFit(self._data_container)
-        _fit_with_constraint.add_matrix_constraint(['a', 'b'], self._means, self._cov_mat_uncor)
+        _fit_with_constraint.add_matrix_parameter_constraint(['a', 'b'], self._means, self._cov_mat_uncor)
         self._test_consistency(_fit_with_constraint, self._cov_mat_uncor_inv)
 
     def test_fit_profile_cov_mat_correlated(self):
         _fit_with_constraint = XYFit(self._data_container)
-        _fit_with_constraint.add_matrix_constraint(['a', 'b'], self._means, self._cov_mat_cor)
+        _fit_with_constraint.add_matrix_parameter_constraint(['a', 'b'], self._means, self._cov_mat_cor)
         self._test_consistency(_fit_with_constraint, self._cov_mat_cor_inv)
 
     def test_fit_profile_simple_a(self):
         _fit_with_constraint = XYFit(self._data_container)
-        _fit_with_constraint.add_simple_constraint('a', self._means[0], np.sqrt(self._vars[0]))
+        _fit_with_constraint.add_parameter_constraint('a', self._means[0], np.sqrt(self._vars[0]))
         self._test_consistency(_fit_with_constraint, self._cov_mat_simple_a_inv)
 
     def test_fit_profile_simple_b(self):
         _fit_with_constraint = XYFit(self._data_container)
-        _fit_with_constraint.add_simple_constraint('b', self._means[1], np.sqrt(self._vars[1]))
+        _fit_with_constraint.add_parameter_constraint('b', self._means[1], np.sqrt(self._vars[1]))
         self._test_consistency(_fit_with_constraint, self._cov_mat_simple_b_inv)
 
