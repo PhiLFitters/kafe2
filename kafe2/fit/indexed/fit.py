@@ -126,6 +126,9 @@ class IndexedFit(FitBase):
         self._nexus.new_function(self._cost_function.func, function_name=self._cost_function.name, add_unknown_parameters=False)
         self._nexus.new_alias(**{'cost': self._cost_function.name})
 
+        for _arg_name in self._fit_param_names:
+            self._nexus.add_dependency(source=_arg_name, target="parameter_values")
+
     def _invalidate_total_error_cache(self):
         self.__cache_total_error = None
         self.__cache_total_cov_mat = None
