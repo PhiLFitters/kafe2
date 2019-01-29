@@ -9,17 +9,35 @@ class TestMatrixParameterConstraintDirect(unittest.TestCase):
 
     def setUp(self):
         self._fit_par_values = [0.1, 1.2, 2.3, 3.4, 4.5, 5.6, 6.7, 7.8, 8.9, 9.0]
-        self._par_values = np.array([0.1, 1.2, 8.9, 4.5, 5.6])
-        self._par_indices = [0, 1, 8, 4, 5]
-        self._par_means = np.array([0.1, 0.0, 8.9, 4.0, 6.1])
-        self._par_variances = np.array([1.0, 1.44, 1.0, 2.0, 0.5])
-        self._par_cov_mat = np.eye(5) * self._par_variances
-        self._expected_cost = 0.0 + 1.2 ** 2 / 1.44 + 0.0 + 0.5 ** 2 / 2.0 + 0.5 ** 2 / 0.5
+        self._par_values = np.array([[8.9, 3.4, 5.6], [0.1, 2.3, 9.0], [5.6, 4.5, 3.4]])
+        self._par_indices = [[8, 3, 5], [0, 2, 9], [5, 4, 3]]
+        self._par_means = np.array([[1.23, 7.20, 3.95], [4.11, 3.00, 2.95], [0.1, -8.5, 67.0]])
+        self._par_cov_mats = np.array([
+            [
+                [1.0, 0.0, 0.0],
+                [0.0, 2.8, 0.0],
+                [0.0, 0.0, 0.5],
+            ], [
+                [1.0, 0.2, 0.3],
+                [0.2, 2.8, 0.1],
+                [0.3, 0.1, 0.5],
+            ]
+        ])
+        self._expected_cost = np.zeros((3, 3, 2))
+        for _i in range(3):
+            for _j in range(3):
+                for _k in range(2):
+                    _res = self._par_values[_i] - self._par_means[_j]
+                    self._expected_cost[_i, _j, _k] = _res.dot(np.linalg.inv(self._par_cov_mats[_k])).dot(_res)
 
     def test_cost_matrix(self):
-        _constraint = GaussianMatrixParameterConstraint(self._par_indices, self._par_means, self._par_cov_mat)
-        _cost = _constraint.cost(self._fit_par_values)
-        self.assertTrue(np.sum(np.abs(_cost - self._expected_cost)) < 1e-12)
+        for _i in range(3):
+            for _j in range(3):
+                for _k in range(2):
+                    _constraint = GaussianMatrixParameterConstraint(
+                        self._par_indices[_i], self._par_means[_j], self._par_cov_mats[_k])
+                    self.assertTrue(np.abs(
+                        _constraint.cost(self._fit_par_values) - self._expected_cost[_i, _j, _k]) < 1e-12)
 
 
 class TestSimpleParameterConstraintDirect(unittest.TestCase):
