@@ -359,6 +359,9 @@ class XYFit(FitBase):
 
         self.__cache_y_error_band = np.sqrt(_band_y)
 
+    def _get_poi_index_by_name(self, name):
+        return self._poi_names.index(name)
+
     # -- public properties
 
     @property

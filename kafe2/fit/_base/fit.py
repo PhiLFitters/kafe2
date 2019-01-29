@@ -105,6 +105,9 @@ class FitBase(FileIOMixin, object):
             format_as_latex=False,
             with_expression=True)
 
+    def _get_poi_index_by_name(self, name):
+        return self._fit_param_names.index(name)
+
     # -- public properties
 
     @abc.abstractproperty
@@ -221,18 +224,16 @@ class FitBase(FileIOMixin, object):
 
     def add_matrix_parameter_constraint(self, names, values, cov_mat):
         # TODO documentation
-        # TODO _fit_poi_names in XYFit
         # TODO check inputs valid
-        _par_indices = list(map(self._fit_param_names.index, names))
+        _par_indices = list(map(self._get_poi_index_by_name, names))
         self._fit_param_constraints.append(GaussianMatrixParameterConstraint(
             indices=_par_indices, values=values, cov_mat=cov_mat
         ))
 
     def add_parameter_constraint(self, name, value, uncertainty):
         # TODO documentation
-        # TODO _fit_poi_names in XYFit
         # TODO check inputs valid
-        _index = self._fit_param_names.index(name)
+        _index = self._get_poi_index_by_name(name)
         self._fit_param_constraints.append(GaussianSimpleParameterConstraint(
             index=_index, value=value, uncertainty=uncertainty
         ))
