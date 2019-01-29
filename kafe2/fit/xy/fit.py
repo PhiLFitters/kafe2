@@ -360,7 +360,10 @@ class XYFit(FitBase):
         self.__cache_y_error_band = np.sqrt(_band_y)
 
     def _get_poi_index_by_name(self, name):
-        return self._poi_names.index(name)
+        try:
+            return self._poi_names.index(name)
+        except ValueError:
+            raise self.EXCEPTION_TYPE('Unknown parameter name: %s' % name)
 
     # -- public properties
 

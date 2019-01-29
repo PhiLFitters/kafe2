@@ -106,7 +106,10 @@ class FitBase(FileIOMixin, object):
             with_expression=True)
 
     def _get_poi_index_by_name(self, name):
-        return self._fit_param_names.index(name)
+        try:
+            return self._fit_param_names.index(name)
+        except ValueError:
+            raise self.EXCEPTION_TYPE('Unknown parameter name: %s' % name)
 
     # -- public properties
 
@@ -224,7 +227,9 @@ class FitBase(FileIOMixin, object):
 
     def add_matrix_parameter_constraint(self, names, values, cov_mat):
         # TODO documentation
-        # TODO check inputs valid
+        if len(names) != len(values):
+            raise self.EXCEPTION_TYPE(
+                'Lengths of names and values are different: %s <-> %s' % (len(names), len(values)))
         _par_indices = list(map(self._get_poi_index_by_name, names))
         self._fit_param_constraints.append(GaussianMatrixParameterConstraint(
             indices=_par_indices, values=values, cov_mat=cov_mat
@@ -232,7 +237,6 @@ class FitBase(FileIOMixin, object):
 
     def add_parameter_constraint(self, name, value, uncertainty):
         # TODO documentation
-        # TODO check inputs valid
         _index = self._get_poi_index_by_name(name)
         self._fit_param_constraints.append(GaussianSimpleParameterConstraint(
             index=_index, value=value, uncertainty=uncertainty

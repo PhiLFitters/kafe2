@@ -26,7 +26,6 @@ class ParameterConstraint(FileIOMixin, object, metaclass=ABCMeta):
 
 class GaussianSimpleParameterConstraint(ParameterConstraint):
     # TODO documentation
-    # TODO check input valid
     def __init__(self, index, value, uncertainty):
         self._index = index
         self._value = value
@@ -39,11 +38,17 @@ class GaussianSimpleParameterConstraint(ParameterConstraint):
 
 class GaussianMatrixParameterConstraint(ParameterConstraint):
     # TODO documentation
-    # TODO check input valid
     def __init__(self, indices, values, cov_mat):
         self._indices = np.array(indices)
         self._values = np.array(values)
         self._cov_mat = np.array(cov_mat)
+        if not np.array_equal(self._cov_mat, self._cov_mat.T):
+            raise ParameterConstraintException('The covariance matrix for parameter constraints must be symmetric!')
+        if len(self._values.shape) != 1 or self._values.shape * 2 != self._cov_mat.shape:
+            raise ParameterConstraintException(
+                'Expected values and cov_mat to be of shapes (N, ), (N, N) but received shapes %s, %s instead!'
+                % (self._values.shape, self._cov_mat.shape))
+
         self._cov_mat_inverse = None
         super(GaussianMatrixParameterConstraint).__init__()
 

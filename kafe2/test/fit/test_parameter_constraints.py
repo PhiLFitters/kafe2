@@ -2,7 +2,9 @@ import unittest
 import numpy as np
 
 from kafe2.fit import XYContainer, XYFit
-from kafe2.fit._base.constraint import GaussianMatrixParameterConstraint, GaussianSimpleParameterConstraint
+from kafe2.fit._base.constraint import GaussianMatrixParameterConstraint, GaussianSimpleParameterConstraint, \
+    ParameterConstraintException
+from kafe2.fit._base.fit import FitException
 
 
 class TestMatrixParameterConstraintDirect(unittest.TestCase):
@@ -29,6 +31,14 @@ class TestMatrixParameterConstraintDirect(unittest.TestCase):
                 for _k in range(2):
                     _res = self._par_values[_i] - self._par_means[_j]
                     self._expected_cost[_i, _j, _k] = _res.dot(np.linalg.inv(self._par_cov_mats[_k])).dot(_res)
+
+    def test_bad_input_exception(self):
+        with self.assertRaises(ParameterConstraintException):
+            GaussianMatrixParameterConstraint([1, 0], [0.0, 1.0], [[0.5, 0.1], [0.0, 0.6]])
+        with self.assertRaises(ParameterConstraintException):
+            GaussianMatrixParameterConstraint([1, 0], [[0.0, 1.0]], [[0.5, 0.0], [0.0, 0.6]])
+        with self.assertRaises(ParameterConstraintException):
+            GaussianMatrixParameterConstraint([1, 0], [0.0, 1.0, 5.0], [[0.5, 0.0], [0.0, 0.6]])
 
     def test_cost_matrix(self):
         for _i in range(3):
@@ -116,6 +126,15 @@ class TestParameterConstraintInXYFit(unittest.TestCase):
                 self._profile_no_constraints[_i, _j] = _cost_function(
                     self._test_par_values[_i, 0, _j],
                     self._test_par_values[_i, 1, _j])
+
+    def test_bad_input_exception(self):
+        _fit_with_constraint = XYFit(self._data_container)
+        with self.assertRaises(FitException):
+            _fit_with_constraint.add_parameter_constraint('c', 1.0, 1.0)
+        with self.assertRaises(FitException):
+            _fit_with_constraint.add_matrix_parameter_constraint(['a', 'c'], [1.0, 2.0], [[0.2, 0.0], [0.0, 0.1]])
+        with self.assertRaises(FitException):
+            _fit_with_constraint.add_matrix_parameter_constraint(['a'], [1.0, 2.0], [[0.2, 0.0], [0.0, 0.1]])
 
     def test_fit_profile_cov_mat_uncorrelated(self):
         _fit_with_constraint = XYFit(self._data_container)
