@@ -37,7 +37,7 @@ class XYMultiModelFunction(ModelFunctionBase):
             model_function_list = [model_function_list]
         if len(model_function_list) != len(data_indices) - 1:
             raise XYMultiModelFunctionException(
-                "Received %s models but %s datasets, len(model_function_list) must be equal to len(data_indices) - 1)!"
+                "Received %s models but %s datasets, must be equal!"
                 % (len(model_function_list), len(data_indices) - 1)
             )
         self._x_name = 'x'

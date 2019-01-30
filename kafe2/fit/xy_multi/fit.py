@@ -275,7 +275,10 @@ class XYMultiFit(FitBase):
         self._nexus.add_dependency(source='x_model', target="y_model")
         # self._nexus.add_dependency(source='x_uncor_nuisance_vector', target='y_model')
         for _arg_name in self._poi_names:
+            self._nexus.add_dependency(source=_arg_name, target="poi_values")
             self._nexus.add_dependency(source=_arg_name, target="y_model")
+            self._nexus.add_dependency(source=_arg_name, target="projected_xy_total_cov_mat")
+            self._nexus.add_dependency(source=_arg_name, target="projected_xy_total_error")
 
     def _invalidate_total_error_cache(self):
         self.__cache_x_data_error = None
@@ -378,6 +381,12 @@ class XYMultiFit(FitBase):
             n_significant_digits=2,
             format_as_latex=False,
             with_expression=True) for _i in range(self.model_count)]
+
+    def _get_poi_index_by_name(self, name):
+        try:
+            return self._poi_names.index(name)
+        except ValueError:
+            raise self.EXCEPTION_TYPE('Unknown parameter name: %s' % name)
 
     # -- public properties
 
