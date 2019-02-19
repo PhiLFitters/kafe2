@@ -384,12 +384,12 @@ class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
 
         super(CostFunctionBase_NegLogLikelihood, self).__init__(cost_function=_nll_func)
 
-        self._formatter.latex_name = "-2\ln\mathcal{L}"
+        self._formatter.latex_name = "-2\\ln\\mathcal{L}"
         self._formatter.name = "nll"
         self._formatter.description = _cost_function_description
 
     @staticmethod
-    def nll_gaussian(data, model, total_error):
+    def nll_gaussian(data, model, total_error, parameter_values, parameter_constraints):
         r"""A negative log-likelihood function assuming Gaussian statistics for each measurement.
 
         The cost function is given by:
@@ -408,16 +408,21 @@ class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
         :param total_error: total *y* uncertainties for data
         :return: cost function value
         """
+        _par_cost = 0.0
+        if parameter_constraints is not None:
+            for _par_constraint in parameter_constraints:
+                _par_cost += _par_constraint.cost(parameter_values)
+
         _per_point_likelihoods = norm.pdf(data, loc=model, scale=total_error)
 
         _nll = np.sum(np.log(_per_point_likelihoods)*(-2.0))
         # guard against returning NaN
         if np.isnan(_nll):
             return np.inf
-        return _nll
+        return _nll + _par_cost
 
     @staticmethod
-    def nll_poisson(data, model):
+    def nll_poisson(data, model, parameter_values, parameter_constraints):
         r"""A negative log-likelihood function assuming Poisson statistics for each measurement.
 
         The cost function is given by:
@@ -435,13 +440,18 @@ class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
         :param model: model values
         :return: cost function value
         """
+        _par_cost = 0.0
+        if parameter_constraints is not None:
+            for _par_constraint in parameter_constraints:
+                _par_cost += _par_constraint.cost(parameter_values)
+
         _per_point_likelihoods = poisson.pmf(data, mu=model, loc=0.0)
         _total_likelihood = np.prod(_per_point_likelihoods)
         # guard against returning NaN
         _nll = -2.0 * np.log(_total_likelihood)
         if np.isnan(_nll):
             return np.inf
-        return _nll
+        return _nll + _par_cost
 
 
 class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):

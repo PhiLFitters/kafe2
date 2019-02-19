@@ -30,7 +30,9 @@ class HistFit(FitBase):
                           'data_cov_mat', 'model_cov_mat', 'total_cov_mat',
                           'data_cor_mat', 'model_cor_mat', 'total_cor_mat'}
 
-    def __init__(self, data, model_density_function=function_library.normal_distribution_pdf, cost_function=HistCostFunction_NegLogLikelihood(data_point_distribution='poisson'), model_density_antiderivative=None, minimizer=None, minimizer_kwargs=None):
+    def __init__(self, data, model_density_function=function_library.normal_distribution_pdf,
+                 cost_function=HistCostFunction_NegLogLikelihood(data_point_distribution='poisson'),
+                 model_density_antiderivative=None, minimizer=None, minimizer_kwargs=None):
         """
         Construct a fit of a model to a histogram.
 
@@ -91,6 +93,7 @@ class HistFit(FitBase):
         # TODO: check where to update this (set/release/etc.)
         # FIXME: nicer way than len()?
         self._cost_function.ndf = self._data_container.size - len(self._param_model.parameters)
+        self._fit_param_constraints = []
 
 
     # -- private methods
@@ -139,10 +142,15 @@ class HistFit(FitBase):
         self._nexus.new_function(lambda: self.total_error, function_name='total_error')
         self._nexus.new_function(lambda: self.total_cov_mat, function_name='total_cov_mat')
         self._nexus.new_function(lambda: self.total_cov_mat_inverse, function_name='total_cov_mat_inverse')
+        self._nexus.new_function(lambda: self.parameter_values, function_name='parameter_values')
+        self._nexus.new_function(lambda: self.parameter_constraints, function_name='parameter_constraints')
 
         # the cost function (the function to be minimized)
         self._nexus.new_function(self._cost_function.func, function_name=self._cost_function.name, add_unknown_parameters=False)
         self._nexus.new_alias(**{'cost': self._cost_function.name})
+
+        for _arg_name in self._fit_param_names:
+            self._nexus.add_dependency(source=_arg_name, target="parameter_values")
 
     def _invalidate_total_error_cache(self):
         self.__cache_total_error = None
