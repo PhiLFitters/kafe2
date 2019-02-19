@@ -35,6 +35,17 @@ class GaussianSimpleParameterConstraint(ParameterConstraint):
     def cost(self, parameter_values):
         return ((parameter_values[self._index] - self._value) / self._uncertainty) ** 2
 
+    @property
+    def index(self):
+        return self._index
+
+    @property
+    def value(self):
+        return self._value
+
+    @property
+    def uncertainty(self):
+        return self._uncertainty
 
 class GaussianMatrixParameterConstraint(ParameterConstraint):
     # TODO documentation
@@ -51,6 +62,18 @@ class GaussianMatrixParameterConstraint(ParameterConstraint):
 
         self._cov_mat_inverse = None
         super(GaussianMatrixParameterConstraint).__init__()
+
+    @property
+    def indices(self):
+        return self._indices
+
+    @property
+    def values(self):
+        return self._values
+
+    @property
+    def cov_mat(self):
+        return self._cov_mat
 
     @property
     def cov_mat_inverse(self):

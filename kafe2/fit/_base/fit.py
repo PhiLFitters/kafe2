@@ -105,12 +105,6 @@ class FitBase(FileIOMixin, object):
             format_as_latex=False,
             with_expression=True)
 
-    def _get_poi_index_by_name(self, name):
-        try:
-            return self._fit_param_names.index(name)
-        except ValueError:
-            raise self.EXCEPTION_TYPE('Unknown parameter name: %s' % name)
-
     # -- public properties
 
     @abc.abstractproperty
@@ -150,6 +144,11 @@ class FitBase(FileIOMixin, object):
     def parameter_values(self):
         """the current parameter values"""
         return list(self.parameter_name_value_dict.values())
+
+    @property
+    def parameter_names(self):
+        """the current parameter names"""
+        return list(self.parameter_name_value_dict.keys())
 
     @property
     def parameter_errors(self):
@@ -206,6 +205,14 @@ class FitBase(FileIOMixin, object):
         """the number of model functions contained in the fit, 1 by default"""
         return 1
 
+    @property
+    def poi_values(self):
+        return self.parameter_values
+
+    @property
+    def poi_names(self):
+        return self.parameter_names
+
     # -- public methods
 
     def set_parameter_values(self, **param_name_value_dict):
@@ -230,14 +237,22 @@ class FitBase(FileIOMixin, object):
         if len(names) != len(values):
             raise self.EXCEPTION_TYPE(
                 'Lengths of names and values are different: %s <-> %s' % (len(names), len(values)))
-        _par_indices = list(map(self._get_poi_index_by_name, names))
+        _par_indices = []
+        for _name in names:
+            try:
+                _par_indices.append(self.poi_names.index(_name))
+            except ValueError:
+                raise self.EXCEPTION_TYPE('Unknown parameter name: %s' % _name)
         self._fit_param_constraints.append(GaussianMatrixParameterConstraint(
             indices=_par_indices, values=values, cov_mat=cov_mat
         ))
 
     def add_parameter_constraint(self, name, value, uncertainty):
         # TODO documentation
-        _index = self._get_poi_index_by_name(name)
+        try:
+            _index = self.poi_names.index(name)
+        except ValueError:
+            raise self.EXCEPTION_TYPE('Unknown parameter name: %s' % name)
         self._fit_param_constraints.append(GaussianSimpleParameterConstraint(
             index=_index, value=value, uncertainty=uncertainty
         ))

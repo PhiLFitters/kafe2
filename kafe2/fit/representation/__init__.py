@@ -15,6 +15,7 @@ _FILE_FORMAT_ALIAS_RESOLVDICT = dict(yml='yaml')
 
 
 from ._base import DReprError
+from .constraint import *
 from .container import *
 from .fit import *
 from .format import *

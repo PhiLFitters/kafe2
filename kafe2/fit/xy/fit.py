@@ -803,9 +803,13 @@ class XYFit(FitBase):
     def poi_values(self):
         # gives the values of the model_function_parameters
         _poi_values = []
-        for _name in self._poi_names:
+        for _name in self.poi_names:
             _poi_values.append(self.parameter_name_value_dict[_name])
         return _poi_values
+
+    @property
+    def poi_names(self):
+        return self._poi_names
 
     @property
     def x_uncor_nuisance_values(self):
