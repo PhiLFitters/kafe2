@@ -14,10 +14,10 @@ class TestMatrixParameterConstraintDirect(unittest.TestCase):
 
     def setUp(self):
         self._fit_par_values = [0.1, 1.2, 2.3, 3.4, 4.5, 5.6, 6.7, 7.8, 8.9, 9.0]
-        self._par_values = np.array([[8.9, 3.4, 5.6], [0.1, 2.3, 9.0], [5.6, 4.5, 3.4]])
+        self._par_test_values = np.array([[8.9, 3.4, 5.6], [0.1, 2.3, 9.0], [5.6, 4.5, 3.4]])
         self._par_indices = [[8, 3, 5], [0, 2, 9], [5, 4, 3]]
-        self._par_means = np.array([[1.23, 7.20, 3.95], [4.11, 3.00, 2.95], [0.1, -8.5, 67.0]])
-        self._par_cov_mats = np.array([
+        self._par_values = np.array([[1.23, 7.20, 3.95], [4.11, 3.00, 2.95], [0.1, -8.5, 67.0]])
+        self._par_cov_mats_abs = np.array([
             [
                 [1.0, 0.0, 0.0],
                 [0.0, 2.8, 0.0],
@@ -28,12 +28,30 @@ class TestMatrixParameterConstraintDirect(unittest.TestCase):
                 [0.3, 0.1, 0.5],
             ]
         ])
-        self._expected_cost = np.zeros((3, 3, 2))
+        self._par_cov_mats_rel = np.array([
+            [
+                [0.1, 0.0, 0.0],
+                [0.0, 0.2, 0.0],
+                [0.0, 0.0, 0.3],
+            ], [
+                [0.10, 0.01, 0.02],
+                [0.01, 0.20, 0.03],
+                [0.02, 0.03, 0.30],
+            ]
+        ])
+        self._expected_cost_abs = np.zeros((3, 3, 2))
         for _i in range(3):
             for _j in range(3):
                 for _k in range(2):
-                    _res = self._par_values[_i] - self._par_means[_j]
-                    self._expected_cost[_i, _j, _k] = _res.dot(np.linalg.inv(self._par_cov_mats[_k])).dot(_res)
+                    _res = self._par_test_values[_i] - self._par_values[_j]
+                    self._expected_cost_abs[_i, _j, _k] = _res.dot(np.linalg.inv(self._par_cov_mats_abs[_k])).dot(_res)
+        self._expected_cost_rel = np.zeros((3, 3, 2))
+        for _i in range(3):
+            for _j in range(3):
+                for _k in range(2):
+                    _res = self._par_test_values[_i] - self._par_values[_j]
+                    _abs_cov_mat = self._par_cov_mats_rel[_k] * np.outer(self._par_values[_j], self._par_values[_j])
+                    self._expected_cost_rel[_i, _j, _k] = _res.dot(np.linalg.inv(_abs_cov_mat)).dot(_res)
 
     def test_bad_input_exception(self):
         with self.assertRaises(ParameterConstraintException):
@@ -43,39 +61,69 @@ class TestMatrixParameterConstraintDirect(unittest.TestCase):
         with self.assertRaises(ParameterConstraintException):
             GaussianMatrixParameterConstraint([1, 0], [0.0, 1.0, 5.0], [[0.5, 0.0], [0.0, 0.6]])
 
-    def test_cost_matrix(self):
+    def test_cost_matrix_abs(self):
         for _i in range(3):
             for _j in range(3):
                 for _k in range(2):
                     _constraint = GaussianMatrixParameterConstraint(
-                        self._par_indices[_i], self._par_means[_j], self._par_cov_mats[_k])
+                        self._par_indices[_i], self._par_values[_j], self._par_cov_mats_abs[_k])
                     self.assertTrue(np.abs(
-                        _constraint.cost(self._fit_par_values) - self._expected_cost[_i, _j, _k]) < 1e-12)
+                        _constraint.cost(self._fit_par_values) - self._expected_cost_abs[_i, _j, _k]) < 1e-12)
+
+    def test_cost_matrix_rel(self):
+        for _i in range(3):
+            for _j in range(3):
+                for _k in range(2):
+                    _constraint = GaussianMatrixParameterConstraint(
+                        self._par_indices[_i], self._par_values[_j], self._par_cov_mats_rel[_k],
+                        relative=True
+                    )
+                    self.assertTrue(np.abs(
+                        _constraint.cost(self._fit_par_values) - self._expected_cost_rel[_i, _j, _k]) < 1e-12)
 
 
 class TestSimpleParameterConstraintDirect(unittest.TestCase):
 
     def setUp(self):
         self._fit_par_values = [0.1, 1.2, 2.3, 3.4, 4.5, 5.6, 6.7, 7.8, 8.9, 9.0]
-        self._par_values = [8.9, 3.4, 5.6]
+        self._par_test_values = [8.9, 3.4, 5.6]
         self._par_indices = [8, 3, 5]
-        self._par_means = [1.23, 7.20, 3.95]
-        self._par_uncertainties = [1.0, 2.8, 0.001]
-        self._expected_cost = np.zeros((3, 3, 3))
+        self._par_values = [1.23, 7.20, 3.95]
+        self._par_uncertainties_abs = [1.0, 2.8, 0.001]
+        self._par_uncertainties_rel = [0.1, 0.3, 0.01]
+        self._expected_cost_abs = np.zeros((3, 3, 3))
         for _i in range(3):
             for _j in range(3):
                 for _k in range(3):
-                    _res = self._par_values[_i] - self._par_means[_j]
-                    self._expected_cost[_i, _j, _k] = (_res / self._par_uncertainties[_k]) ** 2
+                    _res = self._par_test_values[_i] - self._par_values[_j]
+                    self._expected_cost_abs[_i, _j, _k] = (_res / self._par_uncertainties_abs[_k]) ** 2
+        self._expected_cost_rel = np.zeros((3, 3, 3))
+        for _i in range(3):
+            for _j in range(3):
+                for _k in range(3):
+                    _res = self._par_test_values[_i] - self._par_values[_j]
+                    self._expected_cost_rel[_i, _j, _k] = (_res / (self._par_uncertainties_rel[_k]
+                                                                   * self._par_values[_j])) ** 2
 
-    def test_cost_simple(self):
+    def test_cost_simple_abs(self):
         for _i in range(3):
             for _j in range(3):
                 for _k in range(3):
                     _constraint = GaussianSimpleParameterConstraint(
-                        self._par_indices[_i], self._par_means[_j], self._par_uncertainties[_k])
+                        self._par_indices[_i], self._par_values[_j], self._par_uncertainties_abs[_k])
                     self.assertTrue(np.abs(
-                        _constraint.cost(self._fit_par_values) - self._expected_cost[_i, _j, _k]) < 1e-12)
+                        _constraint.cost(self._fit_par_values) - self._expected_cost_abs[_i, _j, _k]) < 1e-12)
+
+    def test_cost_simple_rel(self):
+        for _i in range(3):
+            for _j in range(3):
+                for _k in range(3):
+                    _constraint = GaussianSimpleParameterConstraint(
+                        self._par_indices[_i], self._par_values[_j], self._par_uncertainties_rel[_k],
+                        relative=True
+                    )
+                    self.assertTrue(np.abs(
+                        _constraint.cost(self._fit_par_values) - self._expected_cost_rel[_i, _j, _k]) < 1e-12)
 
 
 class TestParameterConstraintInHistFit(unittest.TestCase):

@@ -232,7 +232,7 @@ class FitBase(FileIOMixin, object):
         """
         return self._fitter.set_all_fit_parameter_values(param_value_list)
 
-    def add_matrix_parameter_constraint(self, names, values, cov_mat):
+    def add_matrix_parameter_constraint(self, names, values, cov_mat, relative=False):
         # TODO documentation
         if len(names) != len(values):
             raise self.EXCEPTION_TYPE(
@@ -244,17 +244,17 @@ class FitBase(FileIOMixin, object):
             except ValueError:
                 raise self.EXCEPTION_TYPE('Unknown parameter name: %s' % _name)
         self._fit_param_constraints.append(GaussianMatrixParameterConstraint(
-            indices=_par_indices, values=values, cov_mat=cov_mat
+            indices=_par_indices, values=values, cov_mat=cov_mat, relative=False
         ))
 
-    def add_parameter_constraint(self, name, value, uncertainty):
+    def add_parameter_constraint(self, name, value, uncertainty, relative=False):
         # TODO documentation
         try:
             _index = self.poi_names.index(name)
         except ValueError:
             raise self.EXCEPTION_TYPE('Unknown parameter name: %s' % name)
         self._fit_param_constraints.append(GaussianSimpleParameterConstraint(
-            index=_index, value=value, uncertainty=uncertainty
+            index=_index, value=value, uncertainty=uncertainty, relative=relative
         ))
 
     def get_matching_errors(self, matching_criteria=None, matching_type='equal'):
