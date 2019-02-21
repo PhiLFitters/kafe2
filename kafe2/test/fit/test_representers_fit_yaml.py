@@ -61,7 +61,7 @@ parameter_constraints:
       - type: matrix
         names: [sigma, mu]
         values: [1.3, 2.5]
-        cov_mat: [[1.1, 0.1], [0.1, 2.4]]
+        matrix: [[1.1, 0.1], [0.1, 2.4]]
 """
 
 TEST_FIT_HIST_MISSING_KEYWORD="""
@@ -312,7 +312,7 @@ parameter_constraints:
       - type: matrix
         names: [a, b]
         values: [2.05, -0.95]
-        cov_mat: [[1.1, 0.1], [0.1, 2.4]]
+        matrix: [[1.1, 0.1], [0.1, 2.4]]
 """
 
 TEST_FIT_INDEXED_MISSING_KEYWORD="""
@@ -373,7 +373,7 @@ class TestIndexedFitYamlRepresenter(unittest.TestCase):
         self._fit.add_parameter_constraint(name='a', value=2.0, uncertainty=1.0)
         self._fit.add_parameter_constraint(name='b', value=-1.0, uncertainty=0.5)
         self._fit.add_matrix_parameter_constraint(names=['a', 'b'], values=[2.05, -0.95],
-                                                  cov_mat=[[1.1, 0.1], [0.1, 2.4]])
+                                                  matrix=[[1.1, 0.1], [0.1, 2.4]])
 
         self._roundtrip_stringstream = IOStreamHandle(StringIO())
         self._testfile_stringstream = IOStreamHandle(StringIO(TEST_FIT_INDEXED))
@@ -530,7 +530,7 @@ parameter_constraints:
       - type: matrix
         names: [a, b]
         values: [2.05, -0.95]
-        cov_mat: [[1.1, 0.1], [0.1, 2.4]]
+        matrix: [[1.1, 0.1], [0.1, 2.4]]
 """
 
 TEST_FIT_XY_MISSING_KEYWORD="""
@@ -589,7 +589,7 @@ class TestXYFitYamlRepresenter(unittest.TestCase):
         self._fit.add_parameter_constraint(name='a', value=2.0, uncertainty=1.0)
         self._fit.add_parameter_constraint(name='b', value=-1.0, uncertainty=0.5)
         self._fit.add_matrix_parameter_constraint(names=['a', 'b'], values=[2.05, -0.95],
-                                                  cov_mat=[[1.1, 0.1], [0.1, 2.4]])
+                                                  matrix=[[1.1, 0.1], [0.1, 2.4]])
 
         self._roundtrip_stringstream = IOStreamHandle(StringIO())
         self._testfile_stringstream = IOStreamHandle(StringIO(TEST_FIT_XY))
@@ -756,7 +756,7 @@ parameter_constraints:
       - type: matrix
         names: [a, b, c]
         values: [0.3, 1.6, -0.6]
-        cov_mat: [[1.2, 0.1, 0.2], [0.1, 3.4, 0.3], [0.2, 0.3, 9.0]]
+        matrix: [[1.2, 0.1, 0.2], [0.1, 3.4, 0.3], [0.2, 0.3, 9.0]]
 """
 
 TEST_FIT_XY_MULTI_MISSING_KEYWORD="""
@@ -838,7 +838,7 @@ class TestXYMultiFitYamlRepresenter(unittest.TestCase):
         self._fit.add_parameter_constraint(name='c', value=-0.5, uncertainty=1.0)
         self._fit.add_parameter_constraint(name='b', value=1.4, uncertainty=0.5)
         self._fit.add_matrix_parameter_constraint(names=['a', 'b', 'c'], values=[0.3, 1.6, -0.6],
-                                                  cov_mat=[[1.2, 0.1, 0.2], [0.1, 3.4, 0.3], [0.2, 0.3, 9.0]])
+                                                  matrix=[[1.2, 0.1, 0.2], [0.1, 3.4, 0.3], [0.2, 0.3, 9.0]])
 
         self._roundtrip_stringstream = IOStreamHandle(StringIO())
         self._testfile_stringstream = IOStreamHandle(StringIO(TEST_FIT_XY_MULTI))

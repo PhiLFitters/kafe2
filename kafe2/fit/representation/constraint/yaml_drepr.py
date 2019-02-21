@@ -29,10 +29,24 @@ class ConstraintYamlWriter(YamlWriterMixin, ConstraintDReprBase):
             _yaml_doc['index'] = constraint.index
             _yaml_doc['value'] = constraint.value
             _yaml_doc['uncertainty'] = constraint.uncertainty
+            _yaml_doc['relative'] = constraint.relative
         elif _class is GaussianMatrixParameterConstraint:
             _yaml_doc['indices'] = constraint.indices.tolist()
             _yaml_doc['values'] = constraint.values.tolist()
-            _yaml_doc['cov_mat'] = constraint.cov_mat.tolist()
+            if constraint.relative:
+                if constraint.matrix_type is 'cov':
+                    _yaml_doc['matrix'] = constraint.cov_mat_rel.tolist()
+                else:
+                    _yaml_doc['matrix'] = constraint.cor_mat.tolist()
+                    _yaml_doc['uncertainties'] = constraint.uncertainties_rel.tolist()
+            else:
+                if constraint.matrix_type is 'cov':
+                    _yaml_doc['matrix'] = constraint.cov_mat.tolist()
+                else:
+                    _yaml_doc['matrix'] = constraint.cor_mat.tolist()
+                    _yaml_doc['uncertainties'] = constraint.uncertainties.tolist()
+            _yaml_doc['relative'] = constraint.relative
+            _yaml_doc['matrix_type'] = constraint.matrix_type
         else:
             raise DReprError('Unknown constraint class: %s' % _class)
 
@@ -51,7 +65,7 @@ class ConstraintYamlReader(YamlReaderMixin, ConstraintDReprBase):
         if constraint_class is GaussianSimpleParameterConstraint:
             return ['index', 'value', 'uncertainty']
         elif constraint_class is GaussianMatrixParameterConstraint:
-            return ['indices', 'values', 'cov_mat']
+            return ['indices', 'values', 'matrix']
         else:
             raise DReprError('Unknown constraint class: %s' % constraint_class)
 
@@ -74,22 +88,20 @@ class ConstraintYamlReader(YamlReaderMixin, ConstraintDReprBase):
         _class = cls._OBJECT_TYPE_NAME_TO_CLASS.get(_constraint_type, None)
 
         if _class is GaussianSimpleParameterConstraint:
-            _index = yaml_doc.pop('index')
-            _value = yaml_doc.pop('value')
-            _uncertainty = yaml_doc.pop('uncertainty')
             _constraint_object = GaussianSimpleParameterConstraint(
-                index=_index,
-                value=_value,
-                uncertainty=_uncertainty
+                index=yaml_doc.pop('index'),
+                value=yaml_doc.pop('value'),
+                uncertainty=yaml_doc.pop('uncertainty'),
+                relative=yaml_doc.pop('relative', False)
             )
         elif _class is GaussianMatrixParameterConstraint:
-            _indices = yaml_doc.pop('indices')
-            _values = yaml_doc.pop('values')
-            _cov_mat = yaml_doc.pop('cov_mat')
             _constraint_object = GaussianMatrixParameterConstraint(
-                indices=_indices,
-                values=_values,
-                cov_mat=_cov_mat
+                indices=yaml_doc.pop('indices'),
+                values=yaml_doc.pop('values'),
+                matrix=yaml_doc.pop('matrix'),
+                matrix_type=yaml_doc.pop('matrix_type', 'cov'),
+                uncertainties=yaml_doc.pop('uncertainties', None),
+                relative=yaml_doc.pop('relative', False)
             )
         else:
             raise DReprError('unkown constraint class: %s' % _class)
