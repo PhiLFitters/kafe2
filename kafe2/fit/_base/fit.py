@@ -202,10 +202,12 @@ class FitBase(FileIOMixin, object):
 
     @property
     def poi_values(self):
+        """the values of the parameters of interest, equal to ``self.parameter_values`` minus nuisance parameters"""
         return self.parameter_values
 
     @property
     def poi_names(self):
+        """the names of the parameters of interest, equal to ``self.parameter_names`` minus nuisance parameter names"""
         return self.parameter_names
 
     # -- public methods
@@ -229,7 +231,26 @@ class FitBase(FileIOMixin, object):
 
     def add_matrix_parameter_constraint(self, names, values, matrix, matrix_type='cov', uncertainties=None,
                                         relative=False):
-        # TODO documentation
+        """
+        Advanced class for applying correlated constraints to several parameters of a fit.
+        The order of ``names``, ``values``, ``matrix``, and ``uncertainties`` must be aligned.
+        In other words the first index must belong to the first value, the first row/column in the matrix, etc.
+
+        Let N be the number of parameters to be constrained.
+        :param names: The names of the parameters to be constrained
+        :type names: iterable of str, shape (N,)
+        :param values: The values to which the parameters should be constrained
+        :type values: iterable of float, shape (N,)
+        :param matrix: The matrix that defines the correlation between the parameters. By default interpreted as a
+            covariance matrix. Can also be interpreted as a correlation matrix by setting ``matrix_type``
+        :type matrix: iterable of float, shape (N, N)
+        :param matrix_type: Whether the matrix should be interpreted as a covariance matrix or as a correlation matrix
+        :type matrix_type: str, either 'cov' or 'cor'
+        :param uncertainties: The uncertainties to be used in conjunction with a correlation matrix
+        :type uncertainties: ``None`` or iterable of float, shape (N,)
+        :param relative: Whether the covariance matrix/the uncertainties should be interpreted as relative to ``values``
+        :type relative: bool
+        """
         if len(names) != len(values):
             raise self.EXCEPTION_TYPE(
                 'Lengths of names and values are different: %s <-> %s' % (len(names), len(values)))
@@ -245,7 +266,18 @@ class FitBase(FileIOMixin, object):
         ))
 
     def add_parameter_constraint(self, name, value, uncertainty, relative=False):
-        # TODO documentation
+        """
+        Simple class for applying a gaussian constraint to a single fit parameter.
+
+        :param name: The name of the parameter to be constrained
+        :type name: str
+        :param value: The value to which the parameter should be constrained
+        :type value: float
+        :param uncertainty: The uncertainty with which the parameter should be constrained to the given value
+        :type uncertainty: float
+        :param relative: Whether the given uncertainty is relative to the given value
+        :type relative: bool
+        """
         try:
             _index = self.poi_names.index(name)
         except ValueError:
