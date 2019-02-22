@@ -16,11 +16,13 @@ __all__ = ["CostFunctionBase",
            "CostFunctionBase_NegLogLikelihoodRatio",
            "CostFunctionException"]
 
+
 def _generic_chi2(data, model,
                   cov_mat_inverse=None,
                   err=None, err_relative_to=None,
                   fail_on_no_matrix=False,
-                  fail_on_zero_errors=False):
+                  fail_on_zero_errors=False,
+                  parameter_values=None, parameter_constraints=None):
 
     data = np.asarray(data)
     model = np.asarray(model)
@@ -29,16 +31,21 @@ def _generic_chi2(data, model,
         raise CostFunctionException("'data' and 'model' must have the same shape! Got %r and %r..."
                                     % (data.shape, model.shape))
 
+    _par_cost = 0.0
+    if parameter_constraints is not None:
+        for _par_constraint in parameter_constraints:
+            _par_cost += _par_constraint.cost(parameter_values)
+
     _res = (data - model)
 
     # if a covariance matrix inverse is given, use it
     if cov_mat_inverse is not None:
-        return _res.dot(cov_mat_inverse).dot(_res)[0, 0]
+        return _res.dot(cov_mat_inverse).dot(_res)[0, 0] + _par_cost
 
     if fail_on_no_matrix:
         raise np.linalg.LinAlgError("Covariance matrix is singular!")
 
-    # otherwise, if an array of pointwise errors is given, use that
+    # otherwise, if an array of point-wise errors is given, use that
     if err is not None:
         err = np.asarray(err)
         if err.shape != data.shape:
@@ -61,10 +68,15 @@ def _generic_chi2(data, model,
             _res = _res/err
 
     # return sum of squared residuals
-    return np.sum(_res ** 2)
+    return np.sum(_res ** 2) + _par_cost
 
-def _generic_chi2_nuisance(data, model, nuisance_vector=np.array([]), nuisance_cor_design_mat=None, uncor_cov_mat_inverse=None,
-                           fail_on_no_matrix=False):
+
+def _generic_chi2_nuisance(data, model,
+                           nuisance_vector=np.array([]),
+                           nuisance_cor_design_mat=None,
+                           uncor_cov_mat_inverse=None,
+                           fail_on_no_matrix=False,
+                           parameter_values=None, parameter_constraints=None):
 
     data = np.asarray(data)
     model = np.asarray(model)
@@ -73,23 +85,28 @@ def _generic_chi2_nuisance(data, model, nuisance_vector=np.array([]), nuisance_c
         raise CostFunctionException("'data' and 'model' must have the same shape! Got %r and %r..."
                                     % (data.shape, model.shape))
 
-    #if a uncorrelated cov-mat is given use it
+    _par_cost = 0.0
+    if parameter_constraints is not None:
+        for _par_constraint in parameter_constraints:
+            _par_cost += _par_constraint.cost(parameter_values)
+
+    # if an uncorrelated cov-mat is given use it
     if uncor_cov_mat_inverse is not None:
         _inner_sum = np.squeeze(np.asarray(nuisance_vector.dot(nuisance_cor_design_mat)))
-        _penalties = nuisance_vector.dot(nuisance_vector)
+        _nuisance_penalties = nuisance_vector.dot(nuisance_vector)
         _chisquare = (data - model - _inner_sum).dot(uncor_cov_mat_inverse).dot(data - model - _inner_sum)[0, 0]
-        return _chisquare + _penalties
+        return _chisquare + _nuisance_penalties + _par_cost
 
-    #raise if uncorrelaed matrix is None and the correlated is not None
+    # raise if uncorrelated matrix is None and the correlated is not None
     if nuisance_vector.all() == 0.0:
-        raise CostFunctionException('Is not working for only fullcorrelated y-errors')
+        raise CostFunctionException('y-errors must not be fully correlated!')
 
     if fail_on_no_matrix:
         raise np.linalg.LinAlgError("Uncorrelated Covariance matrix is singular!")
     else:
-        #chisquaere without errors
+        # chisquare without errors
         _chisquare = (data -model).dot(data-model)
-        return _chisquare
+        return _chisquare + _par_cost
 
 
 class CostFunctionException(Exception):
@@ -260,16 +277,17 @@ class CostFunctionBase_Chi2(CostFunctionBase):
                 _chi2_func = self.chi2_pointwise_errors
             _cost_function_description += " (with pointwise errors)"
         else:
-            raise CostFunctionException("Unknown value '%s' for 'errors_to_use': must be one of ('covariance', 'pointwise', None)")
+            raise CostFunctionException(
+                "Unknown value '%s' for 'errors_to_use': must be one of ('covariance', 'pointwise', None)")
 
         super(CostFunctionBase_Chi2, self).__init__(cost_function=_chi2_func)
 
-        self._formatter.latex_name = "\chi^2"
+        self._formatter.latex_name = "\\chi^2"
         self._formatter.name = "chi2"
         self._formatter.description = _cost_function_description
 
     @staticmethod
-    def chi2_no_errors(data, model):
+    def chi2_no_errors(data, model, parameter_values, parameter_constraints):
         r"""A least-squares cost function calculated from 'y' data and model values,
         without considering uncertainties:
 
@@ -283,10 +301,11 @@ class CostFunctionBase_Chi2(CostFunctionBase):
         :param y_model: model values
         :return: cost function value
         """
-        return _generic_chi2(data=data, model=model, cov_mat_inverse=None, fail_on_no_matrix=False)
+        return _generic_chi2(data=data, model=model, cov_mat_inverse=None, fail_on_no_matrix=False,
+                             parameter_values=parameter_values, parameter_constraints=parameter_constraints)
 
     @staticmethod
-    def chi2_covariance(data, model, total_cov_mat_inverse):
+    def chi2_covariance(data, model, total_cov_mat_inverse, parameter_values, parameter_constraints):
         r"""A least-squares cost function calculated from 'y' data and model values,
         considering the covariance matrix of the 'y' measurements.
 
@@ -301,10 +320,11 @@ class CostFunctionBase_Chi2(CostFunctionBase):
         :param y_total_cov_mat_inverse: inverse of the total covariance matrix
         :return: cost function value
         """
-        return _generic_chi2(data=data, model=model, cov_mat_inverse=total_cov_mat_inverse, fail_on_no_matrix=True)
+        return _generic_chi2(data=data, model=model, cov_mat_inverse=total_cov_mat_inverse, fail_on_no_matrix=True,
+                             parameter_values=parameter_values, parameter_constraints=parameter_constraints)
 
     @staticmethod
-    def chi2_pointwise_errors(data, model, total_error):
+    def chi2_pointwise_errors(data, model, total_error, parameter_values, parameter_constraints):
         r"""A least-squares cost function calculated from 'y' data and model values,
         considering pointwise (uncorrelated) uncertainties for each data point:
 
@@ -319,17 +339,21 @@ class CostFunctionBase_Chi2(CostFunctionBase):
         :param y_total_error: total measurement uncertainties
         :return:
         """
-        return _generic_chi2(data=data, model=model, cov_mat_inverse=None, err=total_error, fail_on_zero_errors=True)
+        return _generic_chi2(data=data, model=model, cov_mat_inverse=None, err=total_error, fail_on_zero_errors=True,
+                             parameter_values=parameter_values, parameter_constraints=parameter_constraints)
 
     @staticmethod
-    def chi2_covariance_fallback(data, model, total_cov_mat_inverse):
-        return _generic_chi2(data=data, model=model, cov_mat_inverse=total_cov_mat_inverse, fail_on_no_matrix=False)
+    def chi2_covariance_fallback(data, model, total_cov_mat_inverse, parameter_values, parameter_constraints):
+        return _generic_chi2(
+            data=data, model=model, cov_mat_inverse=total_cov_mat_inverse, parameter_values=parameter_values,
+            parameter_constraints=parameter_constraints, fail_on_no_matrix=False
+        )
 
     @staticmethod
     def chi2_pointwise_errors_fallback(data, model, total_error):
         return _generic_chi2(data=data, model=model, cov_mat_inverse=None, err=total_error, fail_on_zero_errors=False)
 
-
+# TODO add parameter constraints
 class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
     def __init__(self, data_point_distribution='poisson'):
         r"""
@@ -360,12 +384,12 @@ class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
 
         super(CostFunctionBase_NegLogLikelihood, self).__init__(cost_function=_nll_func)
 
-        self._formatter.latex_name = "-2\ln\mathcal{L}"
+        self._formatter.latex_name = "-2\\ln\\mathcal{L}"
         self._formatter.name = "nll"
         self._formatter.description = _cost_function_description
 
     @staticmethod
-    def nll_gaussian(data, model, total_error):
+    def nll_gaussian(data, model, total_error, parameter_values, parameter_constraints):
         r"""A negative log-likelihood function assuming Gaussian statistics for each measurement.
 
         The cost function is given by:
@@ -384,16 +408,21 @@ class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
         :param total_error: total *y* uncertainties for data
         :return: cost function value
         """
+        _par_cost = 0.0
+        if parameter_constraints is not None:
+            for _par_constraint in parameter_constraints:
+                _par_cost += _par_constraint.cost(parameter_values)
+
         _per_point_likelihoods = norm.pdf(data, loc=model, scale=total_error)
 
         _nll = np.sum(np.log(_per_point_likelihoods)*(-2.0))
         # guard against returning NaN
         if np.isnan(_nll):
             return np.inf
-        return _nll
+        return _nll + _par_cost
 
     @staticmethod
-    def nll_poisson(data, model):
+    def nll_poisson(data, model, parameter_values, parameter_constraints):
         r"""A negative log-likelihood function assuming Poisson statistics for each measurement.
 
         The cost function is given by:
@@ -411,13 +440,18 @@ class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
         :param model: model values
         :return: cost function value
         """
+        _par_cost = 0.0
+        if parameter_constraints is not None:
+            for _par_constraint in parameter_constraints:
+                _par_cost += _par_constraint.cost(parameter_values)
+
         _per_point_likelihoods = poisson.pmf(data, mu=model, loc=0.0)
         _total_likelihood = np.prod(_per_point_likelihoods)
         # guard against returning NaN
         _nll = -2.0 * np.log(_total_likelihood)
         if np.isnan(_nll):
             return np.inf
-        return _nll
+        return _nll + _par_cost
 
 
 class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):

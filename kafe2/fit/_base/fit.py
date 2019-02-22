@@ -1,16 +1,13 @@
 import abc
-import inspect
 import numpy as np
-import re
-import six
-import string
 import sys
 import textwrap
 
 from collections import OrderedDict
+
+from kafe2.core.constraint import GaussianMatrixParameterConstraint, GaussianSimpleParameterConstraint
 from ...tools import print_dict_as_table
-from ...core import get_minimizer, NexusFitter
-from ...tools import print_dict_recursive
+from ...core import NexusFitter
 from .container import DataContainerException
 from ..io.file import FileIOMixin
 
@@ -39,6 +36,7 @@ class FitBase(FileIOMixin, object):
         self._nexus = None
         self._fitter = None
         self._fit_param_names = None
+        self._fit_param_constraints = None
         self._model_function = None
         self._cost_function = None
         super(FitBase, self).__init__()
@@ -71,7 +69,7 @@ class FitBase(FileIOMixin, object):
                 % (_invalid_args,))
 
     def _initialize_fitter(self, minimizer=None, minimizer_kwargs=None):
-        #save minimizer, minimizer_kwargs for serialization
+        # save minimizer, minimizer_kwargs for serialization
         self._minimizer = minimizer
         self._minimizer_kwargs = minimizer_kwargs
         self._fitter = NexusFitter(nexus=self._nexus,
@@ -79,7 +77,6 @@ class FitBase(FileIOMixin, object):
                                    parameter_to_minimize=self._cost_function.name,
                                    minimizer=minimizer,
                                    minimizer_kwargs=minimizer_kwargs)
-
 
     @staticmethod
     def _latexify_ascii(ascii_string):
@@ -95,7 +92,7 @@ class FitBase(FileIOMixin, object):
     def _mark_errors_for_update(self):
         pass
 
-    #Gets overwritten by multi models
+    # Gets overwritten by multi models
     def _get_model_report_dict_entry(self):
         return self._model_function.formatter.get_formatted(
             with_par_values=False,
@@ -144,6 +141,11 @@ class FitBase(FileIOMixin, object):
         return list(self.parameter_name_value_dict.values())
 
     @property
+    def parameter_names(self):
+        """the current parameter names"""
+        return list(self.parameter_name_value_dict.keys())
+
+    @property
     def parameter_errors(self):
         """the current parameter uncertainties"""
         return self._fitter.fit_parameter_errors
@@ -162,6 +164,11 @@ class FitBase(FileIOMixin, object):
     def parameter_name_value_dict(self):
         """a dictionary mapping each parameter name to its current value"""
         return self._fitter.fit_parameter_values
+
+    @property
+    def parameter_constraints(self):
+        """the gaussian constraints given for the fit parameters"""
+        return self._fit_param_constraints
 
     @property
     def cost_function_value(self):
@@ -193,6 +200,16 @@ class FitBase(FileIOMixin, object):
         """the number of model functions contained in the fit, 1 by default"""
         return 1
 
+    @property
+    def poi_values(self):
+        """the values of the parameters of interest, equal to ``self.parameter_values`` minus nuisance parameters"""
+        return self.parameter_values
+
+    @property
+    def poi_names(self):
+        """the names of the parameters of interest, equal to ``self.parameter_names`` minus nuisance parameter names"""
+        return self.parameter_names
+
     # -- public methods
 
     def set_parameter_values(self, **param_name_value_dict):
@@ -211,6 +228,63 @@ class FitBase(FileIOMixin, object):
         :param param_value_list: list of parameter values (mind the order)
         """
         return self._fitter.set_all_fit_parameter_values(param_value_list)
+
+    def add_matrix_parameter_constraint(self, names, values, matrix, matrix_type='cov', uncertainties=None,
+                                        relative=False):
+        """
+        Advanced class for applying correlated constraints to several parameters of a fit.
+        The order of ``names``, ``values``, ``matrix``, and ``uncertainties`` must be aligned.
+        In other words the first index must belong to the first value, the first row/column in the matrix, etc.
+
+        Let N be the number of parameters to be constrained.
+        :param names: The names of the parameters to be constrained
+        :type names: iterable of str, shape (N,)
+        :param values: The values to which the parameters should be constrained
+        :type values: iterable of float, shape (N,)
+        :param matrix: The matrix that defines the correlation between the parameters. By default interpreted as a
+            covariance matrix. Can also be interpreted as a correlation matrix by setting ``matrix_type``
+        :type matrix: iterable of float, shape (N, N)
+        :param matrix_type: Whether the matrix should be interpreted as a covariance matrix or as a correlation matrix
+        :type matrix_type: str, either 'cov' or 'cor'
+        :param uncertainties: The uncertainties to be used in conjunction with a correlation matrix
+        :type uncertainties: ``None`` or iterable of float, shape (N,)
+        :param relative: Whether the covariance matrix/the uncertainties should be interpreted as relative to ``values``
+        :type relative: bool
+        """
+        if len(names) != len(values):
+            raise self.EXCEPTION_TYPE(
+                'Lengths of names and values are different: %s <-> %s' % (len(names), len(values)))
+        _par_indices = []
+        for _name in names:
+            try:
+                _par_indices.append(self.poi_names.index(_name))
+            except ValueError:
+                raise self.EXCEPTION_TYPE('Unknown parameter name: %s' % _name)
+        self._fit_param_constraints.append(GaussianMatrixParameterConstraint(
+            indices=_par_indices, values=values, matrix=matrix, matrix_type=matrix_type, uncertainties=uncertainties,
+            relative=relative
+        ))
+
+    def add_parameter_constraint(self, name, value, uncertainty, relative=False):
+        """
+        Simple class for applying a gaussian constraint to a single fit parameter.
+
+        :param name: The name of the parameter to be constrained
+        :type name: str
+        :param value: The value to which the parameter should be constrained
+        :type value: float
+        :param uncertainty: The uncertainty with which the parameter should be constrained to the given value
+        :type uncertainty: float
+        :param relative: Whether the given uncertainty is relative to the given value
+        :type relative: bool
+        """
+        try:
+            _index = self.poi_names.index(name)
+        except ValueError:
+            raise self.EXCEPTION_TYPE('Unknown parameter name: %s' % name)
+        self._fit_param_constraints.append(GaussianSimpleParameterConstraint(
+            index=_index, value=value, uncertainty=uncertainty, relative=relative
+        ))
 
     def get_matching_errors(self, matching_criteria=None, matching_type='equal'):
         """

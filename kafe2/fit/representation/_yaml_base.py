@@ -48,19 +48,19 @@ class YamlReaderMixin(DReprReaderMixin):
     """
     
     @classmethod
-    def _make_object(cls, yaml_doc, default_type='xy'):
+    def _make_object(cls, yaml_doc, default_type='xy', **modify_kwargs):
         #strings may be used as shortcuts for frequently used functionality
         if isinstance(yaml_doc, str):
             yaml_doc = cls._process_string(yaml_doc, default_type)
-        _overriden_yaml_doc = cls._check_required_keywords_and_override_subspaces(yaml_doc, default_type)
+        _overriden_yaml_doc = cls._check_required_keywords_and_override_subspaces(yaml_doc, default_type, modify_kwargs)
         _object, _leftover_yaml_doc = cls._convert_yaml_doc_to_object(_overriden_yaml_doc.copy())
         if _leftover_yaml_doc:
             raise YamlReaderException("Received unknown or unsupported keywords for constructing a %s object: %s"
-                                      % (cls.BASE_OBJECT_TYPE_NAME, _leftover_yaml_doc.keys()))
+                                      % (cls.BASE_OBJECT_TYPE_NAME, list(_leftover_yaml_doc.keys())))
         return _object
     
     @classmethod
-    def _check_required_keywords_and_override_subspaces(cls, yaml_doc, default_type='xy'):
+    def _check_required_keywords_and_override_subspaces(cls, yaml_doc, default_type='xy', modify_kwargs={}):
         if not cls._type_required():
             _kafe_object_class = None
         else:
@@ -75,7 +75,7 @@ class YamlReaderMixin(DReprReaderMixin):
                 raise YamlReaderException("%s type unknown or not supported: %s" 
                                           % (cls.BASE_OBJECT_TYPE_NAME, _object_type))
 
-        yaml_doc = cls._modify_yaml_doc(yaml_doc.copy(), _kafe_object_class)
+        yaml_doc = cls._modify_yaml_doc(yaml_doc.copy(), _kafe_object_class, **modify_kwargs)
         
         _override_dict = cls._get_subspace_override_dict(_kafe_object_class)
         for _keyword in list(_override_dict.keys()):
@@ -107,7 +107,9 @@ class YamlReaderMixin(DReprReaderMixin):
         return dict(type=default_type)
     
     @classmethod
-    def _modify_yaml_doc(cls, yaml_doc, kafe_object_class):
+    def _modify_yaml_doc(cls, yaml_doc, kafe_object_class, **kwargs):
+        if kwargs:
+            raise YamlReaderException('Received unexpected kwargs: %s' % kwargs)
         return yaml_doc
     
     @classmethod

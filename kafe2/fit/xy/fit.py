@@ -86,6 +86,8 @@ class XYFit(FitBase):
         # FIXME: nicer way than len()?
         self._cost_function.ndf = self._data_container.size - len(self._param_model.parameters)
 
+        self._fit_param_constraints = []
+
     # -- private methods
 
     def _init_nexus(self):
@@ -123,6 +125,8 @@ class XYFit(FitBase):
             self._poi_names.append(_arg_name)
 
         self._nexus.new(**_nexus_new_dict)  # Create nexus Nodes for function parameters
+        self._nexus.new_function(lambda: self.poi_values, function_name='poi_values')
+        self._nexus.new_function(lambda: self.parameter_constraints, function_name='parameter_constraints')
 
         # add the original function name as an alias to 'y_model'
         self._nexus.new_alias(**{self._model_function.name: 'y_model'})
@@ -261,6 +265,7 @@ class XYFit(FitBase):
         self._nexus.add_dependency(source="projected_xy_total_cov_mat", 
                                    target="projected_xy_total_cov_mat_inverse")
         for _arg_name in self._poi_names:
+            self._nexus.add_dependency(source=_arg_name, target="poi_values")
             self._nexus.add_dependency(source=_arg_name, target="y_model")
             self._nexus.add_dependency(source=_arg_name, target="projected_xy_total_cov_mat")
             self._nexus.add_dependency(source=_arg_name, target="projected_xy_total_error")
@@ -353,6 +358,12 @@ class XYFit(FitBase):
             _band_y[_x_idx] = _p_res.dot(self.parameter_cov_mat[:_n_poi, :_n_poi]).dot(_p_res)[0, 0]
 
         self.__cache_y_error_band = np.sqrt(_band_y)
+
+    def _get_poi_index_by_name(self, name):
+        try:
+            return self._poi_names.index(name)
+        except ValueError:
+            raise self.EXCEPTION_TYPE('Unknown parameter name: %s' % name)
 
     # -- public properties
 
@@ -792,9 +803,13 @@ class XYFit(FitBase):
     def poi_values(self):
         # gives the values of the model_function_parameters
         _poi_values = []
-        for _name in self._poi_names:
+        for _name in self.poi_names:
             _poi_values.append(self.parameter_name_value_dict[_name])
         return _poi_values
+
+    @property
+    def poi_names(self):
+        return self._poi_names
 
     @property
     def x_uncor_nuisance_values(self):

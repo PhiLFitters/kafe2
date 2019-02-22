@@ -5,6 +5,7 @@ from .. import _AVAILABLE_REPRESENTATIONS
 from ....fit import IndexedFit, HistFit, XYFit, XYMultiFit
 from ..container.yaml_drepr import DataContainerYamlReader, DataContainerYamlWriter
 from ..model.yaml_drepr import ParametricModelYamlReader, ParametricModelYamlWriter
+from ..constraint.yaml_drepr import ConstraintYamlReader, ConstraintYamlWriter
 
 __all__ = ['FitYamlWriter', 'FitYamlReader']
 
@@ -19,7 +20,7 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
     def _make_representation(cls, fit):
         _yaml_doc = dict()
 
-        # -- determine model function type
+        # -- determine fit type
         _type = cls._CLASS_TO_OBJECT_TYPE_NAME.get(fit.__class__, None)
         if _type is None:
             raise DReprError("Fit type unknown or not supported: %s" % fit.__class__)
@@ -32,7 +33,10 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
         
         _yaml_doc['minimizer'] = fit._minimizer
         _yaml_doc['minimizer_kwargs'] = fit._minimizer_kwargs
-        
+
+        _yaml_doc['parameter_constraints'] = [ConstraintYamlWriter._make_representation(_parameter_constraint)
+                                              for _parameter_constraint in fit.parameter_constraints]
+
         return _yaml_doc
     
 class FitYamlReader(YamlReaderMixin, FitDReprBase):
@@ -132,7 +136,7 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
     
     @classmethod
     def _convert_yaml_doc_to_object(cls, yaml_doc):
-        # -- determine model function class from type
+        # -- determine fit class from type
         _fit_type = yaml_doc.pop('type')
         _class = cls._OBJECT_TYPE_NAME_TO_CLASS.get(_fit_type, None)
         
@@ -178,6 +182,12 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
             )
         if _read_parametric_model:
             _fit_object._param_model = _read_parametric_model
+        _constraint_yaml_list = yaml_doc.pop('parameter_constraints', None)
+        if _constraint_yaml_list:
+            _fit_object._fit_param_constraints = [
+                ConstraintYamlReader._make_object(_constraint_yaml, parameter_names=_fit_object.poi_names)
+                for _constraint_yaml in _constraint_yaml_list
+            ]
         return _fit_object, yaml_doc
     
 # register the above classes in the module-level dictionary

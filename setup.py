@@ -10,7 +10,7 @@ __version__ = "2.0.0.dev0"
 
 def discover_kafe_tests():
     _tl = unittest.TestLoader()
-    _ts = _tl.discover('kafe2/tests', 'test_*.py')
+    _ts = _tl.discover('kafe2/test', 'test_*.py')
     return _ts
 
 

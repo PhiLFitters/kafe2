@@ -165,7 +165,7 @@ class XYMultiCostFunction_Chi2(CostFunctionBase_Chi2):
         
 
     @staticmethod
-    def chi2_no_errors(y_data, y_model):
+    def chi2_no_errors(y_data, y_model, poi_values, parameter_constraints):
         r"""A least-squares cost function calculated from 'y' data and model values,
         without considering uncertainties:
 
@@ -179,10 +179,11 @@ class XYMultiCostFunction_Chi2(CostFunctionBase_Chi2):
         :param y_model: model values
         :return: cost function value
         """
-        return CostFunctionBase_Chi2.chi2_no_errors(data=y_data, model=y_model)
+        return CostFunctionBase_Chi2.chi2_no_errors(data=y_data, model=y_model, parameter_values=poi_values,
+                                                    parameter_constraints=parameter_constraints)
 
     @staticmethod
-    def chi2_covariance(y_data, y_model, y_total_cov_mat_inverse):
+    def chi2_covariance(y_data, y_model, y_total_cov_mat_inverse, poi_values, parameter_constraints):
         r"""A least-squares cost function calculated from 'y' data and model values,
         considering the covariance matrix of the 'y' measurements.
 
@@ -197,10 +198,13 @@ class XYMultiCostFunction_Chi2(CostFunctionBase_Chi2):
         :param y_total_cov_mat_inverse: inverse of the total covariance matrix
         :return: cost function value
         """
-        return CostFunctionBase_Chi2.chi2_covariance(data=y_data, model=y_model, total_cov_mat_inverse=y_total_cov_mat_inverse)
+        return CostFunctionBase_Chi2.chi2_covariance(data=y_data, model=y_model,
+                                                     total_cov_mat_inverse=y_total_cov_mat_inverse,
+                                                     parameter_values=poi_values,
+                                                     parameter_constraints=parameter_constraints)
 
     @staticmethod
-    def chi2_pointwise_errors(y_data, y_model, y_total_error):
+    def chi2_pointwise_errors(y_data, y_model, y_total_error, poi_values, parameter_constraints):
         r"""A least-squares cost function calculated from 'y' data and model values,
         considering pointwise (uncorrelated) uncertainties for each data point:
 
@@ -215,31 +219,51 @@ class XYMultiCostFunction_Chi2(CostFunctionBase_Chi2):
         :param y_total_error: total measurement uncertainties
         :return:
         """
-        return CostFunctionBase_Chi2.chi2_pointwise_errors(data=y_data, model=y_model, total_error=y_total_error)
+        return CostFunctionBase_Chi2.chi2_pointwise_errors(data=y_data, model=y_model, total_error=y_total_error,
+            parameter_values=poi_values, parameter_constraints=parameter_constraints)
 
     @staticmethod
-    def chi2_xy_covariance(y_data, y_model, projected_xy_total_cov_mat_inverse):
-        return CostFunctionBase_Chi2.chi2_covariance(data=y_data, model=y_model, total_cov_mat_inverse=projected_xy_total_cov_mat_inverse)
+    def chi2_xy_covariance(y_data, y_model, projected_xy_total_cov_mat_inverse, poi_values, parameter_constraints):
+        return CostFunctionBase_Chi2.chi2_covariance(
+            data=y_data, model=y_model, total_cov_mat_inverse=projected_xy_total_cov_mat_inverse,
+            parameter_values=poi_values, parameter_constraints=parameter_constraints
+        )
 
     @staticmethod
-    def chi2_xy_pointwise_errors(y_data, y_model, x_total_error, projected_xy_total_error):
-        return CostFunctionBase_Chi2.chi2_pointwise_errors(y_data, y_model, total_error=projected_xy_total_error)
+    def chi2_xy_pointwise_errors(y_data, y_model, projected_xy_total_error, poi_values, parameter_constraints):
+        return CostFunctionBase_Chi2.chi2_pointwise_errors(
+            y_data, y_model, total_error=projected_xy_total_error,
+            parameter_values=poi_values, parameter_constraints=parameter_constraints
+        )
 
     @staticmethod
-    def chi2_pointwise_errors_fallback(y_data, y_model, y_total_error):
-        return CostFunctionBase_Chi2.chi2_pointwise_errors_fallback(data=y_data, model=y_model, total_error=y_total_error)
+    def chi2_pointwise_errors_fallback(y_data, y_model, y_total_error, poi_values, parameter_constraints):
+        return CostFunctionBase_Chi2.chi2_pointwise_errors_fallback(
+            data=y_data, model=y_model, total_error=y_total_error,
+            parameter_values=poi_values, parameter_constraints=parameter_constraints
+        )
 
     @staticmethod
-    def chi2_covariance_fallback(y_data, y_model, y_total_cov_mat_inverse):
-        return CostFunctionBase_Chi2.chi2_covariance_fallback(data=y_data, model=y_model, total_cov_mat_inverse=y_total_cov_mat_inverse)
+    def chi2_covariance_fallback(y_data, y_model, y_total_cov_mat_inverse, poi_values, parameter_constraints):
+        return CostFunctionBase_Chi2.chi2_covariance_fallback(
+            data=y_data, model=y_model, total_cov_mat_inverse=y_total_cov_mat_inverse,
+            parameter_values=poi_values, parameter_constraints=parameter_constraints
+        )
 
     @staticmethod
-    def chi2_xy_pointwise_errors_fallback(y_data, y_model, projected_xy_total_error):
-        return CostFunctionBase_Chi2.chi2_pointwise_errors_fallback(y_data, y_model, total_error=projected_xy_total_error)
+    def chi2_xy_pointwise_errors_fallback(y_data, y_model, projected_xy_total_error, poi_values, parameter_constraints):
+        return CostFunctionBase_Chi2.chi2_pointwise_errors_fallback(
+            y_data, y_model, total_error=projected_xy_total_error,
+            parameter_values=poi_values, parameter_constraints=parameter_constraints
+        )
 
     @staticmethod
-    def chi2_xy_covariance_fallback(y_data, y_model, projected_xy_total_cov_mat_inverse):
-        return CostFunctionBase_Chi2.chi2_covariance_fallback(data=y_data, model=y_model, total_cov_mat_inverse=projected_xy_total_cov_mat_inverse)
+    def chi2_xy_covariance_fallback(y_data, y_model, projected_xy_total_cov_mat_inverse, poi_values,
+                                    parameter_constraints):
+        return CostFunctionBase_Chi2.chi2_covariance_fallback(
+            data=y_data, model=y_model, total_cov_mat_inverse=projected_xy_total_cov_mat_inverse,
+            parameter_values=poi_values, parameter_constraints=parameter_constraints
+        )
 
 
 class XYMultiCostFunction_NegLogLikelihood(CostFunctionBase_NegLogLikelihood):

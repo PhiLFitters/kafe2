@@ -6,12 +6,22 @@ from .._base.cost import CostFunctionBase_Chi2_Nuisance
 
 __all__ = ["XYCostFunction_UserDefined", "XYCostFunction_Chi2", "XYCostFunction_NegLogLikelihood"]
 
-def _generic_xy_chi2_nuisance_pointwise(x_data, x_model, y_model, y_data, y_total_error=None, x_total_error=None, fail_on_zeros=False):
-# calculates the costfunction values for ChiSquare with Nuisanceparameters for pointwise errors.
+# TODO replace with calls to _base/cost/_generic_chi2_nuisance if possible
+
+def _generic_xy_chi2_nuisance_pointwise(x_data, x_model, y_model, y_data,
+                                        y_total_error=None, x_total_error=None, fail_on_zeros=False,
+                                        poi_values=None, parameter_constraints=None):
+    # calculates the cost function values for ChiSquare with nuisance parameters for pointwise errors.
 
     if y_model.shape != y_data.shape or y_model.shape != x_model.shape or x_model.shape != x_data.shape:
-        raise CostFunctionException("x_data, x_model, 'y_data' and 'y_model' must have the same shape! Got %r, %r, %r and %r..."
+        raise CostFunctionException(
+            "x_data, x_model, 'y_data' and 'y_model' must have the same shape! Got %r, %r, %r and %r..."
                                 % (x_data.shape, x_model.shape, y_data.shape, y_model.shape))
+    _par_cost = 0.0
+    if parameter_constraints is not None:
+        for _par_constraint in parameter_constraints:
+            _par_cost += _par_constraint.cost(poi_values)
+
     _x_res = (x_data - x_model)
     _y_res = (y_data - y_model)
 
@@ -52,14 +62,23 @@ def _generic_xy_chi2_nuisance_pointwise(x_data, x_model, y_model, y_data, y_tota
     #cost function value without any errors
     return _y_res.dot(_y_res)
 
+
 def _generic_xy_chi2_nuisance_covaraince(x_data, x_model,  y_data, y_model,
-                  x_uncor_cov_mat_inverse=None, y_uncor_cov_mat_inverse=None, y_nuisance_cor_design_mat=None, y_nuisance_vector=np.array([]),
-                  fail_on_no_y_matrix=False, fail_on_no_x_matrix=False):
-    """calculates the cost function values for ChiSquare with Nuisanceparameters for pointwise errors."""
+                                         x_uncor_cov_mat_inverse=None, y_uncor_cov_mat_inverse=None,
+                                         y_nuisance_cor_design_mat=None, y_nuisance_vector=np.array([]),
+                                         fail_on_no_y_matrix=False, fail_on_no_x_matrix=False,
+                                         poi_values=None, parameter_constraints=None):
+    """calculates the cost function values for ChiSquare with nuisance parameters for cov mat errors."""
 
     if y_model.shape != y_data.shape or y_model.shape != x_model.shape or x_model.shape != x_data.shape:
-        raise CostFunctionException("x_data, x_model, 'y_data' and 'y_model' must have the same shape! Got %r, %r, %r and %r..."
+        raise CostFunctionException(
+            "x_data, x_model, 'y_data' and 'y_model' must have the same shape! Got %r, %r, %r and %r..."
                                 % (x_data.shape, x_model.shape, y_data.shape, y_model.shape))
+
+    _par_cost = 0.0
+    if parameter_constraints is not None:
+        for _par_constraint in parameter_constraints:
+            _par_cost += _par_constraint.cost(poi_values)
 
     _x_res = (x_data - x_model)
     _y_res = (y_data - y_model)
@@ -81,7 +100,7 @@ def _generic_xy_chi2_nuisance_covaraince(x_data, x_model,  y_data, y_model,
                         return _chisquare
 
             else:
-                #with y-errors but without x-errors
+                # with y-errors but without x-errors
                 _inner_sum = np.squeeze(np.asarray(y_nuisance_vector.dot(y_nuisance_cor_design_mat)))
                 _y_penalties = y_nuisance_vector.dot(y_nuisance_vector)
                 _chisquare = (_y_res - _inner_sum).dot(y_uncor_cov_mat_inverse).dot(_y_res - _inner_sum)
@@ -97,12 +116,12 @@ def _generic_xy_chi2_nuisance_covaraince(x_data, x_model,  y_data, y_model,
 
                     raise np.linalg.LinAlgError("Uncorrelated Y Covariance matrix is singular!")
                 else:
-                    #with x-errors but without y-errors
+                    # with x-errors but without y-errors
                     _chisquare = _y_res.dot(_y_res)
                     return (_chisquare +_x_penalties)[0, 0]
 
         else:
-                #with x- and y-errors
+                # with x- and y-errors
                 _inner_sum = np.squeeze(np.asarray(y_nuisance_vector.dot(y_nuisance_cor_design_mat)))
                 _y_penalties = y_nuisance_vector.dot(y_nuisance_vector)
                 _chi2 = (_y_res - _inner_sum).dot(y_uncor_cov_mat_inverse).dot(_y_res- _inner_sum)[0, 0]
@@ -136,7 +155,8 @@ class XYCostFunction_Chi2(CostFunctionBase_Chi2):
         """
 
         if axes_to_use.lower() == 'y':
-            super(XYCostFunction_Chi2, self).__init__(errors_to_use=errors_to_use, fallback_on_singular=fallback_on_singular)
+            super(XYCostFunction_Chi2, self).__init__(
+                errors_to_use=errors_to_use, fallback_on_singular=fallback_on_singular)
         elif axes_to_use.lower() == 'xy':
             _cost_function_description = "chi-square with projected x errors"
             if errors_to_use is None:
@@ -155,7 +175,8 @@ class XYCostFunction_Chi2(CostFunctionBase_Chi2):
                     _chi2_func = self.chi2_xy_pointwise_errors
                 _cost_function_description += ' (pointwise errors)'
             else:
-                raise CostFunctionException("Unknown value '%s' for 'errors_to_use': must be one of ('covariance', 'pointwise', None)")
+                raise CostFunctionException(
+                    "Unknown value '%s' for 'errors_to_use': must be one of ('covariance', 'pointwise', None)")
             CostFunctionBase.__init__(self, cost_function=_chi2_func)
             self._formatter.latex_name = "\chi^2"
             self._formatter.name = "chi2"
@@ -166,7 +187,7 @@ class XYCostFunction_Chi2(CostFunctionBase_Chi2):
         
 
     @staticmethod
-    def chi2_no_errors(y_data, y_model):
+    def chi2_no_errors(y_data, y_model, poi_values, parameter_constraints):
         r"""A least-squares cost function calculated from 'y' data and model values,
         without considering uncertainties:
 
@@ -180,10 +201,11 @@ class XYCostFunction_Chi2(CostFunctionBase_Chi2):
         :param y_model: model values
         :return: cost function value
         """
-        return CostFunctionBase_Chi2.chi2_no_errors(data=y_data, model=y_model)
+        return CostFunctionBase_Chi2.chi2_no_errors(data=y_data, model=y_model, parameter_values=poi_values,
+                                                    parameter_constraints=parameter_constraints)
 
     @staticmethod
-    def chi2_covariance(y_data, y_model, y_total_cov_mat_inverse):
+    def chi2_covariance(y_data, y_model, y_total_cov_mat_inverse, poi_values, parameter_constraints):
         r"""A least-squares cost function calculated from 'y' data and model values,
         considering the covariance matrix of the 'y' measurements.
 
@@ -198,10 +220,13 @@ class XYCostFunction_Chi2(CostFunctionBase_Chi2):
         :param y_total_cov_mat_inverse: inverse of the total covariance matrix
         :return: cost function value
         """
-        return CostFunctionBase_Chi2.chi2_covariance(data=y_data, model=y_model, total_cov_mat_inverse=y_total_cov_mat_inverse)
+        return CostFunctionBase_Chi2.chi2_covariance(data=y_data, model=y_model,
+                                                     total_cov_mat_inverse=y_total_cov_mat_inverse,
+                                                     parameter_values=poi_values,
+                                                     parameter_constraints=parameter_constraints)
 
     @staticmethod
-    def chi2_pointwise_errors(y_data, y_model, y_total_error):
+    def chi2_pointwise_errors(y_data, y_model, y_total_error, poi_values, parameter_constraints):
         r"""A least-squares cost function calculated from 'y' data and model values,
         considering pointwise (uncorrelated) uncertainties for each data point:
 
@@ -216,33 +241,53 @@ class XYCostFunction_Chi2(CostFunctionBase_Chi2):
         :param y_total_error: total measurement uncertainties
         :return:
         """
-        return CostFunctionBase_Chi2.chi2_pointwise_errors(data=y_data, model=y_model, total_error=y_total_error)
+        return CostFunctionBase_Chi2.chi2_pointwise_errors(data=y_data, model=y_model, total_error=y_total_error,
+            parameter_values=poi_values, parameter_constraints=parameter_constraints)
 
     @staticmethod
-    def chi2_xy_covariance(y_data, y_model, projected_xy_total_cov_mat_inverse):
-        return CostFunctionBase_Chi2.chi2_covariance(data=y_data, model=y_model, total_cov_mat_inverse=projected_xy_total_cov_mat_inverse)
+    def chi2_xy_covariance(y_data, y_model, projected_xy_total_cov_mat_inverse, poi_values, parameter_constraints):
+        return CostFunctionBase_Chi2.chi2_covariance(
+            data=y_data, model=y_model, total_cov_mat_inverse=projected_xy_total_cov_mat_inverse,
+            parameter_values=poi_values, parameter_constraints=parameter_constraints
+        )
 
     @staticmethod
-    def chi2_xy_pointwise_errors(y_data, y_model, x_total_error, projected_xy_total_error):
-        return CostFunctionBase_Chi2.chi2_pointwise_errors(y_data, y_model, total_error=projected_xy_total_error)
+    def chi2_xy_pointwise_errors(y_data, y_model, projected_xy_total_error, poi_values, parameter_constraints):
+        return CostFunctionBase_Chi2.chi2_pointwise_errors(
+            y_data, y_model, total_error=projected_xy_total_error,
+            parameter_values=poi_values, parameter_constraints=parameter_constraints
+        )
 
     @staticmethod
-    def chi2_pointwise_errors_fallback(y_data, y_model, y_total_error):
-        return CostFunctionBase_Chi2.chi2_pointwise_errors_fallback(data=y_data, model=y_model, total_error=y_total_error)
+    def chi2_pointwise_errors_fallback(y_data, y_model, y_total_error, poi_values, parameter_constraints):
+        return CostFunctionBase_Chi2.chi2_pointwise_errors_fallback(
+            data=y_data, model=y_model, total_error=y_total_error,
+            parameter_values=poi_values, parameter_constraints=parameter_constraints
+        )
 
     @staticmethod
-    def chi2_covariance_fallback(y_data, y_model, y_total_cov_mat_inverse):
-        return CostFunctionBase_Chi2.chi2_covariance_fallback(data=y_data, model=y_model, total_cov_mat_inverse=y_total_cov_mat_inverse)
+    def chi2_covariance_fallback(y_data, y_model, y_total_cov_mat_inverse, poi_values, parameter_constraints):
+        return CostFunctionBase_Chi2.chi2_covariance_fallback(
+            data=y_data, model=y_model, total_cov_mat_inverse=y_total_cov_mat_inverse,
+            parameter_values=poi_values, parameter_constraints=parameter_constraints
+        )
 
     @staticmethod
-    def chi2_xy_pointwise_errors_fallback(y_data, y_model, projected_xy_total_error):
-        return CostFunctionBase_Chi2.chi2_pointwise_errors_fallback(y_data, y_model, total_error=projected_xy_total_error)
+    def chi2_xy_pointwise_errors_fallback(y_data, y_model, projected_xy_total_error, poi_values, parameter_constraints):
+        return CostFunctionBase_Chi2.chi2_pointwise_errors_fallback(
+            y_data, y_model, total_error=projected_xy_total_error,
+            parameter_values=poi_values, parameter_constraints=parameter_constraints
+        )
 
     @staticmethod
-    def chi2_xy_covariance_fallback(y_data, y_model, projected_xy_total_cov_mat_inverse):
-        return CostFunctionBase_Chi2.chi2_covariance_fallback(data=y_data, model=y_model, total_cov_mat_inverse=projected_xy_total_cov_mat_inverse)
+    def chi2_xy_covariance_fallback(y_data, y_model, projected_xy_total_cov_mat_inverse, poi_values,
+                                    parameter_constraints):
+        return CostFunctionBase_Chi2.chi2_covariance_fallback(
+            data=y_data, model=y_model, total_cov_mat_inverse=projected_xy_total_cov_mat_inverse,
+            parameter_values=poi_values, parameter_constraints=parameter_constraints
+        )
 
-
+# TODO add parameter constraints
 class XYCostFunction_NegLogLikelihood(CostFunctionBase_NegLogLikelihood):
     def __init__(self, data_point_distribution='poisson'):
         r"""
