@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 r"""
-Fitting several related models in a multi-model fit
-===================================================
+Fitting several related models using parameter constraints
+==========================================================
 
 The premise of this example is deceptively simple: a series
 of voltages is applied to a resistor and the resulting current
@@ -34,7 +34,7 @@ some coefficients :math:`p_0`, :math:`p_1`, and :math:`p_2`:
 
 This model is based purely on empirical observations. The :math:`I(U)`
 dependence is more complicated, but takes the "running" of the
-resistane with the temperature into account:
+resistance with the temperature into account:
 
 .. math::
 
@@ -49,31 +49,36 @@ In essence, there are two models here which must be fitted to the
 the other in some way.
 
 
-Approach 2: multi-model fit
----------------------------
+Approach 1: parameter constraints
+---------------------------------
 
 There are several ways to achieve this with *kafe2*. The method chosen
-here is to use the :py:object:`~kafe.fit.xy_multi.XYMultifit` functionality
-to fit both models simultaneously to the :math:`T(U)` and :math:`I(U)`
-datasets.
+here consists of two steps: First, a quadartic model is fitted to the
+:math:`T(U)` datasets to estimate the parameters :math:`p_0`, :math:`p_1`
+and :math:`p_2` and their covariance matrix.
+
+Next, the :math:`I(U)` model is fitted, with the temperature :math:`t`
+being explicitly replaced by its parameterization as a function of
+:math:`p_0`, :math:`p_1` and :math:`p_2`. The key here is to fit these
+parameters again from the :math:`I(U)` dataset, but to constrain them
+to the values obtained in the previous :math:`T(U)` fit.
 
 In general, this approach yields different results than the one using
-parameter constraints, which is demonstrated in the example called
-``fit_with_parameter_constraints``.
+a simultaneous multi-model fit, which is demonstrated in the example called
+``multifit``.
 """
 
 
 import numpy as np
 import matplotlib.pyplot as plt
 
-from kafe2 import XYMultiFit, XYMultiPlot
+from kafe2 import XYFit, XYPlot
 
 # empirical model for T(U): a parabola
 # independent variable MUST be named x!
 def empirical_T_U_model(x, p2=1.0, p1=1.0, p0=0.0):
     # use quadratic model as empirical temerature dependence T(U)
     return p2 * x**2 + p1 * x + p0
-
 
 
 # model of current-voltage dependence I(U) for a heating resistor
@@ -96,36 +101,65 @@ T -= T0 #Measurements are in Kelvin, convert to °C
 
 # -- Finally, go through the fitting procedure
 
-# Step 1:  construct an XYMultiFit object
-fit = XYMultiFit(xy_data=[[U, T], [U, I]],
-                 model_function=[empirical_T_U_model, I_U_model])
+# Step 1:  perform an "auxiliary" fit to the T(U) data
+auxiliary_fit = XYFit(
+    xy_data=[U, T],
+    model_function=empirical_T_U_model
+)
+
+# (optional): Assign names for models and parameters
+auxiliary_fit.assign_parameter_latex_names(x='U', p2='p_2', p1='p_1', p0='p_0')
+auxiliary_fit.assign_model_function_expression('{0}*{x}^2 + {1}*{x} + {2}')
+auxiliary_fit.assign_model_function_latex_expression(r'{0}\,{x}^2 + {1}\,{x} + {2}')
 
 # declare errors on U
-fit.add_simple_shared_x_error(err_val=sigU, correlation=0, relative=False)
+auxiliary_fit.add_simple_error(axis='x', err_val=sigU, correlation=0, relative=False)
 
 # declare errors on T
-fit.add_simple_error(axis='y', err_val=sigT, model_index=0)
+auxiliary_fit.add_simple_error(axis='y', err_val=sigT)
 
+# perform the the auxliary fit
+auxiliary_fit.do_fit()
+auxiliary_fit.report()
+
+auxiliary_plot = XYPlot(auxiliary_fit)
+auxiliary_plot.plot()
+auxiliary_plot.show_fit_info_box(format_as_latex=True)
+
+
+# Step 2:  perform the main fit
+main_fit = XYFit(
+    xy_data=[U, I],
+    model_function=I_U_model
+)
+
+# declare errors on U
+main_fit.add_simple_error(axis='x', err_val=sigU, correlation=0, relative=False)
 # declare errors on I
-fit.add_simple_error(axis='y', err_val=sigI, model_index=1)
+main_fit.add_simple_error(axis='y', err_val=sigI)
 
+# constrain the parameters
+main_fit.add_matrix_parameter_constraint(
+    names = auxiliary_fit.parameter_names,
+    values = auxiliary_fit.parameter_values,
+    matrix = auxiliary_fit.parameter_cov_mat,
+    matrix_type = 'cov'
+)
 
-# Step 3 (optional): Assign names for models and parameters
-fit.assign_parameter_latex_names(x='U', p2='p_2', p1='p_1', p0='p_0', R0='R_0', alph=r'\alpha_\mathrm{T}')
-
-fit.assign_model_function_expression('{0}*{x}^2 + {1}*{x} + {2}', model_index=0)
-fit.assign_model_function_latex_expression(r'{0}\,{x}^2 + {1}\,{x} + {2}', model_index=0)
-fit.assign_model_function_expression('{x} / ({0} * (1 + ({2}*{x}^2 + {3}*{x} + {4}) * {1}))', model_index=1)
-fit.assign_model_function_latex_expression(r'\frac{{{x}}}{{{0} \cdot (1 + ({2}{x}^2 + {3}{x} + {4}) \cdot {1})}}', model_index=1)
+# (optional): Assign names for models and parameters
+main_fit.assign_parameter_latex_names(x='U', p2='p_2', p1='p_1', p0='p_0', R0='R_0', alph=r'\alpha_\mathrm{T}')
+main_fit.assign_model_function_expression('{x} / ({0} * (1 + ({2}*{x}^2 + {3}*{x} + {4}) * {1}))')
+main_fit.assign_model_function_latex_expression(r'\frac{{{x}}}{{{0} \cdot (1 + ({2}{x}^2 + {3}{x} + {4}) \cdot {1})}}')
 
 # Step 4: do the fit
-fit.do_fit()
+main_fit.do_fit()
 
 #(Optional) print the results
-fit.report()
+main_fit.report()
 
 #(Optional) plot the results
-plot = XYMultiPlot(fit, separate_plots=True)
+plot = XYPlot(main_fit)
 plot.plot()
 plot.show_fit_info_box(format_as_latex=True)
+
 plt.show()
