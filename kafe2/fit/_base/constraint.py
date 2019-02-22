@@ -8,8 +8,10 @@ class ParameterConstraintException(Exception):
     pass
 
 
-class ParameterConstraint(FileIOMixin, object, metaclass=ABCMeta):
+class ParameterConstraint(FileIOMixin, object):
     # TODO documentation
+
+    __metaclass__ = ABCMeta
 
     def __init__(self):
         pass
@@ -36,7 +38,7 @@ class GaussianSimpleParameterConstraint(ParameterConstraint):
             self._uncertainty_abs = uncertainty
             self._uncertainty_rel = None
         self._relative = relative
-        super(GaussianSimpleParameterConstraint).__init__()
+        super(GaussianSimpleParameterConstraint, self).__init__()
 
     def cost(self, parameter_values):
         return ((parameter_values[self.index] - self.value) / self.uncertainty) ** 2
@@ -122,7 +124,7 @@ class GaussianMatrixParameterConstraint(ParameterConstraint):
         self._relative = relative
 
         self._cov_mat_inverse = None
-        super(GaussianMatrixParameterConstraint).__init__()
+        super(GaussianMatrixParameterConstraint, self).__init__()
 
     def cost(self, parameter_values):
         _selected_par_values = np.asarray(parameter_values)[self.indices]
