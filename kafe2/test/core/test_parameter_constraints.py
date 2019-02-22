@@ -2,8 +2,7 @@ import unittest
 import numpy as np
 
 from kafe2.fit import HistContainer, HistFit, IndexedContainer, IndexedFit, XYContainer, XYFit, XYMultiContainer, XYMultiFit
-from kafe2.fit._base.constraint import GaussianMatrixParameterConstraint, GaussianSimpleParameterConstraint, \
-    ParameterConstraintException
+from kafe2.core.constraint import GaussianMatrixParameterConstraint, GaussianSimpleParameterConstraint
 from kafe2.fit.indexed.fit import IndexedFitException
 from kafe2.fit.xy.fit import XYFitException
 from kafe2.fit.xy_multi.fit import XYMultiFitException

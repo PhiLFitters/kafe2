@@ -1,18 +1,13 @@
 import abc
-import inspect
 import numpy as np
-import re
-import six
-import string
 import sys
 import textwrap
 
 from collections import OrderedDict
 
-from kafe2.fit._base.constraint import GaussianMatrixParameterConstraint, GaussianSimpleParameterConstraint
+from kafe2.core.constraint import GaussianMatrixParameterConstraint, GaussianSimpleParameterConstraint
 from ...tools import print_dict_as_table
-from ...core import get_minimizer, NexusFitter
-from ...tools import print_dict_recursive
+from ...core import NexusFitter
 from .container import DataContainerException
 from ..io.file import FileIOMixin
 

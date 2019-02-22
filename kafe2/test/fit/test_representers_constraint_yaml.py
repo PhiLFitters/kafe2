@@ -5,7 +5,7 @@ import numpy as np
 from kafe2.fit.io import IOStreamHandle
 from kafe2.fit.representation import ConstraintYamlReader, ConstraintYamlWriter
 from kafe2.fit.representation._yaml_base import YamlReaderException
-from kafe2.fit._base.constraint import GaussianSimpleParameterConstraint, GaussianMatrixParameterConstraint
+from kafe2.core.constraint import GaussianSimpleParameterConstraint, GaussianMatrixParameterConstraint
 
 TEST_SIMPLE_GAUSSIAN_CONSTRAINT_ABS = """
 type: simple
