@@ -431,7 +431,7 @@ class PlotFigureBase(object):
             for _pt in self._defined_plot_types:
                 self._call_plot_method_for_plot_type(_spid, _pt, target_axis=self._main_plot_axes)
 
-    def _render_parameter_info_box(self, target_figure, format_as_latex, **kwargs):
+    def _render_parameter_info_box(self, target_figure, format_as_latex, asymmetric_errors, **kwargs):
         if 'transform' not in kwargs:
             kwargs['transform'] = target_figure.transFigure
         if 'zorder' not in kwargs:
@@ -459,7 +459,10 @@ class PlotFigureBase(object):
 
             for _pi, _pf in enumerate(_pdc.model_function_argument_formatters):
                 _y = _y_inc_offset - _y_inc_size * _y_inc_counter
-                _formatted_string = _pf.get_formatted(with_name=True, with_value=True, with_errors=True, format_as_latex=format_as_latex)
+                _formatted_string = _pf.get_formatted(
+                    with_name=True, with_value=True, with_errors=True,
+                    asymmetric_errors=asymmetric_errors, format_as_latex=format_as_latex
+                )
                 target_figure.text(_fig_ls[2]+.05, _y, _formatted_string, **kwargs)
                 _y_inc_counter += 1
 
@@ -578,13 +581,14 @@ class PlotFigureBase(object):
         self._main_plot_axes.set_xlabel(kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'x'))
         self._main_plot_axes.set_ylabel(kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'y'))
 
-    def show_fit_info_box(self, format_as_latex=True):
+    def show_fit_info_box(self, format_as_latex=True, asymmetric_errors=False):
         """Render text information about each plot on the figure.
 
         :param format_as_latex: if ``True``, the infobox text will be formatted as a LaTeX string
         :type format_as_latex: bool
         """
-        self._render_parameter_info_box(self._fig, format_as_latex=format_as_latex)
+        # TODO update documentation
+        self._render_parameter_info_box(self._fig, format_as_latex=format_as_latex, asymmetric_errors=asymmetric_errors)
 
 
 class MultiPlotBase(object):

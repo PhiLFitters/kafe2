@@ -144,9 +144,8 @@ class ModelParameterFormatter(FileIOMixin, object):
             return None
         return self._error[0]
 
-
-    def get_formatted(self, with_name=False, with_value=True, with_errors=True,
-                      n_significant_digits=2, round_value_to_error=True, format_as_latex=False):
+    def get_formatted(self, with_name=False, with_value=True, with_errors=True, n_significant_digits=2,
+                      round_value_to_error=True, asymmetric_errors=False, format_as_latex=False):
         """
         Get a formatted string representing this model parameter.
 
@@ -158,6 +157,7 @@ class ModelParameterFormatter(FileIOMixin, object):
         :param format_as_latex: if ``True``, the returned string will be formatted using LaTeX syntax
         :return: string
         """
+        # TODO update documentation
         _display_string = ""
         if with_name:
             if format_as_latex:
@@ -192,15 +192,15 @@ class ModelParameterFormatter(FileIOMixin, object):
                     _sig = int(-np.floor(_log_abs_value / np.log(10))) + n_significant_digits - 1
 
                 _display_val = round(self._value, _sig)
-                if self._error_is_asymmetric:
+                if asymmetric_errors:
                     _display_err_dn = round(self.error_down, _sig)
                     _display_err_up = round(self.error_up, _sig)
                     if format_as_latex:
-                        _display_string += "%g^{%g}_{%g}" % (_display_val, _display_err_up, _display_err_dn)
+                        _display_string += "$%g^{%g}_{%g}$" % (_display_val, _display_err_up, _display_err_dn)
                     else:
                         _display_string += "%g + %g (up) - %g (down)" % (_display_val, _display_err_up, _display_err_dn)
                 else:
-                    _display_err = round(self._error[0], _sig)
+                    _display_err = round(0.5 * (self.error_down + self.error_up), _sig)
                     if format_as_latex:
                         _display_string += r"$%g \pm %g$" % (_display_val, _display_err)
                     else:
