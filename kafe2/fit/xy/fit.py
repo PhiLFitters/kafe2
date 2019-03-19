@@ -917,10 +917,7 @@ class XYFit(FitBase):
                 if np.abs(self.cost_function_value - _previous_cost_function_value) < _convergence_limit:
                     break
                 _previous_cost_function_value = self.cost_function_value
-            # update parameter formatters
-            for _fpf, _pv, _pe in zip(self._model_function.argument_formatters, self.parameter_values, self.parameter_errors):
-                _fpf.value = _pv
-                _fpf.error = _pe
+            self._update_parameter_formatters()
 
     def eval_model_function(self, x=None, model_parameters=None):
         """

@@ -100,6 +100,12 @@ class FitBase(FileIOMixin, object):
             format_as_latex=False,
             with_expression=True)
 
+    def _update_parameter_formatters(self):
+        for _fpf, _pv, _pe in zip(
+                self._model_function.argument_formatters, self.parameter_values, self.parameter_errors):
+            _fpf.value = _pv
+            _fpf.error = _pe
+
     # -- public properties
 
     @abc.abstractproperty
@@ -445,10 +451,7 @@ class FitBase(FileIOMixin, object):
         if not self._data_container.has_errors:
             raise self.EXCEPTION_TYPE('Cannot perform a fit without specifying data errors first!')
         self._fitter.do_fit()
-        # update parameter formatters
-        for _fpf, _pv, _pe in zip(self._model_function.argument_formatters, self.parameter_values, self.parameter_errors):
-            _fpf.value = _pv
-            _fpf.error = _pe
+        self._update_parameter_formatters()
 
     def assign_model_function_expression(self, expression_format_string):
         """Assign a plain-text-formatted expression string to the model function."""

@@ -992,10 +992,7 @@ class XYMultiFit(FitBase):
                 if np.abs(self.cost_function_value - _previous_cost_function_value) < _convergence_limit:
                     break
                 _previous_cost_function_value = self.cost_function_value
-            # update parameter formatters
-            for _fpf, _pv, _pe in zip(self._model_function.argument_formatters, self.parameter_values, self.parameter_errors):
-                _fpf.value = _pv
-                _fpf.error = _pe
+            self._update_parameter_formatters()
 
     def assign_model_function_expression(self, expression_format_string, model_index):
         """Assign a plain-text-formatted expression string to the model function."""
