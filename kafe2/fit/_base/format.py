@@ -27,7 +27,7 @@ class ModelParameterFormatter(FileIOMixin, object):
 
     The formatted string is obtained by calling the :py:meth:`~ModelParameterFormatter.get_formatted` method.
     """
-    def __init__(self, name, value=None, error=None, latex_name=None):
+    def __init__(self, name, value=None, error=None, asymmetric_error=None, latex_name=None):
         """
 
         Construct a :py:obj:`Formatter` for a model function:
@@ -46,8 +46,8 @@ class ModelParameterFormatter(FileIOMixin, object):
         """
         self.value = value
 
-        self._error_is_asymmetric = False
         self.error = error
+        self.asymmetric_error = asymmetric_error
 
         self._name = name
         self._latex_name = latex_name
@@ -100,52 +100,40 @@ class ModelParameterFormatter(FileIOMixin, object):
 
     @error.setter
     def error(self, err_spec):
-        _err_spec = err_spec
-        if _err_spec is None:
-            self._error = None
-            self._error_is_asymmetric = False
-            return
-
-        try:
-            iter(_err_spec)
-        except TypeError:
-            _err_spec = (_err_spec,)
-
-        if len(_err_spec) == 2:
-            self._error = tuple(_err_spec)  # asymmetric error
-            self._error_is_asymmetric = True
-        elif len(_err_spec) == 1:
-            self._error = (_err_spec[0], _err_spec[0])  # asymmetric error
-            self._error_is_asymmetric = False
-        else:
-            raise FormatterException("Error specification not understood: %r" % (err_spec,))
+        self._error = err_spec
 
     @property
     def error_rel(self):
         """the relative parameter error (``float``/tuple of 2 ``floats``)"""
         if self._error is None:
             return None
-        if self._error_is_asymmetric:
-            return (self._error[0]/self._value, self._error[1]/self._value)
         else:
-            return self._error[0]/self._value
+            return self._error/self._value
+
+    @property
+    def asymmetric_error(self):
+        return self._asymmetric_error
+
+    @asymmetric_error.setter
+    def asymmetric_error(self, err_spec):
+        self._asymmetric_error = err_spec
 
     @property
     def error_up(self):
         """the "up" error (only for asymmetric errors)"""
-        if self._error is None:
+        if self.asymmetric_error is None:
             return None
-        return self._error[1]
+        return self.asymmetric_error[1]
 
     @property
     def error_down(self):
         """the "down" error (only for asymmetric errors)"""
-        if self._error is None:
+        if self.asymmetric_error is None:
             return None
-        return self._error[0]
+        return self.asymmetric_error[0]
 
     def get_formatted(self, with_name=False, with_value=True, with_errors=True, n_significant_digits=2,
-                      round_value_to_error=True, asymmetric_errors=False, format_as_latex=False):
+                      round_value_to_error=True, asymmetric_error=False, format_as_latex=False):
         """
         Get a formatted string representing this model parameter.
 
@@ -174,7 +162,8 @@ class ModelParameterFormatter(FileIOMixin, object):
             if self._value:
                 _log_abs_value = np.log(np.abs(self._value))
 
-            if not with_errors or self._error is None:
+            if not with_errors or (not asymmetric_error and self.error is None) or \
+                    (asymmetric_error and self.asymmetric_error is None):
                 _sig = int(-np.floor(_log_abs_value / np.log(10))) + n_significant_digits - 1
                 _display_val = round(self._value, _sig)
                 if format_as_latex:
@@ -182,7 +171,10 @@ class ModelParameterFormatter(FileIOMixin, object):
                 else:
                     _display_string += "%g" % (_display_val,)
             else:
-                _min_err = np.min(list(map(abs, self._error)))
+                if asymmetric_error:
+                    _min_err = min(abs(self.error_up), abs(self.error_down))
+                else:
+                    _min_err = self.error
                 # fallback to rounding to 10^(-1) if error is zero
                 if not _min_err or np.isnan(_min_err):
                     _min_err = 1e-1
@@ -192,7 +184,7 @@ class ModelParameterFormatter(FileIOMixin, object):
                     _sig = int(-np.floor(_log_abs_value / np.log(10))) + n_significant_digits - 1
 
                 _display_val = round(self._value, _sig)
-                if asymmetric_errors:
+                if asymmetric_error:
                     _display_err_dn = round(self.error_down, _sig)
                     _display_err_up = round(self.error_up, _sig)
                     if format_as_latex:
@@ -200,7 +192,7 @@ class ModelParameterFormatter(FileIOMixin, object):
                     else:
                         _display_string += "%g + %g (up) - %g (down)" % (_display_val, _display_err_up, _display_err_dn)
                 else:
-                    _display_err = round(0.5 * (self.error_down + self.error_up), _sig)
+                    _display_err = round(self.error, _sig)
                     if format_as_latex:
                         _display_string += r"$%g \pm %g$" % (_display_val, _display_err)
                     else:

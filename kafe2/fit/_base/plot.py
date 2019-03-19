@@ -461,7 +461,7 @@ class PlotFigureBase(object):
                 _y = _y_inc_offset - _y_inc_size * _y_inc_counter
                 _formatted_string = _pf.get_formatted(
                     with_name=True, with_value=True, with_errors=True,
-                    asymmetric_errors=asymmetric_errors, format_as_latex=format_as_latex
+                    asymmetric_error=asymmetric_errors, format_as_latex=format_as_latex
                 )
                 target_figure.text(_fig_ls[2]+.05, _y, _formatted_string, **kwargs)
                 _y_inc_counter += 1
