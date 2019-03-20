@@ -37,13 +37,10 @@ class MinimizerBase(object):
         def _profile(parameter_value):
             self.set_several(self.parameter_names, min_parameters)
             self.set(parameter_name, parameter_value)
-            #print('pre %s: %s@%s' % (parameter_name, self.function_value, self.parameter_values))
             self.fix(parameter_name)
             self.minimize()
             _fval = self.function_value
             self.release(parameter_name)
-            #print('post %s: %s@%s' % (parameter_name, _fval, self.parameter_values))
-            #print()
             return _fval - target_chi_2
 
         return brentq(f=_profile, a=low, b=high, xtol=self.tolerance)

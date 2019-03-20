@@ -19,12 +19,12 @@ class MinimizerScipyOptimize(MinimizerBase):
                  parameter_names, parameter_values, parameter_errors,
                  function_to_minimize, method="slsqp"):
         self._par_names = parameter_names
-        self._par_val = parameter_values
+        self.parameter_values = parameter_values
         self._par_err = parameter_errors
         self._method = method
         self._par_bounds = None
         #self._par_bounds = [(None, None) for _pn in self._par_names]
-        self._par_fixed = [False] * len(parameter_names)
+        self._par_fixed = np.array([False] * len(parameter_names))
         self._par_constraints = []
         """
         # for fixing:
@@ -48,6 +48,12 @@ class MinimizerScipyOptimize(MinimizerBase):
         self._opt_result = None
 
     # -- private methods
+
+    def _save_state(self):
+        pass
+
+    def _load_state(self):
+        pass
 
     def _get_opt_result(self):
         if self._opt_result is None:
@@ -105,6 +111,10 @@ class MinimizerScipyOptimize(MinimizerBase):
     def parameter_values(self):
         return self._par_val
 
+    @parameter_values.setter
+    def parameter_values(self, new_values):
+        self._par_val = np.array(new_values)
+
     @property
     def parameter_errors(self):
         return self._par_err
@@ -129,9 +139,7 @@ class MinimizerScipyOptimize(MinimizerBase):
             self.set(_pn, _pv)
 
     def fix(self, parameter_name):
-        raise NotImplementedError
         _par_id = self._par_names.index(parameter_name)
-        _pv = self._par_val[_par_id]
         self._par_fixed[_par_id] = True
 
 
@@ -140,7 +148,6 @@ class MinimizerScipyOptimize(MinimizerBase):
             self.fix(_pn)
 
     def release(self, parameter_name):
-        raise NotImplementedError
         _par_id = self._par_names.index(parameter_name)
         self._par_fixed[_par_id] = False
 
@@ -163,16 +170,33 @@ class MinimizerScipyOptimize(MinimizerBase):
         return self._func_handle(*args)
 
     def minimize(self, max_calls=6000):
-        self._par_constraints = []
-        for _par_id, (_pf, _pv) in enumerate(zip(self._par_fixed, self._par_val)):
-            if _pf:
-                self._par_constraints.append(
-                    dict(type='eq', fun=lambda x: x[_par_id] - _pv, jac=lambda x: 0.)
-                )
+        if np.any(self._par_fixed):
+            # if pars are fixed arg list becomes shorter -> pick and insert fixed pars from self.parameter_values
+            _par_fixed_indices = np.array(self._par_fixed, dtype=int)  # 1 if fixed, 0 otherwise
+            # keep track of the arg positions within the fixed/dynamic lists:
+            _position_indices = np.zeros_like(self.parameter_values, dtype=int)
+            _n_fixed_parameters = 0
+            _par_vals = []
+            for _par_index, _par_fixed in enumerate(self._par_fixed):
+                if _par_fixed:
+                    _position_indices[_par_index] = _par_index
+                    _n_fixed_parameters += 1
+                else:
+                    _position_indices[_par_index] = _par_index - _n_fixed_parameters
+                    _par_vals.append(self.parameter_values[_par_index])
+            _dyn_and_fixed_args = np.zeros(shape=(2,) + self.parameter_values.shape)
+            _dyn_and_fixed_args[1] = self.parameter_values
 
+            def _func(args):
+                _dyn_and_fixed_args[0, 0:-_n_fixed_parameters] = args
+                _selected_values = _dyn_and_fixed_args[_par_fixed_indices, _position_indices]
+                return self._func_wrapper_unpack_args(_selected_values)
+        else:
+            _func = self._func_wrapper_unpack_args
+            _par_vals = self.parameter_values
 
-        self._opt_result = opt.minimize(self._func_wrapper_unpack_args,
-                                        self._par_val,
+        self._opt_result = opt.minimize(_func,
+                                        _par_vals,
                                         args=(),
                                         method=self._method,
                                         jac=None,
@@ -183,7 +207,11 @@ class MinimizerScipyOptimize(MinimizerBase):
                                         callback=None,
                                         options=dict(maxiter=max_calls, disp=False))
 
-        self._par_val = self._opt_result.x
+        if np.any(self._par_fixed):
+            _dyn_and_fixed_args[0, 0:-_n_fixed_parameters] = self._opt_result.x
+            self.parameter_values = _dyn_and_fixed_args[_par_fixed_indices, _position_indices]
+        else:
+            self.parameter_values = self._opt_result.x
 
         self._hessian_inv = np.asmatrix(nd.Hessian(self._func_wrapper_unpack_args)(self._par_val)).I
 
