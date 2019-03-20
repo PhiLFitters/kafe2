@@ -46,14 +46,20 @@ class MinimizerScipyOptimize(MinimizerBase):
         self._pars_contour = None
 
         self._opt_result = None
+        super(MinimizerScipyOptimize, self).__init__()
 
     # -- private methods
 
     def _save_state(self):
-        pass
+        self._save_state_dict['parameter_values'] = self.parameter_values
+        self._save_state_dict['parameter_errors'] = self.parameter_errors
+        self._save_state_dict['function_value'] = self._fval
 
     def _load_state(self):
-        pass
+        self.parameter_values = self._save_state_dict['parameter_values']
+        self.parameter_errors = self._save_state_dict['parameter_errors']
+        self._fval = self._save_state_dict['function_value']
+        self._func_wrapper_unpack_args(self.parameter_values)  # call the function to propagate the changes to the nexus
 
     def _get_opt_result(self):
         if self._opt_result is None:
@@ -71,7 +77,6 @@ class MinimizerScipyOptimize(MinimizerBase):
         assert err_def > 0
         self._err_def = err_def
 
-
     @property
     def tolerance(self):
         return self._tol
@@ -80,9 +85,6 @@ class MinimizerScipyOptimize(MinimizerBase):
     def tolerance(self, tolerance):
         assert tolerance > 0
         self._tol = tolerance
-
-
-
 
     @property
     def hessian(self):
@@ -109,7 +111,7 @@ class MinimizerScipyOptimize(MinimizerBase):
 
     @property
     def parameter_values(self):
-        return self._par_val
+        return np.array(self._par_val)
 
     @parameter_values.setter
     def parameter_values(self, new_values):
@@ -117,7 +119,11 @@ class MinimizerScipyOptimize(MinimizerBase):
 
     @property
     def parameter_errors(self):
-        return self._par_err
+        return np.array(self._par_err)
+
+    @parameter_errors.setter
+    def parameter_errors(self, new_par_errs):
+        self._par_err = np.array(new_par_errs)
 
     @property
     def parameter_names(self):
@@ -141,7 +147,6 @@ class MinimizerScipyOptimize(MinimizerBase):
     def fix(self, parameter_name):
         _par_id = self._par_names.index(parameter_name)
         self._par_fixed[_par_id] = True
-
 
     def fix_several(self, parameter_names):
         for _pn in parameter_names:
@@ -221,7 +226,6 @@ class MinimizerScipyOptimize(MinimizerBase):
             self._par_cor_mat = CovMat(self._par_cov_mat).cor_mat
 
         self._fval = self._opt_result.fun
-
 
     def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, **minimizer_contour_kwargs):
         _algorithm = minimizer_contour_kwargs.pop("algorithm", "heuristic_grid")
@@ -484,7 +488,6 @@ class MinimizerScipyOptimize(MinimizerBase):
         if np.min(_adjacent_points) > contour_fun:
             return np.mean(_adjacent_points)
         return -1
-    
     
     @staticmethod
     def _get_adjacent_grid_points(grid, x_0, y_0, vector_1, vector_2):
