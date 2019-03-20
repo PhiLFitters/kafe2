@@ -457,6 +457,7 @@ class PlotFigureBase(object):
             target_figure.text(_fig_ls[2] + .025, _y, _formatted_string, **kwargs)
             _y_inc_counter += 1
 
+            _pdc._fitter._update_parameter_formatters(update_asymmetric_errors=asymmetric_errors)
             for _pi, _pf in enumerate(_pdc.model_function_argument_formatters):
                 _y = _y_inc_offset - _y_inc_size * _y_inc_counter
                 _formatted_string = _pf.get_formatted(

@@ -100,11 +100,14 @@ class FitBase(FileIOMixin, object):
             format_as_latex=False,
             with_expression=True)
 
-    def _update_parameter_formatters(self):
+    def _update_parameter_formatters(self, update_asymmetric_errors=False):
         for _fpf, _pv, _pe in zip(
                 self._model_function.argument_formatters, self.parameter_values, self.parameter_errors):
             _fpf.value = _pv
             _fpf.error = _pe
+        if update_asymmetric_errors:
+            for _fpf, _ape in zip(self._model_function.argument_formatters, self.asymmetric_parameter_errors):
+                _fpf.asymmetric_error = _ape
 
     # -- public properties
 
@@ -165,6 +168,11 @@ class FitBase(FileIOMixin, object):
     def parameter_cor_mat(self):
         """the current parameter correlation matrix"""
         return self._fitter.fit_parameter_cor_mat
+
+    @property
+    def asymmetric_parameter_errors(self):
+        """the current asymmetric parameter uncertainties"""
+        return self._fitter.asymmetric_fit_parameter_errors
 
     @property
     def parameter_name_value_dict(self):

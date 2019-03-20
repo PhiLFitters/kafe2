@@ -1,4 +1,5 @@
 from __future__ import print_function
+from .minimizer_base import MinimizerBase
 from kafe2.core.contour import ContourFactory
 from kafe2.core.error import CovMat
 try:
@@ -13,7 +14,7 @@ import numdifftools as nd
 class MinimizerScipyOptimizeException(Exception):
     pass
 
-class MinimizerScipyOptimize(object):
+class MinimizerScipyOptimize(MinimizerBase):
     def __init__(self,
                  parameter_names, parameter_values, parameter_errors,
                  function_to_minimize, method="slsqp"):
