@@ -253,7 +253,8 @@ class IndexedFit(FitBase):
 
     def report(self, output_stream=sys.stdout,
                show_data=True,
-               show_model=True):
+               show_model=True,
+               asymmetric_parameter_errors=False):
         """Print a summary of the fit state and/or results."""
         _result_dict = self.get_result_dict()
 
@@ -309,4 +310,5 @@ class IndexedFit(FitBase):
 
             print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=1)
 
-        super(IndexedFit, self).report(output_stream=output_stream)
+        super(IndexedFit, self).report(output_stream=output_stream,
+                                       asymmetric_parameter_errors=asymmetric_parameter_errors)

@@ -510,7 +510,7 @@ class FitBase(FileIOMixin, object):
 
         return _result_dict
 
-    def report(self, output_stream=sys.stdout):
+    def report(self, output_stream=sys.stdout, asymmetric_parameter_errors=False):
         """Print a summary of the fit state and/or results."""
         _result_dict = self.get_result_dict()
 
@@ -531,13 +531,15 @@ class FitBase(FileIOMixin, object):
         output_stream.write(_indent + "Model Parameters\n")
         output_stream.write(_indent + "================\n\n")
 
+        self._update_parameter_formatters(update_asymmetric_errors=asymmetric_parameter_errors)
         for _pf in self._model_function.argument_formatters:
             output_stream.write(_indent * 2)
             output_stream.write(
                 _pf.get_formatted(with_name=True,
                                   with_value=True,
                                   with_errors=True,
-                                  format_as_latex=False)
+                                  format_as_latex=False,
+                                  asymmetric_error=asymmetric_parameter_errors)
             )
             output_stream.write('\n')
         output_stream.write('\n')
