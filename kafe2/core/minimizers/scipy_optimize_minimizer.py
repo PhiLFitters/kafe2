@@ -54,12 +54,14 @@ class MinimizerScipyOptimize(MinimizerBase):
         self._save_state_dict['parameter_values'] = self.parameter_values
         self._save_state_dict['parameter_errors'] = self.parameter_errors
         self._save_state_dict['function_value'] = self._fval
+        super(MinimizerScipyOptimize, self)._save_state()
 
     def _load_state(self):
         self.parameter_values = self._save_state_dict['parameter_values']
         self.parameter_errors = self._save_state_dict['parameter_errors']
         self._fval = self._save_state_dict['function_value']
         self._func_wrapper_unpack_args(self.parameter_values)  # call the function to propagate the changes to the nexus
+        super(MinimizerScipyOptimize, self)._load_state()
 
     def _get_opt_result(self):
         if self._opt_result is None:

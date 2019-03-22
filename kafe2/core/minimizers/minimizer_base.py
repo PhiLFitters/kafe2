@@ -15,12 +15,12 @@ class MinimizerBase(object):
         self._par_asymm_err = None
 
     def _save_state(self):
-        raise NotImplementedError()
+        self._save_state_dict['asymmetric_parameter_error'] = self._par_asymm_err
 
     def _load_state(self):
-        raise NotImplementedError()
+        self._par_asymm_err = self._save_state_dict['asymmetric_parameter_error']
 
-    def _calculate_asymmetric_parameter_errors(self):
+    def _calculate_asymmetric_parameter_errors(self):  # TODO max calls
         self.minimize()
         self._save_state()
         _asymm_par_errs = np.zeros(shape=self.parameter_values.shape + (2,))
@@ -58,10 +58,8 @@ class MinimizerBase(object):
         raise NotImplementedError()
 
     @property
-    def asymmetric_parameter_errors(self):
-        if self._par_asymm_err is None:
-            self._par_asymm_err = self._calculate_asymmetric_parameter_errors()
-        return self._par_asymm_err
+    def num_pars(self):
+        raise NotImplementedError()
 
     @property
     def parameter_values(self):
@@ -70,6 +68,12 @@ class MinimizerBase(object):
     @property
     def parameter_errors(self):
         raise NotImplementedError()
+
+    @property
+    def asymmetric_parameter_errors(self):
+        if self._par_asymm_err is None:
+            self._par_asymm_err = self._calculate_asymmetric_parameter_errors()
+        return self._par_asymm_err
 
     @property
     def parameter_names(self):
@@ -95,5 +99,5 @@ class MinimizerBase(object):
     def release(self, parameter_name):
         raise NotImplementedError()
 
-    def minimize(self):
+    def minimize(self):  # TODO max calls
         raise NotImplementedError()

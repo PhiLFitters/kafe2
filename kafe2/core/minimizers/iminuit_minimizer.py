@@ -35,6 +35,10 @@ class MinimizerIMinuit(MinimizerBase):
 
     # -- private methods
 
+    def _reset(self):
+        self.__iminuit = None
+        self._invalidate_cache()
+
     def _invalidate_cache(self):
         self._par_val = None
         self._par_err = None
@@ -46,6 +50,18 @@ class MinimizerIMinuit(MinimizerBase):
         self._fmin_struct = None
         self._pars_contour = None
         super(MinimizerIMinuit, self)._invalidate_cache()
+
+    def _save_state(self):
+        self._save_state_dict['minimizer_param_dict'] = self._minimizer_param_dict
+        self._save_state_dict['iminuit'] = self.__iminuit
+        super(MinimizerIMinuit, self)._save_state()
+
+    def _load_state(self):
+        self._reset()
+        self._minimizer_param_dict = self._save_state_dict['minimizer_param_dict']
+        self.__iminuit = self._save_state_dict['iminuit']
+        self._func_handle(*self.parameter_values)  # call the function to propagate the changes to the nexus
+        super(MinimizerIMinuit, self)._load_state()
 
     def _get_fmin_struct(self):
         if self._fmin_struct is None:
@@ -64,6 +80,16 @@ class MinimizerIMinuit(MinimizerBase):
             self.__iminuit.tol = self.tolerance
         return self.__iminuit
 
+    def _calculate_asymmetric_parameter_errors(self):
+        self.minimize()
+        _minos_result_dict = self._get_iminuit().minos()
+        _asymm_par_errs = np.zeros(shape=self.parameter_values.shape + (2,))
+        for _par_name in self.parameter_names:
+            _index = self.parameter_names.index(_par_name)
+            _asymm_par_errs[_index, 0] = _minos_result_dict[_par_name]['lower']
+            _asymm_par_errs[_index, 1] = _minos_result_dict[_par_name]['upper']
+        return _asymm_par_errs
+
     def _fill_in_zeroes_for_fixed(self, submatrix):
         """
         Takes the partial error matrix (submatrix) and adds
@@ -78,20 +104,6 @@ class MinimizerIMinuit(MinimizerBase):
             _mat = np.insert(np.insert(_mat, _id, 0., axis=0), _id, 0., axis=1)
 
         return _mat
-
-    def _reset(self):
-        self.__iminuit = None
-        self._invalidate_cache()
-
-    def _save_state(self):
-        self._save_state_dict['minimizer_param_dict'] = self._minimizer_param_dict
-        self._save_state_dict['iminuit'] = self.__iminuit
-
-    def _load_state(self):
-        self._reset()
-        self._minimizer_param_dict = self._save_state_dict['minimizer_param_dict']
-        self.__iminuit = self._save_state_dict['iminuit']
-        self._func_handle(*self.parameter_values)  # call the function to propagate the changes to the nexus
 
 
     # -- public properties
