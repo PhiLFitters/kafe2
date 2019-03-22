@@ -28,10 +28,9 @@ class MinimizerIMinuit(MinimizerBase):
             self._minimizer_param_dict["limit_" + _pn] = None
 
         self._reset()  # sets self.__iminuit and caches to None
-        self._func_handle = function_to_minimize
         self.errordef = 1.0
         self.tolerance = 0.001
-        super(MinimizerIMinuit, self).__init__()
+        super(MinimizerIMinuit, self).__init__(function_to_minimize=function_to_minimize)
 
     # -- private methods
 

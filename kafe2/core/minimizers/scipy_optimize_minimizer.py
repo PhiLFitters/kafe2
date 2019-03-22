@@ -1,7 +1,6 @@
 from __future__ import print_function
 from .minimizer_base import MinimizerBase
 from kafe2.core.contour import ContourFactory
-from kafe2.core.error import CovMat
 try:
     import scipy.optimize as opt
 except ImportError:
@@ -31,24 +30,22 @@ class MinimizerScipyOptimize(MinimizerBase):
         dict(type='eq', fun=lambda: _const, jac=lambda: 0.)
         """
 
-        self._func_handle = function_to_minimize
         self._err_def = 1.0
         self._tol = 1e-6
 
         # cache for calculations
-        self._hessian = None
-        self._hessian_inv = None
-        self._fval = None
         self._par_cov_mat = None
         self._par_cor_mat = None
-        self._par_asymm_err_dn = None
-        self._par_asymm_err_up = None
         self._pars_contour = None
 
         self._opt_result = None
-        super(MinimizerScipyOptimize, self).__init__()
+        super(MinimizerScipyOptimize, self).__init__(function_to_minimize=function_to_minimize)
 
     # -- private methods
+
+    def _invalidate_cache(self):
+        self._par_err = None
+        super(MinimizerScipyOptimize, self)._invalidate_cache()
 
     def _save_state(self):
         self._save_state_dict['parameter_values'] = self.parameter_values
@@ -58,9 +55,8 @@ class MinimizerScipyOptimize(MinimizerBase):
 
     def _load_state(self):
         self.parameter_values = self._save_state_dict['parameter_values']
-        self._par_err = self._save_state_dict['parameter_errors']
+        self._par_err = np.array(self._save_state_dict['parameter_errors'])
         self._fval = self._save_state_dict['function_value']
-        self._func_wrapper_unpack_args(self.parameter_values)  # call the function to propagate the changes to the nexus
         super(MinimizerScipyOptimize, self)._load_state()
 
     def _get_opt_result(self):
@@ -89,29 +85,6 @@ class MinimizerScipyOptimize(MinimizerBase):
         self._tol = tolerance
 
     @property
-    def hessian(self):
-        # TODO: cache this
-        return self._hessian_inv.I
-
-    @property
-    def cov_mat(self):
-        return self._par_cov_mat
-
-    @property
-    def cor_mat(self):
-        return self._par_cor_mat
-
-    @property
-    def hessian_inv(self):
-        return self._hessian_inv
-
-    @property
-    def function_value(self):
-        if self._fval is None:
-            self._fval = self._func_handle(*self.parameter_values)
-        return self._fval
-
-    @property
     def parameter_values(self):
         return np.array(self._par_val)
 
@@ -121,7 +94,10 @@ class MinimizerScipyOptimize(MinimizerBase):
 
     @property
     def parameter_errors(self):
-        return np.array(self._par_err)
+        if self._par_err is None:
+            print(self.cov_mat)
+            self._par_err = np.sqrt(np.diag(self.cov_mat))
+        return self._par_err
 
     @property
     def parameter_names(self):
@@ -169,9 +145,6 @@ class MinimizerScipyOptimize(MinimizerBase):
         _par_id = self._par_names.index(parameter_name)
         self._par_bounds[_par_id] = (None, None)
 
-    def _func_wrapper_unpack_args(self, args):
-        return self._func_handle(*args)
-
     def minimize(self, max_calls=6000):
         if np.any(self._par_fixed):
             # if pars are fixed arg list becomes shorter -> pick and insert fixed pars from self.parameter_values
@@ -209,19 +182,13 @@ class MinimizerScipyOptimize(MinimizerBase):
                                         tol=self.tolerance,
                                         callback=None,
                                         options=dict(maxiter=max_calls, disp=False))
+        self._invalidate_cache()
 
         if np.any(self._par_fixed):
             _dyn_and_fixed_args[0, 0:-_n_fixed_parameters] = self._opt_result.x
             self.parameter_values = _dyn_and_fixed_args[_par_fixed_indices, _position_indices]
         else:
             self.parameter_values = self._opt_result.x
-
-        self._hessian_inv = np.asmatrix(nd.Hessian(self._func_wrapper_unpack_args)(self._par_val)).I
-
-        if self._hessian_inv is not None:
-            self._par_cov_mat = self._hessian_inv * 2.0 * self._err_def
-            self._par_err = np.sqrt(np.diag(self._par_cov_mat))
-            self._par_cor_mat = CovMat(self._par_cov_mat).cor_mat
 
         self._fval = self._opt_result.fun
 
