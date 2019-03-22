@@ -238,11 +238,9 @@ class ParametricModelYamlWriter(YamlWriterMixin, ParametricModelDReprBase):
                     parametric_model._model_function_object)
         else:
             raise YamlWriterException("Unkonwn parametric model type")
-        
-        _parameters = parametric_model.parameters
-        if isinstance(_parameters, np.ndarray):
-            _parameters = _parameters.tolist() #better readability in file
-        _yaml_doc['model_parameters'] = _parameters
+
+        # convert all numpy array entries to regular float, then convert to list, improves readability
+        _yaml_doc['model_parameters'] = np.array(parametric_model.parameters, dtype=float).tolist()
 
         # -- write error representation for all container types
         if parametric_model.has_errors:
