@@ -43,10 +43,9 @@ class MinimizerIMinuit(MinimizerBase):
         self._fval = None
         self._par_cov_mat = None
         self._par_cor_mat = None
-        self._par_asymm_err_dn = None
-        self._par_asymm_err_up = None
         self._fmin_struct = None
         self._pars_contour = None
+        super(MinimizerIMinuit, self)._invalidate_cache()
 
     def _get_fmin_struct(self):
         if self._fmin_struct is None:
@@ -182,7 +181,7 @@ class MinimizerIMinuit(MinimizerBase):
                 # need to hack to get initial parameter values
                 _v = _m.values
                 _pvals = [_v[pname] for pname in self.parameter_names]
-            self._par_val = tuple(_pvals)
+            self._par_val = np.array(_pvals)
         return self._par_val
 
     @property

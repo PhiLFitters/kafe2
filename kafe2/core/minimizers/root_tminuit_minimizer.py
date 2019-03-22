@@ -51,8 +51,7 @@ class MinimizerROOTTMinuit(MinimizerBase):
         self._fval = None
         self._par_cov_mat = None
         self._par_cor_mat = None
-        self._par_asymm_err_dn = None
-        self._par_asymm_err_up = None
+        self._par_asymm_err = None
         self._fmin_struct = None
         self._pars_contour = None
 

@@ -1,12 +1,18 @@
+import numpy as np
 from scipy.optimize import brentq
+
 
 class MinimizerBase(object):
 
     def __init__(self):
+        self._invalidate_cache()  # initializes caches with None
         self._save_state_dict = dict()
 
     def _reset(self):
-        pass
+        self._invalidate_cache()
+
+    def _invalidate_cache(self):
+        self._par_asymm_err = None
 
     def _save_state(self):
         raise NotImplementedError()
@@ -14,24 +20,26 @@ class MinimizerBase(object):
     def _load_state(self):
         raise NotImplementedError()
 
-    def _calculate_asymmetric_parameter_error(self, parameter_name):
+    def _calculate_asymmetric_parameter_errors(self):
         self.minimize()
         self._save_state()
-        _target_chi_2 = self.function_value + 1.0
-        _min_parameters = self.parameter_values  # (1.061 -0.548)
+        _asymm_par_errs = np.zeros(shape=self.parameter_values.shape + (2,))
+        for _par_index, _par_name in enumerate(self.parameter_names):
+            _target_chi_2 = self.function_value + 1.0
+            _min_parameters = self.parameter_values
 
-        _par_index = self.parameter_names.index(parameter_name)
-        _par_min = self.parameter_values[_par_index]
-        _par_err = self.parameter_errors[_par_index]
+            _par_min = self.parameter_values[_par_index]
+            _par_err = self.parameter_errors[_par_index]
 
-        _cut_dn = self._find_chi_2_cut(parameter_name, _par_min - 2 * _par_err, _par_min, _target_chi_2, _min_parameters)
-        _err_dn = _par_min - _cut_dn
+            _cut_dn = self._find_chi_2_cut(_par_name, _par_min - 2 * _par_err, _par_min, _target_chi_2,
+                                           _min_parameters)
+            _asymm_par_errs[_par_index, 0] = _cut_dn - _par_min
 
-        _cut_up = self._find_chi_2_cut(parameter_name, _par_min, _par_min + 2 * _par_err, _target_chi_2, _min_parameters)
-        _err_up = _cut_up - _par_min
-        #print(_cut_dn, _cut_up)  # expected c ~ (-1.1685, 0.0729)
-        self._load_state()
-        return _err_dn, _err_up
+            _cut_up = self._find_chi_2_cut(_par_name, _par_min, _par_min + 2 * _par_err, _target_chi_2,
+                                           _min_parameters)
+            _asymm_par_errs[_par_index, 1] = _cut_up - _par_min
+            self._load_state()
+        return _asymm_par_errs
 
     def _find_chi_2_cut(self, parameter_name, low, high, target_chi_2, min_parameters):
         def _profile(parameter_value):
@@ -51,10 +59,9 @@ class MinimizerBase(object):
 
     @property
     def asymmetric_parameter_errors(self):
-        _asymmetric_errors = (self._calculate_asymmetric_parameter_error(_par_name)
-                              for _par_name in self.parameter_names)
-        #self.minimize()
-        return _asymmetric_errors
+        if self._par_asymm_err is None:
+            self._par_asymm_err = self._calculate_asymmetric_parameter_errors()
+        return self._par_asymm_err
 
     @property
     def parameter_values(self):
