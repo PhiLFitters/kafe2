@@ -41,7 +41,7 @@ _fit.report(asymmetric_parameter_errors=True)
 
 _plot = _fit.generate_plot()
 _plot.plot()
-_plot.show_fit_info_box(format_as_latex=True, asymmetric_errors=True)
+_plot.show_fit_info_box(format_as_latex=True, asymmetric_parameter_errors=True)
 
 _profiler = ContoursProfiler(_fit)
 _profiler.plot_profiles_contours_matrix(

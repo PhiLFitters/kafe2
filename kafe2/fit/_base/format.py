@@ -138,14 +138,22 @@ class ModelParameterFormatter(FileIOMixin, object):
         Get a formatted string representing this model parameter.
 
         :param with_name:  if ``True``, output will include the parameter name
+        :type with_name: bool
         :param with_value: if ``True``, output will include the parameter value
+        :type with_value: bool
         :param with_errors: if ``True``, output will include the parameter error/errors
+        :type with_errors: bool
         :param n_significant_digits: number of significant digits for rounding
+        :type n_significant_digits: int
         :param round_value_to_error: if ``True``, the parameter value will be rounded to the same precision as the error
+        :type round_value_to_error: bool
+        :param asymmetric_error: if ``True``, use two different errors for up/down directions
+        :type asymmetric_error: bool
         :param format_as_latex: if ``True``, the returned string will be formatted using LaTeX syntax
-        :return: string
+        :type format_as_latex: bool
+        :return: the string representation of the parameter
+        :rtype: str
         """
-        # TODO update documentation
         _display_string = ""
         if with_name:
             if format_as_latex:

@@ -511,7 +511,14 @@ class FitBase(FileIOMixin, object):
         return _result_dict
 
     def report(self, output_stream=sys.stdout, asymmetric_parameter_errors=False):
-        """Print a summary of the fit state and/or results."""
+        """
+        Print a summary of the fit state and/or results.
+
+        :param output_stream: the output stream to which the report should be printed
+        :type output_stream: TextIOBase
+        :param asymmetric_parameter_errors: if ``True``, use two different parameter errors for up/down directions
+        :type asymmetric_parameter_errors: bool
+        """
         _result_dict = self.get_result_dict()
 
         ###print_dict_recursive(_result_dict, output_stream)
