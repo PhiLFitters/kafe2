@@ -58,7 +58,7 @@ class MinimizerScipyOptimize(MinimizerBase):
 
     def _load_state(self):
         self.parameter_values = self._save_state_dict['parameter_values']
-        self.parameter_errors = self._save_state_dict['parameter_errors']
+        self._par_err = self._save_state_dict['parameter_errors']
         self._fval = self._save_state_dict['function_value']
         self._func_wrapper_unpack_args(self.parameter_values)  # call the function to propagate the changes to the nexus
         super(MinimizerScipyOptimize, self)._load_state()
@@ -122,10 +122,6 @@ class MinimizerScipyOptimize(MinimizerBase):
     @property
     def parameter_errors(self):
         return np.array(self._par_err)
-
-    @parameter_errors.setter
-    def parameter_errors(self, new_par_errs):
-        self._par_err = np.array(new_par_errs)
 
     @property
     def parameter_names(self):
