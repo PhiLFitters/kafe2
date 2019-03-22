@@ -87,7 +87,7 @@ class IOFileHandle(IOStreamHandle):
     `with IOFileHandle(...) as fh: fh.write(...)`
     """
 
-    _VALID_MODES = ['rb', 'ab']
+    _VALID_MODES = ['r', 'a']
 
     def __init__(self, filename, mode):
         super(IOFileHandle, self).__init__(buffer=None)
@@ -153,7 +153,7 @@ class IOFileHandle(IOStreamHandle):
 
 class InputFileHandle(IOFileHandle):
     def __init__(self, filename):
-        super(InputFileHandle, self).__init__(filename, mode='rb')
+        super(InputFileHandle, self).__init__(filename, mode='r')
 
     def __repr__(self):
         return "{}(filename={})".format(self.__class__.__name__, repr(self.filename))
@@ -163,7 +163,7 @@ class InputFileHandle(IOFileHandle):
 
 class OutputFileHandle(IOFileHandle):
     def __init__(self, filename):
-        super(OutputFileHandle, self).__init__(filename, mode='ab')
+        super(OutputFileHandle, self).__init__(filename, mode='a')
 
     def __repr__(self):
         return "{}(filename={})".format(self.__class__.__name__, repr(self.filename))
