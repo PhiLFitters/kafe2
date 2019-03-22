@@ -100,6 +100,15 @@ class FitBase(FileIOMixin, object):
             format_as_latex=False,
             with_expression=True)
 
+    def _update_parameter_formatters(self, update_asymmetric_errors=False):
+        for _fpf, _pv, _pe in zip(
+                self._model_function.argument_formatters, self.parameter_values, self.parameter_errors):
+            _fpf.value = _pv
+            _fpf.error = _pe
+        if update_asymmetric_errors:
+            for _fpf, _ape in zip(self._model_function.argument_formatters, self.asymmetric_parameter_errors):
+                _fpf.asymmetric_error = _ape
+
     # -- public properties
 
     @abc.abstractproperty
@@ -159,6 +168,11 @@ class FitBase(FileIOMixin, object):
     def parameter_cor_mat(self):
         """the current parameter correlation matrix"""
         return self._fitter.fit_parameter_cor_mat
+
+    @property
+    def asymmetric_parameter_errors(self):
+        """the current asymmetric parameter uncertainties"""
+        return self._fitter.asymmetric_fit_parameter_errors
 
     @property
     def parameter_name_value_dict(self):
@@ -445,10 +459,7 @@ class FitBase(FileIOMixin, object):
         if not self._data_container.has_errors:
             raise self.EXCEPTION_TYPE('Cannot perform a fit without specifying data errors first!')
         self._fitter.do_fit()
-        # update parameter formatters
-        for _fpf, _pv, _pe in zip(self._model_function.argument_formatters, self.parameter_values, self.parameter_errors):
-            _fpf.value = _pv
-            _fpf.error = _pe
+        self._update_parameter_formatters()
 
     def assign_model_function_expression(self, expression_format_string):
         """Assign a plain-text-formatted expression string to the model function."""
@@ -499,8 +510,15 @@ class FitBase(FileIOMixin, object):
 
         return _result_dict
 
-    def report(self, output_stream=sys.stdout):
-        """Print a summary of the fit state and/or results."""
+    def report(self, output_stream=sys.stdout, asymmetric_parameter_errors=False):
+        """
+        Print a summary of the fit state and/or results.
+
+        :param output_stream: the output stream to which the report should be printed
+        :type output_stream: TextIOBase
+        :param asymmetric_parameter_errors: if ``True``, use two different parameter errors for up/down directions
+        :type asymmetric_parameter_errors: bool
+        """
         _result_dict = self.get_result_dict()
 
         ###print_dict_recursive(_result_dict, output_stream)
@@ -520,13 +538,15 @@ class FitBase(FileIOMixin, object):
         output_stream.write(_indent + "Model Parameters\n")
         output_stream.write(_indent + "================\n\n")
 
+        self._update_parameter_formatters(update_asymmetric_errors=asymmetric_parameter_errors)
         for _pf in self._model_function.argument_formatters:
             output_stream.write(_indent * 2)
             output_stream.write(
                 _pf.get_formatted(with_name=True,
                                   with_value=True,
                                   with_errors=True,
-                                  format_as_latex=False)
+                                  format_as_latex=False,
+                                  asymmetric_error=asymmetric_parameter_errors)
             )
             output_stream.write('\n')
         output_stream.write('\n')

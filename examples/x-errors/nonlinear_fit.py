@@ -37,10 +37,11 @@ _fit.add_simple_error('y', _y_err)
 
 
 _fit.do_fit()
+_fit.report(asymmetric_parameter_errors=True)
 
 _plot = _fit.generate_plot()
 _plot.plot()
-_plot.show_fit_info_box(format_as_latex=True)
+_plot.show_fit_info_box(format_as_latex=True, asymmetric_parameter_errors=True)
 
 _profiler = ContoursProfiler(_fit)
 _profiler.plot_profiles_contours_matrix(

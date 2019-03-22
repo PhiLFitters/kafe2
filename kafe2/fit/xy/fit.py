@@ -917,10 +917,7 @@ class XYFit(FitBase):
                 if np.abs(self.cost_function_value - _previous_cost_function_value) < _convergence_limit:
                     break
                 _previous_cost_function_value = self.cost_function_value
-            # update parameter formatters
-            for _fpf, _pv, _pe in zip(self._model_function.argument_formatters, self.parameter_values, self.parameter_errors):
-                _fpf.value = _pv
-                _fpf.error = _pe
+            self._update_parameter_formatters()
 
     def eval_model_function(self, x=None, model_parameters=None):
         """
@@ -977,8 +974,20 @@ class XYFit(FitBase):
 
     def report(self, output_stream=sys.stdout,
                show_data=True,
-               show_model=True):
-        """Print a summary of the fit state and/or results."""
+               show_model=True,
+               asymmetric_parameter_errors=False):
+        """
+        Print a summary of the fit state and/or results.
+
+        :param output_stream: the output stream to which the report should be printed
+        :type output_stream: TextIOBase
+        :param show_data: if ``True``, print out information about the data
+        :type show_data: bool
+        :param show_model: if ``True``, print out information about the parametric model
+        :type show_model: bool
+        :param asymmetric_parameter_errors: if ``True``, use two different parameter errors for up/down directions
+        :type asymmetric_parameter_errors: bool
+        """
         _result_dict = self.get_result_dict()
 
         _indent = ' ' * 4
@@ -1050,4 +1059,4 @@ class XYFit(FitBase):
 
             print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=1)
 
-        super(XYFit, self).report(output_stream=output_stream)
+        super(XYFit, self).report(output_stream=output_stream, asymmetric_parameter_errors=asymmetric_parameter_errors)

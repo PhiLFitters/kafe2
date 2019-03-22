@@ -1,6 +1,7 @@
 from __future__ import print_function
-from kafe2.core.contour import ContourFactory
 import six
+from .minimizer_base import MinimizerBase
+from kafe2.core.contour import ContourFactory
 try:
     from ROOT import TMinuit, Double, Long
     from ROOT import TMath  # for using ROOT's chi2prob function
@@ -17,7 +18,7 @@ class MinimizerROOTTMinuitException(Exception):
     pass
 
 
-class MinimizerROOTTMinuit(object):
+class MinimizerROOTTMinuit(MinimizerBase):
     def __init__(self,
                  parameter_names, parameter_values, parameter_errors,
                  function_to_minimize, strategy = 1):
@@ -50,8 +51,7 @@ class MinimizerROOTTMinuit(object):
         self._fval = None
         self._par_cov_mat = None
         self._par_cor_mat = None
-        self._par_asymm_err_dn = None
-        self._par_asymm_err_up = None
+        self._par_asymm_err = None
         self._fmin_struct = None
         self._pars_contour = None
 
