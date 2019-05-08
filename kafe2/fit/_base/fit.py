@@ -158,17 +158,26 @@ class FitBase(FileIOMixin, object):
     @property
     def parameter_errors(self):
         """the current parameter uncertainties"""
-        return self._fitter.fit_parameter_errors
+        if self._loaded_result_dict is not None:
+            return self._loaded_result_dict['parameter_errors']
+        else:
+            return self._fitter.fit_parameter_errors
 
     @property
     def parameter_cov_mat(self):
         """the current parameter covariance matrix"""
-        return self._fitter.fit_parameter_cov_mat
+        if self._loaded_result_dict is not None:
+            return self._loaded_result_dict['parameter_cov_mat']
+        else:
+            return self._fitter.fit_parameter_cov_mat
 
     @property
     def parameter_cor_mat(self):
         """the current parameter correlation matrix"""
-        return self._fitter.fit_parameter_cor_mat
+        if self._loaded_result_dict is not None:
+            return self._loaded_result_dict['parameter_cor_mat']
+        else:
+            return self._fitter.fit_parameter_cor_mat
 
     @property
     def asymmetric_parameter_errors(self):
@@ -228,7 +237,10 @@ class FitBase(FileIOMixin, object):
     @property
     def did_fit(self):
         """whether a fit was performed for the given data and model"""
-        return self._fitter.state_is_from_minimizer
+        if self._loaded_result_dict is not None:
+            return self._loaded_result_dict['did_fit']
+        else:
+            return self._fitter.state_is_from_minimizer
 
     # -- public methods
 
@@ -465,6 +477,7 @@ class FitBase(FileIOMixin, object):
         if not self._data_container.has_errors:
             raise self.EXCEPTION_TYPE('Cannot perform a fit without specifying data errors first!')
         self._fitter.do_fit()
+        self._loaded_result_dict = None
         self._update_parameter_formatters()
 
     def assign_model_function_expression(self, expression_format_string):

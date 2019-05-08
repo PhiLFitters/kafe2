@@ -1,5 +1,7 @@
+import numpy as np
+
 from .._base import DReprError
-from .._yaml_base import  YamlWriterMixin, YamlReaderMixin, YamlReaderException
+from .._yaml_base import YamlWriterMixin, YamlReaderMixin, YamlReaderException
 from ._base import FitDReprBase
 from .. import _AVAILABLE_REPRESENTATIONS
 from ....fit import IndexedFit, HistFit, XYFit, XYMultiFit
@@ -25,12 +27,12 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
         if _type is None:
             raise DReprError("Fit type unknown or not supported: %s" % fit.__class__)
         _yaml_doc['type'] = _type
-        
+
         _yaml_doc['dataset'] = DataContainerYamlWriter._make_representation(fit._data_container)
         _yaml_doc['parametric_model'] = ParametricModelYamlWriter._make_representation(fit._param_model)
-        
+
         #TODO cost function
-        
+
         _yaml_doc['minimizer'] = fit._minimizer
         _yaml_doc['minimizer_kwargs'] = fit._minimizer_kwargs
 
@@ -145,7 +147,7 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
         # -- determine fit class from type
         _fit_type = yaml_doc.pop('type')
         _class = cls._OBJECT_TYPE_NAME_TO_CLASS.get(_fit_type, None)
-        
+
         _data = DataContainerYamlReader._make_object(yaml_doc.pop('dataset'), default_type=_fit_type)
         _parametric_model_entry = yaml_doc.pop('parametric_model', None)
         if _parametric_model_entry:
@@ -170,7 +172,7 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
                 data=_data,
                 model_function=_read_model_function,
                 minimizer=_minimizer,
-                minimizer_kwargs=_minimizer_kwargs                
+                minimizer_kwargs=_minimizer_kwargs
             )
         elif _class is XYFit:
             _fit_object = XYFit(
@@ -194,7 +196,12 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
                 ConstraintYamlReader._make_object(_constraint_yaml, parameter_names=_fit_object.poi_names)
                 for _constraint_yaml in _constraint_yaml_list
             ]
-        yaml_doc.pop('fit_results', None)
+        _fit_results = yaml_doc.pop('fit_results', None)
+        if _fit_results is not None and _fit_results['did_fit']:
+            _fit_results['parameter_cov_mat'] = np.asmatrix(_fit_results['parameter_cov_mat'])
+            _fit_results['parameter_errors'] = np.array(_fit_results['parameter_errors'])
+            _fit_results['parameter_cor_mat'] = np.asmatrix(_fit_results['parameter_cor_mat'])
+        _fit_object._loaded_result_dict = _fit_results
         return _fit_object, yaml_doc
     
 # register the above classes in the module-level dictionary

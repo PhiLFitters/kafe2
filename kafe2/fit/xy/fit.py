@@ -87,6 +87,7 @@ class XYFit(FitBase):
         self._cost_function.ndf = self._data_container.size - len(self._param_model.parameters)
 
         self._fit_param_constraints = []
+        self._loaded_result_dict = None
 
     # -- private methods
 
@@ -919,6 +920,7 @@ class XYFit(FitBase):
                 if np.abs(self.cost_function_value - _previous_cost_function_value) < _convergence_limit:
                     break
                 _previous_cost_function_value = self.cost_function_value
+            self._loaded_result_dict = None
             self._update_parameter_formatters()
 
     def eval_model_function(self, x=None, model_parameters=None):
