@@ -224,6 +224,11 @@ class FitBase(FileIOMixin, object):
         """the names of the parameters of interest, equal to ``self.parameter_names`` minus nuisance parameter names"""
         return self.parameter_names
 
+    @property
+    def did_fit(self):
+        """whether a fit was performed for the given data and model"""
+        return self._fitter.state_is_from_minimizer
+
     # -- public methods
 
     def set_parameter_values(self, **param_name_value_dict):
@@ -481,10 +486,9 @@ class FitBase(FileIOMixin, object):
 
     def get_result_dict(self):
         """Return a structured dictionary of human-readable strings characterizing the fit result."""
-        # TODO: warn if self._fitter.state_is_from_minimizer is False?
         _result_dict = OrderedDict()
 
-        _result_dict['did_fit'] = self._fitter.state_is_from_minimizer
+        _result_dict['did_fit'] = self.did_fit
 
         _cost = self.cost_function_value
         _ndf = self._cost_function.ndf
