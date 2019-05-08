@@ -783,6 +783,8 @@ class XYFit(FitBase):
     @property
     def y_error_band(self):
         """one-dimensional array representing the uncertainty band around the model function"""
+        if not self.did_fit:
+            raise XYFitException('Cannot calculate an error band without first performing a fit.')
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         if self.__cache_y_error_band is None:
