@@ -201,12 +201,11 @@ class MinimizerIMinuit(MinimizerBase):
             if not self._get_iminuit().is_clean_state():
                 # if the fit has been performed at least once
                 _param_struct = self._get_iminuit().get_param_states()
-                _perrs = [p.error for p in _param_struct]
+                self._par_err = np.array([p.error for p in _param_struct])
             else:
                 # need to hack to get initial parameter errors
                 _e = self._get_iminuit().errors
-                _perrs = [_e[pname] for pname in _e]
-            self._par_err = tuple(_perrs)
+                self._par_err = np.array([_e[pname] for pname in _e])
         return self._par_err
 
     @property

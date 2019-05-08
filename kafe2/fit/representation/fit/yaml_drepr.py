@@ -36,7 +36,13 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
 
         _yaml_doc['parameter_constraints'] = [ConstraintYamlWriter._make_representation(_parameter_constraint)
                                               for _parameter_constraint in fit.parameter_constraints]
-
+        _fit_results = fit.get_result_dict_for_robots()
+        _fit_results['parameter_values'] = _fit_results['parameter_values'].tolist()
+        if _fit_results['did_fit']:
+            _fit_results['parameter_cov_mat'] = _fit_results['parameter_cov_mat'].tolist()
+            _fit_results['parameter_errors'] = _fit_results['parameter_errors'].tolist()
+            _fit_results['parameter_cor_mat'] = _fit_results['parameter_cor_mat'].tolist()
+        _yaml_doc['fit_results'] = _fit_results
         return _yaml_doc
     
 class FitYamlReader(YamlReaderMixin, FitDReprBase):
@@ -180,14 +186,15 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
                 minimizer=_minimizer,
                 minimizer_kwargs=_minimizer_kwargs
             )
-        if _read_parametric_model:
+        if _read_parametric_model is not None:
             _fit_object._param_model = _read_parametric_model
         _constraint_yaml_list = yaml_doc.pop('parameter_constraints', None)
-        if _constraint_yaml_list:
+        if _constraint_yaml_list is not None:
             _fit_object._fit_param_constraints = [
                 ConstraintYamlReader._make_object(_constraint_yaml, parameter_names=_fit_object.poi_names)
                 for _constraint_yaml in _constraint_yaml_list
             ]
+        yaml_doc.pop('fit_results', None)
         return _fit_object, yaml_doc
     
 # register the above classes in the module-level dictionary

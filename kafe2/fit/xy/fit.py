@@ -990,8 +990,6 @@ class XYFit(FitBase):
         :param asymmetric_parameter_errors: if ``True``, use two different parameter errors for up/down directions
         :type asymmetric_parameter_errors: bool
         """
-        _result_dict = self.get_result_dict()
-
         _indent = ' ' * 4
 
         if show_data:

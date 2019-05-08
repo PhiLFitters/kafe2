@@ -39,6 +39,7 @@ class FitBase(FileIOMixin, object):
         self._fit_param_constraints = None
         self._model_function = None
         self._cost_function = None
+        self._loaded_result_dict = None  # contains potential fit results when loading from a file
         super(FitBase, self).__init__()
 
     # -- private methods
@@ -147,7 +148,7 @@ class FitBase(FileIOMixin, object):
     @property
     def parameter_values(self):
         """the current parameter values"""
-        return list(self.parameter_name_value_dict.values())
+        return np.array(list(self.parameter_name_value_dict.values()))
 
     @property
     def parameter_names(self):
@@ -484,33 +485,25 @@ class FitBase(FileIOMixin, object):
     def generate_plot(self):
         raise FitException('generate_plot has not been specified for %s' % self.__class__)
 
-    def get_result_dict(self):
-        """Return a structured dictionary of human-readable strings characterizing the fit result."""
-        _result_dict = OrderedDict()
+    def get_result_dict_for_robots(self):
+        """Return a dictionary of the fit results."""
+        _result_dict = dict()
 
         _result_dict['did_fit'] = self.did_fit
-
-        _cost = self.cost_function_value
+        _cost = float(self.cost_function_value)  # convert numpy scalar to float for yaml representation
         _ndf = self._cost_function.ndf
-        _round_cost_sig = max(2, int(-np.floor(np.log(_cost)/np.log(10))) + 2 - 1)
-        _rounded_cost = round(_cost, _round_cost_sig)
-        _result_dict['cost'] = _rounded_cost
-
+        _result_dict['cost'] = _cost
         _result_dict['ndf'] = _ndf
-        _result_dict['cost/ndf'] = "{}/{} = {}".format(_rounded_cost, _ndf, round(_cost/_ndf, 3))
-
-        _result_dict['model function'] = self._get_model_report_dict_entry()
-
-        _result_dict['formatted fit parameters'] = dict()
-        for _pf in self._model_function.argument_formatters:
-            _result_dict['formatted fit parameters'][_pf.name] = _pf.get_formatted(with_name=False,
-                                                                                   with_value=True,
-                                                                                   with_errors=True,
-                                                                                   format_as_latex=False)
-
-        _result_dict['fit parameter values'] = self.parameter_values
-        _result_dict['fit parameter errors'] = self.parameter_errors
-        _result_dict['fit parameter covariance matrix'] = self.parameter_cov_mat
+        _result_dict['cost/ndf'] = _cost / _ndf
+        _result_dict['parameter_values'] = self.parameter_values
+        if _result_dict['did_fit']:
+            _result_dict['parameter_cov_mat'] = self.parameter_cov_mat
+            _result_dict['parameter_errors'] = self.parameter_errors
+            _result_dict['parameter_cor_mat'] = self.parameter_cor_mat
+        else:
+            _result_dict['parameter_cov_mat'] = None
+            _result_dict['parameter_errors'] = None
+            _result_dict['parameter_cor_mat'] = None
 
         return _result_dict
 
@@ -523,9 +516,6 @@ class FitBase(FileIOMixin, object):
         :param asymmetric_parameter_errors: if ``True``, use two different parameter errors for up/down directions
         :type asymmetric_parameter_errors: bool
         """
-        _result_dict = self.get_result_dict()
-
-        ###print_dict_recursive(_result_dict, output_stream)
 
         _indent = ' ' * 4
 
@@ -536,7 +526,7 @@ class FitBase(FileIOMixin, object):
 
                 """))
 
-        if not _result_dict['did_fit']:
+        if not self.did_fit:
             output_stream.write('WARNING: No fit has been performed yet. Did you forget to run do_fit()?\n\n')
 
         output_stream.write(_indent + "Model Parameters\n")
