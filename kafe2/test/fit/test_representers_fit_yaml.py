@@ -279,6 +279,33 @@ class TestHistFitYamlRepresenter(unittest.TestCase):
         #    )
         #)
 
+    def test_round_trip_save_results(self):
+        self._fit.do_fit()
+        self._roundtrip_streamwriter.write()
+        self._roundtrip_stringstream.seek(0)  # return to beginning
+        _read_fit = self._roundtrip_streamreader.read()
+        self.assertTrue(isinstance(_read_fit, HistFit))
+
+        self.assertTrue(self._fit.did_fit == _read_fit.did_fit)
+        self.assertTrue(
+            np.allclose(
+                self._fit.parameter_cov_mat,
+                _read_fit.parameter_cov_mat
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                self._fit.parameter_errors,
+                _read_fit.parameter_errors
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                self._fit.parameter_cor_mat,
+                _read_fit.parameter_cor_mat
+            )
+        )
+
 
 TEST_FIT_INDEXED="""
 type: indexed
@@ -496,6 +523,34 @@ class TestIndexedFitYamlRepresenter(unittest.TestCase):
             )
         )
 
+    def test_round_trip_save_results(self):
+        self._fit.do_fit()
+        self._roundtrip_streamwriter.write()
+        self._roundtrip_stringstream.seek(0)  # return to beginning
+        _read_fit = self._roundtrip_streamreader.read()
+        self.assertTrue(isinstance(_read_fit, IndexedFit))
+
+        self.assertTrue(self._fit.did_fit == _read_fit.did_fit)
+        self.assertTrue(
+            np.allclose(
+                self._fit.parameter_cov_mat,
+                _read_fit.parameter_cov_mat
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                self._fit.parameter_errors,
+                _read_fit.parameter_errors
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                self._fit.parameter_cor_mat,
+                _read_fit.parameter_cor_mat
+            )
+        )
+
+
 TEST_FIT_XY="""
 type: xy
 dataset:
@@ -678,7 +733,6 @@ class TestXYFitYamlRepresenter(unittest.TestCase):
             )
         )
 
-
     def test_round_trip_with_stringstream(self):
         self._roundtrip_streamwriter.write()
         self._roundtrip_stringstream.seek(0)  # return to beginning
@@ -712,6 +766,34 @@ class TestXYFitYamlRepresenter(unittest.TestCase):
                 _read_fit.y_model
             )
         )
+
+    def test_round_trip_save_results(self):
+        self._fit.do_fit()
+        self._roundtrip_streamwriter.write()
+        self._roundtrip_stringstream.seek(0)  # return to beginning
+        _read_fit = self._roundtrip_streamreader.read()
+        self.assertTrue(isinstance(_read_fit, XYFit))
+
+        self.assertTrue(self._fit.did_fit == _read_fit.did_fit)
+        self.assertTrue(
+            np.allclose(
+                self._fit.parameter_cov_mat,
+                _read_fit.parameter_cov_mat
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                self._fit.parameter_errors,
+                _read_fit.parameter_errors
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                self._fit.parameter_cor_mat,
+                _read_fit.parameter_cor_mat
+            )
+        )
+
 
 TEST_FIT_XY_MULTI="""
 type: xy_multi
@@ -959,3 +1041,31 @@ class TestXYMultiFitYamlRepresenter(unittest.TestCase):
                 _read_fit.y_model
             )
         )
+
+    def test_round_trip_save_results(self):
+        self._fit.do_fit()
+        self._roundtrip_streamwriter.write()
+        self._roundtrip_stringstream.seek(0)  # return to beginning
+        _read_fit = self._roundtrip_streamreader.read()
+        self.assertTrue(isinstance(_read_fit, XYMultiFit))
+
+        self.assertTrue(self._fit.did_fit == _read_fit.did_fit)
+        self.assertTrue(
+            np.allclose(
+                self._fit.parameter_cov_mat,
+                _read_fit.parameter_cov_mat
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                self._fit.parameter_errors,
+                _read_fit.parameter_errors
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                self._fit.parameter_cor_mat,
+                _read_fit.parameter_cor_mat
+            )
+        )
+

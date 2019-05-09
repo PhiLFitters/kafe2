@@ -149,7 +149,6 @@ def get_compact_representation(parameter_names, parameter_values, parameter_erro
     _par_cor_strs = ['Par cor mat']
     _max_pc_str_length = max(11, 7 * (parameter_cor_mat.shape[0] - 1) - 1)
     for _i, _par_cor_row in enumerate(np.array(parameter_cor_mat)):
-        print(_par_cor_row)
         _reduced_row_str = ''
         for _j in range(_i):
             if _j > 0:
