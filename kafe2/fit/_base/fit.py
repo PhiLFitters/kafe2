@@ -264,6 +264,26 @@ class FitBase(FileIOMixin, object):
         """
         return self._fitter.set_all_fit_parameter_values(param_value_list)
 
+    def fix_parameter(self, name, value=None):
+        """
+        Fix a parameter so that its value doesn't change when calling ``self.do_fit``.
+
+        :param name: The name of the parameter to be fixed
+        :type name: str
+        :param value: The value to be given to the fixed parameter, optional
+        :type value: float
+        """
+        self._fitter.fix_parameter(par_name=name, par_value=value)
+
+    def release_parameter(self, par_name):
+        """
+        Release a fixed parameter so that its value once again changes when calling ``self.do_fit``.
+
+        :param par_name: The name of the fixed parameter to be released
+        :type par_name: str
+        """
+        self._fitter.release_parameter(par_name=par_name)
+
     def add_matrix_parameter_constraint(self, names, values, matrix, matrix_type='cov', uncertainties=None,
                                         relative=False):
         """

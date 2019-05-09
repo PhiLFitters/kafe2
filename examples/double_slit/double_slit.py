@@ -101,7 +101,7 @@ f.assign_model_function_latex_expression(
 
 # perform the fits
 f.set_parameter_values(I0=1., b=20e-6, g=50e-6, k=9.67e6)
-f._fitter.fix_parameter('k')
+f.fix_parameter('k')
 f.do_fit()
 
 cpf = ContoursProfiler(f)
