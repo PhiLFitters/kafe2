@@ -540,7 +540,7 @@ class FitBase(FileIOMixin, object):
                 """))
 
         if not self.did_fit:
-            output_stream.write('WARNING: No fit has been performed yet. Did you forget to run do_fit()?\n\n')
+            output_stream.write('WARNING: No fit has been performed as of yet. Did you forget to run fit.do_fit()?\n\n')
 
         output_stream.write(_indent + "Model Parameters\n")
         output_stream.write(_indent + "================\n\n")

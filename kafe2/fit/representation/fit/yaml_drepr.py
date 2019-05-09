@@ -8,6 +8,7 @@ from ....fit import IndexedFit, HistFit, XYFit, XYMultiFit
 from ..container.yaml_drepr import DataContainerYamlReader, DataContainerYamlWriter
 from ..model.yaml_drepr import ParametricModelYamlReader, ParametricModelYamlWriter
 from ..constraint.yaml_drepr import ConstraintYamlReader, ConstraintYamlWriter
+from ....tools import get_compact_representation
 
 __all__ = ['FitYamlWriter', 'FitYamlReader']
 
@@ -17,7 +18,46 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
         super(FitYamlWriter, self).__init__(
             output_io_handle=output_io_handle,
             fit=fit)
-    
+
+    def _get_preface_comment(self):
+        _preface_comment = super(FitYamlWriter, self)._get_preface_comment()
+        _did_fit = self._kafe_object.did_fit
+        if not _did_fit:
+            _preface_comment += '\n# WARNING: No fit has been performed as of yet. Did you forget to run fit.do_fit()?\n'
+        _preface_comment += '\n'
+        if self._kafe_object.model_count == 1:
+            _preface_comment += "# Model function: %s\n" % self._kafe_object._model_function.formatter.get_formatted(
+                format_as_latex=False,
+                with_expression=True,
+                with_par_values=False
+            )
+        else:
+            for _i in range(self._kafe_object.model_count):
+                _preface_comment += "# Model function %s: %s\n" % (_i,
+                    self._kafe_object._model_function.formatter.get_formatted(
+                        model_index=_i,
+                        format_as_latex=False,
+                        with_expression=True,
+                        with_par_values=False
+                    )
+                )
+
+        if _did_fit:
+            _cost = self._kafe_object.cost_function_value
+            _ndf = self._kafe_object._cost_function.ndf
+            _round_cost_sig = max(2, int(-np.floor(np.log(_cost)/np.log(10))) + 1)
+            _rounded_cost = round(_cost, _round_cost_sig)
+            _preface_comment += "# Cost: %s\n" % _rounded_cost
+            _preface_comment += '# ndf: %s\n' % _ndf
+            _round_cost_per_ndf_sig = max(2, int(-np.floor(np.log(_cost / _ndf)/np.log(10))) + 1)
+            _preface_comment += "# Cost/ndf: %s\n\n" % round(_cost / _ndf, _round_cost_per_ndf_sig)
+            _preface_comment += get_compact_representation(
+                self._kafe_object.parameter_names, self._kafe_object.parameter_values,
+                self._kafe_object.parameter_errors, self._kafe_object.parameter_cor_mat
+            )
+        _preface_comment += '\n'
+        return _preface_comment
+
     @classmethod
     def _make_representation(cls, fit):
         _yaml_doc = dict()
