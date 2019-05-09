@@ -51,7 +51,7 @@ class DReprWriterMixin(object):
 
     def _get_preface_comment(self):
         return '# kafe2 %s %s representation written by %s on %s.\n' % (
-            self.BASE_OBJECT_TYPE_NAME,
+            self._kafe_object.__class__.__name__,
             self.DREPR_FLAVOR_NAME,
             getpass.getuser(),
             datetime.datetime.now().strftime('%d.%m.%Y, %H:%M')
