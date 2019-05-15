@@ -3,7 +3,15 @@ import numpy as np
 from .._base import CostFunctionBase, CostFunctionBase_Chi2, CostFunctionBase_NegLogLikelihood, CostFunctionBase_NegLogLikelihoodRatio, CostFunctionException
 from .._base.cost import CostFunctionBase_Chi2_Nuisance
 
-__all__ = ["XYMultiCostFunction_UserDefined", "XYMultiCostFunction_Chi2", "XYMultiCostFunction_NegLogLikelihood"]
+__all__ = [
+    "XYMultiCostFunction_UserDefined",
+    "XYMultiCostFunction_Chi2",
+    "XYMultiCostFunction_Chi2_Nuisance",
+    "XYMultiCostFunction_NegLogLikelihood",
+    "XYMultiCostFunction_NegLogLikelihoodRatio",
+    "STRING_TO_COST_FUNCTION"
+]
+
 
 def _generic_xy_chi2_nuisance_pointwise(x_data, x_model, y_model, y_data, y_total_error=None, x_total_error=None, fail_on_zeros=False):
 # calculates the costfunction values for ChiSquare with Nuisanceparameters for pointwise errors.
@@ -690,5 +698,19 @@ class XYMultiCostFunction_Chi2_Nuisance(CostFunctionBase_Chi2_Nuisance):
                                      x_total_error=x_total_error, fail_on_zeros=False, y_total_error=y_total_error)
 
 
-
-
+STRING_TO_COST_FUNCTION = {
+    'chi2': XYMultiCostFunction_Chi2,
+    'chi_2': XYMultiCostFunction_Chi2,
+    'chisquared': XYMultiCostFunction_Chi2,
+    'chi_squared': XYMultiCostFunction_Chi2,
+    'chi2n': XYMultiCostFunction_Chi2_Nuisance,
+    'chi_2_n': XYMultiCostFunction_Chi2_Nuisance,
+    'chisquarednuisance': XYMultiCostFunction_Chi2_Nuisance,
+    'chi_squared_nuisance': XYMultiCostFunction_Chi2_Nuisance,
+    'nll': XYMultiCostFunction_NegLogLikelihood,
+    'negloglikelihood': XYMultiCostFunction_NegLogLikelihood,
+    'neg_log_likelihood': XYMultiCostFunction_NegLogLikelihood,
+    'nllr': XYMultiCostFunction_NegLogLikelihoodRatio,
+    'negloglikelihoodratio': XYMultiCostFunction_NegLogLikelihoodRatio,
+    'neg_log_likelihood_ratio': XYMultiCostFunction_NegLogLikelihoodRatio,
+}

@@ -8,8 +8,7 @@ from ...core import NexusFitter, Nexus
 from .._base import (FitException, FitBase, DataContainerBase,
                      ModelParameterFormatter, CostFunctionBase)
 from .container import HistContainer
-from .cost import HistCostFunction_NegLogLikelihood, HistCostFunction_UserDefined
-from .format import HistModelDensityFunctionFormatter
+from .cost import HistCostFunction_NegLogLikelihood, HistCostFunction_UserDefined, STRING_TO_COST_FUNCTION
 from .model import HistParametricModel, HistModelFunction
 from ..util import function_library
 
@@ -63,6 +62,8 @@ class HistFit(FitBase):
         # set and validate the cost function
         if isinstance(cost_function, CostFunctionBase):
             self._cost_function = cost_function
+        elif isinstance(cost_function, str):
+            self._cost_function = STRING_TO_COST_FUNCTION[cost_function]()
         else:
             self._cost_function = HistCostFunction_UserDefined(cost_function)
             #self._validate_cost_function_raise()

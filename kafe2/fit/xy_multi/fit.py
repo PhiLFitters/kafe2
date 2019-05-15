@@ -11,7 +11,7 @@ from ...core import NexusFitter, Nexus
 from ...config import kc
 from .._base import FitException, FitBase, DataContainerBase, CostFunctionBase
 from .container import XYMultiContainer
-from .cost import XYMultiCostFunction_Chi2, XYMultiCostFunction_UserDefined
+from .cost import XYMultiCostFunction_Chi2, XYMultiCostFunction_UserDefined, STRING_TO_COST_FUNCTION
 from .model import XYMultiParametricModel, XYMultiModelFunction
 
 
@@ -77,6 +77,8 @@ class XYMultiFit(FitBase):
         # set and validate the cost function
         if isinstance(cost_function, CostFunctionBase):
             self._cost_function = cost_function
+        elif isinstance(cost_function, str):
+            self._cost_function = STRING_TO_COST_FUNCTION[cost_function]()
         else:
             self._cost_function = XYMultiCostFunction_UserDefined(cost_function)
             #self._validate_cost_function_raise()

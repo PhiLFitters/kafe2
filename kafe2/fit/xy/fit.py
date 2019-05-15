@@ -11,7 +11,7 @@ from ...core import NexusFitter, Nexus
 from ...config import kc
 from .._base import FitException, FitBase, DataContainerBase, CostFunctionBase
 from .container import XYContainer
-from .cost import XYCostFunction_Chi2, XYCostFunction_UserDefined
+from .cost import XYCostFunction_Chi2, XYCostFunction_UserDefined, STRING_TO_COST_FUNCTION
 from .model import XYParametricModel, XYModelFunction
 from ..util import function_library
 
@@ -65,6 +65,8 @@ class XYFit(FitBase):
         # set and validate the cost function
         if isinstance(cost_function, CostFunctionBase):
             self._cost_function = cost_function
+        elif isinstance(cost_function, str):
+            self._cost_function = STRING_TO_COST_FUNCTION[cost_function]()
         else:
             self._cost_function = XYCostFunction_UserDefined(cost_function)
             #self._validate_cost_function_raise()

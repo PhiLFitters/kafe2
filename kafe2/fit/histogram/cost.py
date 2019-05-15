@@ -1,12 +1,12 @@
 from .._base import CostFunctionBase, CostFunctionBase_Chi2, CostFunctionBase_NegLogLikelihood, CostFunctionBase_NegLogLikelihoodRatio, CostFunctionException
 
-
-
-__all__ = ["HistCostFunction_UserDefined",
-           "HistCostFunction_Chi2",
-           "HistCostFunction_NegLogLikelihood",
-           "HistCostFunction_NegLogLikelihoodRatio"]
-
+__all__ = [
+    "HistCostFunction_UserDefined",
+    "HistCostFunction_Chi2",
+    "HistCostFunction_NegLogLikelihood",
+    "HistCostFunction_NegLogLikelihoodRatio",
+    "STRING_TO_COST_FUNCTION"
+]
 
 
 class HistCostFunction_UserDefined(CostFunctionBase):
@@ -232,3 +232,17 @@ class HistCostFunction_NegLogLikelihoodRatio(CostFunctionBase_NegLogLikelihoodRa
         """
         # "translate" the argument names
         return CostFunctionBase_NegLogLikelihoodRatio.nllr_poisson(data=data, model=model)
+
+
+STRING_TO_COST_FUNCTION = {
+    'chi2': HistCostFunction_Chi2,
+    'chi_2': HistCostFunction_Chi2,
+    'chisquared': HistCostFunction_Chi2,
+    'chi_squared': HistCostFunction_Chi2,
+    'nll': HistCostFunction_NegLogLikelihood,
+    'negloglikelihood': HistCostFunction_NegLogLikelihood,
+    'neg_log_likelihood': HistCostFunction_NegLogLikelihood,
+    'nllr': HistCostFunction_NegLogLikelihoodRatio,
+    'negloglikelihoodratio': HistCostFunction_NegLogLikelihoodRatio,
+    'neg_log_likelihood_ratio': HistCostFunction_NegLogLikelihoodRatio,
+}

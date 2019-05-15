@@ -1,9 +1,12 @@
 from .._base import CostFunctionBase, CostFunctionBase_Chi2, CostFunctionBase_NegLogLikelihood, CostFunctionException
 
 
-__all__ = ["IndexedCostFunction_UserDefined",
-           "IndexedCostFunction_Chi2",
-           "IndexedCostFunction_NegLogLikelihood"]
+__all__ = [
+    "IndexedCostFunction_UserDefined",
+    "IndexedCostFunction_Chi2",
+    "IndexedCostFunction_NegLogLikelihood",
+    "STRING_TO_COST_FUNCTION"
+]
 
 
 
@@ -76,3 +79,17 @@ class IndexedCostFunction_NegLogLikelihoodRatio(CostFunctionBase_NegLogLikelihoo
         :type data_point_distribution: ``'poisson'`` or ``'gaussian'``
         """
         super(IndexedCostFunction_NegLogLikelihoodRatio, self).__init__(data_point_distribution=data_point_distribution)
+
+
+STRING_TO_COST_FUNCTION = {
+    'chi2': IndexedCostFunction_Chi2,
+    'chi_2': IndexedCostFunction_Chi2,
+    'chisquared': IndexedCostFunction_Chi2,
+    'chi_squared': IndexedCostFunction_Chi2,
+    'nll': IndexedCostFunction_NegLogLikelihood,
+    'negloglikelihood': IndexedCostFunction_NegLogLikelihood,
+    'neg_log_likelihood': IndexedCostFunction_NegLogLikelihood,
+    'nllr': IndexedCostFunction_NegLogLikelihoodRatio,
+    'negloglikelihoodratio': IndexedCostFunction_NegLogLikelihoodRatio,
+    'neg_log_likelihood_ratio': IndexedCostFunction_NegLogLikelihoodRatio,
+}

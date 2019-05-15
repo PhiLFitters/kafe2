@@ -4,7 +4,14 @@ from .._base import (CostFunctionBase, CostFunctionBase_Chi2, CostFunctionBase_N
                      CostFunctionBase_NegLogLikelihoodRatio, CostFunctionException)
 from .._base.cost import CostFunctionBase_Chi2_Nuisance
 
-__all__ = ["XYCostFunction_UserDefined", "XYCostFunction_Chi2", "XYCostFunction_NegLogLikelihood"]
+__all__ = [
+    "XYCostFunction_UserDefined",
+    "XYCostFunction_Chi2",
+    "XYCostFunction_Chi2_Nuisance",
+    "XYCostFunction_NegLogLikelihood",
+    "XYCostFunction_NegLogLikelihoodRatio",
+    "STRING_TO_COST_FUNCTION"
+]
 
 # TODO replace with calls to _base/cost/_generic_chi2_nuisance if possible
 
@@ -712,5 +719,19 @@ class XYCostFunction_Chi2_Nuisance(CostFunctionBase_Chi2_Nuisance):
                                      x_total_error=x_total_error, fail_on_zeros=False, y_total_error=y_total_error)
 
 
-
-
+STRING_TO_COST_FUNCTION = {
+    'chi2': XYCostFunction_Chi2,
+    'chi_2': XYCostFunction_Chi2,
+    'chisquared': XYCostFunction_Chi2,
+    'chi_squared': XYCostFunction_Chi2,
+    'chi2n': XYCostFunction_Chi2_Nuisance,
+    'chi_2_n': XYCostFunction_Chi2_Nuisance,
+    'chisquarednuisance': XYCostFunction_Chi2_Nuisance,
+    'chi_squared_nuisance': XYCostFunction_Chi2_Nuisance,
+    'nll': XYCostFunction_NegLogLikelihood,
+    'negloglikelihood': XYCostFunction_NegLogLikelihood,
+    'neg_log_likelihood': XYCostFunction_NegLogLikelihood,
+    'nllr': XYCostFunction_NegLogLikelihoodRatio,
+    'negloglikelihoodratio': XYCostFunction_NegLogLikelihoodRatio,
+    'neg_log_likelihood_ratio': XYCostFunction_NegLogLikelihoodRatio,
+}

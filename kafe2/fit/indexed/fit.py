@@ -10,7 +10,7 @@ from ...config import kc
 from ...core import NexusFitter, Nexus
 from .._base import FitException, FitBase, DataContainerBase, CostFunctionBase
 from .container import IndexedContainer
-from .cost import IndexedCostFunction_Chi2, IndexedCostFunction_UserDefined
+from .cost import IndexedCostFunction_Chi2, IndexedCostFunction_UserDefined, STRING_TO_COST_FUNCTION
 from .model import IndexedParametricModel, IndexedModelFunction
 
 
@@ -57,6 +57,8 @@ class IndexedFit(FitBase):
         # set and validate the cost function
         if isinstance(cost_function, CostFunctionBase):
             self._cost_function = cost_function
+        elif isinstance(cost_function, str):
+            self._cost_function = STRING_TO_COST_FUNCTION[cost_function]()
         else:
             self._cost_function = IndexedCostFunction_UserDefined(cost_function)
             #self._validate_cost_function_raise()
