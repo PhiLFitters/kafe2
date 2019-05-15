@@ -33,6 +33,7 @@ Requirements
 * `Numdifftools <https://pypi.org/project/Numdifftools/>`_
 * `SciPy <http://www.scipy.org>`_
 * `matplotlib <http://matplotlib.org>`_
+* `tabulate <https://pypi.org/project/tabulate/>`_
 
 
 Since *kafe2* relies on *matplotlib* for graphics it might be necessary to install external programs:
