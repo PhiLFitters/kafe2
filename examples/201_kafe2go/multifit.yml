@@ -1,0 +1,84 @@
+type: xy_multi
+x_data: 
+#U[V]
+- 0.50
+- 1.00
+- 1.50
+- 2.00
+- 2.50
+- 3.00
+- 3.50
+- 4.00
+- 4.50
+- 5.00
+- 5.50
+- 6.00
+- 6.50
+- 7.00
+- 7.50
+- 8.00
+- 8.50
+- 9.00
+- 9.50
+- 10.00
+x_errors: 0.1 #TODO shared x error
+y_data_0: 
+#I[A]
+- 0.50
+- 0.89
+- 1.41
+- 1.67
+- 2.30
+- 2.59
+- 2.77
+- 3.57
+- 3.94
+- 4.24
+- 4.73
+- 4.87
+- 5.35
+- 5.74
+- 5.77
+- 6.17
+- 6.32
+- 6.83
+- 6.87
+- 7.17
+y_data_1: 
+#T[deg C]
+- 20.35
+- 20.65
+- 22.25
+- 23.65
+- 26.25
+- 27.85
+- 29.85
+- 34.25
+- 37.75
+- 41.95
+- 44.85
+- 50.05
+- 54.25
+- 60.55
+- 65.05
+- 69.95
+- 76.85
+- 81.55
+- 85.45
+- 94.75
+y_errors: 0.1 #TODO assign errors to specific datasets
+model_function_0: |
+    # model of current-voltage dependence I(U) for a heating resistor
+    # independent variable MUST be named x!
+    def I_U_model(x, R0=1., alph=0.004, p2=1.0, p1=1.0, p0=0.0):
+        # use quadratic model as empirical temerature dependence T(U)
+        _temperature = p2 * x**2 + p1 * x + p0 #empirical T_U_model
+        # plug the temperature into the model
+        return x / (R0 * (1.0 + _temperature * alph))
+model_function_1: |
+    # empirical model for T(U): a parabola
+    # independent variable MUST be named x!
+    def empirical_T_U_model(x, p2=1.0, p1=1.0, p0=0.0):
+        # use quadratic model as empirical temerature dependence T(U)
+        return p2 * x**2 + p1 * x + p0
+        
