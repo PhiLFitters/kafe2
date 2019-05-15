@@ -118,13 +118,16 @@ def print_dict_as_table(dct, output_stream=sys.stdout, sep='  ', cell_format='%.
             output_stream.write(_indent_prefix + sep.join(_row) + '\n')
 
 
-def get_compact_representation(parameter_names, parameter_values, parameter_errors, parameter_cor_mat, line_prefix='# ',
-                               table_format='rst'):
+def get_compact_representation(parameter_names, parameter_values, parameter_errors, parameter_cor_mat,
+                               asymmetric_parameter_errors=None, line_prefix='# ', table_format='rst'):
     assert (len(parameter_names) == len(parameter_values) == len(parameter_errors) == parameter_cor_mat.shape[0]
             == parameter_cor_mat.shape[1])
     try:
         import tabulate
-        _headers = ['Par name', 'Par val', 'Par err', 'Par cor mat']
+        if asymmetric_parameter_errors is None:
+            _headers = ['Par name', 'Par val', 'Par err', 'Par cor mat']
+        else:
+            _headers = ['Par name', 'Par val', 'Par err parabolic', 'Par err down', 'Par err up', 'Par cor mat']
         _data = []
 
         _reduced_cor_mat = [_cor_mat_row[:_i] for _i, _cor_mat_row in enumerate(parameter_cor_mat.tolist())]
@@ -137,6 +140,12 @@ def get_compact_representation(parameter_names, parameter_values, parameter_erro
             _sig_fig_val = max(_sig_fig_err, -int(np.log10(np.abs(_par_val))) + 2)
             _row.append(round(_par_val, _sig_fig_val))
             _row.append(round(_par_err, _sig_fig_err))
+            if asymmetric_parameter_errors is not None:
+                _err_down, _err_up = asymmetric_parameter_errors[_i]
+                _sig_fig_err_down = max(2, -int(np.log10(np.abs(_err_down))) + 1)
+                _row.append(round(_err_down, _sig_fig_err_down))
+                _sig_fig_err_up = max(2, -int(np.log10(np.abs(_err_up))) + 1)
+                _row.append(round(_err_up, _sig_fig_err_up))
             _row.append(_cor_mat_row_str)
             _data.append(_row)
 

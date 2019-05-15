@@ -182,7 +182,10 @@ class FitBase(FileIOMixin, object):
     @property
     def asymmetric_parameter_errors(self):
         """the current asymmetric parameter uncertainties"""
-        return self._fitter.asymmetric_fit_parameter_errors
+        if self._loaded_result_dict is not None and self._loaded_result_dict['asymmetric_parameter_errors'] is not None:
+            return self._loaded_result_dict['asymmetric_parameter_errors']
+        else:
+            return self._fitter.asymmetric_fit_parameter_errors
 
     @property
     def parameter_name_value_dict(self):
@@ -518,6 +521,11 @@ class FitBase(FileIOMixin, object):
             _result_dict['parameter_errors'] = None
             _result_dict['parameter_cor_mat'] = None
 
+        if self._loaded_result_dict is not None and self._loaded_result_dict['asymmetric_parameter_errors'] is not None:
+            _result_dict['asymmetric_parameter_errors'] = self._loaded_result_dict['asymmetric_parameter_errors']
+        else:
+            _result_dict['asymmetric_parameter_errors'] = self._fitter.asymmetric_fit_parameter_errors_if_calculated
+
         return _result_dict
 
     def report(self, output_stream=sys.stdout, asymmetric_parameter_errors=False):
@@ -587,3 +595,9 @@ class FitBase(FileIOMixin, object):
                               format_as_latex=False)
         )
         output_stream.write('\n')
+
+    def to_file(self, filename, format=None, calculate_asymmetric_errors=False):
+        """Write kafe2 object to file"""
+        if calculate_asymmetric_errors:
+            self.asymmetric_parameter_errors
+        super(FitBase, self).to_file(filename=filename, format=None)

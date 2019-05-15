@@ -48,7 +48,7 @@ class ModelFunctionYamlWriter(YamlWriterMixin, ModelFunctionDReprBase):
             _yaml_doc['python_code'] = _python_code_list
             _yaml_doc['data_indices'] = model_function.data_indices
         else:
-            _python_code = inspect.getsource(model_function.func)
+            _python_code = model_function.source_code
             _python_code = textwrap.dedent(_python_code) #remove indentation
             _python_code = _python_code.replace("@staticmethod\n","") #remove @staticmethod decorator
             #TODO what about other decorators?
@@ -172,10 +172,11 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
             _python_code_list = yaml_doc.pop("python_code")
             if isinstance(_python_code_list, str): #check if only one model function is given
                 _python_code_list = [_python_code_list]
-            _python_function_list = [
-                ModelFunctionYamlReader._parse_model_function(_python_code)
-                for _python_code in _python_code_list
-            ]
+            _python_function_list = []
+            for _python_code in _python_code_list:
+                _python_function = ModelFunctionYamlReader._parse_model_function(_python_code)
+                _python_function._source_code = _python_code
+                _python_function_list.append(_python_function)
             _data_indices = yaml_doc.pop("data_indices")
             _model_function_object = XYMultiModelFunction(_python_function_list, _data_indices)
         else:
@@ -186,6 +187,7 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
             else:
                 _parsed_function = ModelFunctionYamlReader._parse_model_function(_raw_string)
                 _model_function_object = _class(_parsed_function)
+                _model_function_object._source_code = _raw_string
         
         #construct model function formatter if specified
         _model_function_formatter_yaml = yaml_doc.pop('model_function_formatter', None)

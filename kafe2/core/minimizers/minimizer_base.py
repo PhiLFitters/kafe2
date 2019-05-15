@@ -100,6 +100,10 @@ class MinimizerBase(object):
         return self._par_asymm_err
 
     @property
+    def asymmetric_parameter_errors_if_calculated(self):
+        return self._par_asymm_err
+
+    @property
     def parameter_names(self):
         raise NotImplementedError()
 

@@ -100,6 +100,7 @@ class ModelFunctionBase(FileIOMixin, object):
         self._assign_model_function_argspec_and_argcount()
         self._validate_model_function_raise()
         self._assign_function_formatter()
+        self._source_code = None
         super(ModelFunctionBase, self).__init__()
         
     @classmethod
@@ -209,3 +210,10 @@ class ModelFunctionBase(FileIOMixin, object):
             new_defaults
         )
         self._model_function_argspec = _new_argspec
+
+    @property
+    def source_code(self):
+        if self._source_code is None:
+            return inspect.getsource(self.func)
+        else:
+            return self._source_code

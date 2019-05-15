@@ -51,9 +51,18 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
             _preface_comment += '# ndf: %s\n' % _ndf
             _round_cost_per_ndf_sig = max(2, int(-np.floor(np.log(_cost / _ndf)/np.log(10))) + 1)
             _preface_comment += "# Cost/ndf: %s\n\n" % round(_cost / _ndf, _round_cost_per_ndf_sig)
+
+            # If asymmetric parameters errors were not calculated, check the loaded result dict
+            _asymmetric_parameter_errors = self._kafe_object._fitter.asymmetric_fit_parameter_errors_if_calculated
+            if _asymmetric_parameter_errors is None and self._kafe_object._loaded_result_dict is not None:
+                _asymmetric_parameter_errors = self._kafe_object._loaded_result_dict['asymmetric_parameter_errors']
+
             _preface_comment += get_compact_representation(
-                self._kafe_object.parameter_names, self._kafe_object.parameter_values,
-                self._kafe_object.parameter_errors, self._kafe_object.parameter_cor_mat
+                parameter_names=self._kafe_object.parameter_names,
+                parameter_values=self._kafe_object.parameter_values,
+                parameter_errors=self._kafe_object.parameter_errors,
+                parameter_cor_mat=self._kafe_object.parameter_cor_mat,
+                asymmetric_parameter_errors=_asymmetric_parameter_errors
             )
         _preface_comment += '\n'
         return _preface_comment
@@ -84,6 +93,8 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
             _fit_results['parameter_cov_mat'] = _fit_results['parameter_cov_mat'].tolist()
             _fit_results['parameter_errors'] = _fit_results['parameter_errors'].tolist()
             _fit_results['parameter_cor_mat'] = _fit_results['parameter_cor_mat'].tolist()
+        if _fit_results['asymmetric_parameter_errors'] is not None:
+            _fit_results['asymmetric_parameter_errors'] = _fit_results['asymmetric_parameter_errors'].tolist()
         _yaml_doc['fit_results'] = _fit_results
         return _yaml_doc
     
@@ -237,10 +248,13 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
                 for _constraint_yaml in _constraint_yaml_list
             ]
         _fit_results = yaml_doc.pop('fit_results', None)
-        if _fit_results is not None and _fit_results['did_fit']:
-            _fit_results['parameter_cov_mat'] = np.asmatrix(_fit_results['parameter_cov_mat'])
-            _fit_results['parameter_errors'] = np.array(_fit_results['parameter_errors'])
-            _fit_results['parameter_cor_mat'] = np.asmatrix(_fit_results['parameter_cor_mat'])
+        if _fit_results is not None:
+            if _fit_results['did_fit']:
+                _fit_results['parameter_cov_mat'] = np.asmatrix(_fit_results['parameter_cov_mat'])
+                _fit_results['parameter_errors'] = np.array(_fit_results['parameter_errors'])
+                _fit_results['parameter_cor_mat'] = np.asmatrix(_fit_results['parameter_cor_mat'])
+            if _fit_results['asymmetric_parameter_errors'] is not None:
+                _fit_results['asymmetric_parameter_errors'] = np.array(_fit_results['asymmetric_parameter_errors'])
         _fit_object._loaded_result_dict = _fit_results
         return _fit_object, yaml_doc
     
