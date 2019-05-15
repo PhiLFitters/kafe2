@@ -95,7 +95,6 @@ class MinimizerScipyOptimize(MinimizerBase):
     @property
     def parameter_errors(self):
         if self._par_err is None:
-            print(self.cov_mat)
             self._par_err = np.sqrt(np.diag(self.cov_mat))
         return self._par_err
 

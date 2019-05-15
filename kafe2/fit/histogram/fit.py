@@ -94,6 +94,7 @@ class HistFit(FitBase):
         # FIXME: nicer way than len()?
         self._cost_function.ndf = self._data_container.size - len(self._param_model.parameters)
         self._fit_param_constraints = []
+        self._loaded_result_dict = None
 
 
     # -- private methods

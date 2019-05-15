@@ -28,6 +28,7 @@ class YamlWriterMixin(DReprWriterMixin):
             except IOError:
                 # if truncate not available, ignore
                 pass
+            _h.write(self._get_preface_comment())
             yaml.dump(self._yaml_doc, _h, default_flow_style=False)
 
 class YamlReaderException(Exception):

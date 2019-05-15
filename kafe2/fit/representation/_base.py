@@ -1,4 +1,6 @@
 import abc
+import getpass
+import datetime
 
 
 class DReprError(Exception):
@@ -47,9 +49,18 @@ class DReprWriterMixin(object):
         """Implement this method for the different data formats"""
         pass
 
+    def _get_preface_comment(self):
+        return '# kafe2 %s %s representation written by %s on %s.\n' % (
+            self._kafe_object.__class__.__name__,
+            self.DREPR_FLAVOR_NAME,
+            getpass.getuser(),
+            datetime.datetime.now().strftime('%d.%m.%Y, %H:%M')
+        )
+
     def write(self):
         self._representation = self._make_representation(self._kafe_object)
         with self._ohandle as _h:
+            _h.write(self._get_preface_comment())
             _h.write(self._representation)
 
 

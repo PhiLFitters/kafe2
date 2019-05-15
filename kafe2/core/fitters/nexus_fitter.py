@@ -145,6 +145,10 @@ class NexusFitter(object):
         return self._minimizer.asymmetric_parameter_errors
 
     @property
+    def asymmetric_fit_parameter_errors_if_calculated(self):
+        return self._minimizer.asymmetric_parameter_errors_if_calculated
+
+    @property
     def parameter_to_minimize_value(self):
         # if self.__cache_stale or self.__minimizing:  # allow getting fresh (non-cached) parameters while minimizing
         if self.__cache_stale:

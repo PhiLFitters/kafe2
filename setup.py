@@ -33,13 +33,14 @@ setup(
     package_data={'kafe2': ['config/*.conf', 'config/*.yaml', 'config/*.yml', 'fit/tools/kafe2go']},
     scripts=['kafe2/fit/tools/kafe2go.py', 'kafe2/fit/tools/kafe2go'],
     test_suite='setup.discover_kafe_tests',
-    keywords = "data analysis lab courses education students physics fitting minimization",
+    keywords="data analysis lab courses education students physics fitting minimization",
     license='GPL3',
     #TODO requirement versions
     install_requires=[
         'NumPy',
         'Numdifftools',
         'Scipy',
+        'tabulate',
         'matplotlib'
     ],
     classifiers=[

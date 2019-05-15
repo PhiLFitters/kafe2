@@ -39,6 +39,7 @@ class FitBase(FileIOMixin, object):
         self._fit_param_constraints = None
         self._model_function = None
         self._cost_function = None
+        self._loaded_result_dict = None  # contains potential fit results when loading from a file
         super(FitBase, self).__init__()
 
     # -- private methods
@@ -147,7 +148,7 @@ class FitBase(FileIOMixin, object):
     @property
     def parameter_values(self):
         """the current parameter values"""
-        return list(self.parameter_name_value_dict.values())
+        return np.array(list(self.parameter_name_value_dict.values()))
 
     @property
     def parameter_names(self):
@@ -157,22 +158,34 @@ class FitBase(FileIOMixin, object):
     @property
     def parameter_errors(self):
         """the current parameter uncertainties"""
-        return self._fitter.fit_parameter_errors
+        if self._loaded_result_dict is not None:
+            return self._loaded_result_dict['parameter_errors']
+        else:
+            return self._fitter.fit_parameter_errors
 
     @property
     def parameter_cov_mat(self):
         """the current parameter covariance matrix"""
-        return self._fitter.fit_parameter_cov_mat
+        if self._loaded_result_dict is not None:
+            return self._loaded_result_dict['parameter_cov_mat']
+        else:
+            return self._fitter.fit_parameter_cov_mat
 
     @property
     def parameter_cor_mat(self):
         """the current parameter correlation matrix"""
-        return self._fitter.fit_parameter_cor_mat
+        if self._loaded_result_dict is not None:
+            return self._loaded_result_dict['parameter_cor_mat']
+        else:
+            return self._fitter.fit_parameter_cor_mat
 
     @property
     def asymmetric_parameter_errors(self):
         """the current asymmetric parameter uncertainties"""
-        return self._fitter.asymmetric_fit_parameter_errors
+        if self._loaded_result_dict is not None and self._loaded_result_dict['asymmetric_parameter_errors'] is not None:
+            return self._loaded_result_dict['asymmetric_parameter_errors']
+        else:
+            return self._fitter.asymmetric_fit_parameter_errors
 
     @property
     def parameter_name_value_dict(self):
@@ -223,6 +236,14 @@ class FitBase(FileIOMixin, object):
     def poi_names(self):
         """the names of the parameters of interest, equal to ``self.parameter_names`` minus nuisance parameter names"""
         return self.parameter_names
+
+    @property
+    def did_fit(self):
+        """whether a fit was performed for the given data and model"""
+        if self._loaded_result_dict is not None:
+            return self._loaded_result_dict['did_fit']
+        else:
+            return self._fitter.state_is_from_minimizer
 
     # -- public methods
 
@@ -459,6 +480,7 @@ class FitBase(FileIOMixin, object):
         if not self._data_container.has_errors:
             raise self.EXCEPTION_TYPE('Cannot perform a fit without specifying data errors first!')
         self._fitter.do_fit()
+        self._loaded_result_dict = None
         self._update_parameter_formatters()
 
     def assign_model_function_expression(self, expression_format_string):
@@ -479,34 +501,30 @@ class FitBase(FileIOMixin, object):
     def generate_plot(self):
         raise FitException('generate_plot has not been specified for %s' % self.__class__)
 
-    def get_result_dict(self):
-        """Return a structured dictionary of human-readable strings characterizing the fit result."""
-        # TODO: warn if self._fitter.state_is_from_minimizer is False?
-        _result_dict = OrderedDict()
+    def get_result_dict_for_robots(self):
+        """Return a dictionary of the fit results."""
+        _result_dict = dict()
 
-        _result_dict['did_fit'] = self._fitter.state_is_from_minimizer
-
-        _cost = self.cost_function_value
+        _result_dict['did_fit'] = self.did_fit
+        _cost = float(self.cost_function_value)  # convert numpy scalar to float for yaml representation
         _ndf = self._cost_function.ndf
-        _round_cost_sig = max(2, int(-np.floor(np.log(_cost)/np.log(10))) + 2 - 1)
-        _rounded_cost = round(_cost, _round_cost_sig)
-        _result_dict['cost'] = _rounded_cost
-
+        _result_dict['cost'] = _cost
         _result_dict['ndf'] = _ndf
-        _result_dict['cost/ndf'] = "{}/{} = {}".format(_rounded_cost, _ndf, round(_cost/_ndf, 3))
+        _result_dict['cost/ndf'] = _cost / _ndf
+        _result_dict['parameter_values'] = self.parameter_values
+        if _result_dict['did_fit']:
+            _result_dict['parameter_cov_mat'] = self.parameter_cov_mat
+            _result_dict['parameter_errors'] = self.parameter_errors
+            _result_dict['parameter_cor_mat'] = self.parameter_cor_mat
+        else:
+            _result_dict['parameter_cov_mat'] = None
+            _result_dict['parameter_errors'] = None
+            _result_dict['parameter_cor_mat'] = None
 
-        _result_dict['model function'] = self._get_model_report_dict_entry()
-
-        _result_dict['formatted fit parameters'] = dict()
-        for _pf in self._model_function.argument_formatters:
-            _result_dict['formatted fit parameters'][_pf.name] = _pf.get_formatted(with_name=False,
-                                                                                   with_value=True,
-                                                                                   with_errors=True,
-                                                                                   format_as_latex=False)
-
-        _result_dict['fit parameter values'] = self.parameter_values
-        _result_dict['fit parameter errors'] = self.parameter_errors
-        _result_dict['fit parameter covariance matrix'] = self.parameter_cov_mat
+        if self._loaded_result_dict is not None and self._loaded_result_dict['asymmetric_parameter_errors'] is not None:
+            _result_dict['asymmetric_parameter_errors'] = self._loaded_result_dict['asymmetric_parameter_errors']
+        else:
+            _result_dict['asymmetric_parameter_errors'] = self._fitter.asymmetric_fit_parameter_errors_if_calculated
 
         return _result_dict
 
@@ -519,9 +537,6 @@ class FitBase(FileIOMixin, object):
         :param asymmetric_parameter_errors: if ``True``, use two different parameter errors for up/down directions
         :type asymmetric_parameter_errors: bool
         """
-        _result_dict = self.get_result_dict()
-
-        ###print_dict_recursive(_result_dict, output_stream)
 
         _indent = ' ' * 4
 
@@ -532,8 +547,8 @@ class FitBase(FileIOMixin, object):
 
                 """))
 
-        if not _result_dict['did_fit']:
-            output_stream.write('WARNING: No fit has been performed yet. Did you forget to run do_fit()?\n\n')
+        if not self.did_fit:
+            output_stream.write('WARNING: No fit has been performed as of yet. Did you forget to run fit.do_fit()?\n\n')
 
         output_stream.write(_indent + "Model Parameters\n")
         output_stream.write(_indent + "================\n\n")
@@ -580,3 +595,9 @@ class FitBase(FileIOMixin, object):
                               format_as_latex=False)
         )
         output_stream.write('\n')
+
+    def to_file(self, filename, format=None, calculate_asymmetric_errors=False):
+        """Write kafe2 object to file"""
+        if calculate_asymmetric_errors:
+            self.asymmetric_parameter_errors
+        super(FitBase, self).to_file(filename=filename, format=None)

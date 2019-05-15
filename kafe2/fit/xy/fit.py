@@ -87,6 +87,7 @@ class XYFit(FitBase):
         self._cost_function.ndf = self._data_container.size - len(self._param_model.parameters)
 
         self._fit_param_constraints = []
+        self._loaded_result_dict = None
 
     # -- private methods
 
@@ -783,6 +784,8 @@ class XYFit(FitBase):
     @property
     def y_error_band(self):
         """one-dimensional array representing the uncertainty band around the model function"""
+        if not self.did_fit:
+            raise XYFitException('Cannot calculate an error band without first performing a fit.')
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         if self.__cache_y_error_band is None:
@@ -917,6 +920,7 @@ class XYFit(FitBase):
                 if np.abs(self.cost_function_value - _previous_cost_function_value) < _convergence_limit:
                     break
                 _previous_cost_function_value = self.cost_function_value
+            self._loaded_result_dict = None
             self._update_parameter_formatters()
 
     def eval_model_function(self, x=None, model_parameters=None):
@@ -988,8 +992,6 @@ class XYFit(FitBase):
         :param asymmetric_parameter_errors: if ``True``, use two different parameter errors for up/down directions
         :type asymmetric_parameter_errors: bool
         """
-        _result_dict = self.get_result_dict()
-
         _indent = ' ' * 4
 
         if show_data:
