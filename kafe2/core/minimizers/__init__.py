@@ -10,7 +10,7 @@ AVAILABLE_MINIMIZERS = dict()
 _MINIMIZER_NAME_ALIASES = dict()
 
 _catch_error_class = ImportError
-if sys.version_info >= (3,6):
+if sys.version_info >= (3, 6):
     # python version 3.6+ throws a different exception type on import fail...
     _catch_error_class = ModuleNotFoundError
 
@@ -41,7 +41,7 @@ try:
     })
     _MINIMIZER_NAME_ALIASES['minuit'] = 'root.tminuit'
     _MINIMIZER_NAME_ALIASES['root'] = 'root.tminuit'
-except _catch_error_class:
+except (_catch_error_class, ImportError):  # Python 2.7 ROOT bindings cause ImportError in Python 3.6
     pass
 
 # raise if no minimizers can be imported
