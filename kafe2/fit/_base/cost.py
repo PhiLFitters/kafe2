@@ -358,7 +358,7 @@ class CostFunctionBase_Chi2(CostFunctionBase):
         return _generic_chi2(data=data, model=model, cov_mat_inverse=None, err=total_error, fail_on_zero_errors=False,
                              parameter_values=parameter_values, parameter_constraints=parameter_constraints)
 
-# TODO add parameter constraints
+
 class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
     def __init__(self, data_point_distribution='poisson'):
         r"""
