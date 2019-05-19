@@ -47,6 +47,8 @@ class HistCostFunction_Chi2(CostFunctionBase_Chi2):
 
         :param data: measurement data
         :param model: model values
+        :param parameter_values: fit parameter values
+        :param parameter_constraints: fit parameter constraints
         :return: cost function value
         """
         return CostFunctionBase_Chi2.chi2_no_errors(data=data, model=model, parameter_values=parameter_values,
@@ -66,6 +68,8 @@ class HistCostFunction_Chi2(CostFunctionBase_Chi2):
         :param data: measurement data
         :param model: model values
         :param total_cov_mat_inverse: inverse of the total covariance matrix
+        :param parameter_values: fit parameter values
+        :param parameter_constraints: fit parameter constraints
         :return: cost function value
         """
         return CostFunctionBase_Chi2.chi2_covariance(data=data, model=model,
@@ -87,7 +91,9 @@ class HistCostFunction_Chi2(CostFunctionBase_Chi2):
         :param data: measurement data
         :param model: model values
         :param total_error: total measurement uncertainties
-        :return:
+        :param parameter_values: fit parameter values
+        :param parameter_constraints: fit parameter constraints
+        :return: cost function value
         """
         return CostFunctionBase_Chi2.chi2_pointwise_errors(data=data, model=model, total_error=total_error,
                                                            parameter_values=parameter_values,
@@ -131,6 +137,8 @@ class HistCostFunction_NegLogLikelihood(CostFunctionBase_NegLogLikelihood):
         :param data: measurement data
         :param model: model values
         :param total_error: total *y* uncertainties for data
+        :param parameter_values: fit parameter values
+        :param parameter_constraints: fit parameter constraints
         :return: cost function value
         """
         # "translate" the argument names
@@ -155,6 +163,8 @@ class HistCostFunction_NegLogLikelihood(CostFunctionBase_NegLogLikelihood):
 
         :param data: measurement data
         :param model: model values
+        :param parameter_values: fit parameter values
+        :param parameter_constraints: fit parameter constraints
         :return: cost function value
         """
         # "translate" the argument names
@@ -188,7 +198,7 @@ class HistCostFunction_NegLogLikelihoodRatio(CostFunctionBase_NegLogLikelihoodRa
         super(HistCostFunction_NegLogLikelihoodRatio, self).__init__(data_point_distribution=data_point_distribution)
 
     @staticmethod
-    def nllr_gaussian(data, model, total_error):
+    def nllr_gaussian(data, model, total_error, parameter_values, parameter_constraints):
         r"""A negative log-likelihood function assuming Gaussian statistics for each measurement.
 
         The cost function is given by:
@@ -205,14 +215,17 @@ class HistCostFunction_NegLogLikelihoodRatio(CostFunctionBase_NegLogLikelihoodRa
         :param data: measurement data
         :param model: model values
         :param total_error: total *y* uncertainties for data
+        :param parameter_values: fit parameter values
+        :param parameter_constraints: fit parameter constraints
         :return: cost function value
         """
         # "translate" the argument names
-        return CostFunctionBase_NegLogLikelihoodRatio.nllr_gaussian(data=data, model=model, total_error=total_error)
-
+        return CostFunctionBase_NegLogLikelihoodRatio.nllr_gaussian(
+            data=data, model=model, total_error=total_error, parameter_values=parameter_values,
+            parameter_constraints=parameter_constraints)
 
     @staticmethod
-    def nllr_poisson(data, model):
+    def nllr_poisson(data, model, parameter_values, parameter_constraints):
         r"""A negative log-likelihood function assuming Poisson statistics for each measurement.
 
         The cost function is given by:
@@ -231,7 +244,8 @@ class HistCostFunction_NegLogLikelihoodRatio(CostFunctionBase_NegLogLikelihoodRa
         :return: cost function value
         """
         # "translate" the argument names
-        return CostFunctionBase_NegLogLikelihoodRatio.nllr_poisson(data=data, model=model)
+        return CostFunctionBase_NegLogLikelihoodRatio.nllr_poisson(
+            data=data, model=model, parameter_values=parameter_values, parameter_constraints=parameter_constraints)
 
 
 STRING_TO_COST_FUNCTION = {

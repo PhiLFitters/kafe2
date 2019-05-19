@@ -297,8 +297,10 @@ class CostFunctionBase_Chi2(CostFunctionBase):
         In the above, :math:`{\bf d}` are the measurements and :math:`{\bf m}` are the model
         predictions.
 
-        :param y_data: measurement data
-        :param y_model: model values
+        :param data: measurement data
+        :param model: model values
+        :param parameter_values: fit parameter values
+        :param parameter_constraints: fit parameter constraints
         :return: cost function value
         """
         return _generic_chi2(data=data, model=model, cov_mat_inverse=None, fail_on_no_matrix=False,
@@ -315,9 +317,11 @@ class CostFunctionBase_Chi2(CostFunctionBase):
         In the above, :math:`{\bf d}` are the measurements, :math:`{\bf m}` are the model
         predictions, and :math:`{{\bf V}^{-1}}` is the inverse of the total covariance matrix.
 
-        :param y_data: measurement data
-        :param y_model: model values
-        :param y_total_cov_mat_inverse: inverse of the total covariance matrix
+        :param data: measurement data
+        :param model: model values
+        :param total_cov_mat_inverse: inverse of the total covariance matrix
+        :param parameter_values: fit parameter values
+        :param parameter_constraints: fit parameter constraints
         :return: cost function value
         """
         return _generic_chi2(data=data, model=model, cov_mat_inverse=total_cov_mat_inverse, fail_on_no_matrix=True,
@@ -350,8 +354,9 @@ class CostFunctionBase_Chi2(CostFunctionBase):
         )
 
     @staticmethod
-    def chi2_pointwise_errors_fallback(data, model, total_error):
-        return _generic_chi2(data=data, model=model, cov_mat_inverse=None, err=total_error, fail_on_zero_errors=False)
+    def chi2_pointwise_errors_fallback(data, model, total_error, parameter_values, parameter_constraints):
+        return _generic_chi2(data=data, model=model, cov_mat_inverse=None, err=total_error, fail_on_zero_errors=False,
+                             parameter_values=parameter_values, parameter_constraints=parameter_constraints)
 
 # TODO add parameter constraints
 class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
@@ -406,6 +411,8 @@ class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
         :param data: measurement data
         :param model: model values
         :param total_error: total *y* uncertainties for data
+        :param parameter_values: fit parameter values
+        :param parameter_constraints: fit parameter constraints
         :return: cost function value
         """
         _par_cost = 0.0
@@ -438,6 +445,8 @@ class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
 
         :param data: measurement data
         :param model: model values
+        :param parameter_values: fit parameter values
+        :param parameter_constraints: fit parameter constraints
         :return: cost function value
         """
         _par_cost = 0.0
@@ -495,7 +504,7 @@ class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
         self._formatter.description = _cost_function_description
 
     @staticmethod
-    def nllr_gaussian(data, model, total_error):
+    def nllr_gaussian(data, model, total_error, parameter_values, parameter_constraints):
         r"""A negative log-likelihood ratio function assuming Gaussian statistics for each measurement.
 
         The cost function is given by:
@@ -512,6 +521,8 @@ class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
         :param data: measurement data
         :param model: model values
         :param total_error: total *y* uncertainties for data
+        :param parameter_values: fit parameter constraints
+        :param parameter_constraints: fit parameter constraints
         :return: cost function value
         """
         _per_point_likelihoods = norm.pdf(data, loc=model, scale=total_error)
@@ -524,7 +535,7 @@ class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
         return _nll
 
     @staticmethod
-    def nllr_poisson(data, model):
+    def nllr_poisson(data, model, parameter_values, parameter_constraints):
         r"""A negative log-likelihood function assuming Poisson statistics for each measurement.
 
         The cost function is given by:
@@ -540,6 +551,8 @@ class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
 
         :param data: measurement data
         :param model: model values
+        :param parameter_values: fit parameter values
+        :param parameter_constraints: fit parameter constraints
         :return: cost function value
         """
         _per_point_likelihoods = poisson.pmf(data, mu=model, loc=0.0)
@@ -551,8 +564,8 @@ class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
             return np.inf
         return _nll
 
-class CostFunctionBase_Chi2_Nuisance(CostFunctionBase_Chi2):
 
+class CostFunctionBase_Chi2_Nuisance(CostFunctionBase_Chi2):
 
     def __init__(self, errors_to_use='covariance', fall_back_on_singular=True):
         """
@@ -590,7 +603,8 @@ class CostFunctionBase_Chi2_Nuisance(CostFunctionBase_Chi2):
         self._formatter.description = "chi-square (with nuisance parameters for correlated uncertainties)"
 
     @staticmethod
-    def chi2_nui_cov(data, model, total_uncor_cov_mat_inverse, total_nuisance_cor_design_mat, nuisance_vector):
+    def chi2_nui_cov(data, model, total_uncor_cov_mat_inverse, total_nuisance_cor_design_mat, nuisance_vector,
+                     parameter_values, parameter_constraints):
         r"""A least-squares cost function that accounts for correlated uncertainties through nuisance parameters. The nuisance parameters are fitted.
 
         The cost function is given by:
@@ -604,19 +618,22 @@ class CostFunctionBase_Chi2_Nuisance(CostFunctionBase_Chi2):
              :math:{\bf nui} is the  Nuisance-vector
 
         :param data: measurement data
-        :param model model values
+        :param model: model values
         :param total_uncor_cov_mat_inverse: inverse of the uncorrelated part of the total covariance matrix
-        :param: total_nuisance_cor_design_mat: matrix containing the correlated parts of each uncertainty source for each data point
-        :param: nuisance_vector: vector containing nuisance parameters
-
+        :param total_nuisance_cor_design_mat: matrix containing the correlated parts of each uncertainty source for each data point
+        :param nuisance_vector: vector containing nuisance parameters
+        :param parameter_values: fit parameter values
+        :param parameter_constraints: fit parameter constraints
         :return: cost function value
         """
-        return _generic_chi2_nuisance(data=data, model=model, uncor_cov_mat_inverse=total_uncor_cov_mat_inverse,
-                                      nuisance_cor_design_mat=total_nuisance_cor_design_mat, nuisance_vector=nuisance_vector,
-                                      fail_on_no_matrix=True)
+        return _generic_chi2_nuisance(
+            data=data, model=model, uncor_cov_mat_inverse=total_uncor_cov_mat_inverse,
+            nuisance_cor_design_mat=total_nuisance_cor_design_mat, nuisance_vector=nuisance_vector,
+            fail_on_no_matrix=True, parameter_values=parameter_values, parameter_constraints=parameter_constraints)
 
     @staticmethod
-    def chi2_nui_cov_fallback(data, model, total_uncor_cov_mat_inverse, total_nuisance_cor_design_mat, nuisance_vector):
+    def chi2_nui_cov_fallback(data, model, total_uncor_cov_mat_inverse, total_nuisance_cor_design_mat, nuisance_vector,
+                              parameter_values, parameter_constraints):
         r"""A least-squares cost function that accounts for correlated uncertainties through nuisance parameters. The nuisance parameters are fitted.
 
         .. TODO: describe fallback behavior
@@ -632,19 +649,21 @@ class CostFunctionBase_Chi2_Nuisance(CostFunctionBase_Chi2):
              :math:{\bf nui} is the  Nuisance-vector
 
         :param data: measurement data
-        :param model model values
+        :param model: model values
         :param total_uncor_cov_mat_inverse: inverse of the uncorrelated part of the total covariance matrix
-        :param: total_nuisance_cor_design_mat: matrix containing the correlated parts of each uncertainty source for each data point
-        :param: nuisance_vector: vector containing nuisance parameters
-
+        :param total_nuisance_cor_design_mat: matrix containing the correlated parts of each uncertainty source for each data point
+        :param nuisance_vector: vector containing nuisance parameters
+        :param parameter_values: fit parameter values
+        :param parameter_constraints: fit parameter constraints
         :return: cost function value
         """
-        return _generic_chi2_nuisance(data=data, model=model, uncor_cov_mat_inverse=total_uncor_cov_mat_inverse,
-                                      nuisance_cor_design_mat=total_nuisance_cor_design_mat, nuisance_vector=nuisance_vector,
-                                      fail_on_no_matrix=False)
+        return _generic_chi2_nuisance(
+            data=data, model=model, uncor_cov_mat_inverse=total_uncor_cov_mat_inverse,
+            nuisance_cor_design_mat=total_nuisance_cor_design_mat, nuisance_vector=nuisance_vector,
+            fail_on_no_matrix=False, parameter_values=parameter_values, parameter_constraints=parameter_constraints)
 
     @staticmethod
-    def chi2_nui_pointwise(data, model, total_error):
+    def chi2_nui_pointwise(data, model, total_error, parameter_values, parameter_constraints):
         r"""A least-squares cost function calculated from the data and model values,
               considering pointwise (uncorrelated) uncertainties for each data point:
 
@@ -655,15 +674,18 @@ class CostFunctionBase_Chi2_Nuisance(CostFunctionBase_Chi2):
         predictions, and :math:`{\bf \sigma}` are the pointwise total uncertainties.
 
         :param data: measurement data
+        :param model: model values
         :param total_error: array of total errors
-
+        :param parameter_values: fit parameter values
+        :param parameter_constraints: fit parameter constraints
         :return cost function value
         """
-        return CostFunctionBase_Chi2.chi2_pointwise_errors(data=data, model=model,
-                                                       total_error=total_error)
+        return CostFunctionBase_Chi2.chi2_pointwise_errors(
+            data=data, model=model, total_error=total_error, parameter_values=parameter_values,
+            parameter_constraints=parameter_constraints)
 
     @staticmethod
-    def chi2_nui_pointwise_fallback(data, model, total_error):
+    def chi2_nui_pointwise_fallback(data, model, total_error, parameter_values, parameter_constraints):
         r"""A least-squares cost function calculated from the data and model values,
               considering pointwise (uncorrelated) uncertainties for each data point:
 
@@ -676,12 +698,15 @@ class CostFunctionBase_Chi2_Nuisance(CostFunctionBase_Chi2):
         predictions, and :math:`{\bf \sigma}` are the pointwise total uncertainties.
 
         :param data: measurement data
+        :param model: model values
         :param total_error: array of total errors
-
+        :param parameter_values: fit parameter values
+        :param parameter_constraints: fit parameter constraints
         :return cost function value
         """
-        return CostFunctionBase_Chi2.chi2_pointwise_errors_fallback(data=data, model=model,
-                                                     total_error=total_error)
+        return CostFunctionBase_Chi2.chi2_pointwise_errors_fallback(
+            data=data, model=model, total_error=total_error, parameter_values=parameter_values,
+            parameter_constraints=parameter_constraints)
 
 
 
