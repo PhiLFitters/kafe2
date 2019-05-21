@@ -525,14 +525,13 @@ class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
         :param parameter_constraints: fit parameter constraints
         :return: cost function value
         """
-        _per_point_likelihoods = norm.pdf(data, loc=model, scale=total_error)
-        _total_likelihood = np.prod(_per_point_likelihoods)
-        _marginal_likelihood = np.prod(model)
-        # guard against returning NaN
-        _nll = -2.0 * np.log(_total_likelihood/_marginal_likelihood)
-        if np.isnan(_nll):
-            return np.inf
-        return _nll
+        _par_cost = 0.0
+        if parameter_constraints is not None:
+            for _parameter_constraint in parameter_constraints:
+                _par_cost += _parameter_constraint.cost(parameter_values)
+        _total_log_likelihood = np.sum(np.log(norm.pdf(x=data, loc=model, scale=total_error)))
+        _saturated_log_likelihood = np.sum(np.log(norm.pdf(x=model, loc=model, scale=total_error)))
+        return -2.0 * (_total_log_likelihood - _saturated_log_likelihood) + _par_cost
 
     @staticmethod
     def nllr_poisson(data, model, parameter_values, parameter_constraints):

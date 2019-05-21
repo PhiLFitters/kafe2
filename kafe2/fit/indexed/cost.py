@@ -1,4 +1,5 @@
-from .._base import CostFunctionBase, CostFunctionBase_Chi2, CostFunctionBase_NegLogLikelihood, CostFunctionException
+from .._base import CostFunctionBase, CostFunctionBase_Chi2, CostFunctionBase_NegLogLikelihood, \
+    CostFunctionBase_NegLogLikelihoodRatio
 
 
 __all__ = [
@@ -57,7 +58,7 @@ class IndexedCostFunction_NegLogLikelihood(CostFunctionBase_NegLogLikelihood):
         super(IndexedCostFunction_NegLogLikelihood, self).__init__(data_point_distribution=data_point_distribution)
 
 
-class IndexedCostFunction_NegLogLikelihoodRatio(CostFunctionBase_NegLogLikelihood):
+class IndexedCostFunction_NegLogLikelihoodRatio(CostFunctionBase_NegLogLikelihoodRatio):
     def __init__(self, data_point_distribution='poisson'):
         r"""
         Built-in negative log-likelihood cost function for *indexed* data.

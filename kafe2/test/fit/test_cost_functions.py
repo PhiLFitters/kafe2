@@ -77,7 +77,6 @@ class TestCostBase(unittest.TestCase):
             self._cost_nll_gaussian + self._par_cost - self.NLL_COST_FUNCTION(data_point_distribution='gaussian')
             (self._data, self._model, self._pointwise_errors, self._par_vals, self._par_constraints)) < self._tol)
 
-    @unittest.skip('nllr not implemented yet')
     def test_nllr_gaussian(self):
         self.assertTrue(np.abs(
             self._cost_chi2_pointwise - self.NLLR_COST_FUNCTION(data_point_distribution='gaussian')
