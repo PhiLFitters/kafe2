@@ -421,12 +421,11 @@ class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
                 _par_cost += _par_constraint.cost(parameter_values)
 
         _per_point_likelihoods = norm.pdf(data, loc=model, scale=total_error)
-
-        _nll = np.sum(np.log(_per_point_likelihoods)*(-2.0))
+        _total_log_likelihood = np.sum(np.log(_per_point_likelihoods))
         # guard against returning NaN
-        if np.isnan(_nll):
+        if np.isnan(_total_log_likelihood):
             return np.inf
-        return _nll + _par_cost
+        return -2.0 * _total_log_likelihood + _par_cost
 
     @staticmethod
     def nll_poisson(data, model, parameter_values, parameter_constraints):
@@ -455,12 +454,11 @@ class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
                 _par_cost += _par_constraint.cost(parameter_values)
 
         _per_point_likelihoods = poisson.pmf(data, mu=model, loc=0.0)
-        _total_likelihood = np.prod(_per_point_likelihoods)
+        _total_log_likelihood = np.sum(np.log(_per_point_likelihoods))
         # guard against returning NaN
-        _nll = -2.0 * np.log(_total_likelihood)
-        if np.isnan(_nll):
+        if np.isnan(_total_log_likelihood):
             return np.inf
-        return _nll + _par_cost
+        return -2.0 * _total_log_likelihood + _par_cost
 
 
 class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
@@ -530,7 +528,7 @@ class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
             for _parameter_constraint in parameter_constraints:
                 _par_cost += _parameter_constraint.cost(parameter_values)
         _total_log_likelihood = np.sum(np.log(norm.pdf(x=data, loc=model, scale=total_error)))
-        _saturated_log_likelihood = np.sum(np.log(norm.pdf(x=model, loc=model, scale=total_error)))
+        _saturated_log_likelihood = np.sum(np.log(norm.pdf(x=data, loc=data, scale=total_error)))
         return -2.0 * (_total_log_likelihood - _saturated_log_likelihood) + _par_cost
 
     @staticmethod

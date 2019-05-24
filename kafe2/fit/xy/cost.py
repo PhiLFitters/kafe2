@@ -318,7 +318,7 @@ class XYCostFunction_NegLogLikelihood(CostFunctionBase_NegLogLikelihood):
         super(XYCostFunction_NegLogLikelihood, self).__init__(data_point_distribution=data_point_distribution)
 
     @staticmethod
-    def nll_gaussian(y_data, y_model, y_total_error, poi_values, parameter_constraints):
+    def nll_gaussian(y_data, y_model, projected_xy_total_error, poi_values, parameter_constraints):
         r"""A negative log-likelihood function assuming Gaussian statistics for each measurement.
 
         The cost function is given by:
@@ -334,14 +334,14 @@ class XYCostFunction_NegLogLikelihood(CostFunctionBase_NegLogLikelihood):
 
         :param y_data: measurement data
         :param y_model: model values
-        :param y_total_error: total *y* uncertainties for data
+        :param projected_xy_total_error: total *xy* uncertainties for data
         :param poi_values: fit parameter values
         :param parameter_constraints: fit parameter constraints
         :return: cost function value
         """
         # "translate" the argument names
         return CostFunctionBase_NegLogLikelihood.nll_gaussian(
-            data=y_data, model=y_model, total_error=y_total_error, parameter_values=poi_values,
+            data=y_data, model=y_model, total_error=projected_xy_total_error, parameter_values=poi_values,
             parameter_constraints=parameter_constraints)
 
     @staticmethod
@@ -390,7 +390,7 @@ class XYCostFunction_NegLogLikelihoodRatio(CostFunctionBase_NegLogLikelihoodRati
         super(XYCostFunction_NegLogLikelihoodRatio, self).__init__(data_point_distribution=data_point_distribution)
 
     @staticmethod
-    def nllr_gaussian(y_data, y_model, y_total_error, poi_values, parameter_constraints):
+    def nllr_gaussian(y_data, y_model, projected_xy_total_error, poi_values, parameter_constraints):
         r"""A negative log-likelihood function assuming Gaussian statistics for each measurement.
 
         The cost function is given by:
@@ -406,14 +406,14 @@ class XYCostFunction_NegLogLikelihoodRatio(CostFunctionBase_NegLogLikelihoodRati
 
         :param y_data: measurement data
         :param y_model: model values
-        :param y_total_error: total *y* uncertainties for data
+        :param projected_xy_total_error: total *xy* uncertainties for data
         :param poi_values: fit parameter values
         :param parameter_constraints: fit parameter constraints
         :return: cost function value
         """
         # "translate" the argument names
         return CostFunctionBase_NegLogLikelihoodRatio.nllr_gaussian(
-            data=y_data, model=y_model, total_error=y_total_error, parameter_values=poi_values,
+            data=y_data, model=y_model, total_error=projected_xy_total_error, parameter_values=poi_values,
             parameter_constraints=parameter_constraints)
 
     @staticmethod
