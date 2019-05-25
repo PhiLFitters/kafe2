@@ -83,6 +83,9 @@ class XYMultiFit(FitBase):
             self._cost_function = XYMultiCostFunction_UserDefined(cost_function)
             #self._validate_cost_function_raise()
             # TODO: validate user-defined cost function? how?
+        _data_and_cost_compatible, _reason = self._cost_function.is_data_compatible(self.data)
+        if not _data_and_cost_compatible:
+            raise self.EXCEPTION_TYPE('Fit data and cost function are not compatible: %s' % _reason)
 
         # declare cache
         self._invalidate_total_error_cache()

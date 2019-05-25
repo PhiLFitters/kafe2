@@ -247,6 +247,16 @@ class CostFunctionBase(FileIOMixin, object):
     def get_flag(self, name):
         return self._flags.get(name, None)
 
+    def is_data_compatible(self, data):
+        """
+        Tests if model data is compatible with cost function
+        :param data: the model data
+        :type data: numpy.ndarray
+        :return: if the data is compatible, and if not a reason for the incompatibility
+        :rtype: (boo, str)
+        """
+        return True, None
+
 
 class CostFunctionBase_Chi2(CostFunctionBase):
     def __init__(self, errors_to_use='covariance', fallback_on_singular=True):
@@ -460,6 +470,12 @@ class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
             return np.inf
         return -2.0 * _total_log_likelihood + _par_cost
 
+    def is_data_compatible(self, data):
+        if self._cost_function_handle is self.nll_poisson and (np.count_nonzero(data % 1) > 0 or np.any(data < 0)):
+            return False, "poisson distribution can only have non-negative integers as y data."
+        else:
+            return True, None
+
 
 class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
     def __init__(self, data_point_distribution='poisson'):
@@ -560,6 +576,12 @@ class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
         if np.isnan(_nll):
             return np.inf
         return _nll
+
+    def is_data_compatible(self, data):
+        if self._cost_function_handle is self.nllr_poisson and (np.count_nonzero(data % 1) > 0 or np.any(data < 0)):
+            return False, "poisson distribution can only have non-negative integers as y data."
+        else:
+            return True, None
 
 
 class CostFunctionBase_Chi2_Nuisance(CostFunctionBase_Chi2):
