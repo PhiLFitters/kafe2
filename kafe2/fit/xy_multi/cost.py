@@ -433,7 +433,7 @@ class XYMultiCostFunction_NegLogLikelihoodRatio(CostFunctionBase_NegLogLikelihoo
         """
         # "translate" the argument names
         return CostFunctionBase_NegLogLikelihoodRatio.nllr_poisson(
-            data=y_data, model=y_model, poi_values=poi_values, parameter_constraints=parameter_constraints)
+            data=y_data, model=y_model, parameter_values=poi_values, parameter_constraints=parameter_constraints)
 
 
 class XYMultiCostFunction_Chi2_Nuisance(CostFunctionBase_Chi2_Nuisance):

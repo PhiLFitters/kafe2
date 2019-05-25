@@ -545,7 +545,11 @@ class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
                 _par_cost += _parameter_constraint.cost(parameter_values)
         _total_log_likelihood = np.sum(np.log(norm.pdf(x=data, loc=model, scale=total_error)))
         _saturated_log_likelihood = np.sum(np.log(norm.pdf(x=data, loc=data, scale=total_error)))
-        return -2.0 * (_total_log_likelihood - _saturated_log_likelihood) + _par_cost
+        _log_likelihood_ratio = _total_log_likelihood - _saturated_log_likelihood
+        # guard against returning NaN
+        if np.isnan(_log_likelihood_ratio):
+            return np.inf
+        return -2.0 * _log_likelihood_ratio + _par_cost
 
     @staticmethod
     def nllr_poisson(data, model, parameter_values, parameter_constraints):
@@ -568,14 +572,17 @@ class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
         :param parameter_constraints: fit parameter constraints
         :return: cost function value
         """
-        _per_point_likelihoods = poisson.pmf(data, mu=model, loc=0.0)
-        _total_likelihood = np.prod(_per_point_likelihoods)
-        _marginal_likelihood = np.prod(model)
+        _par_cost = 0.0
+        if parameter_constraints is not None:
+            for _parameter_constraint in parameter_constraints:
+                _par_cost += _parameter_constraint.cost(parameter_values)
+        _total_log_likelihood = np.sum(np.log(poisson.pmf(k=data, mu=model, loc=0.0)))
+        _saturated_log_likelihood = np.sum(np.log(poisson.pmf(k=data, mu=data, loc=0.0)))
+        _log_likelihood_ratio = _total_log_likelihood - _saturated_log_likelihood
         # guard against returning NaN
-        _nll = -2.0 * np.log(_total_likelihood/_marginal_likelihood)
-        if np.isnan(_nll):
+        if np.isnan(_log_likelihood_ratio):
             return np.inf
-        return _nll
+        return -2.0 * _log_likelihood_ratio + _par_cost
 
     def is_data_compatible(self, data):
         if self._cost_function_handle is self.nllr_poisson and (np.count_nonzero(data % 1) > 0 or np.any(data < 0)):
