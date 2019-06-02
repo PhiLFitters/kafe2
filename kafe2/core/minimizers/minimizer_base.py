@@ -11,11 +11,13 @@ class MinimizerBase(object):
         self._func_handle = function_to_minimize
         self._invalidate_cache()  # initializes caches with None
         self._save_state_dict = dict()
+        self._printed_inf_cost_warning = False
 
     def _reset(self):
         self._invalidate_cache()
 
     def _invalidate_cache(self):
+        self._fval = None
         self._par_asymm_err = None
         self._hessian = None
         self._hessian_inv = None
@@ -34,8 +36,15 @@ class MinimizerBase(object):
         self._par_cov_mat = np.array(self._save_state_dict['par_cov_mat'])
         self._func_wrapper_unpack_args(self.parameter_values)  # call the function to propagate the changes to the nexus
 
+    def _func_wrapper(self, *args):
+        _fval = self._func_handle(*args)
+        if not self._printed_inf_cost_warning and np.isinf(_fval):
+            print('Warning: the cost function has been evaluated as infinite. The fit might not converge correctly.')
+            self._printed_inf_cost_warning = True
+        return _fval
+
     def _func_wrapper_unpack_args(self, args):
-        return self._func_handle(*args)
+        return self._func_wrapper(*args)
 
     def _calculate_asymmetric_parameter_errors(self):  # TODO max calls
         self.minimize()
@@ -79,6 +88,9 @@ class MinimizerBase(object):
     def function_value(self):
         if self._fval is None:
             self._fval = self._func_handle(*self.parameter_values)
+        if not self._printed_inf_cost_warning and np.isinf(self._fval):
+            print('Warning: the cost function has been evaluated as infinite. The fit might not converge correctly.')
+            self._printed_inf_cost_warning = True
         return self._fval
 
     @property

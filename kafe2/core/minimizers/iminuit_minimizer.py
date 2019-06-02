@@ -41,10 +41,6 @@ class MinimizerIMinuit(MinimizerBase):
     def _invalidate_cache(self):
         self._par_val = None
         self._par_err = None
-        self._hessian = None
-        self._hessian_inv = None
-        self._fval = None
-        self._par_cov_mat = None
         self._par_cor_mat = None
         self._fmin_struct = None
         self._pars_contour = None
@@ -70,7 +66,7 @@ class MinimizerIMinuit(MinimizerBase):
 
     def _get_iminuit(self):
         if self.__iminuit is None:
-            self.__iminuit = iminuit.Minuit(self._func_handle,
+            self.__iminuit = iminuit.Minuit(self._func_wrapper,
                                         forced_parameters=self.parameter_names,
                                         errordef=self.errordef,
                                         **self._minimizer_param_dict)
@@ -169,16 +165,6 @@ class MinimizerIMinuit(MinimizerBase):
     @property
     def hessian_inv(self):
         return self.cov_mat / 2.0 / self.errordef
-
-    @property
-    def function_value(self):
-        if self._fval is None:
-            self._fval = self._func_handle(*self.parameter_values)
-        return self._fval
-        # if self._fmin_struct is None:
-        #     self._fmin_struct = self._get_iminuit().get_fmin()
-        #
-        # return self._fmin_struct.fval
 
     @property
     def parameter_values(self):

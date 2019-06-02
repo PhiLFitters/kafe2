@@ -56,6 +56,7 @@ class MinimizerROOTTMinuit(MinimizerBase):
         self._pars_contour = None
 
         self._min_result_stale = True
+        self._printed_inf_cost_warning = False
 
     # -- private methods
 
@@ -160,7 +161,7 @@ class MinimizerROOTTMinuit(MinimizerBase):
                                        count=self.n_pars)
 
         # call the Python implementation of FCN.
-        f[0] = self._func_handle(*parameter_list)
+        f[0] = self._func_wrapper(*parameter_list)
 
     def _insert_zeros_for_fixed(self, submatrix):
         """
@@ -295,12 +296,6 @@ class MinimizerROOTTMinuit(MinimizerBase):
     @property
     def hessian_inv(self):
         return self.cov_mat / 2.0 / self.errordef
-
-    @property
-    def function_value(self):
-        if self._fval is None:
-            self._fval = self._func_handle(*self.parameter_values)
-        return self._fval
 
     @property
     def parameter_values(self):
