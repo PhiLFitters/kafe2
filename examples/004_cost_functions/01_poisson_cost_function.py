@@ -64,8 +64,7 @@ def expected_activity_per_day(x, Delta_t=5000, T_12_C14=5730):
 xy_fit = XYFit(
     xy_data=[years_of_death, measured_c14_activity],
     model_function=expected_activity_per_day,
-    cost_function=XYCostFunction_NegLogLikelihood(data_point_distribution='poisson'),
-    minimizer='iminuit'
+    cost_function=XYCostFunction_NegLogLikelihood(data_point_distribution='poisson')
 )
 
 # The half life of carbon-14 is only known with a precision of +-40 years
