@@ -430,8 +430,7 @@ class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
             for _par_constraint in parameter_constraints:
                 _par_cost += _par_constraint.cost(parameter_values)
 
-        _per_point_likelihoods = norm.pdf(data, loc=model, scale=total_error)
-        _total_log_likelihood = np.sum(np.log(_per_point_likelihoods))
+        _total_log_likelihood = np.sum(norm.logpdf(data, loc=model, scale=total_error))
         # guard against returning NaN
         if np.isnan(_total_log_likelihood):
             return np.inf
@@ -463,8 +462,7 @@ class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
             for _par_constraint in parameter_constraints:
                 _par_cost += _par_constraint.cost(parameter_values)
 
-        _per_point_likelihoods = poisson.pmf(data, mu=model, loc=0.0)
-        _total_log_likelihood = np.sum(np.log(_per_point_likelihoods))
+        _total_log_likelihood = np.sum(poisson.logpmf(data, mu=model, loc=0.0))
         # guard against returning NaN
         if np.isnan(_total_log_likelihood):
             return np.inf
@@ -543,8 +541,8 @@ class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
         if parameter_constraints is not None:
             for _parameter_constraint in parameter_constraints:
                 _par_cost += _parameter_constraint.cost(parameter_values)
-        _total_log_likelihood = np.sum(np.log(norm.pdf(x=data, loc=model, scale=total_error)))
-        _saturated_log_likelihood = np.sum(np.log(norm.pdf(x=data, loc=data, scale=total_error)))
+        _total_log_likelihood = np.sum(norm.logpdf(data, loc=model, scale=total_error))
+        _saturated_log_likelihood = np.sum(norm.logpdf(x=data, loc=data, scale=total_error))
         _log_likelihood_ratio = _total_log_likelihood - _saturated_log_likelihood
         # guard against returning NaN
         if np.isnan(_log_likelihood_ratio):
@@ -576,8 +574,8 @@ class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
         if parameter_constraints is not None:
             for _parameter_constraint in parameter_constraints:
                 _par_cost += _parameter_constraint.cost(parameter_values)
-        _total_log_likelihood = np.sum(np.log(poisson.pmf(k=data, mu=model, loc=0.0)))
-        _saturated_log_likelihood = np.sum(np.log(poisson.pmf(k=data, mu=data, loc=0.0)))
+        _total_log_likelihood = np.sum(poisson.logpmf(k=data, mu=model, loc=0.0))
+        _saturated_log_likelihood = np.sum(poisson.logpmf(k=data, mu=data, loc=0.0))
         _log_likelihood_ratio = _total_log_likelihood - _saturated_log_likelihood
         # guard against returning NaN
         if np.isnan(_log_likelihood_ratio):

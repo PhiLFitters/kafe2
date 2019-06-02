@@ -144,7 +144,7 @@ class HistContainer(IndexedContainer):
         if self._unprocessed_entries:  # process outstanding entries
             self._fill_unprocessed()
         # NOTE: returned array starts at 0
-        return self._idx_data[1:-1]  # don't consider underflow and overflow bins
+        return self._idx_data[1:-1].copy()  # don't consider underflow and overflow bins
 
     @data.setter
     def data(self, data):
