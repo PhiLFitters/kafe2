@@ -67,7 +67,6 @@ xy_fit = XYFit(
     cost_function=XYCostFunction_NegLogLikelihood(data_point_distribution='poisson'),
     minimizer='iminuit'
 )
-xy_fit.add_simple_error('y', 1.0)
 
 # The half life of carbon-14 is only known with a precision of +-40 years
 xy_fit.add_parameter_constraint(name='T_12_C14', value=5730, uncertainty=40)

@@ -151,6 +151,7 @@ class CostFunctionBase(FileIOMixin, object):
 
         self._flags = {}
         self._ndf = None
+        self._needs_errors = True
         super(CostFunctionBase, self).__init__()
 
     @classmethod
@@ -241,6 +242,11 @@ class CostFunctionBase(FileIOMixin, object):
         assert new_ndf == int(new_ndf)  # ndf must be integer
         self._ndf = new_ndf
 
+    @property
+    def needs_errors(self):
+        """Whether the cost function needs errors for a meaningful result"""
+        return self._needs_errors
+
     def set_flag(self, name, value):
         self._flags[name] = value
 
@@ -295,6 +301,7 @@ class CostFunctionBase_Chi2(CostFunctionBase):
         self._formatter.latex_name = "\\chi^2"
         self._formatter.name = "chi2"
         self._formatter.description = _cost_function_description
+        self._needs_errors = _chi2_func is not self.chi2_no_errors
 
     @staticmethod
     def chi2_no_errors(data, model, parameter_values, parameter_constraints):
@@ -402,6 +409,7 @@ class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
         self._formatter.latex_name = "-2\\ln\\mathcal{L}"
         self._formatter.name = "nll"
         self._formatter.description = _cost_function_description
+        self._needs_errors = _nll_func is self.nll_gaussian
 
     @staticmethod
     def nll_gaussian(data, model, total_error, parameter_values, parameter_constraints):
@@ -514,6 +522,7 @@ class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
         self._formatter.latex_name = r"-2\ln\mathcal{L}_{\rm R}"
         self._formatter.name = "nllr"
         self._formatter.description = _cost_function_description
+        self._needs_errors = _nll_func is self.nllr_gaussian
 
     @staticmethod
     def nllr_gaussian(data, model, total_error, parameter_values, parameter_constraints):

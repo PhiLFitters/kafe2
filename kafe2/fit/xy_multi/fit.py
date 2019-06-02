@@ -983,7 +983,7 @@ class XYMultiFit(FitBase):
 
     def do_fit(self):
         """Perform the fit."""
-        if not self._data_container.has_y_errors:
+        if self._cost_function.needs_errors and not self._data_container.has_y_errors:
             raise self.EXCEPTION_TYPE('Cannot perform a fit without specifying y-errors first!')
         if not self._data_container.has_x_errors:
             super(XYMultiFit, self).do_fit()

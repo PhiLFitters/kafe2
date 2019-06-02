@@ -136,7 +136,7 @@ class XYPlotContainer(PlotContainerBase):
         :param kwargs: keyword arguments accepted by the ``matplotlib`` ``fill_between`` method
         :return: plot handle(s)
         """
-        if self._fitter.has_errors and self._fitter.did_fit:
+        if self._fitter.did_fit and (self._fitter.has_errors or not self._fitter._cost_function.needs_errors):
             _band_y = self._fitter.y_error_band
             _y = self.model_y
             return target_axis.fill_between(
