@@ -376,6 +376,10 @@ class PlotFigureBase(object):
             self._subplot_container_plot_method_name[_pt] = self.PLOT_SUBPLOT_TYPES[_pt]['plot_container_method']
             self._subplot_static_kwarg_dicts[_pt] = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, _pt, 'plot_kwargs')
             self._subplot_prop_cyclers[_pt] = Cycler(*kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, _pt, 'property_cycler'))
+            
+        #set axis labels:
+        self._plot_label_x = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'x')
+        self._plot_label_y = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'y')
 
     # -- private methods
 
@@ -569,6 +573,34 @@ class PlotFigureBase(object):
         """The ``matplotlib`` figure managed by this object."""
         return self._fig
 
+    @property
+    def x_label(self):
+        """The current x-label."""
+        return self._plot_label_x
+
+    @x_label.setter
+    def x_label(self, x_label):
+        """Set the x-label for the plot.
+        
+        :param x_label: x-label to set
+        :type x_label: string
+        """
+        self._plot_label_x = x_label
+
+    @property
+    def y_label(self):
+        """The current y-label"""
+        return self._plot_label_y
+
+    @y_label.setter
+    def y_label(self, y_label):
+        """Set the y-label for the plot.
+        
+        :param y_label: y-label to set
+        :type y_label: string
+        """
+        self._plot_label_y = y_label
+
     # -- public methods
 
     def plot(self):
@@ -579,8 +611,8 @@ class PlotFigureBase(object):
         self._set_plot_range_to_total_data_range()
         self._render_legend(self._main_plot_axes)
         # set axis labels
-        self._main_plot_axes.set_xlabel(kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'x'))
-        self._main_plot_axes.set_ylabel(kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'y'))
+        self._main_plot_axes.set_xlabel(self.x_label)
+        self._main_plot_axes.set_ylabel(self.y_label)
 
     def show_fit_info_box(self, asymmetric_parameter_errors=False, format_as_latex=True):
         """Render text information about each plot on the figure.
