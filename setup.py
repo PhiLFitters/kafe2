@@ -41,7 +41,8 @@ setup(
         'Numdifftools',
         'Scipy',
         'tabulate',
-        'matplotlib'
+        'matplotlib',
+        'PyYaml'
     ],
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -56,4 +57,4 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
     ],
- )
+)
