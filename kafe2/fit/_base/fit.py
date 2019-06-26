@@ -507,6 +507,10 @@ class FitBase(FileIOMixin, object):
         """Assign a plain-text-formatted expression string to the model function."""
         self._model_function.formatter.expression_format_string = expression_format_string
 
+    def assign_model_function_latex_name(self, latex_name):
+        """Assign a LaTeX-formatted string to be the model function name."""
+        self._model_function.formatter.latex_name = latex_name
+
     def assign_model_function_latex_expression(self, latex_expression_format_string):
         """Assign a LaTeX-formatted expression string to the model function."""
         self._model_function.formatter.latex_expression_format_string = latex_expression_format_string

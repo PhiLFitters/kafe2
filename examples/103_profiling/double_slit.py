@@ -93,6 +93,7 @@ f = XYFit(xy_data=d, model_function=interference, minimizer='iminuit')
 
 # assign LaTeX strings to various quantities (for nice display)
 f.assign_parameter_latex_names(I0='I_0', b='b', g='g', k='k')
+f.assign_model_function_latex_name('I')
 f.assign_model_function_latex_expression(
     r"{I0}\,\left(\frac{{\sin(\frac{{{k}}}{{2}}\,b\,\sin{{{x}}})}}"
     r"{{\frac{{{k}}}{{2}}\,b\,\sin{{{x}}}}}"
