@@ -52,6 +52,8 @@ class XYFit(FitBase):
         """
         # set the data
         self.data = xy_data
+        #set the labels
+        self.labels = [None, None]
 
         # set/construct the model function object
         if isinstance(model_function, self.__class__.MODEL_FUNCTION_TYPE):
@@ -379,6 +381,14 @@ class XYFit(FitBase):
         return self._data_container.x
 
     @property
+    def x_label(self):
+        return self.labels[0]
+
+    @x_label.setter
+    def x_label(self, x_label):
+        self.labels[0] = x_label
+
+    @property
     def x_model(self):
         # if cost function uses x-nuisance parameters, consider these
         if self._cost_function.get_flag("need_x_nuisance") and self._data_container.has_uncor_x_errors:
@@ -400,6 +410,14 @@ class XYFit(FitBase):
     def y_data(self):
         """array of measurement data *y* values"""
         return self._data_container.y
+
+    @property
+    def y_label(self):
+        return self.labels[1]
+
+    @y_label.setter
+    def y_label(self, y_label):
+        self.labels[1] = y_label
 
     @property
     def data(self):
@@ -979,7 +997,10 @@ class XYFit(FitBase):
 
     def generate_plot(self):
         from kafe2.fit.xy.plot import XYPlot
-        return XYPlot(self)
+        _plot = XYPlot(self)
+        _plot.x_label = self.x_label
+        _plot.y_label = self.y_label
+        return _plot
 
     def report(self, output_stream=sys.stdout,
                show_data=True,

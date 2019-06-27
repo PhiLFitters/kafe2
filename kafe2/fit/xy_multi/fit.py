@@ -60,6 +60,7 @@ class XYMultiFit(FitBase):
         
         # set the data
         self.data = xy_data
+        self.labels = None
         self._minimizer = minimizer
         self._minimizer_kwargs = minimizer_kwargs
 
@@ -402,6 +403,14 @@ class XYMultiFit(FitBase):
         return self._data_container.x
 
     @property
+    def x_label(self, i):
+        return self.labels[i][0]
+
+    @x_label.setter
+    def x_label(self, label, i):
+        self.labels[i][0] = label
+
+    @property
     def x_model(self):
         # if cost function uses x-nuisance parameters, consider these
         if self._cost_function.get_flag("need_x_nuisance") and self._data_container.has_uncor_x_errors:
@@ -423,6 +432,14 @@ class XYMultiFit(FitBase):
     def y_data(self):
         """array of measurement data *y* values"""
         return self._data_container.y
+
+    @property
+    def y_label(self, i):
+        return self.labels[i][1]
+
+    @x_label.setter
+    def y_label(self, label, i):
+        self.labels[i][1] = label
 
     @property
     def data(self):
@@ -1067,6 +1084,7 @@ class XYMultiFit(FitBase):
 
     def generate_plot(self):
         from kafe2.fit.xy_multi import XYMultiPlot
+        #TODO: set labels for each plot of multiplot, maybe in the xy-multi class
         return XYMultiPlot(self)
 
     def report(self, output_stream=sys.stdout,
