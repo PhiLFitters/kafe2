@@ -2,7 +2,7 @@ import numpy as np
 
 from .._base import PlotContainerBase, PlotContainerException, PlotFigureBase
 from .._aux import step_fill_between
-from . import IndexedFit
+from .fit import IndexedFit
 
 __all__ = ["IndexedPlot", "IndexedPlotContainer"]
 
