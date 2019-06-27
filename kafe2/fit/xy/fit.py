@@ -382,10 +382,15 @@ class XYFit(FitBase):
 
     @property
     def x_label(self):
+        """x-label to be passed on to the plot"""
         return self.labels[0]
 
     @x_label.setter
     def x_label(self, x_label):
+        """sets the x-label to be passed onto the plot
+
+        :param x_label: str
+        """
         self.labels[0] = x_label
 
     @property
@@ -413,10 +418,16 @@ class XYFit(FitBase):
 
     @property
     def y_label(self):
+        """y-label to be passed onto the plot"""
         return self.labels[1]
 
     @y_label.setter
     def y_label(self, y_label):
+        """sets the y-label to be passed onto the plot
+
+        :param y_label: str
+        :return:
+        """
         self.labels[1] = y_label
 
     @property

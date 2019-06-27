@@ -60,7 +60,7 @@ class XYMultiFit(FitBase):
         
         # set the data
         self.data = xy_data
-        self.labels = None
+        self.labels = [[None, None]]
         self._minimizer = minimizer
         self._minimizer_kwargs = minimizer_kwargs
 
@@ -404,10 +404,23 @@ class XYMultiFit(FitBase):
 
     @property
     def x_label(self, i):
+        """The x label for a dataset
+
+        :param i: index of dataset
+        :type i: int
+        """
         return self.labels[i][0]
 
+    # TODO better handling when setting the labels, catch out of bounds and creating array elements
     @x_label.setter
     def x_label(self, label, i):
+        """Set the x-label for a dataset
+
+        :param label: label to set
+        :type label: str
+        :param i: index of dataset
+        :type i: int
+        """
         self.labels[i][0] = label
 
     @property
@@ -435,10 +448,23 @@ class XYMultiFit(FitBase):
 
     @property
     def y_label(self, i):
+        """The y-label for a dataset
+
+        :param i: index of dataset
+        :type i: int
+        """
         return self.labels[i][1]
 
-    @x_label.setter
+    # TODO better handling when setting the labels, catch out of bounds and creating array elements
+    @y_label.setter
     def y_label(self, label, i):
+        """set the y-label for a dataset
+
+        :param label: label to set
+        :type label: str
+        :param i: index of dataset
+        :type i: int
+        """
         self.labels[i][1] = label
 
     @property
