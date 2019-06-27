@@ -583,9 +583,10 @@ class PlotFigureBase(object):
         """Set the x-label for the plot.
         
         :param x_label: x-label to set
-        :type x_label: string
+        :type x_label: str
         """
-        self._plot_label_x = x_label
+        if x_label is not None:
+            self._plot_label_x = x_label
 
     @property
     def y_label(self):
@@ -597,9 +598,10 @@ class PlotFigureBase(object):
         """Set the y-label for the plot.
         
         :param y_label: y-label to set
-        :type y_label: string
+        :type y_label: str
         """
-        self._plot_label_y = y_label
+        if y_label is not None:
+            self._plot_label_y = y_label
 
     # -- public methods
 
