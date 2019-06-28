@@ -644,6 +644,7 @@ class MultiPlotBase(object):
         :type separate_plots: bool
         """
         self._underlying_plots = []
+        self._axis_labels = []
         try:
             iter(fit_objects)
         except:
@@ -652,6 +653,8 @@ class MultiPlotBase(object):
             for _fit_object in fit_objects:
                 for _i in range(_fit_object.model_count):
                     self._underlying_plots.append(self.__class__.SINGULAR_PLOT_TYPE(_fit_object, model_indices=_i))
+                    # set size of labels array, if label is None it should be set to the default by SINGULAR_PLOT_TYPE
+                    self._axis_labels.append([None, None])
         else:
             for _fit_object in fit_objects:
                 _fit_object_list = [] 
@@ -661,13 +664,25 @@ class MultiPlotBase(object):
                     _model_indices.append(_i)
                 self._underlying_plots.append(self.__class__.SINGULAR_PLOT_TYPE(_fit_object_list, model_indices=_model_indices))
 
+    @property
+    def axis_labels(self):
+        return self._axis_labels
+
+    @axis_labels.setter
+    def axis_labels(self, labels):
+        if len(labels) != len(self._axis_labels) or len(labels[0]) != len(self._axis_labels[0]):
+            raise PlotContainerException("The dimensions of labels must fit the dimension of the data")
+        self._axis_labels = labels
+
     def get_figure(self, plot_index):
         """return the figure with the specified index"""
         return self._underlying_plots[plot_index].figure
     
     def plot(self):
         """Plot data, model (and other subplots) for all child :py:obj:`Fit` objects, and show legend."""
-        for _plot in self._underlying_plots:
+        for _i, _plot in enumerate(self._underlying_plots):
+            _plot.x_label = self._axis_labels[_i][0]
+            _plot.y_label = self._axis_labels[_i][1]
             _plot.plot()
     
     def show_fit_info_box(self, format_as_latex=True):
