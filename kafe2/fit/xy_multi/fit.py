@@ -445,10 +445,16 @@ class XYMultiFit(FitBase):
 
     @property
     def axis_labels(self):
+        """the axis-labels to be passed on to the plot"""
         return self._axis_labels
 
     @axis_labels.setter
     def axis_labels(self, labels):
+        """sets the axis-labels to be passed on to the plot
+
+        :param labels: list of axis labels
+        :type labels: list
+        """
         if len(labels) != len(self._axis_labels) or len(labels[0]) != len(self._axis_labels[0]):
             raise XYMultiFitException("The dimensions of labels must fit the dimension of the data")
         self._axis_labels = labels
