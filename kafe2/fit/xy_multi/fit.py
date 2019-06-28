@@ -60,7 +60,8 @@ class XYMultiFit(FitBase):
         
         # set the data
         self.data = xy_data
-        self.labels = [[None, None]]
+        # set labels according to the size of xy_data
+        self._axis_labels = [[None, None] for _ in range(xy_data.num_datasets)]
         self._minimizer = minimizer
         self._minimizer_kwargs = minimizer_kwargs
 
@@ -403,27 +404,6 @@ class XYMultiFit(FitBase):
         return self._data_container.x
 
     @property
-    def x_label(self, i):
-        """The x label for a dataset
-
-        :param i: index of dataset
-        :type i: int
-        """
-        return self.labels[i][0]
-
-    # TODO better handling when setting the labels, catch out of bounds and creating array elements
-    @x_label.setter
-    def x_label(self, label, i):
-        """Set the x-label for a dataset
-
-        :param label: label to set
-        :type label: str
-        :param i: index of dataset
-        :type i: int
-        """
-        self.labels[i][0] = label
-
-    @property
     def x_model(self):
         # if cost function uses x-nuisance parameters, consider these
         if self._cost_function.get_flag("need_x_nuisance") and self._data_container.has_uncor_x_errors:
@@ -447,27 +427,6 @@ class XYMultiFit(FitBase):
         return self._data_container.y
 
     @property
-    def y_label(self, i):
-        """The y-label for a dataset
-
-        :param i: index of dataset
-        :type i: int
-        """
-        return self.labels[i][1]
-
-    # TODO better handling when setting the labels, catch out of bounds and creating array elements
-    @y_label.setter
-    def y_label(self, label, i):
-        """set the y-label for a dataset
-
-        :param label: label to set
-        :type label: str
-        :param i: index of dataset
-        :type i: int
-        """
-        self.labels[i][1] = label
-
-    @property
     def data(self):
         """(2, N)-array containing *x* and *y* measurement values"""
         return self._data_container.data
@@ -481,6 +440,18 @@ class XYMultiFit(FitBase):
                                       % (type(new_data), self.CONTAINER_TYPE))
         else:
             self._data_container = self._new_data_container(new_data, dtype=float)
+        # TODO: Think of a better way when setting new data to not always delete all labels
+        self._axis_labels = [[None, None] for _ in range(new_data.num_datasets)]
+
+    @property
+    def axis_labels(self):
+        return self._axis_labels
+
+    @axis_labels.setter
+    def axis_labels(self, labels):
+        if len(labels) != len(self._axis_labels) or len(labels[0]) != len(self._axis_labels[0]):
+            raise XYMultiFitException("The dimensions of labels must fit the dimension of the data")
+        self._axis_labels = labels
 
     @property
     def model(self):
@@ -1111,7 +1082,9 @@ class XYMultiFit(FitBase):
     def generate_plot(self):
         from kafe2.fit.xy_multi import XYMultiPlot
         #TODO: set labels for each plot of multiplot, maybe in the xy-multi class
-        return XYMultiPlot(self)
+        _plot = XYMultiPlot(self)
+        _plot.axis_labels = self._axis_labels
+        return _plot
 
     def report(self, output_stream=sys.stdout,
                show_data=True,
