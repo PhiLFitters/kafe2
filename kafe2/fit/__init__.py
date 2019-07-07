@@ -131,6 +131,7 @@ The following objects are provided for handling histograms:
 from ._base.profile import *   # just for `ContoursProfiler` -> better way?
 
 from .indexed import *
+from .unbinned import *
 from .histogram import *
 from .tools import *
 from .util import *
