@@ -112,15 +112,15 @@ class UnbinnedFit(FitBase):
         for _fpn in self._fit_param_names:
             self._nexus.add_dependency(_fpn, 'model')
         # bind other reserved nodes
-        #self._nexus.new_function(lambda: self.data_error, function_name='data_error')
-        #self._nexus.new_function(lambda: self.data_cov_mat, function_name='data_cov_mat')
-        #self._nexus.new_function(lambda: self.data_cov_mat_inverse, function_name='data_cov_mat_inverse')
-        #self._nexus.new_function(lambda: self.model_error, function_name='model_error')
-        #self._nexus.new_function(lambda: self.model_cov_mat, function_name='model_cov_mat')
-        #self._nexus.new_function(lambda: self.model_cov_mat, function_name='model_cov_mat_inverse')
+        self._nexus.new_function(lambda: self.data_error, function_name='data_error')
+        self._nexus.new_function(lambda: self.data_cov_mat, function_name='data_cov_mat')
+        self._nexus.new_function(lambda: self.data_cov_mat_inverse, function_name='data_cov_mat_inverse')
+        self._nexus.new_function(lambda: self.model_error, function_name='model_error')
+        self._nexus.new_function(lambda: self.model_cov_mat, function_name='model_cov_mat')
+        self._nexus.new_function(lambda: self.model_cov_mat, function_name='model_cov_mat_inverse')
         self._nexus.new_function(lambda: self.total_error, function_name='total_error')
-        #self._nexus.new_function(lambda: self.total_cov_mat, function_name='total_cov_mat')
-        #self._nexus.new_function(lambda: self.total_cov_mat_inverse, function_name='total_cov_mat_inverse')
+        self._nexus.new_function(lambda: self.total_cov_mat, function_name='total_cov_mat')
+        self._nexus.new_function(lambda: self.total_cov_mat_inverse, function_name='total_cov_mat_inverse')
         self._nexus.new_function(lambda: self.parameter_values, function_name='parameter_values')
         self._nexus.new_function(lambda: self.parameter_constraints, function_name='parameter_constraints')
 
@@ -137,6 +137,19 @@ class UnbinnedFit(FitBase):
         self.__cache_total_cov_mat = None
         self.__cache_total_cov_mat_inverse = None
 
+    def _mark_errors_for_update(self):
+        # TODO: implement a mass 'mark_for_update' routine in Nexus
+        self._nexus.get_by_name('model').mark_for_update()
+        self._nexus.get_by_name('data_error').mark_for_update()
+        self._nexus.get_by_name('data_cov_mat').mark_for_update()
+        self._nexus.get_by_name('data_cov_mat_inverse').mark_for_update()
+        self._nexus.get_by_name('model_error').mark_for_update()
+        self._nexus.get_by_name('model_cov_mat').mark_for_update()
+        self._nexus.get_by_name('model_cov_mat_inverse').mark_for_update()
+        self._nexus.get_by_name('total_error').mark_for_update()
+        self._nexus.get_by_name('total_cov_mat').mark_for_update()
+        self._nexus.get_by_name('total_cov_mat_inverse').mark_for_update()
+
     @property
     def data(self):
         return self._data_container.data
@@ -152,16 +165,70 @@ class UnbinnedFit(FitBase):
             self._data_container = self._new_data_container(new_data, dtype=float)
 
     @property
-    def total_error(self):
-        """array of pointwise total uncertainties"""
-        if self.__cache_total_error is None:
-            _tmp = self.data_error**2
-            _tmp += self.model_error**2
-            self.__cache_total_error = np.sqrt(_tmp)
-        return self.__cache_total_error
+    def data_error(self):
+        """array of pointwise data uncertainties"""
+        return self._data_container.err
+
+    @property
+    def data_cov_mat(self):
+        """the data covariance matrix"""
+        return self._data_container.cov_mat
+
+    @property
+    def data_cov_mat_inverse(self):
+        """inverse of the data covariance matrix (or ``None`` if singular)"""
+        return self._data_container.cov_mat_inverse
 
     @property
     def model(self):
         """array of model predictions for the data points"""
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         return self._param_model.data  # * self._data_container.n_entries  # NOTE: model is just a density->scale up
+
+    @property
+    def model_error(self):
+        """array of pointwise model uncertainties"""
+        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
+        return self._param_model.err  # FIXME: how to handle scaling
+
+    @property
+    def model_cov_mat(self):
+        """the model covariance matrix"""
+        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
+        return self._param_model.cov_mat
+
+    @property
+    def model_cov_mat_inverse(self):
+        """inverse of the model covariance matrix (or ``None`` if singular)"""
+        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
+        return self._param_model.cov_mat_inverse
+
+    @property
+    def total_error(self):
+        """array of pointwise total uncertainties"""
+        if self.__cache_total_error is None:
+            _tmp = self.data_error**2
+            # _tmp += self.model_error**2 # FIXME: different shapes, len(data) and len(args)
+            self.__cache_total_error = np.sqrt(_tmp)
+        return self.__cache_total_error
+
+    @property
+    def total_cov_mat(self):
+        """the total covariance matrix"""
+        if self.__cache_total_cov_mat is None:
+            _tmp = self.data_cov_mat
+            _tmp += self.model_cov_mat
+            self.__cache_total_cov_mat = _tmp
+        return self.__cache_total_cov_mat
+
+    @property
+    def total_cov_mat_inverse(self):
+        """inverse of the total covariance matrix (or ``None`` if singular)"""
+        if self.__cache_total_cov_mat_inverse is None:
+            _tmp = self.total_cov_mat
+            try:
+                _tmp = _tmp.I
+                self.__cache_total_cov_mat_inverse = _tmp
+            except np.linalg.LinAlgError:
+                pass
+        return self.__cache_total_cov_mat_inverse
