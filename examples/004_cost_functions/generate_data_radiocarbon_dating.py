@@ -28,3 +28,5 @@ current_num_atoms_c14 = initial_num_atoms_c14 * np.exp(-np.log(2) * (delta_t - X
 current_activity_per_day = current_num_atoms_c14 * np.log(2) / (true_t12_c14 * DAYS_PER_YEAR)
 measured_activity_per_day = np.random.poisson(lam=current_activity_per_day, size=num_x_values)
 np.savetxt('measured_c14_activity.txt', [X, measured_activity_per_day])
+measured_activity_per_2_min = np.random.poisson(lam=current_activity_per_day / (24 * 30), size=num_x_values)
+np.savetxt('measured_c14_activity_sparse.txt', [X, measured_activity_per_2_min])
