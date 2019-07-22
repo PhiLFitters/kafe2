@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
 DELTA_T_CALENDARS = 4857  # Difference between modern and ancient calendar in years
 CURRENT_YEAR = 2019  # Current year according to the modern calendar
