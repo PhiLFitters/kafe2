@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 """
-kafe2 example: Gaussian approximation of Poisson cost function
-==============================================================
+kafe2 example: Gaussian approximation of Poisson distributions for large N
+==========================================================================
 
 This example is a continuation of the Poisson cost function example. While a Poisson distribution with mean N is
 inherently asymmetric, it can be approximated using a symmetric Gaussian distribution with a standard deviation of
