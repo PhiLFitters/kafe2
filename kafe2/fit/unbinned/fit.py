@@ -102,6 +102,13 @@ class UnbinnedFit(FitBase):
 
         self._nexus.add_dependency('model', 'cost')
 
+    # private methods
+    def _invalidate_total_error_cache(self):
+        pass
+
+    def _mark_errors_for_update(self):
+        pass
+
     @property
     def data(self):
         return self._data_container.data
@@ -115,6 +122,10 @@ class UnbinnedFit(FitBase):
                                        % (type(new_data), self.CONTAINER_TYPE))
         else:
             self._data_container = self._new_data_container(new_data, dtype=float)
+
+    @property
+    def model(self):
+        pass
 
     def report(self, output_stream=sys.stdout, asymmetric_parameter_errors=False):
         super(UnbinnedFit, self).report(output_stream=output_stream,
