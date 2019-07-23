@@ -23,5 +23,4 @@ dT = np.loadtxt(infile)
 data = UnbinnedContainer(dT)
 fit = UnbinnedFit(data=data, model_density_function=pdf)
 
-fit.add_simple_error(1.0)
 fit.do_fit()

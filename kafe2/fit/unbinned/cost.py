@@ -43,12 +43,13 @@ class UnbinnedCostFunction_NegLogLikelihood(CostFunctionBase):
         :type data_point_distribution: ``'poisson'`` or ``'gaussian'``
         """
         super(UnbinnedCostFunction_NegLogLikelihood, self).__init__(cost_function=self.nll)
+        self._needs_errors = False
 
     # model is the pdf already evaluated at all x-points with the given params, as far as I understand.
     # so there's only need to evaluate the model in the nll calculations?
     @staticmethod
-    def nll(data, model, total_error, parameter_values, parameter_constraints):
-        return -np.log(np.sum(model))
+    def nll(pdf):
+        return -np.sum(np.log(pdf))
 
 STRING_TO_COST_FUNCTION = {
     'nll': UnbinnedCostFunction_NegLogLikelihood,

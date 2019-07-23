@@ -3,17 +3,17 @@ from types import FunctionType
 
 from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException, ModelParameterFormatter
 from .container import UnbinnedContainer, UnbinnedContainerException
-from .format import UnbinnedModelDensityFunctionFormatter
+from .format import UnbinnedModelPDFFormatter
 from ..util import function_library
 
 
-class UnbinnedModelDensityFunctionException(ModelFunctionException):
+class UnbinnedModelPDFException(ModelFunctionException):
     pass
 
 
-class UnbinnedModelDensityFunction(ModelFunctionBase):
-    EXCEPTION_TYPE = UnbinnedModelDensityFunctionException
-    FORMATTER_TYPE = UnbinnedModelDensityFunctionFormatter
+class UnbinnedModelPDF(ModelFunctionBase):
+    EXCEPTION_TYPE = UnbinnedModelPDFException
+    FORMATTER_TYPE = UnbinnedModelPDFFormatter
 
     def __init__(self, model_density_function=None):
         self._x_name = 'x'
@@ -22,9 +22,9 @@ class UnbinnedModelDensityFunction(ModelFunctionBase):
         elif model_density_function.lower() == "gaussian":
             _pdf = function_library.normal_distribution_pdf
         else:
-            raise UnbinnedModelDensityFunctionException("Unknown value '%s' for 'model_density_function':"
-                                                        "It must be a function or one of ('gaussian')!")
-        super(UnbinnedModelDensityFunction, self).__init__(model_function=_pdf)
+            raise UnbinnedModelPDFException("Unknown value '%s' for 'model_density_function':"
+                                            "It must be a function or one of ('gaussian')!")
+        super(UnbinnedModelPDF, self).__init__(model_function=_pdf)
 
     def _validate_model_function_raise(self):
         # require pdf model function arguments to include 'x'
@@ -40,7 +40,7 @@ class UnbinnedModelDensityFunction(ModelFunctionBase):
                 % (self.func, self.x_name))
 
         # evaluate general model function requirements
-        super(UnbinnedModelDensityFunction, self)._validate_model_function_raise()
+        super(UnbinnedModelPDF, self)._validate_model_function_raise()
 
     def _get_parameter_formatters(self):
         _start_at_arg = 1
@@ -63,7 +63,7 @@ class UnbinnedParametricModelException(UnbinnedContainerException):
 
 
 class UnbinnedParametricModel(ParametricModelBaseMixin, UnbinnedContainer):
-    def __init__(self, data, model_density_function=UnbinnedModelDensityFunction(function_library.normal_distribution_pdf),
+    def __init__(self, data, model_density_function=UnbinnedModelPDF(function_library.normal_distribution_pdf),
                  model_parameters=[1.0, 1.0]):
         super(UnbinnedParametricModel, self).__init__(data, model_density_function, model_parameters, dtype=float)
 

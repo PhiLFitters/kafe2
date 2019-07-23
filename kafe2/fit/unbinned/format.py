@@ -1,10 +1,10 @@
 from .._base import ModelFunctionFormatter
 
 
-__all__ = ["UnbinnedModelDensityFunctionFormatter"]
+__all__ = ["UnbinnedModelPDFFormatter"]
 
 
-class UnbinnedModelDensityFunctionFormatter(ModelFunctionFormatter):
+class UnbinnedModelPDFFormatter(ModelFunctionFormatter):
     def __init__(self, name, latex_name=None, x_name='x', latex_x_name=None,
                  arg_formatters=None, expression_string=None, latex_expression_string=None):
         """
@@ -24,7 +24,7 @@ class UnbinnedModelDensityFunctionFormatter(ModelFunctionFormatter):
         if self._latex_x_name is None:
             self._latex_x_name = self._latexify_ascii(self._x_name)
 
-        super(UnbinnedModelDensityFunctionFormatter, self).__init__(
+        super(UnbinnedModelPDFFormatter, self).__init__(
             name, latex_name=latex_name, arg_formatters=arg_formatters,
             expression_string=expression_string,
             latex_expression_string=latex_expression_string
