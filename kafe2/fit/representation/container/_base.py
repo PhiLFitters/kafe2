@@ -1,4 +1,5 @@
 import abc
+import six
 
 from kafe2.fit.histogram import HistContainer
 from kafe2.fit.indexed import IndexedContainer
@@ -9,8 +10,8 @@ from kafe2.fit.representation._base import GenericDReprBase
 __all__ = ["DataContainerDReprBase"]
 
 
+@six.add_metaclass(abc.ABCMeta)
 class DataContainerDReprBase(GenericDReprBase):
-    __metaclass__ = abc.ABCMeta
     BASE_OBJECT_TYPE_NAME = 'container'
 
     _CLASS_TO_OBJECT_TYPE_NAME = {

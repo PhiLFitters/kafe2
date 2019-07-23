@@ -3,6 +3,7 @@ import inspect
 import numpy as np
 import re
 import string
+import six
 
 from .format import ModelParameterFormatter, CostFunctionFormatter
 
@@ -113,6 +114,7 @@ class CostFunctionException(Exception):
     pass
 
 
+@six.add_metaclass(abc.ABCMeta)
 class CostFunctionBase(FileIOMixin, object):
     """
     This is a purely abstract class implementing the minimal interface required by all
@@ -132,7 +134,6 @@ class CostFunctionBase(FileIOMixin, object):
     cost function and to ensure the function can be used as a cost function (validation).
 
     """
-    __metaclass__ = abc.ABCMeta
 
     EXCEPTION_TYPE = CostFunctionException
     FORMATTER_TYPE = CostFunctionFormatter

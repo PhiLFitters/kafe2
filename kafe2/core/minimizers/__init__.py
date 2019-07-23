@@ -1,5 +1,6 @@
 import abc
 import sys
+import six
 
 from ...config import kc
 
@@ -78,11 +79,11 @@ def get_minimizer(minimizer_spec=None):
             "Unknown minimizer '{}'! Available: {}".format(minimizer_spec, list(AVAILABLE_MINIMIZERS.keys())))
 
 
+@six.add_metaclass(abc.ABCMeta)
 class MinimizerBase(object):
     """
     Purely abstract class. Defines the minimal interface required by all specializations.
     """
-    __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
     def minimize(self): pass
