@@ -9,6 +9,7 @@ from kafe2.fit.indexed.model import IndexedModelFunctionException
 
 
 CONFIG_PARAMETER_DEFAULT_VALUE = kc('core', 'default_initial_parameter_value')
+DEFAULT_TEST_MINIMIZER = 'scipy'
 
 
 class TestFittersIndexed(unittest.TestCase):
@@ -65,18 +66,20 @@ class TestFittersIndexed(unittest.TestCase):
 
         self.idx_fit = IndexedFit(data=self._ref_data_values,
                                   model_function=self.idx_model,
-                                  cost_function=self.simple_chi2)
+                                  cost_function=self.simple_chi2,
+                                  minimizer=DEFAULT_TEST_MINIMIZER)
         self.idx_fit.add_simple_error(err_val=1.0)
-        self.idx_fit_explicit_model_name_in_chi2 = IndexedFit(
-            data=self._ref_data_values,
-            model_function=self.idx_model,
-            cost_function=self.simple_chi2_explicit_model_name)
+        self.idx_fit_explicit_model_name_in_chi2 = IndexedFit(data=self._ref_data_values,
+                                                              model_function=self.idx_model,
+                                                              cost_function=self.simple_chi2_explicit_model_name,
+                                                              minimizer=DEFAULT_TEST_MINIMIZER)
         self.idx_fit_explicit_model_name_in_chi2.add_simple_error(err_val=1.0)
         self.idx_fit_default_cost_function = IndexedFit(data=self._ref_data_values,
-                                                        model_function=self.idx_model)
+                                                        model_function=self.idx_model,
+                                                        minimizer=DEFAULT_TEST_MINIMIZER)
         self.idx_fit_default_cost_function.add_simple_error(err_val=1.0)
 
-        self._ref_parameter_value_estimates = [1.1351433845831516, 2.137441531781195, 2.3405503488535118]
+        self._ref_parameter_value_estimates = [1.1351433,  2.13736919, 2.33346549]
         self._ref_model_value_estimates = self.idx_model(*self._ref_parameter_value_estimates)
 
 
@@ -94,7 +97,7 @@ class TestFittersIndexed(unittest.TestCase):
             np.allclose(
                 self.idx_fit.model,
                 self._ref_model_values,
-                rtol=1e-2
+                rtol=1e-3
             )
         )
 
@@ -114,7 +117,7 @@ class TestFittersIndexed(unittest.TestCase):
             np.allclose(
                 self.idx_fit.model,
                 self._ref_model_value_estimates,
-                rtol=1e-2
+                rtol=1e-3
             )
         )
 
@@ -174,7 +177,8 @@ class TestFittersIndexed(unittest.TestCase):
     def test_model_nodefaults(self):
         idx_fit = IndexedFit(data=self._ref_data_values,
                              model_function=self.idx_model_nodefaults,
-                             cost_function=self.simple_chi2)
+                             cost_function=self.simple_chi2,
+                             minimizer=DEFAULT_TEST_MINIMIZER)
         self.assertTrue(
             np.allclose(
                 idx_fit.parameter_values,
@@ -186,7 +190,8 @@ class TestFittersIndexed(unittest.TestCase):
     def test_model_partialdefaults(self):
         idx_fit = IndexedFit(data=self._ref_data_values,
                              model_function=self.idx_model_partialdefaults,
-                             cost_function=self.simple_chi2)
+                             cost_function=self.simple_chi2,
+                             minimizer=DEFAULT_TEST_MINIMIZER)
         self.assertTrue(
             np.allclose(
                 idx_fit.parameter_values,
@@ -197,31 +202,31 @@ class TestFittersIndexed(unittest.TestCase):
 
     def test_raise_reserved_parameter_names_in_model(self):
         with self.assertRaises(IndexedFitException):
-            idx_fit_reserved_names = IndexedFit(
-                            data=self._ref_data_values,
-                            model_function=self.idx_model_reserved_names,
-                            cost_function=self.simple_chi2)
+            idx_fit_reserved_names = IndexedFit(data=self._ref_data_values,
+                                                model_function=self.idx_model_reserved_names,
+                                                cost_function=self.simple_chi2,
+                                                minimizer=DEFAULT_TEST_MINIMIZER)
 
     def test_raise_varargs_in_model(self):
         with self.assertRaises(IndexedModelFunctionException):
-            idx_fit_reserved_names = IndexedFit(
-                            data=self._ref_data_values,
-                            model_function=self.idx_model_varargs,
-                            cost_function=self.simple_chi2)
+            idx_fit_reserved_names = IndexedFit(data=self._ref_data_values,
+                                                model_function=self.idx_model_varargs,
+                                                cost_function=self.simple_chi2,
+                                                minimizer=DEFAULT_TEST_MINIMIZER)
 
     def test_raise_varkwargs_in_model(self):
         with self.assertRaises(IndexedModelFunctionException):
-            idx_fit_reserved_names = IndexedFit(
-                            data=self._ref_data_values,
-                            model_function=self.idx_model_varkwargs,
-                            cost_function=self.simple_chi2)
+            idx_fit_reserved_names = IndexedFit(data=self._ref_data_values,
+                                                model_function=self.idx_model_varkwargs,
+                                                cost_function=self.simple_chi2,
+                                                minimizer=DEFAULT_TEST_MINIMIZER)
 
     def test_raise_varargs_and_varkwargs_in_model(self):
         with self.assertRaises(IndexedModelFunctionException):
-            idx_fit_reserved_names = IndexedFit(
-                            data=self._ref_data_values,
-                            model_function=self.idx_model_varargs_and_varkwargs,
-                            cost_function=self.simple_chi2)
+            idx_fit_reserved_names = IndexedFit(data=self._ref_data_values,
+                                                model_function=self.idx_model_varargs_and_varkwargs,
+                                                cost_function=self.simple_chi2,
+                                                minimizer=DEFAULT_TEST_MINIMIZER)
 
 class TestFittersIndexedChi2WithError(unittest.TestCase):
 
@@ -262,7 +267,8 @@ class TestFittersIndexedChi2WithError(unittest.TestCase):
 
         self.idx_fit = IndexedFit(data=self._ref_data_values,
                                   model_function=self.idx_model,
-                                  cost_function=self.chi2_with_error)
+                                  cost_function=self.chi2_with_error,
+                                  minimizer=DEFAULT_TEST_MINIMIZER)
 
         self.idx_fit.add_simple_error(self._ref_data_error,
                                       name="MyDataError", correlation=0, relative=False, reference='data')
@@ -271,7 +277,7 @@ class TestFittersIndexedChi2WithError(unittest.TestCase):
 
         self._ref_total_error = np.sqrt(self._ref_data_error ** 2 + self._ref_model_error ** 2)
 
-        self._ref_parameter_value_estimates = [1.1351433845831516, 2.137441531781195, 2.3405503488535118]
+        self._ref_parameter_value_estimates = [1.1351433, 2.13736919, 2.33346549]
         self._ref_model_value_estimates = self.idx_model(*self._ref_parameter_value_estimates)
 
     def test_get_matching_error_all_empty_dict(self):
@@ -326,7 +332,8 @@ class TestFittersIndexedChi2WithError(unittest.TestCase):
         self.idx_fit_chi2_with_cov_mat = IndexedFit(
                                   data=self._ref_data_values,
                                   model_function=self.idx_model,
-                                  cost_function=self.chi2_with_cov_mat)
+                                  cost_function=self.chi2_with_cov_mat,
+                                  minimizer=DEFAULT_TEST_MINIMIZER)
         self.idx_fit_chi2_with_cov_mat.add_simple_error(self._ref_data_error, correlation=0, relative=False, reference='data')
         self.idx_fit_chi2_with_cov_mat.do_fit()
 
@@ -379,7 +386,7 @@ class TestFittersIndexedChi2WithError(unittest.TestCase):
             np.allclose(
                 self.idx_fit.model,
                 self._ref_model_values,
-                rtol=1e-2
+                rtol=1e-3
             )
         )
 
@@ -388,7 +395,7 @@ class TestFittersIndexedChi2WithError(unittest.TestCase):
             np.allclose(
                 self.idx_fit.total_error,
                 self._ref_total_error,
-                rtol=1e-2
+                rtol=1e-3
             )
         )
 
@@ -408,7 +415,7 @@ class TestFittersIndexedChi2WithError(unittest.TestCase):
             np.allclose(
                 self.idx_fit.model,
                 self._ref_model_value_estimates,
-                rtol=1e-2
+                rtol=1e-3
             )
         )
 
@@ -418,7 +425,7 @@ class TestFittersIndexedChi2WithError(unittest.TestCase):
             np.allclose(
                 self.idx_fit.total_error,
                 self._ref_total_error,
-                rtol=1e-2
+                rtol=1e-3
             )
         )
 
