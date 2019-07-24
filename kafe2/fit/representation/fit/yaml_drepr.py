@@ -232,6 +232,8 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
                 minimizer=_minimizer,
                 minimizer_kwargs=_minimizer_kwargs
             )
+            _fit_object.x_label = yaml_doc.pop('x_label', None)
+            _fit_object.y_label = yaml_doc.pop('y_label', None)
         elif _class is XYMultiFit:
             _fit_object = XYMultiFit(
                 xy_data=_data,
@@ -239,6 +241,14 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
                 minimizer=_minimizer,
                 minimizer_kwargs=_minimizer_kwargs
             )
+            _xy_label = []
+            _x_label = yaml_doc.pop('x_label', None)
+            _y_label = yaml_doc.pop('y_label', None)
+            for _i in range(len(_fit_object.data)):
+                _x_label_i = yaml_doc.pop('x_label_%s' % _i, _x_label)
+                _y_label_i = yaml_doc.pop('y_label_%s' % _i, _y_label)
+                _xy_label.append([_x_label_i, _y_label_i])
+            _fit_object.axis_labels = _xy_label
         if _read_parametric_model is not None:
             _fit_object._param_model = _read_parametric_model
         _constraint_yaml_list = yaml_doc.pop('parameter_constraints', None)
