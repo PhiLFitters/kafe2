@@ -60,8 +60,6 @@ class XYMultiFit(FitBase):
         
         # set the data
         self.data = xy_data
-        # set labels according to the size of xy_data
-        self._axis_labels = [[None, None] for _ in range(xy_data.num_datasets)]
         self._minimizer = minimizer
         self._minimizer_kwargs = minimizer_kwargs
 
@@ -441,7 +439,7 @@ class XYMultiFit(FitBase):
         else:
             self._data_container = self._new_data_container(new_data, dtype=float)
         # TODO: Think of a better way when setting new data to not always delete all labels
-        self._axis_labels = [[None, None] for _ in range(new_data.num_datasets)]
+        self._axis_labels = [[None, None] for _ in range(self._data_container.num_datasets)]
 
     @property
     def axis_labels(self):
