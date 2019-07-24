@@ -10,6 +10,7 @@ from kafe2.fit.unbinned.fit import UnbinnedFitException
 
 
 CONFIG_PARAMETER_DEFAULT_VALUE = kc('core', 'default_initial_parameter_value')
+DEFAULT_TEST_MINIMIZER = 'scipy'
 
 
 class TestFittersUnbinned(unittest.TestCase):
@@ -21,7 +22,6 @@ class TestFittersUnbinned(unittest.TestCase):
         pdf1 = np.exp(-x / tau) / tau / (np.exp(-a / tau) - np.exp(-b / tau))
         pdf2 = 1. / (b - a)
         return (1 - fbg) * pdf1 + fbg * pdf2
-
 
     def setUp(self):
         self._ref_params = (2.2, 0.1)
@@ -38,11 +38,12 @@ class TestFittersUnbinned(unittest.TestCase):
 
         self._ref_cont = UnbinnedContainer(self._ref_data)
 
-        self.unbinned_fit = UnbinnedFit(data=self._ref_cont, model_density_function=self.data_model_density)
+        self.unbinned_fit = UnbinnedFit(data=self._ref_cont,
+                                        model_density_function=self.data_model_density,
+                                        minimizer=DEFAULT_TEST_MINIMIZER)
 
         self._ref_parameter_value_estimates = [2.12814778, 0.10562081]
         self._ref_model = self.data_model_density(self._ref_data, *self._ref_parameter_value_estimates)
-
 
     def test_before_fit_compare_parameter_values(self):
         self.assertTrue(
