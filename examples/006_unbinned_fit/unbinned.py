@@ -1,4 +1,17 @@
-from kafe2 import UnbinnedContainer, UnbinnedFit, ContoursProfiler
+#!/usr/bin/env python2
+"""
+kafe2 example: Unbinned Fit
+================================
+
+An unbinned fit is needed, when there are too few data points to create
+a histogram which follows the pdf one wants to fit.
+With an unbinned likelihood fit it's still possible to fit the pdf to the
+data points.
+In this example we want to calculate the decay time of a myon. As there are
+only a few events in the detector, we use an unbinned fit.
+"""
+
+from kafe2 import UnbinnedContainer, UnbinnedFit, ContoursProfiler, UnbinnedPlot
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -28,13 +41,8 @@ fit = UnbinnedFit(data=data, model_density_function=pdf)
 fit.do_fit()
 fit.report()
 
+plot = UnbinnedPlot(fit)
+plot.plot()
 cpf = ContoursProfiler(fit, profile_subtract_min=False)
-cpf.plot_profiles_contours_matrix(parameters=['tau'],
-                                  show_grid_for='all',
-                                  show_fit_minimum_for='all',
-                                  show_error_span_profiles=True,
-                                  show_legend=True,
-                                  show_parabolic_profiles=True,
-                                  show_ticks_for='all',
-                                  contour_naming_convention='sigma',
-                                  label_ticks_in_sigma=False)
+cpf.plot_profiles_contours_matrix(parameters=['tau', 'fbg'])
+plt.show()

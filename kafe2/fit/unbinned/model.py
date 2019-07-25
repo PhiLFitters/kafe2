@@ -74,3 +74,18 @@ class UnbinnedParametricModel(ParametricModelBaseMixin, UnbinnedContainer):
     @data.setter
     def data(self):
         raise UnbinnedParametricModelException("Parametric model data cannot be set!")
+
+    def eval_model_function(self, x=None, model_parameters=None):
+        """
+        Evaluate the model function.
+
+        :param x: *x* values of the support points (if ``None``, the model *x* values are used)
+        :type x: list or ``None``
+        :param model_parameters: values of the model parameters (if ``None``, the current values are used)
+        :type model_parameters: list or ``None``
+        :return: value(s) of the model function for the given parameters
+        :rtype: :py:obj:`numpy.ndarray`
+        """
+        _x = x if x is not None else self.data
+        _pars = model_parameters if model_parameters is not None else self._model_parameters
+        return self._model_function_object.func(_x, *_pars)

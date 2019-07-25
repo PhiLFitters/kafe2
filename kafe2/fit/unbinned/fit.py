@@ -124,8 +124,38 @@ class UnbinnedFit(FitBase):
             self._data_container = self._new_data_container(new_data, dtype=float)
 
     @property
+    def data_range(self):
+        """
+        :return: the minimum and maximum value of the data
+        """
+        return self._data_container.data_range
+
+    @property
     def model(self):
-        pass
+        """array of model predictions for the data points"""
+        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
+        return self._param_model.data
+
+    @property
+    def model_error(self):
+        """array of pointwise model uncertainties"""
+        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
+        return self._param_model.err
+
+    def eval_model_function(self, x=None, model_parameters=None):
+        """
+        Evaluate the model function.
+
+        :param x: values of *x* at which to evaluate the model function (if ``None``, the data *x* values are used)
+        :type x: iterable of float
+        :param model_parameters: the model parameter values (if ``None``, the current values are used)
+        :type model_parameters: iterable of float
+        :return: model function values
+        :rtype: :py:class:`numpy.ndarray`
+        """
+        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
+        self._param_model.x = self.data
+        return self._param_model.eval_model_function(x=x, model_parameters=model_parameters)
 
     def report(self, output_stream=sys.stdout, asymmetric_parameter_errors=False):
         super(UnbinnedFit, self).report(output_stream=output_stream,

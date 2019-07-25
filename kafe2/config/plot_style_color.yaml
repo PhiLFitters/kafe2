@@ -113,6 +113,28 @@ indexed:
 
 
 
+unbinned:
+  axis_labels:
+    x: "$x$"
+    y: "Density"
+  data_density:
+    plot_kwargs:
+      alpha: 0.5
+      linestyle: '-'
+      label: 'Data %(subplot_id)s'
+      zorder: -100
+    property_cycler:
+      -
+        facecolor:
+          - *kafe_light_red
+          - *kafe_light_blue
+          - *kafe_light_green
+          - *kafe_light_orange
+          - *kafe_light_violet
+          - *kafe_light_brown
+
+
+
 xy:
   axis_labels:
     x: "$x$"

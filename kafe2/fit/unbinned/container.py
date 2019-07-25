@@ -26,4 +26,9 @@ class UnbinnedContainer(IndexedContainer):
         """
         super(UnbinnedContainer, self).__init__(data=data, dtype=dtype)
 
-    # for now everything is the same to the indexed container
+    @property
+    def data_range(self):
+        """
+        :return: the minimum and maximum value of the data
+        """
+        return np.amin(self.data), np.amax(self.data)
