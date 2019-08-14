@@ -27,10 +27,20 @@ class UnbinnedFit(FitBase):
     MODEL_TYPE = UnbinnedParametricModel
     MODEL_FUNCTION_TYPE = UnbinnedModelPDF
     EXCEPTION_TYPE = UnbinnedFitException
-    RESERVED_NODE_NAMES = {'data', 'pdf', 'cost'}
+    RESERVED_NODE_NAMES = {'data', 'model', 'cost'}
 
     def __init__(self, data, model_density_function='gaussian',
                  cost_function=UnbinnedCostFunction_NegLogLikelihood(), minimizer=None, minimizer_kwargs=None):
+        """
+        Construct a fit to a model of *unbinned* data.
+
+        :param data: the data points
+        :param model_density_function: the model density
+        :type model_density_function: :py:class:`~kafe2.fit.unbinned.UnbinnedModelPDF` or unwrapped native Python function
+        :param cost_function: the cost function
+        :param minimizer: the minimizer to use
+        :param minimizer_kwargs:
+        """
         self.data = data
 
         # set/construct the model function object
@@ -111,10 +121,16 @@ class UnbinnedFit(FitBase):
 
     @property
     def data(self):
+        """The current data of the fit object"""
         return self._data_container.data
 
     @data.setter
     def data(self, new_data):
+        """
+        Set new data for the fit
+
+        :param new_data: new data
+        """
         if isinstance(new_data, self.CONTAINER_TYPE):
             self._data_container = deepcopy(new_data)
         elif isinstance(new_data, DataContainerBase):
@@ -125,9 +141,7 @@ class UnbinnedFit(FitBase):
 
     @property
     def data_range(self):
-        """
-        :return: the minimum and maximum value of the data
-        """
+        """The minimum and maximum value of the data"""
         return self._data_container.data_range
 
     @property

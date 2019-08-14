@@ -6,21 +6,22 @@ from ..util import function_library
 
 __all__ = [
     "UnbinnedCostFunction_UserDefined",
-    "UnbinnedCostFunction_NegLogLikelihood"
+    "UnbinnedCostFunction_NegLogLikelihood",
+    "STRING_TO_COST_FUNCTION"
 ]
 
 
 class UnbinnedCostFunction_UserDefined(CostFunctionBase):
     def __init__(self, user_defined_cost_function):
         """
-        User-defined cost function for fits to histograms.
+        User-defined cost function for unbinned fits.
         The function handle must be provided by the user.
 
         :param user_defined_cost_function: function handle
 
         .. note::
             The names of the function arguments must be valid reserved
-            names for the associated fit type (:py:obj:`~kafe2.fit.HistFit`)!
+            names for the associated fit type (:py:obj:`~kafe2.fit.UnbinnedFit`)!
         """
         super(UnbinnedCostFunction_UserDefined, self).__init__(cost_function=user_defined_cost_function)
 
@@ -28,19 +29,13 @@ class UnbinnedCostFunction_UserDefined(CostFunctionBase):
 class UnbinnedCostFunction_NegLogLikelihood(CostFunctionBase):
     def __init__(self):
         r"""
-        Built-in negative log-likelihood cost function for *Hist* data.
+        Built-in negative log-likelihood cost function for *Unbinned* data.
 
-        In addition to the measurement data and model predictions, likelihood-fits require a
-        probability distribution describing how the measurements are distributed around the model
-        predictions.
-        This built-in cost function supports two such distributions: the *Poisson* and *Gaussian* (normal)
-        distributions.
+        When using an unbinned dataset, the negative log-likelihood is the best method to fit a probability density
+        funtion *pdf* to the density of the datapoints
 
         In general, a negative log-likelihood cost function is defined as the double negative logarithm of the
         product of the individual likelihoods of the data points.
-
-        :param data_point_distribution: which type of statistics to use for modelling the distribution of individual data points
-        :type data_point_distribution: ``'poisson'`` or ``'gaussian'``
         """
         super(UnbinnedCostFunction_NegLogLikelihood, self).__init__(cost_function=self.nll)
         self._needs_errors = False

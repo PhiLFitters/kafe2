@@ -20,7 +20,7 @@ class UnbinnedPlotContainer(PlotContainerBase):
 
     def __init__(self, unbinned_fit_object, n_plot_points_model=100):
         """
-        Construc an :py:obj:`UnbinnedPlotContainer` for a :py:obj:`~kafe2.fit.unbinned.UnbinnedFit` object:
+        Construct an :py:obj:`UnbinnedPlotContainer` for a :py:obj:`~kafe2.fit.unbinned.UnbinnedFit` object:
         :param unbinned_fit_object: an :py:obj:`~kafe2.fit.unbinned.UnbinnedFit` object
         :param n_plot_points_model: Number of data points for plotting the model
         :type n_plot_points_model: int
@@ -133,15 +133,23 @@ class UnbinnedPlotContainer(PlotContainerBase):
 
     # public methods
     def plot_data(self, target_axis, **kwargs):
+        # This is an abstract method an needs to be implemented
+        # plot_data_density is used instead to plot the data, to avoid specific kwargs from the default config.
+        # The data density is plotted with LineCollection, which doesn't support some of the kwargs (e.g marker)
         pass
 
-    def plot_data_density(self, target_axis, height=0.05, **kwargs):
+    def plot_data_density(self, target_axis, height=None, **kwargs):
         """
         Method called by the main plot routine to plot the data points to a specified matplotlib ``Axes`` object.
 
         :param target_axis: ``matplotlib`` ``Axes`` object
+        :param height: The height of the lines which represent the density
+        :type height: float
         :return: plot handle(s)
         """
+        if height is None:
+            height = np.max(self.model_y)/10
+
         data = self.data_x
         xy_pairs = np.column_stack([np.repeat(data, 2), np.tile([0, height], len(data))])
         lines = xy_pairs.reshape([len(data), 2, 2])
