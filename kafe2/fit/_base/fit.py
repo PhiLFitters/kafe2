@@ -285,6 +285,24 @@ class FitBase(FileIOMixin, object):
         """
         self._fitter.release_parameter(par_name=par_name)
 
+    def limit_parameter(self, par_name, par_limits):
+        """
+        Limit a parameter to a given range
+        :param par_name: The name of the parameter to limited
+        :type par_name: str
+        :param par_limits: The range of the parameter to be limited to
+        :type par_limits: tuple
+        """
+        self._fitter.limit_parameter(par_name, par_limits)
+
+    def unlimit_parameter(self, par_name):
+        """
+        Unlimit a parameter
+        :param par_name: The name of the parameter to unlimit
+        :type par_name: str
+        """
+        self._fitter.unlimit_parameter(par_name)
+
     def add_matrix_parameter_constraint(self, names, values, matrix, matrix_type='cov', uncertainties=None,
                                         relative=False):
         """

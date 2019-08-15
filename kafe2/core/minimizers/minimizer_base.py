@@ -157,6 +157,12 @@ class MinimizerBase(object):
     def set_several(self, parameter_names, parameter_values):
         raise NotImplementedError()
 
+    def limit(self, parameter_name, parameter_value):
+        raise NotImplementedError()
+
+    def unlimit(self, parameter_name, parameter_value):
+        raise NotImplementedError()
+
     def fix(self, parameter_name):
         raise NotImplementedError()
 

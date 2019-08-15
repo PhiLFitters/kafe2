@@ -177,6 +177,12 @@ class NexusFitter(object):
     def release_parameter(self, par_name):
         self._minimizer.release(par_name)
 
+    def limit_parameter(self, par_name, par_limits):
+        self._minimizer.limit(par_name, par_limits)
+
+    def unlimit_parameter(self, par_name):
+        self._minimizer.unlimit(par_name)
+
     def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, **kwargs):
         if not self.__state_is_from_minimizer:
             raise NexusFitterException("To calculate a contour the do_fit method has to be called first.")
