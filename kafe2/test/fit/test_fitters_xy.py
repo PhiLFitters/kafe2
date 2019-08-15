@@ -8,6 +8,7 @@ from kafe2.fit.xy.fit import XYFitException
 from kafe2.fit.xy.model import XYModelFunctionException
 
 CONFIG_PARAMETER_DEFAULT_VALUE = kc('core', 'default_initial_parameter_value')
+DEFAULT_TEST_MINIMIZER = 'scipy'
 
 
 class TestFittersXY(unittest.TestCase):
@@ -65,18 +66,20 @@ class TestFittersXY(unittest.TestCase):
 
         self.xy_fit = XYFit(xy_data=self._ref_xy_data,
                             model_function=self.xy_model,
-                            cost_function=self.simple_chi2)
+                            cost_function=self.simple_chi2,
+                            minimizer=DEFAULT_TEST_MINIMIZER)
         self.xy_fit.add_simple_error(axis='y', err_val=1.0)
-        self.xy_fit_explicit_model_name_in_chi2 = XYFit(
-            xy_data=self._ref_xy_data,
-            model_function=self.xy_model,
-            cost_function=self.simple_chi2_explicit_model_name)
+        self.xy_fit_explicit_model_name_in_chi2 = XYFit(xy_data=self._ref_xy_data,
+                                                        model_function=self.xy_model,
+                                                        cost_function=self.simple_chi2_explicit_model_name,
+                                                        minimizer=DEFAULT_TEST_MINIMIZER)
         self.xy_fit_explicit_model_name_in_chi2.add_simple_error(axis='y', err_val=1.0)
         self.xy_fit_default_cost_function = XYFit(xy_data=self._ref_xy_data,
-                                                  model_function=self.xy_model)
+                                                  model_function=self.xy_model,
+                                                  minimizer=DEFAULT_TEST_MINIMIZER)
 
         self.xy_fit_default_cost_function.add_simple_error(axis='y', err_val=1.0)
-        self._ref_parameter_value_estimates = [1.1351433845831516, 2.137441531781195, 2.3405503488535118]
+        self._ref_parameter_value_estimates = [1.1351433, 2.13736919, 2.33346549]
         self._ref_y_model_value_estimates = self.xy_model(self._ref_x, *self._ref_parameter_value_estimates)
 
 
@@ -174,8 +177,9 @@ class TestFittersXY(unittest.TestCase):
 
     def test_model_nodefaults(self):
         xy_fit = XYFit(xy_data=self._ref_xy_data,
-                             model_function=self.xy_model_nodefaults,
-                             cost_function=self.simple_chi2)
+                       model_function=self.xy_model_nodefaults,
+                       cost_function=self.simple_chi2,
+                       minimizer=DEFAULT_TEST_MINIMIZER)
         self.assertTrue(
             np.allclose(
                 xy_fit.parameter_values,
@@ -186,8 +190,9 @@ class TestFittersXY(unittest.TestCase):
 
     def test_model_partialdefaults(self):
         xy_fit = XYFit(xy_data=self._ref_xy_data,
-                             model_function=self.xy_model_partialdefaults,
-                             cost_function=self.simple_chi2)
+                       model_function=self.xy_model_partialdefaults,
+                       cost_function=self.simple_chi2,
+                       minimizer=DEFAULT_TEST_MINIMIZER)
         self.assertTrue(
             np.allclose(
                 xy_fit.parameter_values,
@@ -198,31 +203,32 @@ class TestFittersXY(unittest.TestCase):
 
     def test_raise_reserved_parameter_names_in_model(self):
         with self.assertRaises(XYFitException):
-            xy_fit_reserved_names = XYFit(
-                            xy_data=self._ref_xy_data,
-                            model_function=self.xy_model_reserved_names,
-                            cost_function=self.simple_chi2)
+            xy_fit_reserved_names = XYFit(xy_data=self._ref_xy_data,
+                                          model_function=self.xy_model_reserved_names,
+                                          cost_function=self.simple_chi2,
+                                          minimizer=DEFAULT_TEST_MINIMIZER)
 
     def test_raise_varargs_in_model(self):
         with self.assertRaises(XYModelFunctionException):
-            xy_fit_reserved_names = XYFit(
-                            xy_data=self._ref_xy_data,
-                            model_function=self.xy_model_varargs,
-                            cost_function=self.simple_chi2)
+            xy_fit_reserved_names = XYFit(xy_data=self._ref_xy_data,
+                                          model_function=self.xy_model_varargs,
+                                          cost_function=self.simple_chi2,
+                                          minimizer=DEFAULT_TEST_MINIMIZER)
 
     def test_raise_varkwargs_in_model(self):
         with self.assertRaises(XYModelFunctionException):
-            xy_fit_reserved_names = XYFit(
-                            xy_data=self._ref_xy_data,
-                            model_function=self.xy_model_varkwargs,
-                            cost_function=self.simple_chi2)
+            xy_fit_reserved_names = XYFit(xy_data=self._ref_xy_data,
+                                          model_function=self.xy_model_varkwargs,
+                                          cost_function=self.simple_chi2,
+                                          minimizer=DEFAULT_TEST_MINIMIZER)
 
     def test_raise_varargs_and_varkwargs_in_model(self):
         with self.assertRaises(XYModelFunctionException):
-            xy_fit_reserved_names = XYFit(
-                            xy_data=self._ref_xy_data,
-                            model_function=self.xy_model_varargs_and_varkwargs,
-                            cost_function=self.simple_chi2)
+            xy_fit_reserved_names = XYFit(xy_data=self._ref_xy_data,
+                                          model_function=self.xy_model_varargs_and_varkwargs,
+                                          cost_function=self.simple_chi2,
+                                          minimizer=DEFAULT_TEST_MINIMIZER)
+
 
 class TestFittersXYChi2WithError(unittest.TestCase):
 
@@ -262,8 +268,9 @@ class TestFittersXYChi2WithError(unittest.TestCase):
         self._ref_y_model_error = 1.0
 
         self.xy_fit = XYFit(xy_data=self._ref_xy_data,
-                                  model_function=self.xy_model,
-                                  cost_function=self.chi2_with_error)
+                            model_function=self.xy_model,
+                            cost_function=self.chi2_with_error,
+                            minimizer=DEFAULT_TEST_MINIMIZER)
 
         self.xy_fit.add_simple_error('y', self._ref_y_data_error,
                                      name="MyYDataError", correlation=0, relative=False, reference='data')
@@ -272,7 +279,7 @@ class TestFittersXYChi2WithError(unittest.TestCase):
 
         self._ref_y_total_error = np.sqrt(self._ref_y_data_error ** 2 + self._ref_y_model_error ** 2)
 
-        self._ref_parameter_value_estimates = [1.1351433845831516, 2.137441531781195, 2.3405503488535118]
+        self._ref_parameter_value_estimates = [1.1351433, 2.13736919, 2.33346549]
         self._ref_model_value_estimates = self.xy_model(self._ref_x, *self._ref_parameter_value_estimates)
 
     def test_get_matching_error_all_empty_dict(self):
@@ -333,7 +340,8 @@ class TestFittersXYChi2WithError(unittest.TestCase):
         self.xy_fit_chi2_with_cov_mat = XYFit(
                                   xy_data=self._ref_xy_data,
                                   model_function=self.xy_model,
-                                  cost_function=self.chi2_with_cov_mat)
+                                  cost_function=self.chi2_with_cov_mat,
+                                  minimizer=DEFAULT_TEST_MINIMIZER)
         self.xy_fit_chi2_with_cov_mat.add_simple_error('y', self._ref_y_data_error, correlation=0, relative=False, reference='data')
         self.xy_fit_chi2_with_cov_mat.do_fit()
 

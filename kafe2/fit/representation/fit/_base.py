@@ -1,4 +1,5 @@
 import abc
+import six
 
 from kafe2.fit.indexed import IndexedFit
 from kafe2.fit.xy import XYFit
@@ -9,8 +10,8 @@ from kafe2.fit.xy_multi.fit import XYMultiFit
 __all__ = ["FitDReprBase"]
 
 
+@six.add_metaclass(abc.ABCMeta)
 class FitDReprBase(GenericDReprBase):
-    __metaclass__ = abc.ABCMeta
     BASE_OBJECT_TYPE_NAME = 'fit'
 
     _CLASS_TO_OBJECT_TYPE_NAME = {

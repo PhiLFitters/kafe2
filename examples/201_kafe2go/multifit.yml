@@ -67,6 +67,14 @@ y_data_1:
 - 85.45
 - 94.75
 y_errors: 0.1 #TODO assign errors to specific datasets
+
+#When setting labels you can define a default label which is used when no particular label for a index is given
+x_label: "$x$ default"
+#You can overwrite it by setting labels for a certain dataset
+x_label_1: "$x_1$"
+y_label_0: "$y_0$"
+y_label_1: "$y_1$"
+
 model_function_0: |
     # model of current-voltage dependence I(U) for a heating resistor
     # independent variable MUST be named x!

@@ -98,10 +98,13 @@ class HistPlotContainer(PlotContainerBase):
         :param kwargs: keyword arguments accepted by the ``matplotlib`` method ``errorbar``
         :return: plot handle(s)
         """
+        _yerr = np.sqrt(
+            self.data_yerr ** 2 + self._fitter._cost_function.get_uncertainty_gaussian_approximation(self.data_y) ** 2
+        )
         return target_axis.errorbar(self.data_x,
                                     self.data_y,
                                     xerr=self.data_xerr,
-                                    yerr=self.data_yerr,
+                                    yerr=_yerr,
                                     **kwargs)
 
     def plot_model(self, target_axis, **kwargs):

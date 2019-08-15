@@ -37,7 +37,7 @@ import matplotlib.pyplot as plt
 from kafe2 import XYFit, XYCostFunction_NegLogLikelihood, XYPlot
 
 # Years of death are our x-data, measured c14 activity is our y-data.
-# Note that our data does NOT have any measurement errors.
+# Note that our data does NOT include any x or y errors.
 years_of_death, measured_c14_activity = np.loadtxt('measured_c14_activity.txt')
 
 days_per_year = 365.25  # assumed number of days per year
@@ -71,6 +71,8 @@ xy_fit = XYFit(
 xy_fit.add_parameter_constraint(name='T_12_C14', value=5730, uncertainty=40)
 
 # Perform the fit
+# Note that since for a Poisson distribution the data error is directly linked to the mean.
+# Because of this fits can be performed without explicitly adding data errors.
 xy_fit.do_fit()
 
 # Optional: print out a report on the fit results on the console

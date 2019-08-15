@@ -11,6 +11,7 @@ from kafe2.fit.histogram.model import HistModelFunctionException
 
 
 CONFIG_PARAMETER_DEFAULT_VALUE = kc('core', 'default_initial_parameter_value')
+DEFAULT_TEST_MINIMIZER = 'scipy'
 
 
 class TestFittersHist(unittest.TestCase):
@@ -38,7 +39,7 @@ class TestFittersHist(unittest.TestCase):
         self._ref_n_entries = 100
         self._ref_params = (14., 3.)
 
-        self._ref_entries = np.array([ 11.47195963,   9.96715403,  19.90275216,  13.65225802,
+        self._ref_entries = np.array([11.47195963,   9.96715403,  19.90275216,  13.65225802,
                                     18.52670233,  17.79707059,  11.5441954 ,  18.42331074,
                                     13.3808496 ,  18.40632518,  13.21694177,  15.34569261,
                                      9.85164713,  11.56275047,  12.42687109,   9.43924719,
@@ -74,15 +75,17 @@ class TestFittersHist(unittest.TestCase):
         self.hist_fit = HistFit(data=self._ref_hist_cont,
                                 model_density_function=self.hist_model_density,
                                 cost_function=self.simple_chi2,
-                                model_density_antiderivative=self.hist_model_density_antideriv)
+                                model_density_antiderivative=self.hist_model_density_antideriv,
+                                minimizer=DEFAULT_TEST_MINIMIZER)
         self.hist_fit.add_simple_error(err_val=1.0)
         self.hist_fit_default_cost_function = HistFit(data=self._ref_hist_cont,
                                                       model_density_function=self.hist_model_density,
-                                                      model_density_antiderivative=self.hist_model_density_antideriv)
+                                                      model_density_antiderivative=self.hist_model_density_antideriv,
+                                                      minimizer=DEFAULT_TEST_MINIMIZER)
         self.hist_fit_default_cost_function.add_simple_error(err_val=1.0)
 
-        self._ref_parameter_value_estimates = [13.828005427495496, 2.6276452391799703]
-        self._ref_parameter_value_estimates_default_cost_function = [14.185468816590726, 3.0232973450410165]
+        self._ref_parameter_value_estimates = [13.82779355, 2.62031141]
+        self._ref_parameter_value_estimates_default_cost_function = [14.18443871, 3.0148702]
         self._ref_model_estimates = (self.hist_model_density_antideriv(self._ref_bin_edges[1:], *self._ref_parameter_value_estimates) -
                                      self.hist_model_density_antideriv(self._ref_bin_edges[:-1], *self._ref_parameter_value_estimates)) * self._ref_n_entries
         self._ref_model_estimates_default_cost_function = (self.hist_model_density_antideriv(self._ref_bin_edges[1:], *self._ref_parameter_value_estimates_default_cost_function) -

@@ -3,6 +3,7 @@ import inspect
 import numpy as np
 import re
 import string
+import six
 
 from .format import ModelParameterFormatter, CostFunctionFormatter
 
@@ -113,6 +114,7 @@ class CostFunctionException(Exception):
     pass
 
 
+@six.add_metaclass(abc.ABCMeta)
 class CostFunctionBase(FileIOMixin, object):
     """
     This is a purely abstract class implementing the minimal interface required by all
@@ -132,7 +134,6 @@ class CostFunctionBase(FileIOMixin, object):
     cost function and to ensure the function can be used as a cost function (validation).
 
     """
-    __metaclass__ = abc.ABCMeta
 
     EXCEPTION_TYPE = CostFunctionException
     FORMATTER_TYPE = CostFunctionFormatter
@@ -247,6 +248,14 @@ class CostFunctionBase(FileIOMixin, object):
         """Whether the cost function needs errors for a meaningful result"""
         return self._needs_errors
 
+    def get_uncertainty_gaussian_approximation(self, data):
+        """
+        Get the gaussian approximation of the uncertainty inherent to the cost function, returns 0 by default.
+        :param data: the fit data
+        :return: the approximated gaussian uncertainty given the fit data
+        """
+        return 0
+
     def set_flag(self, name, value):
         self._flags[name] = value
 
@@ -256,7 +265,7 @@ class CostFunctionBase(FileIOMixin, object):
     def is_data_compatible(self, data):
         """
         Tests if model data is compatible with cost function
-        :param data: the model data
+        :param data: the fit data
         :type data: numpy.ndarray
         :return: if the data is compatible, and if not a reason for the incompatibility
         :rtype: (boo, str)
@@ -482,6 +491,12 @@ class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
         else:
             return True, None
 
+    def get_uncertainty_gaussian_approximation(self, data):
+        if self._cost_function_handle is self.nll_poisson:
+            return np.sqrt(data)
+        else:
+            return 0
+
 
 class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
     def __init__(self, data_point_distribution='poisson'):
@@ -596,6 +611,12 @@ class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
             return False, "poisson distribution can only have non-negative integers as y data."
         else:
             return True, None
+
+    def get_uncertainty_gaussian_approximation(self, data):
+        if self._cost_function_handle is self.nllr_poisson:
+            return np.sqrt(data)
+        else:
+            return 0
 
 
 class CostFunctionBase_Chi2_Nuisance(CostFunctionBase_Chi2):
