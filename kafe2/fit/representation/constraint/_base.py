@@ -1,4 +1,5 @@
 import abc
+import six
 
 from kafe2.fit.representation._base import GenericDReprBase
 from kafe2.core.constraint import GaussianSimpleParameterConstraint, GaussianMatrixParameterConstraint
@@ -6,8 +7,8 @@ from kafe2.core.constraint import GaussianSimpleParameterConstraint, GaussianMat
 __all__ = ["ConstraintDReprBase"]
 
 
+@six.add_metaclass(abc.ABCMeta)
 class ConstraintDReprBase(GenericDReprBase):
-    __metaclass__ = abc.ABCMeta
     BASE_OBJECT_TYPE_NAME = 'constraint'
 
     _CLASS_TO_OBJECT_TYPE_NAME = {

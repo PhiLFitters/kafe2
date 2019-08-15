@@ -1,5 +1,6 @@
-from abc import ABCMeta
+import abc
 import numpy as np
+import six
 
 from kafe2.fit.io.file import FileIOMixin
 
@@ -8,13 +9,12 @@ class ParameterConstraintException(Exception):
     pass
 
 
+@six.add_metaclass(abc.ABCMeta)
 class ParameterConstraint(FileIOMixin, object):
     """
     Abstract base class for parameter constraints.
     Subclasses must implement the ``cost`` method.
     """
-
-    __metaclass__ = ABCMeta
 
     def __init__(self):
         pass

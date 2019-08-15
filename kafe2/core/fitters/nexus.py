@@ -14,11 +14,11 @@ class NodeException(Exception):
     pass
 
 
+@six.add_metaclass(abc.ABCMeta)
 class NodeBase(object):
     """
     Abstract class. Defines the minimal interface required by all specializations.
     """
-    __metaclass__ = abc.ABCMeta
 
     RESERVED_PARAMETER_NAMES = ('__all__', '__real__')
 

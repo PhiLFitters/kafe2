@@ -17,6 +17,7 @@ class DataContainerException(Exception):
     pass
 
 
+@six.add_metaclass(abc.ABCMeta)
 class DataContainerBase(FileIOMixin, object):
     """
     This is a purely abstract class implementing the minimal interface required by all
@@ -24,7 +25,6 @@ class DataContainerBase(FileIOMixin, object):
 
     It stores measurement data and uncertainties.
     """
-    __metaclass__ = abc.ABCMeta
 
     def __init__(self):
         self._error_dicts = dict()

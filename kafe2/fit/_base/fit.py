@@ -2,6 +2,7 @@ import abc
 import numpy as np
 import sys
 import textwrap
+import six
 
 from collections import OrderedDict
 
@@ -18,12 +19,12 @@ class FitException(Exception):
     pass
 
 
+@six.add_metaclass(abc.ABCMeta)
 class FitBase(FileIOMixin, object):
     """
     This is a purely abstract class implementing the minimal interface required by all
     types of fitters.
     """
-    __metaclass__ = abc.ABCMeta
 
     CONTAINER_TYPE = None
     MODEL_TYPE = None

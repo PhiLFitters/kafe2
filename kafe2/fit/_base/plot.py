@@ -106,6 +106,7 @@ class PlotContainerException(Exception):
     pass
 
 
+@six.add_metaclass(abc.ABCMeta)
 class PlotContainerBase(object):
     """
     This is a purely abstract class implementing the minimal interface required by all
@@ -124,7 +125,6 @@ class PlotContainerBase(object):
     data and the fitted model, as well as methods calling the ``matplotlib`` routines
     doing the actual plotting.
     """
-    __metaclass__ = abc.ABCMeta
 
     FIT_TYPE = None
 
@@ -269,9 +269,12 @@ class PlotContainerBase(object):
 
 # -- must come last!
 
+
 class PlotFigureException(Exception):
     pass
 
+
+@six.add_metaclass(abc.ABCMeta)  # TODO: check if needed
 class PlotFigureBase(object):
     """
     This is a purely abstract class implementing the minimal interface required by all
@@ -283,7 +286,6 @@ class PlotFigureBase(object):
     It controls the overall figure layout and is responsible for axes, subplot and legend management.
     """
     # TODO update documentation
-    __metaclass__ = abc.ABCMeta  # TODO: check if needed
 
     PLOT_CONTAINER_TYPE = None
     PLOT_STYLE_CONFIG_DATA_TYPE = 'default'

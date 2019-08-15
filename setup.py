@@ -42,7 +42,8 @@ setup(
         'Scipy',
         'tabulate',
         'matplotlib',
-        'PyYaml'
+        'PyYaml',
+        'six'
     ],
     classifiers=[
         'Development Status :: 4 - Beta',

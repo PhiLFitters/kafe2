@@ -1,4 +1,5 @@
 import abc
+import six
 #import pyximport
 
 #pyximport.install()
@@ -51,11 +52,11 @@ def get_fitter(fitter_spec):
     return _fitter
 
 
+@six.add_metaclass(abc.ABCMeta)
 class FitterBase(object):
     """
     Purely abstract class. Defines the minimal interface required by all specializations.
     """
-    __metaclass__ = abc.ABCMeta
 
     @abc.abstractproperty
     def do_fit(self): pass

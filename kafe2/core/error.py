@@ -5,6 +5,7 @@
 import abc
 import copy
 import numpy as np
+import six
 
 import logging
 
@@ -194,11 +195,11 @@ Data structures for Gaussian Errors
 """
 
 
+@six.add_metaclass(abc.ABCMeta)
 class GaussianErrorBase(object):
     """
     Purely abstract class. Defines the minimal interface required by all specializations.
     """
-    __metaclass__ = abc.ABCMeta
 
     @abc.abstractproperty
     def error(self):

@@ -1,4 +1,5 @@
 import abc
+import six
 
 from kafe2.fit.histogram import HistModelFunction, HistParametricModel
 from kafe2.fit.indexed import IndexedModelFunction, IndexedParametricModel
@@ -9,8 +10,8 @@ from kafe2.fit.representation._base import GenericDReprBase
 __all__ = ["ModelFunctionDReprBase", "ParametricModelDReprBase"]
 
 
+@six.add_metaclass(abc.ABCMeta)
 class ModelFunctionDReprBase(GenericDReprBase):
-    __metaclass__ = abc.ABCMeta
     BASE_OBJECT_TYPE_NAME = 'model_function'
 
     _CLASS_TO_OBJECT_TYPE_NAME = {
@@ -30,8 +31,9 @@ class ModelFunctionDReprBase(GenericDReprBase):
         self._kafe_object = model_function
         super(ModelFunctionDReprBase, self).__init__()
 
+
+@six.add_metaclass(abc.ABCMeta)
 class ParametricModelDReprBase(GenericDReprBase):
-    __metaclass__ = abc.ABCMeta
     BASE_OBJECT_TYPE_NAME = 'model'
 
     _CLASS_TO_OBJECT_TYPE_NAME = {

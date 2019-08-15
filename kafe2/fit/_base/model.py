@@ -1,5 +1,6 @@
 import abc
 import inspect
+import six
 
 from .format import ModelParameterFormatter, ModelFunctionFormatter
 from ..io.file import FileIOMixin
@@ -65,6 +66,7 @@ class ModelFunctionException(Exception):
     pass
 
 
+@six.add_metaclass(abc.ABCMeta)
 class ModelFunctionBase(FileIOMixin, object):
     """
     This is a purely abstract class implementing the minimal interface required by all
@@ -80,7 +82,6 @@ class ModelFunctionBase(FileIOMixin, object):
     model function and to ensure the function can be used as a model function (validation).
 
     """
-    __metaclass__ = abc.ABCMeta
 
     EXCEPTION_TYPE = ModelFunctionException
     FORMATTER_TYPE = ModelFunctionFormatter
