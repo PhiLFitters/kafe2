@@ -1,9 +1,8 @@
-import numpy as np
 from types import FunctionType
 
 from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException, ModelParameterFormatter
 from .container import UnbinnedContainer, UnbinnedContainerException
-from .format import UnbinnedModelPDFFormatter
+from ..xy.format import XYModelFunctionFormatter
 from ..util import function_library
 
 
@@ -13,7 +12,7 @@ class UnbinnedModelPDFException(ModelFunctionException):
 
 class UnbinnedModelPDF(ModelFunctionBase):
     EXCEPTION_TYPE = UnbinnedModelPDFException
-    FORMATTER_TYPE = UnbinnedModelPDFFormatter
+    FORMATTER_TYPE = XYModelFunctionFormatter  # TODO: check for more duplicates and use the xy Formatter where possible
 
     def __init__(self, model_density_function=None):
         self._x_name = 'x'

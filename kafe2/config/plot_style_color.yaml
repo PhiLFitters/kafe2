@@ -120,8 +120,8 @@ unbinned:
   data_density:
     plot_kwargs:
       alpha: 0.5
-      linestyle: '-'
-      label: 'Data %(subplot_id)s'
+      linestyle: 'solid'
+      label: 'data %(subplot_id)s'
       zorder: -100
     property_cycler:
       -

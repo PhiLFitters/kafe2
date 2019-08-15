@@ -10,6 +10,5 @@
 from .container import *
 from .cost import *
 from .fit import *
-from .format import *
 from .model import *
 from .plot import *

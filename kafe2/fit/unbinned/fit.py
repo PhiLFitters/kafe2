@@ -1,19 +1,14 @@
 from collections import OrderedDict
 from copy import deepcopy
 
-import numpy as np
-import six
 import sys
-import textwrap
 
-from ...tools import print_dict_as_table
 from ...core import NexusFitter, Nexus
 from ...config import kc
-from .._base import FitException, FitBase, DataContainerBase, CostFunctionBase
+from .._base import FitException, FitBase, DataContainerBase
 from .container import UnbinnedContainer
 from .cost import UnbinnedCostFunction_UserDefined, UnbinnedCostFunction_NegLogLikelihood
 from .model import UnbinnedModelPDF, UnbinnedParametricModel
-from ..util import function_library
 
 __all__ = ["UnbinnedFit"]
 
