@@ -9,7 +9,6 @@ from collections import OrderedDict
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gs
 
-
 __all__ = ["PlotContainerBase", "PlotFigureBase", "MultiPlotBase", "PlotContainerException", "PlotFigureException",
            "kc_plot_style"]
 
@@ -135,7 +134,7 @@ class PlotContainerBase(object):
 
         :param fit_object: an object derived from :py:obj:`~kafe2.fit._base.FitBase`
         """
-        #TODO: update documentation
+        # TODO: update documentation
         if not isinstance(fit_object, self.__class__.FIT_TYPE):
             raise PlotContainerException("PlotContainer of type '%s' is incompatible with Fit of type '%s'"
                                          % (self.__class__, fit_object.__class__))
@@ -236,7 +235,6 @@ class PlotContainerBase(object):
         :return: iterable
         """
         pass
-
 
     @abc.abstractmethod
     def plot_data(self, target_axis, **kwargs):
@@ -360,7 +358,7 @@ class PlotFigureBase(object):
             if self.__class__.IS_MULTI_PLOT:
                 _pdc = self.__class__.PLOT_CONTAINER_TYPE(_fit, model_index=self._model_indices[_i])
             else:
-                _pdc = self.__class__.PLOT_CONTAINER_TYPE(_fit)                
+                _pdc = self.__class__.PLOT_CONTAINER_TYPE(_fit)
             self._plot_data_containers.append(_pdc)
             self._artist_store.append(dict())
 
@@ -378,7 +376,7 @@ class PlotFigureBase(object):
             self._subplot_container_plot_method_name[_pt] = self.PLOT_SUBPLOT_TYPES[_pt]['plot_container_method']
             self._subplot_static_kwarg_dicts[_pt] = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, _pt, 'plot_kwargs')
             self._subplot_prop_cyclers[_pt] = Cycler(*kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, _pt, 'property_cycler'))
-            
+
         #set axis labels:
         self._plot_label_x = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'x')
         self._plot_label_y = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'y')
@@ -387,7 +385,7 @@ class PlotFigureBase(object):
 
     def _get_interpolated_label(self, subplot_id, plot_type):
         _kwargs = self._subplot_static_kwarg_dicts[subplot_id][plot_type]
-        _label_raw =_kwargs.pop('label')
+        _label_raw = _kwargs.pop('label')
         return _label_raw % _kwargs
 
     def _get_subplot_kwargs(self, subplot_id, plot_type):
@@ -409,7 +407,6 @@ class PlotFigureBase(object):
         _n_defined_plot_types = len(self._defined_plot_types)
         if 'zorder' not in _kwargs:
             _kwargs['zorder'] = subplot_id * _n_defined_plot_types + self._defined_plot_types.index(plot_type)
-
 
         return _kwargs
 
@@ -495,8 +492,6 @@ class PlotFigureBase(object):
             target_figure.text(_fig_ls[2], _y, _formatted_string, **kwargs)
             _y_inc_counter += 1
 
-
-
     def _render_legend(self, target_axis, **kwargs):
         _hs_unsorted, _ls_unsorted = target_axis.get_legend_handles_labels()
         _hs_sorted, _ls_sorted = [], []
@@ -504,7 +499,7 @@ class PlotFigureBase(object):
         # sort legend entries by drawing order
         for _subplot_artist_map in self._artist_store:
             for _pt in self._defined_plot_types:
-                _artist = _subplot_artist_map.get(_pt , None)
+                _artist = _subplot_artist_map.get(_pt, None)
                 if _artist is None:
                     continue
                 try:
@@ -534,7 +529,6 @@ class PlotFigureBase(object):
                            borderaxespad=_borderaxespad,
                            ncol=_ncol,
                            **kwargs).set_zorder(_zorder)
-
 
     def _get_total_data_range_x(self):
         _min, _max = None, None
@@ -585,9 +579,10 @@ class PlotFigureBase(object):
         """Set the x-label for the plot.
         
         :param x_label: x-label to set
-        :type x_label: string
+        :type x_label: str
         """
-        self._plot_label_x = x_label
+        if x_label is not None:
+            self._plot_label_x = x_label
 
     @property
     def y_label(self):
@@ -599,9 +594,10 @@ class PlotFigureBase(object):
         """Set the y-label for the plot.
         
         :param y_label: y-label to set
-        :type y_label: string
+        :type y_label: str
         """
-        self._plot_label_y = y_label
+        if y_label is not None:
+            self._plot_label_y = y_label
 
     # -- public methods
 
@@ -631,7 +627,7 @@ class PlotFigureBase(object):
 class MultiPlotBase(object):
     """Abstract class for making plots from multi fits"""
     SINGULAR_PLOT_TYPE = None
-    
+
     def __init__(self, fit_objects, separate_plots=True):
         """
         Parent constructor for multi plots
@@ -644,32 +640,53 @@ class MultiPlotBase(object):
         :type separate_plots: bool
         """
         self._underlying_plots = []
+        self._axis_labels = []
         try:
             iter(fit_objects)
         except:
-            fit_objects=[fit_objects]
+            fit_objects = [fit_objects]
         if separate_plots:
             for _fit_object in fit_objects:
                 for _i in range(_fit_object.model_count):
                     self._underlying_plots.append(self.__class__.SINGULAR_PLOT_TYPE(_fit_object, model_indices=_i))
+                    # set size of labels array, if label is None it should be set to the default by SINGULAR_PLOT_TYPE
+                    self._axis_labels.append([None, None])
         else:
             for _fit_object in fit_objects:
-                _fit_object_list = [] 
+                _fit_object_list = []
                 _model_indices = []
                 for _i in range(_fit_object.model_count):
                     _fit_object_list.append(_fit_object)
                     _model_indices.append(_i)
                 self._underlying_plots.append(self.__class__.SINGULAR_PLOT_TYPE(_fit_object_list, model_indices=_model_indices))
 
+    @property
+    def axis_labels(self):
+        """the axis-labels of the plot"""
+        return self._axis_labels
+
+    @axis_labels.setter
+    def axis_labels(self, labels):
+        """sets the axis labels of the plot
+
+        :param labels: list of axis labels
+        :type labels: list
+        """
+        if len(labels) != len(self._axis_labels) or len(labels[0]) != len(self._axis_labels[0]):
+            raise PlotContainerException("The dimensions of labels must fit the dimension of the data")
+        self._axis_labels = labels
+
     def get_figure(self, plot_index):
         """return the figure with the specified index"""
         return self._underlying_plots[plot_index].figure
-    
+
     def plot(self):
         """Plot data, model (and other subplots) for all child :py:obj:`Fit` objects, and show legend."""
-        for _plot in self._underlying_plots:
+        for _i, _plot in enumerate(self._underlying_plots):
+            _plot.x_label = self._axis_labels[_i][0]
+            _plot.y_label = self._axis_labels[_i][1]
             _plot.plot()
-    
+
     def show_fit_info_box(self, format_as_latex=True):
         """Render text information about each plot on the figure.
 
@@ -678,4 +695,3 @@ class MultiPlotBase(object):
         """
         for _plot in self._underlying_plots:
             _plot.show_fit_info_box(format_as_latex=format_as_latex)
-        

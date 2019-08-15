@@ -2,7 +2,7 @@ import numpy as np
 
 from .._base import PlotContainerBase, PlotContainerException, PlotFigureBase
 from .._aux import step_fill_between
-from . import IndexedFit
+from .fit import IndexedFit
 
 __all__ = ["IndexedPlot", "IndexedPlotContainer"]
 
@@ -81,15 +81,26 @@ class IndexedPlotContainer(PlotContainerBase):
         :return: plot handle(s)
         """
         if self._fitter.has_errors:
+            _yerr = np.sqrt(
+                self.data_yerr ** 2
+                + self._fitter._cost_function.get_uncertainty_gaussian_approximation(self.data_y) ** 2
+            )
             return target_axis.errorbar(self.data_x,
                                         self.data_y,
                                         xerr=self.data_xerr,
-                                        yerr=self.data_yerr,
+                                        yerr=_yerr,
                                         **kwargs)
         else:
-            return target_axis.plot(self.data_x,
-                                    self.data_y,
-                                    **kwargs)
+            _yerr = self._fitter._cost_function.get_uncertainty_gaussian_approximation(self.data_y)
+            if np.all(_yerr == 0):
+                return target_axis.plot(self.data_x,
+                                        self.data_y,
+                                        **kwargs)
+            else:
+                return target_axis.errorbar(self.data_x,
+                                            self.data_y,
+                                            yerr=_yerr,
+                                            **kwargs)
 
     def plot_model(self, target_axis, **kwargs):
         """

@@ -34,6 +34,7 @@ Requirements
 * `SciPy <http://www.scipy.org>`_
 * `matplotlib <http://matplotlib.org>`_
 * `tabulate <https://pypi.org/project/tabulate/>`_
+* `PyYAML <https://pypi.org/project/PyYAML/>`_
 
 
 Since *kafe2* relies on *matplotlib* for graphics it might be necessary to install external programs:
