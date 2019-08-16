@@ -229,6 +229,20 @@ class TestFittersXY(unittest.TestCase):
                                           cost_function=self.simple_chi2,
                                           minimizer=DEFAULT_TEST_MINIMIZER)
 
+    def test_nexus_update_on_data_change(self):
+        new_estimates = [0, 1, 0]
+        self.xy_fit.data = np.array([[0, 1, 2, 3, 4], [0, 1, 2, 3, 4]])
+        self.xy_fit.add_simple_error(axis='y', err_val=1.0)
+        self.xy_fit.do_fit()
+        print(self.xy_fit.parameter_values)
+        self.assertTrue(
+            np.allclose(
+                self.xy_fit.parameter_values,
+                new_estimates,
+                atol=1e-2
+            )
+        )
+
 
 class TestFittersXYChi2WithError(unittest.TestCase):
 
