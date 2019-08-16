@@ -112,8 +112,8 @@ class XYMultiFit(FitBase):
         self._nexus = Nexus()
 
         # create regular nexus Nodes for the x and y data values
-        self._nexus.new(y_data=self.y_data)
-        self._nexus.new(x_data=self.x_data)
+        self._nexus.new_function(lambda: self.y_data, function_name='y_data')
+        self._nexus.new_function(lambda: self.x_data, function_name='x_data')
 
         # create nexus function Nodes for the x and y model values
         self._nexus.new_function(lambda: self.x_model, function_name='x_model')
@@ -440,6 +440,9 @@ class XYMultiFit(FitBase):
             self._data_container = self._new_data_container(new_data, dtype=float)
         # TODO: Think of a better way when setting new data to not always delete all labels
         self._axis_labels = [[None, None] for _ in range(self._data_container.num_datasets)]
+        if hasattr(self, '_nexus'):
+            self._nexus.get_by_name('x_data').mark_for_update()
+            self._nexus.get_by_name('y_data').mark_for_update()
 
     @property
     def axis_labels(self):

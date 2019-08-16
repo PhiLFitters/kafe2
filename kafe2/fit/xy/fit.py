@@ -102,8 +102,8 @@ class XYFit(FitBase):
         self._nexus = Nexus()
 
         # create regular nexus Nodes for the x and y data values
-        self._nexus.new(y_data=self.y_data)
-        self._nexus.new(x_data=self.x_data)
+        self._nexus.new_function(lambda: self.y_data, function_name='y_data')
+        self._nexus.new_function(lambda: self.x_data, function_name='x_data')
 
         # create nexus function Nodes for the x and y model values
         self._nexus.new_function(lambda: self.x_model, function_name='x_model')
@@ -446,6 +446,10 @@ class XYFit(FitBase):
             _x_data = new_data[0]
             _y_data = new_data[1]
             self._data_container = self._new_data_container(_x_data, _y_data, dtype=float)
+        # update nexus data nodes
+        if hasattr(self, '_nexus'):
+            self._nexus.get_by_name('x_data').mark_for_update()
+            self._nexus.get_by_name('y_data').mark_for_update()
 
     @property
     def model(self):

@@ -101,7 +101,7 @@ class HistFit(FitBase):
 
     def _init_nexus(self):
         self._nexus = Nexus()
-        self._nexus.new(data=self.data)  # Node containing indexed data is called 'data'
+        self._nexus.new_function(lambda: self.data, function_name='data')  # Node containing indexed data is called 'data'
 
         # create a NexusNode for each parameter of the model function
 
@@ -187,6 +187,8 @@ class HistFit(FitBase):
                                       % (type(new_data), self.CONTAINER_TYPE))
         else:
             raise HistFitException("Fitting a histogram requires a HistContainer!")
+        if hasattr(self, '_nexus'):
+            self._nexus.get_by_name('data').mark_for_update()
 
     @property
     def data_error(self):
