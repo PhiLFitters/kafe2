@@ -71,7 +71,7 @@ class UnbinnedFit(FitBase):
         self._nexus = Nexus()
 
         # create regular nexus node
-        self._nexus.new(x=self.data)
+        self._nexus.new_function(lambda: self.data, 'x')
 
         # create a NexusNode for each parameter of the model function
         _nexus_new_dict = OrderedDict()
@@ -133,6 +133,8 @@ class UnbinnedFit(FitBase):
                                        % (type(new_data), self.CONTAINER_TYPE))
         else:
             self._data_container = self._new_data_container(new_data, dtype=float)
+        if hasattr(self, '_nexus'):
+            self._nexus.get_by_name('x').mark_for_update()
 
     @property
     def data_range(self):

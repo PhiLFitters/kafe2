@@ -86,5 +86,5 @@ class UnbinnedParametricModel(ParametricModelBaseMixin, UnbinnedContainer):
         :rtype: :py:obj:`numpy.ndarray`
         """
         _x = x if x is not None else self.data
-        _pars = model_parameters if model_parameters is not None else self._model_parameters
+        _pars = model_parameters if model_parameters is not None else self.parameters
         return self._model_function_object.func(_x, *_pars)
