@@ -92,6 +92,14 @@ class IndexedContainer(DataContainerBase):
         _total_error = self.get_total_error()
         return _total_error.cor_mat
 
+    @property
+    def data_range(self):
+        """
+        :return: the minimum and maximum value of the data
+        """
+        return np.amin(self.data), np.amax(self.data)
+
+
     # -- public methods
 
     def add_simple_error(self, err_val,

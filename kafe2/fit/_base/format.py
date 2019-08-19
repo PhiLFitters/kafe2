@@ -302,6 +302,9 @@ class ModelFunctionFormatter(FileIOMixin, object):
         return ["%s" % (_pn,) for _pn in _par_name_strings]
 
     def _get_formatted_expression(self, format_as_latex=False):
+        # TODO: nicer way then always use two curly braces for latex expression?
+        # Currently when creating a latex expression to curly braces are needed. E.g. \\frac{{1}}{{x}} for 1/x
+        # If only one curly brace is used kafe will lookup the associated param
         _kwargs = self._get_format_kwargs(format_as_latex=format_as_latex)
         if format_as_latex and self._latex_expr_string is not None:
             _par_expr_string = self._latex_expr_string.format(*[_af.latex_name for _af in self._arg_formatters], **_kwargs)
