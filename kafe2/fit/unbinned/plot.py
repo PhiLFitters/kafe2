@@ -132,13 +132,7 @@ class UnbinnedPlotContainer(PlotContainerBase):
         return self._plot_range_y
 
     # public methods
-    def plot_data(self, target_axis, **kwargs):
-        # This is an abstract method an needs to be implemented
-        # plot_data_density is used instead to plot the data, to avoid specific kwargs from the default config.
-        # The data density is plotted with LineCollection, which doesn't support some of the kwargs (e.g marker)
-        pass
-
-    def plot_data_density(self, target_axis, height=None, **kwargs):
+    def plot_data(self, target_axis, height=None, **kwargs):
         """
         Method called by the main plot routine to plot the data points to a specified matplotlib ``Axes`` object.
 
@@ -147,8 +141,10 @@ class UnbinnedPlotContainer(PlotContainerBase):
         :type height: float
         :return: plot handle(s)
         """
+        kwargs.pop('marker', None)  # pop marker keyword, as LineCollection doesn't support it
+
         if height is None:
-            height = np.max(self.model_y)/10
+            height = np.max(self.model_y)/10  # set height to 1/10th of the max height of the model
 
         data = self.data_x
         xy_pairs = np.column_stack([np.repeat(data, 2), np.tile([0, height], len(data))])
@@ -177,15 +173,7 @@ class UnbinnedPlot(PlotFigureBase):
 
     PLOT_CONTAINER_TYPE = UnbinnedPlotContainer
     PLOT_STYLE_CONFIG_DATA_TYPE = 'unbinned'
-    PLOT_SUBPLOT_TYPES = OrderedDict()
-    PLOT_SUBPLOT_TYPES.update(
-        data_density=dict(
-            plot_container_method='plot_data_density',
-        ),
-        model=dict(
-            plot_container_method='plot_model',
-        ),
-    )
+    PlotFigureBase.PLOT_SUBPLOT_TYPES.copy()
 
     def __init__(self, fit_objects):
         super(UnbinnedPlot, self).__init__(fit_objects=fit_objects)

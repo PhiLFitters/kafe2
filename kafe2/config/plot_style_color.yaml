@@ -117,7 +117,7 @@ unbinned:
   axis_labels:
     x: "$x$"
     y: "Density"
-  data_density:
+  data:
     plot_kwargs:
       alpha: 0.5
       linestyle: 'solid'
