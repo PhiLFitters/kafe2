@@ -406,7 +406,7 @@ class PlotFigureBase(object):
         # calculate zorder if not explicitly given
         _n_defined_plot_types = len(self._defined_plot_types)
         if 'zorder' not in _kwargs:
-            _kwargs['zorder'] = subplot_id * _n_defined_plot_types + self._defined_plot_types.index(plot_type)
+            _kwargs['zorder'] = subplot_id * _n_defined_plot_types + list(self._defined_plot_types).index(plot_type)
 
         return _kwargs
 

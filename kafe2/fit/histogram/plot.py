@@ -118,7 +118,7 @@ class HistPlotContainer(PlotContainerBase):
         #_pad = kwargs.pop('bar_width_pad')
         _sf = kwargs.pop('bar_width_scale_factor')
         return target_axis.bar(
-                             left=self.model_x,
+                             x=self.model_x,
                              align='center',
                              height=self.model_y,
                              width=self.model_xerr*2.0 * _sf,
