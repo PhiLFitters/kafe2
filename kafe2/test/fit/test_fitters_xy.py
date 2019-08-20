@@ -231,10 +231,10 @@ class TestFittersXY(unittest.TestCase):
 
     def test_nexus_update_on_data_change(self):
         new_estimates = [0, 1, 0]
-        self.xy_fit.data = np.array([[0, 1, 2, 3, 4], [0, 1, 2, 3, 4]])
+        lin = range(5)
+        self.xy_fit.data = [lin, lin]
         self.xy_fit.add_simple_error(axis='y', err_val=1.0)
         self.xy_fit.do_fit()
-        print(self.xy_fit.parameter_values)
         self.assertTrue(
             np.allclose(
                 self.xy_fit.parameter_values,

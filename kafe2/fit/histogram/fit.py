@@ -187,8 +187,10 @@ class HistFit(FitBase):
                                       % (type(new_data), self.CONTAINER_TYPE))
         else:
             raise HistFitException("Fitting a histogram requires a HistContainer!")
-        if hasattr(self, '_nexus'):
+        if hasattr(self, '_nexus'):  # update nexus data node
             self._nexus.get_by_name('data').mark_for_update()
+        if hasattr(self, '_param_model'):  # update the parametric model if the bins have changed
+            self._param_model.rebin(self._data_container.bin_edges)
 
     @property
     def data_error(self):
