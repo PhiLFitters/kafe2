@@ -431,6 +431,7 @@ class XYMultiFit(FitBase):
 
     @data.setter
     def data(self, new_data):
+        # Fixme: When new data has different length do_fit() will fail when the minimizer calls the x_model
         if isinstance(new_data, self.CONTAINER_TYPE):
             self._data_container = deepcopy(new_data)
         elif isinstance(new_data, DataContainerBase):

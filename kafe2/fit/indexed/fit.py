@@ -161,6 +161,7 @@ class IndexedFit(FitBase):
 
     @data.setter
     def data(self, new_data):
+        # Fixme: Error when performing fit if data has a different shape than the old data. model still has old shape
         if isinstance(new_data, self.CONTAINER_TYPE):
             self._data_container = deepcopy(new_data)
         elif isinstance(new_data, DataContainerBase):
