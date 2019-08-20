@@ -450,6 +450,10 @@ class XYFit(FitBase):
         if hasattr(self, '_nexus'):
             self._nexus.get_by_name('x_data').mark_for_update()
             self._nexus.get_by_name('y_data').mark_for_update()
+        if hasattr(self, '_cost_function'):
+            self._cost_function.ndf = self._data_container.size - len(self._param_model.parameters)
+        if hasattr(self, '_param_model'):
+            self._param_model.x = self.x_model
 
     @property
     def model(self):

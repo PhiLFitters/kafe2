@@ -138,6 +138,8 @@ class UnbinnedFit(FitBase):
             self._data_container = self._new_data_container(new_data, dtype=float)
         if hasattr(self, '_nexus'):
             self._nexus.get_by_name('x').mark_for_update()
+        if hasattr(self, '_cost_function'):
+            self._cost_function.ndf = self._data_container.size - len(self._param_model.parameters)
 
     @property
     def data_range(self):
