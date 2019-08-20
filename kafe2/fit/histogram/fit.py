@@ -191,6 +191,9 @@ class HistFit(FitBase):
             self._nexus.get_by_name('data').mark_for_update()
         if hasattr(self, '_param_model'):  # update the parametric model if the bins have changed
             self._param_model.rebin(self._data_container.bin_edges)
+            # FIXME: nicer way than len()?
+        if hasattr(self, '_cost_function'):  # update ndf if size has changed
+            self._cost_function.ndf = self._data_container.size - len(self._param_model.parameters)
 
     @property
     def data_error(self):

@@ -161,7 +161,6 @@ class IndexedFit(FitBase):
 
     @data.setter
     def data(self, new_data):
-        # Fixme: Error when performing fit if data has a different shape than the old data. model still has old shape
         if isinstance(new_data, self.CONTAINER_TYPE):
             self._data_container = deepcopy(new_data)
         elif isinstance(new_data, DataContainerBase):
@@ -169,10 +168,13 @@ class IndexedFit(FitBase):
                                       % (type(new_data), self.CONTAINER_TYPE))
         else:
             self._data_container = self._new_data_container(new_data, dtype=float)
-        # update nexus data nodes
-        if hasattr(self, '_nexus'):
+        # Fixme: Error when performing fit if data has a different shape than the old data. model still has old shape
+        #        Updating the data node is not enough. The parametric model needs to be rebuilt as well.
+        #        When rebuilding the parametric model, the shape of the model function needs to be changed too
+        if hasattr(self, '_nexus'):  # update nexus data nodes
             self._nexus.get_by_name('data').mark_for_update()
-            self._nexus.get_by_name(self._model_function.name).mark_for_update()
+        if hasattr(self, '_cost_function'):
+            self._cost_function.ndf = self._data_container.size - len(self._param_model.parameters)
 
     @property
     def data_error(self):
