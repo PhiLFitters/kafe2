@@ -105,7 +105,6 @@ class TestFittersUnbinned(unittest.TestCase):
     def test_nexus_update_on_data_change(self):
         self.unbinned_fit.data = self._ref_data_2
         self.unbinned_fit.do_fit()
-        print(self.unbinned_fit.parameter_values)
         self.assertTrue(
             np.allclose(
                 self.unbinned_fit.parameter_values,
