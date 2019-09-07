@@ -46,7 +46,7 @@ class UnbinnedPlotContainer(PlotContainerBase):
         if additional_pad is None:
             additional_pad = (0, 0)
         model = self.model_y
-        _ymax = np.amax(model)
+        _ymax = np.nanmax(model[model != np.inf])
         # no negative densities possible, ymin has to be 0, fo data density to show
         _ymin = 0
         _w = _ymax - _ymin
@@ -144,7 +144,7 @@ class UnbinnedPlotContainer(PlotContainerBase):
         kwargs.pop('marker', None)  # pop marker keyword, as LineCollection doesn't support it
 
         if height is None:
-            height = np.max(self.model_y)/10  # set height to 1/10th of the max height of the model
+            height = self.y_range[1]/10  # set height to 1/10th of the max height of the model
 
         data = self.data_x
         xy_pairs = np.column_stack([np.repeat(data, 2), np.tile([0, height], len(data))])
