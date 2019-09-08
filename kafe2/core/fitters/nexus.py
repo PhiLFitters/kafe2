@@ -1361,3 +1361,45 @@ class Nexus(object):
     def print_state(self):
         """Print a representation of the nexus state."""
         NodeChildrenPrinter(self._root_ref()).run()
+
+
+class CombinedNexus(Nexus):
+
+    def __init__(self, source_nexuses, source_nexus_namespaces=None, shared_parameters=None):
+        super(CombinedNexus, self).__init__()
+        if source_nexus_namespaces is None:
+            source_nexus_namespaces = ['', ] * len(source_nexuses)
+        else:
+            assert len(source_nexuses) == len(source_nexus_namespaces)
+        self._shared_parameters = shared_parameters
+        if self._shared_parameters is None:
+            self._shared_parameters = []
+        for _source_nexus, _source_nexus_namespace in zip(source_nexuses, source_nexus_namespaces):
+            _nodes = _source_nexus._nodes.values()
+            for _node in _nodes:
+                if isinstance(_node, ValueNode):
+                    if _node.name in shared_parameters:
+                        self.add(node=_node, existing_behavior='ignore')
+                    else:
+                        _node.name = _source_nexus_namespace + _node.name
+                        self.add(node=_node)
+                elif isinstance(_node, Function):
+                    _function_name = _node.name
+                    if _node.name in shared_parameters:
+                        raise NotImplementedError('Shared node functions not supported: %s' % _node.name)
+                    else:
+                        _function_name = _source_nexus_namespace + _node.name
+                        self.new_function(
+                            function_handle=_node._func, function_name=_function_name,
+                            parameter_namespace=_source_nexus_namespace,
+                            namespace_exempt_parameters=self._shared_parameters,
+                            wire_parameters=False
+                        )
+                        for _node_alias in _node.aliases:
+                            self._new_alias_one(alias=_source_nexus_namespace + _node_alias,
+                                                name=_function_name)
+                elif isinstance(_node, RootNode):
+                    pass
+                else:
+                    print(_node)
+                    raise Exception('Unknown node type: %s' % _node.__class__)

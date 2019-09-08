@@ -150,6 +150,7 @@ using `matplotlib`.
 from .indexed import *
 from .unbinned import *
 from .histogram import *
+from .multi import *
 from .tools import *
 from .util import *
 from .xy import *

@@ -43,7 +43,7 @@ class FitBase(FileIOMixin, object):
         self._fit_param_constraints = None
         self._model_function = None
         self._cost_function = None
-        self._loaded_result_dict = None  # contains potential fit results when loading from a file
+        self._loaded_result_dict = None  # contains potential fit results when loading from a file or multifit
         super(FitBase, self).__init__()
 
     # -- private methods
@@ -132,21 +132,77 @@ class FitBase(FileIOMixin, object):
     @abc.abstractmethod
     def _set_new_parametric_model(self): pass
 
-    # Gets overwritten by multi models
-    def _get_model_report_dict_entry(self):
-        return self._model_function.formatter.get_formatted(
-            with_par_values=False,
-            n_significant_digits=2,
-            format_as_latex=False,
-            with_expression=True)
+    def _get_model_function_argument_formatters(self):
+        return self._model_function.argument_formatters
+
+    def _report_data(self, output_stream, indent, indentation_level):
+        pass
+
+    def _report_model(self, output_stream, indent, indentation_level):
+        pass
+
+    def _report_fit_results(self, output_stream, indent, indentation_level, asymmetric_parameter_errors):
+        output_stream.write(indent * indentation_level + '###############\n')
+        output_stream.write(indent * indentation_level + '# Fit Results #\n')
+        output_stream.write(indent * indentation_level + '###############\n\n')
+
+        if not self.did_fit:
+            output_stream.write(indent * (indentation_level + 1) +
+                                'WARNING: No fit has been performed as of yet. Did you forget to run fit.do_fit()?\n\n')
+
+        output_stream.write(indent * (indentation_level + 1) + "Model Parameters\n")
+        output_stream.write(indent * (indentation_level + 1) + "================\n\n")
+
+        self._update_parameter_formatters(update_asymmetric_errors=asymmetric_parameter_errors)
+        for _pf in self._get_model_function_argument_formatters():
+            output_stream.write(indent * (indentation_level + 2))
+            output_stream.write(
+                _pf.get_formatted(with_name=True,
+                                  with_value=True,
+                                  with_errors=True,
+                                  format_as_latex=False,
+                                  asymmetric_error=asymmetric_parameter_errors)
+            )
+            output_stream.write('\n')
+        output_stream.write('\n')
+
+        output_stream.write(indent * (indentation_level + 1) + "Model Parameter Correlations\n")
+        output_stream.write(indent * (indentation_level + 1) + "============================\n\n")
+
+        _cor_mat_content = self.parameter_cor_mat
+        if _cor_mat_content is not None:
+            _cor_mat_as_dict = OrderedDict()
+            _cor_mat_as_dict['_invisible_first_column'] = self.poi_names
+            for _poi_name, _row in zip(self.poi_names, self.parameter_cor_mat.T):
+                _cor_mat_as_dict[_poi_name] = np.atleast_1d(np.squeeze(np.asarray(_row)))
+
+            print_dict_as_table(_cor_mat_as_dict, output_stream=output_stream, indent_level=2)
+        else:
+            output_stream.write(indent * (indentation_level + 2) + '<not available>\n')
+        output_stream.write('\n')
+
+        output_stream.write(indent * (indentation_level + 1) + "Cost Function\n")
+        output_stream.write(indent * (indentation_level + 1) + "=============\n\n")
+
+        _pf = self._cost_function._formatter
+        output_stream.write(indent * (indentation_level + 2) + "cost function: {}\n\n".format(_pf.description))
+        output_stream.write(indent * (indentation_level + 2) + "cost / ndf = ")
+        output_stream.write(
+            _pf.get_formatted(value=self.cost_function_value,
+                              n_degrees_of_freedom=self._cost_function.ndf,
+                              with_name=False,
+                              with_value_per_ndf=True,
+                              format_as_latex=False)
+        )
+        output_stream.write('\n')
 
     def _update_parameter_formatters(self, update_asymmetric_errors=False):
         for _fpf, _pv, _pe in zip(
-                self._model_function.argument_formatters, self.parameter_values, self.parameter_errors):
+                self._get_model_function_argument_formatters(), self.parameter_values, self.parameter_errors):
             _fpf.value = _pv
             _fpf.error = _pe
         if update_asymmetric_errors:
-            for _fpf, _ape in zip(self._model_function.argument_formatters, self.asymmetric_parameter_errors):
+            for _fpf, _ape in zip(self._get_model_function_argument_formatters(), self.asymmetric_parameter_errors):
                 _fpf.asymmetric_error = _ape
 
     # -- public properties
@@ -584,7 +640,7 @@ class FitBase(FileIOMixin, object):
 
     def assign_parameter_latex_names(self, **par_latex_names_dict):
         """Assign LaTeX-formatted strings to the model function parameters."""
-        for _pf in self._model_function.argument_formatters:
+        for _pf in self._get_model_function_argument_formatters():
             _pln = par_latex_names_dict.get(_pf.name, None)
             if _pln is not None:
                 _pf.latex_name = _pln
@@ -620,73 +676,31 @@ class FitBase(FileIOMixin, object):
 
         return _result_dict
 
-    def report(self, output_stream=sys.stdout, asymmetric_parameter_errors=False):
+    def report(self, output_stream=sys.stdout, show_data=True, show_model=True, show_fit_results=True,
+               asymmetric_parameter_errors=False):
         """
         Print a summary of the fit state and/or results.
 
         :param output_stream: the output stream to which the report should be printed
         :type output_stream: TextIOBase
+        :param show_data: if ``True``, print out information about the data
+        :type show_data: bool
+        :param show_model: if ``True``, print out information about the parametric model
+        :type show_model: bool
+        :param show_fit_results: if ``True``, print out information about the fit results
+        :type show_fit_results: bool
         :param asymmetric_parameter_errors: if ``True``, use two different parameter errors for up/down directions
         :type asymmetric_parameter_errors: bool
         """
 
         _indent = ' ' * 4
-
-        output_stream.write(textwrap.dedent("""
-                    ###############
-                    # Fit Results #
-                    ###############
-
-                """))
-
-        if not self.did_fit:
-            output_stream.write('WARNING: No fit has been performed as of yet. Did you forget to run fit.do_fit()?\n\n')
-
-        output_stream.write(_indent + "Model Parameters\n")
-        output_stream.write(_indent + "================\n\n")
-
-        self._update_parameter_formatters(update_asymmetric_errors=asymmetric_parameter_errors)
-        for _pf in self._model_function.argument_formatters:
-            output_stream.write(_indent * 2)
-            output_stream.write(
-                _pf.get_formatted(with_name=True,
-                                  with_value=True,
-                                  with_errors=True,
-                                  format_as_latex=False,
-                                  asymmetric_error=asymmetric_parameter_errors)
-            )
-            output_stream.write('\n')
-        output_stream.write('\n')
-
-        output_stream.write(_indent + "Model Parameter Correlations\n")
-        output_stream.write(_indent + "============================\n\n")
-
-        _cor_mat_content = self.parameter_cor_mat
-        if _cor_mat_content is not None:
-            _cor_mat_as_dict = OrderedDict()
-            _cor_mat_as_dict['_invisible_first_column'] = self._fit_param_names
-            for _par_name, _row in zip(self._fit_param_names, self.parameter_cor_mat.T):
-                _cor_mat_as_dict[_par_name] = np.atleast_1d(np.squeeze(np.asarray(_row)))
-
-            print_dict_as_table(_cor_mat_as_dict, output_stream=output_stream, indent_level=2)
-        else:
-            output_stream.write(_indent * 2 + '<not available>\n')
-        output_stream.write('\n')
-
-        output_stream.write(_indent + "Cost Function\n")
-        output_stream.write(_indent + "=============\n\n")
-
-        _pf = self._cost_function._formatter
-        output_stream.write(_indent * 2 + "cost function: {}\n\n".format(_pf.description))
-        output_stream.write(_indent * 2 + "cost / ndf = ")
-        output_stream.write(
-            _pf.get_formatted(value=self.cost_function_value,
-                              n_degrees_of_freedom=self._cost_function.ndf,
-                              with_name=False,
-                              with_value_per_ndf=True,
-                              format_as_latex=False)
-        )
-        output_stream.write('\n')
+        if show_data:
+            self._report_data(output_stream=output_stream, indent=_indent, indentation_level=0)
+        if show_model:
+            self._report_model(output_stream=output_stream, indent=_indent, indentation_level=0)
+        if show_fit_results:
+            self._report_fit_results(output_stream=output_stream, indent=_indent, indentation_level=0,
+                                     asymmetric_parameter_errors=asymmetric_parameter_errors)
 
     def to_file(self, filename, format=None, calculate_asymmetric_errors=False):
         """Write kafe2 object to file"""
