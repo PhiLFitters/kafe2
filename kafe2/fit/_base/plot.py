@@ -4,6 +4,7 @@ import six
 import textwrap
 import warnings
 
+from ..multi.fit import MultiFit
 from ...config import matplotlib as mpl
 from ...config import kc, ConfigError
 
@@ -510,6 +511,8 @@ class Plot(object):
     def __init__(self, fit_objects, separate_figures=False):
 
         # set the managed fit objects
+        if isinstance(fit_objects, MultiFit):
+            fit_objects = fit_objects.fits
         try:
             iter(fit_objects)
         except TypeError:

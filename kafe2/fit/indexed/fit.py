@@ -202,6 +202,51 @@ class IndexedFit(FitBase):
                 'model_error',
             )
         )
+    def _report_data(self, output_stream, indent, indentation_level):
+        output_stream.write(indent * indentation_level + '########\n')
+        output_stream.write(indent * indentation_level + '# Data #\n')
+        output_stream.write(indent * indentation_level + '########\n\n')
+
+        _data_table_dict = OrderedDict()
+        _data_table_dict['Index'] = range(self.data_size)
+        _data_table_dict['Data'] = self.data
+        if self.has_data_errors:
+            _data_table_dict['Data Error'] = self.data_error
+            _data_table_dict['Data Total Correlation Matrix'] = self.data_cor_mat
+
+        print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=indentation_level + 1)
+        output_stream.write('\n')
+
+    def _report_model(self, output_stream, indent, indentation_level):
+        output_stream.write(indent * indentation_level + '#########\n')
+        output_stream.write(indent * indentation_level + '# Model #\n')
+        output_stream.write(indent * indentation_level + '#########\n\n')
+
+        # output_stream.write(_indent)
+        output_stream.write(indent * (indentation_level + 1) + "Model Function\n")
+        output_stream.write(indent * (indentation_level + 1) + "==============\n\n")
+        output_stream.write(indent * (indentation_level + 2))
+        output_stream.write(
+            self._model_function.formatter.get_formatted(
+                with_par_values=False,
+                n_significant_digits=2,
+                format_as_latex=False,
+                with_expression=True
+            )
+        )
+        output_stream.write('\n\n\n')
+
+        _data_table_dict = OrderedDict()
+        _data_table_dict['Index'] = range(self.data_size)
+        _data_table_dict['Model'] = self.model
+        if self.has_model_errors:
+            _data_table_dict['Model Error'] = self.model_error
+            _data_table_dict['Model Total Correlation Matrix'] = self.model_cor_mat
+
+        print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=indentation_level + 1)
+        output_stream.write('\n')
+
+    # -- public properties
 
         # TODO: add 'uncor_cov_mat'
         #for _side in ('data', 'model', 'total'):
@@ -303,74 +348,3 @@ class IndexedFit(FitBase):
     # -- public methods
 
     ## add_error... methods inherited from FitBase ##
-
-    def report(self, output_stream=sys.stdout,
-               show_data=True,
-               show_model=True,
-               asymmetric_parameter_errors=False):
-        """
-        Print a summary of the fit state and/or results.
-
-        :param output_stream: the output stream to which the report should be printed
-        :type output_stream: TextIOBase
-        :param show_data: if ``True``, print out information about the data
-        :type show_data: bool
-        :param show_model: if ``True``, print out information about the parametric model
-        :type show_model: bool
-        :param asymmetric_parameter_errors: if ``True``, use two different parameter errors for up/down directions
-        :type asymmetric_parameter_errors: bool
-        """
-        _indent = ' ' * 4
-
-        if show_data:
-            output_stream.write(textwrap.dedent("""
-                ########
-                # Data #
-                ########
-
-            """))
-
-            _data_table_dict = OrderedDict()
-            _data_table_dict['Index'] = range(self.data_size)
-            _data_table_dict['Data'] = self.data
-            if self.has_data_errors:
-                _data_table_dict['Data Error'] = self.data_error
-                #_data_table_dict['Data Total Covariance Matrix'] = self.data_cov_mat
-                _data_table_dict['Data Total Correlation Matrix'] = self.data_cor_mat
-
-            print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=1)
-
-        if show_model:
-            output_stream.write(textwrap.dedent("""
-                #########
-                # Model #
-                #########
-
-            """))
-
-            #output_stream.write(_indent)
-            output_stream.write(_indent + "Model Function\n")
-            output_stream.write(_indent + "==============\n\n")
-            output_stream.write(_indent * 2)
-            output_stream.write(
-                self._model_function.formatter.get_formatted(
-                    with_par_values=False,
-                    n_significant_digits=2,
-                    format_as_latex=False,
-                    with_expression=True
-                )
-            )
-            output_stream.write('\n\n\n')
-
-            _data_table_dict = OrderedDict()
-            _data_table_dict['Index'] = range(self.data_size)
-            _data_table_dict['Model'] = self.model
-            if self.has_model_errors:
-                _data_table_dict['Model Error'] = self.model_error
-                #_data_table_dict['Model Total Covariance Matrix'] = self.model_cov_mat
-                _data_table_dict['Model Total Correlation Matrix'] = self.model_cor_mat
-
-            print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=1)
-
-        super(IndexedFit, self).report(output_stream=output_stream,
-                                       asymmetric_parameter_errors=asymmetric_parameter_errors)
