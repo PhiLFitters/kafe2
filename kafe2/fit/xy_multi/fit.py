@@ -667,7 +667,7 @@ class XYMultiFit(FitBase):
         self._param_model.x = self.x_model
         if np.count_nonzero(self._data_container.x_err) == 0:
             return self.y_total_error
-        if self.__cache_projected_xy_total_error is None:
+        if self.__cache_projected_xy_total_error is None or True:
             _x_errors = self.x_total_error
             _precision = 0.01 * np.min(_x_errors)
             _derivatives = self._param_model.eval_model_function_derivative_by_x(dx=_precision)
@@ -702,7 +702,7 @@ class XYMultiFit(FitBase):
         self._param_model.x = self.x_model
         if np.count_nonzero(self._data_container.x_err) == 0:
             return self.y_total_cov_mat
-        if self.__cache_projected_xy_total_cov_mat is None:
+        if self.__cache_projected_xy_total_cov_mat is None or True:
             _x_errors = self.x_total_error
             _precision = 0.01 * np.min(_x_errors)
             _derivatives = self._param_model.eval_model_function_derivative_by_x(dx=_precision)
@@ -716,7 +716,7 @@ class XYMultiFit(FitBase):
         """inverse of the total *x* covariance matrix (or ``None`` if singular)"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
-        if self.__cache_x_total_cov_mat_inverse is None:
+        if self.__cache_x_total_cov_mat_inverse is None or True:
             _tmp = self.x_total_cov_mat
             try:
                 _tmp = _tmp.I
@@ -743,7 +743,7 @@ class XYMultiFit(FitBase):
     def projected_xy_total_cov_mat_inverse(self):
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
-        if self.__cache_projected_xy_total_cov_mat_inverse is None:
+        if self.__cache_projected_xy_total_cov_mat_inverse is None or True:
             _tmp = self.projected_xy_total_cov_mat
             try:
                 _tmp = _tmp.I

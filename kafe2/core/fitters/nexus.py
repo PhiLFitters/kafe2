@@ -5,6 +5,7 @@ import sys
 import weakref
 from ast import parse
 from collections import OrderedDict
+from numpy.linalg import LinAlgError
 
 
 NODE_VALUE_DEFAULT = 1.0
@@ -25,7 +26,8 @@ class NodeBase(object):
     def __init__(self, name, parent_nexus=None):
         self.name = name
         self.nexus = parent_nexus
-
+        self.aliases = []
+        self.dependent_functions = []
         self._stale = False
 
     @staticmethod
@@ -68,13 +70,20 @@ class NodeBase(object):
         #logger.debug("Marking for update: %s", self)
         self._stale = True
 
-    def notify_dependencies(self):
-        #logger.debug("Notifying dependencies: %s", self)
-        if self.nexus:
-            self.nexus.notify_dependencies(self)
+    def notify_dependent_functions(self):
+        for _dependent_function in self.dependent_functions:
+            _dependent_function.mark_for_update()
+            _dependent_function.notify_dependent_functions()
+
+    def add_alias(self, alias):
+        self.aliases.append(alias)
+
+    def add_dependent_function(self, dependent_function):
+        assert self.nexus is dependent_function.nexus
+        self.dependent_functions.append(dependent_function)
 
     def __str__(self):
-        return "ParameterBase('%s', nexus=%s) [%d]" % (self.name, self.nexus, id(self))
+        return "ParameterBase('%s', nexus=%s, aliases=%s) [%d]" % (self.name, self.nexus, self.aliases, id(self))
 
 
 class NodeValue(NodeBase):
@@ -96,7 +105,7 @@ class NodeValue(NodeBase):
     @value.setter
     def value(self, value):
         self._value = value
-        self.notify_dependencies()
+        self.notify_dependent_functions()
 
     def update(self):
         # TODO: handle simple dependencies?
@@ -104,14 +113,23 @@ class NodeValue(NodeBase):
         return
 
     def __str__(self):
-        return "Parameter('%s', value='%s', nexus=%s) [%d]" % (self.name, self.value, self.nexus, id(self))
+        return "Parameter('%s', value='%s', nexus=%s, aliases=%s) [%d]" % (
+            self.name, self.value, self.nexus, self.aliases, id(self))
 
 
 class NodeFunction(NodeBase):
     """All keyword arguments of the function must be parameters registered in the parameter space."""
-    def __init__(self, function_handle, function_name=None, parent_nexus=None):
+    def __init__(self, function_handle, function_name=None, parameter_names=None, parameter_namespace=None,
+                 namespace_exempt_parameters=None, parent_nexus=None):
         _fname = function_name if function_name is not None else function_handle.__name__
+        self._override_parameter_names = parameter_names
         super(NodeFunction, self).__init__(_fname, parent_nexus=parent_nexus)
+        self._parameter_namespace = parameter_namespace
+        if self._parameter_namespace is None:
+            self._parameter_namespace = ''
+        self._namespace_exempt_parameters = namespace_exempt_parameters
+        if self._namespace_exempt_parameters is None:
+            self._namespace_exempt_parameters = []
         self.func = function_handle
         self._value = 0.0
         #self._par_value_cache = dict()
@@ -126,12 +144,12 @@ class NodeFunction(NodeBase):
 
     @property
     def parameter_names(self):
-        return self._func_varnames
+        return self._func_parnames
 
     @parameter_names.setter
     def parameter_names(self, para_names):
-        self._func_varcount = len(para_names)
-        self._func_varnames = para_names
+        self._func_parcount = len(para_names)
+        self._func_parnames = para_names
         self._stale = True
 
     def _update(self):
@@ -141,7 +159,7 @@ class NodeFunction(NodeBase):
 
         #self._par_value_cache = dict()
         self._par_value_cache = []
-        _pns = self._func_varnames
+        _pns = self._func_parnames
         _ps = self.nexus.get_by_name(_pns)
         for _pn, _p in zip(_pns, _ps):
             #logger.debug("Update: %s = %s (%s)", _pn, _p.value, _p)
@@ -169,12 +187,23 @@ class NodeFunction(NodeBase):
     def func(self, function_handle):
         self._func = function_handle
         # do introspection
-        self._func_varcount = self._func.__code__.co_argcount
-        self._func_varnames = inspect.getargspec(self._func)[0]
+        if self._override_parameter_names is not None:
+            self._func_parcount = len(self._override_parameter_names)
+            self._func_parnames = self._override_parameter_names
+        else:
+            _func_parnames_no_namespace = inspect.getargspec(self._func)[0]
+            self._func_parnames = []
+            for _func_varname in _func_parnames_no_namespace:
+                if _func_varname in self._namespace_exempt_parameters:
+                    self._func_parnames.append(_func_varname)
+                else:
+                    self._func_parnames.append(self._parameter_namespace + _func_varname)
+            self._func_parcount = self._func.__code__.co_argcount
         self._stale = True
 
     def __str__(self):
-        return "ParameterFunction('%s', function_handle=%s, nexus=%s) [%d]" % (self.name, self._func, self.nexus, id(self))
+        return "ParameterFunction('%s', function_handle=%s, dependencies=%s, nexus=%s, aliases=%s) [%d]" % (
+            self.name, self._func, self.dependent_functions, self.nexus, self.aliases, id(self))
 
 
 # ----------------------------------------------
@@ -205,7 +234,6 @@ class Nexus(object):
 
         self.__nexus_stale = True  # need to rebuild nexus?
 
-        self._dependency_graph = dict()
         self._dependency_graph_stale = False
 
     # -- private methods
@@ -220,14 +248,25 @@ class Nexus(object):
 
     def _check_for_dependency_cycles_raise(self):
         """Check for dependency cycles. Recursive and expensive!"""
-        _seen = list()
-        def check_cycle_from_vertex(v):
-            _seen.add(v)
-            for _dep in self._dependency_graph.get(v, tuple()):
-                if _dep in _seen or check_cycle_from_vertex(_dep):
-                    _m = ' <- '.join(_seen)
-                    raise NexusException("Cyclic parameter dependency detected: %s!" % (_m,))
-            _seen.remove(v)
+        _unchecked_nodes = self.get(par_spec='__real__')
+
+        def check_node(node):
+            _seen_nodes = set()
+            _seen_nodes.add(node)
+            for _dependency in node.dependencies:
+                if _dependency in _seen_nodes:
+                    raise NexusException("Cyclic parameter dependency: %s!" % node.name)
+                _seen_nodes.add(_dependency)
+                if node in _unchecked_nodes:
+                    check_node(_dependency)
+            try:
+                _unchecked_nodes.remove(node)
+            except ValueError:
+                pass
+
+        while _unchecked_nodes:
+            check_node(_unchecked_nodes[0])
+
 
     def _rebuild_nexus(self):
 
@@ -251,6 +290,7 @@ class Nexus(object):
             if _p not in _first_seen_par_obj_names_ids and _p not in _first_seen_par_function_obj_names_ids:
                 if isinstance(_p, NodeFunction):
                     _first_seen_par_function_obj_names_ids[_p] = (_pn, _main_id)
+                    _real_dim += 1
                 else:
                     _first_seen_par_obj_names_ids[_p] = (_pn, _main_id)
                     _real_dim += 1
@@ -282,85 +322,6 @@ class Nexus(object):
         self.__nexus_real_dim = _real_dim
         self.__nexus_stale = False
         self.__getter_cache = dict()  # rebuilding nexus invalidates getter cache
-
-    # -- heuristic getters
-    #
-    # def _get_par_obj(self, par_spec):
-    #     if self.__nexus_stale:
-    #         self._rebuild_nexus()
-    #
-    #     # check the cache
-    #     _found_par = self.__getter_cache.get(par_spec, None)
-    #     if _found_par is not None:
-    #         return _found_par
-    #
-    #     # long lookup and fill cache
-    #     if isinstance(par_spec, ParameterBase):
-    #         # is param object
-    #         if par_spec not in self.__nexus_list_main_par_objects:
-    #             raise ParameterSpaceException("%s is not registered in this parameter space!" % (par_spec,))
-    #         self.__getter_cache[par_spec] = par_spec
-    #         return par_spec
-    #     try:
-    #         int(par_spec)
-    #         # is ID
-    #         if par_spec < 0 or par_spec > len(self.__nexus_list_main_par_names):
-    #             raise ParameterSpaceException("No parameter with ID '%d'!" % (par_spec,))
-    #         _found_par = self.__nexus_list_main_par_objects[par_spec]
-    #         self.__getter_cache[par_spec] = _found_par
-    #         return _found_par
-    #     except (TypeError, ValueError):
-    #         # is probably par name (str/unicode)
-    #         if par_spec not in self.__nexus_list_main_par_names:
-    #             raise ParameterSpaceException("No parameter with name '%s'!" % (par_spec,))
-    #         _id = self.__nexus_list_main_par_names.index(par_spec)
-    #         _found_par = self.__nexus_list_main_par_objects[_id]
-    #         self.__getter_cache[par_spec] = _found_par
-    #         return _found_par
-    #
-    # def _get_par_main_name(self, par_spec):
-    #     if self.__nexus_stale:
-    #         self._rebuild_nexus()
-    #     try:
-    #         int(par_spec)
-    #         # is ID
-    #         if par_spec < 0 or par_spec > len(self.__nexus_list_main_par_names):
-    #             raise ParameterSpaceException("No parameter with ID '%d'!" % (par_spec,))
-    #         return self.__nexus_list_main_par_names[par_spec]
-    #     except (TypeError, ValueError):
-    #         if isinstance(par_spec, ParameterBase):
-    #             # is param object
-    #             if par_spec not in self.__nexus_list_main_par_objects:
-    #                 raise ParameterSpaceException("%s is not registered in this parameter space!" % (par_spec,))
-    #             _id = self.__nexus_list_main_par_objects.index(par_spec)
-    #             return self.__nexus_list_main_par_names[_id]
-    #         else:
-    #             # is probably par name (str/unicode)
-    #             if par_spec not in self.__nexus_list_main_par_names:
-    #                 raise ParameterSpaceException("No parameter with name '%s'!" % (par_spec,))
-    #             return par_spec
-    #
-    # def _get_par_id(self, par_spec):
-    #     if self.__nexus_stale:
-    #         self._rebuild_nexus()
-    #     try:
-    #         int(par_spec)
-    #         if par_spec < 0 or par_spec > len(self.__nexus_list_main_par_names):
-    #             raise ParameterSpaceException("No parameter with ID '%d'!" % (par_spec,))
-    #         # is ID
-    #         return par_spec
-    #     except (TypeError, ValueError):
-    #         if isinstance(par_spec, ParameterBase):
-    #             # is param object
-    #             if par_spec not in self.__nexus_list_main_par_objects:
-    #                 raise ParameterSpaceException("%s is not registered in this parameter space!" % (par_spec,))
-    #             return self.__nexus_list_main_par_objects.index(par_spec)
-    #         else:
-    #             # is probably par name (str/unicode)
-    #             if par_spec not in self.__nexus_list_main_par_names:
-    #                 raise ParameterSpaceException("No parameter with name '%s'!" % (par_spec,))
-    #             return self.__nexus_list_main_par_names.index(par_spec)
-
 
     # -- helper methods
 
@@ -405,26 +366,12 @@ class Nexus(object):
         try:
             NodeBase.check_parameter_name_raise(alias)
             self.__map_par_name_to_par_obj[alias] = _p
+            _p.aliases.append(alias)
         except NodeException as pe:
             # re-raise ParameterException as ParameterSpaceException
             raise NexusException(pe)
 
         self.__nexus_stale = True
-
-    # def _get_dependent_parameter_objects(self, source_par_obj, default=tuple()):
-    #     if self._dependency_graph_stale:
-    #         self._check_for_dependency_cycles_raise()
-    #         self._dependency_graph_stale = False
-    #     return self._dependency_graph.get(source_par_obj, default)
-    #
-    # def _notify_dependent_parameter_objects(self, source_par_obj):
-    #     #logger.debug("Notifying targets for source: %s", source)
-    #     print "Notifying targets for source: %s" % (source_par_obj,)
-    #     for _target_par_obj in self._get_dependent_parameter_objects(source_par_obj, tuple()):
-    #         _target_par_obj.mark_for_update()
-    #         #logger.debug("Notifying target: %s", _target_par_obj)
-    #         print "Notifying target: %s" % (_target_par_obj,)
-    #         self._notify_dependent_parameter_objects(_target_par_obj)
 
     # -- public interface
 
@@ -508,26 +455,29 @@ class Nexus(object):
         for k, v in six.iteritems(kwargs):
             self._new_one(k, v)
 
-    def new_function(self, function_handle, function_name=None, add_unknown_parameters=False, wire_parameters=True):
-        _p = self.__map_par_name_to_par_obj.get(function_handle)
+    def new_function(self, function_handle, function_name=None, parameter_names=None, parameter_namespace=None,
+                     namespace_exempt_parameters=None, add_unknown_parameters=False, wire_parameters=True):
+        if parameter_namespace is None:
+            parameter_namespace = ''
+        if namespace_exempt_parameters is None:
+            namespace_exempt_parameters = []
+        _pf = NodeFunction(
+            function_handle, function_name=function_name, parameter_names=parameter_names,
+            parameter_namespace=parameter_namespace, namespace_exempt_parameters=namespace_exempt_parameters,
+            parent_nexus=self
+        )
+        _p = self.__map_par_name_to_par_obj.get(_pf.name)
         if _p is not None:
-            raise NexusException("Cannot create parameter '%s': exists!" % (function_handle,))
-        else:
-            try:
-                _pf = NodeFunction(function_handle, function_name=function_name, parent_nexus=self)
-                self.__map_par_name_to_par_obj[_pf.name] = _pf
-                #self.add_dependency(target=_fname, sources=_pf.parameter_names)
-                for _pf_par_name in _pf.parameter_names:
-                    if add_unknown_parameters:
-                        _pf_par_obj = self.get_by_name(_pf_par_name)
-                        if _pf_par_obj is None:
-                            self.new(**{_pf_par_name: NODE_VALUE_DEFAULT})
-                    if wire_parameters:
-                        self.add_dependency(source=_pf_par_name, target=_pf.name)
-            except NodeException as pe:
-                # re-raise NodeException as NexusException
-                raise NexusException(pe.message)
-            self.__nexus_stale = True
+            raise NexusException("Cannot create parameter '%s': exists!" % (_pf.name,))
+        self.__map_par_name_to_par_obj[_pf.name] = _pf
+        for _pf_par_name in _pf.parameter_names:
+            if add_unknown_parameters:
+                _pf_par_obj = self.get_by_name(_pf_par_name)
+                if _pf_par_obj is None:
+                    self.new(**{_pf_par_name: NODE_VALUE_DEFAULT})
+            if wire_parameters:
+                self.add_dependency(source=_pf_par_name, target=_pf.name)
+        self.__nexus_stale = True
 
     # change parameter values
 
@@ -548,24 +498,6 @@ class Nexus(object):
         for k, v in six.iteritems(kwargs):
             self._new_alias_one(k, v)
 
-    # def add_dependency(self, target, sources):
-        # print "Adding Dependency: target=%s, sources=%r" % (target, sources)
-        # if self.get(target) is None:
-        #     raise ParameterSpaceException("Cannot create parameter dependency: Target parameter '%s' does not exist!" % (target,))
-        #
-        # if target not in self._dependency_graph:
-        #     self._dependency_graph[target] = []
-        #
-        # _src_pars = self.get(sources)
-        #
-        # if isinstance(_src_pars, ParameterBase):
-        #     _src_pars = [_src_pars]
-        #
-        # for _src_par, _src_par_name in zip(_src_pars, sources):
-        #     if _src_par is None:
-        #         raise ParameterSpaceException("Cannot create parameter dependency: Source parameter '%s' does not exist!" % (_src_par_name,))
-        #     self._dependency_graph[target].append(_src_par_name)
-
     # handle parameter dependencies
 
     def add_dependency(self, source, target):
@@ -573,43 +505,22 @@ class Nexus(object):
         #print "Adding Dependency: source=%s,  target=%s " % (source, target)
         _src_par_obj = self.get_by_name(source)
         if _src_par_obj is None:
-            raise NexusException("Cannot create parameter dependency: Source parameter '%s' does not exist!" % (source,))
-
-        if _src_par_obj not in self._dependency_graph:
-            self._dependency_graph[_src_par_obj] = []
-            self._dependency_graph_stale = True
+            raise NexusException(
+                "Cannot create parameter dependency %s(%s): Source parameter '%s' does not exist!" % (
+                    target, source, source))
 
         _target_par_obj = self.get_by_name(target)
 
         if _target_par_obj is None:
-            raise NexusException("Cannot create parameter dependency: Target parameter '%s' does not exist!" % (target,))
+            raise NexusException(
+                "Cannot create parameter dependency %s(%s): Target parameter '%s' does not exist!" % (
+                    target, source, target))
 
-        self._dependency_graph[_src_par_obj].append(_target_par_obj)
+        _src_par_obj.dependent_functions.append(_target_par_obj)
         self._dependency_graph_stale = True
 
-    # def get_dependencies_OLD(self, source, default=tuple()):
-    #     _src_par_obj = self.get_by_name(source)
-    #     return self._get_dependent_parameter_objects(_src_par_obj)
-    #
-    # def notify_dependencies_OLD(self, source):
-    #     _src_par_obj = self.get_by_name(source)
-    #     print source, _src_par_obj
-    #     return self._notify_dependent_parameter_objects(_src_par_obj)
-
-    def get_dependencies(self, source, default=tuple()):
-        if self._dependency_graph_stale:
-            self._check_for_dependency_cycles_raise()
-            self._dependency_graph_stale = False
-        _deps = self._dependency_graph.get(source, None)
-        if _deps is None:
-            # if nothing found, try again assuming 'source' is a parameter name, not a parameter object...
-            _src_obj = self.get_by_name(source)
-            _deps = self._dependency_graph.get(_src_obj, default)
-            return _deps
-        return _deps
-
     def notify_dependencies(self, source):
-        for _target in self.get_dependencies(source, tuple()):
+        for _target in source.dependencies:
             try:
                 _target.mark_for_update()
             except AttributeError:
@@ -626,10 +537,73 @@ class Nexus(object):
             else:
                 sys.stdout.write("{}".format(_par_name))
 
-            _content = "{}".format(_par_obj.value)
+            try:
+                _content = "{}".format(_par_obj.value)
+            except LinAlgError:
+                _content = "<LinAlgError>"
 
             # if content repr has newlines, display as indented block
             if '\n' in _content:
                 _content = "\n" + _content
                 _content = _content.replace("\n", "\n\t")
             sys.stdout.write(" = {}\n".format(_content))
+
+
+class CombinedNexus(Nexus):
+
+    def __init__(self, source_nexuses, source_nexus_namespaces=None, shared_parameters=None):
+        super(CombinedNexus, self).__init__()
+        if source_nexus_namespaces is None:
+            source_nexus_namespaces = ['', ] * len(source_nexuses)
+        else:
+            assert len(source_nexuses) == len(source_nexus_namespaces)
+        self._shared_parameters = shared_parameters
+        if self._shared_parameters is None:
+            self._shared_parameters = []
+        for _source_nexus, _source_nexus_namespace in zip(source_nexuses, source_nexus_namespaces):
+            _nodes = _source_nexus.get(par_spec='__real__')
+            for _node in _nodes:
+                if isinstance(_node, NodeValue):
+                    if _node.name in shared_parameters:
+                        try:
+                            self._new_one(name=_node.name, value=_node.value)
+                            for _node_alias in _node.aliases:
+                                self._new_alias_one(alias=_node_alias, name=_node.name)
+                        except NexusException:
+                            pass
+                    else:
+                        self._new_one(name=_source_nexus_namespace + _node.name, value=_node.value)
+                        for _node_alias in _node.aliases:
+                            self._new_alias_one(alias=_source_nexus_namespace + _node_alias,
+                                                name=_source_nexus_namespace + _node.name)
+                elif isinstance(_node, NodeFunction):
+                    _function_name = _node.name
+                    if _node.name in shared_parameters:
+                        raise NotImplementedError('Shared node functions not supported: %s' % _node.name)
+                    else:
+                        _function_name = _source_nexus_namespace + _node.name
+                        self.new_function(
+                            function_handle=_node._func, function_name=_function_name,
+                            parameter_namespace=_source_nexus_namespace,
+                            namespace_exempt_parameters=self._shared_parameters,
+                            wire_parameters=False
+                        )
+                        for _node_alias in _node.aliases:
+                            self._new_alias_one(alias=_source_nexus_namespace + _node_alias,
+                                                name=_function_name)
+                else:
+                    raise NexusException('Unknown node type: %s' % _node.__class__)
+
+            # add dependencies in external loop
+            # ensures that order of nodes does not matter
+            # catches manually added dependencies that are not evident from the python function
+            for _node in _nodes:
+                for _dependent_function in _node.dependent_functions:
+                    if _node.name in self._shared_parameters:
+                        _source_name = _node.name
+                    else:
+                        _source_name = _source_nexus_namespace + _node.name
+                    self.add_dependency(
+                        source=_source_name,
+                        target=_source_nexus_namespace + _dependent_function.name
+                    )

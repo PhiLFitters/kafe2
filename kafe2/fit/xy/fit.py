@@ -660,8 +660,7 @@ class XYFit(FitBase):
         if self.__cache_projected_xy_total_error is None:
             _x_errors = self.x_total_error
             _precision = 0.01 * np.min(_x_errors)
-            _derivatives = self._param_model.eval_model_function_derivative_by_x(dx=_precision, 
-                                                                                 model_parameters=self.parameter_values)
+            _derivatives = self._param_model.eval_model_function_derivative_by_x(dx=_precision, model_parameters=self.poi_values)
             self.__cache_projected_xy_total_error = np.sqrt(self.y_total_error**2 + self.x_total_error**2 * _derivatives**2)
         return self.__cache_projected_xy_total_error
 
@@ -696,7 +695,7 @@ class XYFit(FitBase):
         if self.__cache_projected_xy_total_cov_mat is None or True:
             _x_errors = self.x_total_error
             _precision = 0.01 * np.min(_x_errors)
-            _derivatives = self._param_model.eval_model_function_derivative_by_x(dx=_precision, model_parameters=self.parameter_values)
+            _derivatives = self._param_model.eval_model_function_derivative_by_x(dx=_precision, model_parameters=self.poi_values)
             _outer_product = np.outer(_derivatives, _derivatives)
             _projected_x_cov_mat = np.asarray(self.x_total_cov_mat) * _outer_product
             self.__cache_projected_xy_total_cov_mat = self.y_total_cov_mat + np.asmatrix(_projected_x_cov_mat)
