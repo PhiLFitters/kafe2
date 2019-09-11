@@ -47,7 +47,11 @@ class UnbinnedCostFunction_NegLogLikelihood(CostFunctionBase):
     # so there's only need to evaluate the model in the nll calculations?
     @staticmethod
     def nll(model):
-        return -2.0 * np.sum(np.log(model))
+        _total_log_likelihood = np.sum(np.log(model))
+        # guard against returning NaN
+        if np.isnan(_total_log_likelihood):
+            return np.inf
+        return -2.0 * _total_log_likelihood
 
 STRING_TO_COST_FUNCTION = {
     'nll': UnbinnedCostFunction_NegLogLikelihood,
