@@ -22,7 +22,7 @@ class UnbinnedFit(FitBase):
     MODEL_TYPE = UnbinnedParametricModel
     MODEL_FUNCTION_TYPE = UnbinnedModelPDF
     EXCEPTION_TYPE = UnbinnedFitException
-    RESERVED_NODE_NAMES = {'data', 'model', 'cost'}
+    RESERVED_NODE_NAMES = {'data', 'model', 'cost', 'parameter_values', 'parameter_constraints'}
 
     def __init__(self, data, model_density_function='gaussian',
                  cost_function=UnbinnedCostFunction_NegLogLikelihood(), minimizer=None, minimizer_kwargs=None):
@@ -90,6 +90,9 @@ class UnbinnedFit(FitBase):
             self._fit_param_names.append(_arg_name)
 
         self._nexus.new(**_nexus_new_dict)  # Create nexus Nodes for function parameters
+        # bind other reserved node names
+        self._nexus.new_function(lambda: self.parameter_values, function_name='parameter_values')
+        self._nexus.new_function(lambda: self.parameter_constraints, function_name='parameter_constraints')
 
         # create pdf function node
         self._nexus.new_function(function_handle=self._model_function.func)
