@@ -69,6 +69,8 @@ def _generic_chi2(data, model,
             _res = _res/err
 
     # return sum of squared residuals
+    if np.isnan(_res).any():
+        return np.inf
     return np.sum(_res ** 2) + _par_cost
 
 
@@ -96,6 +98,8 @@ def _generic_chi2_nuisance(data, model,
         _inner_sum = np.squeeze(np.asarray(nuisance_vector.dot(nuisance_cor_design_mat)))
         _nuisance_penalties = nuisance_vector.dot(nuisance_vector)
         _chisquare = (data - model - _inner_sum).dot(uncor_cov_mat_inverse).dot(data - model - _inner_sum)[0, 0]
+        if np.isnan(_chisquare):
+            return np.inf
         return _chisquare + _nuisance_penalties + _par_cost
 
     # raise if uncorrelated matrix is None and the correlated is not None
@@ -107,6 +111,8 @@ def _generic_chi2_nuisance(data, model,
     else:
         # chisquare without errors
         _chisquare = (data -model).dot(data-model)
+        if np.isnan(_chisquare):
+            return np.inf
         return _chisquare + _par_cost
 
 
