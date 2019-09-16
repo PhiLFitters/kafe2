@@ -280,6 +280,8 @@ class ContoursProfiler(object):
         :type show_error_span: bool
         :param show_ticks: if ``True``, *x* and *y* ticks are displayed
         :type show_ticks: bool
+        :param label_ticks_in_sigma: if ``True``, label ticks are in units of 1 sigma
+        :type label_ticks_in_sigma: bool
         :return: 3-tuple with lists containing the profile, parabola, fit minumum and parameter error span artists
         :rtype: tuple of lists of ``matplotlib`` artists
         :return:
@@ -302,12 +304,14 @@ class ContoursProfiler(object):
 
         _y_offset = _cost_function_min if not self._profile_kwargs['subtract_min'] else 0.0
 
-        _parabola_artist = self._plot_parabolic_cost(_axes,
-                                  _x,
-                                  quad_coeff=1. / (_par_err**2),
-                                  x_offset=_par_val,
-                                  y_offset=_y_offset,
-                                  label="parabolic approximation")
+        _parabola_artist = None
+        if show_parabolic:
+            _parabola_artist = self._plot_parabolic_cost(_axes,
+                                                         _x,
+                                                         quad_coeff=1. / (_par_err**2),
+                                                         x_offset=_par_val,
+                                                         y_offset=_y_offset,
+                                                         label="parabolic approximation")
 
         _minimum_artist = None
         if show_fit_minimum:
