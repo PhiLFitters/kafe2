@@ -229,6 +229,8 @@ class ContoursProfiler(object):
         :type parameter_1: str
         :param parameter_2:  name of the second contour parameter
         :type parameter_2: str
+        :param smoothing_sigma: sigma for smoothing the contour with a gaussian filter
+        :type smoothing_sigma: int or float or complex or Iterable
         :return: list of tuples of the form (sigma, contour)
         :rtype: list of 2-tuples of float and 2d-array
         """
@@ -374,11 +376,15 @@ class ContoursProfiler(object):
         :type show_grid: bool
         :param show_legend: if ``True``, the legend is displayed
         :type show_legend: bool
-        :param show_helper_lines: if ``True``, a pair of intersecting horizontal and vertical helper lines are
-                                  displayed to indicate the fit minimum
-        :type show_helper_lines: bool
+        :param show_fit_minimum: if ``True``, the fit minimum is shown as a marker with error bars
+        :type show_fit_minimum: bool
         :param show_ticks: if ``True``, *x* and *y* ticks are displayed
         :type show_ticks: bool
+        :param label_ticks_in_sigma: if ``True``, label ticks are in units of 1 sigma
+        :type label_ticks_in_sigma: bool
+        :param naming_convention: if ``'sigma'`` the contour is labelled in sigma, if ``'cl'`` the contour is labelled
+                                  in confidence level
+        :type naming_convention: str
         :return: contour and helper lines ``matplotlib`` artists
         :rtype: tuple of list of artists returned by ``matplotlib``
         """
@@ -448,7 +454,6 @@ class ContoursProfiler(object):
             _axes.set_xticks([])
             _axes.set_yticks([])
 
-
         return _contour_artists, _minimum_artist
 
     def plot_profiles_contours_matrix(self,
@@ -475,11 +480,19 @@ class ContoursProfiler(object):
         :type show_fit_minimum_for: ``None``, ``'profiles'``, ``'contours'`` or ``'all'``
         :param show_legend: if ``True``, the legend is displayed
         :type show_legend: bool
-        :param full_matrix: if ``True``, contour subplots are also shown above the main diagonal
-        :type full_matrix: bool
+        :param show_parabolic_profiles: if ``True``, a parabolic approximation of the profile near the minimum is also
+                                        drawn
+        :type show_parabolic_profiles: bool
         :param show_error_span_profiles: if ``True``, the parameter uncertainty region is shaded in the
                                          profile plots
         :type show_error_span_profiles: bool
+        :param full_matrix: if ``True``, contour subplots are also shown above the main diagonal
+        :type full_matrix: bool
+        :param label_ticks_in_sigma: if ``True``, label ticks are in units of 1 sigma
+        :type label_ticks_in_sigma: bool
+        :param contour_naming_convention: if ``'sigma'`` the contour is labelled in sigma, if ``'cl'`` the contour is
+                                          labelled in confidence level
+        :type contour_naming_convention: str
         """
         _par_names = parameters
         if _par_names is None:
@@ -528,7 +541,6 @@ class ContoursProfiler(object):
 
         _all_legend_handles = tuple()
         _all_legend_labels = tuple()
-
 
         # fill all subplots in the grid (diagonal and lower triangle)
         for row in six.moves.range(_npar):
@@ -612,7 +624,6 @@ class ContoursProfiler(object):
                         _ct_axes.set_xlim(_subplot_lims_x_cols[row])
                     if not np.any(np.isinf(_subplot_lims_y_rows[col])):
                         _ct_axes.set_ylim(_subplot_lims_y_rows[col])
-
 
         if show_legend:
             # suppress multiple entries for the same label
