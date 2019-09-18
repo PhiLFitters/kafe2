@@ -1,5 +1,6 @@
 import abc
 import inspect
+import numpy as np
 import six
 
 from .format import ModelParameterFormatter, ModelFunctionFormatter
@@ -92,18 +93,34 @@ class ModelFunctionBase(FileIOMixin, object):
 
         :param model_function: function handle
         """
+        # determine library function from string specification
         if isinstance(model_function, str):
             self._model_function_handle = function_library.STRING_TO_FUNCTION.get(model_function, None)
             if not self._model_function_handle:
                 raise self.__class__.EXCEPTION_TYPE('Unknown model function: %s' % model_function)
-        else:
+            self._callable = self._model_function_handle
+
+        # special handling of numpy vectorized functions
+        elif isinstance(model_function, np.vectorize):
+            self._callable = model_function
+            self._model_function_handle = model_function.pyfunc
+
+        # handle generic callables
+        elif callable(model_function):
             self._model_function_handle = model_function if model_function else self._get_default()
+            self._callable = self._model_function_handle
+
+        # raise if not callable
+        else:
+            raise ModelFunctionException("Cannot use {} as model function: "
+                                         "object not callable!".format(model_function))
+
         self._assign_model_function_argspec_and_argcount()
         self._validate_model_function_raise()
         self._assign_function_formatter()
         self._source_code = None
         super(ModelFunctionBase, self).__init__()
-        
+
     @classmethod
     def _get_base_class(cls):
         return ModelFunctionBase
@@ -111,7 +128,7 @@ class ModelFunctionBase(FileIOMixin, object):
     @classmethod
     def _get_object_type_name(cls):
         return 'model_function'
-    
+
     @classmethod
     def _get_default(cls):
         return function_library.linear_model
@@ -145,7 +162,7 @@ class ModelFunctionBase(FileIOMixin, object):
             self.name, arg_formatters=self._get_parameter_formatters())
 
     def __call__(self, *args, **kwargs):
-        self._model_function_handle(*args, **kwargs)
+        self._callable(*args, **kwargs)
 
     @property
     def name(self):
@@ -188,7 +205,7 @@ class ModelFunctionBase(FileIOMixin, object):
     def argument_formatters(self):
         """The :py:obj:`ModelParameterFormatter`-derived objects for the function arguments"""
         return self._formatter.arg_formatters
-    
+
     @property
     def defaults(self):
         """The default values for model function parameters"""
@@ -198,7 +215,7 @@ class ModelFunctionBase(FileIOMixin, object):
             _temp_defaults = tuple(self.argspec.defaults)
         # fill up unspecified defaults with 1.0
         return (1.0,) * (self.parcount - len(_temp_defaults)) + _temp_defaults
-    
+
     @defaults.setter
     def defaults(self, new_defaults):
         if self.parcount != len(new_defaults): #first arg is x, but x is not a parameter

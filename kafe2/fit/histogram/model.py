@@ -28,7 +28,22 @@ class HistModelFunction(ModelFunctionBase):
         #TODO default model function
         self._x_name = 'x'
         super(HistModelFunction, self).__init__(model_function=model_density_function)
-        self._antiderivative = model_density_antiderivative
+
+        # special handling of numpy vectorized antiderivative functions
+        if isinstance(model_density_antiderivative, np.vectorize):
+            self._antiderivative = model_density_antiderivative
+            self._antiderivative_function_handle = model_density_antiderivative.pyfunc
+
+        # handle generic callables and `None`
+        elif callable(model_density_antiderivative) or model_density_antiderivative is None:
+            self._antiderivative_function_handle = model_density_antiderivative
+            self._antiderivative = self._antiderivative_function_handle
+
+        # raise if not callable
+        else:
+            raise ModelFunctionException("Cannot use {} as model density antiderivative: "
+                                         "object not callable!".format(model_density_antiderivative))
+
         self._validate_model_function_antiderivative_raise()
 
     def _validate_model_function_raise(self):
@@ -51,7 +66,7 @@ class HistModelFunction(ModelFunctionBase):
         if self.antiderivative is None:
             return
 
-        _model_func_antider_argspec = inspect.getargspec(self.antiderivative)
+        _model_func_antider_argspec = inspect.getargspec(self._antiderivative_function_handle)
 
         # require antiderivative and density to have the same arguments
         if self.argspec.args != _model_func_antider_argspec.args:
@@ -87,8 +102,8 @@ class HistParametricModelException(HistContainerException):
 
 class HistParametricModel(ParametricModelBaseMixin, HistContainer):
     #TODO n_bins, bin_range, bin_edges contain redundant information, should the arguments for HistParametricModel be refactored?
-    def __init__(self, n_bins, bin_range, 
-                 model_density_func=HistModelFunction(function_library.normal_distribution_pdf), 
+    def __init__(self, n_bins, bin_range,
+                 model_density_func=HistModelFunction(function_library.normal_distribution_pdf),
                  model_parameters=[1.0, 1.0], bin_edges=None, model_density_func_antiderivative=None):
         # print "IndexedParametricModel.__init__(model_func=%r, model_parameters=%r)" % (model_func, model_parameters)
         self._model_density_func_antider_handle = model_density_func_antiderivative
