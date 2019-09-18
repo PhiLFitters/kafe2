@@ -162,7 +162,7 @@ class ModelFunctionBase(FileIOMixin, object):
             self.name, arg_formatters=self._get_parameter_formatters())
 
     def __call__(self, *args, **kwargs):
-        self._callable(*args, **kwargs)
+        return self._callable(*args, **kwargs)
 
     @property
     def name(self):
@@ -171,7 +171,7 @@ class ModelFunctionBase(FileIOMixin, object):
 
     @property
     def func(self):
-        """The model function handle"""
+        """The underlying model function handle"""
         return self._model_function_handle
 
     @property

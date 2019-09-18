@@ -87,4 +87,4 @@ class UnbinnedParametricModel(ParametricModelBaseMixin, UnbinnedContainer):
         """
         _x = x if x is not None else self.data
         _pars = model_parameters if model_parameters is not None else self.parameters
-        return self._model_function_object.func(_x, *_pars)
+        return self._model_function_object(_x, *_pars)

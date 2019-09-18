@@ -77,7 +77,7 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
         """
         # print "XYParametricModel.__init__(x_data=%r, model_func=%r, model_parameters=%r)" % (x_data, model_func, model_parameters)
         _x_data_array = np.array(x_data)
-        _y_data = model_func.func(_x_data_array, *model_parameters)
+        _y_data = model_func(_x_data_array, *model_parameters)
         super(XYParametricModel, self).__init__(model_func, model_parameters, _x_data_array, _y_data)
 
     # -- private methods
@@ -140,7 +140,7 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
         """
         _x = x if x is not None else self.x
         _pars = model_parameters if model_parameters is not None else self._model_parameters
-        return self._model_function_object.func(_x, *_pars)
+        return self._model_function_object(_x, *_pars)
 
     def eval_model_function_derivative_by_parameters(self, x=None, model_parameters=None, par_dx=None):
         """
@@ -165,7 +165,7 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
             def _chipped_func(par):
                 _chipped_pars = _pars.copy()
                 _chipped_pars[_par_idx] = par
-                return self._model_function_object.func(_x, *_chipped_pars)
+                return self._model_function_object(_x, *_chipped_pars)
 
             _der_val = derivative(_chipped_func, _par_val, dx=_par_dx)
             _ret.append(_der_val)
@@ -195,7 +195,7 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
         _ret = []
         for _x_idx, (_x_val, _dx) in enumerate(zip(_x, _dxs)):
             def _chipped_func(x):
-                return self._model_function_object.func(x, *_pars)
+                return self._model_function_object(x, *_pars)
 
             _der_val = derivative(_chipped_func, _x_val, dx=_dx)
             _ret.append(_der_val)

@@ -149,7 +149,7 @@ class XYMultiModelFunction(ModelFunctionBase):
         for _i, _model_function in enumerate(self._singular_model_functions):
             _x = x[_x_indices[_i]:_x_indices[_i + 1]]
             _arg_list = self._construct_arg_list(args, _i)
-            _y[self.data_indices[_i]:self.data_indices[_i + 1]] = _model_function.func(_x, *_arg_list)
+            _y[self.data_indices[_i]:self.data_indices[_i + 1]] = _model_function(_x, *_arg_list)
         return _y
 
     @property
@@ -188,8 +188,8 @@ class XYMultiModelFunction(ModelFunctionBase):
         :return: y-values of the specified model function at the given *x* values
         :rtype: float of :py:obj:`numpy.ndarray` of float
         """
-        return self.singular_model_functions[model_index].func(x, *self._construct_arg_list(args, model_index))
-    
+        return self.singular_model_functions[model_index](x, *self._construct_arg_list(args, model_index))
+
     def get_argument_formatters(self, model_index):
         """
         return the argument formatters for a single underlying model function
@@ -228,7 +228,7 @@ class XYMultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
         _x_data_array = np.asarray(x_data)
         _xy_data = np.empty([2, _x_data_array.size])
         _xy_data[0] = _x_data_array
-        _xy_data[1] = model_func.func(_x_data_array, *model_parameters)
+        _xy_data[1] = model_func(_x_data_array, *model_parameters)
         super(XYMultiParametricModel, self).__init__(model_func, model_parameters, _xy_data)
 
     # -- private methods
@@ -316,7 +316,7 @@ class XYMultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
         _x = x if x is not None else self.x
         _pars = model_parameters if model_parameters is not None else self._model_parameters
         if model_index is None:
-            return self._model_function_object.func(_x, *_pars)
+            return self._model_function_object(_x, *_pars)
         else:
             return self._model_function_object.eval_underlying_model_function(_x, _pars, model_index)
 
@@ -371,9 +371,9 @@ class XYMultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
                     def _chipped_func(par):
                         _chipped_pars = _par_sublist.copy()
                         _chipped_pars[_par_sublist_index] = par
-                        return _model_function.func(_x_splice, *_chipped_pars)
+                        return _model_function(_x_splice, *_chipped_pars)
                     _derivatives[_j].append(derivative(_chipped_func, _par_val, dx=_par_dx))
-        
+
         _flattened_derivatives = []
         for _derivative in _derivatives:
             _flattened_derivatives.append(np.append(np.array([]), _derivative))
@@ -418,8 +418,8 @@ class XYMultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
                 _par_sublist.append(_pars[_par_index])
             
             def _chipped_func(x):
-                return _model_function.func(x, *_par_sublist)
-            
+                return _model_function(x, *_par_sublist)
+
             for _j in range(_x_indices[_i], _x_indices[_i + 1]):
                 _derivatives.append(derivative(_chipped_func, _x[_j], dx=_dxs[_j]))
                             
