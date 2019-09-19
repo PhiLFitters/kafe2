@@ -9,6 +9,7 @@ from collections import OrderedDict
 from kafe2.core.constraint import GaussianMatrixParameterConstraint, GaussianSimpleParameterConstraint
 from ...tools import print_dict_as_table
 from ...core import NexusFitter
+from ...config import kc
 from .container import DataContainerException
 from ..io.file import FileIOMixin
 
@@ -86,13 +87,43 @@ class FitBase(FileIOMixin, object):
         _lpn = ascii_string.replace('_', r"\_")
         return r"{\tt %s}" % (_lpn,)
 
-    @abc.abstractmethod
-    def _invalidate_total_error_cache(self):
-        pass
+    @staticmethod
+    def _get_default_values(model_function=None, x_name=None):
+        """
+        :param model_function: model function handle
+        :param x_name: name of the independent parameter
+        :return: ordered dict with default values for fit parameters
+        :rtype: dict
+        """
+        _nexus_new_dict = OrderedDict()
+        _arg_defaults = model_function.argspec.defaults
+        _n_arg_defaults = 0 if _arg_defaults is None else len(_arg_defaults)
+        for _arg_pos, _arg_name in enumerate(model_function.argspec.args):
+            # skip independent variable parameter
+            if _arg_name == x_name:
+                continue
+            if _arg_pos >= (model_function.argcount - _n_arg_defaults):
+                _default_value = _arg_defaults[_arg_pos - (model_function.argcount - _n_arg_defaults)]
+            else:
+                _default_value = kc('core', 'default_initial_parameter_value')
+            _nexus_new_dict[_arg_name] = _default_value
+        return _nexus_new_dict
 
     @abc.abstractmethod
-    def _mark_errors_for_update(self):
-        pass
+    def _invalidate_total_error_cache(self): pass
+
+    @abc.abstractmethod
+    def _mark_errors_for_update(self): pass
+
+    def _mark_errors_for_update_invalidate_total_error_cache(self):
+        self._mark_errors_for_update()
+        self._invalidate_total_error_cache()
+
+    @abc.abstractmethod
+    def _set_new_data(self, new_data): pass
+
+    @abc.abstractmethod
+    def _set_new_parametric_model(self): pass
 
     # Gets overwritten by multi models
     def _get_model_report_dict_entry(self):
@@ -113,10 +144,24 @@ class FitBase(FileIOMixin, object):
 
     # -- public properties
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def data(self): pass
 
-    @abc.abstractproperty
+    @data.setter
+    def data(self, new_data):
+        """
+        Sets new data of the fit Object
+        :param new_data: Array or Data-Container with the new data
+        """
+        self._set_new_data(new_data)
+        self._set_new_parametric_model()
+        # TODO: check where to update this (set/release/etc.)
+        # FIXME: nicer way than len()?
+        self._cost_function.ndf = self._data_container.size - len(self._param_model.parameters)
+
+    @property
+    @abc.abstractmethod
     def model(self): pass
 
     # @abc.abstractproperty

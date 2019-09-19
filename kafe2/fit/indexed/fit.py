@@ -3,6 +3,7 @@ from copy import deepcopy
 
 import numpy as np
 import sys
+import six
 import textwrap
 
 from ...tools import print_dict_as_table
@@ -42,14 +43,11 @@ class IndexedFit(FitBase):
         :param cost_function: the cost function
         :type cost_function: :py:class:`~kafe2.fit._base.CostFunctionBase`-derived or unwrapped native Python function
         """
-        # set the data
-        self.data = data
-
         # set/construct the model function object
         if isinstance(model_function, self.__class__.MODEL_FUNCTION_TYPE):
             self._model_function = model_function
         else:
-                self._model_function = self.__class__.MODEL_FUNCTION_TYPE(model_function)
+            self._model_function = self.__class__.MODEL_FUNCTION_TYPE(model_function)
 
         # validate the model function for this fit
         self._validate_model_function_for_fit_raise()
@@ -61,11 +59,8 @@ class IndexedFit(FitBase):
             self._cost_function = STRING_TO_COST_FUNCTION[cost_function]()
         else:
             self._cost_function = IndexedCostFunction_UserDefined(cost_function)
-            #self._validate_cost_function_raise()
+            # self._validate_cost_function_raise()
             # TODO: validate user-defined cost function? how?
-        _data_and_cost_compatible, _reason = self._cost_function.is_data_compatible(self.data)
-        if not _data_and_cost_compatible:
-            raise self.EXCEPTION_TYPE('Fit data and cost function are not compatible: %s' % _reason)
 
         # declare cache
         self.__cache_total_error = None
@@ -77,16 +72,16 @@ class IndexedFit(FitBase):
 
         # initialize the Fitter
         self._initialize_fitter(minimizer, minimizer_kwargs)
-        # create the child ParametricModel objet
-        self._param_model = self._new_parametric_model(self._model_function, self.parameter_values, shape_like=self.data)
-
-        # TODO: check where to update this (set/release/etc.)
-        # FIXME: nicer way than len()?
-        self._cost_function.ndf = self._data_container.size - len(self._param_model.parameters)
 
         self._fit_param_constraints = []
         self._loaded_result_dict = None
 
+        # set the data after the cost_function has been set and nexus has been initialized
+        self.data = data
+        # validate cost function
+        _data_and_cost_compatible, _reason = self._cost_function.is_data_compatible(self.data)
+        if not _data_and_cost_compatible:
+            raise self.EXCEPTION_TYPE('Fit data and cost function are not compatible: %s' % _reason)
 
     # -- private methods
 
@@ -94,21 +89,13 @@ class IndexedFit(FitBase):
         self._nexus = Nexus()
         self._nexus.new_function(lambda: self.data, function_name='data')  # Node containing indexed data is called 'data'
 
-        # create a NexusNode for each parameter of the model function
-
-        _nexus_new_dict = OrderedDict()
-        _arg_defaults = self._model_function.argspec.defaults
-        _n_arg_defaults = 0 if _arg_defaults is None else len(_arg_defaults)
-        self._fit_param_names = []
-        for _arg_pos, _arg_name in enumerate(self._model_function.argspec.args):
-            if _arg_pos >= (self._model_function.argcount - _n_arg_defaults):
-                _default_value = _arg_defaults[_arg_pos - (self._model_function.argcount - _n_arg_defaults)]
-            else:
-                _default_value = kc('core', 'default_initial_parameter_value')
-            _nexus_new_dict[_arg_name] = _default_value
-            self._fit_param_names.append(_arg_name)
-
+        # get names and default values of all parameters
+        _nexus_new_dict = self._get_default_values(model_function=self._model_function)
         self._nexus.new(**_nexus_new_dict)  # Create nexus Nodes for function parameters
+
+        self._fit_param_names = []  # names of all fit parameters (including nuisance parameters)
+        for param_name in six.iterkeys(_nexus_new_dict):
+            self._fit_param_names.append(param_name)
 
         self._nexus.new_function(self._model_function.func, function_name=self._model_function.name, add_unknown_parameters=False)
 
@@ -142,6 +129,7 @@ class IndexedFit(FitBase):
 
     def _mark_errors_for_update(self):
         # TODO: implement a mass 'mark_for_update' routine in Nexus
+        self._nexus.get_by_name('model').mark_for_update()
         self._nexus.get_by_name('data_error').mark_for_update()
         self._nexus.get_by_name('data_cov_mat').mark_for_update()
         self._nexus.get_by_name('data_cov_mat_inverse').mark_for_update()
@@ -152,15 +140,7 @@ class IndexedFit(FitBase):
         self._nexus.get_by_name('total_cov_mat').mark_for_update()
         self._nexus.get_by_name('total_cov_mat_inverse').mark_for_update()
 
-    # -- public properties
-
-    @property
-    def data(self):
-        """array of measurement values"""
-        return self._data_container.data
-
-    @data.setter
-    def data(self, new_data):
+    def _set_new_data(self, new_data):
         if isinstance(new_data, self.CONTAINER_TYPE):
             self._data_container = deepcopy(new_data)
         elif isinstance(new_data, DataContainerBase):
@@ -168,13 +148,19 @@ class IndexedFit(FitBase):
                                       % (type(new_data), self.CONTAINER_TYPE))
         else:
             self._data_container = self._new_data_container(new_data, dtype=float)
-        # Fixme: Error when performing fit if data has a different shape than the old data. model still has old shape
-        #        Updating the data node is not enough. The parametric model needs to be rebuilt as well.
-        #        When rebuilding the parametric model, the shape of the model function needs to be changed too
-        if hasattr(self, '_nexus'):  # update nexus data nodes
-            self._nexus.get_by_name('data').mark_for_update()
-        if hasattr(self, '_cost_function'):
-            self._cost_function.ndf = self._data_container.size - len(self._param_model.parameters)
+        self._nexus.get_by_name('data').mark_for_update()
+
+    def _set_new_parametric_model(self):
+        self._param_model = self._new_parametric_model(self._model_function, self.parameter_values,
+                                                       shape_like=self.data)
+        self._mark_errors_for_update_invalidate_total_error_cache()
+
+    # -- public properties
+
+    @FitBase.data.getter
+    def data(self):
+        """array of measurement values"""
+        return self._data_container.data
 
     @property
     def data_error(self):

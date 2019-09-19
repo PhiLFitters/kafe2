@@ -50,9 +50,7 @@ class XYFit(FitBase):
         :param cost_function: the cost function
         :type cost_function: :py:class:`~kafe2.fit._base.CostFunctionBase`-derived or unwrapped native Python function
         """
-        # set the data
-        self.data = xy_data
-        #set the labels
+        # set the labels
         self.labels = [None, None]
 
         # set/construct the model function object
@@ -71,11 +69,8 @@ class XYFit(FitBase):
             self._cost_function = STRING_TO_COST_FUNCTION[cost_function]()
         else:
             self._cost_function = XYCostFunction_UserDefined(cost_function)
-            #self._validate_cost_function_raise()
+            # self._validate_cost_function_raise()
             # TODO: validate user-defined cost function? how?
-        _data_and_cost_compatible, _reason = self._cost_function.is_data_compatible(self.data)
-        if not _data_and_cost_compatible:
-            raise self.EXCEPTION_TYPE('Fit data and cost function are not compatible: %s' % _reason)
 
         # declare cache
         self._invalidate_total_error_cache()
@@ -85,16 +80,16 @@ class XYFit(FitBase):
 
         # initialize the Fitter
         self._initialize_fitter(minimizer, minimizer_kwargs)
-        # create the child ParametricModel object
-        self._param_model = self._new_parametric_model(self.x_model, self._model_function,
-                                                       self.poi_values)
-
-        # TODO: check where to update this (set/release/etc.)
-        # FIXME: nicer way than len()?
-        self._cost_function.ndf = self._data_container.size - len(self._param_model.parameters)
 
         self._fit_param_constraints = []
         self._loaded_result_dict = None
+
+        # set the data after the cost_function has been set and nexus has been initialized
+        self.data = xy_data
+        # validate cost function
+        _data_and_cost_compatible, _reason = self._cost_function.is_data_compatible(self.data)
+        if not _data_and_cost_compatible:
+            raise self.EXCEPTION_TYPE('Fit data and cost function are not compatible: %s' % _reason)
 
     # -- private methods
 
@@ -109,30 +104,23 @@ class XYFit(FitBase):
         self._nexus.new_function(lambda: self.x_model, function_name='x_model')
         self._nexus.new_function(lambda: self.y_model, function_name='y_model')
 
+        # get names and default values of all parameters
+        _nexus_new_dict = self._get_default_values(model_function=self._model_function,
+                                                   x_name=self._model_function.x_name)
         # create a nexus Node for each parameter of the model function
-        _nexus_new_dict = OrderedDict()
-        _arg_defaults = self._model_function.argspec.defaults
-        _n_arg_defaults = 0 if _arg_defaults is None else len(_arg_defaults)
+        self._nexus.new(**_nexus_new_dict)  # Create nexus Nodes for function parameters
+
         self._fit_param_names = []  # names of all fit parameters (including nuisance parameters)
         self._poi_names = []  # names of the parameters of interest (i.e. the model parameters)
+        for param_name in six.iterkeys(_nexus_new_dict):
+            self._fit_param_names.append(param_name)
+            self._poi_names.append(param_name)
+
         self._y_nuisance_names = []  # names of all nuisance parameters accounting for correlated y errors
         self._x_uncor_nuisance_names = []  # names of all nuisance parameters accounting for uncorrelated x errors
         # TODO
         # self._x_cor_nuisance_names = []  # names of all nuisance parameters accounting for correlated x errors
 
-        for _arg_pos, _arg_name in enumerate(self._model_function.argspec.args):
-            # skip independent variable parameter
-            if _arg_name == self._model_function.x_name:
-                continue
-            if _arg_pos >= (self._model_function.argcount - _n_arg_defaults):
-                _default_value = _arg_defaults[_arg_pos - (self._model_function.argcount - _n_arg_defaults)]
-            else:
-                _default_value = kc('core', 'default_initial_parameter_value')
-            _nexus_new_dict[_arg_name] = _default_value
-            self._fit_param_names.append(_arg_name)
-            self._poi_names.append(_arg_name)
-
-        self._nexus.new(**_nexus_new_dict)  # Create nexus Nodes for function parameters
         self._nexus.new_function(lambda: self.poi_values, function_name='poi_values')
         self._nexus.new_function(lambda: self.parameter_constraints, function_name='parameter_constraints')
 
@@ -346,10 +334,6 @@ class XYFit(FitBase):
         self._nexus.get_by_name('x_model').mark_for_update()
         self._nexus.get_by_name('y_model').mark_for_update()
 
-    def _mark_errors_for_update_invalidate_total_error_cache(self):
-        self._mark_errors_for_update()
-        self._invalidate_total_error_cache()
-
     def _calculate_y_error_band(self):
         _xmin, _xmax = self._data_container.x_range
         _band_x = np.linspace(_xmin, _xmax, 100)  # TODO: config
@@ -372,6 +356,25 @@ class XYFit(FitBase):
             return self._poi_names.index(name)
         except ValueError:
             raise self.EXCEPTION_TYPE('Unknown parameter name: %s' % name)
+
+    def _set_new_data(self, new_data):
+        if isinstance(new_data, self.CONTAINER_TYPE):
+            self._data_container = deepcopy(new_data)
+        elif isinstance(new_data, DataContainerBase):
+            raise XYFitException("Incompatible container type '%s' (expected '%s')"
+                                      % (type(new_data), self.CONTAINER_TYPE))
+        else:
+            _x_data = new_data[0]
+            _y_data = new_data[1]
+            self._data_container = self._new_data_container(_x_data, _y_data, dtype=float)
+        # update nexus data nodes
+        if hasattr(self, '_nexus'):
+            self._nexus.get_by_name('x_data').mark_for_update()
+            self._nexus.get_by_name('y_data').mark_for_update()
+
+    def _set_new_parametric_model(self):
+        self._param_model = self._new_parametric_model(self.x_model, self._model_function, self.poi_values)
+        self._mark_errors_for_update_invalidate_total_error_cache()
 
     # -- public properties
 
@@ -430,30 +433,10 @@ class XYFit(FitBase):
         """
         self.labels[1] = y_label
 
-    @property
+    @FitBase.data.getter
     def data(self):
         """(2, N)-array containing *x* and *y* measurement values"""
         return self._data_container.data
-
-    @data.setter
-    def data(self, new_data):
-        if isinstance(new_data, self.CONTAINER_TYPE):
-            self._data_container = deepcopy(new_data)
-        elif isinstance(new_data, DataContainerBase):
-            raise XYFitException("Incompatible container type '%s' (expected '%s')"
-                                      % (type(new_data), self.CONTAINER_TYPE))
-        else:
-            _x_data = new_data[0]
-            _y_data = new_data[1]
-            self._data_container = self._new_data_container(_x_data, _y_data, dtype=float)
-        # update nexus data nodes
-        if hasattr(self, '_nexus'):
-            self._nexus.get_by_name('x_data').mark_for_update()
-            self._nexus.get_by_name('y_data').mark_for_update()
-        if hasattr(self, '_cost_function'):
-            self._cost_function.ndf = self._data_container.size - len(self._param_model.parameters)
-        if hasattr(self, '_param_model'):
-            self._param_model.x = self.x_model
 
     @property
     def model(self):

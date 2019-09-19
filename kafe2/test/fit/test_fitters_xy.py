@@ -454,10 +454,10 @@ class TestFittersXYChi2WithError(unittest.TestCase):
     def test_report_before_fit(self):
         _buffer = six.StringIO()
         self.xy_fit.report(output_stream=_buffer)
-        self.assertNotEquals(_buffer.getvalue(), "")
+        self.assertNotEqual(_buffer.getvalue(), "")
 
     def test_report_after_fit(self):
         _buffer = six.StringIO()
         self.xy_fit.do_fit()
         self.xy_fit.report(output_stream=_buffer)
-        self.assertNotEquals(_buffer.getvalue(), "")
+        self.assertNotEqual(_buffer.getvalue(), "")

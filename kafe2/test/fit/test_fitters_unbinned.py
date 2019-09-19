@@ -94,13 +94,13 @@ class TestFittersUnbinned(unittest.TestCase):
     def test_report_before_fit(self):
         _buffer = six.StringIO()
         self.unbinned_fit.report(output_stream=_buffer)
-        self.assertNotEquals(_buffer.getvalue(), "")
+        self.assertNotEqual(_buffer.getvalue(), "")
 
     def test_report_after_fit(self):
         _buffer = six.StringIO()
         self.unbinned_fit.do_fit()
         self.unbinned_fit.report(output_stream=_buffer)
-        self.assertNotEquals(_buffer.getvalue(), "")
+        self.assertNotEqual(_buffer.getvalue(), "")
 
     def test_nexus_update_on_data_change(self):
         self.unbinned_fit.data = self._ref_data_2
