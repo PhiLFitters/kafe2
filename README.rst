@@ -4,6 +4,14 @@
 kafe2 - Karlsruhe Fit Environment 2
 *************************************
 
+.. image:: https://readthedocs.org/projects/kafe2/badge/?version=latest
+    :target: https://kafe2.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
+.. image:: https://travis-ci.org/dsavoiu/kafe2.svg?branch=master
+    :target: https://travis-ci.org/dsavoiu/kafe2
+
+
 =====
 About
 =====
