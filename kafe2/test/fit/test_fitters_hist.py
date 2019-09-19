@@ -188,13 +188,13 @@ class TestFittersHist(unittest.TestCase):
     def test_report_before_fit(self):
         _buffer = six.StringIO()
         self.hist_fit.report(output_stream=_buffer)
-        self.assertNotEquals(_buffer.getvalue(), "")
+        self.assertNotEqual(_buffer.getvalue(), "")
 
     def test_report_after_fit(self):
         _buffer = six.StringIO()
         self.hist_fit.do_fit()
         self.hist_fit.report(output_stream=_buffer)
-        self.assertNotEquals(_buffer.getvalue(), "")
+        self.assertNotEqual(_buffer.getvalue(), "")
 
     def test_nexus_update_on_data_change(self):
         new_data = HistContainer(self._ref_n_bins_2, self._ref_n_bin_range_2, bin_edges=None,

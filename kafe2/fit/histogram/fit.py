@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from copy import deepcopy
 
+import six
 import numpy as np
 
 from ...config import kc
@@ -42,12 +43,9 @@ class HistFit(FitBase):
         :param cost_function: the cost function
         :type cost_function: :py:class:`~kafe2.fit._base.CostFunctionBase`-derived or unwrapped native Python function
         """
-        # set the data
-        self.data = data
-
         # set/construct the model function object
         if isinstance(model_density_function, self.__class__.MODEL_FUNCTION_TYPE):
-            #TODO shouldn't this Exception only be raised if the kafe2 model function already has an antiderivative?
+            # TODO shouldn't this Exception only be raised if the kafe2 model function already has an antiderivative?
             if model_density_antiderivative is not None:
                 raise HistFitException("Antiderivative (%r) provided in constructor for %r, "
                                        "but histogram model function object (%r) already constructed!"
@@ -66,11 +64,8 @@ class HistFit(FitBase):
             self._cost_function = STRING_TO_COST_FUNCTION[cost_function]()
         else:
             self._cost_function = HistCostFunction_UserDefined(cost_function)
-            #self._validate_cost_function_raise()
+            # self._validate_cost_function_raise()
             # TODO: validate user-defined cost function? how?
-        _data_and_cost_compatible, _reason = self._cost_function.is_data_compatible(self.data)
-        if not _data_and_cost_compatible:
-            raise self.EXCEPTION_TYPE('Fit data and cost function are not compatible: %s' % _reason)
 
         # declare cache
         self.__cache_total_error = None
@@ -83,19 +78,15 @@ class HistFit(FitBase):
         # initialize the Fitter
         self._initialize_fitter(minimizer, minimizer_kwargs)
 
-        # create the child ParametricModel object
-        self._param_model = self._new_parametric_model(
-            self._data_container.size,
-            self._data_container.bin_range,
-            self._model_function,
-            self.parameter_values,
-            self._data_container.bin_edges,
-            model_density_func_antiderivative=self._model_function.antiderivative)
-        # FIXME: nicer way than len()?
-        self._cost_function.ndf = self._data_container.size - len(self._param_model.parameters)
         self._fit_param_constraints = []
         self._loaded_result_dict = None
 
+        # set the data after the cost_function has been set and nexus has been initialized
+        self.data = data
+        # validate cost function
+        _data_and_cost_compatible, _reason = self._cost_function.is_data_compatible(self.data)
+        if not _data_and_cost_compatible:
+            raise self.EXCEPTION_TYPE('Fit data and cost function are not compatible: %s' % _reason)
 
     # -- private methods
 
@@ -103,24 +94,14 @@ class HistFit(FitBase):
         self._nexus = Nexus()
         self._nexus.new_function(lambda: self.data, function_name='data')  # Node containing indexed data is called 'data'
 
-        # create a NexusNode for each parameter of the model function
-
-        _nexus_new_dict = OrderedDict()
-        _arg_defaults = self._model_function.argspec.defaults
-        _n_arg_defaults = 0 if _arg_defaults is None else len(_arg_defaults)
-        self._fit_param_names = []
-        for _arg_pos, _arg_name in enumerate(self._model_function.argspec.args):
-            # skip independent variable parameter
-            if _arg_name == self._model_function.x_name:
-                continue
-            if _arg_pos >= (self._model_function.argcount - _n_arg_defaults):
-                _default_value = _arg_defaults[_arg_pos - (self._model_function.argcount - _n_arg_defaults)]
-            else:
-                _default_value = kc('core', 'default_initial_parameter_value')
-            _nexus_new_dict[_arg_name] = _default_value
-            self._fit_param_names.append(_arg_name)
-
+        # get names and default values of all parameters
+        _nexus_new_dict = self._get_default_values(model_function=self._model_function,
+                                                   x_name=self._model_function.x_name)
         self._nexus.new(**_nexus_new_dict)  # Create nexus Nodes for function parameters
+
+        self._fit_param_names = []  # names of all fit parameters (including nuisance parameters)
+        for param_name in six.iterkeys(_nexus_new_dict):
+            self._fit_param_names.append(param_name)
 
         #self._nexus.new_function(self._model_func_handle, add_unknown_parameters=False)
 
@@ -171,29 +152,33 @@ class HistFit(FitBase):
         self._nexus.get_by_name('total_cov_mat').mark_for_update()
         self._nexus.get_by_name('total_cov_mat_inverse').mark_for_update()
 
-    # -- public properties
-
-    @property
-    def data(self):
-        """array of measurement values"""
-        return self._data_container.data
-
-    @data.setter
-    def data(self, new_data):
+    def _set_new_data(self, new_data):
         if isinstance(new_data, self.CONTAINER_TYPE):
             self._data_container = deepcopy(new_data)
         elif isinstance(new_data, DataContainerBase):
-            raise HistFitException("Incompatible container type '%s' (expected '%s')"
-                                      % (type(new_data), self.CONTAINER_TYPE))
+            raise HistFitException("Incompatible container type '{}' (expected '{}')"
+                                   .format(type(new_data), self.CONTAINER_TYPE))
         else:
             raise HistFitException("Fitting a histogram requires a HistContainer!")
-        if hasattr(self, '_nexus'):  # update nexus data node
-            self._nexus.get_by_name('data').mark_for_update()
-        if hasattr(self, '_param_model'):  # update the parametric model if the bins have changed
-            self._param_model.rebin(self._data_container.bin_edges)
-            # FIXME: nicer way than len()?
-        if hasattr(self, '_cost_function'):  # update ndf if size has changed
-            self._cost_function.ndf = self._data_container.size - len(self._param_model.parameters)
+        self._nexus.get_by_name('data').mark_for_update()
+
+    def _set_new_parametric_model(self):
+        # create the child ParametricModel object
+        self._param_model = self._new_parametric_model(self._data_container.size,
+                                                       self._data_container.bin_range,
+                                                       self._model_function,
+                                                       self.parameter_values,
+                                                       self._data_container.bin_edges,
+                                                       model_density_func_antiderivative=
+                                                       self._model_function.antiderivative)
+        self._mark_errors_for_update_invalidate_total_error_cache()
+
+    # -- public properties
+
+    @FitBase.data.getter
+    def data(self):
+        """array of measurement values"""
+        return self._data_container.data
 
     @property
     def data_error(self):
