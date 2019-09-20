@@ -127,9 +127,7 @@ auxiliary_fit.report()
 
 # (Optional) plot the results
 auxiliary_plot = XYPlot(auxiliary_fit)
-auxiliary_plot.plot()
-auxiliary_plot.show_fit_info_box()
-
+auxiliary_plot.plot(with_fit_info=True)
 
 # Step 2: perform the main fit
 main_fit = XYFit(
@@ -163,7 +161,6 @@ main_fit.report()
 
 # (Optional) plot the results
 plot = XYPlot(main_fit)
-plot.plot()
-plot.show_fit_info_box()
+plot.plot(with_fit_info=True)
 
 plt.show()

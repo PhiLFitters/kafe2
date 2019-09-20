@@ -1,6 +1,8 @@
 import abc
 import numpy as np
 import six
+import textwrap
+import warnings
 
 from ...config import matplotlib as mpl
 from ...config import kc, ConfigError
@@ -8,6 +10,7 @@ from ...config import kc, ConfigError
 from collections import OrderedDict
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gs
+from matplotlib.legend_handler import HandlerBase
 
 __all__ = ["PlotContainerBase", "PlotFigureBase", "MultiPlotBase", "PlotContainerException", "PlotFigureException",
            "kc_plot_style"]
@@ -101,6 +104,10 @@ class Cycler(object):
             _args.append(_tmp_dict)
         return Cycler(*_args)
 
+class DummyLegendHandler(HandlerBase):
+    """Dummy legend handler (nothing is drawn)"""
+    def legend_artist(self, *args, **kwargs):
+        return None
 
 class PlotContainerException(Exception):
     pass
@@ -300,6 +307,12 @@ class PlotFigureBase(object):
         ),
     )
 
+    FIT_INFO_STRING_FORMAT = textwrap.dedent("""\
+        {model_function}
+        {parameters}
+            $\\hookrightarrow${fit_quality}
+    """)
+
     IS_MULTI_PLOT = False
 
     def __init__(self, fit_objects, model_indices=None):
@@ -315,24 +328,20 @@ class PlotFigureBase(object):
                 model_indices = [model_indices]
         self._model_indices = model_indices
         self._fig = plt.figure()  # defaults from matplotlibrc
-        # self._figsize = (self._fig.get_figwidth()*self._fig.dpi, self._fig.get_figheight()*self._fig.dpi)
+
+        # figure layout (TODO: no hardcoding)
         self._outer_gs = gs.GridSpec(nrows=1,
-                                     ncols=3,
+                                     ncols=2,
                                      left=0.075,
                                      bottom=0.1,
                                      right=0.925,
                                      top=0.9,
                                      wspace=None,
                                      hspace=None,
-                                     width_ratios=[6, 2, 4],
+                                     width_ratios=[1, 1],
                                      height_ratios=None)
 
-        # TODO: use these later to maintain absolute margin width on resize
-        self._absolute_outer_sizes = dict(left=self._outer_gs.left*self._fig.get_figwidth()*self._fig.dpi,
-                                          bottom=self._outer_gs.bottom*self._fig.get_figheight()*self._fig.dpi,
-                                          right=self._outer_gs.right*self._fig.get_figwidth()*self._fig.dpi,
-                                          top=self._outer_gs.top*self._fig.get_figheight()*self._fig.dpi)
-
+        # plot axes layout (TODO: allow ratio plot)
         self._plot_axes_gs = gs.GridSpecFromSubplotSpec(
             nrows=1,
             ncols=1,
@@ -343,9 +352,6 @@ class PlotFigureBase(object):
             subplot_spec=self._outer_gs[0, 0]
         )
         self._main_plot_axes = plt.subplot(self._plot_axes_gs[0, 0])
-
-        # NOTE: not working because mpl_connect overwrites existing handlers for the same event x_x
-        #_cid = self._fig.canvas.mpl_connect('resize_event', self._on_resize)
 
         self._plot_data_containers = []
         self._artist_store = []
@@ -434,70 +440,46 @@ class PlotFigureBase(object):
             for _pt in self._defined_plot_types:
                 self._call_plot_method_for_plot_type(_spid, _pt, target_axis=self._main_plot_axes)
 
-    def _render_parameter_info_box(self, target_figure, format_as_latex, asymmetric_parameter_errors, **kwargs):
-        if 'transform' not in kwargs:
-            kwargs['transform'] = target_figure.transFigure
-        if 'zorder' not in kwargs:
-            kwargs['zorder'] = 999
+    @classmethod
+    def _get_fit_info(cls, plot_data_container, format_as_latex, asymmetric_parameter_errors):
 
-        _fig_bs, _fig_ts, _fig_ls, _fig_rs = self._outer_gs.get_grid_positions(self._fig)
+        plot_data_container._fitter._update_parameter_formatters(
+            update_asymmetric_errors=asymmetric_parameter_errors
+        )
 
-        _n_text_lines = len(self._plot_data_containers) * 2
-        _n_text_lines += np.sum([len(_pdc._fitter._model_function.argument_formatters) for _pdc in self._plot_data_containers])
-        # FIXME: access to "_pdc._fitter._model_function" not public!
+        _cost_func = plot_data_container._fitter._cost_function  # TODO: public interface
 
-        _y_inc_size = min(.05, (_fig_ts[0] - _fig_ls[0])/_n_text_lines)
-        _y_inc_offset = _fig_ts[0] - 0.05
-        _y_inc_counter = 0
-        for _id, _pdc in enumerate(self._plot_data_containers):
-            _y = _y_inc_offset - _y_inc_size*_y_inc_counter
-            target_figure.text(_fig_ls[2], _y, r"Model %d" % (self._model_indices[_id],), fontdict={'weight': 'bold'}, **kwargs)
-            _y_inc_counter += 1
-
-            _y = _y_inc_offset - _y_inc_size * _y_inc_counter
-            _formatted_string = _pdc.get_formatted_model_function(
-                with_par_values=False, n_significant_digits=2, format_as_latex=format_as_latex, with_expression=True)
-            target_figure.text(_fig_ls[2] + .025, _y, _formatted_string, **kwargs)
-            _y_inc_counter += 1
-
-            _pdc._fitter._update_parameter_formatters(update_asymmetric_errors=asymmetric_parameter_errors)
-            for _pi, _pf in enumerate(_pdc.model_function_argument_formatters):
-                _y = _y_inc_offset - _y_inc_size * _y_inc_counter
-                _formatted_string = _pf.get_formatted(
-                    with_name=True, with_value=True, with_errors=True,
-                    asymmetric_error=asymmetric_parameter_errors, format_as_latex=format_as_latex
+        return cls.FIT_INFO_STRING_FORMAT.format(
+            model_function=plot_data_container.get_formatted_model_function(
+                with_par_values=False,
+                n_significant_digits=2,
+                format_as_latex=format_as_latex,
+                with_expression=True
+            ),
+            parameters='\n'.join([
+                '    ' + _pf.get_formatted(
+                    with_name=True,
+                    with_value=True,
+                    with_errors=True,
+                    asymmetric_error=asymmetric_parameter_errors,
+                    format_as_latex=format_as_latex
                 )
-                target_figure.text(_fig_ls[2]+.05, _y, _formatted_string, **kwargs)
-                _y_inc_counter += 1
+                for _pf in plot_data_container.model_function_argument_formatters
+            ]),
+            fit_quality=_cost_func._formatter.get_formatted(
+                value=plot_data_container._fitter.cost_function_value,
+                n_degrees_of_freedom=_cost_func.ndf,
+                with_value_per_ndf=True,
+                format_as_latex=format_as_latex
+            ) + (" (global)" if cls.IS_MULTI_PLOT else ""),
+        )
 
-            if not self.__class__.IS_MULTI_PLOT:
-                # print info about cost function per degree of freedom
-                _y = _y_inc_offset - _y_inc_size * _y_inc_counter
-                _pf = _pdc._fitter._cost_function._formatter
-                _formatted_string = _pf.get_formatted(value=_pdc._fitter.cost_function_value,
-                                                n_degrees_of_freedom=_pdc._fitter._cost_function.ndf, # TODO: public interface
-                                                with_value_per_ndf=True,
-                                                format_as_latex=format_as_latex)
-                target_figure.text(_fig_ls[2] + .05, _y, _formatted_string, **kwargs)
-                _y_inc_counter += 1
-        if self.__class__.IS_MULTI_PLOT:
-            _y_inc_counter += 1
-            _pdc = self._plot_data_containers[0]
-            _y = _y_inc_offset - _y_inc_size * _y_inc_counter
-            _pf = _pdc._fitter._cost_function._formatter
-            _formatted_string = _pf.get_formatted(value=_pdc._fitter.cost_function_value,
-                                            n_degrees_of_freedom=_pdc._fitter._cost_function.ndf, # TODO: public interface
-                                            with_value_per_ndf=True,
-                                            format_as_latex=format_as_latex)
-            target_figure.text(_fig_ls[2], _y, _formatted_string, **kwargs)
-            _y_inc_counter += 1
-
-    def _render_legend(self, target_axis, **kwargs):
+    def _render_legend(self, target_axis, with_fit_info=True, with_asymmetric_parameter_errors=False, **kwargs):
         _hs_unsorted, _ls_unsorted = target_axis.get_legend_handles_labels()
         _hs_sorted, _ls_sorted = [], []
 
         # sort legend entries by drawing order
-        for _subplot_artist_map in self._artist_store:
+        for _i_subplot, _subplot_artist_map in enumerate(self._artist_store):
             for _pt in self._defined_plot_types:
                 _artist = _subplot_artist_map.get(_pt, None)
                 if _artist is None:
@@ -509,25 +491,34 @@ class PlotFigureBase(object):
                 _hs_sorted.append(_hs_unsorted[_artist_index])
                 _ls_sorted.append(_ls_unsorted[_artist_index])
 
+            # add fit info as extra legend entry
+            if with_fit_info:
+                _hs_sorted.append('_nokey_')
+                _ls_sorted.append(
+                    self._get_fit_info(
+                        self._plot_data_containers[_i_subplot],
+                        format_as_latex=True,
+                        asymmetric_parameter_errors=with_asymmetric_parameter_errors
+                    )
+                )
+
         _zorder = kwargs.pop('zorder', 999)
         _bbox_to_anchor = kwargs.pop('bbox_to_anchor', None)
         if _bbox_to_anchor is None:
-            # _ls, _rs = self._outer_gs.get_grid_positions(self._fig)[2:]
-            # _l = _ls[1]
-            # _b = self._outer_gs.bottom
-            # _w = self._outer_gs.right - _l
-            # _h = self._outer_gs.top - _b
-            # _bbox_to_anchor = (_l, _b, _w, _h)
             _bbox_to_anchor = (1.05, 0.0, 0.67, 1.0)  # axes coordinates FIXME: no hardcoding!
+
         _mode = kwargs.pop('mode', "expand")
         _borderaxespad = kwargs.pop('borderaxespad', 0.1)
         _ncol = kwargs.pop('ncol', 1)
+
+        kwargs['loc'] = 'upper left'
 
         target_axis.legend(_hs_sorted, _ls_sorted,
                            bbox_to_anchor=_bbox_to_anchor,
                            mode=_mode,
                            borderaxespad=_borderaxespad,
                            ncol=_ncol,
+                           handler_map={'_nokey_': DummyLegendHandler()},
                            **kwargs).set_zorder(_zorder)
 
     def _get_total_data_range_x(self):
@@ -577,7 +568,7 @@ class PlotFigureBase(object):
     @x_label.setter
     def x_label(self, x_label):
         """Set the x-label for the plot.
-        
+
         :param x_label: x-label to set
         :type x_label: str
         """
@@ -592,7 +583,7 @@ class PlotFigureBase(object):
     @y_label.setter
     def y_label(self, y_label):
         """Set the y-label for the plot.
-        
+
         :param y_label: y-label to set
         :type y_label: str
         """
@@ -601,28 +592,57 @@ class PlotFigureBase(object):
 
     # -- public methods
 
-    def plot(self):
-        """Plot data, model (and other subplots) for all child :py:obj:`Fit` objects, and show legend."""
+    def plot(self,
+             with_legend=True,
+             with_fit_info=True,
+             with_asymmetric_parameter_errors=False):
+        """Plot data, model (and other subplots) for all child :py:obj:`Fit` objects."""
         # TODO: hooks?
-        # TODO: more fine-grained control over what is plotted
         self._plot_all_subplots_all_plot_types()
         self._set_plot_range_to_total_data_range()
-        self._render_legend(self._main_plot_axes)
+
+        if with_legend:
+            self._render_legend(
+                self._main_plot_axes,
+                with_fit_info=with_fit_info,
+                with_asymmetric_parameter_errors=with_asymmetric_parameter_errors
+            )
+
         # set axis labels
         self._main_plot_axes.set_xlabel(self.x_label)
         self._main_plot_axes.set_ylabel(self.y_label)
 
+    def get_fit_info_strings(self, format_as_latex=False, asymmetric_parameter_errors=False):
+        """Return list of strings with information about each fit.
+
+        :param format_as_latex: if ``True``, the fit information text will be formatted as a LaTeX string
+        :type format_as_latex: bool
+        :param asymmetric_parameter_errors: if ``True``, asymmetric parameter errors (up/down directions) are shown
+        :type asymmetric_parameter_errors: bool
+        """
+        return [
+            self._get_fit_info(
+                _pdc,
+                format_as_latex=format_as_latex,
+                asymmetric_parameter_errors=asymmetric_parameter_errors
+            )
+            for _pdc in self._plot_data_containers
+        ]
+
     def show_fit_info_box(self, asymmetric_parameter_errors=False, format_as_latex=True):
-        """Render text information about each plot on the figure.
+        """[DEPRECATED] Render text information about each plot on the figure.
 
         :param format_as_latex: if ``True``, the infobox text will be formatted as a LaTeX string
         :type format_as_latex: bool
         :param asymmetric_parameter_errors: if ``True``, use two different parameter errors for up/down directions
         :type asymmetric_parameter_errors: bool
         """
-        self._render_parameter_info_box(self._fig, format_as_latex=format_as_latex,
-                                        asymmetric_parameter_errors=asymmetric_parameter_errors)
 
+        # API is deprecated
+        warnings.warn(
+            "Method `show_fit_info_box` of `{}` object is deprecated. "
+            "This call will have no effect. Pass 'with_fit_info=True' to `plot` "
+            "method to show fit results as part of the legend instead.".format(self.__class__.__name__), UserWarning)
 
 class MultiPlotBase(object):
     """Abstract class for making plots from multi fits"""
@@ -631,7 +651,7 @@ class MultiPlotBase(object):
     def __init__(self, fit_objects, separate_plots=True):
         """
         Parent constructor for multi plots
-        
+
         :param fit_objects: the fit objects for which plots should be created
         :type fit_objects: specified by subclass
         :param separate_plots: if ``True``, will create separate plots for each model
@@ -680,15 +700,29 @@ class MultiPlotBase(object):
         """return the figure with the specified index"""
         return self._underlying_plots[plot_index].figure
 
-    def plot(self):
+    def plot(self,
+             with_legend=True,
+             with_fit_info=True,
+             with_asymmetric_parameter_errors=False):
         """Plot data, model (and other subplots) for all child :py:obj:`Fit` objects, and show legend."""
         for _i, _plot in enumerate(self._underlying_plots):
             _plot.x_label = self._axis_labels[_i][0]
             _plot.y_label = self._axis_labels[_i][1]
-            _plot.plot()
+            _plot.plot(with_legend=with_legend,
+                       with_fit_info=with_fit_info,
+                       with_asymmetric_parameter_errors=with_asymmetric_parameter_errors)
+
+    def get_fit_info_strings(self, format_as_latex=False, asymmetric_parameter_errors=False):
+        return [
+            _plot.get_fit_info_strings(
+                format_as_latex=format_as_latex,
+                asymmetric_parameter_errors=asymmetric_parameter_errors
+            )
+            for _plot in self._underlying_plots
+        ]
 
     def show_fit_info_box(self, format_as_latex=True):
-        """Render text information about each plot on the figure.
+        """[DEPRECATED] Render text information about each plot on the figure.
 
         :param format_as_latex: if ``True``, the infobox text will be formatted as a LaTeX string
         :type format_as_latex: bool

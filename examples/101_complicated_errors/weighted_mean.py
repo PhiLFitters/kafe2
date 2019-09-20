@@ -60,8 +60,7 @@ f.report()
 
 # to see the fit results, plot using IndexedPlot
 p = IndexedPlot(fit_objects=f)
-p.plot()
-p.show_fit_info_box(format_as_latex=True)
+p.plot(with_fit_info=True)
 
 # show the fit result
 plt.show()

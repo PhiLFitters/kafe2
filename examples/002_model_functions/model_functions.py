@@ -51,8 +51,7 @@ exponential_fit.report()
 
 # Optional: Create a plot of the fit results using XYPlot.
 p = XYPlot(fit_objects=[linear_fit, exponential_fit])
-p.plot()
-p.show_fit_info_box(format_as_latex=True)
+p.plot(with_fit_info=True)
 
 # Show the fit results.
 plt.show()

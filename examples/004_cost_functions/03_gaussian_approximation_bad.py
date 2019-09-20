@@ -113,6 +113,6 @@ print('For N~6000:', relative_error_full)
 
 # Optional: create a plot of the fit results using XYPlot
 xy_plot_poisson_sparse = XYPlot([xy_fit_gaussian_sparse, xy_fit_poisson_sparse])
-xy_plot_poisson_sparse.plot()
-xy_plot_poisson_sparse.show_fit_info_box()
+xy_plot_poisson_sparse.plot(with_fit_info=True)
+
 plt.show()

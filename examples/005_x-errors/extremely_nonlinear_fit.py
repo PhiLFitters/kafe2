@@ -21,8 +21,7 @@ _fit_iminuit.add_simple_error('y', _y_err)
 _fit_iminuit.do_fit()
 
 #_plot = _fit_iminuit.generate_plot()
-#_plot.plot()
-#_plot.show_fit_info_box(format_as_latex=True)
+#_plot.plot(with_fit_info=True)
 
 _profiler_iminuit = ContoursProfiler(_fit_iminuit)
 _a_profile_iminuit = _profiler_iminuit.get_profile('a')
@@ -35,8 +34,7 @@ _fit_scipy.add_simple_error('y', _y_err)
 _fit_scipy.do_fit()
 
 #_plot = _fit_scipy.generate_plot()
-#_plot.plot()
-#_plot.show_fit_info_box(format_as_latex=True)
+#_plot.plot(with_fit_info=True)
 
 _profiler_scipy = ContoursProfiler(_fit_scipy)
 _a_profile_scipy = _profiler_scipy.get_profile('a')

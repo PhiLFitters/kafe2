@@ -65,6 +65,6 @@ xy_fit.report()
 
 # Optional: create a plot of the fit results using XYPlot
 xy_plot = XYPlot(xy_fit)
-xy_plot.plot()
-xy_plot.show_fit_info_box()
+xy_plot.plot(with_fit_info=True)
+
 plt.show()

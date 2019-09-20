@@ -38,8 +38,7 @@ line_fit.report()
 
 # Optional: Create a plot of the fit results using XYPlot.
 plot = XYPlot(fit_objects=line_fit) # Create a kafe2 plot object.
-plot.plot() # Do the plot.
-plot.show_fit_info_box() # Optional: Add numerical fit results to the image.
+plot.plot(with_fit_info=True) # Do the plot.
 
 # Show the fit result.
 plt.show()

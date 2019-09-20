@@ -54,8 +54,7 @@ nonlinear_fit.report(asymmetric_parameter_errors=True)
 # Optional: Create a plot of the fit results using XYPlot.
 # Note the asymmetric_parameter_errors flag
 plot = XYPlot(nonlinear_fit)
-plot.plot()
-plot.show_fit_info_box(format_as_latex=True, asymmetric_parameter_errors=True)
+plot.plot(with_fit_info=True, with_asymmetric_parameter_errors=True)
 
 # Optional: Calculate a detailed representation of the profile likelihood
 # Note how the actual chi2 profile differs from the parabolic approximation that you would expect with a linear fit.

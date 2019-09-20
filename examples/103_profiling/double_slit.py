@@ -118,8 +118,7 @@ cpf.plot_profiles_contours_matrix(parameters=['I0', 'b', 'g'],
 
 # to see the fit results, plot using XYPlot
 p = XYPlot(fit_objects=f)
-p.plot()
-p.show_fit_info_box(format_as_latex=True)
+p.plot(with_fit_info=True)
 
 # show the fit result
 plt.show()

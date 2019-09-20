@@ -60,8 +60,9 @@ fit.do_fit()  # perform the fit
 fit.report()  # print a fit report to the terminal
 
 plot = UnbinnedPlot(fit)  # create a plot object
-plot.plot()  # plot the data and the fit
-plot.show_fit_info_box()  # Optional: Add numerical fit results to the image.
+plot.plot(with_fit_info=True)  # plot the data and the fit
+
 cpf = ContoursProfiler(fit, profile_subtract_min=False)  # Optional: create a contours profile
 cpf.plot_profiles_contours_matrix(parameters=['tau', 'fbg'])  # Optional: plot the contour matrix for tau and fbg
+
 plt.show()  # show the plot(s)

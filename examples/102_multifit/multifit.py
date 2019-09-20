@@ -127,6 +127,6 @@ fit.report()
 
 # (Optional): plot the results
 plot = XYMultiPlot(fit, separate_plots=True)
-plot.plot()
-plot.show_fit_info_box(format_as_latex=True)
+plot.plot(with_asymmetric_parameter_errors=True)
+
 plt.show()
