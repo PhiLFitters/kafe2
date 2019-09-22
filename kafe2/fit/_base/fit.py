@@ -65,8 +65,8 @@ class FitBase(FileIOMixin, object):
     def _validate_model_function_for_fit_raise(self):
         """make sure the supplied model function is compatible with the fit type"""
         # disallow using reserved keywords as model function arguments
-        if not self.RESERVED_NODE_NAMES.isdisjoint(set(self._model_function.argspec.args)):
-            _invalid_args = self.RESERVED_NODE_NAMES.intersection(set(self._model_function.argspec.args))
+        if not self.RESERVED_NODE_NAMES.isdisjoint(set(self._model_function.signature.parameters)):
+            _invalid_args = self.RESERVED_NODE_NAMES.intersection(set(self._model_function.signature.parameters))
             raise self.__class__.EXCEPTION_TYPE(
                 "The following names are reserved and cannot be used as model function arguments: %r"
                 % (_invalid_args,))
@@ -96,17 +96,15 @@ class FitBase(FileIOMixin, object):
         :rtype: dict
         """
         _nexus_new_dict = OrderedDict()
-        _arg_defaults = model_function.argspec.defaults
-        _n_arg_defaults = 0 if _arg_defaults is None else len(_arg_defaults)
-        for _arg_pos, _arg_name in enumerate(model_function.argspec.args):
+        for _par in model_function.signature.parameters.values():
             # skip independent variable parameter
-            if _arg_name == x_name:
+            if _par.name == x_name:
                 continue
-            if _arg_pos >= (model_function.argcount - _n_arg_defaults):
-                _default_value = _arg_defaults[_arg_pos - (model_function.argcount - _n_arg_defaults)]
+            if _par.default == _par.empty:
+                _nexus_new_dict[_par.name] = kc('core', 'default_initial_parameter_value')
             else:
-                _default_value = kc('core', 'default_initial_parameter_value')
-            _nexus_new_dict[_arg_name] = _default_value
+                _nexus_new_dict[_par.name] = _par.default
+
         return _nexus_new_dict
 
     @abc.abstractmethod

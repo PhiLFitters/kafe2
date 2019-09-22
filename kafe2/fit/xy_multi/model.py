@@ -1,5 +1,6 @@
 import inspect
 import numpy as np
+import six
 
 from scipy.misc import derivative
 
@@ -8,6 +9,12 @@ from .container import XYMultiContainer, XYMultiContainerException
 from .format import XYMultiModelFunctionFormatter
 from ..xy.model import XYModelFunction
 from collections import OrderedDict
+
+
+if six.PY2:
+    from funcsigs import signature, Signature, Parameter
+else:
+    from inspect import signature, Signature, Parameter
 
 
 __all__ = ["XYMultiParametricModel", "XYMultiModelFunction"]
@@ -47,81 +54,69 @@ class XYMultiModelFunction(ModelFunctionBase):
         super(XYMultiModelFunction, self).__init__(model_function=self._eval)
 
     #in this case also assigns self._model_arg_indices
-    def _assign_model_function_argspec_and_argcount(self):
+    def _assign_model_function_signature_and_argcount(self):
+
         #stores the location of singular model function arguments in the
         #combined multi model function argument list
         self._model_arg_indices = []
+
         #TODO implement
         _varargs = None
         _keywords = None
-        _args_with_defaults = OrderedDict() #the combined args
+
+        _args_with_defaults = OrderedDict()  # the combined args
         for _model_function in self._singular_model_functions:
-            _args = _model_function.argspec.args[1:] #index 0 reserved for x
-            _defaults = _model_function.argspec.defaults
-            _defaults = () if _defaults is None else _defaults
-            #insert None defaults because kwargs come after args
-            _defaults = (None,) * (len(_args) - len(_defaults)) + _defaults
-            #add singular model function arg names and defaults to the combined lists
+            _args = list(_model_function.signature.parameters)[1:]  # index 0 reserved for x
+            _defaults = [_par.default for _par in _model_function.signature.parameters.values()][1:]  # index 0 reserved for x
+
+            # add singular model function arg names and defaults to the combined lists
             for _arg_name, _default_value in zip(_args, _defaults):
-                #None is dummy default value, replace
-                if _arg_name not in _args_with_defaults or _args_with_defaults[_arg_name] is None:
+
+                # replace dummy default values
+                if _arg_name not in _args_with_defaults or _args_with_defaults[_arg_name] == Parameter.empty:
                     _args_with_defaults[_arg_name] = _default_value
-                elif _default_value != None and _args_with_defaults[_arg_name] != _default_value:
-                    #TODO Exception or Warning?
+
+                # raise on conflicting defaults
+                elif _default_value != Parameter.empty and _args_with_defaults[_arg_name] != _default_value:
                     raise XYMultiModelFunctionException(
                         "Model functions have conflicting defaults for parameter %s: %s <-> %s" % 
                         (_arg_name, _args_with_defaults[_arg_name], _default_value))
-            #save the locations of singular args in the combined list
-            _keys = list(_args_with_defaults.keys())
+
+            # save the locations of singular args in the combined list
+            _keys = list(_args_with_defaults)
             self._model_arg_indices.append([_keys.index(_arg_name) for _arg_name in _args])
-        _combined_args = list(_args_with_defaults.keys())
+
+        _combined_args = list(_args_with_defaults)
         _combined_defaults = []
         for _arg_name in _combined_args:
             _default = _args_with_defaults.get(_arg_name)
-            if _default is None:
-                _combined_defaults.append(1.0)
-            else:
-                _combined_defaults.append(_default)
+            _combined_defaults.append(_default if _default != Parameter.empty else 1.0)
+
         _combined_args.insert(0, self._x_name)
-        self._model_function_argspec = inspect.ArgSpec(_combined_args, _varargs, _keywords, _combined_defaults)
+        _combined_defaults.insert(0, Parameter.empty)
+
+        self._model_function_signature = Signature(
+            parameters=[
+                Parameter(
+                    name=_arg,
+                    default=_default,
+                    kind=Parameter.POSITIONAL_OR_KEYWORD,
+                )
+                for _arg, _default in zip(_combined_args, _combined_defaults)
+            ]
+        )
+
         self._model_function_argcount = len(_combined_args)
         self._model_function_parcount = self._model_function_argcount - 1
 
     def _validate_model_function_raise(self):
         for _model_function in self.singular_model_functions:
-            _argspec = inspect.getargspec(_model_function.func)
-            # require 'xy' model function agruments to include 'x'
-            if self.x_name not in _argspec.args:
-                raise self.__class__.EXCEPTION_TYPE(
-                    "Model function '%r' must have independent variable '%s' among its arguments!"
-                    % (_model_function.func, self.x_name))
-
-            # require 'xy' model functions to have at least two arguments
-            if len(_argspec.args) < 2:
-                raise self.__class__.EXCEPTION_TYPE(
-                    "Model function '%r' needs at least one parameter beside independent variable '%s'!"
-                    % (_model_function.func, self.x_name))
-
-            # evaluate general model function requirements
-            #super(XYMultiModelFunction, self)._validate_model_function_raise()
-            if _argspec.varargs and self._model_function_argspec.keywords:
-                raise self.__class__.EXCEPTION_TYPE("Model function with variable arguments (*%s, **%s) is not supported"
-                                                % (self._model_function_argspec.varargs,
-                                                   self._model_function_argspec.keywords))
-            elif _argspec.varargs:
-                raise self.__class__.EXCEPTION_TYPE(
-                    "Model function with variable arguments (*%s) is not supported"
-                    % (self._model_function_argspec.varargs,))
-            elif _argspec.keywords:
-                raise self.__class__.EXCEPTION_TYPE(
-                    "Model function with variable arguments (**%s) is not supported"
-                    % (self._model_function_argspec.keywords,))
-
+            _model_function._validate_model_function_raise()
 
     def _get_parameter_formatters(self):
         _start_at_arg = 1
         return [ModelParameterFormatter(name=_pn, value=_pv, error=None)
-                for _pn, _pv in zip(self.argspec.args[_start_at_arg:], self.argvals[_start_at_arg:])]
+                for _pn, _pv in zip(list(self.signature.parameters)[_start_at_arg:], self.argvals[_start_at_arg:])]
 
     def _assign_function_formatter(self):
         _singular_formatters=[_model_function.formatter 

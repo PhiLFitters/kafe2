@@ -1,10 +1,15 @@
 import abc
-import inspect
 import six
 import sys
 import weakref
 from ast import parse
 from collections import OrderedDict
+
+
+if six.PY2:
+    from funcsigs import signature
+else:
+    from inspect import signature
 
 
 NODE_VALUE_DEFAULT = 1.0
@@ -170,7 +175,11 @@ class NodeFunction(NodeBase):
         self._func = function_handle
         # do introspection
         self._func_varcount = self._func.__code__.co_argcount
-        self._func_varnames = inspect.getargspec(self._func)[0]
+        self._func_varnames = [
+            pn
+            for pn, p in signature(self._func).parameters.items()
+            if p.kind != p.VAR_POSITIONAL and p.kind != p.VAR_KEYWORD
+        ]
         self._stale = True
 
     def __str__(self):

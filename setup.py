@@ -43,7 +43,8 @@ setup(
         'tabulate',
         'matplotlib',
         'PyYaml',
-        'six'
+        'six',
+        'funcsigs',
     ],
     classifiers=[
         'Development Status :: 4 - Beta',

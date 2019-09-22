@@ -11,6 +11,12 @@ from scipy.stats import poisson, norm
 from kafe2.fit.io.file import FileIOMixin
 
 
+if six.PY2:
+    from funcsigs import signature
+else:
+    from inspect import signature
+
+
 __all__ = ["CostFunctionBase",
            "CostFunctionBase_Chi2",
            "CostFunctionBase_NegLogLikelihood",
@@ -151,7 +157,7 @@ class CostFunctionBase(FileIOMixin, object):
         :param cost_function: function handle
         """
         self._cost_function_handle = cost_function
-        self._cost_function_argspec = inspect.getargspec(self._cost_function_handle)
+        self._cost_function_signature = signature(self._cost_function_handle)
         self._cost_function_argcount = self._cost_function_handle.__code__.co_argcount
         self._validate_cost_function_raise()
         self._assign_function_formatter()
@@ -170,28 +176,35 @@ class CostFunctionBase(FileIOMixin, object):
         return 'cost_function'
 
     def _validate_cost_function_raise(self):
-        self._cost_func_argspec = inspect.getargspec(self._cost_function_handle)
-        if 'cost' in self._cost_func_argspec:
+        self._cost_func_signature = signature(self._cost_function_handle)
+        if 'cost' in self._cost_func_signature.parameters:
             raise self.__class__.EXCEPTION_TYPE(
                 "The alias 'cost' for the cost function value cannot be used as an argument to the cost function!")
 
-        if self._cost_func_argspec.varargs and self._cost_func_argspec.keywords:
-            raise self.__class__.EXCEPTION_TYPE("Cost function with variable arguments (*%s, **%s) is not supported"
-                                 % (self._cost_func_argspec.varargs,
-                                    self._cost_func_argspec.keywords))
-        elif self._cost_func_argspec.varargs:
-            raise self.__class__.EXCEPTION_TYPE(
-                "Cost function with variable arguments (*%s) is not supported"
-                % (self._cost_func_argspec.varargs,))
-        elif self._cost_func_argspec.keywords:
-            raise self.__class__.EXCEPTION_TYPE(
-                "Cost function with variable arguments (**%s) is not supported"
-                % (self._cost_func_argspec.keywords,))
+        # evaluate general cost function requirements
+        for _par in self._cost_func_signature.parameters.values():
+            if _par.kind == _par.VAR_POSITIONAL:
+                raise self.__class__.EXCEPTION_TYPE(
+                    "Cost function '{}' with variable number of positional "
+                    "arguments (*{}) is not supported".format(
+                        _cost_function_handle.__name__,
+                        _par.name,
+                    )
+                )
+            elif _par.kind == _par.VAR_KEYWORD:
+                raise self.__class__.EXCEPTION_TYPE(
+                    "Cost function '{}' with variable number of keyword "
+                    "arguments (**{}) is not supported".format(
+                        _cost_function_handle.__name__,
+                        _par.name,
+                    )
+                )
+
         # TODO: fail if cost function does not depend on data or model
 
     def _get_parameter_formatters(self):
         return [ModelParameterFormatter(name=_pn, value=_pv, error=None)
-                for _pn, _pv in zip(self.argspec.args, self.argvals)]
+                for _pn, _pv in zip(self.signature.parameters, self.argvals)]
 
     def _assign_function_formatter(self):
         self._formatter = self.__class__.FORMATTER_TYPE(
@@ -211,9 +224,9 @@ class CostFunctionBase(FileIOMixin, object):
         return self._cost_function_handle
 
     @property
-    def argspec(self):
-        """The model function argument specification, as returned by :py:meth:`inspect.getargspec`"""
-        return self._cost_function_argspec
+    def signature(self):
+        """The model function argument specification, as returned by :py:meth:`inspect.signature`"""
+        return self._cost_function_signature
 
     @property
     def argcount(self):

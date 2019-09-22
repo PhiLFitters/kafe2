@@ -1,11 +1,18 @@
 import numpy as np
+import six
 
 from scipy.misc import derivative
 
-import inspect
 from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException
 from .container import IndexedContainer, IndexedContainerException
 from .format import IndexedModelFunctionFormatter
+
+
+if six.PY2:
+    from funcsigs import signature, Signature, Parameter
+else:
+    from inspect import signature, Signature, Parameter
+
 
 __all__ = ["IndexedParametricModel", "IndexedModelFunction"]
 
@@ -35,8 +42,8 @@ class IndexedModelFunction(ModelFunctionBase):
 
         super(IndexedModelFunction, self)._validate_model_function_raise()
 
-    def _assign_model_function_argspec_and_argcount(self):
-        self._model_function_argspec = inspect.getargspec(self._model_function_handle)
+    def _assign_model_function_signature_and_argcount(self):
+        self._model_function_signature = signature(self._model_function_handle)
         self._model_function_argcount = self._model_function_handle.__code__.co_argcount
         #for indexed model functions pars == args
         self._model_function_parcount = self._model_function_argcount

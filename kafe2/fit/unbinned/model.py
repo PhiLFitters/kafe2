@@ -27,7 +27,7 @@ class UnbinnedModelPDF(ModelFunctionBase):
 
     def _validate_model_function_raise(self):
         # require pdf model function arguments to include 'x'
-        if self.x_name not in self.argspec.args:
+        if self.x_name not in self.signature.parameters:
             raise self.__class__.EXCEPTION_TYPE(
                 "Model function '%r' must have independent variable '%s' among its arguments!"
                 % (self.func, self.x_name))
@@ -44,7 +44,7 @@ class UnbinnedModelPDF(ModelFunctionBase):
     def _get_parameter_formatters(self):
         _start_at_arg = 1
         return [ModelParameterFormatter(name=_pn, value=_pv, error=None)
-                for _pn, _pv in zip(self.argspec.args[_start_at_arg:], self.argvals[_start_at_arg:])]
+                for _pn, _pv in zip(list(self.signature.parameters)[_start_at_arg:], self.argvals[_start_at_arg:])]
 
     def _assign_function_formatter(self):
         self._formatter = self.__class__.FORMATTER_TYPE(self.name,

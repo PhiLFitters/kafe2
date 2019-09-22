@@ -9,6 +9,12 @@ from inspect import ArgSpec
 from ..util import function_library
 
 
+if six.PY2:
+    from funcsigs import signature, Signature, Parameter
+else:
+    from inspect import signature, Signature, Parameter
+
+
 __all__ = ["ParametricModelBaseMixin", "ModelFunctionBase", "ModelFunctionException"]
 
 
@@ -115,7 +121,7 @@ class ModelFunctionBase(FileIOMixin, object):
             raise ModelFunctionException("Cannot use {} as model function: "
                                          "object not callable!".format(model_function))
 
-        self._assign_model_function_argspec_and_argcount()
+        self._assign_model_function_signature_and_argcount()
         self._validate_model_function_raise()
         self._assign_function_formatter()
         self._source_code = None
@@ -133,29 +139,35 @@ class ModelFunctionBase(FileIOMixin, object):
     def _get_default(cls):
         return function_library.linear_model
 
-    def _assign_model_function_argspec_and_argcount(self):
-        self._model_function_argspec = inspect.getargspec(self._model_function_handle)
+    def _assign_model_function_signature_and_argcount(self):
+        self._model_function_signature = signature(self._model_function_handle)
         self._model_function_argcount = self._model_function_handle.__code__.co_argcount
         #for most model function types there is exactly one argument that is not a parameter (x)
         self._model_function_parcount = self._model_function_argcount - 1
 
     def _validate_model_function_raise(self):
-        if self._model_function_argspec.varargs and self._model_function_argspec.keywords:
-            raise self.__class__.EXCEPTION_TYPE("Model function with variable arguments (*%s, **%s) is not supported"
-                                                % (self._model_function_argspec.varargs,
-                                                   self._model_function_argspec.keywords))
-        elif self._model_function_argspec.varargs:
-            raise self.__class__.EXCEPTION_TYPE(
-                "Model function with variable arguments (*%s) is not supported"
-                % (self._model_function_argspec.varargs,))
-        elif self._model_function_argspec.keywords:
-            raise self.__class__.EXCEPTION_TYPE(
-                "Model function with variable arguments (**%s) is not supported"
-                % (self._model_function_argspec.keywords,))
+        # evaluate general model function requirements
+        for _par in self.signature.parameters.values():
+            if _par.kind == _par.VAR_POSITIONAL:
+                raise self.__class__.EXCEPTION_TYPE(
+                    "Model function '{}' with variable number of positional "
+                    "arguments (*{}) is not supported".format(
+                        self._model_function_handle.__name__,
+                        _par.name,
+                    )
+                )
+            elif _par.kind == _par.VAR_KEYWORD:
+                raise self.__class__.EXCEPTION_TYPE(
+                    "Model function '{}' with variable number of keyword "
+                    "arguments (**{}) is not supported".format(
+                        self._model_function_handle.__name__,
+                        _par.name,
+                    )
+                )
 
     def _get_parameter_formatters(self):
         return [ModelParameterFormatter(name=_pn, value=_pv, error=None)
-                for _pn, _pv in zip(self.argspec.args, self.argvals)]
+                for _pn, _pv in zip(self.signature.parameters, self.argvals)]
 
     def _assign_function_formatter(self):
         self._formatter = self.__class__.FORMATTER_TYPE(
@@ -175,9 +187,9 @@ class ModelFunctionBase(FileIOMixin, object):
         return self._model_function_handle
 
     @property
-    def argspec(self):
-        """The model function argument specification, as returned by :py:meth:`inspect.getargspec`"""
-        return self._model_function_argspec
+    def signature(self):
+        """The model function argument specification, as returned by :py:meth:`inspect.signature`"""
+        return self._model_function_signature
 
     @property
     def argcount(self):
@@ -209,25 +221,33 @@ class ModelFunctionBase(FileIOMixin, object):
     @property
     def defaults(self):
         """The default values for model function parameters"""
-        if not self.argspec.defaults:
-            _temp_defaults = ()
-        else:
-            _temp_defaults = tuple(self.argspec.defaults)
+
         # fill up unspecified defaults with 1.0
-        return (1.0,) * (self.parcount - len(_temp_defaults)) + _temp_defaults
+        return tuple([
+            _par.default if _par.default != _par.empty else 1.0
+            for _par in list(self.signature.parameters.values())[self.argcount-self.parcount:]
+        ])
 
     @defaults.setter
     def defaults(self, new_defaults):
         if self.parcount != len(new_defaults): #first arg is x, but x is not a parameter
             raise ModelFunctionException('Expected %s parameter defaults (1 per parameter), but received %s'
                                          % (self.parcount, len(new_defaults)))
-        _new_argspec = ArgSpec(
-            self.argspec.args,
-            self.argspec.varargs,
-            self.argspec.keywords,
-            new_defaults
+
+        # pad defaults with empties for 'x'
+        new_defaults = [Parameter.empty] * (self.argcount - self.parcount) + new_defaults
+
+        # set new signature
+        self._model_function_signature = Signature(
+            parameters=[
+                Parameter(
+                    name=_par.name,
+                    kind=_par.kind,
+                    default=_par_default,
+                )
+                for _par, _par_default in zip(self.signature.parameters.values(), new_defaults)
+            ]
         )
-        self._model_function_argspec = _new_argspec
 
     @property
     def source_code(self):
