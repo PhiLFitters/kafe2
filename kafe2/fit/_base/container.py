@@ -91,12 +91,12 @@ class DataContainerBase(FileIOMixin, object):
     @abc.abstractproperty
     def cov_mat(self):
         """A numpy matrix containing the covariance matrix of the data"""
-        return np.matrix(np.empty(tuple()))
+        return np.array(np.empty(tuple()))
 
     @abc.abstractproperty
     def cov_mat_inverse(self):
         """A numpy matrix containing inverse of the data covariance matrix (or ``None`` if not invertible)"""
-        return np.matrix(np.empty(tuple()))
+        return np.array(np.empty(tuple()))
 
     @property
     def has_errors(self):

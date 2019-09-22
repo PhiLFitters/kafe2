@@ -343,7 +343,7 @@ class XYFit(FitBase):
         _n_poi = len(self.poi_values)
         for _x_idx, _x_val in enumerate(_band_x):
             _p_res = _f_deriv_by_params[_x_idx]
-            _band_y[_x_idx] = _p_res.dot(self.parameter_cov_mat[:_n_poi, :_n_poi]).dot(_p_res)[0, 0]
+            _band_y[_x_idx] = _p_res.dot(self.parameter_cov_mat[:_n_poi, :_n_poi]).dot(_p_res)
 
         self.__cache_y_error_band = np.sqrt(_band_y)
 
@@ -684,8 +684,8 @@ class XYFit(FitBase):
             _precision = 0.01 * np.min(_x_errors)
             _derivatives = self._param_model.eval_model_function_derivative_by_x(dx=_precision, model_parameters=self.parameter_values)
             _outer_product = np.outer(_derivatives, _derivatives)
-            _projected_x_cov_mat = np.asarray(self.x_total_cov_mat) * _outer_product
-            self.__cache_projected_xy_total_cov_mat = self.y_total_cov_mat + np.asmatrix(_projected_x_cov_mat)
+            _projected_x_cov_mat = self.x_total_cov_mat * _outer_product
+            self.__cache_projected_xy_total_cov_mat = self.y_total_cov_mat + _projected_x_cov_mat
         return self.__cache_projected_xy_total_cov_mat
 
     @property
@@ -696,7 +696,7 @@ class XYFit(FitBase):
         if self.__cache_x_total_cov_mat_inverse is None:
             _tmp = self.x_total_cov_mat
             try:
-                _tmp = _tmp.I
+                _tmp = np.linalg.inv(_tmp)
                 self.__cache_x_total_cov_mat_inverse = _tmp
             except np.linalg.LinAlgError:
                 pass
@@ -710,7 +710,7 @@ class XYFit(FitBase):
         if self.__cache_y_total_cov_mat_inverse is None:
             _tmp = self.y_total_cov_mat
             try:
-                _tmp = _tmp.I
+                _tmp = np.linalg.inv(_tmp)
                 self.__cache_y_total_cov_mat_inverse = _tmp
             except np.linalg.LinAlgError:
                 pass
@@ -723,7 +723,7 @@ class XYFit(FitBase):
         if self.__cache_projected_xy_total_cov_mat_inverse is None or True:
             _tmp = self.projected_xy_total_cov_mat
             try:
-                _tmp = _tmp.I
+                _tmp = np.linalg.inv(_tmp)
                 self.__cache_projected_xy_total_cov_mat_inverse = _tmp
             except np.linalg.LinAlgError:
                 pass
@@ -748,7 +748,7 @@ class XYFit(FitBase):
         if self.__cache_y_total_uncor_cov_mat_inverse is None:
             _tmp = self.y_total_uncor_cov_mat
             try:
-                _tmp = _tmp.I
+                _tmp = np.linalg.inv(_tmp)
                 self.__cache_y_total_uncor_cov_mat_inverse = _tmp
             except np.linalg.LinAlgError:
                 pass
@@ -784,7 +784,7 @@ class XYFit(FitBase):
         if self.__cache_x_total_uncor_cov_mat_inverse is None:
             _tmp = self.x_total_uncor_cov_mat
             try:
-                _tmp = _tmp.I
+                _tmp = np.linalg.inv(_tmp)
                 self.__cache_x_total_uncor_cov_mat_inverse = _tmp
             except np.linalg.LinAlgError:
                 pass

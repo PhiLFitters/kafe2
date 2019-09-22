@@ -260,9 +260,9 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
         _fit_results = yaml_doc.pop('fit_results', None)
         if _fit_results is not None:
             if _fit_results['did_fit']:
-                _fit_results['parameter_cov_mat'] = np.asmatrix(_fit_results['parameter_cov_mat'])
+                _fit_results['parameter_cov_mat'] = np.asarray(_fit_results['parameter_cov_mat'])
                 _fit_results['parameter_errors'] = np.array(_fit_results['parameter_errors'])
-                _fit_results['parameter_cor_mat'] = np.asmatrix(_fit_results['parameter_cor_mat'])
+                _fit_results['parameter_cor_mat'] = np.asarray(_fit_results['parameter_cor_mat'])
             if _fit_results['asymmetric_parameter_errors'] is not None:
                 _fit_results['asymmetric_parameter_errors'] = np.array(_fit_results['asymmetric_parameter_errors'])
         _fit_object._loaded_result_dict = _fit_results

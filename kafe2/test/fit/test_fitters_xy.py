@@ -263,7 +263,7 @@ class TestFittersXYChi2WithError(unittest.TestCase):
     def chi2_with_cov_mat(y_data, y_model, y_total_cov_mat_inverse):
         _p = y_data - y_model
         if y_total_cov_mat_inverse is not None:
-            return (_p.dot(y_total_cov_mat_inverse).dot(_p))[0, 0]
+            return (_p.dot(y_total_cov_mat_inverse).dot(_p))
         else:
             return 9999
 

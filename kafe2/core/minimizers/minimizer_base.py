@@ -143,7 +143,7 @@ class MinimizerBase(object):
     def cov_mat(self):
         if self._par_cov_mat is None:
             self._par_cov_mat = self.hessian_inv * 2.0 * self._err_def
-        return np.asmatrix(self._par_cov_mat)  # TODO change to array
+        return np.asarray(self._par_cov_mat)
 
     @property
     def cor_mat(self):

@@ -406,7 +406,7 @@ class TestFittersXYMultiChi2WithError(unittest.TestCase):
     def chi2_with_cov_mat(y_data, y_model, y_total_cov_mat_inverse):
         _p = y_data - y_model
         if y_total_cov_mat_inverse is not None:
-            return (_p.dot(y_total_cov_mat_inverse).dot(_p))[0, 0]
+            return (_p.dot(y_total_cov_mat_inverse).dot(_p))
         else:
             return 9999
 
@@ -426,7 +426,7 @@ class TestFittersXYMultiChi2WithError(unittest.TestCase):
         self._ref_data_jitter_1 = np.array([ 0.49671415, -0.1382643,   0.64768854,  1.52302986,
                                             -0.23415337, -0.23413696, 1.57921282,  0.76743473,
                                             -0.46947439,  0.54256004])
-        
+
         self._ref_y_data_0 = self._ref_y_model_values_0 + self._ref_data_jitter_0
         self._ref_xy_data_0 = np.array([self._ref_x, self._ref_y_data_0])
         self._ref_y_data_error_0 = np.ones_like(self._ref_y_data_0) * 1.0

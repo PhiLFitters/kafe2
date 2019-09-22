@@ -36,14 +36,14 @@ class TestMinimizerIMinuit(unittest.TestCase):
                                   parameter_errors=(0.1,))
         self.m1.tolerance = 0.001
 
-        self._ref_hessian_fcn3 = np.asmatrix(np.diag([1 * 2, 0.5 * 2, 3 * 2]))
-        self._ref_hessian_inv_fcn3 = np.asmatrix(np.diag([1./2., 1., 1./6.]))
+        self._ref_hessian_fcn3 = np.diag([1 * 2, 0.5 * 2, 3 * 2])
+        self._ref_hessian_inv_fcn3 = np.diag([1./2., 1., 1./6.])
 
-        self._ref_cov_mat_fcn3 = np.asmatrix(np.diag([1, 1. / 0.5, 1. / 3.]))
-        self._ref_cor_mat_fcn3 = np.asmatrix(np.eye(3))
+        self._ref_cov_mat_fcn3 = np.diag([1, 1. / 0.5, 1. / 3.])
+        self._ref_cor_mat_fcn3 = np.eye(3)
 
-        self._ref_cov_mat_fcn3_fix_x = np.asmatrix(np.diag([0., 1. / 0.5, 1. / 3.]))
-        self._ref_cor_mat_fcn3_fix_x = np.asmatrix(np.diag([0., 1., 1.]))
+        self._ref_cov_mat_fcn3_fix_x = np.diag([0., 1. / 0.5, 1. / 3.])
+        self._ref_cor_mat_fcn3_fix_x = np.diag([0., 1., 1.])
 
         self._ref_scipy_method = 'slsqp'  # solver algorithm name
 

@@ -74,10 +74,10 @@ class TestCostBase(unittest.TestCase):
     def test_chi2_cov_mat(self):
         self.assertTrue(np.abs(
             self._cost_chi2_cov_mat - self.CHI2_COST_FUNCTION(errors_to_use='covariance')
-            (self._data, self._model, np.asmatrix(self._cov_mat_inv), None, None)) < self._tol)
+            (self._data, self._model, self._cov_mat_inv, None, None)) < self._tol)
         self.assertTrue(np.abs(
             self._cost_chi2_cov_mat + self._par_cost - self.CHI2_COST_FUNCTION(errors_to_use='covariance')
-            (self._data, self._model, np.asmatrix(self._cov_mat_inv), self._par_vals, self._par_constraints)) < self._tol)
+            (self._data, self._model, self._cov_mat_inv, self._par_vals, self._par_constraints)) < self._tol)
 
     def test_nll_gaussian(self):
         self.assertTrue(np.abs(

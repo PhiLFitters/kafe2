@@ -30,7 +30,7 @@ def cov_mat_from_float_list(value_list, correlation=0.0):
     else:
         _mat = np.diag(_vals**2 * (1.0 - correlation))
         _mat += np.outer(_vals, _vals) * correlation
-    return CovMat(np.asmatrix(_mat))
+    return CovMat(_mat)
 
 
 """
@@ -114,7 +114,7 @@ class CovMat(object):
             # "copy constructor"
             matrix = copy.deepcopy(matrix.mat)
 
-        self._mat = np.asmatrix(matrix)
+        self._mat = np.asarray(matrix)
         if not (self._mat.shape[1] == self._mat.shape[0]):
             raise ValueError("Covariance matrix must be square matrix, shape %r given," % (self._mat.shape,))
         if not np.allclose(self._mat - self._mat.T, 0):
@@ -131,8 +131,7 @@ class CovMat(object):
         """
         if self._cor_mat is None:
             _sqrt_vars = np.sqrt(np.diag(self.mat))
-            _mat_as_arr = np.asarray(self.mat)
-            self._cor_mat = np.asmatrix(_mat_as_arr / np.outer(_sqrt_vars, _sqrt_vars))
+            self._cor_mat = self.mat / np.outer(_sqrt_vars, _sqrt_vars)
         return self._cor_mat
 
     @property
@@ -142,7 +141,7 @@ class CovMat(object):
         """
         if self._inverse is None:
             try:
-                self._inverse = self._mat.I
+                self._inverse = np.linalg.inv(self._mat)
             except np.linalg.LinAlgError:
                 pass  # fail silently if matrix is singular
         return self._inverse

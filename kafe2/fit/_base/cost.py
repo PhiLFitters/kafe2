@@ -47,7 +47,7 @@ def _generic_chi2(data, model,
 
     # if a covariance matrix inverse is given, use it
     if cov_mat_inverse is not None:
-        return _res.dot(cov_mat_inverse).dot(_res)[0, 0] + _par_cost
+        return _res.dot(cov_mat_inverse).dot(_res) + _par_cost
 
     if fail_on_no_matrix:
         raise np.linalg.LinAlgError("Covariance matrix is singular!")
@@ -103,7 +103,7 @@ def _generic_chi2_nuisance(data, model,
     if uncor_cov_mat_inverse is not None:
         _inner_sum = np.squeeze(np.asarray(nuisance_vector.dot(nuisance_cor_design_mat)))
         _nuisance_penalties = nuisance_vector.dot(nuisance_vector)
-        _chisquare = (data - model - _inner_sum).dot(uncor_cov_mat_inverse).dot(data - model - _inner_sum)[0, 0]
+        _chisquare = (data - model - _inner_sum).dot(uncor_cov_mat_inverse).dot(data - model - _inner_sum)
         if np.isnan(_chisquare):
             return np.inf
         return _chisquare + _nuisance_penalties + _par_cost

@@ -117,7 +117,7 @@ class TestIndexedContainerYamlRepresentation(unittest.TestCase):
 
         self._ref_testfile_data = [80.429, 80.339]
         self._ref_testfile_err = [0.89442719,  0.89442719]
-        self._ref_testfile_cov_mat = np.matrix([[0.8, 0.3], [0.3, 0.8]])
+        self._ref_testfile_cov_mat = np.array([[0.8, 0.3], [0.3, 0.8]])
         self._ref_testfile_error_names = {'ErrorOne', 'ErrorTwo', 'ErrorThree', 'ErrorFour'}
 
         self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_DATASET_INDEXED_MISSING_KEYWORD))
@@ -321,8 +321,8 @@ class TestXYContainerYamlRepresentation(unittest.TestCase):
         self._ref_testfile_y_data = [80.429, 80.339]
         self._ref_testfile_x_err = [0.70710678,  0.70710678]
         self._ref_testfile_y_err = [0.54772256,  0.54772256]
-        self._ref_testfile_y_cov_mat = np.matrix([[0.3, 0.1], [0.1, 0.3]])
-        self._ref_testfile_x_cov_mat = np.matrix([[0.5, 0.2], [0.2, 0.5]])
+        self._ref_testfile_y_cov_mat = np.array([[0.3, 0.1], [0.1, 0.3]])
+        self._ref_testfile_x_cov_mat = np.array([[0.5, 0.2], [0.2, 0.5]])
         self._ref_testfile_error_names = {'XErrorOne', 'XErrorTwo', 'YErrorOne', 'YErrorTwo'}
 
 
@@ -577,14 +577,14 @@ class TestXYMultiContainerYamlRepresentation(unittest.TestCase):
         self._ref_testfile_y_data = [80.429, 80.339, 20.0, 44.0]
         self._ref_testfile_x_err = [0.70710678,  0.70710678,  0.77459667,  0.77459667]
         self._ref_testfile_y_err = [0.63245553,  0.63245553,  0.54772256,  0.54772256]
-        self._ref_testfile_y_cov_mat = np.matrix([[0.4, 0.1, 0.1, 0.1], 
-                                                  [0.1, 0.4, 0.1, 0.1],
-                                                  [0.1, 0.1, 0.3, 0.1],
-                                                  [0.1, 0.1, 0.1, 0.3]])
-        self._ref_testfile_x_cov_mat = np.matrix([[0.5, 0.2, 0.2, 0.2],
-                                                  [0.2, 0.5, 0.2, 0.2],
-                                                  [0.2, 0.2, 0.6, 0.2],
-                                                  [0.2, 0.2, 0.2, 0.6]])
+        self._ref_testfile_y_cov_mat = np.array([[0.4, 0.1, 0.1, 0.1],
+                                                 [0.1, 0.4, 0.1, 0.1],
+                                                 [0.1, 0.1, 0.3, 0.1],
+                                                 [0.1, 0.1, 0.1, 0.3]])
+        self._ref_testfile_x_cov_mat = np.array([[0.5, 0.2, 0.2, 0.2],
+                                                 [0.2, 0.5, 0.2, 0.2],
+                                                 [0.2, 0.2, 0.6, 0.2],
+                                                 [0.2, 0.2, 0.2, 0.6]])
         self._ref_testfile_error_names = {'XErrorOne', 'XErrorTwo', 'XErrorThree', 'YErrorOne', 'YErrorTwo', 'YErrorThree'}
 
 
@@ -822,7 +822,7 @@ class TestHistContainerYamlRepresentation(unittest.TestCase):
         self._ref_testfile_bin_edges = [1.0, 2.0, 3.0]
         self._ref_testfile_data = [1, 1]
         self._ref_testfile_err = [0.89442719,  1]
-        self._ref_testfile_cov_mat = np.matrix([[0.8, 0.3], [0.3, 1.0]])
+        self._ref_testfile_cov_mat = np.array([[0.8, 0.3], [0.3, 1.0]])
         self._ref_testfile_error_names = {'ErrorOne', 'ErrorTwo', 'ErrorThree', 'ErrorFour'}
 
 

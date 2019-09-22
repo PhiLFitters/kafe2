@@ -8,12 +8,12 @@ from kafe2.core.error import MatrixGaussianError, SimpleGaussianError
 class TestMatrixGaussianError(unittest.TestCase):
 
     def setUp(self):
-        self.ref_cov_mat = np.matrix([[0.10, 0.04, 0.29],
-                                      [0.04, 0.02, 0.42],
-                                      [0.29, 0.42, 0.33]])
-        self.ref_cor_mat = np.matrix([[ 1.        ,  0.89442719,  1.59639746],
-                                      [ 0.89442719,  1.        ,  5.16984262],
-                                      [ 1.59639746,  5.16984262,  1.        ]])
+        self.ref_cov_mat = np.array([[0.10, 0.04, 0.29],
+                                     [0.04, 0.02, 0.42],
+                                     [0.29, 0.42, 0.33]])
+        self.ref_cor_mat = np.array([[ 1.        ,  0.89442719,  1.59639746],
+                                     [ 0.89442719,  1.        ,  5.16984262],
+                                     [ 1.59639746,  5.16984262,  1.        ]])
         self.ref_err_val = np.sqrt(np.array([0.1, 0.02, 0.33]))
 
         # -- errors with no reference
@@ -25,9 +25,9 @@ class TestMatrixGaussianError(unittest.TestCase):
 
         # -- errors with reference
         self.ref_reference = [0.1, 0.2, 0.3]
-        self.ref_cov_mat_rel = np.matrix([[10.0,   2.0, 9.667],
-                                          [ 2.0,   0.5, 7.0  ],
-                                          [ 9.667, 7.0, 3.667]])
+        self.ref_cov_mat_rel = np.array([[10.0,   2.0, 9.667],
+                                         [ 2.0,   0.5, 7.0  ],
+                                         [ 9.667, 7.0, 3.667]])
         self.ref_err_val_rel = np.array([3.16227766, 0.70710678, 1.91494125])
 
         # construct error from cov mat with reference (absolute error)
@@ -47,22 +47,22 @@ class TestMatrixGaussianError(unittest.TestCase):
         self.ge_cor_rel_wref = MatrixGaussianError(self.ref_cor_mat, 'cor', err_val=self.ref_err_val_rel, relative=True, reference=self.ref_reference)
 
         # -- ill defined matrices
-        self.wrong_cor_mat_diagonal_not_ones = np.matrix([[42., 0.89442719, 1.59639746],
-                                                          [0.89442719, 1., 5.16984262],
-                                                          [1.59639746, 5.16984262, 1.]])
+        self.wrong_cor_mat_diagonal_not_ones = np.array([[42., 0.89442719, 1.59639746],
+                                                         [0.89442719, 1., 5.16984262],
+                                                         [1.59639746, 5.16984262, 1.]])
 
-        self.wrong_cor_mat_asymm = np.matrix([[1., 42.89442719, 1.59639746],
-                                              [0.89442719, 1., 5.16984262],
-                                              [1.59639746, 5.16984262, 1.]])
+        self.wrong_cor_mat_asymm = np.array([[1., 42.89442719, 1.59639746],
+                                             [0.89442719, 1., 5.16984262],
+                                             [1.59639746, 5.16984262, 1.]])
 
 
-        self.wrong_cov_mat_asymm = np.matrix([[0.10, 42.0, 0.29],
-                                              [0.04, 0.02, 0.42],
-                                              [0.29, 0.42, 0.33]])
+        self.wrong_cov_mat_asymm = np.array([[0.10, 42.0, 0.29],
+                                             [0.04, 0.02, 0.42],
+                                             [0.29, 0.42, 0.33]])
 
-        self.wrong_cov_mat_err_val_mismatch = np.matrix([[0.42, 0.04, 0.29],
-                                                         [0.04, 0.42, 0.42],
-                                                         [0.29, 0.42, 0.42]])
+        self.wrong_cov_mat_err_val_mismatch = np.array([[0.42, 0.04, 0.29],
+                                                        [0.04, 0.42, 0.42],
+                                                        [0.29, 0.42, 0.42]])
 
     def test_compare_cov_from_cov_wref(self):
         self.assertTrue(np.allclose(self.ge_cov_wref.cov_mat, self.ref_cov_mat, atol=1e-3))

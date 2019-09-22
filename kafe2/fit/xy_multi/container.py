@@ -111,7 +111,7 @@ class XYMultiContainer(IndexedContainer):
                 _tmp_uncor_cov_mat+=_err.cov_mat
             else:
                 _tmp_uncor_cov_mat+=_err.cov_mat_uncor
-        return np.matrix(_tmp_uncor_cov_mat)
+        return np.array(_tmp_uncor_cov_mat)
 
     def _calculate_y_nuisance_cor_design_matrix(self):
         """calculate the design matrix containing the correlated parts of all y uncertainties"""
@@ -130,7 +130,7 @@ class XYMultiContainer(IndexedContainer):
         for _col, (_err_name, _err) in enumerate(six.iteritems(_y_cor_errors)):
             _nuisance_ycor_design_matrix[_col, :] = _err.error_cor
 
-        return np.matrix(_nuisance_ycor_design_matrix)
+        return np.array(_nuisance_ycor_design_matrix)
 
     # def _calculate_x_nuisance_cor_design_matrix(self):
     #     """calculate the design matrix containing the correlated parts of all x uncertainties"""
@@ -149,7 +149,7 @@ class XYMultiContainer(IndexedContainer):
     #     for _col, (_err_name, _err) in enumerate(six.iteritems(_x_cor_errors)):
     #         _nuisance_xcor_design_matrix[_col, :] = _err.error_cor
     #
-    #     return np.matrix(_nuisance_xcor_design_matrix)
+    #     return np.array(_nuisance_xcor_design_matrix)
 
     # -- public properties
 
@@ -284,7 +284,7 @@ class XYMultiContainer(IndexedContainer):
     @property
     def y_uncor_cov_mat_inverse(self):
         # y uncorrelated inverse covariance matrix
-        return self.y_uncor_cov_mat.I
+        return np.linalg.inv(self.y_uncor_cov_mat)
 
     @property
     def _y_nuisance_cor_design_mat(self):
@@ -301,7 +301,7 @@ class XYMultiContainer(IndexedContainer):
     @property
     def x_uncor_cov_mat_inverse(self):
         # x uncorrelated inverse covariance matrix
-        return self.x_uncor_cov_mat.I
+        return np.linalg.inv(self.x_uncor_cov_mat)
 
     # @property TODO: correlated x-errors
     # def nuisance_x_cor_cov_mat(self):

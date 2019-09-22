@@ -272,7 +272,7 @@ class MinimizerROOTTMinuit(MinimizerBase):
             # get parameter covariance matrix from TMinuit
             self.__gMinuit.mnemat(_tmp_mat_array, _n_pars_total)
             # reshape into 2D array
-            _sub_cov_mat = np.asmatrix(
+            _sub_cov_mat = np.asarray(
                 np.reshape(
                     _tmp_mat_array,
                     (_n_pars_total, _n_pars_total)
@@ -290,7 +290,7 @@ class MinimizerROOTTMinuit(MinimizerBase):
             # TODO: use CovMat object!
             # Note: for zeros on cov_mat diagonals (which occur for fixed parameters) -> overwrite with 1.0
             _sqrt_diag = np.array([_err if _err>0 else 1.0 for _err in np.sqrt(np.diag(_cov_mat))])
-            self._par_cor_mat = np.asmatrix(np.asarray(_cov_mat) / np.outer(_sqrt_diag, _sqrt_diag))
+            self._par_cor_mat = np.asarray(_cov_mat) / np.outer(_sqrt_diag, _sqrt_diag)
         return self._par_cor_mat
 
     @property

@@ -232,7 +232,7 @@ class IndexedFit(FitBase):
         if self.__cache_total_cov_mat_inverse is None:
             _tmp = self.total_cov_mat
             try:
-                _tmp = _tmp.I
+                _tmp = np.linalg.inv(_tmp)
                 self.__cache_total_cov_mat_inverse = _tmp
             except np.linalg.LinAlgError:
                 pass

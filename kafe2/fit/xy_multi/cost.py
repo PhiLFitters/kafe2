@@ -106,7 +106,7 @@ def _generic_xy_chi2_nuisance_covaraince(
                 _inner_sum = np.squeeze(np.asarray(y_nuisance_vector.dot(y_nuisance_cor_design_mat)))
                 _y_penalties = y_nuisance_vector.dot(y_nuisance_vector)
                 _chisquare = (_y_res - _inner_sum).dot(y_uncor_cov_mat_inverse).dot(_y_res - _inner_sum)
-                return (_y_penalties + _chisquare)[0, 0] + _par_cost
+                return (_y_penalties + _chisquare) + _par_cost
 
     else:
         _x_penalties = np.transpose(_x_res).dot(x_uncor_cov_mat_inverse).dot(_x_res)
@@ -120,14 +120,14 @@ def _generic_xy_chi2_nuisance_covaraince(
                 else:
                     #with x-errors but without y-errors
                     _chisquare = _y_res.dot(_y_res)
-                    return (_chisquare +_x_penalties)[0, 0] + _par_cost
+                    return (_chisquare +_x_penalties) + _par_cost
 
         else:
                 #with x- and y-errors
                 _inner_sum = np.squeeze(np.asarray(y_nuisance_vector.dot(y_nuisance_cor_design_mat)))
                 _y_penalties = y_nuisance_vector.dot(y_nuisance_vector)
-                _chi2 = (_y_res - _inner_sum).dot(y_uncor_cov_mat_inverse).dot(_y_res- _inner_sum)[0, 0]
-                return (_chi2 + _x_penalties + _y_penalties)[0, 0] + _par_cost
+                _chi2 = (_y_res - _inner_sum).dot(y_uncor_cov_mat_inverse).dot(_y_res- _inner_sum)
+                return (_chi2 + _x_penalties + _y_penalties) + _par_cost
 
 
 class XYMultiCostFunction_UserDefined(CostFunctionBase):

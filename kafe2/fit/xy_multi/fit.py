@@ -47,11 +47,11 @@ class XYMultiFit(FitBase):
         :param xy_data: the x and y measurement values
         :type xy_data: (2, N)-array of float or an iterable thereof
         :param model_function: the model function
-        :type model_function: :py:class:`~kafe2.fit.multi.XYMultiModelFunction` or unwrapped native Python function or an 
+        :type model_function: :py:class:`~kafe2.fit.multi.XYMultiModelFunction` or unwrapped native Python function or an
             iterable of those
         :param cost_function: the cost function
         :type cost_function: :py:class:`~kafe2.fit._base.CostFunctionBase`-derived or unwrapped native Python function
-        :param minimizer: the minimizer to be used for the fit, 'root', or 'tminuit' for TMinuit, 'iminuit' for IMinuit, or 'scipy' for SciPy. 
+        :param minimizer: the minimizer to be used for the fit, 'root', or 'tminuit' for TMinuit, 'iminuit' for IMinuit, or 'scipy' for SciPy.
             If None, the minimizer will be chosen according to config (TMinuit > IMinuit > SciPy by default)
         :type str
         :param minimizer_kwargs: kwargs provided to the minimizer constructor
@@ -86,7 +86,7 @@ class XYMultiFit(FitBase):
 
         # declare cache
         self._invalidate_total_error_cache()
-        
+
         # initialize the Nexus
         self._init_nexus()
 
@@ -348,19 +348,19 @@ class XYMultiFit(FitBase):
         for _i in range(self.model_count):
             _xmin, _xmax = self.get_x_range(_i)
             _band_x[_i * num_points : (_i + 1) * num_points] = np.linspace(_xmin, _xmax, num_points)
-        _f_deriv_by_params = self._param_model.eval_model_function_derivative_by_parameters(x=_band_x, 
-                                x_indices=range(0, self.model_count * num_points + 1, num_points), 
+        _f_deriv_by_params = self._param_model.eval_model_function_derivative_by_parameters(x=_band_x,
+                                x_indices=range(0, self.model_count * num_points + 1, num_points),
                                 model_parameters=self.poi_values)
         # here: df/dp[par_idx]|x=x[x_idx] = _f_deriv_by_params[par_idx][x_idx]
 
         _f_deriv_by_params = _f_deriv_by_params.T
         # here: df/dp[par_idx]|x=x[x_idx] = _f_deriv_by_params[x_idx][par_idx]
-        
+
         _band_y = np.zeros_like(_band_x)
         _n_poi = len(self.poi_values)
         for _x_idx, _x_val in enumerate(_band_x):
             _p_res = _f_deriv_by_params[_x_idx]
-            _band_y[_x_idx] = _p_res.dot(self.parameter_cov_mat[:_n_poi, :_n_poi]).dot(_p_res)[0, 0]
+            _band_y[_x_idx] = _p_res.dot(self.parameter_cov_mat[:_n_poi, :_n_poi]).dot(_p_res)
 
         self.__cache_y_error_band = np.sqrt(_band_y)
 
@@ -699,8 +699,8 @@ class XYMultiFit(FitBase):
             _precision = 0.01 * np.min(_x_errors)
             _derivatives = self._param_model.eval_model_function_derivative_by_x(dx=_precision)
             _outer_product = np.outer(_derivatives, _derivatives)
-            _projected_x_cov_mat = np.asarray(self.x_total_cov_mat) * _outer_product
-            self.__cache_projected_xy_total_cov_mat = self.y_total_cov_mat + np.asmatrix(_projected_x_cov_mat)
+            _projected_x_cov_mat = self.x_total_cov_mat * _outer_product
+            self.__cache_projected_xy_total_cov_mat = self.y_total_cov_mat + _projected_x_cov_mat
         return self.__cache_projected_xy_total_cov_mat
 
     @property
@@ -711,7 +711,7 @@ class XYMultiFit(FitBase):
         if self.__cache_x_total_cov_mat_inverse is None:
             _tmp = self.x_total_cov_mat
             try:
-                _tmp = _tmp.I
+                _tmp = np.linalg.inv(_tmp)
                 self.__cache_x_total_cov_mat_inverse = _tmp
             except np.linalg.LinAlgError:
                 pass
@@ -725,7 +725,7 @@ class XYMultiFit(FitBase):
         if self.__cache_y_total_cov_mat_inverse is None:
             _tmp = self.y_total_cov_mat
             try:
-                _tmp = _tmp.I
+                _tmp = np.linalg.inv(_tmp)
                 self.__cache_y_total_cov_mat_inverse = _tmp
             except np.linalg.LinAlgError:
                 pass
@@ -738,7 +738,7 @@ class XYMultiFit(FitBase):
         if self.__cache_projected_xy_total_cov_mat_inverse is None:
             _tmp = self.projected_xy_total_cov_mat
             try:
-                _tmp = _tmp.I
+                _tmp = np.linalg.inv(_tmp)
                 self.__cache_projected_xy_total_cov_mat_inverse = _tmp
             except np.linalg.LinAlgError:
                 pass
@@ -763,7 +763,7 @@ class XYMultiFit(FitBase):
         if self.__cache_y_total_uncor_cov_mat_inverse is None:
             _tmp = self.y_total_uncor_cov_mat
             try:
-                _tmp = _tmp.I
+                _tmp = np.linalg.inv(_tmp)
                 self.__cache_y_total_uncor_cov_mat_inverse = _tmp
             except np.linalg.LinAlgError:
                 pass
@@ -799,7 +799,7 @@ class XYMultiFit(FitBase):
         if self.__cache_x_total_uncor_cov_mat_inverse is None:
             _tmp = self.x_total_uncor_cov_mat
             try:
-                _tmp = _tmp.I
+                _tmp = np.linalg.inv(_tmp)
                 self.__cache_x_total_uncor_cov_mat_inverse = _tmp
             except np.linalg.LinAlgError:
                 pass
@@ -936,15 +936,15 @@ class XYMultiFit(FitBase):
         if err_val.ndim == 0:  # if dimensionless numpy array (i.e. float64), add a dimension
             err_val = np.ones(_x_size) * err_val
         elif err_val.size != _x_size:
-            raise XYMultiFitException("Expected to receive %s error values but received %s instead!" % 
+            raise XYMultiFitException("Expected to receive %s error values but received %s instead!" %
                                     (_x_size, err_val.size))
         _total_err_val = np.tile(err_val, self._data_container.num_datasets)
         _correlation_matrix = np.maximum(np.eye(_x_size), np.ones((_x_size, _x_size)) * correlation)
-        _total_correlation_matrix = np.tile(_correlation_matrix, 
+        _total_correlation_matrix = np.tile(_correlation_matrix,
                                             (self._data_container.num_datasets, self._data_container.num_datasets))
-        return self.add_matrix_error('x', err_matrix=_total_correlation_matrix, matrix_type='cor', 
+        return self.add_matrix_error('x', err_matrix=_total_correlation_matrix, matrix_type='cor',
                                      name=name, err_val=_total_err_val, relative=relative, reference=reference)
-        
+
 
     def add_matrix_error(self, axis, err_matrix, matrix_type,
                          name=None, err_val=None, relative=False, reference='data'):
@@ -1036,8 +1036,8 @@ class XYMultiFit(FitBase):
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.eval_model_function(
-            x=x, 
-            model_parameters=model_parameters, 
+            x=x,
+            model_parameters=model_parameters,
             model_index=model_index
         )
 
@@ -1188,7 +1188,7 @@ class XYMultiFit(FitBase):
         :return the spliced data
         """
         return self._data_container.get_splice(data, index)
-    
+
     def get_model_function(self, index):
         """
         Returns the specified native Phython function which is used as a model function.
@@ -1197,4 +1197,3 @@ class XYMultiFit(FitBase):
         :return the model function with the specified index
         """
         return self._model_function.get_underlying_model_function(index)
-    

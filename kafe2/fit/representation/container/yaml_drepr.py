@@ -20,13 +20,13 @@ class _DataContainerYamlLoader(yaml.Loader):
         """construct a matrix from a tab/endline separated string"""
         _rows = node.value.split('\n')
         _mat = [_row.split() for _row in _rows if _row]  # last row may be empty -> leave out
-        return np.matrix(_mat, dtype=float)
+        return np.array(_mat, dtype=float)
 
     def symmetric_matrix(self, node):
         """construct a lower triangular matrix from a tab/endline separated string"""
         _rows = node.value.split('\n')[:-1]  # last endline ends the matrix -> no new row
         _mat = [_row.split() for _row in _rows]
-        _np_mat = np.matrix(np.zeros((len(_rows), len(_rows))), dtype=float)
+        _np_mat = np.array(np.zeros((len(_rows), len(_rows))), dtype=float)
 
         for _i, _row in enumerate(_mat):
             # check shape -> row index must match row length
@@ -78,7 +78,7 @@ class _DataContainerYamlDumper(yaml.Dumper):
 
 
 # representers for covariance matrices errors
-_DataContainerYamlDumper.add_representer(np.matrix, _DataContainerYamlDumper.matrix)
+_DataContainerYamlDumper.add_representer(np.array, _DataContainerYamlDumper.matrix)
 
 
 class DataContainerYamlWriter(YamlWriterMixin, DataContainerDReprBase):

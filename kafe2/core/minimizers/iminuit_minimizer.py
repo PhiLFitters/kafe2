@@ -126,7 +126,7 @@ class MinimizerIMinuit(MinimizerBase):
     @property
     def hessian(self):
         # TODO: cache this
-        return 2.0 * self.errordef * self.cov_mat.I
+        return 2.0 * self.errordef * np.linalg.inv(self.cov_mat)
 
     @property
     def cov_mat(self):
@@ -138,7 +138,7 @@ class MinimizerIMinuit(MinimizerBase):
 
                 # ... so use skip_fixed=True instead and fill in the gaps
                 _mat = self._get_iminuit().matrix(correlation=False, skip_fixed=True)
-                _mat = np.asmatrix(_mat)  # reshape into numpy matrix
+                _mat = np.asarray(_mat)  # reshape into numpy matrix
                 _mat = self._fill_in_zeroes_for_fixed(_mat)  # fill in fixed par 'gaps'
                 self._par_cov_mat = _mat
             except RuntimeError:
@@ -155,7 +155,7 @@ class MinimizerIMinuit(MinimizerBase):
 
                 # ... so use skip_fixed=True instead and fill in the gaps
                 _mat = self._get_iminuit().matrix(correlation=True, skip_fixed=True)
-                _mat = np.asmatrix(_mat)  # reshape into numpy matrix
+                _mat = np.asarray(_mat)  # reshape into numpy matrix
                 _mat = self._fill_in_zeroes_for_fixed(_mat)  # fill in fixed par 'gaps'
                 self._par_cor_mat = _mat
             except RuntimeError:

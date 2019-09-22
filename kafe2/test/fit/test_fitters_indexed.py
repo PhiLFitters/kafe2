@@ -268,7 +268,7 @@ class TestFittersIndexedChi2WithError(unittest.TestCase):
     def chi2_with_cov_mat(data, model, total_cov_mat_inverse):
         _p = data - model
         if total_cov_mat_inverse is not None:
-            return (_p.dot(total_cov_mat_inverse).dot(_p))[0, 0]
+            return (_p.dot(total_cov_mat_inverse).dot(_p))
         else:
             return 9999
 
