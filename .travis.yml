@@ -58,4 +58,4 @@ install:
 
 script:
   # run unittests
-  - python -m unittest discover kafe2.test -p "*.py"
+  - python -m unittest discover kafe2/test -p "*.py"
