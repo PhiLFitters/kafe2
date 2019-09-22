@@ -57,5 +57,5 @@ install:
   - pip install -e .
 
 script:
-  # run unittests with setup.py
-  - python setup.py test
+  # run unittests
+  - python -m unittest discover kafe2.test -p "*.py"

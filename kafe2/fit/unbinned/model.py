@@ -62,7 +62,7 @@ class UnbinnedParametricModelException(UnbinnedContainerException):
 
 
 class UnbinnedParametricModel(ParametricModelBaseMixin, UnbinnedContainer):
-    def __init__(self, data, model_density_function=UnbinnedModelPDF(function_library.normal_distribution_pdf),
+    def __init__(self, data, model_density_function=function_library.normal_distribution_pdf,
                  model_parameters=[1.0, 1.0]):
         super(UnbinnedParametricModel, self).__init__(data, model_density_function, model_parameters, dtype=float)
 

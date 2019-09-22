@@ -24,10 +24,11 @@ import os
 # don't actually do anything. This is needed for building the documentation
 # on e.g. ReadTheDocs.org
 import mock
- 
+
 MOCK_MODULES = [
     'matplotlib',
     'matplotlib.pyplot',
+    'matplotlib.collections',
     'iminuit',
     'numdifftools',
     'numpy',
@@ -50,7 +51,7 @@ sys.path.insert(0, os.path.abspath('extensions'))
 
 import kafe2
 
-print 'kafe2 version:', kafe2.__version__
+print('kafe2 version:', kafe2.__version__)
 
 # -- General configuration ------------------------------------------------
 
@@ -243,7 +244,7 @@ latex_elements = {
 #'pointsize': '11pt',
 
 # Additional stuff for the LaTeX preamble.
-'preamble': '\usepackage{enumitem}\setlistdepth{48}'
+'preamble': r'\usepackage{enumitem}\setlistdepth{48}'
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
