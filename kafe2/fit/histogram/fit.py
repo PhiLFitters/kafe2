@@ -83,10 +83,6 @@ class HistFit(FitBase):
 
         # set the data after the cost_function has been set and nexus has been initialized
         self.data = data
-        # validate cost function
-        _data_and_cost_compatible, _reason = self._cost_function.is_data_compatible(self.data)
-        if not _data_and_cost_compatible:
-            raise self.EXCEPTION_TYPE('Fit data and cost function are not compatible: %s' % _reason)
 
     # -- private methods
 

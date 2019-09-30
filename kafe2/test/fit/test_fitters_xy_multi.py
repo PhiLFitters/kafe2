@@ -371,7 +371,7 @@ class TestFittersXYMulti(unittest.TestCase):
         new_estimates = [0, 1, 0]
         # TODO: when setting new data with a different length has been fixed, change the size of the new data to test
         #       this as well
-        lin = range(10)
+        lin = range(8)
         self.xy_fit.data = [lin, lin]
         self.xy_fit.add_simple_error(axis='y', err_val=1.0)
         self.xy_fit.do_fit()

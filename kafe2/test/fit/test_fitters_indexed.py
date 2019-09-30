@@ -5,7 +5,7 @@ import six
 from kafe2.config import kc
 from kafe2.fit import IndexedFit
 from kafe2.fit.indexed.fit import IndexedFitException
-from kafe2.fit.indexed.model import IndexedModelFunctionException
+from kafe2.fit.indexed.model import IndexedModelFunctionException, IndexedParametricModelException
 
 
 CONFIG_PARAMETER_DEFAULT_VALUE = kc('core', 'default_initial_parameter_value')
@@ -230,8 +230,6 @@ class TestFittersIndexed(unittest.TestCase):
 
     def test_nexus_update_on_data_change(self):
         new_estimates = [0, 1, 0]
-        # TODO: when setting new data with a different length has been fixed, change the size of the new data to test
-        #       this as well
         self.idx_fit.data = np.arange(10)
         self.idx_fit.add_simple_error(err_val=1.0)
         self.idx_fit.do_fit()
@@ -242,6 +240,10 @@ class TestFittersIndexed(unittest.TestCase):
                 atol=1e-2
             )
         )
+
+    def test_raise_on_data_length_change(self):
+        with self.assertRaises(IndexedParametricModelException):
+            self.idx_fit.data = np.arange(5)
 
 
 class TestFittersIndexedChi2WithError(unittest.TestCase):

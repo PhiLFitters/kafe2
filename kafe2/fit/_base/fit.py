@@ -155,6 +155,10 @@ class FitBase(FileIOMixin, object):
         :param new_data: Array or Data-Container with the new data
         """
         self._set_new_data(new_data)
+        # validate cost function
+        _data_and_cost_compatible, _reason = self._cost_function.is_data_compatible(self.data)
+        if not _data_and_cost_compatible:
+            raise self.EXCEPTION_TYPE('Fit data and cost function are not compatible: %s' % _reason)
         self._set_new_parametric_model()
         # TODO: check where to update this (set/release/etc.)
         # FIXME: nicer way than len()?
