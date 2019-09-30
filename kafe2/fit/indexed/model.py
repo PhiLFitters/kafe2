@@ -63,7 +63,12 @@ class IndexedParametricModel(ParametricModelBaseMixin, IndexedContainer):
         # print "IndexedParametricModel.__init__(model_func=%r, model_parameters=%r)" % (model_func, model_parameters)
         if shape_like is not None:
             _data = np.zeros_like(shape_like)
-            _data[:] = model_func(*model_parameters)
+            try:
+                _data[:] = model_func(*model_parameters)
+            except ValueError:
+                raise IndexedParametricModelException("Indexed Data and Function must have the same shape! "
+                                                      "Got {} and {}".format(len(_data),
+                                                                             len(model_func(*model_parameters))))
         else:
             _data = model_func(*model_parameters)
         super(IndexedParametricModel, self).__init__(model_func, model_parameters, _data)

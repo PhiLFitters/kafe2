@@ -58,6 +58,7 @@ class UnbinnedCostFunction_NegLogLikelihood(CostFunctionBase):
         return -2.0 * _total_log_likelihood
 
 
+
 STRING_TO_COST_FUNCTION = {
     'nll': UnbinnedCostFunction_NegLogLikelihood,
     'negloglikelihood': UnbinnedCostFunction_NegLogLikelihood,

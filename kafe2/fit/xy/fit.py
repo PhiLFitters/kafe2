@@ -86,10 +86,6 @@ class XYFit(FitBase):
 
         # set the data after the cost_function has been set and nexus has been initialized
         self.data = xy_data
-        # validate cost function
-        _data_and_cost_compatible, _reason = self._cost_function.is_data_compatible(self.data)
-        if not _data_and_cost_compatible:
-            raise self.EXCEPTION_TYPE('Fit data and cost function are not compatible: %s' % _reason)
 
     # -- private methods
 
@@ -362,15 +358,14 @@ class XYFit(FitBase):
             self._data_container = deepcopy(new_data)
         elif isinstance(new_data, DataContainerBase):
             raise XYFitException("Incompatible container type '%s' (expected '%s')"
-                                      % (type(new_data), self.CONTAINER_TYPE))
+                                 % (type(new_data), self.CONTAINER_TYPE))
         else:
             _x_data = new_data[0]
             _y_data = new_data[1]
             self._data_container = self._new_data_container(_x_data, _y_data, dtype=float)
         # update nexus data nodes
-        if hasattr(self, '_nexus'):
-            self._nexus.get_by_name('x_data').mark_for_update()
-            self._nexus.get_by_name('y_data').mark_for_update()
+        self._nexus.get_by_name('x_data').mark_for_update()
+        self._nexus.get_by_name('y_data').mark_for_update()
 
     def _set_new_parametric_model(self):
         self._param_model = self._new_parametric_model(self.x_model, self._model_function, self.poi_values)

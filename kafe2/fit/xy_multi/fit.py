@@ -57,11 +57,21 @@ class XYMultiFit(FitBase):
         :param minimizer_kwargs: kwargs provided to the minimizer constructor
         :type minimizer_kwargs: native Python dictionary
         """
-        # constructing the model function needs the data container
-        self._set_new_data(xy_data)
+        # set the cost function, validation is done when setting the data
+        if isinstance(cost_function, CostFunctionBase):
+            self._cost_function = cost_function
+        elif isinstance(cost_function, str):
+            self._cost_function = STRING_TO_COST_FUNCTION[cost_function]()
+        else:
+            self._cost_function = XYMultiCostFunction_UserDefined(cost_function)
+            # self._validate_cost_function_raise()
+            # TODO: validate user-defined cost function? how?
 
         self._minimizer = minimizer
         self._minimizer_kwargs = minimizer_kwargs
+
+        # constructing the model function needs the data container
+        self._set_new_data(xy_data)
 
         # set/construct the model function object
         if isinstance(model_function, self.__class__.MODEL_FUNCTION_TYPE):
@@ -73,19 +83,6 @@ class XYMultiFit(FitBase):
 
         # validate the model function for this fit
         self._validate_model_function_for_fit_raise()
-
-        # set and validate the cost function
-        if isinstance(cost_function, CostFunctionBase):
-            self._cost_function = cost_function
-        elif isinstance(cost_function, str):
-            self._cost_function = STRING_TO_COST_FUNCTION[cost_function]()
-        else:
-            self._cost_function = XYMultiCostFunction_UserDefined(cost_function)
-            #self._validate_cost_function_raise()
-            # TODO: validate user-defined cost function? how?
-        _data_and_cost_compatible, _reason = self._cost_function.is_data_compatible(self.data)
-        if not _data_and_cost_compatible:
-            raise self.EXCEPTION_TYPE('Fit data and cost function are not compatible: %s' % _reason)
 
         # declare cache
         self._invalidate_total_error_cache()
@@ -392,7 +389,7 @@ class XYMultiFit(FitBase):
         # TODO: Think of a better way when setting new data to not always delete all labels
         self._axis_labels = [[None, None] for _ in range(self._data_container.num_datasets)]
         # mark nexus nodes for update
-        # hasattr is needed, beacause data needs to be set before the nexus can be initialized
+        # hasattr is needed, because data needs to be set before the nexus can be initialized
         if hasattr(self, '_nexus'):
             self._nexus.get_by_name('x_data').mark_for_update()
             self._nexus.get_by_name('y_data').mark_for_update()
