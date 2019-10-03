@@ -8,11 +8,14 @@ import textwrap
 
 from ...tools import print_dict_as_table
 from ...core import NexusFitter, Nexus
+from ...core.fitters.nexus import Parameter, Alias
 from ...config import kc
 from .._base import FitException, FitBase, DataContainerBase, CostFunctionBase
+from ..xy.fit import XYFit
 from .container import XYMultiContainer
 from .cost import XYMultiCostFunction_Chi2, XYMultiCostFunction_UserDefined, STRING_TO_COST_FUNCTION
 from .model import XYMultiParametricModel, XYMultiModelFunction
+from ..util import function_library, add_in_quadrature, collect, invert_matrix
 
 
 __all__ = ["XYMultiFit"]
@@ -36,9 +39,15 @@ class XYMultiFit(FitBase):
                            'nuisance_y_data_cor_cov_mat','nuisance_y_model_cor_cov_mat','nuisance_y_total_cor_cov_mat',
                            'nuisance_para', 'y_nuisance_vector'}
 
-    def __init__(self, xy_data, model_function,
-                 cost_function=XYMultiCostFunction_Chi2(axes_to_use='xy', errors_to_use='covariance'),
-                 minimizer=None, minimizer_kwargs=None):
+    def __init__(self,
+                 xy_data,
+                 model_function,
+                 cost_function=XYMultiCostFunction_Chi2(
+                    axes_to_use='xy',
+                    errors_to_use='covariance'),
+                 x_error_algorithm='nonlinear',
+                 minimizer=None,
+                 minimizer_kwargs=None):
         """
         Construct a fit of one or more pairs of models and *xy* datasets.
         To specify more than one such pair, xy_data and model_function must be iterables of the same length.
@@ -69,6 +78,18 @@ class XYMultiFit(FitBase):
             self._cost_function = XYMultiCostFunction_UserDefined(cost_function)
             # self._validate_cost_function_raise()
             # TODO: validate user-defined cost function? how?
+
+        # validate x error algorithm
+        if x_error_algorithm not in XYFit.X_ERROR_ALGORITHMS:
+            raise ValueError(
+                "Unknown value for 'x_error_algorithm': "
+                "{}. Expected one of:".format(
+                    x_error_algorithm,
+                    ', '.join(['iterative linear', 'nonlinear'])
+                )
+            )
+        else:
+            self._x_error_algorithm = x_error_algorithm
 
         self._minimizer = minimizer
         self._minimizer_kwargs = minimizer_kwargs
@@ -107,175 +128,7 @@ class XYMultiFit(FitBase):
     # -- private methods
 
     def _init_nexus(self):
-        self._nexus = Nexus()
-
-        # create regular nexus Nodes for the x and y data values
-        self._nexus.new_function(lambda: self.y_data, function_name='y_data')
-        self._nexus.new_function(lambda: self.x_data, function_name='x_data')
-
-        # create nexus function Nodes for the x and y model values
-        self._nexus.new_function(lambda: self.x_model, function_name='x_model')
-        self._nexus.new_function(lambda: self.y_model, function_name='y_model')
-
-        # get names and default values of all parameters
-        _nexus_new_dict = self._get_default_values(model_function=self._model_function,
-                                                   x_name=self._model_function.x_name)
-        # create a nexus Node for each parameter of the model function
-        self._nexus.new(**_nexus_new_dict)  # Create nexus Nodes for function parameters
-
-        self._fit_param_names = []  # names of all fit parameters (including nuisance parameters)
-        self._poi_names = []  # names of the parameters of interest (i.e. the model parameters)
-        for param_name in six.iterkeys(_nexus_new_dict):
-            self._fit_param_names.append(param_name)
-            self._poi_names.append(param_name)
-
-        self._y_nuisance_names = []  # names of all nuisance parameters accounting for correlated y errors
-        self._x_uncor_nuisance_names = []  # names of all nuisance parameters accounting for uncorrelated x errors
-        # TODO
-        # self._x_cor_nuisance_names = []  # names of all nuisance parameters accounting for correlated x errors
-
-        self._nexus.new_function(lambda: self.poi_values, function_name='poi_values')
-        self._nexus.new_function(lambda: self.parameter_constraints, function_name='parameter_constraints')
-
-        # add the original function name as an alias to 'y_model'
-        self._nexus.new_alias(**{self._model_function.name: 'y_model'})
-
-        # node function for collecting nuisance parameters into a vector
-        def _calc_y_nuisance_vector(*n_para):
-            return np.asarray(n_para)
-
-        self._nexus.new_function(_calc_y_nuisance_vector, function_name="y_nuisance_vector",
-                                 add_unknown_parameters=False)
-
-        # TODO
-        # x-nuisance vector for correlated errors
-        # def _calc_x_corr_nuisance_vector(*n_para):
-        #     return np.asarray(n_para)
-        # self._nexus.new_function(_calc_x_corr_nuisance_vector, function_name="x_corr_nuisance_vector",
-        #                          add_unknown_parameters=False)
-
-        #x-nuisance vector for uncorrelated errors
-        def _calc_x_uncor_nuisance_vector(*n_para):
-            return np.asarray(n_para)
-        self._nexus.new_function(_calc_x_uncor_nuisance_vector, function_name="x_uncor_nuisance_vector",
-                                 add_unknown_parameters=False)
-
-        # -- initialize nuisance parameters
-
-        # one nuisance parameter per correlated 'y' error
-        if self._cost_function.get_flag("need_y_nuisance") and self._data_container.has_y_errors:
-            # retrieve the errors for which to assign 'y'-nuisance parameters
-            _nuisance_error_objects = self.get_matching_errors(
-                matching_criteria=dict(
-                    axis=1,  # cannot use 'y' here
-                    correlated=True
-                )
-            )
-            for _err_name, _err_obj in six.iteritems(_nuisance_error_objects):
-                _nuisance_name = "_n_yc_{}".format(_err_name)
-                self._nexus.new(**{_nuisance_name: 0.0})
-                self._nexus.add_dependency(_nuisance_name, "y_nuisance_vector")
-                self._fit_param_names.append(_nuisance_name)
-                self._y_nuisance_names.append(_nuisance_name)
-            self._nexus.set_function_parameter_names("y_nuisance_vector", self._y_nuisance_names)
-
-        # one 'x' nuisance parameter per data point (TODO: and one per correlated 'x' error)
-        if self._cost_function.get_flag("need_x_nuisance") and self._data_container.has_uncor_x_errors:
-            # one 'x' nuisance parameter per data point
-            for i in six.moves.range(self._data_container.size):
-                _nuisance_name = "_n_xu_{}".format(i)
-                self._nexus.new(**{_nuisance_name: 0.0})
-                self._nexus.add_dependency(_nuisance_name, "x_uncor_nuisance_vector")
-                self._fit_param_names.append(_nuisance_name)
-                self._x_uncor_nuisance_names.append(_nuisance_name)
-            self._nexus.set_function_parameter_names("x_uncor_nuisance_vector", self._x_uncor_nuisance_names)
-            # TODO
-            # # retrieve the errors for which to assign 'x'-nuisance parameters
-            # _nuisance_error_objects = self.get_matching_errors(
-            #     matching_criteria=dict(
-            #         axis=0,  # cannot use 'x' here
-            #         correlated=True
-            #     )
-            # )
-            # for _err_name, _err_obj in six.iteritems(_nuisance_error_objects):
-            #     _nuisance_name = "_n_xc_{}".format(_err_name)
-            #     self._nexus.new(**{_nuisance_name: 0.0})
-            #     self._nexus.add_dependency(_nuisance_name, "x_cor_nuisance_vector")
-            #     self._fit_param_names.append(_nuisance_name)
-            #     self._x_cor_nuisance_names.append(_nuisance_name)
-            # self._nexus.set_function_parameter_names("x_cor_nuisance_vector", self._x_cor_nuisance_names)
-
-        # -- bind other reserved nodes
-
-        self._nexus.new_function(lambda: self.x_data_error, function_name='x_data_error')
-        self._nexus.new_function(lambda: self.x_data_cov_mat, function_name='x_data_cov_mat')
-        self._nexus.new_function(lambda: self.x_data_cov_mat_inverse, function_name='x_data_cov_mat_inverse')
-        self._nexus.new_function(lambda: self.x_model_error, function_name='x_model_error')
-        self._nexus.new_function(lambda: self.x_model_cov_mat, function_name='x_model_cov_mat')
-        self._nexus.new_function(lambda: self.x_model_cov_mat_inverse, function_name='x_model_cov_mat_inverse')
-        self._nexus.new_function(lambda: self.x_total_error, function_name='x_total_error')
-        self._nexus.new_function(lambda: self.x_total_cov_mat, function_name='x_total_cov_mat')
-        self._nexus.new_function(lambda: self.x_total_cov_mat_inverse, function_name='x_total_cov_mat_inverse')
-
-        self._nexus.new_function(lambda: self.projected_xy_total_error, function_name='projected_xy_total_error')
-        self._nexus.new_function(lambda: self.projected_xy_total_cov_mat, function_name='projected_xy_total_cov_mat')
-        self._nexus.new_function(lambda: self.projected_xy_total_cov_mat_inverse, function_name='projected_xy_total_cov_mat_inverse')
-
-        self._nexus.new_function(lambda: self.y_data_error, function_name='y_data_error')
-        self._nexus.new_function(lambda: self.y_data_cov_mat, function_name='y_data_cov_mat')
-        self._nexus.new_function(lambda: self.y_data_cov_mat_inverse, function_name='y_data_cov_mat_inverse')
-        self._nexus.new_function(lambda: self.y_model_error, function_name='y_model_error')
-        self._nexus.new_function(lambda: self.y_model_cov_mat, function_name='y_model_cov_mat')
-        self._nexus.new_function(lambda: self.y_model_cov_mat_inverse, function_name='y_model_cov_mat_inverse')
-        self._nexus.new_function(lambda: self.y_total_error, function_name='y_total_error')
-        self._nexus.new_function(lambda: self.y_total_cov_mat, function_name='y_total_cov_mat')
-        self._nexus.new_function(lambda: self.y_total_cov_mat_inverse, function_name='y_total_cov_mat_inverse')
-
-        #correlated error matrix (for cor-nuisance approach)
-        self._nexus.new_function(lambda: self._y_data_nuisance_cor_design_mat, function_name='_y_data_nuisance_cor_design_mat')
-        self._nexus.new_function(lambda: self._y_model_nuisance_cor_design_mat, function_name='_y_model_nuisance_cor_design_mat')
-        self._nexus.new_function(lambda: self._y_total_nuisance_cor_design_mat, function_name='_y_total_nuisance_cor_design_mat')
-
-        #uncorrelated y error cov matrix
-        self._nexus.new_function(lambda: self.y_data_uncor_cov_mat, function_name='y_data_uncor_cov_mat')
-        self._nexus.new_function(lambda: self.y_data_uncor_cov_mat_inverse,function_name='y_data_uncor_cov_mat_inverse')
-        self._nexus.new_function(lambda: self.y_model_uncor_cov_mat, function_name='y_model_uncor_cov_mat')
-        self._nexus.new_function(lambda: self.y_model_uncor_cov_mat_inverse, function_name='y_model_uncor_cov_mat_inverse')
-        self._nexus.new_function(lambda: self.y_total_uncor_cov_mat, function_name='y_total_uncor_cov_mat')
-        self._nexus.new_function(lambda: self.y_total_uncor_cov_mat_inverse, function_name='y_total_uncor_cov_mat_inverse')
-        # correlated x_error cov matrix (nuisance) TODO: correlated x-errors
-        # self._nexus.new_function(lambda: self.nuisance_x_data_cor_cov_mat, function_name='nuisance_x_data_cor_cov_mat')
-        # self._nexus.new_function(lambda: self.nuisance_x_model_cor_cov_mat,function_name='nuisance_x_model_cor_cov_mat')
-        # self._nexus.new_function(lambda: self.nuisance_x_total_cor_cov_mat,function_name='nuisance_x_total_cor_cov_mat')
-        # uncorrelated x error cov matrix
-        self._nexus.new_function(lambda: self.x_data_uncor_cov_mat, function_name='x_data_uncor_cov_mat')
-        self._nexus.new_function(lambda: self.x_data_uncor_cov_mat_inverse, function_name='x_data_uncor_cov_mat_inverse')
-        self._nexus.new_function(lambda: self.x_model_uncor_cov_mat, function_name='x_model_uncor_cov_mat')
-        self._nexus.new_function(lambda: self.x_model_uncor_cov_mat_inverse, function_name='x_model_uncor_cov_mat_inverse')
-        self._nexus.new_function(lambda: self.x_total_uncor_cov_mat, function_name='x_total_uncor_cov_mat')
-        self._nexus.new_function(lambda: self.x_total_uncor_cov_mat_inverse, function_name='x_total_uncor_cov_mat_inverse')
-
-        # the cost function (the function to be minimized)
-        self._nexus.new_function(self._cost_function.func, function_name=self._cost_function.name,
-                                 add_unknown_parameters=False)
-
-        self._nexus.new_alias(**{'cost': self._cost_function.name})
-
-        # add nexus dependencies to recalculate model
-        # whenever nuisance parameters change
-        for _arg_name in self._x_uncor_nuisance_names:
-             self._nexus.add_dependency(source=_arg_name, target='x_model')
-
-        self._nexus.add_dependency(source='x_data_cov_mat', target='x_model')
-        self._nexus.add_dependency(source='x_data_error', target='x_model')
-
-        self._nexus.add_dependency(source='x_model', target="y_model")
-        # self._nexus.add_dependency(source='x_uncor_nuisance_vector', target='y_model')
-        for _arg_name in self._poi_names:
-            self._nexus.add_dependency(source=_arg_name, target="poi_values")
-            self._nexus.add_dependency(source=_arg_name, target="y_model")
-            self._nexus.add_dependency(source=_arg_name, target="projected_xy_total_cov_mat")
-            self._nexus.add_dependency(source=_arg_name, target="projected_xy_total_error")
+        six.get_unbound_function(XYFit._init_nexus)(self)  # same nexus wiring as for simple XYFit
 
     def _invalidate_total_error_cache(self):
         self.__cache_x_data_error = None
@@ -299,51 +152,51 @@ class XYMultiFit(FitBase):
 
     def _mark_errors_for_update(self):
         # TODO: implement a mass 'mark_for_update' routine in Nexus
-        self._nexus.get_by_name('x_data_error').mark_for_update()
-        self._nexus.get_by_name('x_data_cov_mat').mark_for_update()
-        self._nexus.get_by_name('x_data_cov_mat_inverse').mark_for_update()
-        self._nexus.get_by_name('x_model_error').mark_for_update()
-        self._nexus.get_by_name('x_model_cov_mat').mark_for_update()
-        self._nexus.get_by_name('x_model_cov_mat_inverse').mark_for_update()
-        self._nexus.get_by_name('x_total_error').mark_for_update()
-        self._nexus.get_by_name('x_total_cov_mat').mark_for_update()
-        self._nexus.get_by_name('x_total_cov_mat_inverse').mark_for_update()
-        self._nexus.get_by_name('y_data_error').mark_for_update()
-        self._nexus.get_by_name('y_data_cov_mat').mark_for_update()
-        self._nexus.get_by_name('y_data_cov_mat_inverse').mark_for_update()
-        self._nexus.get_by_name('y_model_error').mark_for_update()
-        self._nexus.get_by_name('y_model_cov_mat').mark_for_update()
-        self._nexus.get_by_name('y_model_cov_mat_inverse').mark_for_update()
-        self._nexus.get_by_name('y_total_error').mark_for_update()
-        self._nexus.get_by_name('y_total_cov_mat').mark_for_update()
-        self._nexus.get_by_name('y_total_cov_mat_inverse').mark_for_update()
-        self._nexus.get_by_name('projected_xy_total_error').mark_for_update()
-        self._nexus.get_by_name('projected_xy_total_cov_mat').mark_for_update()
-        self._nexus.get_by_name('projected_xy_total_cov_mat_inverse').mark_for_update()
+        self._nexus.get('x_data_error').mark_for_update()
+        self._nexus.get('x_data_cov_mat').mark_for_update()
+        self._nexus.get('x_data_cov_mat_inverse').mark_for_update()
+        self._nexus.get('x_model_error').mark_for_update()
+        self._nexus.get('x_model_cov_mat').mark_for_update()
+        self._nexus.get('x_model_cov_mat_inverse').mark_for_update()
+        self._nexus.get('x_total_error').mark_for_update()
+        self._nexus.get('x_total_cov_mat').mark_for_update()
+        self._nexus.get('x_total_cov_mat_inverse').mark_for_update()
+        self._nexus.get('y_data_error').mark_for_update()
+        self._nexus.get('y_data_cov_mat').mark_for_update()
+        self._nexus.get('y_data_cov_mat_inverse').mark_for_update()
+        self._nexus.get('y_model_error').mark_for_update()
+        self._nexus.get('y_model_cov_mat').mark_for_update()
+        self._nexus.get('y_model_cov_mat_inverse').mark_for_update()
+        self._nexus.get('y_total_error').mark_for_update()
+        self._nexus.get('y_total_cov_mat').mark_for_update()
+        self._nexus.get('y_total_cov_mat_inverse').mark_for_update()
+        self._nexus.get('projected_xy_total_error').mark_for_update()
+        self._nexus.get('projected_xy_total_cov_mat').mark_for_update()
+        self._nexus.get('projected_xy_total_cov_mat_inverse').mark_for_update()
 
-        self._nexus.get_by_name('y_data_uncor_cov_mat').mark_for_update()
-        self._nexus.get_by_name('y_model_uncor_cov_mat').mark_for_update()
-        self._nexus.get_by_name('y_total_uncor_cov_mat').mark_for_update()
-        self._nexus.get_by_name('y_data_uncor_cov_mat_inverse').mark_for_update()
-        self._nexus.get_by_name('y_model_uncor_cov_mat_inverse').mark_for_update()
-        self._nexus.get_by_name('y_total_uncor_cov_mat_inverse').mark_for_update()
-        self._nexus.get_by_name('_y_data_nuisance_cor_design_mat').mark_for_update()
-        self._nexus.get_by_name('_y_model_nuisance_cor_design_mat').mark_for_update()
-        self._nexus.get_by_name('_y_total_nuisance_cor_design_mat').mark_for_update()
-        self._nexus.get_by_name('x_data_uncor_cov_mat').mark_for_update()
-        self._nexus.get_by_name('x_model_uncor_cov_mat').mark_for_update()
-        self._nexus.get_by_name('x_total_uncor_cov_mat').mark_for_update()
-        self._nexus.get_by_name('x_data_uncor_cov_mat_inverse').mark_for_update()
-        self._nexus.get_by_name('x_model_uncor_cov_mat_inverse').mark_for_update()
-        self._nexus.get_by_name('x_total_uncor_cov_mat_inverse').mark_for_update()
-        # self._nexus.get_by_name('_x_data_nuisance_cor_design_mat').mark_for_update()
-        # self._nexus.get_by_name('_x_model_nuisance_cor_design_mat').mark_for_update()
-        # self._nexus.get_by_name('_x_total_nuisance_cor_design_mat').mark_for_update()
-        # #self._nexus.get_by_name('x_cor_nuisance_vector').mark_for_update() TODO: uncorrelated x-errors
-        self._nexus.get_by_name('y_nuisance_vector').mark_for_update()
-        self._nexus.get_by_name('x_uncor_nuisance_vector').mark_for_update()
-        self._nexus.get_by_name('x_model').mark_for_update()
-        self._nexus.get_by_name('y_model').mark_for_update()
+        self._nexus.get('y_data_uncor_cov_mat').mark_for_update()
+        self._nexus.get('y_model_uncor_cov_mat').mark_for_update()
+        self._nexus.get('y_total_uncor_cov_mat').mark_for_update()
+        self._nexus.get('y_data_uncor_cov_mat_inverse').mark_for_update()
+        self._nexus.get('y_model_uncor_cov_mat_inverse').mark_for_update()
+        self._nexus.get('y_total_uncor_cov_mat_inverse').mark_for_update()
+        self._nexus.get('_y_data_nuisance_cor_design_mat').mark_for_update()
+        self._nexus.get('_y_model_nuisance_cor_design_mat').mark_for_update()
+        self._nexus.get('_y_total_nuisance_cor_design_mat').mark_for_update()
+        self._nexus.get('x_data_uncor_cov_mat').mark_for_update()
+        self._nexus.get('x_model_uncor_cov_mat').mark_for_update()
+        self._nexus.get('x_total_uncor_cov_mat').mark_for_update()
+        self._nexus.get('x_data_uncor_cov_mat_inverse').mark_for_update()
+        self._nexus.get('x_model_uncor_cov_mat_inverse').mark_for_update()
+        self._nexus.get('x_total_uncor_cov_mat_inverse').mark_for_update()
+        # self._nexus.get('_x_data_nuisance_cor_design_mat').mark_for_update()
+        # self._nexus.get('_x_model_nuisance_cor_design_mat').mark_for_update()
+        # self._nexus.get('_x_total_nuisance_cor_design_mat').mark_for_update()
+        # #self._nexus.get('x_cor_nuisance_vector').mark_for_update() TODO: uncorrelated x-errors
+        self._nexus.get('y_nuisance_vector').mark_for_update()
+        self._nexus.get('x_uncor_nuisance_vector').mark_for_update()
+        self._nexus.get('x_model').mark_for_update()
+        self._nexus.get('y_model').mark_for_update()
 
     def _calculate_y_error_band(self, num_points=100):
         # TODO: config for num_points
@@ -394,8 +247,8 @@ class XYMultiFit(FitBase):
         # mark nexus nodes for update
         # hasattr is needed, because data needs to be set before the nexus can be initialized
         if hasattr(self, '_nexus'):
-            self._nexus.get_by_name('x_data').mark_for_update()
-            self._nexus.get_by_name('y_data').mark_for_update()
+            self._nexus.get('x_data').mark_for_update()
+            self._nexus.get('y_data').mark_for_update()
 
     def _set_new_parametric_model(self):
         self._param_model = self._new_parametric_model(self.x_model, self._model_function, self.poi_values)

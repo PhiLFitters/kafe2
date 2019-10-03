@@ -29,7 +29,8 @@ def _generic_chi2(data, model,
                   err=None, err_relative_to=None,
                   fail_on_no_matrix=False,
                   fail_on_zero_errors=False,
-                  parameter_values=None, parameter_constraints=None):
+                  parameter_values=None,
+                  parameter_constraints=None):
 
     data = np.asarray(data)
     model = np.asarray(model)

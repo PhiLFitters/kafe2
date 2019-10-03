@@ -6,12 +6,13 @@ import numpy as np
 
 from ...config import kc
 from ...core import NexusFitter, Nexus
+from ...core.fitters.nexus import Parameter, Alias
 from .._base import (FitException, FitBase, DataContainerBase,
                      ModelParameterFormatter, CostFunctionBase)
 from .container import HistContainer
 from .cost import HistCostFunction_NegLogLikelihood, HistCostFunction_UserDefined, STRING_TO_COST_FUNCTION
 from .model import HistParametricModel, HistModelFunction
-from ..util import function_library
+from ..util import function_library, add_in_quadrature, collect, invert_matrix
 
 __all__ = ["HistFit"]
 
@@ -30,9 +31,14 @@ class HistFit(FitBase):
                           'data_cov_mat', 'model_cov_mat', 'total_cov_mat',
                           'data_cor_mat', 'model_cor_mat', 'total_cor_mat'}
 
-    def __init__(self, data, model_density_function=function_library.normal_distribution_pdf,
-                 cost_function=HistCostFunction_NegLogLikelihood(data_point_distribution='poisson'),
-                 model_density_antiderivative=None, minimizer=None, minimizer_kwargs=None):
+    def __init__(self,
+                 data,
+                 model_density_function=function_library.normal_distribution_pdf,
+                 cost_function=HistCostFunction_NegLogLikelihood(
+                    data_point_distribution='poisson'),
+                 model_density_antiderivative=None,
+                 minimizer=None,
+                 minimizer_kwargs=None):
         """
         Construct a fit of a model to a histogram.
 
@@ -90,48 +96,124 @@ class HistFit(FitBase):
     # -- private methods
 
     def _init_nexus(self):
+
         self._nexus = Nexus()
-        self._nexus.new_function(lambda: self.data, function_name='data')  # Node containing indexed data is called 'data'
+
+        for _type in ('data', 'model'):
+
+            # add data and model for axis
+            self._add_property_to_nexus(_type)
+            # add errors for axis
+            self._add_property_to_nexus('_'.join((_type, 'error')))
+
+            # add cov mats for axis
+            for _prop in ('cov_mat',):  # TODO: 'uncor_cov_mat'
+                _node = self._add_property_to_nexus('_'.join((_type, _prop)))
+                # add inverse
+                self._nexus.add_function(
+                    invert_matrix,
+                    func_name='_'.join((_node.name, 'inverse')),
+                    par_names=(_node.name,)
+                )
+
+        # 'total_error', i.e. data + model error in quadrature
+        self._nexus.add_function(
+            add_in_quadrature,
+            func_name='total_error',
+            par_names=(
+                'data_error',
+                'model_error'
+            )
+        )
+
+        # 'total_cov_mat', i.e. data + model cov mats
+        for _mat in ('cov_mat',):  # TODO: 'uncor_cov_mat'
+            _node = (
+                self._nexus.get('_'.join(('data', _mat))) +
+                self._nexus.get('_'.join(('model', _mat)))
+            )
+            _node.name = '_'.join(('total', _mat))
+            self._nexus.add(_node)
+
+            # add inverse
+            self._nexus.add_function(
+                invert_matrix,
+                func_name='_'.join((_node.name, 'inverse')),
+                par_names=(_node.name,),
+            )
 
         # get names and default values of all parameters
-        _nexus_new_dict = self._get_default_values(model_function=self._model_function,
-                                                   x_name=self._model_function.x_name)
-        self._nexus.new(**_nexus_new_dict)  # Create nexus Nodes for function parameters
+        _nexus_new_dict = self._get_default_values(
+            model_function=self._model_function,
+            x_name=self._model_function.x_name
+        )
+
+        # -- fit parameters
 
         self._fit_param_names = []  # names of all fit parameters (including nuisance parameters)
-        for param_name in six.iterkeys(_nexus_new_dict):
-            self._fit_param_names.append(param_name)
+        self._poi_names = []  # names of the parameters of interest (i.e. the model parameters)
+        for _par_name, _par_value in six.iteritems(_nexus_new_dict):
+            # create nexus node for function parameter
+            self._nexus.add(Parameter(_par_value, name=_par_name))
 
-        #self._nexus.new_function(self._model_func_handle, add_unknown_parameters=False)
+            # keep track of fit parameter names
+            self._fit_param_names.append(_par_name)
+            self._poi_names.append(_par_name)
 
-        # add an alias 'model' for accessing the model values
-        #self._nexus.new_alias(**{'model': self._model_func_handle.__name__})
-        #self._nexus.new_alias(**{'model_density': self._model_func_handle.__name__})
+        # -- nuisance parameters
+        self._nuisance_names = []  # names of all nuisance parameters accounting for correlated errors
 
-        # bind 'model' node
-        self._nexus.new_function(lambda: self.model, function_name='model')
-        # need to set dependencies manually
-        for _fpn in self._fit_param_names:
-            self._nexus.add_dependency(_fpn, 'model')
-        # bind other reserved nodes
-        self._nexus.new_function(lambda: self.data_error, function_name='data_error')
-        self._nexus.new_function(lambda: self.data_cov_mat, function_name='data_cov_mat')
-        self._nexus.new_function(lambda: self.data_cov_mat_inverse, function_name='data_cov_mat_inverse')
-        self._nexus.new_function(lambda: self.model_error, function_name='model_error')
-        self._nexus.new_function(lambda: self.model_cov_mat, function_name='model_cov_mat')
-        self._nexus.new_function(lambda: self.model_cov_mat, function_name='model_cov_mat_inverse')
-        self._nexus.new_function(lambda: self.total_error, function_name='total_error')
-        self._nexus.new_function(lambda: self.total_cov_mat, function_name='total_cov_mat')
-        self._nexus.new_function(lambda: self.total_cov_mat_inverse, function_name='total_cov_mat_inverse')
-        self._nexus.new_function(lambda: self.parameter_values, function_name='parameter_values')
-        self._nexus.new_function(lambda: self.parameter_constraints, function_name='parameter_constraints')
+        self._nexus.add_function(lambda: self.poi_values, func_name='poi_values')
+        self._nexus.add_function(lambda: self.parameter_values, func_name='parameter_values')
+        self._nexus.add_function(lambda: self.parameter_constraints, func_name='parameter_constraints')
+
+        # add the original function name as an alias to 'model'
+        try:
+            self._nexus.add_alias(self._model_function.name, alias_for='model')
+        except NexusError:
+            pass  # allow 'model' as function name for model
+
+        self._nexus.add_function(
+            collect,
+            func_name="nuisance_vector"
+        )
+
+        # -- initialize nuisance parameters
+
+        # TODO: implement nuisance parameters for histograms
 
         # the cost function (the function to be minimized)
-        self._nexus.new_function(self._cost_function.func, function_name=self._cost_function.name, add_unknown_parameters=False)
-        self._nexus.new_alias(**{'cost': self._cost_function.name})
+        _cost_node = self._nexus.add_function(
+            self._cost_function.func,
+            func_name=self._cost_function.name,
+        )
 
-        for _arg_name in self._fit_param_names:
-            self._nexus.add_dependency(source=_arg_name, target="parameter_values")
+        _cost_alias = self._nexus.add_alias('cost', alias_for=self._cost_function.name)
+
+        self._nexus.add_dependency('poi_values', depends_on=self._poi_names)
+        self._nexus.add_dependency('parameter_values', depends_on=self._fit_param_names)
+
+        self._nexus.add_dependency(
+            'model',
+            depends_on=(
+                'poi_values'
+            )
+        )
+
+        self._nexus.add_dependency(
+            'total_error',
+            depends_on=(
+                'data_error',
+                'model_error',
+            )
+        )
+
+        # TODO: add 'uncor_cov_mat'
+        #for _side in ('data', 'model', 'total'):
+        #    self._nexus.add_dependency(
+        #        '{}_uncor_cov_mat'.format(_side),
+        #        depends_on='{}_cov_mat'.format(_side)
+        #    )
 
     def _invalidate_total_error_cache(self):
         self.__cache_total_error = None
@@ -140,16 +222,16 @@ class HistFit(FitBase):
 
     def _mark_errors_for_update(self):
         # TODO: implement a mass 'mark_for_update' routine in Nexus
-        self._nexus.get_by_name('model').mark_for_update()
-        self._nexus.get_by_name('data_error').mark_for_update()
-        self._nexus.get_by_name('data_cov_mat').mark_for_update()
-        self._nexus.get_by_name('data_cov_mat_inverse').mark_for_update()
-        self._nexus.get_by_name('model_error').mark_for_update()
-        self._nexus.get_by_name('model_cov_mat').mark_for_update()
-        self._nexus.get_by_name('model_cov_mat_inverse').mark_for_update()
-        self._nexus.get_by_name('total_error').mark_for_update()
-        self._nexus.get_by_name('total_cov_mat').mark_for_update()
-        self._nexus.get_by_name('total_cov_mat_inverse').mark_for_update()
+        self._nexus.get('model').mark_for_update()
+        self._nexus.get('data_error').mark_for_update()
+        self._nexus.get('data_cov_mat').mark_for_update()
+        self._nexus.get('data_cov_mat_inverse').mark_for_update()
+        self._nexus.get('model_error').mark_for_update()
+        self._nexus.get('model_cov_mat').mark_for_update()
+        self._nexus.get('model_cov_mat_inverse').mark_for_update()
+        self._nexus.get('total_error').mark_for_update()
+        self._nexus.get('total_cov_mat').mark_for_update()
+        self._nexus.get('total_cov_mat_inverse').mark_for_update()
 
     def _set_new_data(self, new_data):
         if isinstance(new_data, self.CONTAINER_TYPE):
@@ -159,7 +241,7 @@ class HistFit(FitBase):
                                    .format(type(new_data), self.CONTAINER_TYPE))
         else:
             raise HistFitException("Fitting a histogram requires a HistContainer!")
-        self._nexus.get_by_name('data').mark_for_update()
+        self._nexus.get('data').mark_for_update()
 
     def _set_new_parametric_model(self):
         # create the child ParametricModel object

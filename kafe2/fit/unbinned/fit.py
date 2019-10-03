@@ -5,11 +5,13 @@ import sys
 import six
 
 from ...core import NexusFitter, Nexus
+from ...core.fitters.nexus import Parameter, Alias
 from ...config import kc
 from .._base import FitException, FitBase, DataContainerBase
 from .container import UnbinnedContainer
 from .cost import UnbinnedCostFunction_UserDefined, UnbinnedCostFunction_NegLogLikelihood
 from .model import UnbinnedModelPDF, UnbinnedParametricModel
+from ..util import function_library, add_in_quadrature, collect, invert_matrix
 
 __all__ = ["UnbinnedFit"]
 
@@ -25,8 +27,12 @@ class UnbinnedFit(FitBase):
     EXCEPTION_TYPE = UnbinnedFitException
     RESERVED_NODE_NAMES = {'data', 'model', 'cost', 'parameter_values', 'parameter_constraints'}
 
-    def __init__(self, data, model_density_function='gaussian',
-                 cost_function=UnbinnedCostFunction_NegLogLikelihood(), minimizer=None, minimizer_kwargs=None):
+    def __init__(self,
+                 data,
+                 model_density_function='gaussian',
+                 cost_function=UnbinnedCostFunction_NegLogLikelihood(),
+                 minimizer=None,
+                 minimizer_kwargs=None):
         """
         Construct a fit to a model of *unbinned* data.
 
@@ -64,45 +70,80 @@ class UnbinnedFit(FitBase):
     # private methods
 
     def _init_nexus(self):
+
         self._nexus = Nexus()
 
-        # create regular nexus node
-        self._nexus.new_function(lambda: self.data, 'x')
+        for _type in ('data', 'model'):
+            # add data and model for axis
+            self._add_property_to_nexus(_type)
+
+        # add 'x' as an alias of 'data'
+        self._nexus.add_alias('x', alias_for='data')
 
         # get names and default values of all parameters
-        _nexus_new_dict = self._get_default_values(model_function=self._model_function,
-                                                   x_name=self._model_function.x_name)
-        self._nexus.new(**_nexus_new_dict)  # Create nexus Nodes for function parameters
-        # bind other reserved node names
-        self._nexus.new_function(lambda: self.parameter_values, function_name='parameter_values')
-        self._nexus.new_function(lambda: self.parameter_constraints, function_name='parameter_constraints')
+        _nexus_new_dict = self._get_default_values(
+            model_function=self._model_function,
+            x_name=self._model_function.x_name
+        )
+
+        # -- fit parameters
 
         self._fit_param_names = []  # names of all fit parameters (including nuisance parameters)
-        for param_name in six.iterkeys(_nexus_new_dict):
-            self._fit_param_names.append(param_name)
+        self._poi_names = []  # names of the parameters of interest (i.e. the model parameters)
+        for _par_name, _par_value in six.iteritems(_nexus_new_dict):
+            # create nexus node for function parameter
+            self._nexus.add(Parameter(_par_value, name=_par_name))
 
-        # create pdf function node
-        self._nexus.new_function(function_handle=self._model_function.func)
-        # create an alias for pdf
-        self._nexus.new_alias(**{'model': self._model_function.func.__name__})
+            # keep track of fit parameter names
+            self._fit_param_names.append(_par_name)
+            self._poi_names.append(_par_name)
 
-        # need to set dependencies manually
-        for _fpn in self._fit_param_names:
-            self._nexus.add_dependency(_fpn, 'model')
+        # -- nuisance parameters
+        self._nuisance_names = []  # names of all nuisance parameters accounting for correlated errors
+
+        self._nexus.add_function(lambda: self.poi_values, func_name='poi_values')
+        self._nexus.add_function(lambda: self.parameter_values, func_name='parameter_values')
+        self._nexus.add_function(lambda: self.parameter_constraints, func_name='parameter_constraints')
+
+        # add the original function name as an alias to 'model'
+        try:
+            self._nexus.add_alias(self._model_function.name, alias_for='model')
+        except NexusError:
+            pass  # allow 'model' as function name for model
+
+        self._nexus.add_function(
+            collect,
+            func_name="nuisance_vector"
+        )
+
+        # -- initialize nuisance parameters
+
+        # TODO: implement nuisance parameters for unbinned data (?)
 
         # the cost function (the function to be minimized)
-        self._nexus.new_function(self._cost_function.func, function_name=self._cost_function.name,
-                                 add_unknown_parameters=False)
-        self._nexus.new_alias(**{'cost': self._cost_function.name})
+        _cost_node = self._nexus.add_function(
+            self._cost_function.func,
+            func_name=self._cost_function.name,
+        )
 
-        self._nexus.add_dependency('model', 'cost')
+        _cost_alias = self._nexus.add_alias('cost', alias_for=self._cost_function.name)
+
+        self._nexus.add_dependency('poi_values', depends_on=self._poi_names)
+        self._nexus.add_dependency('parameter_values', depends_on=self._fit_param_names)
+
+        self._nexus.add_dependency(
+            'model',
+            depends_on=(
+                'poi_values'
+            )
+        )
 
     # private methods
     def _invalidate_total_error_cache(self):
         pass
 
     def _mark_errors_for_update(self):
-        self._nexus.get_by_name('model').mark_for_update()
+        self._nexus.get('model').mark_for_update()
 
     def _set_new_data(self, new_data):
         if isinstance(new_data, self.CONTAINER_TYPE):
@@ -112,7 +153,7 @@ class UnbinnedFit(FitBase):
                                        % (type(new_data), self.CONTAINER_TYPE))
         else:
             self._data_container = self._new_data_container(new_data, dtype=float)
-        self._nexus.get_by_name('x').mark_for_update()
+        self._nexus.get('x').mark_for_update()
 
     def _set_new_parametric_model(self):
         self._param_model = self._new_parametric_model(

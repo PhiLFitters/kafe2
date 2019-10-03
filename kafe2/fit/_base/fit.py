@@ -5,6 +5,7 @@ import textwrap
 import six
 
 from collections import OrderedDict
+from functools import partial
 
 from kafe2.core.constraint import GaussianMatrixParameterConstraint, GaussianSimpleParameterConstraint
 from ...tools import print_dict_as_table
@@ -45,6 +46,14 @@ class FitBase(FileIOMixin, object):
         super(FitBase, self).__init__()
 
     # -- private methods
+
+    def _add_property_to_nexus(self, prop, obj=None, name=None):
+        '''register a property of this object in the nexus as a function node'''
+        obj = obj if obj is not None else self
+        return self._nexus.add_function(
+            partial(getattr(obj.__class__, prop).fget, obj),
+            func_name=name or prop
+        )
 
     @classmethod
     def _get_base_class(cls):
