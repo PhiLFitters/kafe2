@@ -308,7 +308,7 @@ class MinimizerScipyOptimize(MinimizerBase):
         _target_points_per_axis = 1 + initial_points * 2 ** (iterations + 1)
         _ids = (self._par_names.index(parameter_name_1), self._par_names.index(parameter_name_2))
         _minimum = np.asarray([self._par_val[_ids[0]], self._par_val[_ids[1]]])
-        _err = np.asarray([self._par_err[_ids[0]], self._par_err[_ids[1]]])
+        _err = np.asarray([self.parameter_errors[_ids[0]], self.parameter_errors[_ids[1]]])
 
         _x_values = np.linspace(start=-area_scale_factor * sigma * _err[0], stop=area_scale_factor * sigma * _err[0], num=_target_points_per_axis, endpoint = True)
         _x_values += _minimum[0]
@@ -604,7 +604,7 @@ class MinimizerScipyOptimize(MinimizerBase):
         
     def profile(self, parameter_name, bins=21, bound=2, args=None, subtract_min=False):
         _par_id = self._par_names.index(parameter_name)
-        _par_err = self._par_err[_par_id]
+        _par_err = self.parameter_errors[_par_id]
         _par_min = self._par_val[_par_id]
         _par = np.linspace(start=_par_min - bound * _par_err, stop=_par_min + bound * _par_err, num=bins, endpoint=True)
         _y_offset = self.function_value if subtract_min else 0
