@@ -66,7 +66,7 @@ class ParametricModelBaseMixin(object):
 
         # flag: recalculate the model values next time they are requested
         self._pm_calculation_stale = True
-        self._clear_total_error_cache()
+        self._clear_total_error_cache()  # declared in the container class
 
 
 class ModelFunctionException(Exception):

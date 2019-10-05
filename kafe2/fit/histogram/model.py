@@ -58,13 +58,13 @@ class HistModelFunction(ModelFunctionBase):
         if self.x_name not in self.signature.parameters:
             raise self.__class__.EXCEPTION_TYPE(
                 "Model function '%r' must have independent variable '%s' among its arguments!"
-                % (_model_function.func, self.x_name))
+                % (self._model_function_handle, self.x_name))
 
         # require 'xy' model functions to have at least two arguments
         if len(self.signature.parameters) < 2:
             raise self.__class__.EXCEPTION_TYPE(
                 "Model function '%r' needs at least one parameter beside independent variable '%s'!"
-                % (_model_function.func, self.x_name))
+                % (self._model_function_handle, self.x_name))
 
         # call parent validator
         super(HistModelFunction, self)._validate_model_function_raise()

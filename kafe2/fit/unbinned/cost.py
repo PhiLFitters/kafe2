@@ -55,7 +55,7 @@ class UnbinnedCostFunction_NegLogLikelihood(CostFunctionBase):
         # guard against returning NaN
         if np.isnan(_total_log_likelihood):
             return np.inf
-        return -2.0 * _total_log_likelihood
+        return -2.0 * _total_log_likelihood + _par_cost
 
 
 

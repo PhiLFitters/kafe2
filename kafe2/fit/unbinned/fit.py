@@ -114,7 +114,11 @@ class UnbinnedFit(FitBase):
         self._nexus.get_by_name('x').mark_for_update()
 
     def _set_new_parametric_model(self):
-        self._param_model = self._new_parametric_model(self._model_function, self.parameter_values)
+        self._param_model = self._new_parametric_model(
+            data=self.data,
+            model_density_function=self._model_function,
+            model_parameters=self.parameter_values
+        )
         self._mark_errors_for_update_invalidate_total_error_cache()
 
     @FitBase.data.getter
@@ -151,8 +155,8 @@ class UnbinnedFit(FitBase):
         :rtype: :py:class:`numpy.ndarray`
         """
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
-        self._param_model.x = self.data
-        return self._param_model.eval_model_function(x=x, model_parameters=model_parameters)
+        self._param_model.support = self.data
+        return self._param_model.eval_model_function(support=x, model_parameters=model_parameters)
 
     def report(self, output_stream=sys.stdout, asymmetric_parameter_errors=False):
         super(UnbinnedFit, self).report(output_stream=output_stream,
