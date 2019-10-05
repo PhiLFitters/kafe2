@@ -167,7 +167,3 @@ class UnbinnedFit(FitBase):
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.data
         return self._param_model.eval_model_function(x=x, model_parameters=model_parameters)
-
-    def report(self, output_stream=sys.stdout, asymmetric_parameter_errors=False):
-        super(UnbinnedFit, self).report(output_stream=output_stream,
-                                        asymmetric_parameter_errors=asymmetric_parameter_errors)

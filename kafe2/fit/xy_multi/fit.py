@@ -380,19 +380,72 @@ class XYMultiFit(FitBase):
 
         self.__cache_y_error_band = np.sqrt(_band_y)
 
-    def _get_model_report_dict_entry(self):
-        return [self._param_model._model_function_object.formatter.get_formatted(
-            model_index=_i,
-            with_par_values=False,
-            n_significant_digits=2,
-            format_as_latex=False,
-            with_expression=True) for _i in range(self.model_count)]
-
     def _get_poi_index_by_name(self, name):
         try:
             return self._poi_names.index(name)
         except ValueError:
             raise self.EXCEPTION_TYPE('Unknown parameter name: %s' % name)
+
+    def _report_data(self, output_stream, indent, indentation_level):
+        output_stream.write(indent * indentation_level + '########\n')
+        output_stream.write(indent * indentation_level + '# Data #\n')
+        output_stream.write(indent * indentation_level + '########\n\n')
+        _data_table_dict = OrderedDict()
+        _data_table_dict['X Data'] = self.x_data
+        if self._data_container.has_x_errors:
+            _data_table_dict['X Data Error'] = self.x_data_error
+            _data_table_dict['X Data Total Correlation Matrix'] = self.x_data_cor_mat
+
+        print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=indentation_level + 1)
+        output_stream.write('\n')
+
+        _data_table_dict = OrderedDict()
+        _data_table_dict['Y Data'] = self.y_data
+        if self.has_data_errors:
+            _data_table_dict['Y Data Error'] = self.y_data_error
+            _data_table_dict['Y Data Total Correlation Matrix'] = self.y_data_cor_mat
+
+        print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=indentation_level + 1)
+        output_stream.write('\n')
+
+    def _report_model(self, output_stream, indent, indentation_level):
+        output_stream.write(indent * indentation_level + '#########\n')
+        output_stream.write(indent * indentation_level + '# Model #\n')
+        output_stream.write(indent * indentation_level + '#########\n\n')
+
+        for _i in range(self.model_count):
+            output_stream.write(indent * (indentation_level + 1) + "Model Function\n")
+            output_stream.write(indent * (indentation_level + 1) + "==============\n\n")
+            output_stream.write(indent * (indentation_level + 2))
+            output_stream.write(
+                self._model_function.formatter.get_formatted(
+                    model_index=_i,
+                    with_par_values=False,
+                    n_significant_digits=2,
+                    format_as_latex=False,
+                    with_expression=True
+                )
+            )
+            output_stream.write('\n\n')
+        output_stream.write('\n')
+
+        _data_table_dict = OrderedDict()
+        _data_table_dict['X Model'] = self.x_model
+        if self.has_model_errors:
+            _data_table_dict['X Model Error'] = self.x_model_error
+            _data_table_dict['X Model Total Correlation Matrix'] = self.x_model_cor_mat
+
+        print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=indentation_level + 1)
+        output_stream.write('\n')
+
+        _data_table_dict = OrderedDict()
+        _data_table_dict['Y Model'] = self.y_model
+        if self.has_model_errors:
+            _data_table_dict['Y Model Error'] = self.y_model_error
+            _data_table_dict['Y Model Total Correlation Matrix'] = self.y_model_cor_mat
+
+        print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=indentation_level + 1)
+        output_stream.write('\n')
 
     # -- public properties
 
@@ -1090,100 +1143,6 @@ class XYMultiFit(FitBase):
         _plot.axis_labels = self._axis_labels
         return _plot
 
-    def report(self, output_stream=sys.stdout,
-               show_data=True,
-               show_model=True,
-               asymmetric_parameter_errors=False):
-        """
-        Print a summary of the fit state and/or results.
-
-        :param output_stream: the output stream to which the report should be printed
-        :type output_stream: TextIOBase
-        :param show_data: if ``True``, print out information about the data
-        :type show_data: bool
-        :param show_model: if ``True``, print out information about the parametric model
-        :type show_model: bool
-        :param asymmetric_parameter_errors: if ``True``, use two different parameter errors for up/down directions
-        :type asymmetric_parameter_errors: bool
-        """
-        #TODO _result_dict is never used. intentional?
-        #_result_dict = self.get_result_dict()
-
-        _indent = ' ' * 4
-
-        if show_data:
-            output_stream.write(textwrap.dedent("""
-                ########
-                # Data #
-                ########
-
-            """))
-            _data_table_dict = OrderedDict()
-            _data_table_dict['X Data'] = self.x_data
-            if self._data_container.has_x_errors:
-                _data_table_dict['X Data Error'] = self.x_data_error
-                #_data_table_dict['X Data Total Covariance Matrix'] = self.x_data_cov_mat
-                _data_table_dict['X Data Total Correlation Matrix'] = self.x_data_cor_mat
-
-            print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=1)
-            output_stream.write('\n')
-
-            _data_table_dict = OrderedDict()
-            _data_table_dict['Y Data'] = self.y_data
-            if self.has_data_errors:
-                _data_table_dict['Y Data Error'] = self.y_data_error
-                #_data_table_dict['Y Data Total Covariance Matrix'] = self.y_data_cov_mat
-                _data_table_dict['Y Data Total Correlation Matrix'] = self.y_data_cor_mat
-
-            print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=1)
-
-        if show_model:
-            output_stream.write(textwrap.dedent("""
-                #########
-                # Model #
-                #########
-
-            """))
-
-            #output_stream.write(_indent)
-            for _i in range(self.model_count):
-                output_stream.write(_indent + "Model Function %s\n" % _i)
-                output_stream.write(_indent + "==============\n\n")
-                output_stream.write(_indent * 2)
-                output_stream.write(
-                    self._model_function.formatter.get_formatted(
-                        model_index=_i,
-                        with_par_values=False,
-                        n_significant_digits=2,
-                        format_as_latex=False,
-                        with_expression=True
-                    )
-                )
-                output_stream.write('\n\n')
-            output_stream.write('\n')
-
-            _data_table_dict = OrderedDict()
-            _data_table_dict['X Model'] = self.x_model
-            if self.has_model_errors:
-                _data_table_dict['X Model Error'] = self.x_model_error
-                #_data_table_dict['X Model Total Covariance Matrix'] = self.x_model_cor_mat
-                _data_table_dict['X Model Total Correlation Matrix'] = self.x_model_cor_mat
-
-            print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=1)
-            output_stream.write('\n')
-
-            _data_table_dict = OrderedDict()
-            _data_table_dict['Y Model'] = self.y_model
-            if self.has_model_errors:
-                _data_table_dict['Y Model Error'] = self.y_model_error
-                #_data_table_dict['Y Model Total Covariance Matrix'] = self.y_model_cov_mat
-                _data_table_dict['Y Model Total Correlation Matrix'] = self.y_model_cor_mat
-
-            print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=1)
-
-        super(XYMultiFit, self).report(output_stream=output_stream,
-                                       asymmetric_parameter_errors=asymmetric_parameter_errors)
-
     def get_splice(self, data, index):
         """
         Utility function to splice an iterable according to the container data indices.
@@ -1205,4 +1164,3 @@ class XYMultiFit(FitBase):
         :return the model function with the specified index
         """
         return self._model_function.get_underlying_model_function(index)
-    

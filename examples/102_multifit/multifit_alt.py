@@ -124,7 +124,7 @@ multi_fit.do_fit()
 print('post fit:', multi_fit.parameter_values, multi_fit.cost_function_value)
 
 # (Optional): print the results
-#multi_fit.report()
+multi_fit.report()
 
 # (Optional): plot the results
 #plot = XYMultiPlot(fit, separate_plots=True)
