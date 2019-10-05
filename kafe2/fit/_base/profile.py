@@ -195,7 +195,7 @@ class ContoursProfiler(object):
     def _plot_contour_xy(target_axes, contour, label, contour_color):
         _kwargs = ContoursProfiler._DEFAULT_PLOT_FILL_CONTOUR_KWARGS.copy()
         if contour.xy_points is not None:
-            return [target_axes.fill(contour.xy_points[0], contour.xy_points[1], 
+            return [target_axes.fill(contour.xy_points[0], contour.xy_points[1],
                                     label=label, **_kwargs)]
         else:
             return [target_axes.contour(contour.grid_x, contour.grid_y, contour.grid_z.T, levels=[0,contour.sigma],
@@ -262,7 +262,8 @@ class ContoursProfiler(object):
                      show_fit_minimum=True,
                      show_error_span=True,
                      show_ticks=True,
-                     label_ticks_in_sigma=True):
+                     label_ticks_in_sigma=True,
+                     label_fit_minimum=True):
         """
         Plot the profile cost function for a parameter.
 
@@ -284,6 +285,9 @@ class ContoursProfiler(object):
         :type show_ticks: bool
         :param label_ticks_in_sigma: if ``True``, label ticks are in units of 1 sigma
         :type label_ticks_in_sigma: bool
+        :param label_fit_minimum: if ``True``, the parameter value and the 1 sigma error
+            will be shown as an annotation
+        :type label_fit_minimum: bool
         :return: 3-tuple with lists containing the profile, parabola, fit minumum and parameter error span artists
         :rtype: tuple of lists of ``matplotlib`` artists
         :return:
@@ -322,6 +326,26 @@ class ContoursProfiler(object):
                                                  y=_y_offset,
                                                  xerr=_par_err, yerr=None,
                                                  label="fit minimum")
+
+        if label_fit_minimum:
+            _axes.annotate(
+                '\n'.join([
+                    r"$\langle {}\rangle = {:g}$".format(
+                        _par_formatted_name.strip('$'),
+                        _par_val
+                    ),
+                    r"$\sigma_{{{}}} = {:g}$".format(
+                        _par_formatted_name.strip('$'),
+                        _par_err
+                    )]),
+                xy=(_par_val, 1),
+                xycoords=('data', 'axes fraction'),
+                xytext=(0, -10),
+                textcoords='offset points',
+                ha='center',
+                va='top'
+            )
+
 
         _err_span_artist = None
         if show_error_span:
