@@ -117,16 +117,6 @@ class FitBase(FileIOMixin, object):
         return _nexus_new_dict
 
     @abc.abstractmethod
-    def _invalidate_total_error_cache(self): pass
-
-    @abc.abstractmethod
-    def _mark_errors_for_update(self): pass
-
-    def _mark_errors_for_update_invalidate_total_error_cache(self):
-        self._mark_errors_for_update()
-        self._invalidate_total_error_cache()
-
-    @abc.abstractmethod
     def _set_new_data(self, new_data): pass
 
     @abc.abstractmethod
@@ -505,9 +495,6 @@ class FitBase(FileIOMixin, object):
         _ret = _reference_object.add_simple_error(err_val=err_val,
                                                   name=name, correlation=correlation, relative=relative, **kwargs)
 
-        # mark nexus error parameters as stale
-        self._mark_errors_for_update()
-        self._invalidate_total_error_cache()
         return _ret
 
     def add_matrix_error(self, err_matrix, matrix_type,
@@ -544,9 +531,6 @@ class FitBase(FileIOMixin, object):
         _ret = _reference_object.add_matrix_error(err_matrix=err_matrix, matrix_type=matrix_type,
                                                   name=name, err_val=err_val, relative=relative, **kwargs)
 
-        # mark nexus error parameters as stale
-        self._mark_errors_for_update()
-        self._invalidate_total_error_cache()
         return _ret
 
     def disable_error(self, err_id):
@@ -564,9 +548,6 @@ class FitBase(FileIOMixin, object):
             # try to find error in model container
             _ret = self._param_model.disable_error(err_id)
 
-        # mark nexus error parameters as stale
-        self._mark_errors_for_update()
-        self._invalidate_total_error_cache()
         return _ret
 
     def do_fit(self):

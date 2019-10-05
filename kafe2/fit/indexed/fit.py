@@ -74,11 +74,6 @@ class IndexedFit(FitBase):
             # self._validate_cost_function_raise()
             # TODO: validate user-defined cost function? how?
 
-        # declare cache
-        self.__cache_total_error = None
-        self.__cache_total_cov_mat = None
-        self.__cache_total_cov_mat_inverse = None
-
         # initialize the Nexus
         self._init_nexus()
 
@@ -213,24 +208,6 @@ class IndexedFit(FitBase):
         #        depends_on='{}_cov_mat'.format(_side)
         #    )
 
-    def _invalidate_total_error_cache(self):
-        self.__cache_total_error = None
-        self.__cache_total_cov_mat = None
-        self.__cache_total_cov_mat_inverse = None
-
-    def _mark_errors_for_update(self):
-        # TODO: implement a mass 'mark_for_update' routine in Nexus
-        self._nexus.get('model').mark_for_update()
-        self._nexus.get('data_error').mark_for_update()
-        self._nexus.get('data_cov_mat').mark_for_update()
-        self._nexus.get('data_cov_mat_inverse').mark_for_update()
-        self._nexus.get('model_error').mark_for_update()
-        self._nexus.get('model_cov_mat').mark_for_update()
-        self._nexus.get('model_cov_mat_inverse').mark_for_update()
-        self._nexus.get('total_error').mark_for_update()
-        self._nexus.get('total_cov_mat').mark_for_update()
-        self._nexus.get('total_cov_mat_inverse').mark_for_update()
-
     def _set_new_data(self, new_data):
         if isinstance(new_data, self.CONTAINER_TYPE):
             self._data_container = deepcopy(new_data)
@@ -239,12 +216,15 @@ class IndexedFit(FitBase):
                                       % (type(new_data), self.CONTAINER_TYPE))
         else:
             self._data_container = self._new_data_container(new_data, dtype=float)
+
         self._nexus.get('data').mark_for_update()
 
     def _set_new_parametric_model(self):
-        self._param_model = self._new_parametric_model(self._model_function, self.parameter_values,
-                                                       shape_like=self.data)
-        self._mark_errors_for_update_invalidate_total_error_cache()
+        self._param_model = self._new_parametric_model(
+            self._model_function,
+            self.parameter_values,
+            shape_like=self.data
+        )
 
     # -- public properties
 
@@ -306,32 +286,17 @@ class IndexedFit(FitBase):
     @property
     def total_error(self):
         """array of pointwise total uncertainties"""
-        if self.__cache_total_error is None:
-            _tmp = self.data_error**2
-            _tmp += self.model_error**2
-            self.__cache_total_error = np.sqrt(_tmp)
-        return self.__cache_total_error
+        return add_in_quadrature(self.data_error, self.model_error)
 
     @property
     def total_cov_mat(self):
         """the total covariance matrix"""
-        if self.__cache_total_cov_mat is None:
-            _tmp = self.data_cov_mat
-            _tmp += self.model_cov_mat
-            self.__cache_total_cov_mat = _tmp
-        return self.__cache_total_cov_mat
+        return self.data_cov_mat + self.model_cov_mat
 
     @property
     def total_cov_mat_inverse(self):
         """inverse of the total covariance matrix (or ``None`` if singular)"""
-        if self.__cache_total_cov_mat_inverse is None:
-            _tmp = self.total_cov_mat
-            try:
-                _tmp = np.linalg.inv(_tmp)
-                self.__cache_total_cov_mat_inverse = _tmp
-            except np.linalg.LinAlgError:
-                pass
-        return self.__cache_total_cov_mat_inverse
+        return invert_matrix(self.total_cov_mat)
 
     # -- public methods
 

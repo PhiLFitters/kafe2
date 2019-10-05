@@ -138,12 +138,7 @@ class UnbinnedFit(FitBase):
             )
         )
 
-    # private methods
-    def _invalidate_total_error_cache(self):
-        pass
-
-    def _mark_errors_for_update(self):
-        self._nexus.get('model').mark_for_update()
+    # -- private methods
 
     def _set_new_data(self, new_data):
         if isinstance(new_data, self.CONTAINER_TYPE):
@@ -153,7 +148,10 @@ class UnbinnedFit(FitBase):
                                        % (type(new_data), self.CONTAINER_TYPE))
         else:
             self._data_container = self._new_data_container(new_data, dtype=float)
+
         self._nexus.get('x').mark_for_update()
+        # TODO: make 'Alias' nodes pass on 'mark_for_update'
+        self._nexus.get('data').mark_for_update()
 
     def _set_new_parametric_model(self):
         self._param_model = self._new_parametric_model(
@@ -161,7 +159,6 @@ class UnbinnedFit(FitBase):
             model_density_function=self._model_function,
             model_parameters=self.parameter_values
         )
-        self._mark_errors_for_update_invalidate_total_error_cache()
 
     @FitBase.data.getter
     def data(self):

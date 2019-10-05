@@ -97,9 +97,6 @@ class XYFit(FitBase):
         else:
             self._x_error_algorithm = x_error_algorithm
 
-        # declare cache
-        self._invalidate_total_error_cache()
-
         # initialize the Nexus
         self._init_nexus()
 
@@ -343,78 +340,13 @@ class XYFit(FitBase):
                     depends_on='{}_{}_cov_mat'.format(_axis, _side)
                 )
 
-    def _invalidate_total_error_cache(self):
-        self.__cache_x_data_error = None
-        self.__cache_x_data_cov_mat = None
-        self.__cache_x_total_error = None
-        self.__cache_x_total_cov_mat = None
-        self.__cache_x_total_cov_mat_inverse = None
-        self.__cache_projected_xy_total_error = None
-        self.__cache_projected_xy_total_cov_mat = None
-        self.__cache_projected_xy_total_cov_mat_inverse = None
-        self.__cache_y_total_error = None
-        self.__cache_y_total_cov_mat = None
-        self.__cache_y_total_cov_mat_inverse = None
-        self.__cache_y_error_band = None
-        self.__cache_y_total_uncor_cov_mat = None
-        self.__cache_y_total_uncor_cov_mat_inverse = None
-        self.__cache_y_total_nuisance_cor_design_mat = None
-        self.__cache_x_total_uncor_cov_mat = None
-        self.__cache_x_total_uncor_cov_mat_inverse = None
-        # self.__cache_nuisance_x_total_uncor_cov_mat = None
-
-    def _mark_errors_for_update(self):
-        # TODO: implement a mass 'mark_for_update' routine in Nexus
-        self._nexus.get('x_data_error').mark_for_update()
-        self._nexus.get('x_data_cov_mat').mark_for_update()
-        self._nexus.get('x_data_cov_mat_inverse').mark_for_update()
-        self._nexus.get('x_model_error').mark_for_update()
-        self._nexus.get('x_model_cov_mat').mark_for_update()
-        self._nexus.get('x_model_cov_mat_inverse').mark_for_update()
-        self._nexus.get('x_total_error').mark_for_update()
-        self._nexus.get('x_total_cov_mat').mark_for_update()
-        self._nexus.get('x_total_cov_mat_inverse').mark_for_update()
-        self._nexus.get('y_data_error').mark_for_update()
-        self._nexus.get('y_data_cov_mat').mark_for_update()
-        self._nexus.get('y_data_cov_mat_inverse').mark_for_update()
-        self._nexus.get('y_model_error').mark_for_update()
-        self._nexus.get('y_model_cov_mat').mark_for_update()
-        self._nexus.get('y_model_cov_mat_inverse').mark_for_update()
-        self._nexus.get('y_total_error').mark_for_update()
-        self._nexus.get('y_total_cov_mat').mark_for_update()
-        self._nexus.get('y_total_cov_mat_inverse').mark_for_update()
-        self._nexus.get('projected_xy_total_error').mark_for_update()
-        self._nexus.get('projected_xy_total_cov_mat').mark_for_update()
-        self._nexus.get('projected_xy_total_cov_mat_inverse').mark_for_update()
-
-        self._nexus.get('y_data_uncor_cov_mat').mark_for_update()
-        self._nexus.get('y_model_uncor_cov_mat').mark_for_update()
-        self._nexus.get('y_total_uncor_cov_mat').mark_for_update()
-        self._nexus.get('y_data_uncor_cov_mat_inverse').mark_for_update()
-        self._nexus.get('y_model_uncor_cov_mat_inverse').mark_for_update()
-        self._nexus.get('y_total_uncor_cov_mat_inverse').mark_for_update()
-        self._nexus.get('_y_data_nuisance_cor_design_mat').mark_for_update()
-        self._nexus.get('_y_model_nuisance_cor_design_mat').mark_for_update()
-        self._nexus.get('_y_total_nuisance_cor_design_mat').mark_for_update()
-        self._nexus.get('x_data_uncor_cov_mat').mark_for_update()
-        self._nexus.get('x_model_uncor_cov_mat').mark_for_update()
-        self._nexus.get('x_total_uncor_cov_mat').mark_for_update()
-        self._nexus.get('x_data_uncor_cov_mat_inverse').mark_for_update()
-        self._nexus.get('x_model_uncor_cov_mat_inverse').mark_for_update()
-        self._nexus.get('x_total_uncor_cov_mat_inverse').mark_for_update()
-        # self._nexus.get('_x_data_nuisance_cor_design_mat').mark_for_update()
-        # self._nexus.get('_x_model_nuisance_cor_design_mat').mark_for_update()
-        # self._nexus.get('_x_total_nuisance_cor_design_mat').mark_for_update()
-        # #self._nexus.get('x_cor_nuisance_vector').mark_for_update() TODO: uncorrelated x-errors
-        self._nexus.get('y_nuisance_vector').mark_for_update()
-        self._nexus.get('x_uncor_nuisance_vector').mark_for_update()
-        self._nexus.get('x_model').mark_for_update()
-        self._nexus.get('y_model').mark_for_update()
-
     def _calculate_y_error_band(self):
         _xmin, _xmax = self._data_container.x_range
         _band_x = np.linspace(_xmin, _xmax, 100)  # TODO: config
-        _f_deriv_by_params = self._param_model.eval_model_function_derivative_by_parameters(x=_band_x, model_parameters=self.poi_values)
+        _f_deriv_by_params = self._param_model.eval_model_function_derivative_by_parameters(
+            x=_band_x,
+            model_parameters=self.poi_values
+        )
         # here: df/dp[par_idx]|x=x[x_idx] = _f_deriv_by_params[par_idx][x_idx]
 
         _f_deriv_by_params = _f_deriv_by_params.T
@@ -426,7 +358,7 @@ class XYFit(FitBase):
             _p_res = _f_deriv_by_params[_x_idx]
             _band_y[_x_idx] = _p_res.dot(self.parameter_cov_mat[:_n_poi, :_n_poi]).dot(_p_res)
 
-        self.__cache_y_error_band = np.sqrt(_band_y)
+        return np.sqrt(_band_y)
 
     def _get_poi_index_by_name(self, name):
         try:
@@ -449,8 +381,11 @@ class XYFit(FitBase):
         self._nexus.get('y_data').mark_for_update()
 
     def _set_new_parametric_model(self):
-        self._param_model = self._new_parametric_model(self.x_model, self._model_function, self.poi_values)
-        self._mark_errors_for_update_invalidate_total_error_cache()
+        self._param_model = self._new_parametric_model(
+            self.x_model,
+            self._model_function,
+            self.poi_values
+        )
 
     # -- public properties
 
@@ -700,188 +635,147 @@ class XYFit(FitBase):
         """array of pointwise total *x* uncertainties"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
-        if self.__cache_x_total_error is None:
-            _tmp = self.x_data_error**2
-            _tmp += self.x_model_error**2
-            self.__cache_x_total_error = np.sqrt(_tmp)
-        return self.__cache_x_total_error
+        return add_in_quadrature(self.x_model_error, self.x_data_error)
 
     @property
     def y_total_error(self):
         """array of pointwise total *y* uncertainties"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
-        if self.__cache_y_total_error is None:
-            _tmp = self.y_data_error**2
-            _tmp += self.y_model_error**2
-            self.__cache_y_total_error = np.sqrt(_tmp)
-        return self.__cache_y_total_error
+        return add_in_quadrature(self.y_model_error, self.y_data_error)
 
     @property
     def projected_xy_total_error(self):
         """array of pointwise total *y* with the x uncertainties projected on top of them"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
+
         if np.count_nonzero(self._data_container.x_err) == 0:
             return self.y_total_error
-        if self.__cache_projected_xy_total_error is None:
-            _x_errors = self.x_total_error
-            _precision = 0.01 * np.min(_x_errors)
-            _derivatives = self._param_model.eval_model_function_derivative_by_x(dx=_precision,
-                                                                                 model_parameters=self.parameter_values)
-            self.__cache_projected_xy_total_error = np.sqrt(self.y_total_error**2 + self.x_total_error**2 * _derivatives**2)
-        return self.__cache_projected_xy_total_error
+
+        _x_errors = self.x_total_error
+        _precision = 0.01 * np.min(_x_errors)
+        _derivatives = self._param_model.eval_model_function_derivative_by_x(
+            dx=_precision,
+            model_parameters=self.parameter_values
+        )
+
+        return np.sqrt(self.y_total_error**2 + self.x_total_error**2 * _derivatives**2)
 
     @property
     def x_total_cov_mat(self):
         """the total *x* covariance matrix"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
-        if self.__cache_x_total_cov_mat is None:
-            _tmp = self.x_data_cov_mat
-            _tmp += self.x_model_cov_mat
-            self.__cache_x_total_cov_mat = _tmp
-        return self.__cache_x_total_cov_mat
+
+        return self.x_data_cov_mat + self.x_model_cov_mat
 
     @property
     def y_total_cov_mat(self):
         """the total *y* covariance matrix"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
-        if self.__cache_y_total_cov_mat is None:
-            _tmp = self.y_data_cov_mat
-            _tmp += self.y_model_cov_mat
-            self.__cache_y_total_cov_mat = _tmp
-        return self.__cache_y_total_cov_mat
+
+        return self.y_data_cov_mat + self.y_model_cov_mat
+
 
     @property
     def projected_xy_total_cov_mat(self):
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
+
         if np.count_nonzero(self._data_container.x_err) == 0:
             return self.y_total_cov_mat
-        if self.__cache_projected_xy_total_cov_mat is None or True:
-            _x_errors = self.x_total_error
-            _precision = 0.01 * np.min(_x_errors)
-            _derivatives = self._param_model.eval_model_function_derivative_by_x(dx=_precision, model_parameters=self.parameter_values)
-            _outer_product = np.outer(_derivatives, _derivatives)
-            _projected_x_cov_mat = self.x_total_cov_mat * _outer_product
-            self.__cache_projected_xy_total_cov_mat = self.y_total_cov_mat + _projected_x_cov_mat
 
-        return self.__cache_projected_xy_total_cov_mat
+        _x_errors = self.x_total_error
+        _precision = 0.01 * np.min(_x_errors)
+        _derivatives = self._param_model.eval_model_function_derivative_by_x(
+            dx=_precision,
+            model_parameters=self.parameter_values
+        )
+        _outer_product = np.outer(_derivatives, _derivatives)
+
+        return self.y_total_cov_mat + self.x_total_cov_mat * _outer_product
+
 
     @property
     def x_total_cov_mat_inverse(self):
         """inverse of the total *x* covariance matrix (or ``None`` if singular)"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
-        if self.__cache_x_total_cov_mat_inverse is None:
-            _tmp = self.x_total_cov_mat
-            try:
-                _tmp = np.linalg.inv(_tmp)
-                self.__cache_x_total_cov_mat_inverse = _tmp
-            except np.linalg.LinAlgError:
-                pass
-        return self.__cache_x_total_cov_mat_inverse
+
+        try:
+            return invert_matrix(self.x_total_cov_mat)
+        except np.linalg.LinAlgError:
+            return None
 
     @property
     def y_total_cov_mat_inverse(self):
         """inverse of the total *y* covariance matrix (or ``None`` if singular)"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
-        if self.__cache_y_total_cov_mat_inverse is None:
-            _tmp = self.y_total_cov_mat
-            try:
-                _tmp = np.linalg.inv(_tmp)
-                self.__cache_y_total_cov_mat_inverse = _tmp
-            except np.linalg.LinAlgError:
-                pass
-        return self.__cache_y_total_cov_mat_inverse
+
+        try:
+            return invert_matrix(self.y_total_cov_mat)
+        except np.linalg.LinAlgError:
+            return None
 
     @property
     def projected_xy_total_cov_mat_inverse(self):
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
-        if self.__cache_projected_xy_total_cov_mat_inverse is None or True:
-            _tmp = self.projected_xy_total_cov_mat
-            try:
-                _tmp = np.linalg.inv(_tmp)
-                self.__cache_projected_xy_total_cov_mat_inverse = _tmp
-            except np.linalg.LinAlgError:
-                pass
-        return self.__cache_projected_xy_total_cov_mat_inverse
+
+        try:
+            return invert_matrix(self.projected_xy_total_cov_mat)
+        except np.linalg.LinAlgError:
+            return None
 
     @property
     def y_total_uncor_cov_mat(self):
         """the total *y* uncorrelated covariance matrix"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
-        if self.__cache_y_total_uncor_cov_mat is None:
-            _tmp = self.y_data_uncor_cov_mat
-            _tmp += self.y_model_uncor_cov_mat
-            self.__cache_y_total_uncor_cov_mat = _tmp
-        return self.__cache_y_total_uncor_cov_mat
+
+        return self.y_data_uncor_cov_mat + self.y_model_uncor_cov_mat
+
 
     @property
     def y_total_uncor_cov_mat_inverse(self):
         """inverse of the uncorrelated part of the total *y* covariance matrix (or ``None`` if singular)"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
-        if self.__cache_y_total_uncor_cov_mat_inverse is None:
-            _tmp = self.y_total_uncor_cov_mat
-            try:
-                _tmp = np.linalg.inv(_tmp)
-                self.__cache_y_total_uncor_cov_mat_inverse = _tmp
-            except np.linalg.LinAlgError:
-                pass
-        return self.__cache_y_total_uncor_cov_mat_inverse
+
+        try:
+            return invert_matrix(self.y_total_uncor_cov_mat)
+        except np.linalg.LinAlgError:
+            return None
 
     @property
     def _y_total_nuisance_cor_design_mat(self):
         """matrix containing the correlated parts of all model uncertainties for all total points"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
-        if self.__cache_y_total_nuisance_cor_design_mat is None:
-            _tmp = self._y_data_nuisance_cor_design_mat
-            # _tmp += self.nuisance_y_model_cor_cov_mat
-            self.__cache_y_total_nuisance_cor_design_mat = _tmp
-        return self.__cache_y_total_nuisance_cor_design_mat
+
+        return self._y_data_nuisance_cor_design_mat
 
     @property
     def x_total_uncor_cov_mat(self):
         """the total *x* uncorrelated covariance matrix"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
-        if self.__cache_x_total_uncor_cov_mat is None:
-            _tmp = self.x_data_uncor_cov_mat
-            _tmp += self.x_model_uncor_cov_mat
-            self.__cache_x_total_uncor_cov_mat = _tmp
-        return self.__cache_x_total_uncor_cov_mat
+
+        return self.x_data_uncor_cov_mat + self.x_model_uncor_cov_mat
 
     @property
     def x_total_uncor_cov_mat_inverse(self):
         """inverse of the total *x* uncorrelated covariance matrix (or ``None`` if singular)"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
-        if self.__cache_x_total_uncor_cov_mat_inverse is None:
-            _tmp = self.x_total_uncor_cov_mat
-            try:
-                _tmp = np.linalg.inv(_tmp)
-                self.__cache_x_total_uncor_cov_mat_inverse = _tmp
-            except np.linalg.LinAlgError:
-                pass
-        return self.__cache_x_total_uncor_cov_mat_inverse
 
-    # @property TODO: correlated x-errors
-    # def nuisance_x_total_cor_cov_mat(self):
-    #     """total *x* correlated covariance matrix (nuisance) (or ``None`` if singular)"""
-    #     self._param_model.parameters = self.poi_values  # this is lazy, so just do it
-    #     self._param_model.x = self.x_with_errors
-    #     if self.__cache_nuisance_x_total_cor_cov_mat is None:
-    #         _tmp = self.nuisance_x_data_cor_cov_mat
-    #         # _tmp += self.nuisance_x_model_cor_cov_mat
-    #         self.__cache_nuisance_x_total_cor_cov_mat = _tmp
-    #     return self.__cache_nuisance_x_total_cor_cov_mat
+        try:
+            return invert_matrix(self.x_total_uncor_cov_mat)
+        except np.linalg.LinAlgError:
+            return None
 
     @property
     def y_error_band(self):
@@ -890,9 +784,8 @@ class XYFit(FitBase):
             raise XYFitException('Cannot calculate an error band without first performing a fit.')
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
-        if self.__cache_y_error_band is None:
-            self._calculate_y_error_band()
-        return self.__cache_y_error_band
+
+        return self._calculate_y_error_band()
 
     @property
     def x_range(self):
@@ -1026,8 +919,6 @@ class XYFit(FitBase):
             _convergence_limit = float(kc('fit', 'x_error_fit_convergence_limit'))
             _previous_cost_function_value = self.cost_function_value
             for i in range(kc('fit', 'max_x_error_fit_iterations')):
-                self._mark_errors_for_update()
-                self._invalidate_total_error_cache()
 
                 # explicitly update (frozen) projected matrix before each iteration
                 self._nexus.get('projected_xy_total_cov_mat').update()
