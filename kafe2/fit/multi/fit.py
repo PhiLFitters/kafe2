@@ -39,19 +39,10 @@ class MultiFit(FitBase):
             nexus=self._nexus, parameters_to_fit=_parameter_names, parameter_to_minimize=self._cost_function.name,
             minimizer=self._minimizer, minimizer_kwargs=self._minimizer_kwargs
         )
+        self._fit_param_constraints = []
         self._loaded_result_dict = None
 
-    def assign_parameter_latex_names(self, **par_latex_names_dict):
-        for _underlying_fit in self._underlying_fits:
-            _underlying_fit.assign_parameter_latex_names(**par_latex_names_dict)
-
-    def assign_model_function_expression(self, expression_format_string, fit_index):
-        self._underlying_fits[fit_index].assign_model_function_expression(
-            expression_format_string=expression_format_string)
-
-    def assign_model_function_latex_expression(self, latex_expression_format_string, fit_index):
-        self._underlying_fits[fit_index].assign_model_function_latex_expression(
-            latex_expression_format_string=latex_expression_format_string)
+    # -- private methods
 
     def _get_model_function_argument_formatters(self):
         _included_argument_names = set()
@@ -103,42 +94,152 @@ class MultiFit(FitBase):
         for _original_fitter, _underlying_fit in zip(original_fitters, self._underlying_fits):
             _underlying_fit._fitter = _original_fitter
 
+    # -- public properties
+
+    @property
+    def asymmetric_parameter_errors(self):
+        """the current asymmetric parameter uncertainties"""
+        if self._loaded_result_dict is not None and self._loaded_result_dict['asymmetric_parameter_errors'] is not None:
+            return self._loaded_result_dict['asymmetric_parameter_errors']
+        else:
+            _original_fitters = self._set_multifit_fitter_for_underlying_fits()
+            _asymmetric_parameter_errors = super(MultiFit, self).asymmetric_parameter_errors
+            self._restore_original_fitters_for_underlying_fits(_original_fitters)
+            return _asymmetric_parameter_errors
+
     @property
     def data(self):
-        pass
+        return [_underlying_fit.data for _underlying_fit in self._underlying_fits]
 
     @property
     def data_size(self):
+        """the size (number of points) of the data container"""
         return np.sum([_underlying_fit.data_size for _underlying_fit in self._underlying_fits])
 
     @property
+    def has_data_errors(self):
+        """``True`` if at least one uncertainty source is defined for the data"""
+        return np.any([_underlying_fit.has_data_errors for _underlying_fit in self._underlying_fits])
+
+    @property
+    def has_model_errors(self):
+        """``True`` if at least one uncertainty source is defined for the model"""
+        return np.any([_underlying_fit.has_model_errors for _underlying_fit in self._underlying_fits])
+
+    @property
     def model(self):
-        pass
+        return [_underlying_fit.model for _underlying_fit in self._underlying_fits]
+
+    @property
+    def model_count(self):
+        """the number of model functions contained in the fit, 1 by default"""
+        return np.sum([_underlying_fit.model_count for _underlying_fit in self._underlying_fits])
 
     @property
     def parameter_errors(self):
-        _original_fitters = self._set_multifit_fitter_for_underlying_fits()
-        _parameter_errors = super(MultiFit, self).parameter_errors
-        self._restore_original_fitters_for_underlying_fits(_original_fitters)
-        return _parameter_errors
+        """the current parameter uncertainties"""
+        if self._loaded_result_dict is not None and self._loaded_result_dict['parameter_errors'] is not None:
+            return self._loaded_result_dict['parameter_errors']
+        else:
+            _original_fitters = self._set_multifit_fitter_for_underlying_fits()
+            _parameter_errors = super(MultiFit, self).parameter_errors
+            self._restore_original_fitters_for_underlying_fits(_original_fitters)
+            return _parameter_errors
 
     @property
     def parameter_cor_mat(self):
-        _original_fitters = self._set_multifit_fitter_for_underlying_fits()
-        _parameter_cor_mat = super(MultiFit, self).parameter_cor_mat
-        self._restore_original_fitters_for_underlying_fits(_original_fitters)
-        return _parameter_cor_mat
+        """the current parameter correlation matrix"""
+        if self._loaded_result_dict is not None and self._loaded_result_dict['parameter_cor_mat'] is not None:
+            return self._loaded_result_dict['parameter_cor_mat']
+        else:
+            _original_fitters = self._set_multifit_fitter_for_underlying_fits()
+            _parameter_cor_mat = super(MultiFit, self).parameter_cor_mat
+            self._restore_original_fitters_for_underlying_fits(_original_fitters)
+            return _parameter_cor_mat
 
     @property
     def parameter_cov_mat(self):
-        _original_fitters = self._set_multifit_fitter_for_underlying_fits()
-        _parameter_cov_mat = super(MultiFit, self).parameter_cov_mat
-        self._restore_original_fitters_for_underlying_fits(_original_fitters)
-        return _parameter_cov_mat
+        """the current parameter covariance matrix"""
+        if self._loaded_result_dict is not None and self._loaded_result_dict['parameter_cov_mat'] is not None:
+            return self._loaded_result_dict['parameter_cov_mat']
+        else:
+            _original_fitters = self._set_multifit_fitter_for_underlying_fits()
+            _parameter_cov_mat = super(MultiFit, self).parameter_cov_mat
+            self._restore_original_fitters_for_underlying_fits(_original_fitters)
+            return _parameter_cov_mat
 
     @property
     def underlying_fits(self):
         return self._underlying_fits
+
+    # -- public methods
+
+    def add_matrix_error(self, err_matrix, matrix_type, fit_index=None,
+                         name=None, err_val=None, relative=False, reference='data', **kwargs):
+        if fit_index is None:
+            for _underlying_fit in self._underlying_fits:
+                _underlying_fit[fit_index].add_matrix_error(
+                    err_matrix=err_matrix, matrix_type=matrix_type, name=name, err_val=err_val, relative=relative,
+                    reference=reference, **kwargs
+                )
+        else:
+            self._underlying_fits[fit_index].add_matrix_error(
+                err_matrix=err_matrix, matrix_type=matrix_type, name=name, err_val=err_val, relative=relative,
+                reference=reference, **kwargs
+            )
+
+    def add_simple_error(self, err_val, fit_index=None, name=None, correlation=0, relative=False, reference='data',
+                         **kwargs):
+        if fit_index is None:
+            for _underlying_fit in self._underlying_fits:
+                _underlying_fit[fit_index].add_simple_error(
+                    err_val=err_val, name=name, correlation=correlation, relative=relative, reference=reference,
+                    **kwargs
+                )
+        else:
+            self._underlying_fits[fit_index].add_simple_error(
+                err_val=err_val, name=name, correlation=correlation, relative=relative, reference=reference,
+                **kwargs
+            )
+
+    def assign_model_function_expression(self, expression_format_string, fit_index=None):
+        if fit_index is None:
+            for _underlying_fit in self._underlying_fits:
+                _underlying_fit.assign_model_function_expression(expression_format_string=expression_format_string)
+        else:
+            self._underlying_fits[fit_index].assign_model_function_expression(
+                expression_format_string=expression_format_string)
+
+    def assign_model_function_latex_name(self, latex_name, fit_index=None):
+        if fit_index is None:
+            for _underlying_fit in self._underlying_fits:
+                _underlying_fit.assign_model_function_latex_name(latex_name=latex_name)
+        else:
+            self._underlying_fits[fit_index].assign_model_function_latex_name(latex_name=latex_name)
+
+    def assign_model_function_latex_expression(self, latex_expression_format_string, fit_index=None):
+        if fit_index is None:
+            for _underlying_fit in self._underlying_fits:
+                _underlying_fit.assign_model_function_latex_expression(
+                    latex_expression_format_string=latex_expression_format_string)
+        else:
+            self._underlying_fits[fit_index].assign_model_function_latex_expression(
+                latex_expression_format_string=latex_expression_format_string)
+
+    def assign_parameter_latex_names(self, **par_latex_names_dict):
+        for _underlying_fit in self._underlying_fits:
+            _underlying_fit.assign_parameter_latex_names(**par_latex_names_dict)
+
+    def disable_error(self, err_id):
+        """
+        Temporarily disable an uncertainty source so that it doesn't count towards calculating the
+        total uncertainty.
+
+        :param err_id: error id
+        :type err_id: int
+        """
+        for _underlying_fit in self._underlying_fits:
+            _underlying_fit.disable_error(err_id=err_id)
 
     def do_fit(self):
         """
@@ -152,6 +253,21 @@ class MultiFit(FitBase):
         self._restore_original_fitters_for_underlying_fits(_original_fitters)
         self._update_underlying_fits()
         self._loaded_result_dict = None
+
+    def get_matching_errors(self, fit_index=None, matching_criteria=None, matching_type='equal'):
+        if fit_index is None:
+            _combined_matching_errors = dict()
+            for _underlying_fit in self._underlying_fits:
+                _matching_errors = _underlying_fit.get_matching_errors(
+                    matching_criteria=matching_criteria, matching_type=matching_type)
+                for _key in _matching_errors:
+                    # FATAL: there is an error with the same name in separate fits
+                    assert _key not in _combined_matching_errors
+                    _combined_matching_errors[_key] = _matching_errors[_key]
+            return _combined_matching_errors
+        else:
+            return self._underlying_fits[fit_index].get_matching_errors(
+                matching_criteria=matching_criteria, matching_type=matching_type)
 
     def report(self, output_stream=sys.stdout, show_data=True, show_model=True, show_fit_results=True,
                asymmetric_parameter_errors=False):
