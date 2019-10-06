@@ -87,8 +87,8 @@ class MultiFit(FitBase):
             _underlying_fit._loaded_result_dict = dict(
                 did_fit=self.did_fit,
                 parameter_errors=self.parameter_errors[_parameter_indices],
-                parameter_cor_mat=self.parameter_cor_mat[_parameter_indices, _parameter_indices],
-                parameter_cov_mat=self.parameter_cov_mat[_parameter_indices, _parameter_indices]
+                parameter_cor_mat=self.parameter_cor_mat[_parameter_indices][:, _parameter_indices],
+                parameter_cov_mat=self.parameter_cov_mat[_parameter_indices][:, _parameter_indices]
             )
         self._update_parameter_formatters()
 
@@ -135,6 +135,10 @@ class MultiFit(FitBase):
         _parameter_cov_mat = super(MultiFit, self).parameter_cov_mat
         self._restore_original_fitters_for_underlying_fits(_original_fitters)
         return _parameter_cov_mat
+
+    @property
+    def underlying_fits(self):
+        return self._underlying_fits
 
     def do_fit(self):
         """

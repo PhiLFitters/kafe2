@@ -66,7 +66,7 @@ parameter constraints, which is demonstrated in the example called
 import numpy as np
 import matplotlib.pyplot as plt
 
-from kafe2 import XYFit, MultiFit
+from kafe2 import XYFit, MultiFit, MultiPlot
 
 
 # empirical model for T(U): a parabola
@@ -118,16 +118,14 @@ multi_fit.assign_model_function_latex_expression(r'{0}\,{x}^2 + {1}\,{x} + {2}',
 multi_fit.assign_model_function_expression('{x} / ({0} * (1 + ({2}*{x}^2 + {3}*{x} + {4}) * {1}))', fit_index=1)
 multi_fit.assign_model_function_latex_expression(r'\frac{{{x}}}{{{0} \cdot (1 + ({2}{x}^2 + {3}{x} + {4}) \cdot {1})}}', fit_index=1)
 
-print('pre fit:', multi_fit.parameter_values, multi_fit.cost_function_value)
 # Step 2: do the fit
 multi_fit.do_fit()
-print('post fit:', multi_fit.parameter_values, multi_fit.cost_function_value)
 
 # (Optional): print the results
 multi_fit.report()
 
 # (Optional): plot the results
-#plot = XYMultiPlot(fit, separate_plots=True)
-#plot.plot()
-#plot.show_fit_info_box(format_as_latex=True)
-#plt.show()
+plot = MultiPlot(multi_fit, separate_plots=True)
+plot.plot()
+plot.show_fit_info_box(format_as_latex=True)
+plt.show()
