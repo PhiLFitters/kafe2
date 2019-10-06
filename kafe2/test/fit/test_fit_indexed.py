@@ -1,5 +1,5 @@
 import abc
-import unittest
+import unittest2 as unittest
 import numpy as np
 import six
 
@@ -13,7 +13,7 @@ from kafe2.fit.indexed.fit import IndexedFitException
 from kafe2.fit.indexed.model import IndexedModelFunctionException, IndexedParametricModelException
 from kafe2.fit.indexed.cost import IndexedCostFunction_Chi2
 
-from .test_fit import AbstractTestFit
+from kafe2.test.fit.test_fit import AbstractTestFit
 
 
 def simple_chi2(data, model):
@@ -343,7 +343,7 @@ class TestIndexedFitWithSimpleErrors(AbstractTestFit, unittest.TestCase):
     MINIMIZER = 'scipy'
 
     def setUp(self):
-        TestIndexedFitBasicInterface.setUp(self)
+        six.get_unbound_function(TestIndexedFitBasicInterface.setUp)(self)
 
     def _get_fit(self, errors=None):
         '''convenience'''
@@ -457,7 +457,7 @@ class TestIndexedFitWithMatrixErrors(AbstractTestFit, unittest.TestCase):
     MINIMIZER = 'scipy'
 
     def setUp(self):
-        TestIndexedFitBasicInterface.setUp(self)
+        six.get_unbound_function(TestIndexedFitBasicInterface.setUp)(self)
 
     def _get_fit(self, errors=None):
         '''convenience'''

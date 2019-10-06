@@ -1,5 +1,5 @@
 import scipy.optimize as opt
-import unittest
+import unittest2 as unittest
 
 import numpy as np
 

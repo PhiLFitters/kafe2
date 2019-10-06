@@ -1,5 +1,5 @@
 import abc
-import unittest
+import unittest2 as unittest
 import numpy as np
 import six
 
@@ -15,7 +15,7 @@ from kafe2.fit.histogram.fit import HistFitException
 from kafe2.fit.histogram.model import HistModelFunctionException, HistParametricModelException
 from kafe2.fit.histogram.cost import HistCostFunction_Chi2, HistCostFunction_NegLogLikelihood
 
-from .test_fit import AbstractTestFit
+from kafe2.test.fit.test_fit import AbstractTestFit
 
 
 def simple_chi2(data, model):

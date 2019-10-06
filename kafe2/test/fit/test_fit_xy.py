@@ -1,5 +1,5 @@
 import abc
-import unittest
+import unittest2 as unittest
 import numpy as np
 import six
 
@@ -13,7 +13,7 @@ from kafe2.fit.xy.fit import XYFitException
 from kafe2.fit.xy.model import XYModelFunctionException, XYParametricModelException
 from kafe2.fit.xy.cost import XYCostFunction_Chi2
 
-from .test_fit import AbstractTestFit
+from kafe2.test.fit.test_fit import AbstractTestFit
 
 
 def simple_chi2(y_data, y_model):
@@ -523,7 +523,7 @@ class TestXYFitWithSimpleYErrors(AbstractTestFit, unittest.TestCase):
     MINIMIZER = 'scipy'
 
     def setUp(self):
-        TestXYFitBasicInterface.setUp(self)
+        six.get_unbound_function(TestXYFitBasicInterface.setUp)(self)
 
     def _get_fit(self, errors=None):
         '''convenience'''
@@ -641,7 +641,7 @@ class TestXYFitWithMatrixErrors(AbstractTestFit, unittest.TestCase):
     MINIMIZER = 'scipy'
 
     def setUp(self):
-        TestXYFitBasicInterface.setUp(self)
+        six.get_unbound_function(TestXYFitBasicInterface.setUp)(self)
 
     def _get_fit(self, errors=None):
         '''convenience'''

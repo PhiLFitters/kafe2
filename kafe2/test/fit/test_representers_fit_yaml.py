@@ -1,4 +1,4 @@
-import unittest
+import unittest2 as unittest
 import numpy as np
 from scipy.stats import norm
 from six import StringIO

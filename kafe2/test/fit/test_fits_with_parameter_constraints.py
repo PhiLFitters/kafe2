@@ -1,4 +1,4 @@
-import unittest
+import unittest2 as unittest
 import numpy as np
 
 from kafe2.fit import HistContainer, HistFit, IndexedContainer, IndexedFit, XYContainer, XYFit, XYMultiContainer, XYMultiFit

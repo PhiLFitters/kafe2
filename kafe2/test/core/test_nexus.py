@@ -1,4 +1,4 @@
-import unittest
+import unittest2 as unittest
 
 from kafe2.core.fitters import Nexus
 from kafe2.core.fitters.nexus import NodeException, NexusException, NODE_VALUE_DEFAULT

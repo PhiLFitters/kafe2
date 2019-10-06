@@ -1,5 +1,5 @@
 import numpy as np
-import unittest
+import unittest2 as unittest
 from scipy.special import factorial
 
 from kafe2.core.constraint import GaussianSimpleParameterConstraint, GaussianMatrixParameterConstraint

@@ -1,5 +1,5 @@
 import abc
-import unittest
+import unittest2 as unittest
 import numpy as np
 import six
 
@@ -15,7 +15,7 @@ from kafe2.fit.unbinned.fit import UnbinnedFitException
 from kafe2.fit.unbinned.model import UnbinnedModelPDFException, UnbinnedParametricModelException
 from kafe2.fit.unbinned.cost import UnbinnedCostFunction_NegLogLikelihood
 
-from .test_fit import AbstractTestFit
+from kafe2.test.fit.test_fit import AbstractTestFit
 
 
 

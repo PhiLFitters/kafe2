@@ -1,4 +1,4 @@
-import unittest
+import unittest2 as unittest
 from scipy import optimize as opt
 
 import numpy as np

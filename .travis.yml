@@ -48,6 +48,7 @@ before_install:
   - pip install --upgrade iminuit
   - pip install --upgrade numdifftools
   - pip install --upgrade PyYAML
+  - pip install --upgrade unittest2
 
   # output python version to log
   - python --version
@@ -58,4 +59,4 @@ install:
 
 script:
   # run unittests
-  - python -m unittest discover kafe2/test -p "*.py"
+  - python -m unittest discover kafe2.test

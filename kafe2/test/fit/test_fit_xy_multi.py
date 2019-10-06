@@ -1,5 +1,5 @@
 import abc
-import unittest
+import unittest2 as unittest
 import numpy as np
 import six
 
@@ -14,8 +14,8 @@ from kafe2.fit.xy_multi.model import XYMultiModelFunctionException
 from kafe2.fit.xy.model import XYModelFunctionException
 from kafe2.fit.xy_multi.cost import XYMultiCostFunction_Chi2
 
-from .test_fit import AbstractTestFit
-from .test_fit_xy import (TestXYFitBasicInterface, simple_chi2,
+from kafe2.test.fit.test_fit import AbstractTestFit
+from kafe2.test.fit.test_fit_xy import (TestXYFitBasicInterface, simple_chi2,
     simple_chi2_explicit_model_name,
     analytic_solution)
 
@@ -33,7 +33,7 @@ class TestXYMultiFitBasicInterface(AbstractTestFit, unittest.TestCase):
     MINIMIZER = 'scipy'
 
     def setUp(self):
-        TestXYFitBasicInterface.setUp(self)   # reuse simple XY test
+        six.get_unbound_function(TestXYFitBasicInterface.setUp)(self)   # reuse simple XY test
 
         # "jitter" for data smearing
         self._y_jitter_2 = np.array([ 0.49671415, -0.1382643,   0.64768854,  1.52302986,
