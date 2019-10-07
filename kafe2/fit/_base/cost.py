@@ -333,19 +333,23 @@ class CostFunctionBase_Chi2(CostFunctionBase):
 
     @staticmethod
     def chi2_no_errors(data, model, parameter_values, parameter_constraints):
-        r"""A least-squares cost function calculated from 'y' data and model values,
+        r"""A least-squares cost function calculated from `y` data and model values,
         without considering uncertainties:
 
         .. math::
             C = \chi^2({\bf d}, {\bf m}) = ({\bf d} - {\bf m})\cdot({\bf d} - {\bf m})
+                +
+                C({\bf p})
 
-        In the above, :math:`{\bf d}` are the measurements and :math:`{\bf m}` are the model
-        predictions.
+        In the above, :math:`{\bf d}` are the measurements,
+        :math:`{\bf m}` are the model predictions,
+        and :math:`C({\bf p})` is the additional cost resulting from any constrained parameters.
 
-        :param data: measurement data
-        :param model: model values
-        :param parameter_values: fit parameter values
-        :param parameter_constraints: fit parameter constraints
+        :param data: measurement data :math:`{\bf d}`
+        :param model: model predictions :math:`{\bf m}`
+        :param parameter_values: vector of parameters :math:`{\bf p}`
+        :param parameter_constraints: list of fit parameter constraints
+
         :return: cost function value
         """
         return _generic_chi2(data=data, model=model, cov_mat_inverse=None, fail_on_no_matrix=False,
@@ -353,20 +357,25 @@ class CostFunctionBase_Chi2(CostFunctionBase):
 
     @staticmethod
     def chi2_covariance(data, model, total_cov_mat_inverse, parameter_values, parameter_constraints):
-        r"""A least-squares cost function calculated from 'y' data and model values,
-        considering the covariance matrix of the 'y' measurements.
+        r"""A least-squares cost function calculated from `y` data and model values,
+        considering the covariance matrix of the `y` measurements.
 
         .. math::
             C = \chi^2({\bf d}, {\bf m}) = ({\bf d} - {\bf m})^{\top}\,{{\bf V}^{-1}}\,({\bf d} - {\bf m})
+                +
+                C({\bf p})
 
-        In the above, :math:`{\bf d}` are the measurements, :math:`{\bf m}` are the model
-        predictions, and :math:`{{\bf V}^{-1}}` is the inverse of the total covariance matrix.
+        In the above, :math:`{\bf d}` are the measurements,
+        :math:`{\bf m}` are the model predictions,
+        :math:`{{\bf V}^{-1}}` is the inverse of the total covariance matrix,
+        and :math:`C({\bf p})` is the additional cost resulting from any constrained parameters.
 
-        :param data: measurement data
-        :param model: model values
-        :param total_cov_mat_inverse: inverse of the total covariance matrix
-        :param parameter_values: fit parameter values
-        :param parameter_constraints: fit parameter constraints
+        :param data: measurement data :math:`{\bf d}`
+        :param model: model predictions :math:`{\bf m}`
+        :param total_cov_mat_inverse: inverse of the total covariance matrix :math:`{\bf V}^{-1}`
+        :param parameter_values: vector of parameters :math:`{\bf p}`
+        :param parameter_constraints: list of fit parameter constraints
+
         :return: cost function value
         """
         return _generic_chi2(data=data, model=model, cov_mat_inverse=total_cov_mat_inverse, fail_on_no_matrix=True,
@@ -374,19 +383,26 @@ class CostFunctionBase_Chi2(CostFunctionBase):
 
     @staticmethod
     def chi2_pointwise_errors(data, model, total_error, parameter_values, parameter_constraints):
-        r"""A least-squares cost function calculated from 'y' data and model values,
+        r"""A least-squares cost function calculated from `y` data and model values,
         considering pointwise (uncorrelated) uncertainties for each data point:
 
         .. math::
             C = \chi^2({\bf d}, {\bf m}, {\bf \sigma}) = \sum_k \frac{d_k - m_k}{\sigma_k}
+                +
+                C({\bf p})
 
-        In the above, :math:`{\bf d}` are the measurements, :math:`{\bf m}` are the model
-        predictions, and :math:`{\bf \sigma}` are the pointwise total uncertainties.
+        In the above, :math:`{\bf d}` are the measurements,
+        :math:`{\bf m}` are the model predictions,
+        :math:`{\bf \sigma}` are the pointwise total uncertainties,
+        and :math:`C({\bf p})` is the additional cost resulting from any constrained parameters.
 
-        :param y_data: measurement data
-        :param y_model: model values
-        :param y_total_error: total measurement uncertainties
-        :return:
+        :param data: measurement data :math:`{\bf d}`
+        :param model: model predictions :math:`{\bf m}`
+        :param total_error: total error vector :math:`{\bf \sigma}`
+        :param parameter_values: vector of parameters :math:`{\bf p}`
+        :param parameter_constraints: list of fit parameter constraints
+
+        :return: cost function value
         """
         return _generic_chi2(data=data, model=model, cov_mat_inverse=None, err=total_error, fail_on_zero_errors=True,
                              parameter_values=parameter_values, parameter_constraints=parameter_constraints)
@@ -447,18 +463,25 @@ class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
 
         .. math::
             C = -2 \ln \mathcal{L}({\bf d}, {\bf m}, {\bf \sigma}) = -2 \ln \prod_j \mathcal{L}_{\rm Gaussian} (x=d_j, \mu=m_j, \sigma=\sigma_j)
+                +
+                C({\bf p})
 
         .. math::
             \rightarrow C = -2 \ln \prod_j \frac{1}{\sqrt{2{\sigma_j}^2\pi}} \exp{\left(-\frac{ (d_j-m_j)^2 }{ {\sigma_j}^2}\right)}
+                            +
+                            C({\bf p})
 
-        In the above, :math:`{\bf d}` are the measurements, :math:`{\bf m}` are the model predictions, and :math:`{\bf \sigma}`
-        are the pointwise total uncertainties.
+        In the above, :math:`{\bf d}` are the measurements,
+        :math:`{\bf m}` are the model predictions,
+        :math:`{\bf \sigma}` are the pointwise total uncertainties,
+        and :math:`C({\bf p})` is the additional cost resulting from any constrained parameters.
 
-        :param data: measurement data
-        :param model: model values
-        :param total_error: total *y* uncertainties for data
-        :param parameter_values: fit parameter values
-        :param parameter_constraints: fit parameter constraints
+        :param data: measurement data :math:`{\bf d}`
+        :param model: model predictions :math:`{\bf m}`
+        :param total_error: total error vector :math:`{\bf \sigma}`
+        :param parameter_values: vector of parameters :math:`{\bf p}`
+        :param parameter_constraints: list of fit parameter constraints
+
         :return: cost function value
         """
         _par_cost = 0.0
@@ -480,17 +503,23 @@ class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
 
         .. math::
             C = -2 \ln \mathcal{L}({\bf d}, {\bf m}) = -2 \ln \prod_j \mathcal{L}_{\rm Poisson} (k=d_j, \lambda=m_j)
+                +
+                C({\bf p})
 
         .. math::
             \rightarrow C = -2 \ln \prod_j \frac{{m_j}^{d_j} \exp(-m_j)}{d_j!}
+                            +
+                            C({\bf p})
 
-        In the above, :math:`{\bf d}` are the measurements and :math:`{\bf m}` are the model
-        predictions.
+        In the above, :math:`{\bf d}` are the measurements,
+        :math:`{\bf m}` are the model predictions,
+        and :math:`C({\bf p})` is the additional cost resulting from any constrained parameters.
 
-        :param data: measurement data
-        :param model: model values
-        :param parameter_values: fit parameter values
-        :param parameter_constraints: fit parameter constraints
+        :param data: measurement data :math:`{\bf d}`
+        :param model: model predictions :math:`{\bf m}`
+        :param parameter_values: vector of parameters :math:`{\bf p}`
+        :param parameter_constraints: list of fit parameter constraints
+
         :return: cost function value
         """
         _par_cost = 0.0
@@ -522,7 +551,7 @@ class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
         r"""
         Base class for built-in negative log-likelihood ratio cost function.
 
-        .. WARN:: This cost function has not yet been properly tested and should not
+        .. warning:: This cost function has not yet been properly tested and should not
                   be used yet!
 
         In addition to the measurement data and model predictions, likelihood-fits require a
@@ -566,18 +595,25 @@ class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
 
         .. math::
             C = -2 \ln \mathcal{L}({\bf d}, {\bf m}, {\bf \sigma}) = -2 \ln \prod_j \mathcal{L}_{\rm Gaussian} (x=d_j, \mu=m_j, \sigma=\sigma_j)
+                +
+                C({\bf p})
 
         .. math::
             \rightarrow C = -2 \ln \prod_j \frac{1}{\sqrt{2{\sigma_j}^2\pi}} \exp{\left(-\frac{ (d_j-m_j)^2 }{ {\sigma_j}^2}\right)}
+                            +
+                            C({\bf p})
 
-        In the above, :math:`{\bf d}` are the measurements, :math:`{\bf m}` are the model predictions, and :math:`{\bf \sigma}`
-        are the pointwise total uncertainties.
+        In the above, :math:`{\bf d}` are the measurements,
+        :math:`{\bf m}` are the model predictions,
+        :math:`{\bf \sigma}` are the pointwise total uncertainties,
+        and :math:`C({\bf p})` is the additional cost resulting from any constrained parameters.
 
-        :param data: measurement data
-        :param model: model values
-        :param total_error: total *y* uncertainties for data
-        :param parameter_values: fit parameter constraints
-        :param parameter_constraints: fit parameter constraints
+        :param data: measurement data :math:`{\bf d}`
+        :param model: model predictions :math:`{\bf m}`
+        :param total_error: total error vector :math:`{\bf \sigma}`
+        :param parameter_values: vector of parameters :math:`{\bf p}`
+        :param parameter_constraints: list of fit parameter constraints
+
         :return: cost function value
         """
         _par_cost = 0.0
@@ -600,17 +636,23 @@ class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
 
         .. math::
             C = -2 \ln \mathcal{L}({\bf d}, {\bf m}) = -2 \ln \prod_j \mathcal{L}_{\rm Poisson} (k=d_j, \lambda=m_j)
+                +
+                C({\bf p})
 
         .. math::
             \rightarrow C = -2 \ln \prod_j \frac{{m_j}^{d_j} \exp(-m_j)}{d_j!}
+                            +
+                            C({\bf p})
 
-        In the above, :math:`{\bf d}` are the measurements and :math:`{\bf m}` are the model
-        predictions.
+        In the above, :math:`{\bf d}` are the measurements,
+        :math:`{\bf m}` are the model predictions,
+        and :math:`C({\bf p})` is the additional cost resulting from any constrained parameters.
 
-        :param data: measurement data
-        :param model: model values
-        :param parameter_values: fit parameter values
-        :param parameter_constraints: fit parameter constraints
+        :param data: measurement data :math:`{\bf d}`
+        :param model: model predictions :math:`{\bf m}`
+        :param parameter_values: vector of parameters :math:`{\bf p}`
+        :param parameter_constraints: list of fit parameter constraints
+
         :return: cost function value
         """
         _par_cost = 0.0
@@ -682,21 +724,30 @@ class CostFunctionBase_Chi2_Nuisance(CostFunctionBase_Chi2):
 
         The cost function is given by:
 
-                C = \chi^2({\bf d}, {\bf m} = ({\bf yd} - {\bf m})*{\bf cor_cov} * {\bf nui}) {\bf uncor_cov_inverse} *
-                ({\bf d} - {\bf m})*{\bf cor_cov}{\bf nui}) +  {\bf nui}^2
+        .. math::
+            C = \chi^2 =
+                ({\bf d} - {\bf m} - {\bf G}{\bf b})^{\top}
+                ({\bf V}^{\mathrm{uncor}})^{-1}
+                ({\bf d} - {\bf m} - {\bf G}{\bf b})
+                +
+                {\bf b}^2
+                +
+                C({\bf p})
 
-             In the above, :math:`{\bf d}` are the measurements and :math:`{\bf m}` are the model
-             predictions, :math:{\bf cor_cov} is the total nuisance correlated covariance matrix and
-             :math:{\bf uncor_cov}} is the inverse of the total uncorrelated  covariance matrix
-             :math:{\bf nui} is the  Nuisance-vector
+        In the above, :math:`{\bf d}` are the measurements,
+        :math:`{\bf m}` are the model predictions,
+        :math:{\bf cor_cov} is the total nuisance correlated covariance matrix,
+        :math:{\bf uncor_cov}} is the inverse of the total uncorrelated covariance matrix,
+        :math:{\bf nui} is the Nuisance-vector,
+        and :math:`C({\bf p})` is the additional cost resulting from any constrained parameters.
 
-        :param data: measurement data
-        :param model: model values
-        :param total_uncor_cov_mat_inverse: inverse of the uncorrelated part of the total covariance matrix
-        :param total_nuisance_cor_design_mat: matrix containing the correlated parts of each uncertainty source for each data point
-        :param nuisance_vector: vector containing nuisance parameters
-        :param parameter_values: fit parameter values
-        :param parameter_constraints: fit parameter constraints
+        :param data: measurement data :math:`{\bf d}`
+        :param model: model predictions :math:`{\bf m}`
+        :param total_uncor_cov_mat_inverse: inverse :math:`({\bf V}^{\mathrm{uncor}})^{-1}` of the uncorrelated part of the total covariance matrix
+        :param total_nuisance_cor_design_mat: design matrix :math:`{\bf G}` containing correlated uncertainties
+        :param nuisance_vector: nuisance parameter vector :math:`{\bf b}`
+        :param parameter_values: vector of parameters :math:`{\bf p}`
+        :param parameter_constraints: list of fit parameter constraints
         :return: cost function value
         """
         return _generic_chi2_nuisance(
@@ -713,21 +764,31 @@ class CostFunctionBase_Chi2_Nuisance(CostFunctionBase_Chi2):
 
         The cost function is given by:
 
-                C = \chi^2({\bf d}, {\bf m} = ({\bf yd} - {\bf m})*{\bf cor_cov} * {\bf nui}) {\bf uncor_cov_inverse} *
-                ({\bf d} - {\bf m})*{\bf cor_cov}{\bf nui}) +  {\bf nui}^2
+        .. math::
+            C = \chi^2 =
+                ({\bf d} - {\bf m} - {\bf G}{\bf b})^{\top}
+                ({\bf V}^{\mathrm{uncor}})^{-1}
+                ({\bf d} - {\bf m} - {\bf G}{\bf b})
+                +
+                {\bf b}^2
+                +
+                C({\bf p})
 
-             In the above, :math:`{\bf d}` are the measurements and :math:`{\bf m}` are the model
-             predictions, :math:{\bf cor_cov} is the total nuisance correlated covariance matrix and
-             :math:{\bf uncor_cov}} is the inverse of the total uncorrelated  covariance matrix
-             :math:{\bf nui} is the  Nuisance-vector
+        In the above, :math:`{\bf d}` are the measurements,
+        :math:`{\bf m}` are the model predictions,
+        :math:{\bf cor_cov} is the total nuisance correlated covariance matrix,
+        :math:{\bf uncor_cov}} is the inverse of the total uncorrelated covariance matrix,
+        :math:{\bf nui} is the Nuisance-vector,
+        and :math:`C({\bf p})` is the additional cost resulting from any constrained parameters.
 
-        :param data: measurement data
-        :param model: model values
-        :param total_uncor_cov_mat_inverse: inverse of the uncorrelated part of the total covariance matrix
-        :param total_nuisance_cor_design_mat: matrix containing the correlated parts of each uncertainty source for each data point
-        :param nuisance_vector: vector containing nuisance parameters
-        :param parameter_values: fit parameter values
-        :param parameter_constraints: fit parameter constraints
+        :param data: measurement data :math:`{\bf d}`
+        :param model: model predictions :math:`{\bf m}`
+        :param total_uncor_cov_mat_inverse: inverse :math:`({\bf V}^{\mathrm{uncor}})^{-1}` of the uncorrelated part of the total covariance matrix
+        :param total_nuisance_cor_design_mat: design matrix :math:`{\bf G}` containing correlated uncertainties
+        :param nuisance_vector: nuisance parameter vector :math:`{\bf b}`
+        :param parameter_values: vector of parameters :math:`{\bf p}`
+        :param parameter_constraints: list of fit parameter constraints
+
         :return: cost function value
         """
         return _generic_chi2_nuisance(
@@ -742,15 +803,20 @@ class CostFunctionBase_Chi2_Nuisance(CostFunctionBase_Chi2):
 
         .. math::
             C = \chi^2({\bf d}, {\bf m}, {\bf \sigma}) = \sum_k \frac{d_k - m_k}{\sigma_k}
+                +
+                C({\bf p})
 
-        In the above, :math:`{\bf d}` are the measurements, :math:`{\bf m}` are the model
-        predictions, and :math:`{\bf \sigma}` are the pointwise total uncertainties.
+        In the above, :math:`{\bf d}` are the measurements,
+        :math:`{\bf m}` are the model predictions,
+        :math:`{\bf \sigma}` are the pointwise total uncertainties,
+        and :math:`C({\bf p})` is the additional cost resulting from any constrained parameters.
 
-        :param data: measurement data
-        :param model: model values
-        :param total_error: array of total errors
-        :param parameter_values: fit parameter values
-        :param parameter_constraints: fit parameter constraints
+        :param data: measurement data :math:`{\bf d}`
+        :param model: model predictions :math:`{\bf m}`
+        :param total_error: total error vector :math:`{\bf \sigma}`
+        :param parameter_values: vector of parameters :math:`{\bf p}`
+        :param parameter_constraints: list of fit parameter constraints
+
         :return cost function value
         """
         return CostFunctionBase_Chi2.chi2_pointwise_errors(
@@ -766,15 +832,20 @@ class CostFunctionBase_Chi2_Nuisance(CostFunctionBase_Chi2):
 
         .. math::
             C = \chi^2({\bf d}, {\bf m}, {\bf \sigma}) = \sum_k \frac{d_k - m_k}{\sigma_k}
+                +
+                C({\bf p})
 
-        In the above, :math:`{\bf d}` are the measurements, :math:`{\bf m}` are the model
-        predictions, and :math:`{\bf \sigma}` are the pointwise total uncertainties.
+        In the above, :math:`{\bf d}` are the measurements,
+        :math:`{\bf m}` are the model predictions,
+        :math:`{\bf \sigma}` are the pointwise total uncertainties,
+        and :math:`C({\bf p})` is the additional cost resulting from any constrained parameters.
 
-        :param data: measurement data
-        :param model: model values
-        :param total_error: array of total errors
-        :param parameter_values: fit parameter values
-        :param parameter_constraints: fit parameter constraints
+        :param data: measurement data :math:`{\bf d}`
+        :param model: model predictions :math:`{\bf m}`
+        :param total_error: total error vector :math:`{\bf \sigma}`
+        :param parameter_values: vector of parameters :math:`{\bf p}`
+        :param parameter_constraints: list of fit parameter constraints
+
         :return cost function value
         """
         return CostFunctionBase_Chi2.chi2_pointwise_errors_fallback(

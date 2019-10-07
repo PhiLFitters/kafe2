@@ -63,7 +63,7 @@ class IndexedCostFunction_NegLogLikelihoodRatio(CostFunctionBase_NegLogLikelihoo
         r"""
         Built-in negative log-likelihood cost function for *indexed* data.
 
-        .. WARN:: This cost function has not yet been properly tested and should not
+        .. warning:: This cost function has not yet been properly tested and should not
                   be used yet!
 
         In addition to the measurement data and model predictions, likelihood-fits require a

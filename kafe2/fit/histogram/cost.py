@@ -36,19 +36,23 @@ class HistCostFunction_Chi2(CostFunctionBase_Chi2):
 
     @staticmethod
     def chi2_no_errors(data, model, parameter_values, parameter_constraints):
-        r"""A least-squares cost function calculated from 'y' data and model values,
+        r"""A least-squares cost function calculated from `y` data and model values,
         without considering uncertainties:
 
         .. math::
             C = \chi^2({\bf d}, {\bf m}) = ({\bf d} - {\bf m})\cdot({\bf d} - {\bf m})
+                +
+                C({\bf p})
 
         In the above, :math:`{\bf d}` are the measurements and :math:`{\bf m}` are the model
-        predictions.
+        predictions,
+        and :math:`C({\bf p})` is the additional cost resulting from any constrained parameters.
 
-        :param data: measurement data
-        :param model: model values
-        :param parameter_values: fit parameter values
-        :param parameter_constraints: fit parameter constraints
+        :param data: measurement data :math:`{\bf d}`
+        :param model: model predictions :math:`{\bf m}`
+        :param parameter_values: vector of parameters :math:`{\bf p}`
+        :param parameter_constraints: list of fit parameter constraints
+
         :return: cost function value
         """
         return CostFunctionBase_Chi2.chi2_no_errors(data=data, model=model, parameter_values=parameter_values,
@@ -56,20 +60,24 @@ class HistCostFunction_Chi2(CostFunctionBase_Chi2):
 
     @staticmethod
     def chi2_covariance(data, model, total_cov_mat_inverse, parameter_values, parameter_constraints):
-        r"""A least-squares cost function calculated from 'y' data and model values,
-        considering the covariance matrix of the 'y' measurements.
+        r"""A least-squares cost function calculated from `y` data and model values,
+        considering the covariance matrix of the `y` measurements.
 
         .. math::
             C = \chi^2({\bf d}, {\bf m}) = ({\bf d} - {\bf m})^{\top}\,{{\bf V}^{-1}}\,({\bf d} - {\bf m})
+                +
+                C({\bf p})
 
         In the above, :math:`{\bf d}` are the measurements, :math:`{\bf m}` are the model
-        predictions, and :math:`{{\bf V}^{-1}}` is the inverse of the total covariance matrix.
+        predictions, and :math:`{{\bf V}^{-1}}` is the inverse of the total covariance matrix,
+        and :math:`C({\bf p})` is the additional cost resulting from any constrained parameters.
 
-        :param data: measurement data
-        :param model: model values
-        :param total_cov_mat_inverse: inverse of the total covariance matrix
-        :param parameter_values: fit parameter values
-        :param parameter_constraints: fit parameter constraints
+        :param data: measurement data :math:`{\bf d}`
+        :param model: model predictions :math:`{\bf m}`
+        :param total_cov_mat_inverse: inverse of the total covariance matrix :math:`{\bf V}^{-1}`
+        :param parameter_values: vector of parameters :math:`{\bf p}`
+        :param parameter_constraints: list of fit parameter constraints
+
         :return: cost function value
         """
         return CostFunctionBase_Chi2.chi2_covariance(data=data, model=model,
@@ -79,20 +87,25 @@ class HistCostFunction_Chi2(CostFunctionBase_Chi2):
 
     @staticmethod
     def chi2_pointwise_errors(data, model, total_error, parameter_values, parameter_constraints):
-        r"""A least-squares cost function calculated from 'y' data and model values,
+        r"""A least-squares cost function calculated from `y` data and model values,
         considering pointwise (uncorrelated) uncertainties for each data point:
 
         .. math::
-            C = \chi^2({\bf d}, {\bf m}, {\bf \sigma}) = \sum_k \frac{d_k - m_k}{\sigma_k}
+            C = \chi^2({\bf d}, {\bf m}, {\bf \sigma}) = \sum_k \left(\frac{d_k - m_k}{\sigma_k}\right)^2
+                +
+                C({\bf p})
 
-        In the above, :math:`{\bf d}` are the measurements, :math:`{\bf m}` are the model
-        predictions, and :math:`{\bf \sigma}` are the pointwise total uncertainties.
+        In the above, :math:`{\bf d}` are the measurements,
+        :math:`{\bf m}` are the model predictions,
+        :math:`{\bf \sigma}` are the pointwise total uncertainties,
+        and :math:`C({\bf p})` is the additional cost resulting from any constrained parameters.
 
-        :param data: measurement data
-        :param model: model values
-        :param total_error: total measurement uncertainties
-        :param parameter_values: fit parameter values
-        :param parameter_constraints: fit parameter constraints
+        :param data: measurement data :math:`{\bf d}`
+        :param model: model predictions :math:`{\bf m}`
+        :param total_error: total error vector :math:`{\bf \sigma}`
+        :param parameter_values: vector of parameters :math:`{\bf p}`
+        :param parameter_constraints: list of fit parameter constraints
+
         :return: cost function value
         """
         return CostFunctionBase_Chi2.chi2_pointwise_errors(data=data, model=model, total_error=total_error,
@@ -127,18 +140,25 @@ class HistCostFunction_NegLogLikelihood(CostFunctionBase_NegLogLikelihood):
 
         .. math::
             C = -2 \ln \mathcal{L}({\bf d}, {\bf m}, {\bf \sigma}) = -2 \ln \prod_j \mathcal{L}_{\rm Gaussian} (x=d_j, \mu=m_j, \sigma=\sigma_j)
+                +
+                C({\bf p})
 
         .. math::
             \rightarrow C = -2 \ln \prod_j \frac{1}{\sqrt{2{\sigma_j}^2\pi}} \exp{\left(-\frac{ (d_j-m_j)^2 }{ {\sigma_j}^2}\right)}
+                            +
+                            C({\bf p})
 
-        In the above, :math:`{\bf d}` are the measurements, :math:`{\bf m}` are the model predictions, and :math:`{\bf \sigma}`
-        are the pointwise total uncertainties.
+        In the above, :math:`{\bf d}` are the measurements,
+        :math:`{\bf m}` are the model predictions,
+        :math:`{\bf \sigma}` are the pointwise total uncertainties,
+        and :math:`C({\bf p})` is the additional cost resulting from any constrained parameters.
 
-        :param data: measurement data
-        :param model: model values
-        :param total_error: total *y* uncertainties for data
-        :param parameter_values: fit parameter values
-        :param parameter_constraints: fit parameter constraints
+        :param data: measurement data :math:`{\bf d}`
+        :param model: model predictions :math:`{\bf m}`
+        :param total_error: total error vector :math:`{\bf \sigma}`
+        :param parameter_values: vector of parameters :math:`{\bf p}`
+        :param parameter_constraints: list of fit parameter constraints
+
         :return: cost function value
         """
         # "translate" the argument names
@@ -154,17 +174,23 @@ class HistCostFunction_NegLogLikelihood(CostFunctionBase_NegLogLikelihood):
 
         .. math::
             C = -2 \ln \mathcal{L}({\bf d}, {\bf m}) = -2 \ln \prod_j \mathcal{L}_{\rm Poisson} (k=d_j, \lambda=m_j)
+                +
+                C({\bf p})
 
         .. math::
             \rightarrow C = -2 \ln \prod_j \frac{{m_j}^{d_j} \exp(-m_j)}{d_j!}
+                            +
+                            C({\bf p})
 
-        In the above, :math:`{\bf d}` are the measurements and :math:`{\bf m}` are the model
-        predictions.
+        In the above, :math:`{\bf d}` are the measurements,
+        :math:`{\bf m}` are the model predictions,
+        and :math:`C({\bf p})` is the additional cost resulting from any constrained parameters.
 
-        :param data: measurement data
-        :param model: model values
-        :param parameter_values: fit parameter values
-        :param parameter_constraints: fit parameter constraints
+        :param data: measurement data :math:`{\bf d}`
+        :param model: model predictions :math:`{\bf m}`
+        :param parameter_values: vector of parameters :math:`{\bf p}`
+        :param parameter_constraints: list of fit parameter constraints
+
         :return: cost function value
         """
         # "translate" the argument names
@@ -178,7 +204,7 @@ class HistCostFunction_NegLogLikelihoodRatio(CostFunctionBase_NegLogLikelihoodRa
         r"""
         Built-in negative log-likelihood ratio cost function for histograms.
 
-        .. WARN:: This cost function has not yet been properly tested and should not
+        .. warning:: This cost function has not yet been properly tested and should not
                   be used yet!
 
         In addition to the measurement data and model predictions, likelihood-fits require a
@@ -205,18 +231,25 @@ class HistCostFunction_NegLogLikelihoodRatio(CostFunctionBase_NegLogLikelihoodRa
 
         .. math::
             C = -2 \ln \mathcal{L}({\bf d}, {\bf m}, {\bf \sigma}) = -2 \ln \prod_j \mathcal{L}_{\rm Gaussian} (x=d_j, \mu=m_j, \sigma=\sigma_j)
+                +
+                C({\bf p})
 
         .. math::
             \rightarrow C = -2 \ln \prod_j \frac{1}{\sqrt{2{\sigma_j}^2\pi}} \exp{\left(-\frac{ (d_j-m_j)^2 }{ {\sigma_j}^2}\right)}
+                            +
+                            C({\bf p})
 
-        In the above, :math:`{\bf d}` are the measurements, :math:`{\bf m}` are the model predictions, and :math:`{\bf \sigma}`
-        are the pointwise total uncertainties.
+        In the above, :math:`{\bf d}` are the measurements,
+        :math:`{\bf m}` are the model predictions,
+        :math:`{\bf \sigma}` are the pointwise total uncertainties,
+        and :math:`C({\bf p})` is the additional cost resulting from any constrained parameters.
 
-        :param data: measurement data
-        :param model: model values
+        :param data: measurement data :math:`{\bf d}`
+        :param model: model predictions :math:`{\bf m}`
         :param total_error: total *y* uncertainties for data
-        :param parameter_values: fit parameter values
-        :param parameter_constraints: fit parameter constraints
+        :param parameter_values: vector of parameters :math:`{\bf p}`
+        :param parameter_constraints: list of fit parameter constraints
+
         :return: cost function value
         """
         # "translate" the argument names
@@ -232,15 +265,23 @@ class HistCostFunction_NegLogLikelihoodRatio(CostFunctionBase_NegLogLikelihoodRa
 
         .. math::
             C = -2 \ln \mathcal{L}({\bf d}, {\bf m}) = -2 \ln \prod_j \mathcal{L}_{\rm Poisson} (k=d_j, \lambda=m_j)
+                +
+                C({\bf p})
 
         .. math::
             \rightarrow C = -2 \ln \prod_j \frac{{m_j}^{d_j} \exp(-m_j)}{d_j!}
+                            +
+                            C({\bf p})
 
-        In the above, :math:`{\bf d}` are the measurements and :math:`{\bf m}` are the model
-        predictions.
+        In the above, :math:`{\bf d}` are the measurements,
+        :math:`{\bf m}` are the model predictions,
+        and :math:`C({\bf p})` is the additional cost resulting from any constrained parameters.
 
-        :param data: measurement data
-        :param model: model values
+        :param data: measurement data :math:`{\bf d}`
+        :param model: model predictions :math:`{\bf m}`
+        :param parameter_values: vector of parameters :math:`{\bf p}`
+        :param parameter_constraints: list of fit parameter constraints
+
         :return: cost function value
         """
         # "translate" the argument names

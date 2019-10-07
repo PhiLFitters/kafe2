@@ -358,6 +358,7 @@ class FitBase(FileIOMixin, object):
         In other words the first index must belong to the first value, the first row/column in the matrix, etc.
 
         Let N be the number of parameters to be constrained.
+
         :param names: The names of the parameters to be constrained
         :type names: iterable of str, shape (N,)
         :param values: The values to which the parameters should be constrained

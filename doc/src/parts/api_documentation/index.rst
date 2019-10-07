@@ -6,7 +6,7 @@
 
 
 *****************
-*kafe2* reference
+API documentation
 *****************
 
 This page contains documentation which was automatically extracted from

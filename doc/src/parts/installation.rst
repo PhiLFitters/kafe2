@@ -44,69 +44,69 @@ dependencies. Please note that commands below should be run as root.
 
 For Python 2:
 
-    .. code:: bash
-    
-        pip install kafe2
+.. code:: bash
+
+    pip install kafe2
 
 
 For Python 3:
 
-    .. code:: bash
-    
-        pip3 install kafe2
+.. code:: bash
+
+    pip3 install kafe2
 
 
 If you don't have *pip* installed, get it from the package manager.
 
 In Ubuntu/Mint/Debian, do:
 
-    .. code:: bash
+.. code:: bash
 
-        apt-get install python-pip
+    apt-get install python-pip
 
 
 In Fedora/RHEL/CentOS, do:
 
-    .. code:: bash
+.. code:: bash
 
-        yum install python-pip
+    yum install python-pip
 
 
 or use ``easy_install`` (included with `setuptools <https://pypi.python.org/pypi/setuptools>`_):
 
-    .. code:: bash
+.. code:: bash
 
-        easy_install pip
+    easy_install pip
 
 
 You will also need to install *Tkinter* if it didn't already come with your Python distribution.
 
 For Python 2, Ubuntu/Mint/Debian:
-	
-	.. code:: bash
-	
-	    apt-get install python-tk
+
+.. code:: bash
+
+    apt-get install python-tk
 
 
 For Python 2, Fedora/RHEL/CentOS:
-	
-	.. code:: bash
-	
-	    yum install tkinter
+
+.. code:: bash
+
+    yum install tkinter
 
 
 For Python 3, Ubuntu/Mint/Debian:
-	
-	.. code:: bash
-	
-	    apt-get install python3-tk
+
+.. code:: bash
+
+    apt-get install python3-tk
 
 
 For Python 3, Fedora/RHEL/CentOS:
-	
-	.. code:: bash
-	
-	    yum install python3-tkinter
+
+.. code:: bash
+
+    yum install python3-tkinter
 
 
 ------------------------
@@ -116,26 +116,26 @@ Optional: Install *ROOT*
 ROOT and its Python bindings can be obtained via the package manager in
 Ubuntu/Mint/Debian:
 
-    .. code:: bash
+.. code:: bash
 
-        apt-get install root-system libroot-bindings-python5.34 libroot-bindings-python-dev
+    apt-get install root-system libroot-bindings-python5.34 libroot-bindings-python-dev
 
 Or, in Fedora/RHEL/CentOS:
 
-    .. code:: bash
+.. code:: bash
 
-        yum install root root-python
+    yum install root root-python
 
 
 This setup is usually sufficient. However, you may decide to build ROOT yourself. In this case,
 be sure to compile with *PyROOT* support. Additionally, for Python to see the *PyROOT* bindings,
 the following environment variables have to be set correctly (:
 
-    .. code:: bash
+.. code:: bash
 
-        export ROOTSYS=<directory where ROOT is installed>
-        export LD_LIBRARY_PATH=$ROOTSYS/lib:$PYTHONDIR/lib:$LD_LIBRARY_PATH
-        export PYTHONPATH=$ROOTSYS/lib:$PYTHONPATH
+    export ROOTSYS=<directory where ROOT is installed>
+    export LD_LIBRARY_PATH=$ROOTSYS/lib:$PYTHONDIR/lib:$LD_LIBRARY_PATH
+    export PYTHONPATH=$ROOTSYS/lib:$PYTHONPATH
 
 
 For more info, refer to `<http://root.cern.ch/drupal/content/pyroot>`_.
@@ -152,27 +152,30 @@ this minimizer can be used instead.
 To install the *iminuit* package for Python, the `Pip installer
 <http://www.pip-installer.org/>`_ is recommended:
 
-    .. code:: bash
+.. code:: bash
 
-        pip install iminuit
+    pip install iminuit
 
 You might also need to install the Python headers for *iminuit* to
 compile properly.
 
 In Ubuntu/Mint/Debian, do:
 
-    .. code:: bash
+.. code:: bash
 
-        apt-get install libpython2.7-dev
+    apt-get install libpython2.7-dev
 
 In Fedora/RHEL/CentOS, do:
 
-    .. code:: bash
+.. code:: bash
 
-        yum install python-devel
+    yum install python-devel
 
 
-..TODO update
+.. todo::
+
+    Update this section
+
 Installation notes (Windows)
 ============================
 
@@ -194,9 +197,9 @@ Install `iminuit`
 After installing *WinPython*, start 'WinPython Command Prompt.exe' in the
 *WinPython* installation directory and run
 
-    .. code:: bash
+.. code:: bash
 
-        pip install iminuit
+    pip install iminuit
 
 
 Install `kafe`
@@ -204,17 +207,17 @@ Install `kafe`
 
 Now *kafe* can be installed from PyPI by running:
 
-    .. code:: bash
+.. code:: bash
 
-        pip install kafe
+    pip install kafe
 
 Alternatively, it may be installed directly using *setuptools*. Just run
 the following in 'WinPython Command Prompt.exe' after switching to the
 directory into which you have downloaded *kafe*:
 
-    .. code:: bash
+.. code:: bash
 
-        python setup.py install
+    python setup.py install
 
 
 Using *kafe* with ROOT under Windows
@@ -239,24 +242,24 @@ environment variable must be modified to include the ``bin`` subdirectory
 of path where ROOT is installed. On Windows 10, assuming ROOT has been installed
 in the default directory (``C:\root_v5.34.34``), this is achieved as follows:
 
-  1)  open the Start Menu and start typing "environment variables"
-  2)  select "Edit the system environment variables"
-  3)  click the "Environment Variables..." button
-  4)  in the lower part, under "System variables", look for the "PYTHONPATH" entry
+1)  open the Start Menu and start typing "environment variables"
+2)  select "Edit the system environment variables"
+3)  click the "Environment Variables..." button
+4)  in the lower part, under "System variables", look for the "PYTHONPATH" entry
 
-  5)  modify/add the "PYTHONPATH" entry:
+5)  modify/add the "PYTHONPATH" entry:
 
-      * if it doesn't exist, create it by choosing "New...",
-        enter PYTHONPATH as the variable name
-        and ``C:\root_v5.34.34\bin`` as the variable value
-      * if it already exists and contains only one path, edit it via "Edit..." and
-        insert ``C:\root_v5.34.34\bin;`` at the beginning of the variable value.
-        (Note the semicolon!)
-      * if the variable already contains several paths, choosing "Edit..." will
-        show a dialog box to manage them. Choose "New" and write
-        ``C:\root_v5.34.34\bin``
+    * if it doesn't exist, create it by choosing "New...",
+      enter PYTHONPATH as the variable name
+      and ``C:\root_v5.34.34\bin`` as the variable value
+    * if it already exists and contains only one path, edit it via "Edit..." and
+      insert ``C:\root_v5.34.34\bin;`` at the beginning of the variable value.
+      (Note the semicolon!)
+    * if the variable already contains several paths, choosing "Edit..." will
+      show a dialog box to manage them. Choose "New" and write
+      ``C:\root_v5.34.34\bin``
 
-  6)  close all opened dialogs with "OK"
+6)  close all opened dialogs with "OK"
 
 
 Now you may try to ``import ROOT`` in the *WinPython* interpreter to check

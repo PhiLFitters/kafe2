@@ -1,0 +1,35 @@
+a.collapse-control {
+  text-decoration: none;
+}
+.collapse-control[aria-expanded="false"] span:before {
+  content: '+ show';
+  display: inline-block;
+}
+.collapse-control[aria-expanded="true"] span:before {
+  content: '\2212\ hide';
+  display: inline-block;
+}
+
+.bootstrap-collapsible-container.collapse:not(.in) {
+  overflow: hidden;
+  height: 6em !important;
+  display: block;
+  position: relative;
+}
+
+.bootstrap-collapsible-container.collapsing[aria-expanded="false"] {
+  height: 6em !important;
+}
+
+.bootstrap-collapsible-container.collapse:not(.in) pre:before {
+  content: '';
+  width: 100%;
+  height: 100%;    
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: -moz-linear-gradient(transparent 3em, white);
+  background: -webkit-linear-gradient(transparent 3em, white);
+  background: linear-gradient(transparent 3em, white);
+}
+

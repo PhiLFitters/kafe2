@@ -3,16 +3,16 @@
                          models to several types of data with
    :robots: index, follow
 
-
+**********************
 Theoretical Foundation
-######################
+**********************
 
 
 This section briefly covers the underlying theoretical concepts 
 upon which parameter estimation -and by extension *kafe2*- is based.
 
-Basics notions
-==============
+Basic notions
+=============
 
 
 Measurements and theoretical models
@@ -84,9 +84,9 @@ This means that the cost function :math:`C` then only depends on the
 model parameters, denoted here as a vector :math:`\textbf{p}` in
 parameter space.
 
-    .. math::
+.. math::
 
-        C = C\left(\textbf{d}, \textbf{m}(\textbf{p})\right) =  C(\textbf{p})
+    C = C\left(\textbf{d}, \textbf{m}(\textbf{p})\right) =  C(\textbf{p})
 
 Therefore parameter estimation essentially boils down to finding the
 vector of model parameters :math:`\hat{\textbf{p}}` for which the cost
@@ -121,9 +121,9 @@ the parameters (hence the name '*least squares*').
 More formally, using the data **covariance matrix** :math:`V`, the cost
 function is expressed as follows:
 
-    .. math::
+.. math::
 
-        \chi^2(\textbf{p}) = (\textbf{d} - \textbf{m}(\textbf{p}))^T \ V^{-1} \ (\textbf{d} - \textbf{m}(\textbf{p})).
+    \chi^2(\textbf{p}) = (\textbf{d} - \textbf{m}(\textbf{p}))^T \ V^{-1} \ (\textbf{d} - \textbf{m}(\textbf{p})).
 
 Since the value of the cost function at the minimum follows a :math:`\chi^2`
 distribution, and therefore the method of least squares is also known as
@@ -134,9 +134,9 @@ all elements of :math:`V` except for its diagonal elements :math:`\sigma_i^2`
 
 The above formula then simply becomes
 
-    .. math::
+.. math::
 
-        \chi^2 = \sum_i \left( \frac{d_i - m_i(\textbf{p})}{\sigma_i} \right)^2.
+    \chi^2 = \sum_i \left( \frac{d_i - m_i(\textbf{p})}{\sigma_i} \right)^2.
 
 All that is needed in this simple case is to divide the difference between
 data :math:`d_i` and model :math:`m_i` by the corresponding uncertainty :math:`\sigma_i`.
@@ -162,17 +162,17 @@ Using the probability of making a certain measurement given some values of
 model parameters :math:`P(\textbf{p})` the likelihood function can be defined
 as follows:
 
-    .. math::
+.. math::
 
-        L(\textbf{p}) = \prod_i P_i(\textbf{p}).
+    L(\textbf{p}) = \prod_i P_i(\textbf{p}).
 
 However, usually parameter estimation is not performed by using the
 likelihood, but by using its negative logarithm, the so-called
 **negative log-likelihood**:
 
-    .. math::
+.. math::
 
-        \log nlL(\textbf{p}) = -\log \left( \prod_i P_i(\textbf{p}) \right) = \sum_i \log P_i(\textbf{p}).
+    \log nlL(\textbf{p}) = -\log \left( \prod_i P_i(\textbf{p}) \right) = \sum_i \log P_i(\textbf{p}).
 
 This transformation is allowed because logarithms are
 **strictly monotonically increasing functions**, and therefore
@@ -185,30 +185,30 @@ While the above transformation may seem nonsensical at first, there are
 important advantages to calculating the negative log-likelihood over
 the likelihood:
 
-  - The **product** of the probabilities :math:`\prod_i P_i` is replaced
+-   The **product** of the probabilities :math:`\prod_i P_i` is replaced
     by a **sum** over the logarithms of the probabilities :math:`\sum_i \log P_i`.
     This is a numerical advantage because sums can be calculated much more
     quickly than products, and sums are numerically more stable than
     products of many small numbers.
 
-  - Because the probabilities :math:`P_i` are oftentimes proportional
+-   Because the probabilities :math:`P_i` are oftentimes proportional
     to exponential functions, calculating their logarithm is actually
     **faster** because it reduces the number of necessary operations.
 
-  - Taking the negative logarithm allows for always using the same numerical
+-   Taking the negative logarithm allows for always using the same numerical
     optimizers to **minimize** the cost funtions.
 
 As an example, let us look at the negative log-likelihood of data with
 uncertainties that assume a normal distribution:
 
-    .. math::
+.. math::
 
-        -\log P(\textbf{p})
-        = - \log \prod_i \frac{1}{\sqrt[]{2 \pi} \: \sigma_i} \exp\left(
-        \frac{1}{2} \left( \frac{d_i - m_i(\textbf{p})}{\sigma_i} \right)^2\right)
-        = - \sum_i \log \frac{1}{\sqrt[]{2 \pi} \: \sigma_i} + \sum_i \frac{1}{2}
-        \left( \frac{d_i - m_i(\textbf{p})}{\sigma_i} \right)^2
-        = - \log L_\mathrm{max} + \frac{1}{2} \chi^2
+    -\log P(\textbf{p})
+    = - \log \prod_i \frac{1}{\sqrt[]{2 \pi} \: \sigma_i} \exp\left(
+    \frac{1}{2} \left( \frac{d_i - m_i(\textbf{p})}{\sigma_i} \right)^2\right)
+    = - \sum_i \log \frac{1}{\sqrt[]{2 \pi} \: \sigma_i} + \sum_i \frac{1}{2}
+    \left( \frac{d_i - m_i(\textbf{p})}{\sigma_i} \right)^2
+    = - \log L_\mathrm{max} + \frac{1}{2} \chi^2
 
 As we can see the logarithm cancels out the exponential function of the normal
 distribution and we are left with two parts:

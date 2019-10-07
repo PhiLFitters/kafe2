@@ -4,8 +4,9 @@
    :robots: index, follow
 
 
+**********
 User Guide
-##########
+**********
 
 
 This user guide covers the basics of using *kafe2* for

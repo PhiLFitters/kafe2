@@ -14,15 +14,19 @@ parameters from data ("fitting").
 
 It distinguishes between a number of different data types:
 
-  * series of indexed measurements (dedicated submodule: :py:mod:`~kafe2.fit.indexed`),
-  * *xy* data (dedicated submodule: :py:mod:`~kafe2.fit.xy`), and
-  * histograms (dedicated submodule: :py:mod:`~kafe2.fit.histogram`)
+*  series of indexed measurements (dedicated submodule: :py:mod:`~kafe2.fit.indexed`),
+*  *xy* data (dedicated submodule: :py:mod:`~kafe2.fit.xy`), and
+*  histograms (dedicated submodule: :py:mod:`~kafe2.fit.histogram`)
 
 Each of the above data types has its own particularities when it comes to fitting.
 The main difference is due to the way uncertainties can be defined and
 interpreted for each type of data.
 
-For "*indexed*" data, one data set consists of a list of :math:`N` distinct measurements
+
+Indexed data
+------------
+
+For **indexed** data, one data set consists of a list of :math:`N` distinct measurements
 :math:`d_i`, with the (discrete) index :math:`i` ranging from :math:`0` to :math:`N-1`.
 For each measurement in the series, one or more uncertainty sources can be defined,
 each being a numerical estimate of how much the respective measurement fluctuates.
@@ -36,17 +40,26 @@ is indicated by a horizontal line near the corresponding data point.
 
 The following objects are provided for handling *indexed* data, as described above:
 
-  * :py:obj:`~kafe2.fit.indexed.IndexedContainer`: data container for storing *indexed* data
-  * :py:obj:`~kafe2.fit.indexed.IndexedParametricModel`: corresponding model:
-        uses a model function (:py:obj:`~kafe2.fit.indexed.model.IndexedModelFunction`) to calculate the model
-        predictions and stores the result in an :py:obj:`~kafe2.fit.IndexedContainer`
-  * :py:obj:`~kafe2.fit.indexed.IndexedFit`: a fit of a parametric model to *indexed* data:
-        finds the minimum of the *cost function* to find the
-        parameter values for which the model best fits the data
-  * :py:obj:`~kafe2.fit.indexed.IndexedPlot`: a graphical representation of one or more fits:
-        plots the data points and model predictions using ``matplotlib``
+*  :py:obj:`~kafe2.fit.indexed.IndexedContainer`: data container for storing *indexed* data
+*  :py:obj:`~kafe2.fit.indexed.IndexedParametricModel`: corresponding model:
 
-For "*xy*" data, the same principle as for *indexed* data applies, except each measurement and model prediction
+   - uses a model function (:py:obj:`~kafe2.fit.indexed.model.IndexedModelFunction`) to calculate the model
+     predictions and stores the result in an :py:obj:`~kafe2.fit.IndexedContainer`
+
+*  :py:obj:`~kafe2.fit.indexed.IndexedFit`: a fit of a parametric model to *indexed* data:
+
+   - finds the minimum of the *cost function* to find the
+     parameter values for which the model best fits the data
+
+*  :py:obj:`~kafe2.fit.indexed.IndexedPlot`: a graphical representation of one or more fits:
+
+   - plots the data points and model predictions using ``matplotlib``
+
+
+XY data
+-------
+
+For **xy** data, the same principle as for *indexed* data applies, except each measurement and model prediction
 now depends on a continuous real independent variable :math:`x` instead of a discrete index :math:`i`.
 In effect, the data now consist of :math:`N` ordered pairs :math:`(x=x_i, y=d_i)`.
 
@@ -61,15 +74,24 @@ as determined by propagating the data uncertainties.
 
 The following objects are provided for handling *xy* data:
 
-  * :py:obj:`~kafe2.fit.xy.XYContainer`: data container for storing *xy* data
-  * :py:obj:`~kafe2.fit.xy.XYParametricModel`: corresponding model:
-        uses a model function (:py:obj:`~kafe2.fit.xy.model.XYModelFunction`) to calculate the model predictions and
-        stores the result in an :py:obj:`~kafe2.fit.XYContainer`
-  * :py:obj:`~kafe2.fit.xy.XYFit`: a fit of a parametric model to *xy* data:
-        finds the minimum of the *cost function* to find the parameter values for which the model best fits the data
-  * :py:obj:`~kafe2.fit.xy.XYPlot`: a graphical representation of one or more fits:
-        plots the data points and model predictions using ``matplotlib``
-                                
+*  :py:obj:`~kafe2.fit.xy.XYContainer`: data container for storing *xy* data
+*  :py:obj:`~kafe2.fit.xy.XYParametricModel`: corresponding model:
+
+   - uses a model function (:py:obj:`~kafe2.fit.xy.model.XYModelFunction`) to calculate the model predictions and
+     stores the result in an :py:obj:`~kafe2.fit.XYContainer`
+
+*  :py:obj:`~kafe2.fit.xy.XYFit`: a fit of a parametric model to *xy* data:
+
+   - finds the minimum of the *cost function* to find the parameter values for which the model best fits the data
+
+*  :py:obj:`~kafe2.fit.xy.XYPlot`: a graphical representation of one or more fits:
+
+   - plots the data points and model predictions using ``matplotlib``
+
+
+
+Histograms
+----------
 
 Finally, *kafe2* is also able to handle **histograms**. Histograms organize measurements whose
 values can fall anywhere across a continuum of values into a number of discrete regions
@@ -115,14 +137,19 @@ the model, so that the model can be calculated as a simple difference, rather th
 
 The following objects are provided for handling histograms:
 
-  * :py:obj:`~kafe2.fit.histogram.HistContainer`: data container for storing histograms
-  * :py:obj:`~kafe2.fit.histogram.HistParametricModel`: corresponding model:
-        uses a model function (:py:obj:`~kafe2.fit.xy.model.HistModelFunction`) to calculate the model predictions
-        and stores the result in an :py:obj:`~kafe2.fit.HistContainer`
-  * :py:obj:`~kafe2.fit.histogram.HistFit`: a fit of a parametric model to histograms:
-        finds the minimum of the *cost function* to find the parameter values for which the model best fits the data
-  * :py:obj:`~kafe2.fit.histogram.HistPlot`: a graphical representation of one or more fits:
-        plots the data points and model predictions using ``matplotlib``
+*  :py:obj:`~kafe2.fit.histogram.HistContainer`: data container for storing histograms
+*  :py:obj:`~kafe2.fit.histogram.HistParametricModel`: corresponding model:
+
+   - uses a model function (:py:obj:`~kafe2.fit.xy.model.HistModelFunction`) to calculate the model predictions
+     and stores the result in an :py:obj:`~kafe2.fit.HistContainer`
+
+*  :py:obj:`~kafe2.fit.histogram.HistFit`: a fit of a parametric model to histograms:
+
+   - finds the minimum of the *cost function* to find the parameter values for which the model best fits the data
+
+*  :py:obj:`~kafe2.fit.histogram.HistPlot`: a graphical representation of one or more fits:
+
+   - plots the data points and model predictions using ``matplotlib``
 """
 
 

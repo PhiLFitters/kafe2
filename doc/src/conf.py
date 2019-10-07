@@ -47,13 +47,17 @@ for mod_name in MOCK_MODULES:
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('../..'))
-sys.path.insert(0, os.path.abspath('extensions'))
+sys.path.insert(0, os.path.abspath('ext'))
 
 import kafe2
 
 print('kafe2 version:', kafe2.__version__)
 
 # -- General configuration ------------------------------------------------
+
+# style sheet customizations
+def setup(app):
+    app.add_css_file("style.css")
 
 # If your documentation needs a minimal Sphinx version, state it here.
 needs_sphinx = '1.4'  # needed for imgmath extension
@@ -68,8 +72,13 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.imgmath',
     'sphinx.ext.intersphinx',
-    'sphinx.ext.inheritance_diagram'
+    'sphinx.ext.todo',
+    'sphinx.ext.inheritance_diagram',
+    'bootstrap_collapsible',
 ]
+
+todo_include_todos = True
+autodoc_member_order = 'bysource'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -85,7 +94,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'kafe2'
-copyright = u'2017, D. Savoiu, G. Quast'
+copyright = u'2019, D. Savoiu, G. Quast'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -146,22 +155,40 @@ inheritance_graph_attrs = dict(rankdir="TB", size='""')
 # a list of builtin themes.
 #html_theme = 'nature'
 
-# check if the docs are building on ReadTheDocs
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-if on_rtd:
-    # use the default theme on RTD
-    html_theme = 'default'
+# use own modified RTD theme
+#html_theme = 'rtd_theme_mod'
+#html_theme = 'guzzle_sphinx_theme'
+html_theme = 'bootstrap'
+
+# some themes require further customization
+if html_theme == 'bootstrap':
+    import sphinx_bootstrap_theme
+    html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
+    html_theme_options = {
+        'bootswatch_theme': "sandstone",
+    }
+elif html_theme == 'guzzle_sphinx_theme':
+    import guzzle_sphinx_theme
+    html_theme_path = guzzle_sphinx_theme.html_theme_path()
+
+    # Register the theme as an extension to generate a sitemap.xml
+    extensions.append("guzzle_sphinx_theme")
+
+    # Guzzle theme options (see theme.conf for more information)
+    html_theme_options = {
+        # Set the name of the project to appear in the sidebar
+        "project_nav_name": "kafe2",
+    }
 else:
-    # for private builds, use the "offine" RTD theme
-    html_theme = 'rtd_theme'
+    # Theme options are theme-specific and customize the look and feel of a theme
+    # further.  For a list of options available for each theme, see the
+    # documentation.
+    html_theme_options = {
+        #"collapse_navigation": False
+    }
 
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
-#html_theme_options = {}
-
-# Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = ['_themes']
+    # Add any paths that contain custom themes here, relative to this directory.
+    html_theme_path = ['_themes']
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -172,12 +199,12 @@ html_theme_path = ['_themes']
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "_static/img/badge_kafe2.svg"
+html_logo = "_static/img/icon_kafe2.svg"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-#html_favicon = None
+html_favicon = "_static/img/favicon.ico"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -236,22 +263,40 @@ htmlhelp_basename = 'kafedoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
+latex_engine = 'xelatex'
+latex_use_xindy = False
+
 latex_elements = {
-# The paper size ('letterpaper' or 'a4paper').
-'papersize': 'a4paper',
+#    'fontpkg': r'''
+#\setmainfont{Nimbus Sans L}
+#\setsansfont{Nimbus Sans L}
+#\setmonofont{Inconsolata}
+#''',
 
-# The font size ('10pt', '11pt' or '12pt').
-#'pointsize': '11pt',
+  # The paper size ('letterpaper' or 'a4paper').
+  'papersize': 'a4paper',
 
-# Additional stuff for the LaTeX preamble.
-'preamble': r'\usepackage{enumitem}\setlistdepth{48}'
+  # The font size ('10pt', '11pt' or '12pt').
+  'pointsize': '11pt',
+
+  # Additional stuff for the LaTeX preamble.
+  'preamble': r'''
+\usepackage{enumitem}\setlistdepth{48}
+\usepackage[titles]{tocloft}
+\cftsetpnumwidth {1.25cm}\cftsetrmarg{1.5cm}
+\setlength{\cftchapnumwidth}{0.75cm}
+\setlength{\cftsecindent}{\cftchapnumwidth}
+\setlength{\cftsecnumwidth}{1.25cm}
+''',
+    'fncychap': r'\usepackage[Bjornstrup]{fncychap}',
+    'printindex': r'\footnotesize\raggedright\printindex',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class], toctree_only).
 latex_documents = [
-  ('index_latex', 'kafe.tex', u'kafe2 Documentation',
+  ('index', 'kafe2.tex', u'kafe2 Documentation',
    u'D. Savoiu, G. Quast', 'manual', False),
 ]
 

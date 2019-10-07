@@ -269,7 +269,7 @@ class ContoursProfiler(object):
         :param parameter: name of the parameter to profile in
         :type parameter: str
         :param target_axes: ``Axes`` object (if ``None``, a new figure is created)
-        :type target_axes: ``matplotlib`` ``Axes` or ``None`
+        :type target_axes: ``matplotlib`` ``Axes`` or ``None``
         :param show_parabolic: if ``True``, a parabolic approximation of the profile near the minimum is also drawn
         :type show_parabolic: bool`
         :param show_grid: if ``True``, a grid is drawn

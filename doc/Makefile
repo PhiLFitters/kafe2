@@ -1,11 +1,11 @@
-# Makefile to build Sphinx documentation in `build' subdirectory
+# Makefile to build Sphinx documentation in `src' subdirectory
 # Run `make' to compile the documentation in HTML and LaTeX (PDF) format
 
 
 # Variables
 
 # subdirectory with Sphinx Makefile
-SPHINXSRCDIR = build
+SPHINXSRCDIR = src
 
 
 # Make Targets
@@ -21,5 +21,8 @@ latex:
 	$(MAKE) -C $(SPHINXSRCDIR) latex && $(MAKE) -C $(SPHINXSRCDIR) latexpdf && rm -rf latex && cp -R "$(SPHINXSRCDIR)/_build/latex" .
 
 clean:
-	rm -rf build/_build
+	$(MAKE) -C $(SPHINXSRCDIR) clean && rm -rf html latex
+
+forceclean:
+	rm -rf src/_build
 
