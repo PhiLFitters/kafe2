@@ -88,7 +88,7 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
         _yaml_doc['parameter_constraints'] = [ConstraintYamlWriter._make_representation(_parameter_constraint)
                                               for _parameter_constraint in fit.parameter_constraints]
         _fit_results = fit.get_result_dict_for_robots()
-        _fit_results['parameter_values'] = _fit_results['parameter_values'].tolist()
+        _fit_results['parameter_values'] = list(_fit_results['parameter_values'])
         if _fit_results['did_fit']:
             _fit_results['parameter_cov_mat'] = _fit_results['parameter_cov_mat'].tolist()
             _fit_results['parameter_errors'] = _fit_results['parameter_errors'].tolist()

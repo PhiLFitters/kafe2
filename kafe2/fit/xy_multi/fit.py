@@ -854,7 +854,7 @@ class XYMultiFit(FitBase):
         _poi_values = []
         for _name in self._poi_names:
             _poi_values.append(self.parameter_name_value_dict[_name])
-        return _poi_values
+        return tuple(_poi_values)
 
     @property
     def x_uncor_nuisance_values(self):

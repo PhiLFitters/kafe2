@@ -115,6 +115,9 @@ class XYFit(FitBase):
             self._fit_param_names.append(param_name)
             self._poi_names.append(param_name)
 
+        self._poi_names = tuple(self._poi_names)
+
+        # -- nuisance parameters
         self._y_nuisance_names = []  # names of all nuisance parameters accounting for correlated y errors
         self._x_uncor_nuisance_names = []  # names of all nuisance parameters accounting for uncorrelated x errors
         # TODO
@@ -831,7 +834,7 @@ class XYFit(FitBase):
         _poi_values = []
         for _name in self.poi_names:
             _poi_values.append(self.parameter_name_value_dict[_name])
-        return _poi_values
+        return tuple(_poi_values)
 
     @property
     def poi_names(self):

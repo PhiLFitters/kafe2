@@ -196,12 +196,12 @@ class FitBase(FileIOMixin, object):
     @property
     def parameter_values(self):
         """the current parameter values"""
-        return np.array(list(self.parameter_name_value_dict.values()))
+        return tuple((self._fitter.fit_parameter_values[_pn] for _pn in self._fitter.parameters_to_fit))
 
     @property
     def parameter_names(self):
         """the current parameter names"""
-        return list(self.parameter_name_value_dict.keys())
+        return self._fitter.parameters_to_fit
 
     @property
     def parameter_errors(self):
