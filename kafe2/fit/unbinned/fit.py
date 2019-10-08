@@ -48,6 +48,7 @@ class UnbinnedFit(FitBase):
 
         self._cost_function = cost_function
         # Todo: implement different cost functions and check if data and cost function is compatible
+        # TODO: convert cost_function to a kafe2 cost function object if it is a string
 
         # initialize the Nexus
         self._init_nexus()

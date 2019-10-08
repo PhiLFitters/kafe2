@@ -56,7 +56,10 @@ class IndexedFit(FitBase):
         if isinstance(cost_function, CostFunctionBase):
             self._cost_function = cost_function
         elif isinstance(cost_function, str):
-            self._cost_function = STRING_TO_COST_FUNCTION[cost_function]()
+            _cost_function_class = STRING_TO_COST_FUNCTION.get(cost_function, None)
+            if _cost_function_class is None:
+                raise IndexedFitException('Unknown cost function: %s' % cost_function)
+            self._cost_function = _cost_function_class()
         else:
             self._cost_function = IndexedCostFunction_UserDefined(cost_function)
             # self._validate_cost_function_raise()
