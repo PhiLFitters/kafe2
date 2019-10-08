@@ -131,12 +131,15 @@ class MinimizerBase(object):
     def hessian(self):
         if self._hessian is None:
             self._hessian = nd.Hessian(self._func_wrapper_unpack_args)(self.parameter_values)
+            assert(np.all(self._hessian == self._hessian.T))
         return self._hessian
 
     @property
     def hessian_inv(self):
         if self._hessian_inv is None:
             self._hessian_inv = np.linalg.inv(self.hessian)
+            self._hessian_inv = 0.5 * (self._hessian_inv + self._hessian_inv.T)
+        assert (np.all(self._hessian_inv == self._hessian_inv.T))
         return self._hessian_inv
 
     @property
