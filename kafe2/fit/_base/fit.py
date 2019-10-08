@@ -565,7 +565,7 @@ class FitBase(FileIOMixin, object):
         Perform the minimization of the cost function.
         """
         if self._cost_function.needs_errors and not self._data_container.has_errors:
-            raise self.EXCEPTION_TYPE('Cannot perform a fit without specifying data errors first!')
+            self._cost_function.on_no_errors()
         self._fitter.do_fit()
         self._loaded_result_dict = None
         self._update_parameter_formatters()

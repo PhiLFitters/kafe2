@@ -165,6 +165,7 @@ class CostFunctionBase(FileIOMixin, object):
         self._flags = {}
         self._ndf = None
         self._needs_errors = True
+        self._no_errors_warning_printed = False
         super(CostFunctionBase, self).__init__()
 
     @classmethod
@@ -291,6 +292,11 @@ class CostFunctionBase(FileIOMixin, object):
         """
         return True, None
 
+    def on_no_errors(self):
+        if not self._no_errors_warning_printed:
+            print('WARNING: No data errors were specified. The fit results may be wrong.')
+            self._no_errors_warning_printed = True
+
 
 class CostFunctionBase_Chi2(CostFunctionBase):
     def __init__(self, errors_to_use='covariance', fallback_on_singular=True):
@@ -330,6 +336,15 @@ class CostFunctionBase_Chi2(CostFunctionBase):
         self._formatter.name = "chi2"
         self._formatter.description = _cost_function_description
         self._needs_errors = _chi2_func is not self.chi2_no_errors
+
+    def on_no_errors(self):
+        if not self._no_errors_warning_printed:
+            if (self._cost_function_handle is self.chi2_covariance_fallback
+                    or self._cost_function_handle is self.chi2_pointwise_errors_fallback):
+                print('WARNING: No data errors were specified. Setting data errors to 1.')
+            else:
+                print('WARNING: No data errors were specified. The fit results may be wrong.')
+            self._no_errors_warning_printed = True
 
     @staticmethod
     def chi2_no_errors(data, model, parameter_values, parameter_constraints):

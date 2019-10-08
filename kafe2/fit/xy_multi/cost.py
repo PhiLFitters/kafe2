@@ -184,6 +184,15 @@ class XYMultiCostFunction_Chi2(CostFunctionBase_Chi2):
         else:
             raise CostFunctionException("Unknown value '%s' for 'axes_to_use': must be one of ('xy', 'y')")
 
+    def on_no_errors(self):
+        if not self._no_errors_warning_printed:
+            if (self._cost_function_handle is self.chi2_covariance_fallback
+                    or self._cost_function_handle is self.chi2_pointwise_errors_fallback):
+                print('WARNING: No y data errors were specified. Will set data errors to 1 if data errors become 0.')
+            else:
+                print('WARNING: No y data errors were specified. The fit results may be wrong.')
+            self._no_errors_warning_printed = True
+
     @staticmethod
     def chi2_no_errors(y_data, y_model, poi_values, parameter_constraints):
         r"""A least-squares cost function calculated from 'y' data and model values,
