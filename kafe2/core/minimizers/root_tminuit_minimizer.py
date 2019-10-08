@@ -259,7 +259,7 @@ class MinimizerROOTTMinuit(MinimizerBase):
     @property
     def hessian(self):
         # TODO: cache this
-        return 2.0 * self.errordef * self.cov_mat.I
+        return 2.0 * self.errordef * np.linalg.inv(self.cov_mat)
 
     @property
     def cov_mat(self):
