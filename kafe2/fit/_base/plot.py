@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 from matplotlib import gridspec as gs
 from matplotlib.legend_handler import HandlerBase
 
-__all__ = ["PlotContainerBase", "PlotFigureBase", "MultiPlotBase", "PlotContainerException", "PlotFigureException",
+__all__ = ["PlotAdapterBase", "PlotBase", "MultiPlotBase", "PlotAdapterException", "PlotFigureException",
            "kc_plot_style"]
 
 
@@ -109,17 +109,17 @@ class DummyLegendHandler(HandlerBase):
     def legend_artist(self, *args, **kwargs):
         return None
 
-class PlotContainerException(Exception):
+class PlotAdapterException(Exception):
     pass
 
 
 @six.add_metaclass(abc.ABCMeta)
-class PlotContainerBase(object):
+class PlotAdapterBase(object):
     """
     This is a purely abstract class implementing the minimal interface required by all
     types of plotters.
 
-    A :py:obj:`PlotContainer` object can be constructed for a :py:obj:`Fit` object of the
+    A :py:obj:`PlotAdapter` object can be constructed for a :py:obj:`Fit` object of the
     corresponding type.
     Its main purpose is to provide an interface for accessing data stored in the
     :py:obj:`Fit` object, for the purposes of plotting.
@@ -127,7 +127,7 @@ class PlotContainerBase(object):
     for plotting the data, model (and other information, depending on the fit type),
     and constructs the arrays required by these routines in a meaningful way.
 
-    Classes derived from :py:obj:`PlotContainer` must at the very least contain
+    Classes derived from :py:obj:`PlotAdapter` must at the very least contain
     properties for constructing the ``x`` and ``y`` point arrays for both the
     data and the fitted model, as well as methods calling the ``matplotlib`` routines
     doing the actual plotting.
@@ -135,21 +135,13 @@ class PlotContainerBase(object):
 
     FIT_TYPE = None
 
-    def __init__(self, fit_object, model_index=0):
+    def __init__(self, fit_object):
         """
-        Construct a :py:obj:`PlotContainer` for a :py:obj:`Fit` object:
+        Construct a :py:obj:`PlotAdapter` for a :py:obj:`Fit` object:
 
         :param fit_object: an object derived from :py:obj:`~kafe2.fit._base.FitBase`
         """
-        # TODO: update documentation
-        if not isinstance(fit_object, self.__class__.FIT_TYPE):
-            raise PlotContainerException("PlotContainer of type '%s' is incompatible with Fit of type '%s'"
-                                         % (self.__class__, fit_object.__class__))
-        if fit_object.model_count <= model_index:
-            raise PlotContainerException("Received %s as model index but fit object only has %s models"
-                                         % (fit_object.model_count, model_index))
-        self._fitter = fit_object
-        self._model_index = model_index
+        self._fit = fit_object
 
     def _get_total_error(self, error_contributions):
         _total_err = np.zeros_like(self.data_y)
@@ -295,13 +287,13 @@ class PlotContainerBase(object):
     #Overridden by multi plot containers
     def get_formatted_model_function(self, **kwargs):
         """return model function string"""
-        return self._fitter._model_function.formatter.get_formatted(**kwargs)
+        return self._fit._model_function.formatter.get_formatted(**kwargs)
 
     #Overridden by multi plot containers
     @property
     def model_function_argument_formatters(self):
         """return model function argument formatters"""
-        return self._fitter._model_function.argument_formatters
+        return self._fit._model_function.argument_formatters
 
 # -- must come last!
 
@@ -311,13 +303,13 @@ class PlotFigureException(Exception):
 
 
 @six.add_metaclass(abc.ABCMeta)  # TODO: check if needed
-class PlotFigureBase(object):
+class PlotBase(object):
     """
     This is a purely abstract class implementing the minimal interface required by all
     types of plotters.
 
-    A :py:obj:`PlotFigure` object corresponds to a single ``matplotlib`` figure and
-    can contain plots coming from different :py:obj:`FitBase`-derived objects simultaneously.
+    A :py:obj:`PlotBase` object manages one or several ``matplotlib`` figures that
+    contain plots created from various :py:obj:`FitBase`-derived objects.
 
     It controls the overall figure layout and is responsible for axes, subplot and legend management.
     """
@@ -557,11 +549,11 @@ class PlotFigureBase(object):
     @classmethod
     def _get_fit_info(cls, plot_data_container, format_as_latex, asymmetric_parameter_errors):
 
-        plot_data_container._fitter._update_parameter_formatters(
+        plot_data_container._fit._update_parameter_formatters(
             update_asymmetric_errors=asymmetric_parameter_errors
         )
 
-        _cost_func = plot_data_container._fitter._cost_function  # TODO: public interface
+        _cost_func = plot_data_container._fit._cost_function  # TODO: public interface
 
         return cls.FIT_INFO_STRING_FORMAT.format(
             model_function=plot_data_container.get_formatted_model_function(
@@ -581,7 +573,7 @@ class PlotFigureBase(object):
                 for _pf in plot_data_container.model_function_argument_formatters
             ]),
             fit_quality=_cost_func._formatter.get_formatted(
-                value=plot_data_container._fitter.cost_function_value,
+                value=plot_data_container._fit.cost_function_value,
                 n_degrees_of_freedom=_cost_func.ndf,
                 with_value_per_ndf=True,
                 format_as_latex=format_as_latex
@@ -808,7 +800,7 @@ class MultiPlotBase(object):
         :type labels: list
         """
         if len(labels) != len(self._axis_labels) or len(labels[0]) != len(self._axis_labels[0]):
-            raise PlotContainerException("The dimensions of labels must fit the dimension of the data")
+            raise PlotAdapterException("The dimensions of labels must fit the dimension of the data")
         self._axis_labels = labels
 
     def get_figure(self, plot_index):

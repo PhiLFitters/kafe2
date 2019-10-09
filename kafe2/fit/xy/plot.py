@@ -1,18 +1,18 @@
 import numpy as np
 
 from ...config import kc
-from .._base import PlotContainerBase, PlotContainerException, PlotFigureBase, kc_plot_style
+from .._base import PlotAdapterBase, PlotAdapterException, PlotBase, kc_plot_style
 from .._aux import step_fill_between
 from . import XYFit
 
 
 
-__all__ = ["XYPlot", "XYPlotContainer"]
+__all__ = ["XYPlot", "XYPlotAdapter"]
 
-class XYPlotContainerException(PlotContainerException):
+class XYPlotAdapterException(PlotAdapterException):
     pass
 
-class XYPlotContainer(PlotContainerBase):
+class XYPlotAdapter(PlotAdapterBase):
     FIT_TYPE = XYFit
 
     def __init__(self, xy_fit_object, n_plot_points_model=100):
@@ -21,7 +21,7 @@ class XYPlotContainer(PlotContainerBase):
 
         :param fit_object: an :py:obj:`~kafe2.fit.xy.XYFit` object
         """
-        super(XYPlotContainer, self).__init__(fit_object=xy_fit_object)
+        super(XYPlotAdapter, self).__init__(fit_object=xy_fit_object)
         self._n_plot_points_model = n_plot_points_model
 
         self._plot_range_x = None
@@ -31,7 +31,7 @@ class XYPlotContainer(PlotContainerBase):
     def _compute_plot_range_x(self, pad_coeff=1.1, additional_pad=None):
         if additional_pad is None:
             additional_pad = (0, 0)
-        _xmin, _xmax = self._fitter.x_range
+        _xmin, _xmax = self._fit.x_range
         _w = _xmax - _xmin
         self._plot_range_x = (
             0.5 * (_xmin + _xmax - _w * pad_coeff) - additional_pad[0],
@@ -43,42 +43,42 @@ class XYPlotContainer(PlotContainerBase):
     @property
     def data_x(self):
         """data x values"""
-        return self._fitter.x_data
+        return self._fit.x_data
 
     @property
     def data_y(self):
         """data y values"""
-        return self._fitter.y_data
+        return self._fit.y_data
 
     @property
     def data_xerr(self):
         """x error bars for data: ``None`` for :py:obj:`IndexedPlotContainer`"""
-        return self._fitter.x_error
+        return self._fit.x_error
 
     @property
     def data_yerr(self):
         """y error bars for data: total data uncertainty"""
-        return self._fitter.y_data_error
+        return self._fit.y_data_error
 
     @property
     def model_x(self):
         """model x values"""
-        return self._fitter.x_model
+        return self._fit.x_model
 
     @property
     def model_y(self):
         """model y values"""
-        return self._fitter.y_model
+        return self._fit.y_model
 
     @property
     def model_xerr(self):
         """x error bars for model: ``None`` for :py:obj:`IndexedPlotContainer`"""
-        return self._fitter.x_error
+        return self._fit.x_error
 
     @property
     def model_yerr(self):
         """y error bars for model: total model uncertainty"""
-        return self._fitter.y_model_error
+        return self._fit.y_model_error
 
     @property
     def model_line_x(self):
@@ -89,7 +89,7 @@ class XYPlotContainer(PlotContainerBase):
     @property
     def model_line_y(self):
         """y values at support points for model function"""
-        return self._fitter.eval_model_function(x=self.model_line_x)
+        return self._fit.eval_model_function(x=self.model_line_x)
 
     @property
     def x_range(self):
@@ -160,8 +160,8 @@ class XYPlotContainer(PlotContainerBase):
         :param kwargs: keyword arguments accepted by the ``matplotlib`` ``fill_between`` method
         :return: plot handle(s)
         """
-        if self._fitter.did_fit and (self._fitter.has_errors or not self._fitter._cost_function.needs_errors):
-            _band_y = self._fitter.y_error_band
+        if self._fit.did_fit and (self._fit.has_errors or not self._fit._cost_function.needs_errors):
+            _band_y = self._fit.y_error_band
             _y = self.model_line_y
             return target_axes.fill_between(
                 self.model_line_x,
@@ -200,8 +200,8 @@ class XYPlotContainer(PlotContainerBase):
         :param kwargs: keyword arguments accepted by the ``matplotlib`` methods ``errorbar`` or ``plot``
         :return: plot handle(s)
         """
-        if self._fitter.did_fit and (self._fitter.has_errors or not self._fitter._cost_function.needs_errors):
-            _band_y = self._fitter.y_error_band
+        if self._fit.did_fit and (self._fit.has_errors or not self._fit._cost_function.needs_errors):
+            _band_y = self._fit.y_error_band
             _y = self.model_line_y
             return target_axes.fill_between(
                 self.model_line_x,
@@ -211,13 +211,13 @@ class XYPlotContainer(PlotContainerBase):
             return None  # don't plot error band if fitter input data has no errors...
 
 
-class XYPlot(PlotFigureBase):
+class XYPlot(PlotBase):
 
-    PLOT_CONTAINER_TYPE = XYPlotContainer
+    PLOT_CONTAINER_TYPE = XYPlotAdapter
     PLOT_STYLE_CONFIG_DATA_TYPE = 'xy'
 
     PLOT_SUBPLOT_TYPES = dict(
-        PlotFigureBase.PLOT_SUBPLOT_TYPES,
+        PlotBase.PLOT_SUBPLOT_TYPES,
         model_line=dict(
             plot_container_method='plot_model_line',
             target_axes='main'

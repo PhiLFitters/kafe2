@@ -3,19 +3,19 @@ from matplotlib.collections import LineCollection
 from collections import OrderedDict
 
 from ...config import kc
-from .._base import PlotContainerBase, PlotContainerException, PlotFigureBase, kc_plot_style
+from .._base import PlotAdapterBase, PlotAdapterException, PlotBase, kc_plot_style
 from .._aux import step_fill_between
 from .fit import UnbinnedFit
 
 
-__all__ = ["UnbinnedPlot", "UnbinnedPlotContainer"]
+__all__ = ["UnbinnedPlot", "UnbinnedPlotAdapter"]
 
 
-class UnbinnedPlotContainerException(PlotContainerException):
+class UnbinnedPlotAdapterException(PlotAdapterException):
     pass
 
 
-class UnbinnedPlotContainer(PlotContainerBase):
+class UnbinnedPlotAdapter(PlotAdapterBase):
     FIT_TYPE = UnbinnedFit
 
     def __init__(self, unbinned_fit_object, n_plot_points_model=100):
@@ -25,7 +25,7 @@ class UnbinnedPlotContainer(PlotContainerBase):
         :param n_plot_points_model: Number of data points for plotting the model
         :type n_plot_points_model: int
         """
-        super(UnbinnedPlotContainer, self).__init__(fit_object=unbinned_fit_object)
+        super(UnbinnedPlotAdapter, self).__init__(fit_object=unbinned_fit_object)
         self._n_plot_points_model = n_plot_points_model
         self._plot_range_x = None
         self._plot_range_y = None
@@ -35,7 +35,7 @@ class UnbinnedPlotContainer(PlotContainerBase):
     def _compute_plot_range_x(self, pad_coeff=1.1, additional_pad=None):
         if additional_pad is None:
             additional_pad = (0, 0)
-        _xmin, _xmax = self._fitter.data_range
+        _xmin, _xmax = self._fit.data_range
         _w = _xmax - _xmin
         self._plot_range_x = (
             0.5 * (_xmin + _xmax - _w * pad_coeff) - additional_pad[0],
@@ -59,7 +59,7 @@ class UnbinnedPlotContainer(PlotContainerBase):
 
         :return: iterable
         """
-        return self._fitter.data
+        return self._fit.data
 
     @property
     def data_y(self):
@@ -68,7 +68,7 @@ class UnbinnedPlotContainer(PlotContainerBase):
 
         :return: iterable
         """
-        raise UnbinnedPlotContainerException("There's no y-data in the unbinned container")
+        raise UnbinnedPlotAdapterException("There's no y-data in the unbinned container")
 
     @property
     def data_xerr(self):
@@ -77,11 +77,11 @@ class UnbinnedPlotContainer(PlotContainerBase):
 
         :return: iterable
         """
-        return self._fitter.data.err
+        return self._fit.data.err
 
     @property
     def data_yerr(self):
-        raise UnbinnedPlotContainerException("There's no y-data in the unbinned container, hence no y-error")
+        raise UnbinnedPlotAdapterException("There's no y-data in the unbinned container, hence no y-error")
 
     @property
     def model_x(self):
@@ -96,7 +96,7 @@ class UnbinnedPlotContainer(PlotContainerBase):
 
         :return: iterable
         """
-        return self._fitter.eval_model_function(x=self.model_x)
+        return self._fit.eval_model_function(x=self.model_x)
 
     @property
     def model_xerr(self):
@@ -178,11 +178,11 @@ class UnbinnedPlotContainer(PlotContainerBase):
         """
         raise NotImplementedError("Data/model ratio cannot be plotted for unbinned fits.")
 
-class UnbinnedPlot(PlotFigureBase):
+class UnbinnedPlot(PlotBase):
 
-    PLOT_CONTAINER_TYPE = UnbinnedPlotContainer
+    PLOT_CONTAINER_TYPE = UnbinnedPlotAdapter
     PLOT_STYLE_CONFIG_DATA_TYPE = 'unbinned'
-    PlotFigureBase.PLOT_SUBPLOT_TYPES.copy()
+    PlotBase.PLOT_SUBPLOT_TYPES.copy()
 
     def __init__(self, fit_objects):
         super(UnbinnedPlot, self).__init__(fit_objects=fit_objects)

@@ -1,15 +1,15 @@
 import numpy as np
 
-from .._base import PlotContainerBase, PlotContainerException, PlotFigureBase
+from .._base import PlotAdapterBase, PlotAdapterException, PlotBase
 from .._aux import step_fill_between
 from .fit import IndexedFit
 
-__all__ = ["IndexedPlot", "IndexedPlotContainer"]
+__all__ = ["IndexedPlot", "IndexedPlotAdapter"]
 
-class IndexedPlotContainerException(PlotContainerException):
+class IndexedPlotAdapterException(PlotAdapterException):
     pass
 
-class IndexedPlotContainer(PlotContainerBase):
+class IndexedPlotAdapter(PlotAdapterBase):
     FIT_TYPE = IndexedFit
 
     def __init__(self, indexed_fit_object):
@@ -18,17 +18,17 @@ class IndexedPlotContainer(PlotContainerBase):
 
         :param fit_object: an :py:obj:`~kafe2.fit.indexed.IndexedFit` object
         """
-        super(IndexedPlotContainer, self).__init__(fit_object=indexed_fit_object)
+        super(IndexedPlotAdapter, self).__init__(fit_object=indexed_fit_object)
 
     @property
     def data_x(self):
         """data x values"""
-        return np.arange(self._fitter.data_size)
+        return np.arange(self._fit.data_size)
 
     @property
     def data_y(self):
         """data y values"""
-        return self._fitter.data
+        return self._fit.data
 
     @property
     def data_xerr(self):
@@ -38,7 +38,7 @@ class IndexedPlotContainer(PlotContainerBase):
     @property
     def data_yerr(self):
         """y error bars for data: total data uncertainty"""
-        return self._fitter.data_error
+        return self._fit.data_error
 
     @property
     def model_x(self):
@@ -48,7 +48,7 @@ class IndexedPlotContainer(PlotContainerBase):
     @property
     def model_y(self):
         """model prediction y values"""
-        return self._fitter.model
+        return self._fit.model
 
     @property
     def model_xerr(self):
@@ -58,12 +58,12 @@ class IndexedPlotContainer(PlotContainerBase):
     @property
     def model_yerr(self):
         """y error bars for model: ``None`` for :py:obj:`IndexedPlotContainer`"""
-        return None #self._fitter.model_error
+        return None #self.fit.model_error
 
     @property
     def x_range(self):
         """x plot range: (-0.5, N-0.5) for :py:obj:`IndexedPlotContainer`"""
-        return (-0.5, self._fitter.data_size-0.5)
+        return (-0.5, self._fit.data_size - 0.5)
 
     @property
     def y_range(self):
@@ -80,10 +80,10 @@ class IndexedPlotContainer(PlotContainerBase):
         :param kwargs: keyword arguments accepted by the ``matplotlib`` methods ``errorbar`` or ``plot``
         :return: plot handle(s)
         """
-        if self._fitter.has_errors:
+        if self._fit.has_errors:
             _yerr = np.sqrt(
                 self.data_yerr ** 2
-                + self._fitter._cost_function.get_uncertainty_gaussian_approximation(self.data_y) ** 2
+                + self._fit._cost_function.get_uncertainty_gaussian_approximation(self.data_y) ** 2
             )
             return target_axes.errorbar(self.data_x,
                                         self.data_y,
@@ -91,7 +91,7 @@ class IndexedPlotContainer(PlotContainerBase):
                                         yerr=_yerr,
                                         **kwargs)
         else:
-            _yerr = self._fitter._cost_function.get_uncertainty_gaussian_approximation(self.data_y)
+            _yerr = self._fit._cost_function.get_uncertainty_gaussian_approximation(self.data_y)
             if np.all(_yerr == 0):
                 return target_axes.plot(self.data_x,
                                         self.data_y,
@@ -136,9 +136,9 @@ class IndexedPlotContainer(PlotContainerBase):
                                     yerr=_yerr / self.model_y,
                                     **kwargs)
 
-class IndexedPlot(PlotFigureBase):
+class IndexedPlot(PlotBase):
 
-    PLOT_CONTAINER_TYPE = IndexedPlotContainer
+    PLOT_CONTAINER_TYPE = IndexedPlotAdapter
     PLOT_STYLE_CONFIG_DATA_TYPE = 'indexed'
 
     def __init__(self, fit_objects):

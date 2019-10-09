@@ -1,16 +1,16 @@
 import numpy as np
 
 from ...config import kc
-from .._base import PlotContainerBase, PlotFigureBase, MultiPlotBase, kc_plot_style
+from .._base import PlotAdapterBase, PlotBase, MultiPlotBase, kc_plot_style
 from .._aux import step_fill_between
 from . import XYMultiFit
 
 
 
-__all__ = ["XYMultiPlotSingular", "XYMultiPlot","XYMultiPlotContainer"]
+__all__ = ["XYMultiPlotSingular", "XYMultiPlot", "XYMultiPlotAdapter"]
 
 
-class XYMultiPlotContainer(PlotContainerBase):
+class XYMultiPlotAdapter(PlotAdapterBase):
     FIT_TYPE = XYMultiFit
 
     def __init__(self, xy_multi_fit_object, model_index, n_plot_points_model=100):
@@ -24,7 +24,7 @@ class XYMultiPlotContainer(PlotContainerBase):
         :param n_plot_points_model: the number of points used for the plot
         :tape n_plot_points_model: 100
         """
-        super(XYMultiPlotContainer, self).__init__(
+        super(XYMultiPlotAdapter, self).__init__(
             fit_object=xy_multi_fit_object,
             model_index=model_index
         )
@@ -37,7 +37,7 @@ class XYMultiPlotContainer(PlotContainerBase):
     def _compute_plot_range_x(self, pad_coeff=1.1, additional_pad=None):
         if additional_pad is None:
             additional_pad = (0, 0)
-        _xmin, _xmax = self._fitter.get_x_range(self._model_index)
+        _xmin, _xmax = self._fit.get_x_range(self._model_index)
         _w = _xmax - _xmin
         self._plot_range_x = (
             0.5 * (_xmin + _xmax - _w * pad_coeff) - additional_pad[0],
@@ -49,22 +49,22 @@ class XYMultiPlotContainer(PlotContainerBase):
     @property
     def data_x(self):
         """data x values"""
-        return self._fitter.get_splice(self._fitter.x_data, self._model_index)
+        return self._fit.get_splice(self._fit.x_data, self._model_index)
 
     @property
     def data_y(self):
         """data y values"""
-        return self._fitter.get_splice(self._fitter.y_data, self._model_index)
+        return self._fit.get_splice(self._fit.y_data, self._model_index)
 
     @property
     def data_xerr(self):
         """x error bars for data: ``None`` for :py:obj:`IndexedPlotContainer`"""
-        return self._fitter.get_splice(self._fitter.x_error, self._model_index)
+        return self._fit.get_splice(self._fit.x_error, self._model_index)
 
     @property
     def data_yerr(self):
         """y error bars for data: total data uncertainty"""
-        return self._fitter.get_splice(self._fitter.y_data_error, self._model_index)
+        return self._fit.get_splice(self._fit.y_data_error, self._model_index)
 
     @property
     def model_x(self):
@@ -75,17 +75,17 @@ class XYMultiPlotContainer(PlotContainerBase):
     @property
     def model_y(self):
         """y values at support points for model function"""
-        return self._fitter.eval_model_function(x=self.model_x, model_index=self._model_index)
+        return self._fit.eval_model_function(x=self.model_x, model_index=self._model_index)
 
     @property
     def model_xerr(self):
         """x error bars for model (not used)"""
-        return None if np.allclose(self._fitter.x_error, 0) else self._fitter.x_error
+        return None if np.allclose(self._fit.x_error, 0) else self._fit.x_error
 
     @property
     def model_yerr(self):
         """y error bars for model (not used)"""
-        return None if np.allclose(self._fitter.y_data_error, 0) else self._fitter.y_data_error
+        return None if np.allclose(self._fit.y_data_error, 0) else self._fit.y_data_error
 
     @property
     def x_range(self):
@@ -102,13 +102,13 @@ class XYMultiPlotContainer(PlotContainerBase):
     @property
     def model_function_argument_formatters(self):
         """return model function argument formatters"""
-        return self._fitter._model_function.get_argument_formatters(self._model_index)
+        return self._fit._model_function.get_argument_formatters(self._model_index)
 
     # public methods
 
     def get_formatted_model_function(self, **kwargs):
         """return the formatted model function string"""
-        return self._fitter._model_function.formatter.get_formatted(model_index=self._model_index, **kwargs)
+        return self._fit._model_function.formatter.get_formatted(model_index=self._model_index, **kwargs)
 
     def plot_data(self, target_axes, **kwargs):
         """
@@ -119,10 +119,10 @@ class XYMultiPlotContainer(PlotContainerBase):
         :return: plot handle(s)
         """
         # TODO: how to handle 'data' errors and 'model' errors?
-        if self._fitter.has_errors:
+        if self._fit.has_errors:
             _yerr = np.sqrt(
                 self.data_yerr ** 2
-                + self._fitter._cost_function.get_uncertainty_gaussian_approximation(self.data_y) ** 2
+                + self._fit._cost_function.get_uncertainty_gaussian_approximation(self.data_y) ** 2
             )
             return target_axes.errorbar(self.data_x,
                                         self.data_y,
@@ -130,7 +130,7 @@ class XYMultiPlotContainer(PlotContainerBase):
                                         yerr=_yerr,
                                         **kwargs)
         else:
-            _yerr = self._fitter._cost_function.get_uncertainty_gaussian_approximation(self.data_y)
+            _yerr = self._fit._cost_function.get_uncertainty_gaussian_approximation(self.data_y)
             if np.all(_yerr == 0):
                 return target_axes.plot(self.data_x,
                                         self.data_y,
@@ -162,9 +162,9 @@ class XYMultiPlotContainer(PlotContainerBase):
         :param kwargs: keyword arguments accepted by the ``matplotlib`` ``fill_between`` method
         :return: plot handle(s)
         """
-        _band_y = self._fitter.get_y_error_band(self._model_index)
+        _band_y = self._fit.get_y_error_band(self._model_index)
         _y = self.model_y
-        if self._fitter.has_errors:
+        if self._fit.has_errors:
             return target_axes.fill_between(
                 self.model_x,
                 _y - _band_y, _y + _band_y,
@@ -173,13 +173,13 @@ class XYMultiPlotContainer(PlotContainerBase):
             return None  # don't plot error band if fitter input data has no errors...
 
 
-class XYMultiPlotSingular(PlotFigureBase):
+class XYMultiPlotSingular(PlotBase):
 
-    PLOT_CONTAINER_TYPE = XYMultiPlotContainer
+    PLOT_CONTAINER_TYPE = XYMultiPlotAdapter
     PLOT_STYLE_CONFIG_DATA_TYPE = 'xy'
 
     PLOT_SUBPLOT_TYPES = dict(
-        PlotFigureBase.PLOT_SUBPLOT_TYPES,
+        PlotBase.PLOT_SUBPLOT_TYPES,
         model_line=dict(
             plot_container_method='plot_model_line',
             target_axes='main'
