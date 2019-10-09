@@ -3,7 +3,6 @@ import numpy as np
 from ...config import kc
 from .._base import PlotAdapterBase, PlotBase, MultiPlotBase, kc_plot_style
 from .._aux import step_fill_between
-from . import XYMultiFit
 
 
 
@@ -11,7 +10,6 @@ __all__ = ["XYMultiPlotSingular", "XYMultiPlot", "XYMultiPlotAdapter"]
 
 
 class XYMultiPlotAdapter(PlotAdapterBase):
-    FIT_TYPE = XYMultiFit
 
     def __init__(self, xy_multi_fit_object, model_index, n_plot_points_model=100):
         """

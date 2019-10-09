@@ -15,6 +15,7 @@ from ..xy.fit import XYFit
 from .container import XYMultiContainer
 from .cost import XYMultiCostFunction_Chi2, XYMultiCostFunction_UserDefined, STRING_TO_COST_FUNCTION
 from .model import XYMultiParametricModel, XYMultiModelFunction
+from .plot import XYMultiPlotAdapter
 from ..util import function_library, add_in_quadrature, collect, invert_matrix
 
 
@@ -29,6 +30,7 @@ class XYMultiFit(FitBase):
     CONTAINER_TYPE = XYMultiContainer
     MODEL_TYPE = XYMultiParametricModel
     MODEL_FUNCTION_TYPE = XYMultiModelFunction
+    PLOT_ADAPTER_TYPE = XYMultiPlotAdapter
     EXCEPTION_TYPE = XYMultiFitException
     RESERVED_NODE_NAMES = {'y_data', 'y_model', 'cost',
                            'x_error', 'y_data_error', 'y_model_error', 'total_error',

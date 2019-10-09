@@ -28,6 +28,7 @@ def kc_plot_style(data_type, subplot_key, property_key):
 class CyclerException(Exception):
     pass
 
+
 class Cycler(object):
     # TODO: handle_mismatching_lengths in ['repeat', 'repeat_last', 'reflect']
     def __init__(self, *args):
@@ -104,10 +105,12 @@ class Cycler(object):
             _args.append(_tmp_dict)
         return Cycler(*_args)
 
+
 class DummyLegendHandler(HandlerBase):
     """Dummy legend handler (nothing is drawn)"""
     def legend_artist(self, *args, **kwargs):
         return None
+
 
 class PlotAdapterException(Exception):
     pass
@@ -117,7 +120,7 @@ class PlotAdapterException(Exception):
 class PlotAdapterBase(object):
     """
     This is a purely abstract class implementing the minimal interface required by all
-    types of plotters.
+    types of plot adapters.
 
     A :py:obj:`PlotAdapter` object can be constructed for a :py:obj:`Fit` object of the
     corresponding type.
@@ -132,8 +135,6 @@ class PlotAdapterBase(object):
     data and the fitted model, as well as methods calling the ``matplotlib`` routines
     doing the actual plotting.
     """
-
-    FIT_TYPE = None
 
     def __init__(self, fit_object):
         """
@@ -444,7 +445,7 @@ class PlotBase(object):
         if self._plot_containers is None:
             self._plot_containers = []
             for _i, _fit in enumerate(self._fits):
-                _pdc = self.__class__.PLOT_CONTAINER_TYPE(_fit)
+                _pdc = _fit._new_plot_adapter()
 
                 self._plot_containers.append(_pdc)
 

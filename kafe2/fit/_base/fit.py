@@ -30,6 +30,7 @@ class FitBase(FileIOMixin, object):
 
     CONTAINER_TYPE = None
     MODEL_TYPE = None
+    PLOT_ADAPTER_TYPE = None
     EXCEPTION_TYPE = FitException
     RESERVED_NODE_NAMES = None
 
@@ -70,6 +71,15 @@ class FitBase(FileIOMixin, object):
     def _new_parametric_model(self, *args, **kwargs):
         """create a ParametricModel of the right type for this fit"""
         return self.__class__.MODEL_TYPE(*args, **kwargs)
+
+    def _new_plot_adapter(self, *args, **kwargs):
+        """create a PlotAdapter of the right type for this fit"""
+        if self.__class__.PLOT_ADAPTER_TYPE is None:
+            raise NotImplementedError(
+                "No `PlotAdapter` configured for fit type '{}'!".format(
+                    self.__class__.__name__
+                ))
+        return self.__class__.PLOT_ADAPTER_TYPE(self, *args, **kwargs)
 
     def _validate_model_function_for_fit_raise(self):
         """make sure the supplied model function is compatible with the fit type"""

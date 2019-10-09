@@ -2,7 +2,6 @@ import numpy as np
 
 from .._base import PlotAdapterBase, PlotAdapterException, PlotBase
 from .._aux import step_fill_between
-from .fit import IndexedFit
 
 __all__ = ["IndexedPlot", "IndexedPlotAdapter"]
 
@@ -10,7 +9,6 @@ class IndexedPlotAdapterException(PlotAdapterException):
     pass
 
 class IndexedPlotAdapter(PlotAdapterBase):
-    FIT_TYPE = IndexedFit
 
     def __init__(self, indexed_fit_object):
         """

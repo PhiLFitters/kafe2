@@ -12,6 +12,7 @@ from .._base import (FitException, FitBase, DataContainerBase,
 from .container import HistContainer
 from .cost import HistCostFunction_NegLogLikelihood, HistCostFunction_UserDefined, STRING_TO_COST_FUNCTION
 from .model import HistParametricModel, HistModelFunction
+from .plot import HistPlotAdapter
 from ..util import function_library, add_in_quadrature, collect, invert_matrix
 
 __all__ = ["HistFit"]
@@ -25,6 +26,7 @@ class HistFit(FitBase):
     CONTAINER_TYPE = HistContainer
     MODEL_TYPE = HistParametricModel
     MODEL_FUNCTION_TYPE = HistModelFunction
+    PLOT_ADAPTER_TYPE = HistPlotAdapter
     EXCEPTION_TYPE = HistFitException
     RESERVED_NODE_NAMES = {'data', 'model', 'model_density', 'cost',
                           'data_error', 'model_error', 'total_error',

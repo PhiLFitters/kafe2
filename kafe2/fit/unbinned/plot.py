@@ -5,7 +5,6 @@ from collections import OrderedDict
 from ...config import kc
 from .._base import PlotAdapterBase, PlotAdapterException, PlotBase, kc_plot_style
 from .._aux import step_fill_between
-from .fit import UnbinnedFit
 
 
 __all__ = ["UnbinnedPlot", "UnbinnedPlotAdapter"]
@@ -16,7 +15,6 @@ class UnbinnedPlotAdapterException(PlotAdapterException):
 
 
 class UnbinnedPlotAdapter(PlotAdapterBase):
-    FIT_TYPE = UnbinnedFit
 
     def __init__(self, unbinned_fit_object, n_plot_points_model=100):
         """

@@ -14,6 +14,7 @@ from .._base import FitException, FitBase, DataContainerBase, CostFunctionBase
 from .container import IndexedContainer
 from .cost import IndexedCostFunction_Chi2, IndexedCostFunction_UserDefined, STRING_TO_COST_FUNCTION
 from .model import IndexedParametricModel, IndexedModelFunction
+from .plot import IndexedPlotAdapter
 from ..util import function_library, add_in_quadrature, collect, invert_matrix
 
 
@@ -28,6 +29,7 @@ class IndexedFit(FitBase):
     CONTAINER_TYPE = IndexedContainer
     MODEL_TYPE = IndexedParametricModel
     MODEL_FUNCTION_TYPE = IndexedModelFunction
+    PLOT_ADAPTER_TYPE = IndexedPlotAdapter
     EXCEPTION_TYPE = IndexedFitException
     RESERVED_NODE_NAMES = {'data', 'model', 'cost',
                           'data_error', 'model_error', 'total_error',

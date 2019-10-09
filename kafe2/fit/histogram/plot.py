@@ -3,7 +3,6 @@ import six
 
 from .._base import PlotAdapterBase, PlotAdapterException, PlotBase
 from .._aux import step_fill_between
-from . import HistFit
 
 from ..xy.plot import XYPlotAdapter
 
@@ -13,7 +12,6 @@ class HistPlotAdapterException(PlotAdapterException):
     pass
 
 class HistPlotAdapter(PlotAdapterBase):
-    FIT_TYPE = HistFit
 
     def __init__(self, hist_fit_object, n_plot_points_model_density=100):
         """

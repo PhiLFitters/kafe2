@@ -14,6 +14,7 @@ from .._base import FitException, FitBase, DataContainerBase, CostFunctionBase
 from .container import XYContainer
 from .cost import XYCostFunction_Chi2, XYCostFunction_UserDefined, STRING_TO_COST_FUNCTION
 from .model import XYParametricModel, XYModelFunction
+from .plot import XYPlotAdapter
 from ..util import function_library, add_in_quadrature, collect, invert_matrix
 
 
@@ -28,6 +29,7 @@ class XYFit(FitBase):
     CONTAINER_TYPE = XYContainer
     MODEL_TYPE = XYParametricModel
     MODEL_FUNCTION_TYPE = XYModelFunction
+    PLOT_ADAPTER_TYPE = XYPlotAdapter
     EXCEPTION_TYPE = XYFitException
     RESERVED_NODE_NAMES = {'y_data', 'y_model', 'cost',
                            'x_error', 'y_data_error', 'y_model_error', 'total_error',

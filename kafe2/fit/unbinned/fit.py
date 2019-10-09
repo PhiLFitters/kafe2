@@ -11,6 +11,7 @@ from .._base import FitException, FitBase, DataContainerBase
 from .container import UnbinnedContainer
 from .cost import UnbinnedCostFunction_UserDefined, UnbinnedCostFunction_NegLogLikelihood
 from .model import UnbinnedModelPDF, UnbinnedParametricModel
+from .plot import UnbinnedPlotAdapter
 from ..util import function_library, add_in_quadrature, collect, invert_matrix
 
 __all__ = ["UnbinnedFit"]
@@ -24,6 +25,7 @@ class UnbinnedFit(FitBase):
     CONTAINER_TYPE = UnbinnedContainer
     MODEL_TYPE = UnbinnedParametricModel
     MODEL_FUNCTION_TYPE = UnbinnedModelPDF
+    PLOT_ADAPTER_TYPE = UnbinnedPlotAdapter
     EXCEPTION_TYPE = UnbinnedFitException
     RESERVED_NODE_NAMES = {'data', 'model', 'cost', 'parameter_values', 'parameter_constraints'}
 

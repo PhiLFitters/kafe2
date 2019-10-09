@@ -3,7 +3,6 @@ import numpy as np
 from ...config import kc
 from .._base import PlotAdapterBase, PlotAdapterException, PlotBase, kc_plot_style
 from .._aux import step_fill_between
-from . import XYFit
 
 
 
@@ -13,7 +12,6 @@ class XYPlotAdapterException(PlotAdapterException):
     pass
 
 class XYPlotAdapter(PlotAdapterBase):
-    FIT_TYPE = XYFit
 
     def __init__(self, xy_fit_object, n_plot_points_model=100):
         """
