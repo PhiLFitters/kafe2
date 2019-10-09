@@ -14,7 +14,9 @@ https://github.com/GuenterQuast/picoCosmo. A visual representation of the data c
 https://github.com/GuenterQuast/picoCosmo/blob/master/doc/dpFigs_Kanne.pdf
 """
 
-from kafe2 import UnbinnedContainer, UnbinnedFit, ContoursProfiler, UnbinnedPlot
+from kafe2.fit import UnbinnedContainer, UnbinnedFit, UnbinnedPlot
+from kafe2.fit.tools import ContoursProfiler
+
 import numpy as np
 import matplotlib.pyplot as plt
 

@@ -14,4 +14,3 @@ from .fit import *
 from .format import *
 from .model import *
 from .plot import *
-from .profile import *

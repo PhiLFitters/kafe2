@@ -2,7 +2,7 @@
 import argparse, sys
 import matplotlib.pyplot as plt
 from kafe2.fit._base.fit import FitBase
-from kafe2.fit._base.profile import ContoursProfiler
+from kafe2.fit.tools.contours_profiler import ContoursProfiler
 
 
 class Kafe2GoException(Exception):

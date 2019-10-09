@@ -6,7 +6,8 @@ kafe2 example: Fit a double slit diffraction pattern
 
 import numpy as np
 
-from kafe2 import XYContainer, XYFit, XYPlot, ContoursProfiler
+from kafe2.fit import XYContainer, XYFit, XYPlot
+from kafe2.fit.tools import ContoursProfiler
 
 # import matplotlib *after* kafe2
 import matplotlib.pyplot as plt

@@ -1,5 +1,6 @@
-from kafe2.fit._base.profile import ContoursProfiler
-from kafe2.fit.xy.fit import XYFit
+from kafe2.fit.tools import ContoursProfiler
+from kafe2.fit import XYFit
+
 import numpy as np
 import matplotlib.pyplot as plt
 

@@ -1,2 +1,4 @@
 #TODO documentation
-#TODO should ensemble be imported?
+
+from .contours_profiler import *
+from .ensemble import *

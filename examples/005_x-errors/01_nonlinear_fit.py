@@ -35,7 +35,8 @@ them with the conventional parameter errors.
 """
 
 import matplotlib.pyplot as plt
-from kafe2 import XYContainer, XYFit, XYPlot, ContoursProfiler
+from kafe2 import XYContainer, XYFit, XYPlot
+from kafe2.fit.tools import ContoursProfiler
 
 # Construct a fit with data loaded from a yaml file. The model function is the default of f(x) = a * x + b
 nonlinear_fit = XYFit(xy_data=XYContainer.from_file('data.yml'))

@@ -2,13 +2,14 @@ from __future__ import print_function
 
 import collections
 import matplotlib as mpl
-import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats
 import six
 
 from kafe2.core.error import CovMat
 
+
+__all__ = ['EnsembleVariable', 'EnsembleVariableProbabilityDistribution', 'EnsembleVariablePlotter']
 
 def cycle_axes(array, k):
     """

@@ -155,7 +155,6 @@ The following objects are provided for handling histograms:
 
 # public interface of submodule 'kafe2.fit'
 
-from ._base.profile import *   # just for `ContoursProfiler` -> better way?
 
 from .indexed import *
 from .unbinned import *
