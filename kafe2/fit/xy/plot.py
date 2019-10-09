@@ -1,17 +1,36 @@
 import numpy as np
 
 from ...config import kc
-from .._base import PlotAdapterBase, PlotAdapterException, PlotBase, kc_plot_style
+from .._base import PlotAdapterBase, PlotAdapterException, Plot, kc_plot_style
 from .._aux import step_fill_between
 
 
+__all__ = ["XYPlotAdapter"]
 
-__all__ = ["XYPlot", "XYPlotAdapter"]
 
 class XYPlotAdapterException(PlotAdapterException):
     pass
 
 class XYPlotAdapter(PlotAdapterBase):
+
+    PLOT_STYLE_CONFIG_DATA_TYPE = 'xy'
+    PLOT_SUBPLOT_TYPES = dict(
+        PlotAdapterBase.PLOT_SUBPLOT_TYPES,
+        model_line=dict(
+            plot_adapter_method='plot_model_line',
+            target_axes='main'
+        ),
+        model_error_band=dict(
+            plot_adapter_method='plot_model_error_band',
+            target_axes='main'
+        ),
+        ratio_error_band=dict(
+            plot_style_as='model_error_band',
+            plot_adapter_method='plot_ratio_error_band',
+            target_axes='ratio'
+        ),
+    )
+    del PLOT_SUBPLOT_TYPES['model']  # don't plot model xy points
 
     def __init__(self, xy_fit_object, n_plot_points_model=100):
         """
@@ -207,31 +226,3 @@ class XYPlotAdapter(PlotAdapterBase):
                 **kwargs)
         else:
             return None  # don't plot error band if fitter input data has no errors...
-
-
-class XYPlot(PlotBase):
-
-    PLOT_CONTAINER_TYPE = XYPlotAdapter
-    PLOT_STYLE_CONFIG_DATA_TYPE = 'xy'
-
-    PLOT_SUBPLOT_TYPES = dict(
-        PlotBase.PLOT_SUBPLOT_TYPES,
-        model_line=dict(
-            plot_container_method='plot_model_line',
-            target_axes='main'
-        ),
-        model_error_band=dict(
-            plot_container_method='plot_model_error_band',
-            target_axes='main'
-        ),
-        ratio_error_band=dict(
-            plot_style_as='model_error_band',
-            plot_container_method='plot_ratio_error_band',
-            target_axes='ratio'
-        ),
-    )
-    del PLOT_SUBPLOT_TYPES['model']  # don't plot model xy points
-
-    def __init__(self, fit_objects):
-        super(XYPlot, self).__init__(fit_objects=fit_objects)
-        self._plot_range_x = None

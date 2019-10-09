@@ -6,7 +6,7 @@ kafe2 example: Fit a double slit diffraction pattern
 
 import numpy as np
 
-from kafe2.fit import XYContainer, XYFit, XYPlot
+from kafe2.fit import XYContainer, XYFit, Plot
 from kafe2.fit.tools import ContoursProfiler
 
 # import matplotlib *after* kafe2
@@ -117,8 +117,8 @@ cpf.plot_profiles_contours_matrix(parameters=['I0', 'b', 'g'],
                                   contour_naming_convention='sigma',
                                   label_ticks_in_sigma=True)
 
-# to see the fit results, plot using XYPlot
-p = XYPlot(fit_objects=f)
+# to see the fit results, plot using Plot
+p = Plot(fit_objects=f)
 p.plot(with_fit_info=True)
 
 # show the fit result

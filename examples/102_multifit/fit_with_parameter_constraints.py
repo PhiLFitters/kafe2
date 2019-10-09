@@ -72,7 +72,7 @@ a simultaneous multi-model fit, which is demonstrated in the example called
 import numpy as np
 import matplotlib.pyplot as plt
 
-from kafe2 import XYFit, XYPlot
+from kafe2 import XYFit, Plot
 
 
 # empirical model for T(U): a parabola
@@ -126,7 +126,7 @@ auxiliary_fit.do_fit()
 auxiliary_fit.report()
 
 # (Optional) plot the results
-auxiliary_plot = XYPlot(auxiliary_fit)
+auxiliary_plot = Plot(auxiliary_fit)
 auxiliary_plot.plot(with_fit_info=True)
 
 # Step 2: perform the main fit
@@ -160,7 +160,7 @@ main_fit.do_fit()
 main_fit.report()
 
 # (Optional) plot the results
-plot = XYPlot(main_fit)
+plot = Plot(main_fit)
 plot.plot(with_fit_info=True)
 
 plt.show()

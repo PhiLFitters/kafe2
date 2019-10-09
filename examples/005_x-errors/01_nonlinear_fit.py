@@ -35,7 +35,7 @@ them with the conventional parameter errors.
 """
 
 import matplotlib.pyplot as plt
-from kafe2 import XYContainer, XYFit, XYPlot
+from kafe2 import XYContainer, XYFit, Plot
 from kafe2.fit.tools import ContoursProfiler
 
 # Construct a fit with data loaded from a yaml file. The model function is the default of f(x) = a * x + b
@@ -52,9 +52,9 @@ nonlinear_fit.do_fit()
 # Note the asymmetric_parameter_errors flag
 nonlinear_fit.report(asymmetric_parameter_errors=True)
 
-# Optional: Create a plot of the fit results using XYPlot.
+# Optional: Create a plot of the fit results using Plot.
 # Note the asymmetric_parameter_errors flag
-plot = XYPlot(nonlinear_fit)
+plot = Plot(nonlinear_fit)
 plot.plot(with_fit_info=True, with_asymmetric_parameter_errors=True)
 
 # Optional: Calculate a detailed representation of the profile likelihood

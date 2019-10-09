@@ -12,7 +12,7 @@ a kafe2 fit.
 
 import numpy as np
 
-from kafe2 import XYContainer, XYFit, XYPlot
+from kafe2 import XYContainer, XYFit, Plot
 import matplotlib.pyplot as plt
 
 # To define a model function for kafe2 simply write it as a python function
@@ -49,8 +49,8 @@ exponential_fit.do_fit()
 linear_fit.report()
 exponential_fit.report()
 
-# Optional: Create a plot of the fit results using XYPlot.
-p = XYPlot(fit_objects=[linear_fit, exponential_fit])
+# Optional: Create a plot of the fit results using Plot.
+p = Plot(fit_objects=[linear_fit, exponential_fit])
 p.plot(with_fit_info=True, with_ratio=True)
 
 # Show the fit results.

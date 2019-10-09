@@ -1,17 +1,28 @@
 import numpy as np
 import six
 
-from .._base import PlotAdapterBase, PlotAdapterException, PlotBase
-from .._aux import step_fill_between
+from .._base import PlotAdapterBase, PlotAdapterException, Plot
 
 from ..xy.plot import XYPlotAdapter
 
-__all__ = ["HistPlot", "HistPlotAdapter"]
+__all__ = ["HistPlotAdapter"]
+
 
 class HistPlotAdapterException(PlotAdapterException):
     pass
 
+
 class HistPlotAdapter(PlotAdapterBase):
+
+    PLOT_STYLE_CONFIG_DATA_TYPE = 'histogram'
+
+    PLOT_SUBPLOT_TYPES = dict(
+        PlotAdapterBase.PLOT_SUBPLOT_TYPES,
+        model_density=dict(
+            plot_adapter_method='plot_model_density',
+            target_axes='main',
+        ),
+    )
 
     def __init__(self, hist_fit_object, n_plot_points_model_density=100):
         """
@@ -33,7 +44,7 @@ class HistPlotAdapter(PlotAdapterBase):
     @property
     def data_y(self):
         """data y values"""
-        return self._fit.data
+        return self._fit.data.astype(float)
 
     @property
     def data_xerr(self):
@@ -155,15 +166,3 @@ class HistPlotAdapter(PlotAdapterBase):
             **kwargs
         )
 
-class HistPlot(PlotBase):
-
-    PLOT_CONTAINER_TYPE = HistPlotAdapter
-    PLOT_STYLE_CONFIG_DATA_TYPE = 'histogram'
-
-    PLOT_SUBPLOT_TYPES = PlotBase.PLOT_SUBPLOT_TYPES.copy()  # don't change original class variable
-    PLOT_SUBPLOT_TYPES['model_density'] = dict(
-        plot_container_method='plot_model_density',
-    )
-
-    def __init__(self, fit_objects):
-        super(HistPlot, self).__init__(fit_objects=fit_objects)

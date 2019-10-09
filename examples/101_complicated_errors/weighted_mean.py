@@ -8,7 +8,7 @@ from __future__ import print_function
 
 import numpy as np
 
-from kafe2 import IndexedFit, IndexedPlot
+from kafe2 import IndexedFit, Plot
 
 # import matplotlib *after* kafe2
 import matplotlib.pyplot as plt
@@ -58,8 +58,8 @@ f.do_fit()
 # print out information about the fit
 f.report()
 
-# to see the fit results, plot using IndexedPlot
-p = IndexedPlot(fit_objects=f)
+# to see the fit results, plot using Plot
+p = Plot(f)
 p.plot(with_fit_info=True)
 
 # show the fit result

@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 from matplotlib import gridspec as gs
 from matplotlib.legend_handler import HandlerBase
 
-__all__ = ["PlotAdapterBase", "PlotBase", "MultiPlotBase", "PlotAdapterException", "PlotFigureException",
+__all__ = ["PlotAdapterBase", "Plot", "PlotAdapterException", "PlotFigureException",
            "kc_plot_style"]
 
 
@@ -136,13 +136,62 @@ class PlotAdapterBase(object):
     doing the actual plotting.
     """
 
-    def __init__(self, fit_object):
+    PLOT_STYLE_CONFIG_DATA_TYPE = 'default'
+
+    PLOT_SUBPLOT_TYPES = OrderedDict(
+        data=dict(
+            plot_adapter_method='plot_data',
+            target_axes='main',
+        ),
+        model=dict(
+            plot_adapter_method='plot_model',
+            target_axes='main',
+        ),
+        ratio=dict(
+            plot_style_as='data',
+            plot_adapter_method='plot_ratio',
+            target_axes='ratio',
+        ),
+    )
+
+    def __init__(self, fit_object, axis_labels=None):
         """
         Construct a :py:obj:`PlotAdapter` for a :py:obj:`Fit` object:
 
         :param fit_object: an object derived from :py:obj:`~kafe2.fit._base.FitBase`
         """
         self._fit = fit_object
+
+        self._axis_labels = axis_labels
+        if self._axis_labels is None:
+            self._axis_labels = (
+                kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'x'),
+                kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'y')
+            )
+
+    def _get_subplot_kwargs(self, subplot_id, plot_type):
+
+        # get static kwargs
+        _plot_style_as = self.PLOT_SUBPLOT_TYPES[plot_type].get('plot_style_as', plot_type)
+        _kwargs = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, _plot_style_as, 'plot_kwargs')
+        _prop_cycler_args = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, _plot_style_as, 'property_cycler')
+
+        _prop_cycler = Cycler(*_prop_cycler_args)
+        _kwargs.update(**_prop_cycler.get(subplot_id))
+
+        # apply interpolation to legend labels
+        _label_raw = _kwargs.pop('label')
+
+        # TODO: think of better way to handle this (and make for flexible)
+        _kwargs['label'] = _label_raw % dict(subplot_id=subplot_id,
+                                             plot_type=plot_type)
+
+        # calculate zorder if not explicitly given
+        _n_defined_plot_types = len(self.PLOT_SUBPLOT_TYPES)
+        if 'zorder' not in _kwargs:
+            _kwargs['zorder'] = subplot_id * _n_defined_plot_types + list(self.PLOT_SUBPLOT_TYPES).index(plot_type)
+
+        return _kwargs
 
     def _get_total_error(self, error_contributions):
         _total_err = np.zeros_like(self.data_y)
@@ -162,6 +211,9 @@ class PlotAdapterBase(object):
             return None
         else:
             return _total_err
+
+    def get_axis_labels(self):
+        return self._axis_labels
 
     # -- properties
 
@@ -285,12 +337,12 @@ class PlotAdapterBase(object):
         """
         pass
 
-    #Overridden by multi plot containers
+    #Overridden by multi plot adapters
     def get_formatted_model_function(self, **kwargs):
         """return model function string"""
         return self._fit._model_function.formatter.get_formatted(**kwargs)
 
-    #Overridden by multi plot containers
+    #Overridden by multi plot adapters
     @property
     def model_function_argument_formatters(self):
         """return model function argument formatters"""
@@ -304,7 +356,7 @@ class PlotFigureException(Exception):
 
 
 @six.add_metaclass(abc.ABCMeta)  # TODO: check if needed
-class PlotBase(object):
+class Plot(object):
     """
     This is a purely abstract class implementing the minimal interface required by all
     types of plotters.
@@ -315,26 +367,6 @@ class PlotBase(object):
     It controls the overall figure layout and is responsible for axes, subplot and legend management.
     """
     # TODO update documentation
-
-    PLOT_CONTAINER_TYPE = None
-    PLOT_STYLE_CONFIG_DATA_TYPE = 'default'
-
-    PLOT_SUBPLOT_TYPES = OrderedDict()
-    PLOT_SUBPLOT_TYPES.update(
-        data=dict(
-            plot_container_method='plot_data',
-            target_axes='main',
-        ),
-        model=dict(
-            plot_container_method='plot_model',
-            target_axes='main',
-        ),
-        ratio=dict(
-            plot_style_as='data',
-            plot_container_method='plot_ratio',
-            target_axes='ratio',
-        ),
-    )
 
     FIT_INFO_STRING_FORMAT = textwrap.dedent("""\
         {model_function}
@@ -376,27 +408,9 @@ class PlotBase(object):
                                      width_ratios=[1, 1],
                                      height_ratios=None)
 
-        # default axis labels
-        self._plot_label_x = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'x')
-        self._plot_label_y = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'y')
-
-        # store defined plot types for convenient access
-        self._defined_plot_types = self.PLOT_SUBPLOT_TYPES.keys()
-
-        # fill meta-information structures for all plot_types
-        self._subplot_static_kwarg_dicts = dict()
-        self._subplot_container_plot_method_name = dict()
-        self._subplot_prop_cyclers = dict()
-        for _pt in self._defined_plot_types:
-            _plot_style_as = self.PLOT_SUBPLOT_TYPES[_pt].get('plot_style_as', _pt)
-
-            self._subplot_container_plot_method_name[_pt] = self.PLOT_SUBPLOT_TYPES[_pt]['plot_container_method']
-            self._subplot_static_kwarg_dicts[_pt] = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, _plot_style_as, 'plot_kwargs')
-            self._subplot_prop_cyclers[_pt] = Cycler(*kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, _plot_style_as, 'property_cycler'))
-
         # owned objects
         self._fig = None
-        self._plot_containers = None
+        self._plot_adapters = None
 
     # -- private methods
 
@@ -431,82 +445,50 @@ class PlotBase(object):
             for _i, _k in enumerate(axes_keys)
         }
 
-        # hide x tick labels in all but the lowest Axes
-        for _key in axes_keys[:-1]:
-            self._axes[_key].set_xticklabels([])
-            self._axes[_key].set_xlabel(None)
+    def _get_plot_adapters(self):
+        '''retrieve plot adapters, creating them if needed'''
 
-        self._axes[axes_keys[-1]].set_xlabel(self.x_label)
-        self._axes[axes_keys[0]].set_ylabel(self.y_label)
-
-    def _get_plot_containers(self):
-        '''retrieve plot containers, creating them if needed'''
-
-        if self._plot_containers is None:
-            self._plot_containers = []
+        if self._plot_adapters is None:
+            self._plot_adapters = []
             for _i, _fit in enumerate(self._fits):
                 _pdc = _fit._new_plot_adapter()
 
-                self._plot_containers.append(_pdc)
+                self._plot_adapters.append(_pdc)
 
-        return self._plot_containers
+        return self._plot_adapters
 
-    def _get_subplot_kwargs(self, subplot_id, plot_type):
-        # get static kwargs
-        _kwargs = self._subplot_static_kwarg_dicts.get(plot_type, dict()).copy()
-
-        # get kwargs from property cyclers
-        if plot_type in self._subplot_prop_cyclers:
-            _cycler = self._subplot_prop_cyclers[plot_type]
-            _cycler_kwargs = _cycler.get(subplot_id)
-            _kwargs.update(_cycler_kwargs)
-
-        # apply interpolation to legend labels
-        _label_raw = _kwargs.pop('label')
-
-        # TODO: think of better way to handle this (and make for flexible)
-        _kwargs['label'] = _label_raw % dict(subplot_id=subplot_id,
-                                             plot_type=plot_type)
-
-        # calculate zorder if not explicitly given
-        _n_defined_plot_types = len(self._defined_plot_types)
-        if 'zorder' not in _kwargs:
-            _kwargs['zorder'] = subplot_id * _n_defined_plot_types + list(self._defined_plot_types).index(plot_type)
-
-        return _kwargs
-
-    def _get_plot_handle_for_plot_type(self, plot_type, plot_data_container):
-        _plot_method_name = self.PLOT_SUBPLOT_TYPES[plot_type]['plot_container_method']
+    def _get_plot_handle_for_plot_type(self, plot_type, plot_adapter):
+        _plot_method_name = plot_adapter.PLOT_SUBPLOT_TYPES[plot_type]['plot_adapter_method']
 
         try:
-            _plot_method_handle = getattr(plot_data_container, _plot_method_name)
+            _plot_method_handle = getattr(plot_adapter, _plot_method_name)
         except AttributeError:
             raise PlotFigureException("Cannot handle plot of type '%s': cannot find corresponding "
                                       "plot method '%s' in %s!"
-                                      % (plot_type, _plot_method_name, self.PLOT_CONTAINER_TYPE))
+                                      % (plot_type, _plot_method_name, plot_adapter.__class__))
         return _plot_method_handle
 
-    def _call_plot_method_for_plot_type(self, plot_container, plot_type, target_axes):
+    def _call_plot_method_for_plot_type(self, plot_adapter, plot_type, target_axes, **kwargs):
         _plot_method_handle = self._get_plot_handle_for_plot_type(
-            plot_type, plot_container)
+            plot_type, plot_adapter)
 
         return _plot_method_handle(
             target_axes,
-            **self._get_subplot_kwargs(
-                self._model_indices[plot_container._model_index],
-                plot_type
-            )
+            **kwargs
         )
 
     def _plot_and_get_results(self):
-        _plot_containers = self._get_plot_containers()
+        _plot_adapters = self._get_plot_adapters()
 
         _plots = {}
-        for _i, _pdc in enumerate(_plot_containers):
+        for _i_pdc, _pdc in enumerate(_plot_adapters):
 
-            _pdc._model_index = _i
-            for _pt in self._defined_plot_types:
-                _axes_key = self.PLOT_SUBPLOT_TYPES[_pt]['target_axes']
+            if not _pdc.PLOT_SUBPLOT_TYPES:
+                continue
+
+            _pdc._model_index = _i_pdc
+            for _i_pt, (_pt, _pt_spec) in enumerate(six.iteritems(_pdc.PLOT_SUBPLOT_TYPES)):
+                _axes_key = _pt_spec['target_axes']
 
                 # skip plot elements meant for an inexistent axes
                 if _axes_key not in self._axes:
@@ -519,13 +501,17 @@ class PlotBase(object):
                 _artist = self._call_plot_method_for_plot_type(
                     _pdc,
                     _pt,
-                    target_axes=self._get_axes(_axes_key)
+                    target_axes=self._get_axes(_axes_key),
+                    **_pdc._get_subplot_kwargs(
+                        self._model_indices[_pdc._model_index],  # or _i_pdc
+                        _pt
+                    )
                 )
 
                 _axes_plots.append({
                     'type' : _pt,
-                    'fit_index' : _i,
-                    'container' : _pdc,
+                    'fit_index' : _i_pdc,
+                    'adapter' : _pdc,
                     'artist' : _artist,
                 })
 
@@ -548,16 +534,16 @@ class PlotBase(object):
         return _plots
 
     @classmethod
-    def _get_fit_info(cls, plot_data_container, format_as_latex, asymmetric_parameter_errors):
+    def _get_fit_info(cls, plot_adapter, format_as_latex, asymmetric_parameter_errors):
 
-        plot_data_container._fit._update_parameter_formatters(
+        plot_adapter._fit._update_parameter_formatters(
             update_asymmetric_errors=asymmetric_parameter_errors
         )
 
-        _cost_func = plot_data_container._fit._cost_function  # TODO: public interface
+        _cost_func = plot_adapter._fit._cost_function  # TODO: public interface
 
         return cls.FIT_INFO_STRING_FORMAT.format(
-            model_function=plot_data_container.get_formatted_model_function(
+            model_function=plot_adapter.get_formatted_model_function(
                 with_par_values=False,
                 n_significant_digits=2,
                 format_as_latex=format_as_latex,
@@ -571,10 +557,10 @@ class PlotBase(object):
                     asymmetric_error=asymmetric_parameter_errors,
                     format_as_latex=format_as_latex
                 )
-                for _pf in plot_data_container.model_function_argument_formatters
+                for _pf in plot_adapter.model_function_argument_formatters
             ]),
             fit_quality=_cost_func._formatter.get_formatted(
-                value=plot_data_container._fit.cost_function_value,
+                value=plot_adapter._fit.cost_function_value,
                 n_degrees_of_freedom=_cost_func.ndf,
                 with_value_per_ndf=True,
                 format_as_latex=format_as_latex
@@ -591,34 +577,39 @@ class PlotBase(object):
 
             _axes_plots = plot_results[_axes_key]['plots']
 
-            if with_fit_info:
-                #for _i_plot, _plot_dict in zip(reversed(range(len(_axes_plots))), _axes_plots):
-                for _plot_dict in _axes_plots:
+            _prev_fit_index = None
+            _fit_info_texts_positions = {}
+            for _i_plot, _plot_dict in enumerate(_axes_plots):
 
+                try:
                     try:
-                        try:
-                            _artist_index = _hs_unsorted.index(_plot_dict['artist'][0])
-                        except (ValueError, TypeError):
-                            _artist_index = _hs_unsorted.index(_plot_dict['artist'])
-                    except (KeyError, ValueError):
-                        # artist not available or not plottable -> skip
-                        continue
+                        _artist_index = _hs_unsorted.index(_plot_dict['artist'][0])
+                    except (ValueError, TypeError):
+                        _artist_index = _hs_unsorted.index(_plot_dict['artist'])
+                except (KeyError, ValueError):
+                    # artist not available or not plottable -> skip
+                    continue
 
-                    _hs_sorted.append(_hs_unsorted[_artist_index])
-                    _ls_sorted.append(_ls_unsorted[_artist_index])
+                _hs_sorted.append(_hs_unsorted[_artist_index])
+                _ls_sorted.append(_ls_unsorted[_artist_index])
 
-                    if _plot_dict['type'] != 'model_line':
-                        continue
+                if with_fit_info:
+                    _fit_index = _plot_dict['fit_index']
+                    if _fit_index not in _fit_info_texts_positions:
+                        # compute fit info text for this fit index (if not done already)
+                        _fit_info_texts_positions[_fit_index] = [self._get_fit_info(
+                                _plot_dict['adapter'],
+                                format_as_latex=True,
+                                asymmetric_parameter_errors=with_asymmetric_parameter_errors
+                            ), _i_plot]
+                    else:
+                        # update the legend position at which to insert the text
+                        _fit_info_texts_positions[_fit_index][1] = _i_plot
 
-                    if with_fit_info:
-                        _fit_info = self._get_fit_info(
-                            _plot_dict['container'],
-                            format_as_latex=True,
-                            asymmetric_parameter_errors=with_asymmetric_parameter_errors
-                        )
-
-                        _hs_sorted.append('_nokey_')
-                        _ls_sorted.append(_fit_info)
+            # insert fit infos at the right positions
+            for _i, (_t, _pos) in enumerate(_fit_info_texts_positions.values()):
+                _hs_sorted.insert(_i + _pos + 1, '_nokey_')
+                _ls_sorted.insert(_i + _pos + 1, _t)
 
             _zorder = kwargs.pop('zorder', 999)
             _bbox_to_anchor = kwargs.pop('bbox_to_anchor', None)
@@ -640,7 +631,7 @@ class PlotBase(object):
                          **kwargs).set_zorder(_zorder)
 
     def _adjust_plot_ranges(self, plot_results):
-        '''set the x and y ranges across (all axes) to the total data range reported by the plot containers'''
+        '''set the x and y ranges (all axes) to the total data range reported by the plot adapters'''
         for _axes_name, _axes_dict in six.iteritems(plot_results):
             _ax = self._get_axes(_axes_name)
 
@@ -651,6 +642,28 @@ class PlotBase(object):
             _ylim = _axes_dict.get('y_range', None)
             if _ylim:
                 _ax.set_ylim(_ylim)
+
+    def _set_axis_labels(self, plot_results, axes_keys):
+        '''set the x and y axis labels'''
+        for _axes_name, _axes_dict in six.iteritems(plot_results):
+            _ax = self._get_axes(_axes_name)
+
+            # collect different sets of axis labels
+            _seen_labels = []
+            for _plot in _axes_dict['plots']:
+
+                _labels = _plot['adapter'].get_axis_labels()
+                if _labels not in _seen_labels:
+                    _seen_labels.append(_labels)
+
+            # use concatenation of labels as axis label
+            _ax.set_xlabel(', '.join([_l[0] for _l in _seen_labels]))
+            _ax.set_ylabel(', '.join([_l[1] for _l in _seen_labels]))
+
+        # hide x tick labels in all but the lowest axes
+        for _key in axes_keys[:-1]:
+            self._axes[_key].set_xticklabels([])
+            self._axes[_key].set_xlabel(None)
 
     # -- public properties
 
@@ -664,36 +677,6 @@ class PlotBase(object):
         """A dictionary mapping names to ``matplotlib`` `Axes` objects
         contained in this figure."""
         return self._axes
-
-    @property
-    def x_label(self):
-        """The current x-label."""
-        return self._plot_label_x
-
-    @x_label.setter
-    def x_label(self, x_label):
-        """Set the x-label for the plot.
-
-        :param x_label: x-label to set
-        :type x_label: str
-        """
-        if x_label is not None:
-            self._plot_label_x = x_label
-
-    @property
-    def y_label(self):
-        """The current y-label"""
-        return self._plot_label_y
-
-    @y_label.setter
-    def y_label(self, y_label):
-        """Set the y-label for the plot.
-
-        :param y_label: y-label to set
-        :type y_label: str
-        """
-        if y_label is not None:
-            self._plot_label_y = y_label
 
     # -- public methods
 
@@ -727,6 +710,7 @@ class PlotBase(object):
             )
 
         self._adjust_plot_ranges(_plot_results)
+        self._set_axis_labels(_plot_results, axes_keys=_axes_keys)
 
         if with_ratio:
             _ratio_label = kc('fit', 'plot', 'ratio_label')
@@ -751,93 +735,3 @@ class PlotBase(object):
             "Method `show_fit_info_box` of `{}` object is deprecated. "
             "This call will have no effect. Pass 'with_fit_info=True' to `plot` "
             "method to show fit results as part of the legend instead.".format(self.__class__.__name__), UserWarning)
-
-class MultiPlotBase(object):
-    """Abstract class for making plots from multi fits"""
-    SINGULAR_PLOT_TYPE = None
-
-    def __init__(self, fit_objects, separate_plots=True):
-        """
-        Parent constructor for multi plots
-
-        :param fit_objects: the fit objects for which plots should be created
-        :type fit_objects: specified by subclass
-        :param separate_plots: if ``True``, will create separate plots for each model
-                               within each fit object, if ``False`` will create one plot
-                               for each fit object
-        :type separate_plots: bool
-        """
-        self._underlying_plots = []
-        self._axis_labels = []
-        try:
-            iter(fit_objects)
-        except:
-            fit_objects = [fit_objects]
-        if separate_plots:
-            for _fit_object in fit_objects:
-                for _i in range(_fit_object.model_count):
-                    self._underlying_plots.append(self.__class__.SINGULAR_PLOT_TYPE(_fit_object, model_indices=_i))
-                    # set size of labels array, if label is None it should be set to the default by SINGULAR_PLOT_TYPE
-                    self._axis_labels.append([None, None])
-        else:
-            for _fit_object in fit_objects:
-                _fit_object_list = []
-                _model_indices = []
-                for _i in range(_fit_object.model_count):
-                    _fit_object_list.append(_fit_object)
-                    _model_indices.append(_i)
-                self._underlying_plots.append(self.__class__.SINGULAR_PLOT_TYPE(_fit_object_list, model_indices=_model_indices))
-
-    @property
-    def axis_labels(self):
-        """the axis-labels of the plot"""
-        return self._axis_labels
-
-    @axis_labels.setter
-    def axis_labels(self, labels):
-        """sets the axis labels of the plot
-
-        :param labels: list of axis labels
-        :type labels: list
-        """
-        if len(labels) != len(self._axis_labels) or len(labels[0]) != len(self._axis_labels[0]):
-            raise PlotAdapterException("The dimensions of labels must fit the dimension of the data")
-        self._axis_labels = labels
-
-    def get_figure(self, plot_index):
-        """return the figure with the specified index"""
-        return self._underlying_plots[plot_index].figure
-
-    def plot(self,
-             with_legend=True,
-             with_fit_info=True,
-             with_asymmetric_parameter_errors=False,
-             with_ratio=False):
-        """Plot data, model (and other subplots) for all child :py:obj:`Fit` objects, and show legend."""
-        for _i, _plot in enumerate(self._underlying_plots):
-            _plot.x_label = self._axis_labels[_i][0]
-            _plot.y_label = self._axis_labels[_i][1]
-            _plot.plot(
-                with_legend=with_legend,
-                with_fit_info=with_fit_info,
-                with_asymmetric_parameter_errors=with_asymmetric_parameter_errors
-            )
-
-
-    def get_fit_info_strings(self, format_as_latex=False, asymmetric_parameter_errors=False):
-        return [
-            _plot.get_fit_info_strings(
-                format_as_latex=format_as_latex,
-                asymmetric_parameter_errors=asymmetric_parameter_errors
-            )
-            for _plot in self._underlying_plots
-        ]
-
-    def show_fit_info_box(self, format_as_latex=True):
-        """[DEPRECATED] Render text information about each plot on the figure.
-
-        :param format_as_latex: if ``True``, the infobox text will be formatted as a LaTeX string
-        :type format_as_latex: bool
-        """
-        for _plot in self._underlying_plots:
-            _plot.show_fit_info_box(format_as_latex=format_as_latex)

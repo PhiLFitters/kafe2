@@ -15,7 +15,7 @@ approximation working well for large N.
 
 import numpy as np
 import matplotlib.pyplot as plt
-from kafe2 import XYFit, XYPlot
+from kafe2 import XYFit, Plot
 
 # Years of death are our x-data, measured c14 activity is our y-data.
 # Note that our data does NOT include any x or y errors.
@@ -63,8 +63,8 @@ xy_fit.do_fit()
 # Optional: print out a report on the fit results on the console
 xy_fit.report()
 
-# Optional: create a plot of the fit results using XYPlot
-xy_plot = XYPlot(xy_fit)
+# Optional: create a plot of the fit results using Plot
+xy_plot = Plot(xy_fit)
 xy_plot.plot(with_fit_info=True)
 
 plt.show()

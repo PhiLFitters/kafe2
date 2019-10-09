@@ -16,7 +16,7 @@ approximation becomes important.
 
 import numpy as np
 import matplotlib.pyplot as plt
-from kafe2 import XYFit, XYPlot, XYCostFunction_NegLogLikelihood
+from kafe2 import XYFit, Plot, XYCostFunction_NegLogLikelihood
 
 # Years of death are our x-data, measured c14 activity is our y-data.
 # Note that our data does NOT include any x or y errors.
@@ -111,8 +111,8 @@ print('Relative errors from Gaussian approximation:')
 print('For N~10:', relative_error_sparse)
 print('For N~6000:', relative_error_full)
 
-# Optional: create a plot of the fit results using XYPlot
-xy_plot_poisson_sparse = XYPlot([xy_fit_gaussian_sparse, xy_fit_poisson_sparse])
+# Optional: create a plot of the fit results using Plot
+xy_plot_poisson_sparse = Plot([xy_fit_gaussian_sparse, xy_fit_poisson_sparse])
 xy_plot_poisson_sparse.plot(with_fit_info=True)
 
 plt.show()

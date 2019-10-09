@@ -51,10 +51,6 @@ The following objects are provided for handling *indexed* data, as described abo
    - finds the minimum of the *cost function* to find the
      parameter values for which the model best fits the data
 
-*  :py:obj:`~kafe2.fit.indexed.IndexedPlot`: a graphical representation of one or more fits:
-
-   - plots the data points and model predictions using ``matplotlib``
-
 
 XY data
 -------
@@ -83,11 +79,6 @@ The following objects are provided for handling *xy* data:
 *  :py:obj:`~kafe2.fit.xy.XYFit`: a fit of a parametric model to *xy* data:
 
    - finds the minimum of the *cost function* to find the parameter values for which the model best fits the data
-
-*  :py:obj:`~kafe2.fit.xy.XYPlot`: a graphical representation of one or more fits:
-
-   - plots the data points and model predictions using ``matplotlib``
-
 
 
 Histograms
@@ -147,9 +138,9 @@ The following objects are provided for handling histograms:
 
    - finds the minimum of the *cost function* to find the parameter values for which the model best fits the data
 
-*  :py:obj:`~kafe2.fit.histogram.HistPlot`: a graphical representation of one or more fits:
-
-   - plots the data points and model predictions using ``matplotlib``
+For creating graphical representations of fits, the :py:obj:`~kafe2.fit.Plot` is provided. It can be instantiated
+with any fit object (or list of fit objects) as an argument and will produce one or more plots accordingly
+using `matplotlib`.
 """
 
 
@@ -163,3 +154,5 @@ from .tools import *
 from .util import *
 from .xy import *
 from .xy_multi import *
+
+from ._base.plot import Plot

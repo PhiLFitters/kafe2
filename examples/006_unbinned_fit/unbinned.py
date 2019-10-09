@@ -14,7 +14,7 @@ https://github.com/GuenterQuast/picoCosmo. A visual representation of the data c
 https://github.com/GuenterQuast/picoCosmo/blob/master/doc/dpFigs_Kanne.pdf
 """
 
-from kafe2.fit import UnbinnedContainer, UnbinnedFit, UnbinnedPlot
+from kafe2.fit import UnbinnedContainer, UnbinnedFit, Plot
 from kafe2.fit.tools import ContoursProfiler
 
 import numpy as np
@@ -61,7 +61,7 @@ fit.assign_model_function_latex_expression("(1-{fbg}) \\frac{{e^{{-{x}/{tau}}}}}
 fit.do_fit()  # perform the fit
 fit.report()  # print a fit report to the terminal
 
-plot = UnbinnedPlot(fit)  # create a plot object
+plot = Plot(fit)  # create a plot object
 plot.plot(with_fit_info=True)  # plot the data and the fit
 
 cpf = ContoursProfiler(fit, profile_subtract_min=False)  # Optional: create a contours profile

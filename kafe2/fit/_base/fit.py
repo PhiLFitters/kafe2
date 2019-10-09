@@ -590,7 +590,8 @@ class FitBase(FileIOMixin, object):
                 _pf.latex_name = _pln
 
     def generate_plot(self):
-        raise FitException('generate_plot has not been specified for %s' % self.__class__)
+        from kafe2.fit._base.plot import Plot
+        return Plot(self)
 
     def get_result_dict_for_robots(self):
         """Return a dictionary of the fit results."""

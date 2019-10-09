@@ -15,7 +15,7 @@ from ..xy.fit import XYFit
 from .container import XYMultiContainer
 from .cost import XYMultiCostFunction_Chi2, XYMultiCostFunction_UserDefined, STRING_TO_COST_FUNCTION
 from .model import XYMultiParametricModel, XYMultiModelFunction
-from .plot import XYMultiPlotAdapter
+#from .plot import XYMultiPlotAdapter  # TODO: reimplement
 from ..util import function_library, add_in_quadrature, collect, invert_matrix
 
 
@@ -30,7 +30,7 @@ class XYMultiFit(FitBase):
     CONTAINER_TYPE = XYMultiContainer
     MODEL_TYPE = XYMultiParametricModel
     MODEL_FUNCTION_TYPE = XYMultiModelFunction
-    PLOT_ADAPTER_TYPE = XYMultiPlotAdapter
+    PLOT_ADAPTER_TYPE = None  # TODO: re-configure this when implemented
     EXCEPTION_TYPE = XYMultiFitException
     RESERVED_NODE_NAMES = {'y_data', 'y_model', 'cost',
                            'x_error', 'y_data_error', 'y_model_error', 'total_error',
@@ -801,13 +801,6 @@ class XYMultiFit(FitBase):
         _nuisance_vector = np.linalg.solve(_left_side, np.transpose(_right_side))
 
         return _nuisance_vector
-
-    def generate_plot(self):
-        from kafe2.fit.xy_multi import XYMultiPlot
-        #TODO: set labels for each plot of multiplot, maybe in the xy-multi class
-        _plot = XYMultiPlot(self)
-        _plot.axis_labels = self._axis_labels
-        return _plot
 
     def report(self, output_stream=sys.stdout,
                show_data=True,

@@ -997,8 +997,7 @@ class XYFit(FitBase):
         return _nuisance_vector
 
     def generate_plot(self):
-        from kafe2.fit.xy.plot import XYPlot
-        _plot = XYPlot(self)
+        _plot = super(XYFit, self).generate_plot()
         _plot.x_label = self.x_label
         _plot.y_label = self.y_label
         return _plot

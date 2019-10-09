@@ -66,7 +66,7 @@ parameter constraints, which is demonstrated in the example called
 import numpy as np
 import matplotlib.pyplot as plt
 
-from kafe2 import XYMultiFit, XYMultiPlot
+from kafe2 import XYMultiFit, Plot
 
 
 # empirical model for T(U): a parabola
@@ -126,7 +126,7 @@ fit.do_fit()
 fit.report()
 
 # (Optional): plot the results
-plot = XYMultiPlot(fit, separate_plots=True)
+plot = Plot(fit, separate_figures=True)
 plot.plot(with_asymmetric_parameter_errors=True)
 
 plt.show()

@@ -26,7 +26,7 @@ For reference, at Germany's latitude g lies at approximately 9.81 m/s^2.
 import numpy as np
 import matplotlib.pyplot as plt
 
-from kafe2 import XYContainer, XYFit, XYPlot
+from kafe2 import XYContainer, XYFit, Plot
 
 # Relevant physical magnitudes and their uncertainties
 l, delta_l = 10.0, 0.001  # length of the string, l = 10.0+-0.001 m
@@ -69,7 +69,7 @@ fit.report()
 fit.do_fit()
 
 # Optional: plot the fit results
-plot = XYPlot(fit)
+plot = Plot(fit)
 plot.plot(with_fit_info=True, with_ratio=True)
 
 plt.show()

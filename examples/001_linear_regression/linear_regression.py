@@ -12,7 +12,7 @@ This example demonstrates how to perform such a line fit in kafe2 and
 how to extract the results.
 """
 
-from kafe2 import XYContainer, XYFit, XYPlot
+from kafe2 import XYContainer, XYFit, Plot
 import matplotlib.pyplot as plt
 
 # Create an XYContainer object to hold the xy data for the fit.
@@ -36,8 +36,8 @@ line_fit.do_fit() #This will throw an exception if no errors were specified.
 # Optional: Print out a report on the fit results on the console.
 line_fit.report()
 
-# Optional: Create a plot of the fit results using XYPlot.
-plot = XYPlot(fit_objects=line_fit) # Create a kafe2 plot object.
+# Optional: Create a plot of the fit results using Plot.
+plot = Plot(fit_objects=line_fit) # Create a kafe2 plot object.
 plot.plot(with_fit_info=True) # Do the plot.
 
 # Show the fit result.

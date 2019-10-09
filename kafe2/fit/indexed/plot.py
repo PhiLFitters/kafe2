@@ -1,14 +1,23 @@
 import numpy as np
 
-from .._base import PlotAdapterBase, PlotAdapterException, PlotBase
+from .._base import PlotAdapterBase, PlotAdapterException, Plot
 from .._aux import step_fill_between
 
-__all__ = ["IndexedPlot", "IndexedPlotAdapter"]
+
+__all__ = ["IndexedPlotAdapter"]
+
 
 class IndexedPlotAdapterException(PlotAdapterException):
     pass
 
+
 class IndexedPlotAdapter(PlotAdapterBase):
+
+    PLOT_STYLE_CONFIG_DATA_TYPE = 'indexed'
+
+    PLOT_SUBPLOT_TYPES = dict(
+        PlotAdapterBase.PLOT_SUBPLOT_TYPES,
+    )
 
     def __init__(self, indexed_fit_object):
         """
@@ -134,10 +143,3 @@ class IndexedPlotAdapter(PlotAdapterBase):
                                     yerr=_yerr / self.model_y,
                                     **kwargs)
 
-class IndexedPlot(PlotBase):
-
-    PLOT_CONTAINER_TYPE = IndexedPlotAdapter
-    PLOT_STYLE_CONFIG_DATA_TYPE = 'indexed'
-
-    def __init__(self, fit_objects):
-        super(IndexedPlot, self).__init__(fit_objects=fit_objects)

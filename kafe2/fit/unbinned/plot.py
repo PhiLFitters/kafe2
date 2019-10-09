@@ -1,13 +1,10 @@
 import numpy as np
 from matplotlib.collections import LineCollection
-from collections import OrderedDict
 
-from ...config import kc
-from .._base import PlotAdapterBase, PlotAdapterException, PlotBase, kc_plot_style
-from .._aux import step_fill_between
+from .._base import PlotAdapterBase, PlotAdapterException
 
 
-__all__ = ["UnbinnedPlot", "UnbinnedPlotAdapter"]
+__all__ = ["UnbinnedPlotAdapter"]
 
 
 class UnbinnedPlotAdapterException(PlotAdapterException):
@@ -15,6 +12,17 @@ class UnbinnedPlotAdapterException(PlotAdapterException):
 
 
 class UnbinnedPlotAdapter(PlotAdapterBase):
+
+    PLOT_STYLE_CONFIG_DATA_TYPE = 'unbinned'
+
+    PLOT_SUBPLOT_TYPES = dict(
+        PlotAdapterBase.PLOT_SUBPLOT_TYPES,
+        model_line=dict(
+            plot_adapter_method='plot_model_line',
+            target_axes='main'
+        )
+    )
+    del PLOT_SUBPLOT_TYPES['model']  # don't show "model" points
 
     def __init__(self, unbinned_fit_object, n_plot_points_model=100):
         """
@@ -84,8 +92,7 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
     @property
     def model_x(self):
         """x support values for model function"""
-        _xmin, _xmax = self.x_range
-        return np.linspace(_xmin, _xmax, self._n_plot_points_model)
+        return self.data_x
 
     @property
     def model_y(self):
@@ -94,7 +101,23 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
 
         :return: iterable
         """
-        return self._fit.eval_model_function(x=self.model_x)
+        return self._fit.model
+        #raise UnbinnedPlotAdapterException("There's no y-model in the unbinned container")
+
+    @property
+    def model_line_x(self):
+        """x support values for model function"""
+        _xmin, _xmax = self.x_range
+        return np.linspace(_xmin, _xmax, self._n_plot_points_model)
+
+    @property
+    def model_line_y(self):
+        """
+        The 'y' coordinates of the model (used by :py:meth:`~plot_model`).
+
+        :return: iterable
+        """
+        return self._fit.eval_model_function(x=self.model_line_x)
 
     @property
     def model_xerr(self):
@@ -176,11 +199,18 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
         """
         raise NotImplementedError("Data/model ratio cannot be plotted for unbinned fits.")
 
-class UnbinnedPlot(PlotBase):
+    def plot_model_line(self, target_axes, **kwargs):
+        """
+        Method called by the main plot routine to plot the model to a specified matplotlib ``Axes`` object.
 
-    PLOT_CONTAINER_TYPE = UnbinnedPlotAdapter
-    PLOT_STYLE_CONFIG_DATA_TYPE = 'unbinned'
-    PlotBase.PLOT_SUBPLOT_TYPES.copy()
+        :param target_axes: ``matplotlib`` ``Axes`` object
+        :return: plot handle(s)
+        """
+        """
+        Plot the model predictions to a specified matplotlib ``Axes`` object.
 
-    def __init__(self, fit_objects):
-        super(UnbinnedPlot, self).__init__(fit_objects=fit_objects)
+        :param target_axes: ``matplotlib`` ``Axes`` object
+        :param kwargs: keyword arguments accepted by the :py:func:`~kafe2._aux.step_fill_between` method
+        :return: plot handle(s)
+        """
+        return target_axes.plot(self.model_line_x, self.model_line_y, **kwargs)
