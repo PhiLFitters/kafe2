@@ -132,11 +132,11 @@ class UnbinnedPlotContainer(PlotContainerBase):
         return self._plot_range_y
 
     # public methods
-    def plot_data(self, target_axis, height=None, **kwargs):
+    def plot_data(self, target_axes, height=None, **kwargs):
         """
         Method called by the main plot routine to plot the data points to a specified matplotlib ``Axes`` object.
 
-        :param target_axis: ``matplotlib`` ``Axes`` object
+        :param target_axes: ``matplotlib`` ``Axes`` object
         :param height: The height of the lines which represent the density
         :type height: float
         :return: plot handle(s)
@@ -150,23 +150,23 @@ class UnbinnedPlotContainer(PlotContainerBase):
         xy_pairs = np.column_stack([np.repeat(data, 2), np.tile([0, height], len(data))])
         lines = xy_pairs.reshape([len(data), 2, 2])
         line_segments = LineCollection(lines, **kwargs)
-        return target_axis.add_collection(line_segments)
+        return target_axes.add_collection(line_segments)
 
-    def plot_model(self, target_axis, **kwargs):
+    def plot_model(self, target_axes, **kwargs):
         """
         Method called by the main plot routine to plot the model to a specified matplotlib ``Axes`` object.
 
-        :param target_axis: ``matplotlib`` ``Axes`` object
+        :param target_axes: ``matplotlib`` ``Axes`` object
         :return: plot handle(s)
         """
         """
         Plot the model predictions to a specified matplotlib ``Axes`` object.
 
-        :param target_axis: ``matplotlib`` ``Axes`` object
+        :param target_axes: ``matplotlib`` ``Axes`` object
         :param kwargs: keyword arguments accepted by the :py:func:`~kafe2._aux.step_fill_between` method
         :return: plot handle(s)
         """
-        return target_axis.plot(self.model_x, self.model_y, **kwargs)
+        return target_axes.plot(self.model_x, self.model_y, **kwargs)
 
 
 class UnbinnedPlot(PlotFigureBase):

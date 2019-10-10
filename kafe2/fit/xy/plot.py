@@ -95,11 +95,11 @@ class XYPlotContainer(PlotContainerBase):
 
     # public methods
 
-    def plot_data(self, target_axis, **kwargs):
+    def plot_data(self, target_axes, **kwargs):
         """
         Plot the measurement data to a specified ``matplotlib`` ``Axes`` object.
 
-        :param target_axis: ``matplotlib`` ``Axes`` object
+        :param target_axes: ``matplotlib`` ``Axes`` object
         :param kwargs: keyword arguments accepted by the ``matplotlib`` methods ``errorbar`` or ``plot``
         :return: plot handle(s)
         """
@@ -109,7 +109,7 @@ class XYPlotContainer(PlotContainerBase):
                 self.data_yerr ** 2
                 + self._fitter._cost_function.get_uncertainty_gaussian_approximation(self.data_y) ** 2
             )
-            return target_axis.errorbar(self.data_x,
+            return target_axes.errorbar(self.data_x,
                                         self.data_y,
                                         xerr=self.data_xerr,
                                         yerr=_yerr,
@@ -117,40 +117,40 @@ class XYPlotContainer(PlotContainerBase):
         else:
             _yerr = self._fitter._cost_function.get_uncertainty_gaussian_approximation(self.data_y)
             if np.all(_yerr == 0):
-                return target_axis.plot(self.data_x,
+                return target_axes.plot(self.data_x,
                                         self.data_y,
                                         **kwargs)
             else:
-                return target_axis.errorbar(self.data_x,
+                return target_axes.errorbar(self.data_x,
                                             self.data_y,
                                             yerr=_yerr,
                                             **kwargs)
 
-    def plot_model(self, target_axis, **kwargs):
+    def plot_model(self, target_axes, **kwargs):
         """
         Plot the model function to a specified matplotlib ``Axes`` object.
 
-        :param target_axis: ``matplotlib`` ``Axes`` object
+        :param target_axes: ``matplotlib`` ``Axes`` object
         :param kwargs: keyword arguments accepted by the ``matplotlib`` ``plot`` method
         :return: plot handle(s)
         """
         # TODO: how to handle 'data' errors and 'model' errors?
-        return target_axis.plot(self.model_x,
+        return target_axes.plot(self.model_x,
                                 self.model_y,
                                 **kwargs)
 
-    def plot_model_error_band(self, target_axis, **kwargs):
+    def plot_model_error_band(self, target_axes, **kwargs):
         """
         Plot an error band around the model model function.
 
-        :param target_axis: ``matplotlib`` ``Axes`` object
+        :param target_axes: ``matplotlib`` ``Axes`` object
         :param kwargs: keyword arguments accepted by the ``matplotlib`` ``fill_between`` method
         :return: plot handle(s)
         """
         if self._fitter.did_fit and (self._fitter.has_errors or not self._fitter._cost_function.needs_errors):
             _band_y = self._fitter.y_error_band
             _y = self.model_y
-            return target_axis.fill_between(
+            return target_axes.fill_between(
                 self.model_x,
                 _y - _band_y, _y + _band_y,
                 **kwargs)

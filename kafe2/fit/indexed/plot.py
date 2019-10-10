@@ -72,11 +72,11 @@ class IndexedPlotContainer(PlotContainerBase):
 
     # public methods
 
-    def plot_data(self, target_axis, **kwargs):
+    def plot_data(self, target_axes, **kwargs):
         """
         Plot the measurement data to a specified ``matplotlib`` ``Axes`` object.
 
-        :param target_axis: ``matplotlib`` ``Axes`` object
+        :param target_axes: ``matplotlib`` ``Axes`` object
         :param kwargs: keyword arguments accepted by the ``matplotlib`` methods ``errorbar`` or ``plot``
         :return: plot handle(s)
         """
@@ -85,7 +85,7 @@ class IndexedPlotContainer(PlotContainerBase):
                 self.data_yerr ** 2
                 + self._fitter._cost_function.get_uncertainty_gaussian_approximation(self.data_y) ** 2
             )
-            return target_axis.errorbar(self.data_x,
+            return target_axes.errorbar(self.data_x,
                                         self.data_y,
                                         xerr=self.data_xerr,
                                         yerr=_yerr,
@@ -93,24 +93,24 @@ class IndexedPlotContainer(PlotContainerBase):
         else:
             _yerr = self._fitter._cost_function.get_uncertainty_gaussian_approximation(self.data_y)
             if np.all(_yerr == 0):
-                return target_axis.plot(self.data_x,
+                return target_axes.plot(self.data_x,
                                         self.data_y,
                                         **kwargs)
             else:
-                return target_axis.errorbar(self.data_x,
+                return target_axes.errorbar(self.data_x,
                                             self.data_y,
                                             yerr=_yerr,
                                             **kwargs)
 
-    def plot_model(self, target_axis, **kwargs):
+    def plot_model(self, target_axes, **kwargs):
         """
         Plot the model predictions to a specified matplotlib ``Axes`` object.
 
-        :param target_axis: ``matplotlib`` ``Axes`` object
+        :param target_axes: ``matplotlib`` ``Axes`` object
         :param kwargs: keyword arguments accepted by the :py:func:`~kafe2._aux.step_fill_between` method
         :return: plot handle(s)
         """
-        return step_fill_between(target_axis,
+        return step_fill_between(target_axes,
                                  self.model_x,
                                  self.model_y,
                                  xerr=self.model_xerr,

@@ -25,7 +25,7 @@ class XYMultiPlotContainer(PlotContainerBase):
         :tape n_plot_points_model: 100
         """
         super(XYMultiPlotContainer, self).__init__(
-            fit_object=xy_multi_fit_object, 
+            fit_object=xy_multi_fit_object,
             model_index=model_index
         )
         self._n_plot_points_model = n_plot_points_model
@@ -110,11 +110,11 @@ class XYMultiPlotContainer(PlotContainerBase):
         """return the formatted model function string"""
         return self._fitter._model_function.formatter.get_formatted(model_index=self._model_index, **kwargs)
 
-    def plot_data(self, target_axis, **kwargs):
+    def plot_data(self, target_axes, **kwargs):
         """
         Plot the measurement data to a specified ``matplotlib`` ``Axes`` object.
 
-        :param target_axis: ``matplotlib`` ``Axes`` object
+        :param target_axes: ``matplotlib`` ``Axes`` object
         :param kwargs: keyword arguments accepted by the ``matplotlib`` methods ``errorbar`` or ``plot``
         :return: plot handle(s)
         """
@@ -124,7 +124,7 @@ class XYMultiPlotContainer(PlotContainerBase):
                 self.data_yerr ** 2
                 + self._fitter._cost_function.get_uncertainty_gaussian_approximation(self.data_y) ** 2
             )
-            return target_axis.errorbar(self.data_x,
+            return target_axes.errorbar(self.data_x,
                                         self.data_y,
                                         xerr=self.data_xerr,
                                         yerr=_yerr,
@@ -132,40 +132,40 @@ class XYMultiPlotContainer(PlotContainerBase):
         else:
             _yerr = self._fitter._cost_function.get_uncertainty_gaussian_approximation(self.data_y)
             if np.all(_yerr == 0):
-                return target_axis.plot(self.data_x,
+                return target_axes.plot(self.data_x,
                                         self.data_y,
                                         **kwargs)
             else:
-                return target_axis.errorbar(self.data_x,
+                return target_axes.errorbar(self.data_x,
                                             self.data_y,
                                             yerr=_yerr,
                                             **kwargs)
 
-    def plot_model(self, target_axis, **kwargs):
+    def plot_model(self, target_axes, **kwargs):
         """
         Plot the model function to a specified matplotlib ``Axes`` object.
 
-        :param target_axis: ``matplotlib`` ``Axes`` object
+        :param target_axes: ``matplotlib`` ``Axes`` object
         :param kwargs: keyword arguments accepted by the ``matplotlib`` ``plot`` method
         :return: plot handle(s)
         """
         # TODO: how to handle 'data' errors and 'model' errors?
-        return target_axis.plot(self.model_x,
+        return target_axes.plot(self.model_x,
                                 self.model_y,
                                 **kwargs)
 
-    def plot_model_error_band(self, target_axis, **kwargs):
+    def plot_model_error_band(self, target_axes, **kwargs):
         """
         Plot an error band around the model model function.
 
-        :param target_axis: ``matplotlib`` ``Axes`` object
+        :param target_axes: ``matplotlib`` ``Axes`` object
         :param kwargs: keyword arguments accepted by the ``matplotlib`` ``fill_between`` method
         :return: plot handle(s)
         """
         _band_y = self._fitter.get_y_error_band(self._model_index)
         _y = self.model_y
         if self._fitter.has_errors:
-            return target_axis.fill_between(
+            return target_axes.fill_between(
                 self.model_x,
                 _y - _band_y, _y + _band_y,
                 **kwargs)
@@ -187,7 +187,7 @@ class XYMultiPlotSingular(PlotFigureBase):
     def __init__(self, fit_objects, model_indices):
         """
         Creates a new `XYMultiPlotSingular` figure containing one or more models.
-        
+
         :param fit_objects: the kafe2 fit objects to be shown in the figure
         :type fit_objects: `XYMultiFit` or iterable thereof
         :param model_indices: the indices of the underlying model functions that the fit_objects
@@ -197,14 +197,16 @@ class XYMultiPlotSingular(PlotFigureBase):
         super(XYMultiPlotSingular, self).__init__(fit_objects=fit_objects, model_indices=model_indices)
         self._plot_range_x = None
 
+
+
 class XYMultiPlot(MultiPlotBase):
-    
+
     SINGULAR_PLOT_TYPE = XYMultiPlotSingular
-    
+
     def __init__(self, fit_objects, separate_plots=True):
         """
         Creates a new `XYMultiPlot` object for one or more `XYMultiFit` objects
-        
+
         :param fit_objects: the fit objects for which plots should be created
         :type fit_objects: `XYMultiFit` or an iterable thereof
         :param separate_plots: if ``True``, will create separate plots for each model

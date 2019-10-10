@@ -244,21 +244,21 @@ class PlotContainerBase(object):
         pass
 
     @abc.abstractmethod
-    def plot_data(self, target_axis, **kwargs):
+    def plot_data(self, target_axes, **kwargs):
         """
         Method called by the main plot routine to plot the data points to a specified matplotlib ``Axes`` object.
 
-        :param target_axis: ``matplotlib`` ``Axes`` object
+        :param target_axes: ``matplotlib`` ``Axes`` object
         :return: plot handle(s)
         """
         pass
 
     @abc.abstractmethod
-    def plot_model(self, target_axis, **kwargs):
+    def plot_model(self, target_axes, **kwargs):
         """
         Method called by the main plot routine to plot the model to a specified matplotlib ``Axes`` object.
 
-        :param target_axis: ``matplotlib`` ``Axes`` object
+        :param target_axes: ``matplotlib`` ``Axes`` object
         :return: plot handle(s)
         """
         pass
@@ -427,10 +427,10 @@ class PlotFigureBase(object):
                                       % (plot_type, _plot_method_name, self.PLOT_CONTAINER_TYPE))
         return _plot_method_handle
 
-    def _call_plot_method_for_plot_type(self, subplot_id, plot_type, target_axis):
+    def _call_plot_method_for_plot_type(self, subplot_id, plot_type, target_axes):
         _pdc = self._plot_data_containers[subplot_id]
         _plot_method_handle = self._get_plot_handle_for_plot_type(plot_type, _pdc)
-        _artist = _plot_method_handle(target_axis, **self._get_subplot_kwargs(self._model_indices[subplot_id], plot_type))
+        _artist = _plot_method_handle(target_axes, **self._get_subplot_kwargs(self._model_indices[subplot_id], plot_type))
         # TODO: warn if plot function does not return artist (?)
         # store the artist returned by the plot method
         self._artist_store[subplot_id][plot_type] = _artist
@@ -438,7 +438,7 @@ class PlotFigureBase(object):
     def _plot_all_subplots_all_plot_types(self):
         for _spid, _ in enumerate(self._plot_data_containers):
             for _pt in self._defined_plot_types:
-                self._call_plot_method_for_plot_type(_spid, _pt, target_axis=self._main_plot_axes)
+                self._call_plot_method_for_plot_type(_spid, _pt, target_axes=self._main_plot_axes)
 
     @classmethod
     def _get_fit_info(cls, plot_data_container, format_as_latex, asymmetric_parameter_errors):
@@ -474,8 +474,8 @@ class PlotFigureBase(object):
             ) + (" (global)" if cls.IS_MULTI_PLOT else ""),
         )
 
-    def _render_legend(self, target_axis, with_fit_info=True, with_asymmetric_parameter_errors=False, **kwargs):
-        _hs_unsorted, _ls_unsorted = target_axis.get_legend_handles_labels()
+    def _render_legend(self, target_axes, with_fit_info=True, with_asymmetric_parameter_errors=False, **kwargs):
+        _hs_unsorted, _ls_unsorted = target_axes.get_legend_handles_labels()
         _hs_sorted, _ls_sorted = [], []
 
         # sort legend entries by drawing order

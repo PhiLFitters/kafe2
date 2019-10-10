@@ -90,34 +90,34 @@ class HistPlotContainer(PlotContainerBase):
 
     # public methods
 
-    def plot_data(self, target_axis, **kwargs):
+    def plot_data(self, target_axes, **kwargs):
         """
         Plot the measurement data to a specified ``matplotlib`` ``Axes`` object.
 
-        :param target_axis: ``matplotlib`` ``Axes`` object
+        :param target_axes: ``matplotlib`` ``Axes`` object
         :param kwargs: keyword arguments accepted by the ``matplotlib`` method ``errorbar``
         :return: plot handle(s)
         """
         _yerr = np.sqrt(
             self.data_yerr ** 2 + self._fitter._cost_function.get_uncertainty_gaussian_approximation(self.data_y) ** 2
         )
-        return target_axis.errorbar(self.data_x,
+        return target_axes.errorbar(self.data_x,
                                     self.data_y,
                                     xerr=self.data_xerr,
                                     yerr=_yerr,
                                     **kwargs)
 
-    def plot_model(self, target_axis, **kwargs):
+    def plot_model(self, target_axes, **kwargs):
         """
         Plot the model predictions to a specified matplotlib ``Axes`` object.
 
-        :param target_axis: ``matplotlib`` ``Axes`` object
+        :param target_axes: ``matplotlib`` ``Axes`` object
         :param kwargs: keyword arguments accepted by the ``matplotlib`` method ``bar``
         :return: plot handle(s)
         """
         #_pad = kwargs.pop('bar_width_pad')
         _sf = kwargs.pop('bar_width_scale_factor')
-        return target_axis.bar(
+        return target_axes.bar(
                              x=self.model_x,
                              align='center',
                              height=self.model_y,
@@ -126,16 +126,16 @@ class HistPlotContainer(PlotContainerBase):
                              **kwargs
                              )
 
-    def plot_model_density(self, target_axis, **kwargs):
+    def plot_model_density(self, target_axes, **kwargs):
         """
         Plot the model density to a specified ``matplotlib`` ``Axes`` object.
 
-        :param target_axis: ``matplotlib`` ``Axes`` object
+        :param target_axes: ``matplotlib`` ``Axes`` object
         :param kwargs: keyword arguments accepted by the ``matplotlib`` method ``plot``
         :return: plot handle(s)
         """
         # TODO: how to handle/display "error" on the model density?
-        return target_axis.plot(self.model_density_x,
+        return target_axes.plot(self.model_density_x,
                                 self.model_density_y,
                                 **kwargs)
 
