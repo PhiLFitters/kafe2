@@ -151,6 +151,25 @@ class PlotContainerBase(object):
         self._fitter = fit_object
         self._model_index = model_index
 
+    def _get_total_error(self, error_contributions):
+        _total_err = np.zeros_like(self.data_y)
+        for _ec in error_contributions:
+            _ec = _ec.lower()
+            if _ec not in ('data', 'model'):
+                raise ValueError(
+                    "Unknown error contribution specification '{}': "
+                    "expecting 'data' or 'model'".format(_ec))
+            _total_err += getattr(self, _ec + '_yerr') ** 2
+            _total_err += self._fit._cost_function.get_uncertainty_gaussian_approximation(
+                getattr(self, _ec + '_y')) ** 2
+
+        _total_err = np.sqrt(_total_err)
+
+        if np.all(_total_err==0):
+            return None
+        else:
+            return _total_err
+
     # -- properties
 
     @abc.abstractproperty
@@ -301,9 +320,11 @@ class PlotFigureBase(object):
     PLOT_SUBPLOT_TYPES.update(
         data=dict(
             plot_container_method='plot_data',
+            target_axes='main',
         ),
         model=dict(
             plot_container_method='plot_model',
+            target_axes='main',
         ),
     )
 
@@ -313,9 +334,16 @@ class PlotFigureBase(object):
             $\\hookrightarrow${fit_quality}
     """)
 
-    IS_MULTI_PLOT = False
-
     def __init__(self, fit_objects, model_indices=None):
+
+        # set the managed fit objects
+        try:
+            iter(fit_objects)
+        except TypeError:
+            fit_objects = (fit_objects,)
+        self._fits = fit_objects
+
+        # model indices (relevant for Multiplots)
         if model_indices is None:
             try:
                 model_indices = range(len(fit_objects))
@@ -327,7 +355,6 @@ class PlotFigureBase(object):
             except:
                 model_indices = [model_indices]
         self._model_indices = model_indices
-        self._fig = plt.figure()  # defaults from matplotlibrc
 
         # figure layout (TODO: no hardcoding)
         self._outer_gs = gs.GridSpec(nrows=1,
@@ -341,37 +368,11 @@ class PlotFigureBase(object):
                                      width_ratios=[1, 1],
                                      height_ratios=None)
 
-        # plot axes layout (TODO: allow ratio plot)
-        self._plot_axes_gs = gs.GridSpecFromSubplotSpec(
-            nrows=1,
-            ncols=1,
-            wspace=None,
-            hspace=None,
-            width_ratios=None,
-            #height_ratios=[8, 1],
-            subplot_spec=self._outer_gs[0, 0]
-        )
-        self._main_plot_axes = plt.subplot(self._plot_axes_gs[0, 0])
+        # default axis labels
+        self._plot_label_x = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'x')
+        self._plot_label_y = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'y')
 
-        self._plot_data_containers = []
-        self._artist_store = []
-        try:
-            iter(fit_objects)
-        except TypeError:
-            fit_objects = (fit_objects,)
-
-        for _i, _fit in enumerate(fit_objects):
-            if self.__class__.IS_MULTI_PLOT:
-                _pdc = self.__class__.PLOT_CONTAINER_TYPE(_fit, model_index=self._model_indices[_i])
-            else:
-                _pdc = self.__class__.PLOT_CONTAINER_TYPE(_fit)
-            self._plot_data_containers.append(_pdc)
-            self._artist_store.append(dict())
-
-        self._plot_range_x = None
-        self._plot_range_y = None
-
-        # store defined plot types for conveniient access
+        # store defined plot types for convenient access
         self._defined_plot_types = self.PLOT_SUBPLOT_TYPES.keys()
 
         # fill meta-information structures for all plot_types
@@ -379,24 +380,73 @@ class PlotFigureBase(object):
         self._subplot_container_plot_method_name = dict()
         self._subplot_prop_cyclers = dict()
         for _pt in self._defined_plot_types:
-            self._subplot_container_plot_method_name[_pt] = self.PLOT_SUBPLOT_TYPES[_pt]['plot_container_method']
-            self._subplot_static_kwarg_dicts[_pt] = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, _pt, 'plot_kwargs')
-            self._subplot_prop_cyclers[_pt] = Cycler(*kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, _pt, 'property_cycler'))
+            _plot_style_as = self.PLOT_SUBPLOT_TYPES[_pt].get('plot_style_as', _pt)
 
-        #set axis labels:
-        self._plot_label_x = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'x')
-        self._plot_label_y = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'y')
+            self._subplot_container_plot_method_name[_pt] = self.PLOT_SUBPLOT_TYPES[_pt]['plot_container_method']
+            self._subplot_static_kwarg_dicts[_pt] = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, _plot_style_as, 'plot_kwargs')
+            self._subplot_prop_cyclers[_pt] = Cycler(*kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, _plot_style_as, 'property_cycler'))
+
+        # owned objects
+        self._fig = None
+        self._plot_containers = None
 
     # -- private methods
 
-    def _get_interpolated_label(self, subplot_id, plot_type):
-        _kwargs = self._subplot_static_kwarg_dicts[subplot_id][plot_type]
-        _label_raw = _kwargs.pop('label')
-        return _label_raw % _kwargs
+    def _get_axes(self, axes_key):
+        try:
+            return self._axes[axes_key]
+        except KeyError:
+            raise KeyError("No axes found for name '{}'!".format(axes_key))
+
+    def _create_figure_axes(self, axes_keys, height_ratios=None):
+
+        if height_ratios:
+            assert len(axes_keys) == len(height_ratios)
+
+        # plot axes layout
+        _plot_axes_gs = gs.GridSpecFromSubplotSpec(
+            nrows=len(axes_keys),
+            ncols=1,
+            wspace=None,
+            hspace=0.06,
+            width_ratios=None,
+            height_ratios=height_ratios,
+            subplot_spec=self._outer_gs[0, 0]
+        )
+
+        # create figure (overwrite the old one)
+        self._fig = plt.figure()
+
+        # create named axes
+        self._axes = {
+            _k : plt.subplot(_plot_axes_gs[_i])
+            for _i, _k in enumerate(axes_keys)
+        }
+
+        # hide x tick labels in all but the lowest Axes
+        for _key in axes_keys[:-1]:
+            self._axes[_key].set_xticklabels([])
+            self._axes[_key].set_xlabel(None)
+
+        self._axes[axes_keys[-1]].set_xlabel(self.x_label)
+        self._axes[axes_keys[0]].set_ylabel(self.y_label)
+
+    def _get_plot_containers(self):
+        '''retrieve plot containers, creating them if needed'''
+
+        if self._plot_containers is None:
+            self._plot_containers = []
+            for _i, _fit in enumerate(self._fits):
+                _pdc = self.__class__.PLOT_CONTAINER_TYPE(_fit)
+
+                self._plot_containers.append(_pdc)
+
+        return self._plot_containers
 
     def _get_subplot_kwargs(self, subplot_id, plot_type):
         # get static kwargs
         _kwargs = self._subplot_static_kwarg_dicts.get(plot_type, dict()).copy()
+
         # get kwargs from property cyclers
         if plot_type in self._subplot_prop_cyclers:
             _cycler = self._subplot_prop_cyclers[plot_type]
@@ -405,6 +455,7 @@ class PlotFigureBase(object):
 
         # apply interpolation to legend labels
         _label_raw = _kwargs.pop('label')
+
         # TODO: think of better way to handle this (and make for flexible)
         _kwargs['label'] = _label_raw % dict(subplot_id=subplot_id,
                                              plot_type=plot_type)
@@ -427,18 +478,66 @@ class PlotFigureBase(object):
                                       % (plot_type, _plot_method_name, self.PLOT_CONTAINER_TYPE))
         return _plot_method_handle
 
-    def _call_plot_method_for_plot_type(self, subplot_id, plot_type, target_axes):
-        _pdc = self._plot_data_containers[subplot_id]
-        _plot_method_handle = self._get_plot_handle_for_plot_type(plot_type, _pdc)
-        _artist = _plot_method_handle(target_axes, **self._get_subplot_kwargs(self._model_indices[subplot_id], plot_type))
-        # TODO: warn if plot function does not return artist (?)
-        # store the artist returned by the plot method
-        self._artist_store[subplot_id][plot_type] = _artist
+    def _call_plot_method_for_plot_type(self, plot_container, plot_type, target_axes):
+        _plot_method_handle = self._get_plot_handle_for_plot_type(
+            plot_type, plot_container)
 
-    def _plot_all_subplots_all_plot_types(self):
-        for _spid, _ in enumerate(self._plot_data_containers):
+        return _plot_method_handle(
+            target_axes,
+            **self._get_subplot_kwargs(
+                self._model_indices[plot_container._model_index],
+                plot_type
+            )
+        )
+
+    def _plot_and_get_results(self):
+        _plot_containers = self._get_plot_containers()
+
+        _plots = {}
+        for _i, _pdc in enumerate(_plot_containers):
+
+            _pdc._model_index = _i
             for _pt in self._defined_plot_types:
-                self._call_plot_method_for_plot_type(_spid, _pt, target_axes=self._main_plot_axes)
+                _axes_key = self.PLOT_SUBPLOT_TYPES[_pt]['target_axes']
+
+                # skip plot elements meant for an inexistent axes
+                if _axes_key not in self._axes:
+                    continue
+
+                _axes_plot_dicts = _plots.setdefault(_axes_key, {})
+
+                _axes_plots = _axes_plot_dicts.setdefault('plots', [])
+
+                _artist = self._call_plot_method_for_plot_type(
+                    _pdc,
+                    _pt,
+                    target_axes=self._get_axes(_axes_key)
+                )
+
+                _axes_plots.append({
+                    'type' : _pt,
+                    'fit_index' : _i,
+                    'container' : _pdc,
+                    'artist' : _artist,
+                })
+
+                if _pdc.x_range is not None:
+                    _xlim = _axes_plot_dicts.setdefault(
+                        'x_range', _pdc.x_range)
+                    _axes_plot_dicts['x_range'] = (
+                        min(_xlim[0], _pdc.x_range[0]),
+                        max(_xlim[1], _pdc.x_range[1])
+                    )
+
+                if _pdc.y_range is not None:
+                    _ylim = _axes_plot_dicts.setdefault(
+                        'y_range', _pdc.y_range)
+                    _axes_plot_dicts['y_range'] = (
+                        min(_ylim[0], _pdc.y_range[0]),
+                        max(_ylim[1], _pdc.y_range[1])
+                    )
+
+        return _plots
 
     @classmethod
     def _get_fit_info(cls, plot_data_container, format_as_latex, asymmetric_parameter_errors):
@@ -471,87 +570,79 @@ class PlotFigureBase(object):
                 n_degrees_of_freedom=_cost_func.ndf,
                 with_value_per_ndf=True,
                 format_as_latex=format_as_latex
-            ) + (" (global)" if cls.IS_MULTI_PLOT else ""),
+            ),
         )
 
-    def _render_legend(self, target_axes, with_fit_info=True, with_asymmetric_parameter_errors=False, **kwargs):
-        _hs_unsorted, _ls_unsorted = target_axes.get_legend_handles_labels()
-        _hs_sorted, _ls_sorted = [], []
+    def _render_legend(self, plot_results, axes_keys, with_fit_info=True, with_asymmetric_parameter_errors=False, **kwargs):
+        '''render the legend for axes `axes_keys`'''
+        for _axes_key in axes_keys:
+            _axes = self._get_axes(_axes_key)
 
-        # sort legend entries by drawing order
-        for _i_subplot, _subplot_artist_map in enumerate(self._artist_store):
-            for _pt in self._defined_plot_types:
-                _artist = _subplot_artist_map.get(_pt, None)
-                if _artist is None:
-                    continue
-                try:
-                    _artist_index = _hs_unsorted.index(_artist)
-                except ValueError:
-                    _artist_index = _hs_unsorted.index(_artist[0])
-                _hs_sorted.append(_hs_unsorted[_artist_index])
-                _ls_sorted.append(_ls_unsorted[_artist_index])
+            _hs_unsorted, _ls_unsorted = _axes.get_legend_handles_labels()
+            _hs_sorted, _ls_sorted = [], []
 
-            # add fit info as extra legend entry
+            _axes_plots = plot_results[_axes_key]['plots']
+
             if with_fit_info:
-                _hs_sorted.append('_nokey_')
-                _ls_sorted.append(
-                    self._get_fit_info(
-                        self._plot_data_containers[_i_subplot],
-                        format_as_latex=True,
-                        asymmetric_parameter_errors=with_asymmetric_parameter_errors
-                    )
-                )
+                #for _i_plot, _plot_dict in zip(reversed(range(len(_axes_plots))), _axes_plots):
+                for _plot_dict in _axes_plots:
 
-        _zorder = kwargs.pop('zorder', 999)
-        _bbox_to_anchor = kwargs.pop('bbox_to_anchor', None)
-        if _bbox_to_anchor is None:
-            _bbox_to_anchor = (1.05, 0.0, 0.67, 1.0)  # axes coordinates FIXME: no hardcoding!
+                    try:
+                        try:
+                            _artist_index = _hs_unsorted.index(_plot_dict['artist'][0])
+                        except (ValueError, TypeError):
+                            _artist_index = _hs_unsorted.index(_plot_dict['artist'])
+                    except (KeyError, ValueError):
+                        # artist not available or not plottable -> skip
+                        continue
 
-        _mode = kwargs.pop('mode', "expand")
-        _borderaxespad = kwargs.pop('borderaxespad', 0.1)
-        _ncol = kwargs.pop('ncol', 1)
+                    _hs_sorted.append(_hs_unsorted[_artist_index])
+                    _ls_sorted.append(_ls_unsorted[_artist_index])
 
-        kwargs['loc'] = 'upper left'
+                    if _plot_dict['type'] != 'model_line':
+                        continue
 
-        target_axis.legend(_hs_sorted, _ls_sorted,
-                           bbox_to_anchor=_bbox_to_anchor,
-                           mode=_mode,
-                           borderaxespad=_borderaxespad,
-                           ncol=_ncol,
-                           handler_map={'_nokey_': DummyLegendHandler()},
-                           **kwargs).set_zorder(_zorder)
+                    if with_fit_info:
+                        _fit_info = self._get_fit_info(
+                            _plot_dict['container'],
+                            format_as_latex=True,
+                            asymmetric_parameter_errors=with_asymmetric_parameter_errors
+                        )
 
-    def _get_total_data_range_x(self):
-        _min, _max = None, None
-        for _pdc in self._plot_data_containers:
-            _lim = _pdc.x_range
-            if _lim is None:
-                continue
-            if _min is None or _lim[0] < _min:
-                _min = _lim[0]
-            if _max is None or _lim[1] > _max:
-                _max = _lim[1]
-        return _min, _max
+                        _hs_sorted.append('_nokey_')
+                        _ls_sorted.append(_fit_info)
 
-    def _get_total_data_range_y(self):
-        _min, _max = None, None
-        for _pdc in self._plot_data_containers:
-            _lim = _pdc.y_range
-            if _lim is None:
-                continue
-            if _min is None or _lim[0] < _min:
-                _min = _lim[0]
-            if _max is None or _lim[1] > _max:
-                _max = _lim[1]
-        return _min, _max
+            _zorder = kwargs.pop('zorder', 999)
+            _bbox_to_anchor = kwargs.pop('bbox_to_anchor', None)
+            if _bbox_to_anchor is None:
+                _bbox_to_anchor = (1.05, 0.0, 0.67, 1.0)  # axes coordinates FIXME: no hardcoding!
 
-    def _set_plot_range_to_total_data_range(self):
-        _xlim = self._get_total_data_range_x()
-        if None not in _xlim:
-            self._main_plot_axes.set_xlim(_xlim[0], _xlim[1])
-        _ylim = self._get_total_data_range_y()
-        if None not in _ylim:
-            self._main_plot_axes.set_ylim(_ylim[0], _ylim[1])
+            _mode = kwargs.pop('mode', "expand")
+            _borderaxespad = kwargs.pop('borderaxespad', 0.1)
+            _ncol = kwargs.pop('ncol', 1)
+
+            kwargs['loc'] = 'upper left'
+
+            _axes.legend(_hs_sorted, _ls_sorted,
+                         bbox_to_anchor=_bbox_to_anchor,
+                         mode=_mode,
+                         borderaxespad=_borderaxespad,
+                         ncol=_ncol,
+                         handler_map={'_nokey_': DummyLegendHandler()},
+                         **kwargs).set_zorder(_zorder)
+
+    def _adjust_plot_ranges(self, plot_results):
+        '''set the x and y ranges across (all axes) to the total data range reported by the plot containers'''
+        for _axes_name, _axes_dict in six.iteritems(plot_results):
+            _ax = self._get_axes(_axes_name)
+
+            _xlim = _axes_dict.get('x_range', None)
+            if _xlim:
+                _ax.set_xlim(_xlim)
+
+            _ylim = _axes_dict.get('y_range', None)
+            if _ylim:
+                _ax.set_ylim(_ylim)
 
     # -- public properties
 
@@ -559,6 +650,12 @@ class PlotFigureBase(object):
     def figure(self):
         """The ``matplotlib`` figure managed by this object."""
         return self._fig
+
+    @property
+    def axes(self):
+        """A dictionary mapping names to ``matplotlib`` `Axes` objects
+        contained in this figure."""
+        return self._axes
 
     @property
     def x_label(self):
@@ -597,37 +694,29 @@ class PlotFigureBase(object):
              with_fit_info=True,
              with_asymmetric_parameter_errors=False):
         """Plot data, model (and other subplots) for all child :py:obj:`Fit` objects."""
-        # TODO: hooks?
-        self._plot_all_subplots_all_plot_types()
-        self._set_plot_range_to_total_data_range()
+
+        _axes_keys = ('main',)
+        _height_ratios = None
+
+        self._create_figure_axes(
+            _axes_keys,
+            height_ratios=_height_ratios
+        )
+
+        _plot_results = self._plot_and_get_results()
 
         if with_legend:
             self._render_legend(
-                self._main_plot_axes,
+                plot_results=_plot_results,
+                axes_keys=('main',),
                 with_fit_info=with_fit_info,
                 with_asymmetric_parameter_errors=with_asymmetric_parameter_errors
             )
 
-        # set axis labels
-        self._main_plot_axes.set_xlabel(self.x_label)
-        self._main_plot_axes.set_ylabel(self.y_label)
+        self._adjust_plot_ranges(_plot_results)
 
-    def get_fit_info_strings(self, format_as_latex=False, asymmetric_parameter_errors=False):
-        """Return list of strings with information about each fit.
 
-        :param format_as_latex: if ``True``, the fit information text will be formatted as a LaTeX string
-        :type format_as_latex: bool
-        :param asymmetric_parameter_errors: if ``True``, asymmetric parameter errors (up/down directions) are shown
-        :type asymmetric_parameter_errors: bool
-        """
-        return [
-            self._get_fit_info(
-                _pdc,
-                format_as_latex=format_as_latex,
-                asymmetric_parameter_errors=asymmetric_parameter_errors
-            )
-            for _pdc in self._plot_data_containers
-        ]
+        return _plot_results
 
     def show_fit_info_box(self, asymmetric_parameter_errors=False, format_as_latex=True):
         """[DEPRECATED] Render text information about each plot on the figure.
@@ -708,9 +797,12 @@ class MultiPlotBase(object):
         for _i, _plot in enumerate(self._underlying_plots):
             _plot.x_label = self._axis_labels[_i][0]
             _plot.y_label = self._axis_labels[_i][1]
-            _plot.plot(with_legend=with_legend,
-                       with_fit_info=with_fit_info,
-                       with_asymmetric_parameter_errors=with_asymmetric_parameter_errors)
+            _plot.plot(
+                with_legend=with_legend,
+                with_fit_info=with_fit_info,
+                with_asymmetric_parameter_errors=with_asymmetric_parameter_errors
+            )
+
 
     def get_fit_info_strings(self, format_as_latex=False, asymmetric_parameter_errors=False):
         return [

@@ -178,11 +178,18 @@ class XYMultiPlotSingular(PlotFigureBase):
     PLOT_CONTAINER_TYPE = XYMultiPlotContainer
     PLOT_STYLE_CONFIG_DATA_TYPE = 'xy'
 
-    PLOT_SUBPLOT_TYPES = PlotFigureBase.PLOT_SUBPLOT_TYPES.copy()  # don't change original class variable
-    PLOT_SUBPLOT_TYPES['model_error_band'] = dict(
-        plot_container_method='plot_model_error_band',
+    PLOT_SUBPLOT_TYPES = dict(
+        PlotFigureBase.PLOT_SUBPLOT_TYPES,
+        model_line=dict(
+            plot_container_method='plot_model_line',
+            target_axes='main'
+        ),
+        model_error_band=dict(
+            plot_container_method='plot_model_error_band',
+            target_axes='main'
+        ),
     )
-    IS_MULTI_PLOT = True
+    del PLOT_SUBPLOT_TYPES['model']  # don't plot model xy points
 
     def __init__(self, fit_objects, model_indices):
         """

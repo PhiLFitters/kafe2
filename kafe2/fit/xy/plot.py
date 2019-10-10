@@ -62,24 +62,34 @@ class XYPlotContainer(PlotContainerBase):
 
     @property
     def model_x(self):
+        """model x values"""
+        return self._fitter.x_model
+
+    @property
+    def model_y(self):
+        """model y values"""
+        return self._fitter.y_model
+
+    @property
+    def model_xerr(self):
+        """x error bars for model: ``None`` for :py:obj:`IndexedPlotContainer`"""
+        return self._fitter.x_error
+
+    @property
+    def model_yerr(self):
+        """y error bars for model: total model uncertainty"""
+        return self._fitter.y_model_error
+
+    @property
+    def model_line_x(self):
         """x support values for model function"""
         _xmin, _xmax = self.x_range
         return np.linspace(_xmin, _xmax, self._n_plot_points_model)
 
     @property
-    def model_y(self):
+    def model_line_y(self):
         """y values at support points for model function"""
-        return self._fitter.eval_model_function(x=self.model_x)
-
-    @property
-    def model_xerr(self):
-        """x error bars for model (not used)"""
-        return None if np.allclose(self._fitter.x_error, 0) else self._fitter.x_error
-
-    @property
-    def model_yerr(self):
-        """y error bars for model (not used)"""
-        return None if np.allclose(self._fitter.y_data_error, 0) else self._fitter.y_data_error
+        return self._fitter.eval_model_function(x=self.model_line_x)
 
     @property
     def x_range(self):
@@ -95,7 +105,7 @@ class XYPlotContainer(PlotContainerBase):
 
     # public methods
 
-    def plot_data(self, target_axes, **kwargs):
+    def plot_data(self, target_axes, error_contributions=('data',), **kwargs):
         """
         Plot the measurement data to a specified ``matplotlib`` ``Axes`` object.
 
@@ -103,30 +113,33 @@ class XYPlotContainer(PlotContainerBase):
         :param kwargs: keyword arguments accepted by the ``matplotlib`` methods ``errorbar`` or ``plot``
         :return: plot handle(s)
         """
-        # TODO: how to handle 'data' errors and 'model' errors?
-        if self._fitter.has_errors:
-            _yerr = np.sqrt(
-                self.data_yerr ** 2
-                + self._fitter._cost_function.get_uncertainty_gaussian_approximation(self.data_y) ** 2
-            )
-            return target_axes.errorbar(self.data_x,
-                                        self.data_y,
-                                        xerr=self.data_xerr,
-                                        yerr=_yerr,
-                                        **kwargs)
-        else:
-            _yerr = self._fitter._cost_function.get_uncertainty_gaussian_approximation(self.data_y)
-            if np.all(_yerr == 0):
-                return target_axes.plot(self.data_x,
-                                        self.data_y,
-                                        **kwargs)
-            else:
-                return target_axes.errorbar(self.data_x,
-                                            self.data_y,
-                                            yerr=_yerr,
-                                            **kwargs)
 
-    def plot_model(self, target_axes, **kwargs):
+        _yerr = self._get_total_error(error_contributions)
+
+        return target_axes.errorbar(self.data_x,
+                                    self.data_y,
+                                    xerr=self.data_xerr,
+                                    yerr=_yerr,
+                                    **kwargs)
+
+    def plot_model(self, target_axes, error_contributions=('model',), **kwargs):
+        """
+        Plot the measurement data to a specified ``matplotlib`` ``Axes`` object.
+
+        :param target_axes: ``matplotlib`` ``Axes`` object
+        :param kwargs: keyword arguments accepted by the ``matplotlib`` methods ``errorbar`` or ``plot``
+        :return: plot handle(s)
+        """
+
+        _yerr = self._get_total_error(error_contributions)
+
+        return target_axes.errorbar(self.model_x,
+                                    self.model_y,
+                                    xerr=self.data_xerr,
+                                    yerr=_yerr,
+                                    **kwargs)
+
+    def plot_model_line(self, target_axes, **kwargs):
         """
         Plot the model function to a specified matplotlib ``Axes`` object.
 
@@ -135,8 +148,8 @@ class XYPlotContainer(PlotContainerBase):
         :return: plot handle(s)
         """
         # TODO: how to handle 'data' errors and 'model' errors?
-        return target_axes.plot(self.model_x,
-                                self.model_y,
+        return target_axes.plot(self.model_line_x,
+                                self.model_line_y,
                                 **kwargs)
 
     def plot_model_error_band(self, target_axes, **kwargs):
@@ -149,9 +162,9 @@ class XYPlotContainer(PlotContainerBase):
         """
         if self._fitter.did_fit and (self._fitter.has_errors or not self._fitter._cost_function.needs_errors):
             _band_y = self._fitter.y_error_band
-            _y = self.model_y
+            _y = self.model_line_y
             return target_axes.fill_between(
-                self.model_x,
+                self.model_line_x,
                 _y - _band_y, _y + _band_y,
                 **kwargs)
         else:
@@ -163,10 +176,18 @@ class XYPlot(PlotFigureBase):
     PLOT_CONTAINER_TYPE = XYPlotContainer
     PLOT_STYLE_CONFIG_DATA_TYPE = 'xy'
 
-    PLOT_SUBPLOT_TYPES = PlotFigureBase.PLOT_SUBPLOT_TYPES.copy()  # don't change original class variable
-    PLOT_SUBPLOT_TYPES['model_error_band'] = dict(
-        plot_container_method='plot_model_error_band',
+    PLOT_SUBPLOT_TYPES = dict(
+        PlotFigureBase.PLOT_SUBPLOT_TYPES,
+        model_line=dict(
+            plot_container_method='plot_model_line',
+            target_axes='main'
+        ),
+        model_error_band=dict(
+            plot_container_method='plot_model_error_band',
+            target_axes='main'
+        ),
     )
+    del PLOT_SUBPLOT_TYPES['model']  # don't plot model xy points
 
     def __init__(self, fit_objects):
         super(XYPlot, self).__init__(fit_objects=fit_objects)

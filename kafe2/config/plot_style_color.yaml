@@ -39,10 +39,9 @@ default:
           - 's'
   model:
     plot_kwargs:
-      linestyle: '-'
-      marker: ''
+      linestyle: ''
+      marker: 'o'
       label: 'model %(subplot_id)s'
-      linewidth: 2
       zorder: -10
     property_cycler:
       -
@@ -54,10 +53,10 @@ default:
           - *kafe_light_violet
           - *kafe_light_brown
       -
-        linestyle:
-          - '-'
-          - '--'
-          - '-.'
+        marker:
+          - 'o'
+          - '^'
+          - 's'
 
 histogram:
   axis_labels:
@@ -110,6 +109,27 @@ indexed:
   axis_labels:
     x: "Index"
     y: "$y$"
+  model:
+    plot_kwargs:
+      linestyle: '-'
+      marker: ''
+      label: 'model %(subplot_id)s'
+      linewidth: 2
+      zorder: -10
+    property_cycler:
+      -
+        color:
+          - *kafe_light_red
+          - *kafe_light_blue
+          - *kafe_light_green
+          - *kafe_light_orange
+          - *kafe_light_violet
+          - *kafe_light_brown
+      -
+        linestyle:
+          - '-'
+          - '--'
+          - '-.'
 
 
 
@@ -132,6 +152,25 @@ unbinned:
           - *kafe_light_orange
           - *kafe_light_violet
           - *kafe_light_brown
+  model_line:
+    plot_kwargs:
+      linestyle: '-'
+      marker: ''
+      label: 'model %(subplot_id)s'
+      linewidth: 2
+      zorder: -10
+    property_cycler:
+      - color:
+          - *kafe_light_red
+          - *kafe_light_blue
+          - *kafe_light_green
+          - *kafe_light_orange
+          - *kafe_light_violet
+          - *kafe_light_brown
+      - linestyle:
+          - '-'
+          - '--'
+          - '-.'
 
 
 
@@ -139,6 +178,27 @@ xy:
   axis_labels:
     x: "$x$"
     y: "$y$"
+  model_line:
+    plot_kwargs:
+      linestyle: '-'
+      marker: ''
+      label: 'model %(subplot_id)s'
+      linewidth: 2
+      zorder: -10
+    property_cycler:
+      -
+        color:
+          - *kafe_light_red
+          - *kafe_light_blue
+          - *kafe_light_green
+          - *kafe_light_orange
+          - *kafe_light_violet
+          - *kafe_light_brown
+      -
+        linestyle:
+          - '-'
+          - '--'
+          - '-.'
   model_error_band:
     plot_kwargs:
       alpha: 0.5
