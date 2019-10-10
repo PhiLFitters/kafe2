@@ -169,27 +169,27 @@ class PlotAdapterBase(object):
                 kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'y')
             )
 
-    def _get_subplot_kwargs(self, subplot_id, plot_type):
+    def _get_subplot_kwargs(self, plot_index, plot_type):
 
         # get static kwargs
         _plot_style_as = self.PLOT_SUBPLOT_TYPES[plot_type].get('plot_style_as', plot_type)
-        _kwargs = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, _plot_style_as, 'plot_kwargs')
+        _kwargs = dict(kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, _plot_style_as, 'plot_kwargs'))
         _prop_cycler_args = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, _plot_style_as, 'property_cycler')
 
         _prop_cycler = Cycler(*_prop_cycler_args)
-        _kwargs.update(**_prop_cycler.get(subplot_id))
+        _kwargs.update(**_prop_cycler.get(plot_index))
 
         # apply interpolation to legend labels
         _label_raw = _kwargs.pop('label')
 
         # TODO: think of better way to handle this (and make for flexible)
-        _kwargs['label'] = _label_raw % dict(subplot_id=subplot_id,
+        _kwargs['label'] = _label_raw % dict(subplot_id=plot_index,
                                              plot_type=plot_type)
 
         # calculate zorder if not explicitly given
         _n_defined_plot_types = len(self.PLOT_SUBPLOT_TYPES)
         if 'zorder' not in _kwargs:
-            _kwargs['zorder'] = subplot_id * _n_defined_plot_types + list(self.PLOT_SUBPLOT_TYPES).index(plot_type)
+            _kwargs['zorder'] = plot_index * _n_defined_plot_types + list(self.PLOT_SUBPLOT_TYPES).index(plot_type)
 
         return _kwargs
 
@@ -374,7 +374,7 @@ class Plot(object):
             $\\hookrightarrow${fit_quality}
     """)
 
-    def __init__(self, fit_objects, model_indices=None):
+    def __init__(self, fit_objects, separate_figures=False):
 
         # set the managed fit objects
         try:
@@ -383,18 +383,7 @@ class Plot(object):
             fit_objects = (fit_objects,)
         self._fits = fit_objects
 
-        # model indices (relevant for Multiplots)
-        if model_indices is None:
-            try:
-                model_indices = range(len(fit_objects))
-            except TypeError:
-                model_indices = [0]
-        else:
-            try:
-                iter(model_indices)
-            except:
-                model_indices = [model_indices]
-        self._model_indices = model_indices
+        self._separate_figs = separate_figures
 
         # figure layout (TODO: no hardcoding)
         self._outer_gs = gs.GridSpec(nrows=1,
@@ -409,14 +398,14 @@ class Plot(object):
                                      height_ratios=None)
 
         # owned objects
-        self._fig = None
+        self._figure_dicts = []
         self._plot_adapters = None
 
     # -- private methods
 
     def _get_axes(self, axes_key):
         try:
-            return self._axes[axes_key]
+            return self._current_axes[axes_key]
         except KeyError:
             raise KeyError("No axes found for name '{}'!".format(axes_key))
 
@@ -436,26 +425,28 @@ class Plot(object):
             subplot_spec=self._outer_gs[0, 0]
         )
 
-        # create figure (overwrite the old one)
-        self._fig = plt.figure()
+        # create figure
+        self._figure_dicts.append(dict(figure=plt.figure()))
 
         # create named axes
-        self._axes = {
+        self._current_axes = self._figure_dicts[-1]['axes'] = {
             _k : plt.subplot(_plot_axes_gs[_i])
             for _i, _k in enumerate(axes_keys)
         }
 
-    def _get_plot_adapters(self):
+        self._current_results = None  # populated on 'plot()'
+
+    def _get_plot_adapters(self, plot_indices):
         '''retrieve plot adapters, creating them if needed'''
 
         if self._plot_adapters is None:
             self._plot_adapters = []
-            for _i, _fit in enumerate(self._fits):
-                _pdc = _fit._new_plot_adapter()
+            for _fit in self._fits:
+                self._plot_adapters.append(
+                    _fit._new_plot_adapter()
+                )
 
-                self._plot_adapters.append(_pdc)
-
-        return self._plot_adapters
+        return [self._plot_adapters[_idx] for _idx in plot_indices]
 
     def _get_plot_handle_for_plot_type(self, plot_type, plot_adapter):
         _plot_method_name = plot_adapter.PLOT_SUBPLOT_TYPES[plot_type]['plot_adapter_method']
@@ -477,21 +468,22 @@ class Plot(object):
             **kwargs
         )
 
-    def _plot_and_get_results(self):
-        _plot_adapters = self._get_plot_adapters()
+    def _plot_and_get_results(self, plot_indices=None):
+        plot_indices = plot_indices or range(len(self._fits))
+
+        _plot_adapters = self._get_plot_adapters(plot_indices)
 
         _plots = {}
-        for _i_pdc, _pdc in enumerate(_plot_adapters):
+        for _i_pdc, _pdc in zip(plot_indices, _plot_adapters):
 
             if not _pdc.PLOT_SUBPLOT_TYPES:
                 continue
 
-            _pdc._model_index = _i_pdc
             for _i_pt, (_pt, _pt_spec) in enumerate(six.iteritems(_pdc.PLOT_SUBPLOT_TYPES)):
                 _axes_key = _pt_spec['target_axes']
 
                 # skip plot elements meant for an inexistent axes
-                if _axes_key not in self._axes:
+                if _axes_key not in self._current_axes:
                     continue
 
                 _axes_plot_dicts = _plots.setdefault(_axes_key, {})
@@ -503,7 +495,7 @@ class Plot(object):
                     _pt,
                     target_axes=self._get_axes(_axes_key),
                     **_pdc._get_subplot_kwargs(
-                        self._model_indices[_pdc._model_index],  # or _i_pdc
+                        _i_pdc,
                         _pt
                     )
                 )
@@ -662,21 +654,21 @@ class Plot(object):
 
         # hide x tick labels in all but the lowest axes
         for _key in axes_keys[:-1]:
-            self._axes[_key].set_xticklabels([])
-            self._axes[_key].set_xlabel(None)
+            self._current_axes[_key].set_xticklabels([])
+            self._current_axes[_key].set_xlabel(None)
 
     # -- public properties
 
     @property
-    def figure(self):
-        """The ``matplotlib`` figure managed by this object."""
-        return self._fig
+    def figures(self):
+        """The ``matplotlib`` figures managed by this object."""
+        return [_d['figure'] for _d in self._figure_dicts]
 
     @property
     def axes(self):
-        """A dictionary mapping names to ``matplotlib`` `Axes` objects
-        contained in this figure."""
-        return self._axes
+        """A list of dictionaries (one per figure) mapping names to
+        ``matplotlib`` `Axes` objects contained in this figure."""
+        return [_d['axes'] for _d in self._figure_dicts]
 
     # -- public methods
 
@@ -694,32 +686,38 @@ class Plot(object):
             _axes_keys += ('ratio',)
             _height_ratios = (3, 1)
 
-        self._create_figure_axes(
-            _axes_keys,
-            height_ratios=_height_ratios
-        )
-
-        _plot_results = self._plot_and_get_results()
-
-        if with_legend:
-            self._render_legend(
-                plot_results=_plot_results,
-                axes_keys=('main',),
-                with_fit_info=with_fit_info,
-                with_asymmetric_parameter_errors=with_asymmetric_parameter_errors
+        _all_plot_results = []
+        for i in range(len(self._fits) if self._separate_figs else 1):
+            self._create_figure_axes(
+                _axes_keys,
+                height_ratios=_height_ratios
             )
 
-        self._adjust_plot_ranges(_plot_results)
-        self._set_axis_labels(_plot_results, axes_keys=_axes_keys)
+            _plot_results = self._plot_and_get_results(plot_indices=(i,) if self._separate_figs else None)
 
-        if with_ratio:
-            _ratio_label = kc('fit', 'plot', 'ratio_label')
-            self._axes['ratio'].set_ylabel(_ratio_label)
-            _ymin, _ymax = self._axes['ratio'].get_ylim()
-            _yshift = 1.0 - 0.5 * (_ymin + _ymax)
-            self._axes['ratio'].set_ylim((_ymin + _yshift, _ymax + _yshift))
+            if with_legend:
+                self._render_legend(
+                    plot_results=_plot_results,
+                    axes_keys=('main',),
+                    with_fit_info=with_fit_info,
+                    with_asymmetric_parameter_errors=with_asymmetric_parameter_errors
+                )
 
-        return _plot_results
+            self._adjust_plot_ranges(_plot_results)
+            self._set_axis_labels(_plot_results, axes_keys=_axes_keys)
+
+            if with_ratio:
+                _ratio_label = kc('fit', 'plot', 'ratio_label')
+                self._current_axes['ratio'].set_ylabel(_ratio_label)
+                _ymin, _ymax = self._axes['ratio'].get_ylim()
+                _yshift = 1.0 - 0.5 * (_ymin + _ymax)
+                self._current_axes['ratio'].set_ylim((_ymin + _yshift, _ymax + _yshift))
+
+            _all_plot_results.append(_plot_results)
+
+        self._current_results = _all_plot_results
+
+        return _all_plot_results
 
     def show_fit_info_box(self, asymmetric_parameter_errors=False, format_as_latex=True):
         """[DEPRECATED] Render text information about each plot on the figure.
