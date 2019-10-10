@@ -70,6 +70,6 @@ fit.do_fit()
 
 # Optional: plot the fit results
 plot = XYPlot(fit)
-plot.plot(with_fit_info=True)
+plot.plot(with_fit_info=True, with_ratio=True)
 
 plt.show()

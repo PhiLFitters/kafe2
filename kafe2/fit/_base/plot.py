@@ -282,6 +282,16 @@ class PlotContainerBase(object):
         """
         pass
 
+    @abc.abstractmethod
+    def plot_ratio(self, target_axes, **kwargs):
+        """
+        Method called by the main plot routine to plot the data/model ratio to a specified matplotlib ``Axes`` object.
+
+        :param target_axes: ``matplotlib`` ``Axes`` object
+        :return: plot handle(s)
+        """
+        pass
+
     #Overridden by multi plot containers
     def get_formatted_model_function(self, **kwargs):
         """return model function string"""
@@ -325,6 +335,11 @@ class PlotFigureBase(object):
         model=dict(
             plot_container_method='plot_model',
             target_axes='main',
+        ),
+        ratio=dict(
+            plot_style_as='data',
+            plot_container_method='plot_ratio',
+            target_axes='ratio',
         ),
     )
 
@@ -692,11 +707,16 @@ class PlotFigureBase(object):
     def plot(self,
              with_legend=True,
              with_fit_info=True,
-             with_asymmetric_parameter_errors=False):
+             with_asymmetric_parameter_errors=False,
+             with_ratio=False):
         """Plot data, model (and other subplots) for all child :py:obj:`Fit` objects."""
 
         _axes_keys = ('main',)
         _height_ratios = None
+
+        if with_ratio:
+            _axes_keys += ('ratio',)
+            _height_ratios = (3, 1)
 
         self._create_figure_axes(
             _axes_keys,
@@ -715,6 +735,12 @@ class PlotFigureBase(object):
 
         self._adjust_plot_ranges(_plot_results)
 
+        if with_ratio:
+            _ratio_label = kc('fit', 'plot', 'ratio_label')
+            self._axes['ratio'].set_ylabel(_ratio_label)
+            _ymin, _ymax = self._axes['ratio'].get_ylim()
+            _yshift = 1.0 - 0.5 * (_ymin + _ymax)
+            self._axes['ratio'].set_ylim((_ymin + _yshift, _ymax + _yshift))
 
         return _plot_results
 
@@ -792,7 +818,8 @@ class MultiPlotBase(object):
     def plot(self,
              with_legend=True,
              with_fit_info=True,
-             with_asymmetric_parameter_errors=False):
+             with_asymmetric_parameter_errors=False,
+             with_ratio=False):
         """Plot data, model (and other subplots) for all child :py:obj:`Fit` objects, and show legend."""
         for _i, _plot in enumerate(self._underlying_plots):
             _plot.x_label = self._axis_labels[_i][0]

@@ -168,6 +168,15 @@ class UnbinnedPlotContainer(PlotContainerBase):
         """
         return target_axes.plot(self.model_x, self.model_y, **kwargs)
 
+    def plot_ratio(self, target_axes, **kwargs):
+        """
+        Plot the data/model ratio to a specified ``matplotlib`` ``Axes`` object.
+
+        :param target_axes: ``matplotlib`` ``Axes`` object
+        :param kwargs: keyword arguments accepted by the ``matplotlib`` methods ``errorbar`` or ``plot``
+        :return: plot handle(s)
+        """
+        raise NotImplementedError("Data/model ratio cannot be plotted for unbinned fits.")
 
 class UnbinnedPlot(PlotFigureBase):
 

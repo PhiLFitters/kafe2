@@ -119,6 +119,22 @@ class IndexedPlotContainer(PlotContainerBase):
                                  **kwargs
                                  )
 
+    def plot_ratio(self, target_axes, error_contributions=('data',), **kwargs):
+        """
+        Plot the data/model ratio to a specified ``matplotlib`` ``Axes`` object.
+
+        :param target_axes: ``matplotlib`` ``Axes`` object
+        :param kwargs: keyword arguments accepted by the ``matplotlib`` methods ``errorbar`` or ``plot``
+        :return: plot handle(s)
+        """
+        _yerr = self._get_total_error(error_contributions)
+
+        # TODO: how to handle case when x and y error/model differ?
+        return target_axes.errorbar(self.data_x,
+                                    self.data_y / self.model_y,
+                                    xerr=self.data_xerr,
+                                    yerr=_yerr / self.model_y,
+                                    **kwargs)
 
 class IndexedPlot(PlotFigureBase):
 

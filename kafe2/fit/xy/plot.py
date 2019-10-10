@@ -170,6 +170,46 @@ class XYPlotContainer(PlotContainerBase):
         else:
             return None  # don't plot error band if fitter input data has no errors...
 
+    def plot_ratio(self, target_axes, error_contributions=('data',), **kwargs):
+        """
+        Plot the data/model ratio to a specified ``matplotlib`` ``Axes`` object.
+
+        :param target_axes: ``matplotlib`` ``Axes`` object
+        :param kwargs: keyword arguments accepted by the ``matplotlib`` methods ``errorbar`` or ``plot``
+        :return: plot handle(s)
+        """
+
+        _yerr = self._get_total_error(error_contributions)
+        if _yerr is not None:
+            _yerr /= self.model_y
+
+        # TODO: how to handle case when x and y error/model differ?
+        return target_axes.errorbar(
+            self.data_x,
+            self.data_y / self.model_y,
+            xerr=self.data_xerr,
+            yerr=_yerr,
+            **kwargs
+        )
+
+    def plot_ratio_error_band(self, target_axes, **kwargs):
+        """
+        Plot model error band around the data/model ratio to a specified ``matplotlib`` ``Axes`` object.
+
+        :param target_axes: ``matplotlib`` ``Axes`` object
+        :param kwargs: keyword arguments accepted by the ``matplotlib`` methods ``errorbar`` or ``plot``
+        :return: plot handle(s)
+        """
+        if self._fitter.did_fit and (self._fitter.has_errors or not self._fitter._cost_function.needs_errors):
+            _band_y = self._fitter.y_error_band
+            _y = self.model_line_y
+            return target_axes.fill_between(
+                self.model_line_x,
+                1 - _band_y/_y, 1 + _band_y/_y,
+                **kwargs)
+        else:
+            return None  # don't plot error band if fitter input data has no errors...
+
 
 class XYPlot(PlotFigureBase):
 
@@ -185,6 +225,11 @@ class XYPlot(PlotFigureBase):
         model_error_band=dict(
             plot_container_method='plot_model_error_band',
             target_axes='main'
+        ),
+        ratio_error_band=dict(
+            plot_style_as='model_error_band',
+            plot_container_method='plot_ratio_error_band',
+            target_axes='ratio'
         ),
     )
     del PLOT_SUBPLOT_TYPES['model']  # don't plot model xy points

@@ -1,8 +1,11 @@
 import numpy as np
+import six
 
 from .._base import PlotContainerBase, PlotContainerException, PlotFigureBase
 from .._aux import step_fill_between
 from . import HistFit
+
+from ..xy.plot import XYPlotAdapter
 
 __all__ = ["HistPlot", "HistPlotContainer"]
 
@@ -139,6 +142,20 @@ class HistPlotContainer(PlotContainerBase):
                                 self.model_density_y,
                                 **kwargs)
 
+    def plot_ratio(self, target_axes, error_contributions=('data',), **kwargs):
+        """
+        Plot the data/model ratio to a specified ``matplotlib`` ``Axes`` object.
+
+        :param target_axes: ``matplotlib`` ``Axes`` object
+        :param kwargs: keyword arguments accepted by the ``matplotlib`` methods ``errorbar`` or ``plot``
+        :return: plot handle(s)
+        """
+        return six.get_unbound_function(XYPlotAdapter.plot_ratio)(
+            self,
+            target_axes=target_axes,
+            error_contributions=error_contributions,
+            **kwargs
+        )
 
 class HistPlot(PlotFigureBase):
 

@@ -188,6 +188,11 @@ class XYMultiPlotSingular(PlotFigureBase):
             plot_container_method='plot_model_error_band',
             target_axes='main'
         ),
+        ratio_error_band=dict(
+            plot_style_as='model_error_band',
+            plot_container_method='plot_ratio_error_band',
+            target_axes='ratio'
+        ),
     )
     del PLOT_SUBPLOT_TYPES['model']  # don't plot model xy points
 
