@@ -676,7 +676,8 @@ class Plot(object):
              with_legend=True,
              with_fit_info=True,
              with_asymmetric_parameter_errors=False,
-             with_ratio=False):
+             with_ratio=False,
+             ratio_range=None):
         """Plot data, model (and other subplots) for all child :py:obj:`Fit` objects."""
 
         _axes_keys = ('main',)
@@ -709,9 +710,13 @@ class Plot(object):
             if with_ratio:
                 _ratio_label = kc('fit', 'plot', 'ratio_label')
                 self._current_axes['ratio'].set_ylabel(_ratio_label)
-                _ymin, _ymax = self._axes['ratio'].get_ylim()
-                _yshift = 1.0 - 0.5 * (_ymin + _ymax)
-                self._current_axes['ratio'].set_ylim((_ymin + _yshift, _ymax + _yshift))
+                if ratio_range is None:
+                    # shift automatic plot range so that 1.0 is centered
+                    _ymin, _ymax = self._current_axes['ratio'].get_ylim()
+                    _yshift = 1.0 - 0.5 * (_ymin + _ymax)
+                    self._current_axes['ratio'].set_ylim((_ymin + _yshift, _ymax + _yshift))
+                else:
+                    self._current_axes['ratio'].set_ylim(ratio_range)
 
             _all_plot_results.append(_plot_results)
 
