@@ -27,6 +27,7 @@ import mock
 
 MOCK_MODULES = [
     'matplotlib',
+    'matplotlib.legend_handler',
     'matplotlib.pyplot',
     'matplotlib.collections',
     'iminuit',
