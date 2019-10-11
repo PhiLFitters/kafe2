@@ -434,6 +434,11 @@ class Plot(object):
             for _i, _k in enumerate(axes_keys)
         }
 
+        # make all axes share the 'x' axis of the first axes
+        for _ax_name, _ax in six.iteritems(self._current_axes):
+            self._current_axes[axes_keys[0]].get_shared_x_axes().join(
+                self._current_axes[axes_keys[0]], _ax)
+
         self._current_results = None  # populated on 'plot()'
 
     def _get_plot_adapters(self, plot_indices):
