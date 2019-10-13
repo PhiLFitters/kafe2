@@ -276,7 +276,7 @@ class TestNodes(unittest.TestCase):
         r = RootNode()
         with self.assertRaises(TypeError):
             r.add_parent(2)
-        self.assertEqual(r.iter_parents(), [])
+        self.assertEqual([p for p in r.iter_parents()], [])
         self.assertEqual(r.get_parents(), [])
 
     # -- Empty

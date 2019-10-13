@@ -307,13 +307,17 @@ class NodeBase(object):
 
         return self
 
-    def notify_parents(self, indent=''):
+    def notify_parents(self):
+        # frozen nodes do not notify their parents
+        if self.frozen:
+            return
+
         # execute any callback functions
         self._execute_callbacks()
 
         for _p in self.iter_parents():
             _p.mark_for_update()
-            _p.notify_parents(indent=indent+'  ')
+            _p.notify_parents()
 
     def freeze(self):
         self._frozen = True
@@ -357,6 +361,7 @@ class NodeBase(object):
     def print_descendants(self):
         NodeChildrenPrinter(self).run()
 
+
 class RootNode(NodeBase):
     """
     A Node that acts as the root node of a graph. Cannot have any parent nodes.
@@ -375,7 +380,6 @@ class RootNode(NodeBase):
         # keep root node children sorted by name
         self._children = sorted(self._children, key=lambda x: x.name)
 
-
     def replace(self, other):
         '''replace all instances of this node with `other`'''
         raise TypeError("Root node cannot be replaced!")
@@ -384,10 +388,11 @@ class RootNode(NodeBase):
         raise TypeError("Cannot add parent to root node!")
 
     def iter_parents(self):
-        return list()
+        # empty generator
+        return iter(())
 
-    def get_parents(self):
-        return list()
+    def notify_parents(self):
+        pass
 
 
 @_add_common_operators
@@ -523,6 +528,10 @@ class Parameter(ValueNode):
 
 
 class Alias(ValueNode):
+    """
+    A Node that only passes on the value
+    of another node when evaluated.
+    """
     def __init__(self, ref, name=None):
         ValueNode.__init__(self, value=None, name=name)
 
@@ -535,6 +544,14 @@ class Alias(ValueNode):
         return '{} -> {}'.format(
             NodeBase._pprint(self),
             NodeBase._pprint(self.ref)
+        )
+
+    @ValueNode.value.setter
+    def value(self, value):
+        raise ValueError(
+            "Cannot set value of alias node '{}'.".format(
+                self.name
+            )
         )
 
     @property
