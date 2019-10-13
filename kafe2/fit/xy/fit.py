@@ -8,7 +8,7 @@ import textwrap
 
 from ...tools import print_dict_as_table
 from ...core import NexusFitter, Nexus
-from ...core.fitters.nexus import Parameter, Alias
+from ...core.fitters.nexus import Parameter, Alias, NexusError
 from ...config import kc
 from .._base import FitException, FitBase, DataContainerBase, CostFunctionBase
 from .container import XYContainer
@@ -308,11 +308,6 @@ class XYFit(FitBase):
             )
         )
 
-        # freeze error projection nodes
-        if self._x_error_algorithm == 'iterative linear':
-            self._nexus.get('projected_xy_total_error').freeze()
-            self._nexus.get('projected_xy_total_cov_mat').freeze()
-
         self._nexus.add_dependency(
             'y_model',
             depends_on=(
@@ -341,6 +336,23 @@ class XYFit(FitBase):
                     '{}_{}_uncor_cov_mat'.format(_axis, _side),
                     depends_on='{}_{}_cov_mat'.format(_axis, _side)
                 )
+
+        # in case 'x' errors are defined and the corresponding
+        # algorithm is 'iterative linear', matrices should be projected
+        # once and the corresponding node made frozen
+        if (self._x_error_algorithm == 'iterative linear' and
+            not self.has_x_errors):
+
+            self._with_projected_nodes(('update', 'freeze'))
+
+    def _with_projected_nodes(self, actions):
+        '''perform actions on projected error nodes: freeze, update, unfreeze...'''
+        if isinstance(actions, str):
+            actions = (actions,)
+        for _node_name in ('projected_xy_total_error', 'projected_xy_total_cov_mat'):
+            for action in actions:
+                _node = self._nexus.get(_node_name)
+                getattr(_node, action)()
 
     def _calculate_y_error_band(self):
         _xmin, _xmax = self._data_container.x_range
@@ -390,6 +402,16 @@ class XYFit(FitBase):
         )
 
     # -- public properties
+
+    @property
+    def has_x_errors(self):
+        """``True`` if at least one *x* uncertainty source has been defined"""
+        return self._data_container.has_x_errors or self._param_model.has_x_errors
+
+    @property
+    def has_y_errors(self):
+        """``True`` if at least one *y* uncertainty source has been defined"""
+        return self._data_container.has_y_errors or self._param_model.has_y_errors
 
     @property
     def x_data(self):
@@ -886,6 +908,9 @@ class XYFit(FitBase):
         # do not reinitialize the nexus, since matrix errors are not
         # relevant for nuisance parameters
 
+        # but *do* update projected xy error nodes
+        self._with_projected_nodes('update')
+
         return _ret
 
     def set_poi_values(self, param_values):
@@ -905,46 +930,59 @@ class XYFit(FitBase):
         if self._cost_function.needs_errors and not self._data_container.has_y_errors:
             self._cost_function.on_no_errors()
 
-        if self._data_container.has_x_errors and self._x_error_algorithm == 'iterative linear':
-            # 'iterative linear' x error fitting: multiple iterations;
-            # projected covariance matrix is only updated in-between
-            # and kept constant during minimization
+        # explicitly update (frozen) projected covariance matrix before fit
+        self._with_projected_nodes('update')
 
-            # explicitly update (frozen) projected covariance matrix before fit
-            self._nexus.get('projected_xy_total_cov_mat').update()
-            self._nexus.get('projected_xy_total_error').update()
+        if self.has_x_errors:
+            if self._x_error_algorithm == 'nonlinear':
+                # 'nonlinear' x error fitting: one iteration;
+                # projected covariance matrix is updated during minimization
+                self._with_projected_nodes(('update', 'unfreeze'))
+                super(XYFit, self).do_fit()
 
-            # perform a preliminary fit
-            self._fitter.do_fit()
+            elif self._x_error_algorithm == 'iterative linear':
+                # 'iterative linear' x error fitting: multiple iterations;
+                # projected covariance matrix is only updated in-between
+                # and kept constant during minimization
+                self._with_projected_nodes(('update', 'freeze'))
 
-            # iterate until cost function value converges
-            _convergence_limit = float(kc('fit', 'x_error_fit_convergence_limit'))
-            _previous_cost_function_value = self.cost_function_value
-            for i in range(kc('fit', 'max_x_error_fit_iterations')):
-
-                # explicitly update (frozen) projected matrix before each iteration
-                self._nexus.get('projected_xy_total_cov_mat').update()
-                self._nexus.get('projected_xy_total_error').update()
-
+                # perform a preliminary fit
                 self._fitter.do_fit()
 
-                # check convergence
-                if np.abs(self.cost_function_value - _previous_cost_function_value) < _convergence_limit:
-                    break  # fit converged
-
+                # iterate until cost function value converges
+                _convergence_limit = float(kc('fit', 'x_error_fit_convergence_limit'))
                 _previous_cost_function_value = self.cost_function_value
+                for i in range(kc('fit', 'max_x_error_fit_iterations')):
 
-            # explicitly update (frozen) projected matrix before returning
-            self._nexus.get('projected_xy_total_cov_mat').update()
-            self._nexus.get('projected_xy_total_error').update()
+                    # explicitly update (frozen) projected matrix before each iteration
+                    self._with_projected_nodes('update')
 
-            self._loaded_result_dict = None
-            self._update_parameter_formatters()
+                    self._fitter.do_fit()
+
+                    # check convergence
+                    if np.abs(self.cost_function_value - _previous_cost_function_value) < _convergence_limit:
+                        break  # fit converged
+
+                    _previous_cost_function_value = self.cost_function_value
 
         else:
-            # 'nonlinear' x error fitting: one iteration;
-            # projected covariance matrix is updated during minimization
+            # no 'x' errors: fit as usual
+
+            # freeze error projection nodes (faster)
+            self._with_projected_nodes(('update', 'freeze'))
+
             super(XYFit, self).do_fit()
+
+        # explicitly update error projection nodes
+        self._with_projected_nodes('update')
+
+        # unfreeze error projection nodes only if fit has x errors
+        if self.has_x_errors:
+            self._with_projected_nodes('unfreeze')
+
+        # clear loaded results and update parameter formatters
+        self._loaded_result_dict = None
+        self._update_parameter_formatters()
 
 
     def eval_model_function(self, x=None, model_parameters=None):
