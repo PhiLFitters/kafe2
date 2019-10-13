@@ -7,6 +7,7 @@ from kafe2.fit._base import FitBase
 from matplotlib import pyplot as plt, rcParams
 from matplotlib import gridspec as gs
 from matplotlib import ticker as plticker
+from matplotlib.axes import Axes
 
 
 __all__ = ["ContoursProfiler"]
@@ -67,6 +68,10 @@ class SigmaFormatter(plticker.Formatter):
         _numeric_label = (x - self._cval)/self._sigma
         _str_label = r"%.2g$\sigma$" % (_numeric_label,)
         return _str_label
+
+    def format_data_short(self, value):
+        '''Short version of format string for tick'''
+        return '{:g}'.format(value)
 
 
 class ContoursProfilerException(Exception):
@@ -148,8 +153,8 @@ class ContoursProfiler(object):
                           bottom=0.1,
                           right=0.9,
                           top=0.9,
-                          wspace=None,
-                          hspace=None,
+                          wspace=0.0,
+                          hspace=0.0,
                           height_ratios=None)
 
         return _fig, _gs
@@ -555,20 +560,13 @@ class ContoursProfiler(object):
         _show_minimum_profiles = show_fit_minimum_for in ('all', 'profiles')
         _show_minimum_contours = show_fit_minimum_for in ('all', 'contours')
 
-        # store the global x plot ranges for all subplots in one column
-        _subplot_lims_x_cols = np.zeros((_npar, 2))
-        _subplot_lims_x_cols[:] = (np.inf, -np.inf)
-
-        # store the global y plot ranges for all subplots in one row
-        _subplot_lims_y_rows = np.zeros((_npar, 2))
-        _subplot_lims_y_rows[:] = (np.inf, -np.inf)
-
         _all_legend_handles = tuple()
         _all_legend_labels = tuple()
 
-        # fill all subplots in the grid (diagonal and lower triangle)
+        # draw profiles to subplots on the diagonal
+        _subplots = np.empty((_npar, _npar), dtype=Axes)  # store subplot system in numpy array
         for row in six.moves.range(_npar):
-            _axes = plt.subplot(_gs[row, row])
+            _axes = _subplots[row, row] = plt.subplot(_gs[row, row])
             self.plot_profile(_par_names[row], target_axes=_axes,
                               show_parabolic=show_parabolic_profiles,
                               show_grid=_show_grid_profiles,
@@ -583,11 +581,10 @@ class ContoursProfiler(object):
                 _all_legend_handles += tuple(_hs)
                 _all_legend_labels += tuple(_ls)
 
-            _xlim, _ylim = _axes.get_xlim(), _axes.get_ylim()
-            _subplot_lims_x_cols[row] = min(_subplot_lims_x_cols[row][0], _xlim[0]), max(_subplot_lims_x_cols[row][1], _xlim[1])
-
+        # draw contours to subplots in the lower (and possibly upper) triangle
+        for row in six.moves.range(_npar):
             for col in six.moves.range(row):
-                _axes = plt.subplot(_gs[row, col])
+                _axes = _subplots[row, col] = plt.subplot(_gs[row, col])
                 self.plot_contours(_par_names[col], _par_names[row],
                                    target_axes=_axes,
                                    show_grid=_show_grid_contours,
@@ -602,14 +599,8 @@ class ContoursProfiler(object):
                     _all_legend_handles += tuple(_hs)
                     _all_legend_labels += tuple(_ls)
 
-                _xlim, _ylim = _axes.get_xlim(), _axes.get_ylim()
-                _subplot_lims_x_cols[col] = min(_subplot_lims_x_cols[col][0], _xlim[0]), max(
-                    _subplot_lims_x_cols[col][1], _xlim[1])
-                _subplot_lims_y_rows[row] = min(_subplot_lims_y_rows[row][0], _ylim[0]), max(
-                    _subplot_lims_y_rows[row][1], _ylim[1])
-
                 if full_matrix:
-                    _axes = plt.subplot(_gs[col, row])
+                    _axes = _subplots[col, row] = plt.subplot(_gs[col, row])
                     self.plot_contours(_par_names[row], _par_names[col],
                                        target_axes=_axes,
                                        show_grid=_show_grid_contours,
@@ -619,35 +610,62 @@ class ContoursProfiler(object):
                                        label_ticks_in_sigma=label_ticks_in_sigma,
                                        naming_convention=contour_naming_convention)
 
-                    _xlim, _ylim = _axes.get_xlim(), _axes.get_ylim()
-                    _subplot_lims_x_cols[row] = min(_subplot_lims_x_cols[row][0], _xlim[0]), max(
-                        _subplot_lims_x_cols[row][1], _xlim[1])
-                    _subplot_lims_y_rows[col] = min(_subplot_lims_y_rows[col][0], _ylim[0]), max(
-                        _subplot_lims_y_rows[col][1], _ylim[1])
+        # post-processing: join column x axes and row y axes (where applicable)
+        for i in six.moves.range(_npar):
+            _pf_axes = _subplots[i, i]
 
-        # post-processing: synchronize the x and y plot ranges, adjust tick frequency
-        for row in six.moves.range(_npar):
-            _pf_axes = plt.subplot(_gs[row, row])
+            _ct_axes_col = np.concatenate([_subplots[:i, i], _subplots[i+1:, i]])
+            _ct_axes_col = [_ax for _ax in _ct_axes_col if _ax is not None]
 
-            # synchronize x axis ranges across profile and contour plots
-            if not np.any(np.isinf(_subplot_lims_x_cols[row])):
-                _pf_axes.set_xlim(_subplot_lims_x_cols[row])
-            for col in six.moves.range(row):
+            _pf_axes.get_shared_x_axes().join(_pf_axes, *_ct_axes_col)
+            _pf_axes.autoscale()
 
-                _ct_axes = plt.subplot(_gs[row, col])
-                # synchronize x and y axis ranges across contour plots
-                if not np.any(np.isinf(_subplot_lims_x_cols[col])):
-                    _ct_axes.set_xlim(_subplot_lims_x_cols[col])
-                if not np.any(np.isinf(_subplot_lims_y_rows[row])):
-                    _ct_axes.set_ylim(_subplot_lims_y_rows[row])
+            _ct_axes_row = np.concatenate([_subplots[i, :i], _subplots[i, i+1:]])
+            _ct_axes_row = [_ax for _ax in _ct_axes_row if _ax is not None]
+            if len(_ct_axes_row) > 1:
+                _ct_axes_row[0].get_shared_y_axes().join(_ct_axes_row[0], *_ct_axes_row[1:])
+                _ct_axes_row[0].autoscale()
 
-                if full_matrix:
-                    _ct_axes = plt.subplot(_gs[col, row])
-                    # synchronize x and y axis ranges across contour plots
-                    if not np.any(np.isinf(_subplot_lims_x_cols[row])):
-                        _ct_axes.set_xlim(_subplot_lims_x_cols[row])
-                    if not np.any(np.isinf(_subplot_lims_y_rows[col])):
-                        _ct_axes.set_ylim(_subplot_lims_y_rows[col])
+        # more post-processing: adjust axis and tick labels
+        for row, _row_plots in enumerate(_subplots):
+            for col, _plot in enumerate(_row_plots):
+                # skip empty plots
+                if not _plot:
+                    continue
+
+                # adjust y plot range to match x (in sigma)
+                if col != row:
+                    _x_lim = _plot.get_xlim()
+                    _x_min = self._fit.parameter_values[col]
+                    _y_min = self._fit.parameter_values[row]
+                    _y_over_x_err_ratio = self._fit.parameter_errors[row]/self._fit.parameter_errors[col]
+                    _plot.set_ylim((
+                        _y_min + (_x_lim[0] - _x_min)*_y_over_x_err_ratio,
+                        _y_min + (_x_lim[1] - _x_min)*_y_over_x_err_ratio
+                    ))
+
+                # hide tick labels except for outer plots
+                if col != 0 and col != row:
+                    # not leftmost column or profile -> hide y tick and axis labels
+                    _plot.set_ylabel(None)
+                    #_plot.set_yticklabels([])
+                    for _label in _plot.get_yticklabels():
+                        _label.set_visible(False)
+                if row != _npar - 1:
+                    # not bottom row -> hide x tick and axis labels
+                    _plot.set_xlabel(None)
+                    #_plot.set_xticklabels([])
+                    for _label in _plot.get_xticklabels():
+                        _label.set_visible(False)
+
+                # rotate long x tick labels to avoid overlap
+                if not label_ticks_in_sigma:
+                    for _label in _plot.get_xticklabels():
+                        _label.set_rotation(90)
+
+        # align x and y axis labels
+        _fig.align_ylabels(_subplots[:, 0])
+        _fig.align_xlabels(_subplots[_npar - 1, :])
 
         if show_legend:
             # suppress multiple entries for the same label
@@ -663,5 +681,5 @@ class ContoursProfiler(object):
             _fig.legend(_hs, _ls, loc='upper right')
 
         _gs.tight_layout(_fig,
-                         pad=0.0, w_pad=0, h_pad=-0.2,
+                         pad=0.0, w_pad=0.0, h_pad=0.0,
                          rect=(0.01, 0.02, 0.98, 0.98))
