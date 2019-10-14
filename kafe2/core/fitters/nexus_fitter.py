@@ -117,10 +117,10 @@ class NexusFitter(object):
 
     @property
     def fit_parameter_values(self):
-        return {
-            _pn : self._nx.get(_pn).value
+        return OrderedDict([
+            (_pn, self._nx.get(_pn).value)
             for _pn in self._fit_par_names
-        }
+        ])
 
     @property
     def fit_parameter_cov_mat(self):
