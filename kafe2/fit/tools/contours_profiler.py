@@ -168,15 +168,10 @@ class ContoursProfiler(object):
 
     def _make_figure_gs(self, nrows=1, ncols=1):
         _fig = plt.figure(figsize=(8, 8))  # defaults from matplotlibrc
-        _gs = gs.GridSpec(nrows=nrows,
-                          ncols=ncols,
-                          left=0.05,
-                          bottom=0.1,
-                          right=0.9,
-                          top=0.9,
-                          wspace=0.0,
-                          hspace=0.0,
-                          height_ratios=None)
+
+        _gs = gs.GridSpec(nrows=nrows, ncols=ncols, figure=_fig)
+
+        self._figures.append(_fig)  # store figure
 
         return _fig, _gs
 
@@ -314,9 +309,9 @@ class ContoursProfiler(object):
         :param label_fit_minimum: if ``True``, the parameter value and the 1 sigma error
             will be shown as an annotation
         :type label_fit_minimum: bool
-        :return: 3-tuple with lists containing the profile, parabola, fit minumum and parameter error span artists
-        :rtype: tuple of lists of ``matplotlib`` artists
-        :return:
+
+        :return: figure containing the plot result
+        :rtype: `matplotlib.figure.Figure`
         """
         if target_axes is None:
             _fig, _gs = self._make_figure_gs(1, 1)
@@ -383,7 +378,7 @@ class ContoursProfiler(object):
                          else '$\Delta$%s' % self._cost_function_formatted_name)
 
         if show_legend:
-            _axes.legend(loc='best')
+            _axes.legend(loc='center')
 
         if show_grid:
             _axes.grid('on')
@@ -404,7 +399,11 @@ class ContoursProfiler(object):
             _axes.set_xticks([])
             _axes.set_yticks([])
 
-        return _profile_artist, _parabola_artist, _minimum_artist, _err_span_artist
+        # if own figure created -> set tight layout
+        if target_axes is None:
+            _fig.set_tight_layout(True)
+
+        return _axes.get_figure()
 
     def plot_contours(self, parameter_1, parameter_2, target_axes=None,
                       show_grid=True,
@@ -435,8 +434,9 @@ class ContoursProfiler(object):
         :param naming_convention: if ``'sigma'`` the contour is labelled in sigma, if ``'cl'`` the contour is labelled
                                   in confidence level
         :type naming_convention: str
-        :return: contour and helper lines ``matplotlib`` artists
-        :rtype: tuple of list of artists returned by ``matplotlib``
+
+        :return: figure containing the plot result
+        :rtype: `matplotlib.figure.Figure`
         """
         if target_axes is None:
             _fig, _gs = self._make_figure_gs(1, 1)
@@ -504,7 +504,11 @@ class ContoursProfiler(object):
             _axes.set_xticks([])
             _axes.set_yticks([])
 
-        return _contour_artists, _minimum_artist
+        # if own figure created -> set tight layout
+        if target_axes is None:
+            _fig.set_tight_layout(True)
+
+        return _axes.get_figure()
 
     def plot_profiles_contours_matrix(self,
                                       parameters=None,
@@ -543,6 +547,9 @@ class ContoursProfiler(object):
         :param contour_naming_convention: if ``'sigma'`` the contour is labelled in sigma, if ``'cl'`` the contour is
                                           labelled in confidence level
         :type contour_naming_convention: str
+
+        :return: figure containing the plot result
+        :rtype: `matplotlib.figure.Figure`
         """
         _par_names = parameters
         if _par_names is None:
@@ -587,7 +594,7 @@ class ContoursProfiler(object):
         # draw profiles to subplots on the diagonal
         _subplots = np.empty((_npar, _npar), dtype=Axes)  # store subplot system in numpy array
         for row in six.moves.range(_npar):
-            _axes = _subplots[row, row] = plt.subplot(_gs[row, row])
+            _axes = _subplots[row, row] = _fig.add_subplot(_gs[row, row])
             self.plot_profile(_par_names[row], target_axes=_axes,
                               show_parabolic=show_parabolic_profiles,
                               show_grid=_show_grid_profiles,
@@ -605,7 +612,7 @@ class ContoursProfiler(object):
         # draw contours to subplots in the lower (and possibly upper) triangle
         for row in six.moves.range(_npar):
             for col in six.moves.range(row):
-                _axes = _subplots[row, col] = plt.subplot(_gs[row, col])
+                _axes = _subplots[row, col] = _fig.add_subplot(_gs[row, col])
                 self.plot_contours(_par_names[col], _par_names[row],
                                    target_axes=_axes,
                                    show_grid=_show_grid_contours,
@@ -621,7 +628,7 @@ class ContoursProfiler(object):
                     _all_legend_labels += tuple(_ls)
 
                 if full_matrix:
-                    _axes = _subplots[col, row] = plt.subplot(_gs[col, row])
+                    _axes = _subplots[col, row] = _fig.add_subplot(_gs[col, row])
                     self.plot_contours(_par_names[row], _par_names[col],
                                        target_axes=_axes,
                                        show_grid=_show_grid_contours,
@@ -700,8 +707,29 @@ class ContoursProfiler(object):
                     _ls.append(_l)
                     _seen_labels.add(_l)
 
-            _fig.legend(_hs, _ls, loc='upper right')
+            if not full_matrix:
+                # attach legend to invisible Axes in top right corner
+                _ax_for_legend = _fig.add_subplot(_gs[0, _npar - 1])
+                _ax_for_legend.set_visible(False)
+                _leg = _fig.legend(
+                    _hs, _ls,
+                    loc='upper right',
+                    borderpad=0,
+                    borderaxespad=0
+                )
+                # patch legend bbox to correspond to axes
+                _leg._bbox_to_anchor = _ax_for_legend.bbox
+            else:
+                # place legend outside regular Axes in top right corner
+                _ax_for_legend = _subplots[0, _npar - 1]
+                _leg = _ax_for_legend.legend(
+                    _hs, _ls,
+                    loc='upper left',
+                    bbox_to_anchor=(1.1, 0, 1, 1),
+                    borderpad=0,
+                    borderaxespad=0
+                )
 
-        _gs.tight_layout(_fig,
-                         pad=0.0, w_pad=0.0, h_pad=0.0,
-                         rect=(0.01, 0.02, 0.98, 0.98))
+        _fig.set_tight_layout(True)  # maintain tight layout on resize
+
+        return _fig
