@@ -13,6 +13,27 @@ from matplotlib.axes import Axes
 __all__ = ["ContoursProfiler"]
 
 
+def _linear_range_transform(range_, factor, asymmetry=0.0):
+    """Return a range that is `factor` larger than `range_`.
+
+    The amount by which the extension is done is the direction of
+    each boundary is controlled by a float `asymmetry`, which should
+    be between -1 and 1. An `asymmetry` of 0 will extend the range
+    symmetrically in the direction of both boundaries. An `asymmetry`
+    of -1 (+1) will extend the range in the direction of the first
+    (second) boundary, leaving the other boundary unchanged."""
+
+    assert len(range_) == 2
+    assert factor > 0.0
+    assert -1.0 <= asymmetry <= 1.0
+
+    _m = 0.5 * (range_[1] + range_[0])
+    _d = 0.5 * (range_[1] - range_[0])
+    _asymm_factor = (1.0 + asymmetry)
+
+    return _m - factor*(2.0 - _asymm_factor) * _d, _m + factor*_asymm_factor*_d
+
+
 class ConfidenceLevelFormatted(ConfidenceLevel):
     @property
     def sigma_string(self):
@@ -633,6 +654,9 @@ class ContoursProfiler(object):
                 if not _plot:
                     continue
 
+                _plot.set_xlim(_linear_range_transform(_plot.get_xlim(), factor=1.01))
+                _plot.set_ylim(_linear_range_transform(_plot.get_ylim(), factor=1.01))
+
                 # adjust y plot range to match x (in sigma)
                 if col != row:
                     _x_lim = _plot.get_xlim()
@@ -648,13 +672,11 @@ class ContoursProfiler(object):
                 if col != 0 and col != row:
                     # not leftmost column or profile -> hide y tick and axis labels
                     _plot.set_ylabel(None)
-                    #_plot.set_yticklabels([])
                     for _label in _plot.get_yticklabels():
                         _label.set_visible(False)
                 if row != _npar - 1:
                     # not bottom row -> hide x tick and axis labels
                     _plot.set_xlabel(None)
-                    #_plot.set_xticklabels([])
                     for _label in _plot.get_xticklabels():
                         _label.set_visible(False)
 
