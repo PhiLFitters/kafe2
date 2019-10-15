@@ -73,14 +73,15 @@ class HistModelFunction(ModelFunctionBase):
         if self.antiderivative is None:
             return
 
-        _model_func_antider_signature = signature(self._antiderivative_function_handle)
+        _antider_parameters = list(signature(self._antiderivative_function_handle).parameters)
+        _model_func_parameters = list(self.signature.parameters)
 
         # require antiderivative and density to have the same arguments
-        if self.signature != _model_func_antider_signature:
+        if _model_func_parameters != _antider_parameters:
             raise self.__class__.EXCEPTION_TYPE(
                 "Model density function and its antiderivative have different argument structures:"
                 "(%r vs %r)"
-                % (list(self.signature.parameters), list(_model_func_antider_signature.parameters)))
+                % (_model_func_parameters, _antider_parameters))
 
     def _get_parameter_formatters(self):
         _start_at_arg = 1

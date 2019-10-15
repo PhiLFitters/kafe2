@@ -269,6 +269,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         with self.assertRaises(HistModelFunctionException) as _exc:
             HistFit(data=self._ref_hist_cont,
                     model_density_function=dummy_model,
+                    model_density_antiderivative=dummy_model,
                     minimizer=self.MINIMIZER)
 
         self.assertIn(
@@ -282,6 +283,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         with self.assertRaises(HistModelFunctionException) as _exc:
             HistFit(data=self._ref_hist_cont,
                     model_density_function=dummy_model,
+                    model_density_antiderivative=dummy_model,
                     minimizer=self.MINIMIZER)
 
         self.assertIn(
@@ -296,6 +298,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         with self.assertRaises(HistModelFunctionException) as _exc:
             HistFit(data=self._ref_hist_cont,
                     model_density_function=dummy_model,
+                    model_density_antiderivative=dummy_model,
                     minimizer=self.MINIMIZER)
 
         self.assertIn('variable', _exc.exception.args[0])
@@ -309,6 +312,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         with self.assertRaises(HistModelFunctionException) as _exc:
             HistFit(data=self._ref_hist_cont,
                     model_density_function=dummy_model,
+                    model_density_antiderivative=dummy_model,
                     minimizer=self.MINIMIZER)
 
         self.assertIn('variable', _exc.exception.args[0])
@@ -322,12 +326,42 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         with self.assertRaises(HistModelFunctionException) as _exc:
             HistFit(data=self._ref_hist_cont,
                     model_density_function=dummy_model,
+                    model_density_antiderivative=dummy_model,
                     minimizer=self.MINIMIZER)
 
         self.assertIn('variable', _exc.exception.args[0])
         self.assertIn('varargs', _exc.exception.args[0])
         # TODO: enable when implemented
         #self.assertIn('varkwargs', _exc.exception.args[0])
+
+    def test_model_and_antiderivative_different_signatures_raise(self):
+        def dummy_model(x, data):
+            pass
+
+        def dummy_model_antiderivative(x, bogus):
+            pass
+
+        with self.assertRaises(HistModelFunctionException) as _exc:
+            HistFit(data=self._ref_hist_cont,
+                    model_density_function=dummy_model,
+                    model_density_antiderivative=dummy_model_antiderivative,
+                    minimizer=self.MINIMIZER)
+
+        self.assertIn('different argument structures', _exc.exception.args[0])
+        self.assertIn('data', _exc.exception.args[0])
+
+    def test_model_and_antiderivative_no_defaults(self):
+        def legendre_grade_2(x, a=1, b=2, c=3):
+            return a + b * x + c * 0.5 * (3 * x ** 2 - 1)
+
+        def legendre_grade_2_integrated(x, a, b, c):
+            return 0.5 * x * (2 * a + b * x + c * (x ** 2 - 1))
+
+        # should not raise an error
+        HistFit(data=self._ref_hist_cont,
+                model_density_function=legendre_grade_2,
+                model_density_antiderivative=legendre_grade_2_integrated,
+                minimizer=self.MINIMIZER)
 
     def test_report_before_fit(self):
         # TODO: check report content
