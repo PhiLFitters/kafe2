@@ -310,6 +310,44 @@ class PlotAdapterBase(object):
             **kwargs
         )
 
+    def update_plot_kwargs(self, plot_type, plot_kwargs):
+        """
+        Update the value of keyword arguments `plot_kwargs` to be passed
+        to the plot method for for `plot_type`.
+
+        If a keyword argument should be removed, the value of the keyword
+        in `plot_kwargs` can be set to the special value ``'__del__'``.
+        To indicate that the default value should be used, the special
+        value ``'__default__'`` can be set as a value.
+
+        :param plot_type: key identifying a registered plot type for this `PlotAdapter`
+        :type plot_type: str
+        :param plot_kwargs: dictionary containing keywords arguments to override
+        :type plot_kwargs: dict
+        :return:
+        """
+        _subplots = self._get_subplots()
+
+        if plot_type not in _subplots:
+            raise ValueError(
+                "Cannot set custom plot keyword arguments "
+                "for plot type '{}': no plot with this type defined "
+                "for this adapter!".format(plot_type))
+
+        # remove keys set to '__default__': the defaults will be substituted in
+        # then _get_subplot_kwargs() is called. The '__del__' special value is
+        # handled by _get_subplot_kwargs()
+        _keys_to_delete = [_k for _k, _v in six.iteritems(plot_kwargs) if _v == '__default__']
+
+        _config_dict = _subplots[plot_type].setdefault('plot_method_keywords', {})
+        _config_dict.update(plot_kwargs)
+
+        for _key in _keys_to_delete:
+            try:
+                del _config_dict[_key]
+            except KeyError:
+                pass  # ok, key not present
+
     # -- properties
 
     @abc.abstractproperty
@@ -828,6 +866,242 @@ class Plot(object):
         self._current_results = _all_plot_results
 
         return _all_plot_results
+
+    def get_keywords(self, plot_type):
+        """Retrieve keyword arguments for plots with type `plot_type` as they would be used when calling `plot`.
+
+        This is an advanced function. An understanding of how plotting with
+        `matplotlib` and the `PlotAdapter` classes in *kafe2* work is recommended.
+
+        The `plot_type` must be one of the plot types registered in the
+        `PlotAdapter` (e.g. ``'data'``, ``'model_line'`` etc.).
+
+        :param plot_type: keyword identifying the plot type for which to set a custom keyword argument
+        :type plot_type: str
+
+        :return: list of dictionaries (one per fit instance) containing plot keywords and their values
+        :rtype: list of dict
+        """
+
+        _adapters = self._get_plot_adapters()
+
+        _keywords_list = []
+        for _i_pdc, _pdc in enumerate(_adapters):
+            _keywords_list.append(
+                _pdc._get_subplot_kwargs(
+                    _i_pdc,
+                    plot_type
+                ))
+
+        return _keywords_list
+
+    def set_keywords(self, plot_type, keyword_spec):
+        """Set values for keyword arguments used for plots with type `plot_type`.
+
+        This is an advanced function. An understanding of how plotting with
+        `matplotlib` and the `PlotAdapter` classes in *kafe2* work is recommended.
+
+        The `plot_type` must be one of the plot types registered in the
+        `PlotAdapter` (e.g. ``'data'``, ``'model_line'`` etc.).
+
+        The `keyword_spec` contains dictionaries whose contents will be passed as
+        keyword arguments to the plot adapter method responsible for plotting the
+        `plot_type`. If `keyword` spec contains a key for which a default value is
+        configured, it will be overridden.
+
+        Passing the following special values for a keyword will have the following effects:
+        * ``'__del__'``: the value will be removed from the keyword arguments. This includes
+          default values, meaning that the plot call will be made **without** the keyword
+          argument even if a default value for it exists.
+        * ``'__default__'``: the customized value will be replaced by the default value.
+
+        .. note::
+
+            No keyword/value validation is done: everything is passed to the underlying plot
+            methods as specified. Incorrect or incompatible keywords may be ignored or lead to errors.
+
+        As an example, to override the labels shown in the legend entries for the `data`
+
+        .. code:: python
+
+            p = Plot([fit_1, fit_2])
+            p.customize('data', [dict(label='My Data Label'), dict(label='Another Data Label')])
+
+        To set keywords for a single `fit`, pass values as ``(index, value)``, where `index` is
+        the index of the `fit` object:
+
+        .. code:: python
+
+            p = Plot([fit_1, fit_2])
+            p.customize('data', [(1, dict(label='Another Data Label'))])
+
+        :param plot_type: keyword identifying the plot type for which to set a custom keyword argument
+        :type plot_type: str
+        :param keyword_spec: specification of dictionaries containing the keyword arguments to use for fit.
+            Can be either a list of dictionaries with a length corresponding to the number of `fit` objects
+            managed by this `Plot` instance, or a list of tuples of the form ``(index, dict)``, where
+            ``index``  denotes the index of the `fit` object for which the dictionary `dict` should be used.
+        :type keyword_spec: list of values or list of 2-tuples like ``(index, value)``
+
+        :return: this `Plot` instance
+        :rtype: `Plot`
+        """
+
+        _adapters = self._get_plot_adapters()
+
+        _has_tuples = None
+        for _spec in keyword_spec:
+            if isinstance(_spec, tuple):
+                # raise if both tuples and non-tuples provided
+                if _has_tuples is None:
+                    _has_tuples = True
+                elif not _has_tuples:
+                    raise ValueError(
+                        "Cannot set custom plot keyword arguments: "
+                        "provided `values` contain a mix of tuples and non-tuples!")
+
+                # validate tuple
+                if not len(_spec) == 2:
+                    raise ValueError(
+                        "Cannot set custom plot keyword arguments: "
+                        "tuple {!r} has length {} (expected "
+                        "2) ".format(_spec, len(_spec)))
+
+                # validate index
+                try:
+                    _adapters[_spec[0]]
+                except IndexError:
+                    raise ValueError(
+                        "Cannot set custom plot keyword arguments: "
+                        "invalid index {!r} encountered (object manages {} fit "
+                        "objects)!".format(_spec[0], len(_adapters)))
+            else:
+                if _has_tuples is None:
+                    _has_tuples = False
+                elif _has_tuples:
+                    raise ValueError(
+                        "Cannot set custom plot keyword arguments: "
+                        "provided `values` contain a mix of tuples and non-tuples!")
+
+        if not _has_tuples:
+            # must provide same amount of values as fits
+            if len(_adapters) != len(keyword_spec):
+                raise ValueError(
+                    "Cannot set custom plot keyword argument: "
+                    "{} values provided but this object manages {} "
+                    "fit objects!".format(len(keyword_spec), len(_adapters)))
+
+            # convert plain list to tuple
+            keyword_spec = [(_index, _dict) for _index, _dict in enumerate(keyword_spec)]
+        if _has_tuples:
+            # can provide less tuples than fits but not more
+            if len(_adapters) < len(keyword_spec):
+                raise ValueError(
+                    "Cannot set custom plot keyword argument: "
+                    "{} values provided but this object manages {} "
+                    "fit objects!".format(len(keyword_spec), len(_adapters)))
+
+        for _index, _dict in keyword_spec:
+            _adapters[_index].update_plot_kwargs(plot_type, _dict)
+
+        return self  # allow chaining calls
+
+    def customize(self, plot_type, keyword, values):
+        """Set values for keyword arguments used for plots with type `plot_type`.
+
+        This is a convenience wrapper around `set_keywords`.
+
+        The `keyword` will be passed to the plot adapter method responsible for
+        plotting the `plot_type` as a keyword argument with a value taken
+        from `values`. If a default value for `keyword` is configured, it is
+        overridden.
+
+        The `values` can be specified in two ways:
+        * as a list with a length corresponding to the number of `fit` objects managed
+          by this `Plot` instance. The special value ``'__skip__'`` can be used to skip
+          `fit` objects.
+        # as a list of tuples of the form ``(index, value)``, where `index` denotes the
+          index of the `fit` object for which the `value` should be used.
+
+        Passing the following special values for a keyword will have the following effects:
+        * ``'__del__'``: the value will be removed from the keyword arguments. This includes
+          default values, meaning that the plot call will be made **without** the keyword
+          argument even if a default value for it exists.
+        * ``'__default__'``: the customized value will be replaced by the default value.
+        * ``'__skip__'``: the keywords for this `fit` will not be changed.
+
+        .. note::
+
+            No keyword/value validation is done: everything is passed to the underlying plot
+            methods as specified. Incorrect or incompatible keywords may be ignored or lead to errors.
+
+        As an example, to override the labels shown in the legend entries for the `data`
+
+        .. code:: python
+
+            p = Plot([fit_1, fit_2])
+            p.customize('data', 'label', ['My Data Label', 'Another Data Label'])
+
+        To set keywords for a single `fit`, pass values as ``(index, value)``, where `index` is
+        the index of the `fit` object:
+
+        .. code:: python
+
+            p = Plot([fit_1, fit_2])
+            p.customize('data', 'label', [(1, 'Another Data Label')])
+
+        :param plot_type: keyword identifying the plot type for which to set a custom keyword argument
+        :type plot_type: str
+        :param keyword: the keyword argument. The corresponding value in `values` will be passed
+            to the plot adapter method using this keyword argument
+        :type keyword: str
+        :param values: values that the keyword argument should take for each fit. Can be a list of values
+            with a length corresponding to the number of `fit` objects managed by this `Plot` instance,
+            or a list of tuples of the form ``(index, value)``
+        :type values: list of values or list of 2-tuples like ``(index, value)``
+
+        :return: this `Plot` instance
+        :rtype: `Plot`
+        """
+
+        _has_tuples = None
+        for _val in values:
+            if isinstance(_val, tuple):
+                # raise if both tuples and non-tuples provided
+                if _has_tuples is None:
+                    _has_tuples = True
+                elif not _has_tuples:
+                    raise ValueError(
+                        "Cannot set custom plot keyword arguments: "
+                        "provided `values` contain a mix of tuples and non-tuples!")
+
+                # validate tuple
+                if not len(_val) == 2:
+                    raise ValueError(
+                        "Cannot set custom plot keyword arguments: "
+                        "tuple {!r} has length {} (expected "
+                        "2) ".format(_val, len(_val)))
+            else:
+                if _has_tuples is None:
+                    _has_tuples = False
+                elif _has_tuples:
+                    raise ValueError(
+                        "Cannot set custom plot keyword arguments: "
+                        "provided `values` contain a mix of tuples and non-tuples!")
+
+        if not _has_tuples:
+            _dicts = [
+                {keyword: _value} if _value != '__skip__' else {}
+                for _value in values
+            ]
+        else:
+            _dicts = [
+                (_index, {keyword: _value})
+                for _index, _value in values
+                if _value != '__skip__'
+            ]
+
+        return self.set_keywords(plot_type, _dicts)
 
     def show_fit_info_box(self, asymmetric_parameter_errors=False, format_as_latex=True):
         """[DEPRECATED] Render text information about each plot on the figure.
