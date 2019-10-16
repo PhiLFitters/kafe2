@@ -224,6 +224,12 @@ class ContoursProfiler(object):
                     target_axes.contourf(contour.grid_x, contour.grid_y, contour.grid_z.T, levels=[0,contour.sigma],
                                        colors=contour_color, label=label, **_kwargs)]
 
+    # -- public properties
+
+    @property
+    def figures(self):
+        """The ``matplotlib`` figures managed by this object."""
+        return list(self._figures)
 
     # -- public methods
 
