@@ -17,9 +17,9 @@ __all__ = ['get_fitter']
 AVAILABLE_FITTERS = dict()
 
 
-from .nexus import Nexus, CombinedNexus
+from .nexus import Nexus
 from .nexus_fitter import NexusFitter, NexusFitterException
-__all__ += ['Nexus', 'CombinedNexus', 'NexusFitter', 'NexusFitterException']
+__all__ += ['Nexus', 'NexusFitter', 'NexusFitterException']
 
 AVAILABLE_FITTERS.update({
     'nexus_fitter': NexusFitter,

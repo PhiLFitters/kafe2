@@ -2,7 +2,7 @@ import sys
 import numpy as np
 
 from .._base import FitBase
-from ...core import CombinedNexus, NexusFitter
+from ...core import Nexus, NexusFitter
 from .cost import MultiCostFunction
 
 
@@ -17,32 +17,32 @@ class MultiFit(FitBase):
         except TypeError:
             self._fits = [self._fits]
 
-        _parameter_names = []
-        _nexus_list = []
+        _combined_parameter_names = []
         _fit_namespaces = []
+        self._nexus = Nexus()
         for _i, _fit_i in enumerate(self._fits):
-            _nexus_list.append(_fit_i._nexus)
-            _fit_namespaces.append('fit%s_' % _i)
+            _namespace_i = 'fit%s_' % _i
+            _fit_namespaces.append(_namespace_i)
             for _parameter_name in _fit_i.parameter_names:
-                if _parameter_name not in _parameter_names:
-                    _parameter_names.append(_parameter_name)
-        self._nexus = CombinedNexus(
-            source_nexuses=_nexus_list,
-            source_nexus_namespaces=_fit_namespaces,
-            shared_parameters=_parameter_names
-        )
+                if _parameter_name not in _combined_parameter_names:
+                    _combined_parameter_names.append(_parameter_name)
+            self._nexus.source_from(
+                other_nexus=_fit_i._nexus, namespace=_namespace_i, namespace_exempt_nodes=_fit_i.parameter_names,
+                namespace_exempt_existing_behavior='ignore'
+            )
 
         _singular_cost_functions = [_fit._cost_function for _fit in self._fits]
         self._cost_function = MultiCostFunction(
             singular_cost_functions=_singular_cost_functions, fit_namespaces=_fit_namespaces)
-        self._cost_function.ndf = self.data_size - len(_parameter_names)
+        self._cost_function.ndf = self.data_size - len(_combined_parameter_names)
         _single_cost_names = ['%scost' % _fit_namespace for _fit_namespace in _fit_namespaces]
         self._nexus.add_function(func=self._cost_function.func, par_names=_single_cost_names)
         self._minimizer = minimizer
         self._minimizer_kwargs = minimizer_kwargs
         self._fitter = NexusFitter(
-            nexus=self._nexus, parameters_to_fit=_parameter_names, parameter_to_minimize=self._cost_function.name,
-            minimizer=self._minimizer, minimizer_kwargs=self._minimizer_kwargs
+            nexus=self._nexus, parameters_to_fit=_combined_parameter_names,
+            parameter_to_minimize=self._cost_function.name, minimizer=self._minimizer,
+            minimizer_kwargs=self._minimizer_kwargs
         )
         self._fit_param_constraints = []
         self._loaded_result_dict = None
