@@ -82,11 +82,17 @@ class MultiFit(FitBase):
             _asymmetric_parameter_errors = self._fitter.asymmetric_fit_parameter_errors_if_calculated
             if _asymmetric_parameter_errors is not None:
                 _asymmetric_parameter_errors = _asymmetric_parameter_errors[_parameter_indices]
+            _par_cor_mat = self.parameter_cor_mat
+            if _par_cor_mat is not None:
+                _par_cor_mat = _par_cor_mat[_parameter_indices][:, _parameter_indices]
+            _par_cov_mat = self.parameter_cov_mat
+            if _par_cov_mat is not None:
+                _par_cov_mat = _par_cov_mat[_parameter_indices][:, _parameter_indices]
             _fit._loaded_result_dict = dict(
                 did_fit=self.did_fit,
                 parameter_errors=self.parameter_errors[_parameter_indices],
-                parameter_cor_mat=self.parameter_cor_mat[_parameter_indices][:, _parameter_indices],
-                parameter_cov_mat=self.parameter_cov_mat[_parameter_indices][:, _parameter_indices],
+                parameter_cor_mat=_par_cor_mat,
+                parameter_cov_mat=_par_cov_mat,
                 asymmetric_parameter_errors=_asymmetric_parameter_errors
             )
         self._update_parameter_formatters()
