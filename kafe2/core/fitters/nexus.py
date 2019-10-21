@@ -924,7 +924,7 @@ class Nexus(object):
         }
         self._root_ref = weakref.ref(self._nodes['__root__'])  # convenience
 
-    def add(self, node, existing_behavior='fail'):
+    def add(self, node, node_namespace=None, child_namespaces=None, existing_behavior='fail'):
         """Add a node to the nexus.
 
         The `node` type should be derived from
@@ -946,6 +946,10 @@ class Nexus(object):
 
         :param node: node to add
         :type node: :py:class:`~kafe.core.fitters.nexus_v2.NodeBase` or other
+        :param node_namespace: namespace in which to add the node
+        :type node_namespace: str or None
+        :param child_namespaces: namespaces in which to add the node's children if they aren't already part of the Nexus
+        :type child_namespaces: iterable of str or None
         :param existing_behavior: how to behave if a node with the same name
             has already been added to the nexus. One of: ``fail`` (default),
             ``replace``, ``replace_if_alias``, ``replace_if_empty``,
@@ -954,6 +958,14 @@ class Nexus(object):
 
         :returns: the added node
         """
+        if node_namespace is None:
+            _effective_node_name = node.name
+        else:
+            _effective_node_name = node_namespace + node.name
+        if child_namespaces is None:
+            child_namespaces = (None,) * len(node.get_children())
+        elif isinstance(child_namespaces, str):
+            child_namespaces = (child_namespaces,) * len(node.get_children())
 
         # validate `existing_behavior`
         if existing_behavior not in self._VALID_ADD_EXISTING_BEHAVIORS:
@@ -966,18 +978,18 @@ class Nexus(object):
             )
 
         # check if node has already been added
-        if node.name in self._nodes:
+        if _effective_node_name in self._nodes:
             # resolve behavior if node is empty
             if existing_behavior == 'replace_if_empty':
                 existing_behavior = (
                     'replace'
-                    if isinstance(self._nodes[node.name], Empty)
+                    if isinstance(self._nodes[_effective_node_name], Empty)
                     else 'fail'
                 )
             elif existing_behavior == 'replace_if_alias':
                 existing_behavior = (
                     'replace'
-                    if isinstance(self._nodes[node.name], Alias)
+                    if isinstance(self._nodes[_effective_node_name], Alias)
                     else 'fail'
                 )
 
@@ -985,15 +997,16 @@ class Nexus(object):
             if existing_behavior == 'fail':
                 raise NexusError(
                     "Node '{}' already exists.".format(
-                        node.name
+                        _effective_node_name
                     )
                 )
             elif existing_behavior == 'replace':
                 # add all dependent children to the nexus first
-                for _child in node.iter_children():
-                    self.add(_child, existing_behavior='ignore')
+                for _child, _child_namespace in zip(node.iter_children(), child_namespaces):
+                    self.add(_child, node_namespace=_child_namespace, child_namespaces=_child_namespace,
+                             existing_behavior='ignore')
                 # replace node
-                self._nodes[node.name].replace(node)
+                self._nodes[_effective_node_name].replace(node)
             elif existing_behavior == 'ignore':
                 return  #
             else:
@@ -1002,8 +1015,9 @@ class Nexus(object):
         # node has not been added before
         else:
             # add all dependent children to the nexus first
-            for _child in node.iter_children():
-                self.add(_child, existing_behavior='ignore')
+            for _child, _child_namespace in zip(node.iter_children(), child_namespaces):
+                self.add(_child, node_namespace=_child_namespace, child_namespaces=_child_namespace,
+                         existing_behavior='ignore')
 
             # add new node as child of root node
             self._root_ref().add_child(node)
@@ -1016,14 +1030,15 @@ class Nexus(object):
                     pass
 
         # (re)map name to point to node
-        self._nodes[node.name] = node
+        self._nodes[_effective_node_name] = node
 
         # check for cycles
         NodeCycleChecker(self._root_ref()).run()
 
         return node
 
-    def add_function(self, func, func_name=None, par_names=None, existing_behavior='fail'):
+    def add_function(self, func, func_name=None, par_names=None, function_namespace=None, parameter_namespaces=None,
+                     existing_behavior='fail'):
         """Construct a `Function` node from a Python function and
         add it to the nexus.
 
@@ -1068,6 +1083,10 @@ class Nexus(object):
         :type func_name: str
         :param par_names: node name to use as function parameters
         :type par_names: list of str
+        :param function_namespace: namespace in which to add the function
+        :type function_namespace: str or None
+        :param parameter_namespaces: namespaces in which to add the function parameters
+        :type parameter_namespaces: iterable of str or None
         :param existing_behavior: how to behave if a node with the same
             name has already been added to the nexus. One of: ``fail``
             (default), ``replace``, ``replace_if_empty``, ``ignore``.
@@ -1124,19 +1143,22 @@ class Nexus(object):
 
             assert(isinstance(_node_spec, tuple))
 
-            # add node or nodes under *args
-            for _node_name in _node_spec:
+            if parameter_namespaces is None:
+                parameter_namespaces = ('',) * len(_node_spec)
 
+            # add node or nodes under *args
+            for _node_name, _par_namespace in zip(_node_spec, parameter_namespaces):
+                _effective_node_name = _par_namespace + _node_name
                 # check if parameter node exists
-                if _node_name not in self._nodes:
+                if _effective_node_name not in self._nodes:
                     if _arg_default == SigParameter.empty:
                         # create empty node and add
-                        _pars.append(self.add(Empty(name=_node_name)))
+                        _pars.append(self.add(Empty(name=_effective_node_name)))
                     else:
                         # create parameter node and add
-                        _pars.append(self.add(Parameter(_arg_default, name=_node_name)))
+                        _pars.append(self.add(Parameter(_arg_default, name=_effective_node_name)))
                 else:
-                    _existing_node = self._nodes[_node_name]
+                    _existing_node = self._nodes[_effective_node_name]
 
                     # if default value provided
                     if _arg_default != SigParameter.empty:
@@ -1163,7 +1185,7 @@ class Nexus(object):
                                     "non-empty nexus node already exists and has conflicting "
                                     "value {!r}.".format(
                                         _arg_default,
-                                        _node_name,
+                                        _effective_node_name,
                                         _existing_node.value
                                     ),
                                     UserWarning
@@ -1174,7 +1196,7 @@ class Nexus(object):
                                     "Ignoring default value {!r} for function parameter '{}': "
                                     "non-empty nexus node already exists.".format(
                                         _arg_default,
-                                        _node_name
+                                        _effective_node_name
                                     ),
                                     UserWarning
                                 )
@@ -1185,6 +1207,7 @@ class Nexus(object):
         # add function node to nexus and return it
         return self.add(
             Function(func, name=func_name, parameters=_pars),
+            node_namespace=function_namespace, child_namespaces=parameter_namespaces,
             existing_behavior=existing_behavior
         )
 
@@ -1370,13 +1393,12 @@ class Nexus(object):
             namespace_exempt_nodes = []
         for _node in other_nexus._nodes.values():
             if isinstance(_node, ValueNode):
-                if _node.name in namespace_exempt_nodes:
-                    self.add(node=_node, existing_behavior=namespace_exempt_existing_behavior)
-                else:
-                    _node.name = namespace + _node.name
-                    self.add(node=_node)
+                _node_namespace = None if _node.name in namespace_exempt_nodes else namespace
+                _child_namespaces = [None if _child.name in namespace_exempt_nodes else namespace
+                                     for _child in _node.iter_children()]
+                self.add(node=_node, node_namespace=_node_namespace, child_namespaces=_child_namespaces,
+                         existing_behavior=namespace_exempt_existing_behavior)
             elif isinstance(_node, RootNode):
                 pass
             else:
-                print(_node)
                 raise Exception('Unknown node type: %s' % _node.__class__)
