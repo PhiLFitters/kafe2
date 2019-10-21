@@ -141,6 +141,8 @@ class MinimizerIMinuit(MinimizerBase):
                 _mat = np.asarray(_mat)  # reshape into numpy matrix
                 _mat = self._fill_in_zeroes_for_fixed(_mat)  # fill in fixed par 'gaps'
                 self._par_cov_mat = _mat
+                # TODO without the call below parameter values are changed by calling this method. Why?
+                self._func_wrapper_unpack_args(self.parameter_values)
             except RuntimeError:
                 pass
         return self._par_cov_mat
@@ -158,6 +160,8 @@ class MinimizerIMinuit(MinimizerBase):
                 _mat = np.asarray(_mat)  # reshape into numpy matrix
                 _mat = self._fill_in_zeroes_for_fixed(_mat)  # fill in fixed par 'gaps'
                 self._par_cor_mat = _mat
+                # TODO without the call below parameter values are changed by calling this method. Why?
+                self._func_wrapper_unpack_args(self.parameter_values)
             except RuntimeError:
                 pass
         return self._par_cor_mat

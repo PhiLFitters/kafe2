@@ -28,7 +28,7 @@ class MultiFit(FitBase):
                     _combined_parameter_names.append(_parameter_name)
             self._nexus.source_from(
                 other_nexus=_fit_i._nexus, namespace=_namespace_i, namespace_exempt_nodes=_fit_i.parameter_names,
-                namespace_exempt_existing_behavior='ignore'
+                namespace_exempt_existing_behavior='replace'
             )
 
         _singular_cost_functions = [_fit._cost_function for _fit in self._fits]
