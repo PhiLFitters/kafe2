@@ -1,3 +1,4 @@
+import numpy as np
 import unittest2 as unittest
 
 from kafe2.core.fitters.nexus import (
@@ -13,6 +14,7 @@ from kafe2.core.fitters.nexus import (
 
     Nexus, NexusError,
 )
+
 
 class TestNodes(unittest.TestCase):
 
@@ -181,7 +183,6 @@ class TestNodes(unittest.TestCase):
             [parent_2]
         )
 
-
     def test_parameter_replace(self):
         par = Parameter(3, name='par')
         selector = Function(
@@ -207,14 +208,12 @@ class TestNodes(unittest.TestCase):
 
         self.assertEqual(context.value, 12)
 
-
         # retrieve new parents and children for comparison
         _children_after = par_new.get_children()
         _parents_after = par_new.get_parents()
 
         self.assertEqual(_children_after, _children_after)
         self.assertEqual(_parents_after, _parents_after)
-
 
     def test_parameter_replace_literal(self):
         par = Parameter(3, name='par')
@@ -233,7 +232,6 @@ class TestNodes(unittest.TestCase):
         par.replace(7)
 
         self.assertEqual(context.value, 14)
-
 
     def test_function_replace(self):
         par = Parameter(3, name='par')
@@ -374,6 +372,7 @@ class TestNodes(unittest.TestCase):
     def test_function_value(self):
         par_a = Parameter(3)
         par_b = Parameter(7)
+
         def func(a, b):
             return a*10 + b
 
@@ -395,6 +394,7 @@ class TestNodes(unittest.TestCase):
     def test_function_value_update_frozen(self):
         par_a = Parameter(3)
         par_b = Parameter(7)
+
         def func(a, b):
             return a*10 + b
 
@@ -438,6 +438,7 @@ class TestNodes(unittest.TestCase):
     def test_function_parameters(self):
         par_a = Parameter(3)
         par_b = Parameter(7)
+
         def func(a, b):
             return a*10 + b
 
@@ -512,7 +513,6 @@ class TestNodes(unittest.TestCase):
         # no exception yet
         with self.assertRaises(FallbackError):
             div_a_b.value,
-
 
     # -- Tuple
 
@@ -631,7 +631,6 @@ class TestNexus(unittest.TestCase):
         self._nexus.add(par)
         with self.assertRaises(ValueError):
             self._nexus.add(par, existing_behavior='bogus')
-
 
     def test_add_expression_compare_value(self):
         a = Parameter(3)
@@ -815,3 +814,231 @@ class TestNexus(unittest.TestCase):
         y.value = 23
         self.assertEqual(func_node.stale, True)
         self.assertEqual(func_node.value, 6)
+
+
+class TestCombinedNexus(unittest.TestCase):
+
+    @staticmethod
+    def cost_1(a, b, d):
+        return a ** 2 + b ** 2 + d ** 2
+
+    @staticmethod
+    def cost_2(b, c, e):
+        return (b + c + e) ** 2
+
+    @staticmethod
+    def cost_3(a, b, c, d, e):
+        return (a - b) ** 2 + (c - d) ** 2 + e ** 2
+
+    @staticmethod
+    def combined_cost(*costs):
+        return np.sum(costs)
+
+    def setUp(self):
+        self._nexus_1 = Nexus()
+        self._a_1 = self._nexus_1.add(node=Parameter(value=1e-3, name='a'))
+        self._b_1 = self._nexus_1.add(node=Parameter(value=10, name='b'))
+        self._d_1 = self._nexus_1.add(node=Parameter(value=3.2, name='d'))
+        self._cost_1 = self._nexus_1.add_function(func=TestCombinedNexus.cost_1)
+        self._cost_1_alias = self._nexus_1.add(node=Alias(ref=self._cost_1, name='cost'))
+
+        self._nexus_2 = Nexus()
+        self._b_2 = self._nexus_2.add(node=Parameter(value=11, name='b'))
+        self._c_2 = self._nexus_2.add(node=Parameter(value=8.9, name='c'))
+        self._e_2 = self._nexus_2.add(node=Parameter(value=666, name='e'))
+        self._cost_2 = self._nexus_2.add_function(func=TestCombinedNexus.cost_2)
+        self._cost_2_alias = self._nexus_2.add(node=Alias(ref=self._cost_2, name='cost'))
+
+        self._nexus_3 = Nexus()
+        self._a_3 = self._nexus_3.add(node=Parameter(value=5, name='a'))
+        self._b_3 = self._nexus_3.add(node=Parameter(value=3.33, name='b'))
+        self._c_3 = self._nexus_3.add(node=Parameter(value=0.1, name='c'))
+        self._d_3 = self._nexus_3.add(node=Parameter(value=2, name='d'))
+        self._e_3 = self._nexus_3.add(node=Parameter(value=10, name='e'))
+        self._cost_3 = self._nexus_3.add_function(func=TestCombinedNexus.cost_3)
+        self._cost_3_alias = self._nexus_3.add(node=Alias(ref=self._cost_3, name='cost'))
+
+        self._nexus_list = [self._nexus_1, self._nexus_2, self._nexus_3]
+        self._shared_node_names = ['a', 'b', 'c', 'd', 'e']
+        self._expected_node_names = [
+            ['a', 'b', 'd', 'cost_1', 'cost'],
+            ['b', 'c', 'e', 'cost_2', 'cost'],
+            ['a', 'b', 'c', 'd', 'e', 'cost_3', 'cost']
+        ]
+        self._namespaces = ['ALPHA_', 'BETA_', 'GAMMA_']
+
+    def test_node_existence_by_name_one_source(self):
+        for _i in range(3):
+            _nexus = Nexus()
+            _nexus.source_from(
+                other_nexus=self._nexus_list[_i], namespace=self._namespaces[0],
+                namespace_exempt_nodes=self._shared_node_names, namespace_exempt_existing_behavior='ignore'
+            )
+            _combined_cost_node = _nexus.add_function(func=self.combined_cost, par_names=['cost'],
+                                                      parameter_namespaces=self._namespaces[:1])
+            _nexus.add_alias(name='cost', alias_for='combined_cost')
+            for _expected_node_name in self._expected_node_names[_i]:
+                if _expected_node_name in self._shared_node_names:
+                    assert(_nexus.get(_expected_node_name) is not None)
+                else:
+                    assert(_nexus.get(self._namespaces[0] + _expected_node_name) is not None)
+            assert(_nexus.get('combined_cost') is not None)
+            assert(_nexus.get('cost') is not None)
+
+    def test_node_existence_by_name_two_sources(self):
+        for _i in range(3):
+            for _j in range(3):
+                _nexus = Nexus()
+                _nexus.source_from(
+                    other_nexus=self._nexus_list[_i], namespace=self._namespaces[0],
+                    namespace_exempt_nodes=self._shared_node_names, namespace_exempt_existing_behavior='ignore'
+                )
+                _nexus.source_from(
+                    other_nexus=self._nexus_list[_j], namespace=self._namespaces[1],
+                    namespace_exempt_nodes=self._shared_node_names, namespace_exempt_existing_behavior='ignore'
+                )
+                _combined_cost_node = _nexus.add_function(
+                    func=self.combined_cost, par_names=['cost'] * 2, parameter_namespaces=self._namespaces[:1])
+                _nexus.add_alias(name='cost', alias_for='combined_cost')
+                for _expected_node_name in self._expected_node_names[_i]:
+                    if _expected_node_name in self._shared_node_names:
+                        assert(_nexus.get(_expected_node_name) is not None)
+                    else:
+                        assert(_nexus.get(self._namespaces[0] + _expected_node_name) is not None)
+                for _expected_node_name in self._expected_node_names[_j]:
+                    if _expected_node_name in self._shared_node_names:
+                        assert(_nexus.get(_expected_node_name) is not None)
+                    else:
+                        assert(_nexus.get(self._namespaces[1] + _expected_node_name) is not None)
+                assert(_nexus.get('combined_cost') is not None)
+                assert(_nexus.get('cost') is not None)
+
+    def test_node_existence_by_name_three_sources(self):
+        for _i in range(3):
+            for _j in range(3):
+                for _k in range(3):
+                    _nexus = Nexus()
+                    _nexus.source_from(
+                        other_nexus=self._nexus_list[_i], namespace=self._namespaces[0],
+                        namespace_exempt_nodes=self._shared_node_names, namespace_exempt_existing_behavior='ignore'
+                    )
+                    _nexus.source_from(
+                        other_nexus=self._nexus_list[_j], namespace=self._namespaces[1],
+                        namespace_exempt_nodes=self._shared_node_names, namespace_exempt_existing_behavior='ignore'
+                    )
+                    _nexus.source_from(
+                        other_nexus=self._nexus_list[_k], namespace=self._namespaces[2],
+                        namespace_exempt_nodes=self._shared_node_names, namespace_exempt_existing_behavior='ignore'
+                    )
+                    _combined_cost_node = _nexus.add_function(
+                        func=self.combined_cost, par_names=['cost'] * 3, parameter_namespaces=self._namespaces)
+                    _nexus.add_alias(name='cost', alias_for='combined_cost')
+                    for _expected_node_name in self._expected_node_names[_i]:
+                        if _expected_node_name in self._shared_node_names:
+                            assert(_nexus.get(_expected_node_name) is not None)
+                        else:
+                            assert(_nexus.get(self._namespaces[0] + _expected_node_name) is not None)
+                    for _expected_node_name in self._expected_node_names[_j]:
+                        if _expected_node_name in self._shared_node_names:
+                            assert(_nexus.get(_expected_node_name) is not None)
+                        else:
+                            assert(_nexus.get(self._namespaces[1] + _expected_node_name) is not None)
+                    for _expected_node_name in self._expected_node_names[_k]:
+                        if _expected_node_name in self._shared_node_names:
+                            assert(_nexus.get(_expected_node_name) is not None)
+                        else:
+                            assert(_nexus.get(self._namespaces[2] + _expected_node_name) is not None)
+                    assert(_nexus.get('combined_cost') is not None)
+                    assert(_nexus.get('cost') is not None)
+
+    def test_same_nodes_one_source(self):
+        for _i in range(3):
+            _nexus = Nexus()
+            _nexus.source_from(
+                other_nexus=self._nexus_list[_i], namespace=self._namespaces[0],
+                namespace_exempt_nodes=self._shared_node_names, namespace_exempt_existing_behavior='ignore'
+            )
+            _combined_cost_node = _nexus.add_function(func=self.combined_cost, par_names=['cost'],
+                                                      parameter_namespaces=self._namespaces[:1])
+            _nexus.add_alias(name='cost', alias_for='combined_cost')
+            for _node_name in self._expected_node_names[_i]:
+                if _node_name in self._shared_node_names:
+                    _effective_node_name = _node_name
+                else:
+                    _effective_node_name = self._namespaces[0] + _node_name
+                assert (_nexus.get(_effective_node_name) is self._nexus_list[_i].get(_node_name))
+
+    def test_same_nodes_two_sources(self):
+        for _i in range(3):
+            for _j in range(3):
+                _nexus = Nexus()
+                _nexus.source_from(
+                    other_nexus=self._nexus_list[_i], namespace=self._namespaces[0],
+                    namespace_exempt_nodes=self._shared_node_names, namespace_exempt_existing_behavior='ignore'
+                )
+                _nexus.source_from(
+                    other_nexus=self._nexus_list[_j], namespace=self._namespaces[1],
+                    namespace_exempt_nodes=self._shared_node_names, namespace_exempt_existing_behavior='ignore'
+                )
+                _combined_cost_node = _nexus.add_function(func=self.combined_cost, par_names=['cost'] * 2,
+                                                          parameter_namespaces=self._namespaces[:2])
+                _nexus.add_alias(name='cost', alias_for='combined_cost')
+                for _node_name in self._expected_node_names[_i]:
+                    if _node_name in self._shared_node_names:
+                        _effective_node_name = _node_name
+                    else:
+                        _effective_node_name = self._namespaces[0] + _node_name
+                    assert(_nexus.get(_effective_node_name) is self._nexus_list[_i].get(_node_name))
+                for _node_name in self._expected_node_names[_j]:
+                    if _node_name in self._shared_node_names:
+                        if _node_name in self._expected_node_names[_i]:
+                            continue
+                        _effective_node_name = _node_name
+                    else:
+                        _effective_node_name = self._namespaces[1] + _node_name
+                    assert(_nexus.get(_effective_node_name) is self._nexus_list[_j].get(_node_name))
+
+    def test_same_nodes_three_sources(self):
+        for _i in range(3):
+            for _j in range(3):
+                for _k in range(3):
+                    _nexus = Nexus()
+                    _nexus.source_from(
+                        other_nexus=self._nexus_list[_i], namespace=self._namespaces[0],
+                        namespace_exempt_nodes=self._shared_node_names, namespace_exempt_existing_behavior='ignore'
+                    )
+                    _nexus.source_from(
+                        other_nexus=self._nexus_list[_j], namespace=self._namespaces[1],
+                        namespace_exempt_nodes=self._shared_node_names, namespace_exempt_existing_behavior='ignore'
+                    )
+                    _nexus.source_from(
+                        other_nexus=self._nexus_list[_k], namespace=self._namespaces[2],
+                        namespace_exempt_nodes=self._shared_node_names, namespace_exempt_existing_behavior='ignore'
+                    )
+                    _combined_cost_node = _nexus.add_function(func=self.combined_cost, par_names=['cost'] * 3,
+                                                              parameter_namespaces=self._namespaces[:3])
+                    _nexus.add_alias(name='cost', alias_for='combined_cost')
+                    for _node_name in self._expected_node_names[_i]:
+                        if _node_name in self._shared_node_names:
+                            _effective_node_name = _node_name
+                        else:
+                            _effective_node_name = self._namespaces[0] + _node_name
+                        assert(_nexus.get(_effective_node_name) is self._nexus_list[_i].get(_node_name))
+                    for _node_name in self._expected_node_names[_j]:
+                        if _node_name in self._shared_node_names:
+                            if _node_name in self._expected_node_names[_i]:
+                                continue
+                            _effective_node_name = _node_name
+                        else:
+                            _effective_node_name = self._namespaces[1] + _node_name
+                        assert(_nexus.get(_effective_node_name) is self._nexus_list[_j].get(_node_name))
+                    for _node_name in self._expected_node_names[_k]:
+                        if _node_name in self._shared_node_names:
+                            if _node_name in self._expected_node_names[_i] \
+                                    or _node_name in self._expected_node_names[_j]:
+                                continue
+                            _effective_node_name = _node_name
+                        else:
+                            _effective_node_name = self._namespaces[2] + _node_name
+                        assert(_nexus.get(_effective_node_name) is self._nexus_list[_k].get(_node_name))
+
