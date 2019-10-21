@@ -1386,18 +1386,20 @@ class Nexus(object):
         NodeChildrenPrinter(self._root_ref()).run()
 
     def source_from(self, other_nexus, namespace=None, namespace_exempt_nodes=None,
-                    namespace_exempt_existing_behavior='ignore'):
+                    namespace_exempt_existing_behavior='replace'):
         if namespace is None:
             namespace = ''
         if namespace_exempt_nodes is None:
             namespace_exempt_nodes = []
         for _node in other_nexus._nodes.values():
             if isinstance(_node, ValueNode):
-                _node_namespace = None if _node.name in namespace_exempt_nodes else namespace
                 _child_namespaces = [None if _child.name in namespace_exempt_nodes else namespace
                                      for _child in _node.iter_children()]
-                self.add(node=_node, node_namespace=_node_namespace, child_namespaces=_child_namespaces,
-                         existing_behavior=namespace_exempt_existing_behavior)
+                if _node.name in namespace_exempt_nodes:
+                    self.add(node=_node, node_namespace=None, child_namespaces=_child_namespaces,
+                             existing_behavior=namespace_exempt_existing_behavior)
+                else:
+                    self.add(node=_node, node_namespace=namespace, child_namespaces=_child_namespaces)
             elif isinstance(_node, RootNode):
                 pass
             else:
