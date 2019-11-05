@@ -2,7 +2,7 @@ import numpy as np
 from scipy.stats import norm
 import unittest2 as unittest
 
-from kafe2 import HistContainer, HistFit, MultiFit, XYFit
+from kafe2 import HistContainer, HistFit, IndexedFit, MultiFit, XYFit
 
 _cannot_import_IMinuit = False
 try:
@@ -24,6 +24,25 @@ class TestMultiFit(unittest.TestCase):
             return data[:, _split_indices_1], data[:, _split_indices_2]
         else:
             raise Exception()
+
+    @staticmethod
+    def _assert_fits_valid_and_equal(_fit_1, _fit_2):
+        _fit_1.do_fit()
+        _fit_2.do_fit()
+
+        for _parameter_value in _fit_1.parameter_values:
+            assert _parameter_value != 1.0
+        for _parameter_value in _fit_2.parameter_values:
+            assert _parameter_value != 1.0
+        _tol = 1e-6
+        assert np.allclose(_fit_1.parameter_values, _fit_2.parameter_values, atol=0, rtol=_tol)
+        assert np.allclose(_fit_1.parameter_errors, _fit_2.parameter_errors, atol=0, rtol=_tol)
+        assert _fit_1.parameter_cor_mat is not None
+        assert _fit_2.parameter_cor_mat is not None
+        assert np.allclose(_fit_1.parameter_cor_mat, _fit_2.parameter_cor_mat, atol=0, rtol=_tol)
+        assert _fit_1.parameter_cov_mat is not None
+        assert _fit_2.parameter_cov_mat is not None
+        assert np.allclose(_fit_1.parameter_cov_mat, _fit_2.parameter_cov_mat, atol=0, rtol=_tol)
 
     @staticmethod
     def _get_hist_data(loc=2.5, scale=0.5):
@@ -60,26 +79,84 @@ class TestMultiFit(unittest.TestCase):
         self._fit_hist_split_2_multi = MultiFit(TestMultiFit._get_hist_fit(_split_data_2, minimizer))
 
     @staticmethod
+    def _get_indexed_data(err_y=0.01, a=1.2, b=2.3, c=3.4):
+        _x_0 = np.linspace(start=-10, stop=10, num=101, endpoint=True)
+        _y_0 = TestMultiFit.quadratic_model_xy(_x_0, a, b, c)
+        _y_jitter = np.random.normal(loc=0, scale=err_y, size=101)
+        _y_data = _y_0 + _y_jitter
+
+        return _y_data
+
+    @staticmethod
+    def quadratic_model_indexed_all(a, b, c):
+        _x = np.linspace(start=-10, stop=10, num=101, endpoint=True)
+        return TestMultiFit.quadratic_model_xy(_x, a, b, c)
+
+    @staticmethod
+    def quadratic_model_indexed_split_1(a, b, c):
+        _x = np.linspace(start=-10, stop=0, num=50, endpoint=False)
+        return TestMultiFit.quadratic_model_xy(_x, a, b, c)
+
+    @staticmethod
+    def quadratic_model_indexed_split_2(a, b, c):
+        _x = np.linspace(start=0, stop=10, num=51, endpoint=True)
+        return TestMultiFit.quadratic_model_xy(_x, a, b, c)
+
+    @staticmethod
+    def _get_indexed_fit(data, model_function, minimizer, err=0.01):
+        _indexed_fit = IndexedFit(
+            data=data,
+            model_function=model_function,
+            cost_function='chi2',
+            minimizer=minimizer
+        )
+        _indexed_fit.add_simple_error(err)
+        return _indexed_fit
+
+    def _set_indexed_fits(self, minimizer):
+        _data = TestMultiFit._get_indexed_data()
+        self._fit_indexed_all = TestMultiFit._get_indexed_fit(
+            _data, TestMultiFit.quadratic_model_indexed_all, minimizer)
+        _split_data_1 = _data[:50]
+        _split_data_2 = _data[50:]
+        self._fit_indexed_all_multi = MultiFit(TestMultiFit._get_indexed_fit(
+            _data, TestMultiFit.quadratic_model_indexed_all, minimizer))
+        self._fit_indexed_split_multi = MultiFit(fit_list=[
+            TestMultiFit._get_indexed_fit(
+                _split_data_1, TestMultiFit.quadratic_model_indexed_split_1, minimizer),
+            TestMultiFit._get_indexed_fit(
+                _split_data_2, TestMultiFit.quadratic_model_indexed_split_2, minimizer)
+        ])
+        self._fit_indexed_split_1 = TestMultiFit._get_indexed_fit(
+            _split_data_1, TestMultiFit.quadratic_model_indexed_split_1, minimizer)
+        self._fit_indexed_split_1_multi = MultiFit(TestMultiFit._get_indexed_fit(
+            _split_data_1, TestMultiFit.quadratic_model_indexed_split_1, minimizer))
+        self._fit_indexed_split_2 = TestMultiFit._get_indexed_fit(
+            _split_data_2, TestMultiFit.quadratic_model_indexed_split_2, minimizer)
+        self._fit_indexed_split_2_multi = MultiFit(TestMultiFit._get_indexed_fit(
+            _split_data_2, TestMultiFit.quadratic_model_indexed_split_2, minimizer))
+
+    @staticmethod
     def _get_xy_data(err_x=0.01, err_y=0.01, a=1.2, b=2.3, c=3.4):
         _x_0 = np.linspace(start=-10, stop=10, num=101, endpoint=True)
         _x_jitter = np.random.normal(loc=0, scale=err_x, size=101)
         _x_data = _x_0 + _x_jitter
 
-        _y_0 = TestMultiFit.quadratic_model(_x_data, a, b, c)
+        _y_0 = TestMultiFit.quadratic_model_xy(_x_data, a, b, c)
         _y_jitter = np.random.normal(loc=0, scale=err_y, size=101)
         _y_data = _y_0 + _y_jitter
 
         return np.array([_x_data, _y_data])
 
     @staticmethod
-    def quadratic_model(x, a, b, c):
+    def quadratic_model_xy(x, a, b, c):
         return a * x ** 2 + b * x + c
 
     @staticmethod
     def _get_xy_fit(xy_data, minimizer, err_x=0.01, err_y=0.01):
         _xy_fit = XYFit(
             xy_data=xy_data,
-            model_function=TestMultiFit.quadratic_model,
+            model_function=TestMultiFit.quadratic_model_xy,
             cost_function='chi2',
             minimizer=minimizer,
         )
@@ -108,99 +185,83 @@ class TestMultiFit(unittest.TestCase):
 
 class TestMultiFitIntegrityHist(TestMultiFit):
 
-    @staticmethod
-    def _assert_hist_fits_valid_and_equal(_hist_fit_1, _hist_fit_2):
-        _hist_fit_1.do_fit()
-        _hist_fit_2.do_fit()
-
-        assert _hist_fit_1.parameter_values[0] != 1.0
-        assert _hist_fit_1.parameter_values[1] != 1.0
-        assert _hist_fit_2.parameter_values[0] != 1.0
-        assert _hist_fit_2.parameter_values[1] != 1.0
-        _tol = 1e-6
-        assert np.allclose(_hist_fit_1.parameter_values, _hist_fit_2.parameter_values, atol=0, rtol=_tol)
-        assert np.allclose(_hist_fit_1.parameter_errors, _hist_fit_2.parameter_errors, atol=0, rtol=_tol)
-        assert _hist_fit_1.parameter_cor_mat is not None
-        assert _hist_fit_2.parameter_cor_mat is not None
-        assert np.allclose(_hist_fit_1.parameter_cor_mat, _hist_fit_2.parameter_cor_mat, atol=0, rtol=_tol)
-        assert _hist_fit_1.parameter_cov_mat is not None
-        assert _hist_fit_2.parameter_cov_mat is not None
-        assert np.allclose(_hist_fit_1.parameter_cov_mat, _hist_fit_2.parameter_cov_mat, atol=0, rtol=_tol)
-
     def setUp(self):
         TestMultiFit.setUp(self)
 
     @unittest.skipIf(_cannot_import_IMinuit, 'Cannot import iminuit')
     def test_multifit_integrity_simple_iminuit(self):
         self._set_hist_fits(minimizer='iminuit')
-        TestMultiFitIntegrityHist._assert_hist_fits_valid_and_equal(self._fit_hist_all, self._fit_hist_all_multi)
-        TestMultiFitIntegrityHist._assert_hist_fits_valid_and_equal(self._fit_hist_split_1, self._fit_hist_split_1_multi)
-        TestMultiFitIntegrityHist._assert_hist_fits_valid_and_equal(self._fit_hist_split_2, self._fit_hist_split_2_multi)
+        TestMultiFit._assert_fits_valid_and_equal(self._fit_hist_all, self._fit_hist_all_multi)
+        TestMultiFit._assert_fits_valid_and_equal(self._fit_hist_split_1, self._fit_hist_split_1_multi)
+        TestMultiFit._assert_fits_valid_and_equal(self._fit_hist_split_2, self._fit_hist_split_2_multi)
 
     def test_multifit_integrity_simple_scipy(self):
         self._set_hist_fits(minimizer='scipy')
-        TestMultiFitIntegrityHist._assert_hist_fits_valid_and_equal(self._fit_hist_all, self._fit_hist_all_multi)
-        TestMultiFitIntegrityHist._assert_hist_fits_valid_and_equal(self._fit_hist_split_1, self._fit_hist_split_1_multi)
-        TestMultiFitIntegrityHist._assert_hist_fits_valid_and_equal(self._fit_hist_split_2, self._fit_hist_split_2_multi)
+        TestMultiFit._assert_fits_valid_and_equal(self._fit_hist_all, self._fit_hist_all_multi)
+        TestMultiFit._assert_fits_valid_and_equal(self._fit_hist_split_1, self._fit_hist_split_1_multi)
+        TestMultiFit._assert_fits_valid_and_equal(self._fit_hist_split_2, self._fit_hist_split_2_multi)
 
     @unittest.skipIf(_cannot_import_IMinuit, 'Cannot import iminuit')
     def test_multifit_vs_regular_fit_iminuit(self):
         self._set_hist_fits(minimizer='iminuit')
-        TestMultiFitIntegrityHist._assert_hist_fits_valid_and_equal(self._fit_hist_all, self._fit_hist_split_multi)
+        TestMultiFit._assert_fits_valid_and_equal(self._fit_hist_all, self._fit_hist_split_multi)
 
     def test_multifit_vs_regular_fit_scipy(self):
         self._set_hist_fits(minimizer='scipy')
-        TestMultiFitIntegrityHist._assert_hist_fits_valid_and_equal(self._fit_hist_all, self._fit_hist_split_multi)
+        TestMultiFit._assert_fits_valid_and_equal(self._fit_hist_all, self._fit_hist_split_multi)
+
+
+class TestMultiFitIntegrityIndexed(TestMultiFit):
+
+    def setUp(self):
+        TestMultiFit.setUp(self)
+
+    @unittest.skipIf(_cannot_import_IMinuit, 'Cannot import iminuit')
+    def test_multifit_integrity_simple_iminuit(self):
+        self._set_indexed_fits(minimizer='iminuit')
+        TestMultiFit._assert_fits_valid_and_equal(self._fit_indexed_all, self._fit_indexed_all_multi)
+        TestMultiFit._assert_fits_valid_and_equal(self._fit_indexed_split_1, self._fit_indexed_split_1_multi)
+        TestMultiFit._assert_fits_valid_and_equal(self._fit_indexed_split_2, self._fit_indexed_split_2_multi)
+
+    def test_multifit_integrity_simple_scipy(self):
+        self._set_indexed_fits(minimizer='scipy')
+        TestMultiFit._assert_fits_valid_and_equal(self._fit_indexed_all, self._fit_indexed_all_multi)
+        TestMultiFit._assert_fits_valid_and_equal(self._fit_indexed_split_1, self._fit_indexed_split_1_multi)
+        TestMultiFit._assert_fits_valid_and_equal(self._fit_indexed_split_2, self._fit_indexed_split_2_multi)
+
+    @unittest.skipIf(_cannot_import_IMinuit, 'Cannot import iminuit')
+    def test_multifit_vs_regular_fit_iminuit(self):
+        self._set_indexed_fits(minimizer='iminuit')
+        TestMultiFit._assert_fits_valid_and_equal(self._fit_indexed_all, self._fit_indexed_split_multi)
+
+    def test_multifit_vs_regular_fit_scipy(self):
+        self._set_indexed_fits(minimizer='scipy')
+        TestMultiFit._assert_fits_valid_and_equal(self._fit_indexed_all, self._fit_indexed_split_multi)
 
 
 class TestMultiFitIntegrityXY(TestMultiFit):
 
-    @staticmethod
-    def _assert_xy_fits_valid_and_equal(_xy_fit_1, _xy_fit_2):
-        _xy_fit_1.do_fit()
-        _xy_fit_2.do_fit()
-
-        assert _xy_fit_1.parameter_values[0] != 1.0
-        assert _xy_fit_1.parameter_values[1] != 1.0
-        assert _xy_fit_1.parameter_values[2] != 1.0
-        assert _xy_fit_2.parameter_values[0] != 1.0
-        assert _xy_fit_2.parameter_values[1] != 1.0
-        assert _xy_fit_2.parameter_values[2] != 1.0
-        _tol = 1e-6
-        assert not np.any(np.isnan(_xy_fit_1.parameter_values))
-        assert not np.any(np.isnan(_xy_fit_2.parameter_values))
-        assert np.allclose(_xy_fit_1.parameter_values, _xy_fit_2.parameter_values, atol=0, rtol=_tol)
-        assert not np.any(np.isnan(_xy_fit_1.parameter_errors))
-        assert not np.any(np.isnan(_xy_fit_2.parameter_errors))
-        assert np.allclose(_xy_fit_1.parameter_errors, _xy_fit_2.parameter_errors, atol=0, rtol=_tol)
-        assert _xy_fit_1.parameter_cor_mat is not None
-        assert _xy_fit_2.parameter_cor_mat is not None
-        assert np.allclose(_xy_fit_1.parameter_cor_mat, _xy_fit_2.parameter_cor_mat, atol=0, rtol=_tol)
-        assert _xy_fit_1.parameter_cov_mat is not None
-        assert _xy_fit_2.parameter_cov_mat is not None
-        assert np.allclose(_xy_fit_1.parameter_cov_mat, _xy_fit_2.parameter_cov_mat, atol=0, rtol=_tol)
-
     def setUp(self):
         TestMultiFit.setUp(self)
 
     @unittest.skipIf(_cannot_import_IMinuit, 'Cannot import iminuit')
     def test_multifit_integrity_simple_iminuit(self):
         self._set_xy_fits(minimizer='iminuit')
-        TestMultiFitIntegrityXY._assert_xy_fits_valid_and_equal(self._fit_xy_all, self._fit_xy_all_multi)
-        TestMultiFitIntegrityXY._assert_xy_fits_valid_and_equal(self._fit_xy_split_1, self._fit_xy_split_1_multi)
-        TestMultiFitIntegrityXY._assert_xy_fits_valid_and_equal(self._fit_xy_split_2, self._fit_xy_split_2_multi)
+        TestMultiFit._assert_fits_valid_and_equal(self._fit_xy_all, self._fit_xy_all_multi)
+        TestMultiFit._assert_fits_valid_and_equal(self._fit_xy_split_1, self._fit_xy_split_1_multi)
+        TestMultiFit._assert_fits_valid_and_equal(self._fit_xy_split_2, self._fit_xy_split_2_multi)
 
     def test_multifit_integrity_simple_scipy(self):
         self._set_xy_fits(minimizer='scipy')
-        TestMultiFitIntegrityXY._assert_xy_fits_valid_and_equal(self._fit_xy_all, self._fit_xy_all_multi)
-        TestMultiFitIntegrityXY._assert_xy_fits_valid_and_equal(self._fit_xy_split_1, self._fit_xy_split_1_multi)
-        TestMultiFitIntegrityXY._assert_xy_fits_valid_and_equal(self._fit_xy_split_2, self._fit_xy_split_2_multi)
+        TestMultiFit._assert_fits_valid_and_equal(self._fit_xy_all, self._fit_xy_all_multi)
+        TestMultiFit._assert_fits_valid_and_equal(self._fit_xy_split_1, self._fit_xy_split_1_multi)
+        TestMultiFit._assert_fits_valid_and_equal(self._fit_xy_split_2, self._fit_xy_split_2_multi)
 
     @unittest.skipIf(_cannot_import_IMinuit, 'Cannot import iminuit')
     def test_multifit_vs_regular_fit_iminuit(self):
         self._set_xy_fits(minimizer='iminuit')
-        TestMultiFitIntegrityXY._assert_xy_fits_valid_and_equal(self._fit_xy_all, self._fit_xy_split_multi)
+        TestMultiFit._assert_fits_valid_and_equal(self._fit_xy_all, self._fit_xy_split_multi)
 
     def test_multifit_vs_regular_fit_scipy(self):
         self._set_xy_fits(minimizer='scipy')
-        TestMultiFitIntegrityXY._assert_xy_fits_valid_and_equal(self._fit_xy_all, self._fit_xy_split_multi)
+        TestMultiFit._assert_fits_valid_and_equal(self._fit_xy_all, self._fit_xy_split_multi)
