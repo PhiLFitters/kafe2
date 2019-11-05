@@ -1399,7 +1399,8 @@ class Nexus(object):
                     self.add(node=_node, node_namespace=None, child_namespaces=_child_namespaces,
                              existing_behavior=namespace_exempt_existing_behavior)
                 else:
-                    self.add(node=_node, node_namespace=namespace, child_namespaces=_child_namespaces)
+                    self.add(node=_node, node_namespace=namespace, child_namespaces=_child_namespaces,
+                             existing_behavior='ignore')
             elif isinstance(_node, RootNode):
                 pass
             else:

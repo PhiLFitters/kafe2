@@ -1,4 +1,4 @@
-import inspect
+from funcsigs import Signature, Parameter
 import numpy as np
 
 from .._base import CostFunctionBase
@@ -8,8 +8,8 @@ class MultiCostFunction(CostFunctionBase):
 
     def __init__(self, singular_cost_functions, fit_namespaces):
         self._cost_function_handle = MultiCostFunction.cost_sum
-        self._cost_function_signature = inspect.Signature(
-            parameters=[inspect.Parameter(name='%scost' % _fit_namespace, kind=inspect.Parameter.POSITIONAL_OR_KEYWORD)
+        self._cost_function_signature = Signature(
+            parameters=[Parameter(name='%scost' % _fit_namespace, kind=Parameter.POSITIONAL_OR_KEYWORD)
                         for _fit_namespace in fit_namespaces]
         )
         self._cost_function_argcount = len(singular_cost_functions)
