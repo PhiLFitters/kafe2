@@ -50,9 +50,7 @@ class ModelParameterFormatter(FileIOMixin, object):
         self.asymmetric_error = asymmetric_error
 
         self._name = name
-        self._latex_name = latex_name
-        if self._latex_name is None:
-            self._latex_name = self._latexify_ascii(self._name)
+        self.latex_name = latex_name  # latex_name setter requires self._name to be set beforehand
         super(ModelParameterFormatter, self).__init__()
 
     @classmethod
@@ -81,8 +79,18 @@ class ModelParameterFormatter(FileIOMixin, object):
 
     @latex_name.setter
     def latex_name(self, new_latex_name):
+        """Set the LaTeX-formatted string indicating the parameter name
+
+        :param new_latex_name: LaTeX-formatted string
+        :type new_latex_name: str
+        """
         # TODO: validate
-        self._latex_name = new_latex_name
+        if new_latex_name is None:
+            self._latex_name = self._latexify_ascii(self.name)
+        elif new_latex_name.startswith('{') and new_latex_name.endswith('}'):
+            self._latex_name = new_latex_name
+        else:
+            self._latex_name = '{' + new_latex_name + '}'
 
     @property
     def value(self):
@@ -233,6 +241,7 @@ class ModelFunctionFormatter(FileIOMixin, object):
     """
     DEFAULT_EXPRESSION_STRING = "<not_specified>"
     DEFAULT_LATEX_EXPRESSION_STRING = r"\langle{\it not\,\,specified}\rangle"
+
     def __init__(self, name, latex_name=None, arg_formatters=None, expression_string=None, latex_expression_string=None):
         """
         Construct a :py:obj:`Formatter` for a model function:
@@ -417,6 +426,7 @@ class ModelFunctionFormatter(FileIOMixin, object):
             if _par_expr_string:
                 _out_string += " = " + _par_expr_string
         return _out_string
+
 
 class CostFunctionFormatter(ModelFunctionFormatter):
 
