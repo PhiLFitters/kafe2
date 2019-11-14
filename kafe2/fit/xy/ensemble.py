@@ -170,7 +170,6 @@ class XYFitEnsemble(FitEnsembleBase):
 
     def _do_toy_fit(self):
         """run fit with current pseudo-data"""
-        self._toy_fit._invalidate_total_error_cache()
         self._toy_fit.do_fit()
 
     def _get_var(self, var_name):
