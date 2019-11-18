@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 import unittest
 import sys
@@ -6,7 +6,7 @@ import os
 
 from setuptools import find_packages, setup
 
-__version__ = "2.0.0.dev0"
+__version__ = "0.1.0"
 
 def discover_kafe_tests():
     _tl = unittest.TestLoader()
