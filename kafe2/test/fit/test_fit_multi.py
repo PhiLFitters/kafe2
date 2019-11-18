@@ -37,8 +37,6 @@ class TestMultiFit(unittest.TestCase):
         for _parameter_value in _fit_2.parameter_values:
             assert _parameter_value != 1.0
         _tol = 1e-4
-        print _fit_1.parameter_values
-        print _fit_2.parameter_values
         assert np.allclose(_fit_1.parameter_values, _fit_2.parameter_values, atol=0, rtol=_tol)
         assert np.allclose(_fit_1.parameter_errors, _fit_2.parameter_errors, atol=0, rtol=_tol)
         assert _fit_1.parameter_cor_mat is not None
