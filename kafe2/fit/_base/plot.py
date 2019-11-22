@@ -1,4 +1,5 @@
 import abc
+import matplotlib as mpl
 import numpy as np
 import six
 import textwrap
@@ -550,7 +551,9 @@ class Plot(object):
         # create figure
         self._current_figure = plt.figure(figsize=figsize)
         self._figure_dicts.append(dict(figure=self._current_figure))
-        self._current_figure.set_tight_layout(dict(h_pad=0.1))
+        # 'tight_layout' has a bug in matplotlib < 2
+        if not mpl.__version__.startswith('1'):
+            self._current_figure.set_tight_layout(dict(h_pad=0.1))
 
         # create named axes
         self._current_axes = self._figure_dicts[-1]['axes'] = {
@@ -851,7 +854,11 @@ class Plot(object):
 
             self._adjust_plot_ranges(_plot_results)
             self._set_axis_labels(_plot_results, axes_keys=_axes_keys)
-            self._current_figure.align_ylabels()
+            try:
+                self._current_figure.align_ylabels()
+            except AttributeError:
+                # matplotlib < 2.0.0
+                pass
 
             if with_ratio:
                 _ratio_label = kc('fit', 'plot', 'ratio_label')
