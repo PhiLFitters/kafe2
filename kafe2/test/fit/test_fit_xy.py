@@ -52,7 +52,7 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         assert len(self._y_jitter) == self._n_points
 
         # reference initial values
-        self._ref_initial_pars = 1.1, 2.2, 3.3
+        self._ref_initial_pars = np.array([1.1, 2.2, 3.3])
         self._ref_x = np.arange(self._n_points)
         self._ref_initial_y_model = simple_xy_model(self._ref_x, *self._ref_initial_pars)
         self._ref_initial_xy_model = np.array([self._ref_x, self._ref_initial_y_model])
@@ -79,11 +79,11 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         # reference fit result values
         #self._nominal_fit_result_pars = (1.1351433, 2.13736919, 2.33346549)
-        self._nominal_fit_result_pars = tuple(analytic_solution(
+        self._nominal_fit_result_pars = analytic_solution(
             self._linear_design_matrix,
             np.linalg.inv(self._ref_matrix_eye),
             self._ref_y_data,
-        ))
+        )
 
         self._nominal_fit_result_y_model = simple_xy_model(self._ref_x, *self._nominal_fit_result_pars)
         self._nominal_fit_result_xy_model = np.array([self._ref_x, self._nominal_fit_result_y_model])
@@ -292,8 +292,8 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         self._assert_fit_properties(
             _fit,
             dict(
-                parameter_values=(1, 1, 1),
-                poi_values=(1, 1, 1),
+                parameter_values=np.array([1, 1, 1]),
+                poi_values=np.array([1, 1, 1]),
             )
         )
 
@@ -306,8 +306,8 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         self._assert_fit_properties(
             _fit,
             dict(
-                parameter_values=(1, 1, 3.3),
-                poi_values=(1, 1, 3.3),
+                parameter_values=np.array([1, 1, 3.3]),
+                poi_values=np.array([1, 1, 3.3]),
             )
         )
 
@@ -374,7 +374,7 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         )
 
         _fit.do_fit()
-        _new_estimates = tuple(np.array(self._nominal_fit_result_pars) * 2)
+        _new_estimates = np.array(self._nominal_fit_result_pars) * 2
 
         self._assert_fit_properties(
             _fit,
@@ -405,11 +405,11 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         _fit.do_fit()
 
-        _new_estimates = tuple(analytic_solution(
+        _new_estimates = analytic_solution(
             self._linear_design_matrix[:-1],
             np.linalg.inv(self._ref_matrix_eye[:-1,:-1]),
             self._ref_y_data[:-1] * 2,
-        ))
+        )
 
         self._assert_fit_properties(
             _fit,
@@ -805,7 +805,7 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
         assert len(self._y_jitter) == self._n_points
 
         # reference initial values
-        self._ref_initial_pars = 1.0, 0.0
+        self._ref_initial_pars = np.array([1.0, 0.0])
         self._ref_x = np.arange(self._n_points)
         self._ref_initial_y_model = line_xy_model(self._ref_x, *self._ref_initial_pars)
         self._ref_initial_xy_model = np.array([self._ref_x, self._ref_initial_y_model])
@@ -840,7 +840,7 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
         )
 
         # reference fit result values
-        self._nominal_fit_result_pars = (1.02590618, -0.00967721)
+        self._nominal_fit_result_pars = np.array([1.02590618, -0.00967721])
 
         self._nominal_fit_result_y_model = line_xy_model(self._ref_x, *self._nominal_fit_result_pars)
         self._nominal_fit_result_xy_model = np.array([self._ref_x, self._nominal_fit_result_y_model])

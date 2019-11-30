@@ -25,7 +25,7 @@ class NexusFitter(object):
             minimizer_kwargs = dict()
 
         # initialize minimizer
-        _par_name_val_map = self.fit_parameter_values
+        _par_name_val_map = self.get_fit_parameter_values()
         _par_values = [_par_name_val_map[_pn] for _pn in parameters_to_fit]
         self._minimizer = _minimizer_class(
             parameters_to_fit,
@@ -80,7 +80,6 @@ class NexusFitter(object):
         self.__state_is_from_minimizer = True
 
     def _fcn_wrapper(self, *fit_par_value_list):
-
         # set fit parameter values
         assert(len(fit_par_value_list) == len(self._fit_pars))
         for _par, _new_value in zip(self._fit_pars, fit_par_value_list):
@@ -114,13 +113,6 @@ class NexusFitter(object):
         self._min_par = \
             self._get_pars_from_nexus([parameter_to_minimize])[0]
         self._min_par_name = parameter_to_minimize
-
-    @property
-    def fit_parameter_values(self):
-        return OrderedDict([
-            (_pn, self._nx.get(_pn).value)
-            for _pn in self._fit_par_names
-        ])
 
     @property
     def fit_parameter_cov_mat(self):
@@ -189,6 +181,14 @@ class NexusFitter(object):
             )
 
         return self._minimizer.profile(parameter_name, bins=bins, bound=bound, subtract_min=subtract_min)
+
+    def get_fit_parameter_values(self, parameter_names=None):
+        if parameter_names is None:
+            parameter_names = self._fit_par_names
+        return OrderedDict([
+            (_pn, self._nx.get(_pn).value)
+            for _pn in parameter_names
+        ])
 
     def set_fit_parameter_values(self, **parameter_value_dict):
         _dict_key_set = set(parameter_value_dict.keys())

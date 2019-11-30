@@ -27,8 +27,7 @@ class MultiFit(FitBase):
                 if _parameter_name not in _combined_parameter_names:
                     _combined_parameter_names.append(_parameter_name)
             self._nexus.source_from(
-                other_nexus=_fit_i._nexus, namespace=_namespace_i, namespace_exempt_nodes=_fit_i.parameter_names,
-                namespace_exempt_existing_behavior='replace'
+                other_nexus=_fit_i._nexus, namespace=_namespace_i, namespace_exempt_nodes=_fit_i.parameter_names
             )
 
         _singular_cost_functions = [_fit._cost_function for _fit in self._fits]
@@ -36,7 +35,8 @@ class MultiFit(FitBase):
             singular_cost_functions=_singular_cost_functions, fit_namespaces=_fit_namespaces)
         self._cost_function.ndf = self.data_size - len(_combined_parameter_names)
         _single_cost_names = ['%scost' % _fit_namespace for _fit_namespace in _fit_namespaces]
-        self._nexus.add_function(func=self._cost_function.func, par_names=_single_cost_names)
+        _cost_function_node = self._nexus.add_function(func=self._cost_function.func, par_names=_single_cost_names)
+        self._nexus.add_alias(name='cost', alias_for=_cost_function_node.name)
         self._minimizer = minimizer
         self._minimizer_kwargs = minimizer_kwargs
         self._fitter = NexusFitter(
@@ -44,8 +44,15 @@ class MultiFit(FitBase):
             parameter_to_minimize=self._cost_function.name, minimizer=self._minimizer,
             minimizer_kwargs=self._minimizer_kwargs
         )
+        for _fit in self._fits:
+            _parameter_indices = [_combined_parameter_names.index(_par_name) for _par_name in _fit.parameter_names]
+            _fit._nexus = self._nexus
+            _fit._fitter = self._fitter
+            _fit._fitter_parameter_indices = _parameter_indices
+
         self._fit_param_constraints = []
         self._loaded_result_dict = None
+        self._fitter_parameter_indices = None
 
     # -- private methods
 
@@ -71,31 +78,6 @@ class MultiFit(FitBase):
     def _update_parameter_formatters(self, update_asymmetric_errors=False):
         for _fit in self._fits:
             _fit._update_parameter_formatters(update_asymmetric_errors=update_asymmetric_errors)
-
-    def _update_singular_fits(self):
-        _parameter_name_value_dict = self.parameter_name_value_dict
-        for _fit in self._fits:
-            _parameter_update_dict = {_par_name:_parameter_name_value_dict[_par_name]
-                                      for _par_name in _fit.parameter_names}
-            _fit.set_parameter_values(**_parameter_update_dict)
-            _parameter_indices = self._get_parameter_indices(singular_fit=_fit)
-            _asymmetric_parameter_errors = self._fitter.asymmetric_fit_parameter_errors_if_calculated
-            if _asymmetric_parameter_errors is not None:
-                _asymmetric_parameter_errors = _asymmetric_parameter_errors[_parameter_indices]
-            _par_cor_mat = self.parameter_cor_mat
-            if _par_cor_mat is not None:
-                _par_cor_mat = _par_cor_mat[_parameter_indices][:, _parameter_indices]
-            _par_cov_mat = self.parameter_cov_mat
-            if _par_cov_mat is not None:
-                _par_cov_mat = _par_cov_mat[_parameter_indices][:, _parameter_indices]
-            _fit._loaded_result_dict = dict(
-                did_fit=self.did_fit,
-                parameter_errors=self.parameter_errors[_parameter_indices],
-                parameter_cor_mat=_par_cor_mat,
-                parameter_cov_mat=_par_cov_mat,
-                asymmetric_parameter_errors=_asymmetric_parameter_errors
-            )
-        self._update_parameter_formatters()
 
     def _set_new_data(self, new_data):
         raise NotImplementedError()
@@ -214,7 +196,7 @@ class MultiFit(FitBase):
             if _fit_i._cost_function.needs_errors and not _fit_i._data_container.has_errors:
                 raise self.EXCEPTION_TYPE('No data errors defined for fit %s' % _i)
         self._fitter.do_fit()
-        self._update_singular_fits()
+        self._update_parameter_formatters()
         self._loaded_result_dict = None
 
     def get_matching_errors(self, fit_index=None, matching_criteria=None, matching_type='equal'):

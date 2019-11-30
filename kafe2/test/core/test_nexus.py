@@ -45,8 +45,10 @@ class TestNodes(unittest.TestCase):
 
     def test_nodes_default_constructor(self):
         for _node_type in self.DEFAULT_CONSTRUCTIBLE_NODE_TYPES:
-            _node_type()
-            str(_node_type())
+            # NodeBase constructor cannot be called because NodeBase has an abstract method.
+            if _node_type is not NodeBase:
+                _node_type()
+                str(_node_type())
 
     def test_nodes_parametric_constructor(self):
         p = Parameter(None)
@@ -126,12 +128,9 @@ class TestNodes(unittest.TestCase):
         par = Parameter(3, name='par')
         par_2 = Parameter(2, name='par_2')
 
-        par.add_parent(par_2)
-
-        self.assertEqual(
-            [p.value for p in par.iter_parents()],
-            [2]
-        )
+        # Manually adding parents is not allowed:
+        with self.assertRaises(NodeException):
+            par.add_parent(par_2)
 
     def test_node_set_children(self):
         par = Parameter(3, name='par')
@@ -248,6 +247,7 @@ class TestNodes(unittest.TestCase):
 
         # store parents and children for comparison
         _children_before = selector.get_children()
+        _parameters_before = selector.parameters
         _parents_before = selector.get_parents()
 
         # replace node
@@ -257,9 +257,11 @@ class TestNodes(unittest.TestCase):
         # retrieve new parents and children for comparison
         _children_after = selector_new.get_children()
         _parents_after = selector_new.get_parents()
+        _parameters_after = selector_new.parameters
 
-        self.assertEqual(_children_after, _children_after)
-        self.assertEqual(_parents_after, _parents_after)
+        self.assertEqual(_children_before, _children_after)
+        self.assertEqual(_parents_before, _parents_after)
+        self.assertEqual(_parameters_before, _parameters_after)
 
         self.assertEqual(selector_new.value, 'blup')
 
@@ -777,7 +779,7 @@ class TestNexus(unittest.TestCase):
 
         func_node = self._nexus.add_function(
             func=my_rec_func,
-            par_names=('my_rec_func_2',)
+            par_names=['my_rec_func_2']
         )
 
         # adding second one triggers cycle detection
@@ -839,7 +841,7 @@ class TestCombinedNexus(unittest.TestCase):
         for _i, _nexus_index_i in enumerate(nexus_indices):
             _combined_nexus.source_from(
                 other_nexus=self._nexus_list[_nexus_index_i], namespace=self._namespaces[_i],
-                namespace_exempt_nodes=self._shared_node_names, namespace_exempt_existing_behavior='replace'
+                namespace_exempt_nodes=self._shared_node_names
             )
         _combined_cost_node = _combined_nexus.add_function(func=self.combined_cost, par_names=['cost'] * len(nexus_indices),
                                                   parameter_namespaces=self._namespaces[:len(nexus_indices)])
@@ -940,64 +942,6 @@ class TestCombinedNexus(unittest.TestCase):
                             assert(_combined_nexus.get(self._namespaces[2] + _expected_node_name) is not None)
                     assert(_combined_nexus.get('combined_cost') is not None)
                     assert(_combined_nexus.get('cost') is not None)
-
-    def test_same_nodes_one_source(self):
-        for _i in range(3):
-            _combined_nexus = self._get_combined_nexus((_i,))
-            for _node_name in self._expected_node_names[_i]:
-                if _node_name in self._shared_node_names:
-                    _effective_node_name = _node_name
-                else:
-                    _effective_node_name = self._namespaces[0] + _node_name
-                assert (_combined_nexus.get(_effective_node_name) is self._nexus_list[_i].get(_node_name))
-
-    def test_same_nodes_two_sources(self):
-        for _i in range(3):
-            for _j in range(3):
-                _combined_nexus = self._get_combined_nexus((_i, _j))
-                for _node_name in self._expected_node_names[_i]:
-                    if _node_name in self._shared_node_names:
-                        if _node_name in self._expected_node_names[_j]:
-                            continue
-                        _effective_node_name = _node_name
-                    else:
-                        _effective_node_name = self._namespaces[0] + _node_name
-                    assert(_combined_nexus.get(_effective_node_name) is self._nexus_list[_i].get(_node_name))
-                for _node_name in self._expected_node_names[_j]:
-                    if _node_name in self._shared_node_names:
-                        _effective_node_name = _node_name
-                    else:
-                        _effective_node_name = self._namespaces[1] + _node_name
-                    assert(_combined_nexus.get(_effective_node_name) is self._nexus_list[_j].get(_node_name))
-
-    def test_same_nodes_three_sources(self):
-        for _i in range(3):
-            for _j in range(3):
-                for _k in range(3):
-                    _combined_nexus = self._get_combined_nexus((_i, _j, _k))
-                    for _node_name in self._expected_node_names[_i]:
-                        if _node_name in self._expected_node_names[_j] \
-                                or _node_name in self._expected_node_names[_k]:
-                            continue
-                        if _node_name in self._shared_node_names:
-                            _effective_node_name = _node_name
-                        else:
-                            _effective_node_name = self._namespaces[0] + _node_name
-                        assert(_combined_nexus.get(_effective_node_name) is self._nexus_list[_i].get(_node_name))
-                    for _node_name in self._expected_node_names[_j]:
-                        if _node_name in self._shared_node_names:
-                            if _node_name in self._expected_node_names[_k]:
-                                continue
-                            _effective_node_name = _node_name
-                        else:
-                            _effective_node_name = self._namespaces[1] + _node_name
-                        assert(_combined_nexus.get(_effective_node_name) is self._nexus_list[_j].get(_node_name))
-                    for _node_name in self._expected_node_names[_k]:
-                        if _node_name in self._shared_node_names:
-                            _effective_node_name = _node_name
-                        else:
-                            _effective_node_name = self._namespaces[2] + _node_name
-                        assert(_combined_nexus.get(_effective_node_name) is self._nexus_list[_k].get(_node_name))
 
     def test_cost_correct_one_source(self):
         for _i in range(3):

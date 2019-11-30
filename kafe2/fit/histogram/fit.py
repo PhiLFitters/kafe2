@@ -86,6 +86,7 @@ class HistFit(FitBase):
 
         self._fit_param_constraints = []
         self._loaded_result_dict = None
+        self._fitter_parameter_indices = None
 
         # set the data after the cost_function has been set and nexus has been initialized
         self.data = data

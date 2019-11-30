@@ -42,7 +42,7 @@ class TestXYMultiFitBasicInterface(AbstractTestFit, unittest.TestCase):
         assert len(self._y_jitter_2) == self._n_points
 
         # reference initial values
-        self._ref_initial_pars_2 = 0.5, 1.1, 2.2, 3.3
+        self._ref_initial_pars_2 = np.array([0.5, 1.1, 2.2, 3.3])
         self._ref_initial_y_model_2 = simple_xy_model_2(self._ref_x, *self._ref_initial_pars_2)
         self._ref_initial_xy_model_2 = np.array([self._ref_x, self._ref_initial_y_model_2])
 
@@ -64,11 +64,11 @@ class TestXYMultiFitBasicInterface(AbstractTestFit, unittest.TestCase):
         )
 
         # reference fit result values
-        self._nominal_fit_result_pars_2 = tuple(analytic_solution(
+        self._nominal_fit_result_pars_2 = analytic_solution(
             self._linear_design_matrix_2,
             np.linalg.inv(self._ref_matrix_eye),
             self._ref_y_data_2,
-        ))
+        )
 
         self._nominal_fit_result_y_model_2 = simple_xy_model_2(self._ref_x, *self._nominal_fit_result_pars_2)
         self._nominal_fit_result_xy_model_2 = np.array([self._ref_x, self._nominal_fit_result_y_model_2])
@@ -81,8 +81,8 @@ class TestXYMultiFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         self._ref_matrix_eye_big = np.eye(2 * self._n_points)
 
-        self._nominal_fit_result_pars_big = (1.1143123504315096, 2.216862249916337, 2.9800759487215562, 0.49940864485321074)
-        self._nominal_fit_result_pars_big_reversed = (self._nominal_fit_result_pars_big[-1],) + self._nominal_fit_result_pars_big[:-1]
+        self._nominal_fit_result_pars_big = np.array([1.1143123504315096, 2.216862249916337, 2.9800759487215562, 0.49940864485321074])
+        self._nominal_fit_result_pars_big_reversed = np.array([0.49940864485321074, 1.1143123504315096, 2.216862249916337, 2.9800759487215562])
 
         self._nominal_fit_result_y_model_big = np.hstack([
             simple_xy_model(self._ref_x, *self._nominal_fit_result_pars_big_reversed[1:]),
@@ -443,7 +443,7 @@ class TestXYMultiFitBasicInterface(AbstractTestFit, unittest.TestCase):
         )
 
         _fit.do_fit()
-        _new_estimates = tuple(np.array(self._nominal_fit_result_pars) * 2)
+        _new_estimates = np.array(self._nominal_fit_result_pars) * 2
 
         self._assert_fit_properties(
             _fit,
@@ -477,11 +477,11 @@ class TestXYMultiFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         _fit.do_fit()
 
-        _new_estimates = tuple(analytic_solution(
+        _new_estimates = analytic_solution(
             self._linear_design_matrix[:-1],
             np.linalg.inv(self._ref_matrix_eye[:-1,:-1]),
             self._ref_y_data[:-1] * 2,
-        ))
+        )
 
         self._assert_fit_properties(
             _fit,

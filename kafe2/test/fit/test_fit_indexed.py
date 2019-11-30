@@ -54,7 +54,7 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
         assert len(self._jitter) == self._n_points
 
         # reference initial values
-        self._ref_initial_pars = 1.1, 2.2, 3.3
+        self._ref_initial_pars = np.array([1.1, 2.2, 3.3])
         self._ref_initial_model = simple_indexed_model(*self._ref_initial_pars)
 
         # fit data
@@ -78,11 +78,11 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         # reference fit result values
         #self._nominal_fit_result_pars = (1.1351433, 2.13736919, 2.33346549)
-        self._nominal_fit_result_pars = tuple(analytic_solution(
+        self._nominal_fit_result_pars = analytic_solution(
             self._linear_design_matrix,
             np.linalg.inv(self._ref_matrix_eye),
             self._ref_data,
-        ))
+        )
 
         self._nominal_fit_result_model = simple_indexed_model(*self._nominal_fit_result_pars)
         self._nominal_fit_result_cost = simple_chi2(
@@ -205,8 +205,8 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
         self._assert_fit_properties(
             _fit,
             dict(
-                parameter_values=(1, 1, 1),
-                poi_values=(1, 1, 1),
+                parameter_values=np.array([1, 1, 1]),
+                poi_values=np.array([1, 1, 1]),
             )
         )
 
@@ -219,8 +219,8 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
         self._assert_fit_properties(
             _fit,
             dict(
-                parameter_values=(1, 1, 3.3),
-                poi_values=(1, 1, 3.3),
+                parameter_values=np.array([1, 1, 3.3]),
+                poi_values=np.array([1, 1, 3.3]),
             )
         )
 
@@ -238,7 +238,7 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
         )
 
         _fit.do_fit()
-        _new_estimates = tuple(np.array(self._nominal_fit_result_pars) * 2)
+        _new_estimates = np.array(self._nominal_fit_result_pars) * 2
 
         self._assert_fit_properties(
             _fit,

@@ -29,7 +29,7 @@ class MinimizerIMinuit(MinimizerBase):
 
         self._reset()  # sets self.__iminuit and caches to None
         self.errordef = 1.0
-        self.tolerance = 0.001
+        self.tolerance = 1e-6
         super(MinimizerIMinuit, self).__init__(function_to_minimize=function_to_minimize)
 
     # -- private methods

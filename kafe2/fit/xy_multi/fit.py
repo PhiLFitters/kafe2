@@ -116,6 +116,7 @@ class XYMultiFit(FitBase):
         # initialize the Fitter
         self._initialize_fitter(minimizer, minimizer_kwargs)
         # create the child ParametricModel object
+        self._fitter_parameter_indices = None
         self._set_new_parametric_model()
         # TODO: check where to update this (set/release/etc.)
         # FIXME: nicer way than len()?
@@ -633,7 +634,7 @@ class XYMultiFit(FitBase):
         _poi_values = []
         for _name in self._poi_names:
             _poi_values.append(self.parameter_name_value_dict[_name])
-        return tuple(_poi_values)
+        return np.array(_poi_values)
 
     @property
     def x_uncor_nuisance_values(self):

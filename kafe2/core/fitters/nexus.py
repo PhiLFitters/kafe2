@@ -168,6 +168,12 @@ class NodeBase(object):
                 **(_cb['kwargs'] or {})
             )
 
+    def get_new_node_name(self, namespace, namespace_exempt_parameters):
+        if self.name in namespace_exempt_parameters:
+            return self.name
+        else:
+            return namespace + self.name
+
     # -- properties
 
     @property
@@ -196,6 +202,7 @@ class NodeBase(object):
 
         self._children.append(node)
         node.add_parent(self)
+        #self.mark_for_update()
 
         return self
 
@@ -205,6 +212,8 @@ class NodeBase(object):
                 "Cannot add parent: expected "
                 "node type, got {}".format(type(node))
             )
+        if self not in node.get_children():
+            raise NodeException("Child must be added to parent, not the other way around!")
         self._parents.add(weakref.ref(node))
 
         return self
@@ -230,6 +239,7 @@ class NodeBase(object):
 
         # remove self node from node parents
         node.remove_parent(self)
+        #self.mark_for_update()
 
         return self
 
@@ -239,6 +249,9 @@ class NodeBase(object):
                 "Cannot remove parent: expected "
                 "node type, got {}".format(type(node))
             )
+
+        if self in node.get_children():
+            raise NodeException("Must remove child from parent, not the other way around!")
 
         # remove node from node parents
         self._parents.remove(weakref.ref(node))
@@ -299,7 +312,7 @@ class NodeBase(object):
             if not isinstance(_parent, NodeBase):
                 raise TypeError(
                     "Cannot set parent: expected "
-                    "node type, got {}".format(type(node))
+                    "node type, got {}".format(type(_parent))
                 )
             _new_parents.add(weakref.ref(_parent))
 
@@ -338,22 +351,18 @@ class NodeBase(object):
             other = Parameter(other)
 
         if transfer_children:
-            _other_orig_children = other.get_children()
             other.set_children(self.get_children())
 
-        for _p in self.iter_parents():
-            other.add_parent(_p)
+        for _parent in self.get_parents():
+            _parent.replace_child(current_child=self, new_child=other)
 
-        # set 'other' as parent of all self's children
-        for _child in self.iter_children():
-            _child._parents = set([_p if _p is not self else weakref.ref(other) for _p in _child._parents])
-
-        # set 'other' as child of all self's parents
-        for _parent in self.iter_parents():
-            _parent._children = [_c if _c is not self else other for _c in _parent._children]
-
-        if transfer_children:
-            self.set_children(_other_orig_children)
+    def replace_child(self, current_child, new_child):
+        if current_child not in self._children:
+            raise NodeException("Cannot replace child %s because it is not a child of %s."
+                                % (current_child.name, self.name))
+        self._children = [_c if _c is not current_child else new_child for _c in self._children]
+        new_child.add_parent(self)
+        current_child.remove_parent(self)
 
     def register_callback(self, func, args=None, kwargs=None):
         self._callbacks.append(dict(func=func, args=args, kwargs=kwargs))
@@ -361,6 +370,25 @@ class NodeBase(object):
     def print_descendants(self):
         NodeChildrenPrinter(self).run()
 
+    @abc.abstractmethod
+    def clone_no_children(self, clone_namespace):
+        pass
+
+    def clone_to_other_nexus(self, other_nexus, namespace, namespace_exempt_nodes):
+        _existing_node = other_nexus.get(self.get_new_node_name(namespace, namespace_exempt_nodes))
+        if _existing_node is None:
+            _clone_namespace = '' if self.name in namespace_exempt_nodes else namespace
+            _self_clone = self.clone_no_children(_clone_namespace)
+            for _child in self.get_children():
+                _child_clone = _child.clone_to_other_nexus(other_nexus, namespace, namespace_exempt_nodes)
+                if isinstance(self, Function) and _child in self.parameters:
+                    _self_clone.add_parameter(_child_clone)
+                else:
+                    _self_clone.add_child(_child_clone)
+            other_nexus.add(_self_clone)
+            return _self_clone
+        else:
+            return _existing_node
 
 class RootNode(NodeBase):
     """
@@ -393,6 +421,14 @@ class RootNode(NodeBase):
 
     def notify_parents(self):
         pass
+
+    def clone_no_children(self, clone_namespace):
+        raise NodeException("Root node cannot be cloned!")
+
+    def clone_to_other_nexus(self, other_nexus, namespace, namespace_exempt_nodes):
+        _child_clones = []
+        for _child in self.get_children():
+            _child_clone = _child.clone_to_other_nexus(other_nexus, namespace, namespace_exempt_nodes)
 
 
 @_add_common_operators
@@ -482,6 +518,9 @@ class ValueNode(NodeBase):
         # notify parents that a child value has changed
         self.notify_parents()
 
+    def clone_no_children(self, clone_namespace):
+        return ValueNode(value=self.value, name=clone_namespace+self.name)
+
 
 class Empty(ValueNode):
     """A graph node that acts as a placeholder for a ValueNode.
@@ -516,6 +555,9 @@ class Empty(ValueNode):
             )
         )
 
+    def clone_no_children(self, clone_namespace):
+        return Empty(name=clone_namespace + self.name)
+
 
 class Parameter(ValueNode):
     def __init__(self, value, name=None):
@@ -526,6 +568,9 @@ class Parameter(ValueNode):
         # simple parameters are always up-to-date
         return
 
+    def clone_no_children(self, clone_namespace):
+        return Parameter(value=self.value, name=clone_namespace+self.name)
+
 
 class Alias(ValueNode):
     """
@@ -535,7 +580,8 @@ class Alias(ValueNode):
     def __init__(self, ref, name=None):
         ValueNode.__init__(self, value=None, name=name)
 
-        self.ref = ref
+        if ref is not None:
+            self.ref = ref
 
         self._stale = True
 
@@ -567,6 +613,9 @@ class Alias(ValueNode):
     def update(self):
         self._value = self.ref.value
 
+    def clone_no_children(self, clone_namespace):
+        return Alias(ref=None, name=clone_namespace+self.name)
+
 
 class Function(ValueNode):
     """All keyword arguments of the function must be parameters registered in the parameter space."""
@@ -576,7 +625,9 @@ class Function(ValueNode):
         super(Function, self).__init__(value=None, name=_fname)
 
         self.func = func
-        self.parameters = parameters or []
+        parameters = parameters or []
+        self.parameters = parameters
+        self.set_children(parameters)
 
         self._par_cache = []
 
@@ -586,11 +637,11 @@ class Function(ValueNode):
     @property
     def parameters(self):
         """The nodes representing the function parameters."""
-        return self._children
+        return self._parameters
 
     @parameters.setter
     def parameters(self, parameters):
-        self.set_children(parameters)
+        self._parameters = list(parameters)
 
     @property
     def func(self):
@@ -607,13 +658,29 @@ class Function(ValueNode):
         '''Set node value.'''
         raise NodeException("Function node value cannot be set!")
 
+    def add_parameter(self, parameter):
+        self._parameters.append(parameter)
+        self.add_child(parameter)
+
     def update(self):
         self._par_cache = [
             _par.value
-            for _par in self._children
+            for _par in self._parameters
         ]
         self._value = self()
         self._stale = False
+
+    def clone_no_children(self, clone_namespace):
+        return Function(func=self.func, name=clone_namespace+self.name, parameters=[])
+
+    def replace(self, other, transfer_children=False):
+        NodeBase.replace(self, other, transfer_children)
+        if transfer_children and isinstance(other, Function):
+            other.parameters = self.parameters
+
+    def replace_child(self, current_child, new_child):
+        NodeBase.replace_child(self, current_child, new_child)
+        self._parameters = [_p if _p is not current_child else new_child for _p in self._parameters]
 
 
 class Fallback(ValueNode):
@@ -651,6 +718,9 @@ class Fallback(ValueNode):
     def update(self):
         self._value = self()
         self._stale = False
+
+    def clone_no_children(self, clone_namespace):
+        return Fallback(try_nodes=[], exception_type=self._exception_type, name=clone_namespace+self.name)
 
 
 class Tuple(ValueNode):
@@ -701,6 +771,9 @@ class Tuple(ValueNode):
         for _val in self.value:
             yield _val
 
+    def clone_no_children(self, clone_namespace):
+        return Tuple(nodes=[], name=clone_namespace+self.name)
+
 
 class Array(Tuple):
 
@@ -725,6 +798,9 @@ class Array(Tuple):
 
     def iter_values(self):
         return self.value.__iter__()
+
+    def clone_no_children(self, clone_namespace):
+        return Array(nodes=[], name=clone_namespace+self.name, dtype=self._dtype)
 
 
 # -- Node visitors
@@ -1302,7 +1378,7 @@ class Nexus(object):
 
         # add dependent node `name` as a parent of each node in `depends_on`
         for _dep in depends_on:
-            self.get(_dep).add_parent(_node)
+            _node.add_child(self.get(_dep))
 
         # check for cycles
         NodeCycleChecker(self._root_ref()).run()
@@ -1385,23 +1461,11 @@ class Nexus(object):
         """Print a representation of the nexus state."""
         NodeChildrenPrinter(self._root_ref()).run()
 
-    def source_from(self, other_nexus, namespace=None, namespace_exempt_nodes=None,
-                    namespace_exempt_existing_behavior='replace'):
+    def source_from(self, other_nexus, namespace=None, namespace_exempt_nodes=None):
         if namespace is None:
             namespace = ''
         if namespace_exempt_nodes is None:
             namespace_exempt_nodes = []
-        for _node in other_nexus._nodes.values():
-            if isinstance(_node, ValueNode):
-                _child_namespaces = [None if _child.name in namespace_exempt_nodes else namespace
-                                     for _child in _node.iter_children()]
-                if _node.name in namespace_exempt_nodes:
-                    self.add(node=_node, node_namespace=None, child_namespaces=_child_namespaces,
-                             existing_behavior=namespace_exempt_existing_behavior)
-                else:
-                    self.add(node=_node, node_namespace=namespace, child_namespaces=_child_namespaces,
-                             existing_behavior='ignore')
-            elif isinstance(_node, RootNode):
-                pass
-            else:
-                raise Exception('Unknown node type: %s' % _node.__class__)
+
+        other_nexus.get('__root__').clone_to_other_nexus(
+            other_nexus=self, namespace=namespace, namespace_exempt_nodes=namespace_exempt_nodes)
