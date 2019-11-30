@@ -28,7 +28,14 @@ class TestMultiFit(unittest.TestCase):
             raise Exception()
 
     @staticmethod
-    def _assert_fits_valid_and_equal(_fit_1, _fit_2):
+    def _assert_fits_valid_and_equal(_fit_1, _fit_2, _tol=1e-4):
+        assert len(_fit_1.parameter_names) == len(_fit_2.parameter_names)
+        for _par_name_1, _par_name_2 in zip(_fit_1.parameter_names, _fit_2.parameter_names):
+            assert _par_name_1 == _par_name_2
+        assert np.allclose(_fit_1.parameter_values, _fit_2.parameter_values, atol=0, rtol=_tol)
+        assert np.allclose(_fit_1.cost_function_value, _fit_2.cost_function_value, atol=0, rtol=_tol)
+        assert _fit_1.ndf == _fit_2.ndf
+
         _fit_1.do_fit()
         _fit_2.do_fit()
 
@@ -36,7 +43,6 @@ class TestMultiFit(unittest.TestCase):
             assert _parameter_value != 1.0
         for _parameter_value in _fit_2.parameter_values:
             assert _parameter_value != 1.0
-        _tol = 1e-4
         assert np.allclose(_fit_1.parameter_values, _fit_2.parameter_values, atol=0, rtol=_tol)
         assert np.allclose(_fit_1.parameter_errors, _fit_2.parameter_errors, atol=0, rtol=_tol)
         assert _fit_1.parameter_cor_mat is not None
@@ -199,14 +205,14 @@ class TestMultiFitIntegrityHist(TestMultiFit):
         TestMultiFit.setUp(self)
 
     @unittest.skipIf(_cannot_import_IMinuit, 'Cannot import iminuit')
-    def test_multifit_integrity_simple_iminuit(self):
+    def test_split_fit_integrity_simple_iminuit(self):
         self._set_hist_fits(minimizer='iminuit')
         TestMultiFit._assert_fits_valid_and_equal(self._fit_hist_all, self._fit_hist_all_multi)
         TestMultiFit._assert_fits_valid_and_equal(self._fit_hist_split_1, self._fit_hist_split_1_multi)
         TestMultiFit._assert_fits_valid_and_equal(self._fit_hist_split_2, self._fit_hist_split_2_multi)
 
     @unittest.skip('scipy optimize minimizer seems to be bugged')
-    def test_multifit_integrity_simple_scipy(self):
+    def test_split_fit_integrity_simple_scipy(self):
         self._set_hist_fits(minimizer='scipy')
         TestMultiFit._assert_fits_valid_and_equal(self._fit_hist_all, self._fit_hist_all_multi)
         TestMultiFit._assert_fits_valid_and_equal(self._fit_hist_split_1, self._fit_hist_split_1_multi)
@@ -214,12 +220,12 @@ class TestMultiFitIntegrityHist(TestMultiFit):
 
     @unittest.skipIf(_cannot_import_IMinuit, 'Cannot import iminuit')
     @unittest.skip('Splitting data between fits does not work as intended')
-    def test_multifit_vs_regular_fit_iminuit(self):
+    def test_split_fit_vs_regular_fit_iminuit(self):
         self._set_hist_fits(minimizer='iminuit')
         TestMultiFit._assert_fits_valid_and_equal(self._fit_hist_all, self._fit_hist_split_multi)
 
     @unittest.skip('Splitting data between fits does not work as intended')
-    def test_multifit_vs_regular_fit_scipy(self):
+    def test_split_fit_vs_regular_fit_scipy(self):
         self._set_hist_fits(minimizer='scipy')
         TestMultiFit._assert_fits_valid_and_equal(self._fit_hist_all, self._fit_hist_split_multi)
 
@@ -230,14 +236,14 @@ class TestMultiFitIntegrityIndexed(TestMultiFit):
         TestMultiFit.setUp(self)
 
     @unittest.skipIf(_cannot_import_IMinuit, 'Cannot import iminuit')
-    def test_multifit_integrity_simple_iminuit(self):
+    def test_split_fit_integrity_simple_iminuit(self):
         self._set_indexed_fits(minimizer='iminuit')
         TestMultiFit._assert_fits_valid_and_equal(self._fit_indexed_all, self._fit_indexed_all_multi)
         TestMultiFit._assert_fits_valid_and_equal(self._fit_indexed_split_1, self._fit_indexed_split_1_multi)
         TestMultiFit._assert_fits_valid_and_equal(self._fit_indexed_split_2, self._fit_indexed_split_2_multi)
 
     @unittest.skip('scipy optimize minimizer seems to be bugged')
-    def test_multifit_integrity_simple_scipy(self):
+    def test_split_fit_integrity_simple_scipy(self):
         self._set_indexed_fits(minimizer='scipy')
         TestMultiFit._assert_fits_valid_and_equal(self._fit_indexed_all, self._fit_indexed_all_multi)
         TestMultiFit._assert_fits_valid_and_equal(self._fit_indexed_split_1, self._fit_indexed_split_1_multi)
@@ -245,12 +251,12 @@ class TestMultiFitIntegrityIndexed(TestMultiFit):
 
     @unittest.skipIf(_cannot_import_IMinuit, 'Cannot import iminuit')
     @unittest.skip('Splitting data between fits does not work as intended')
-    def test_multifit_vs_regular_fit_iminuit(self):
+    def test_split_fit_vs_regular_fit_iminuit(self):
         self._set_indexed_fits(minimizer='iminuit')
         TestMultiFit._assert_fits_valid_and_equal(self._fit_indexed_all, self._fit_indexed_split_multi)
 
     @unittest.skip('Splitting data between fits does not work as intended')
-    def test_multifit_vs_regular_fit_scipy(self):
+    def test_split_fit_vs_regular_fit_scipy(self):
         self._set_indexed_fits(minimizer='scipy')
         TestMultiFit._assert_fits_valid_and_equal(self._fit_indexed_all, self._fit_indexed_split_multi)
 
@@ -305,14 +311,14 @@ class TestMultiFitIntegrityXY(TestMultiFit):
                            atol=0, rtol=_tol)
 
     @unittest.skipIf(_cannot_import_IMinuit, 'Cannot import iminuit')
-    def test_multifit_integrity_simple_iminuit(self):
+    def test_split_fit_integrity_simple_iminuit(self):
         self._set_xy_fits(minimizer='iminuit')
         TestMultiFit._assert_fits_valid_and_equal(self._fit_xy_all, self._fit_xy_all_multi)
         TestMultiFit._assert_fits_valid_and_equal(self._fit_xy_split_1, self._fit_xy_split_1_multi)
         TestMultiFit._assert_fits_valid_and_equal(self._fit_xy_split_2, self._fit_xy_split_2_multi)
 
     @unittest.skip('scipy optimize minimizer seems to be bugged')
-    def test_multifit_integrity_simple_scipy(self):
+    def test_split_fit_integrity_simple_scipy(self):
         self._set_xy_fits(minimizer='scipy')
         TestMultiFit._assert_fits_valid_and_equal(self._fit_xy_all, self._fit_xy_all_multi)
         TestMultiFit._assert_fits_valid_and_equal(self._fit_xy_split_1, self._fit_xy_split_1_multi)
@@ -320,11 +326,11 @@ class TestMultiFitIntegrityXY(TestMultiFit):
 
     @unittest.skipIf(_cannot_import_IMinuit, 'Cannot import iminuit')
     @unittest.skip('Splitting data between fits does not work as intended')
-    def test_multifit_vs_regular_fit_iminuit(self):
+    def test_split_fit_vs_regular_fit_iminuit(self):
         self._set_xy_fits(minimizer='iminuit')
         TestMultiFit._assert_fits_valid_and_equal(self._fit_xy_all, self._fit_xy_split_multi)
 
     @unittest.skip('Splitting data between fits does not work as intended')
-    def test_multifit_vs_regular_fit_scipy(self):
+    def test_split_fit_vs_regular_fit_scipy(self):
         self._set_xy_fits(minimizer='scipy')
         TestMultiFit._assert_fits_valid_and_equal(self._fit_xy_all, self._fit_xy_split_multi)

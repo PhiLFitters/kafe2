@@ -358,6 +358,10 @@ class FitBase(FileIOMixin, object):
         else:
             return self._fitter.state_is_from_minimizer
 
+    @property
+    def ndf(self):
+        return self._cost_function.ndf
+
     # -- public methods
 
     def set_parameter_values(self, **param_name_value_dict):
