@@ -70,7 +70,7 @@ class AbstractTestNexusFitter(object):
 
         for _par_name, _val in zip(('x', 'y'), xy_val):
             self.assertAlmostEqual(
-                self.fitter.fit_parameter_values[_par_name],
+                self.fitter.get_fit_parameter_values()[_par_name],
                 _val,
                 places=3
             )
@@ -112,7 +112,7 @@ class AbstractTestNexusFitter(object):
             'slsq'
         )
         self.assertEqual(
-            self.fitter.fit_parameter_values,
+            self.fitter.get_fit_parameter_values(),
             {
                 'x': self._startval_x,
                 'y': self._startval_y,

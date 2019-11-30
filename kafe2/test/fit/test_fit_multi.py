@@ -28,13 +28,13 @@ class TestMultiFit(unittest.TestCase):
             raise Exception()
 
     @staticmethod
-    def _assert_fits_valid_and_equal(_fit_1, _fit_2, _tol=1e-4):
+    def _assert_fits_valid_and_equal(_fit_1, _fit_2, tol=1e-4, check_cost_function_value=True):
         assert len(_fit_1.parameter_names) == len(_fit_2.parameter_names)
         for _par_name_1, _par_name_2 in zip(_fit_1.parameter_names, _fit_2.parameter_names):
             assert _par_name_1 == _par_name_2
-        assert np.allclose(_fit_1.parameter_values, _fit_2.parameter_values, atol=0, rtol=_tol)
-        assert np.allclose(_fit_1.cost_function_value, _fit_2.cost_function_value, atol=0, rtol=_tol)
-        assert _fit_1.ndf == _fit_2.ndf
+        assert np.allclose(_fit_1.parameter_values, _fit_2.parameter_values, atol=0, rtol=tol)
+        if check_cost_function_value:
+            assert np.allclose(_fit_1.cost_function_value, _fit_2.cost_function_value, atol=0, rtol=tol)
 
         _fit_1.do_fit()
         _fit_2.do_fit()
@@ -43,14 +43,38 @@ class TestMultiFit(unittest.TestCase):
             assert _parameter_value != 1.0
         for _parameter_value in _fit_2.parameter_values:
             assert _parameter_value != 1.0
-        assert np.allclose(_fit_1.parameter_values, _fit_2.parameter_values, atol=0, rtol=_tol)
-        assert np.allclose(_fit_1.parameter_errors, _fit_2.parameter_errors, atol=0, rtol=_tol)
+        assert np.allclose(_fit_1.parameter_values, _fit_2.parameter_values, atol=0, rtol=tol)
+        assert np.allclose(_fit_1.parameter_errors, _fit_2.parameter_errors, atol=0, rtol=tol)
         assert _fit_1.parameter_cor_mat is not None
         assert _fit_2.parameter_cor_mat is not None
-        assert np.allclose(_fit_1.parameter_cor_mat, _fit_2.parameter_cor_mat, atol=_tol, rtol=_tol)
+        assert np.allclose(_fit_1.parameter_cor_mat, _fit_2.parameter_cor_mat, atol=tol, rtol=tol)
         assert _fit_1.parameter_cov_mat is not None
         assert _fit_2.parameter_cov_mat is not None
-        assert np.allclose(_fit_1.parameter_cov_mat, _fit_2.parameter_cov_mat, atol=_tol, rtol=_tol)
+        assert np.allclose(_fit_1.parameter_cov_mat, _fit_2.parameter_cov_mat, atol=tol, rtol=tol)
+
+    @staticmethod
+    def _assert_fits_valid_and_equal_double(_regular_fit, _double_fit, tol=1e-4):
+        assert len(_regular_fit.parameter_names) == len(_double_fit.parameter_names)
+        for _par_name_1, _par_name_2 in zip(_regular_fit.parameter_names, _double_fit.parameter_names):
+            assert _par_name_1 == _par_name_2
+        assert np.allclose(_regular_fit.parameter_values, _double_fit.parameter_values, atol=0, rtol=tol)
+        assert np.allclose(_regular_fit.cost_function_value, _double_fit.cost_function_value * 0.5, atol=0, rtol=tol)
+
+        _regular_fit.do_fit()
+        _double_fit.do_fit()
+
+        for _parameter_value in _regular_fit.parameter_values:
+            assert _parameter_value != 1.0
+        for _parameter_value in _double_fit.parameter_values:
+            assert _parameter_value != 1.0
+        assert np.allclose(_regular_fit.parameter_values, _double_fit.parameter_values, atol=0, rtol=tol)
+        assert np.allclose(_regular_fit.parameter_errors, _double_fit.parameter_errors * np.sqrt(2), atol=0, rtol=tol)
+        assert _regular_fit.parameter_cor_mat is not None
+        assert _double_fit.parameter_cor_mat is not None
+        assert np.allclose(_regular_fit.parameter_cor_mat, _double_fit.parameter_cor_mat, atol=tol, rtol=tol)
+        assert _regular_fit.parameter_cov_mat is not None
+        assert _double_fit.parameter_cov_mat is not None
+        assert np.allclose(_regular_fit.parameter_cov_mat, _double_fit.parameter_cov_mat * 0.5, atol=tol, rtol=tol)
 
     @staticmethod
     def _get_hist_data(loc=2.5, scale=0.5):
@@ -65,7 +89,7 @@ class TestMultiFit(unittest.TestCase):
         return HistFit(
             HistContainer(
                 n_bins=100,
-                bin_range=(1.0, 4.0),
+                bin_range=(1.5, 3.5),
                 fill_data=fill_data
             ),
             model_density_antiderivative=TestMultiFit._norm_cdf,
@@ -181,6 +205,10 @@ class TestMultiFit(unittest.TestCase):
         self._fit_xy_split_1_multi = MultiFit(TestMultiFit._get_xy_fit(_split_data_1, minimizer))
         self._fit_xy_split_2 = TestMultiFit._get_xy_fit(_split_data_2, minimizer)
         self._fit_xy_split_2_multi = MultiFit(TestMultiFit._get_xy_fit(_split_data_2, minimizer))
+        self._fit_xy_all_double = MultiFit([
+            TestMultiFit._get_xy_fit(_xy_data, minimizer),
+            TestMultiFit._get_xy_fit(_xy_data, minimizer)
+        ])
 
         self._expected_parameters_all = calculate_expected_fit_parameters_xy(
             x_data=_xy_data[0], y_data=_xy_data[1], model_function=quadratic_model, y_error=0.01,
@@ -219,12 +247,12 @@ class TestMultiFitIntegrityHist(TestMultiFit):
         TestMultiFit._assert_fits_valid_and_equal(self._fit_hist_split_2, self._fit_hist_split_2_multi)
 
     @unittest.skipIf(_cannot_import_IMinuit, 'Cannot import iminuit')
-    @unittest.skip('Splitting data between fits does not work as intended')
     def test_split_fit_vs_regular_fit_iminuit(self):
         self._set_hist_fits(minimizer='iminuit')
-        TestMultiFit._assert_fits_valid_and_equal(self._fit_hist_all, self._fit_hist_split_multi)
+        TestMultiFit._assert_fits_valid_and_equal(
+            self._fit_hist_all, self._fit_hist_split_multi, tol=2e-4, check_cost_function_value=False)
 
-    @unittest.skip('Splitting data between fits does not work as intended')
+    @unittest.skip('scipy optimize minimizer seems to be bugged')
     def test_split_fit_vs_regular_fit_scipy(self):
         self._set_hist_fits(minimizer='scipy')
         TestMultiFit._assert_fits_valid_and_equal(self._fit_hist_all, self._fit_hist_split_multi)
@@ -250,12 +278,11 @@ class TestMultiFitIntegrityIndexed(TestMultiFit):
         TestMultiFit._assert_fits_valid_and_equal(self._fit_indexed_split_2, self._fit_indexed_split_2_multi)
 
     @unittest.skipIf(_cannot_import_IMinuit, 'Cannot import iminuit')
-    @unittest.skip('Splitting data between fits does not work as intended')
     def test_split_fit_vs_regular_fit_iminuit(self):
         self._set_indexed_fits(minimizer='iminuit')
         TestMultiFit._assert_fits_valid_and_equal(self._fit_indexed_all, self._fit_indexed_split_multi)
 
-    @unittest.skip('Splitting data between fits does not work as intended')
+    @unittest.skip('scipy optimize minimizer seems to be bugged')
     def test_split_fit_vs_regular_fit_scipy(self):
         self._set_indexed_fits(minimizer='scipy')
         TestMultiFit._assert_fits_valid_and_equal(self._fit_indexed_all, self._fit_indexed_split_multi)
@@ -275,8 +302,7 @@ class TestMultiFitIntegrityXY(TestMultiFit):
         self._fit_xy_all_multi.do_fit()
         assert np.allclose(self._expected_parameters_all, self._fit_xy_all_multi.parameter_values, atol=0, rtol=_tol)
         self._fit_xy_split_multi.do_fit()
-        # FIXME results for split fit are wrong by ~1%
-        assert np.allclose(self._expected_parameters_all, self._fit_xy_split_multi.parameter_values, atol=0, rtol=1e-2)
+        assert np.allclose(self._expected_parameters_all, self._fit_xy_split_multi.parameter_values, atol=0, rtol=_tol)
         self._fit_xy_split_1.do_fit()
         assert np.allclose(self._expected_parameters_split_1, self._fit_xy_split_1.parameter_values, atol=0, rtol=_tol)
         self._fit_xy_split_1_multi.do_fit()
@@ -288,7 +314,6 @@ class TestMultiFitIntegrityXY(TestMultiFit):
         assert np.allclose(self._expected_parameters_split_2, self._fit_xy_split_2_multi.parameter_values,
                            atol=0, rtol=_tol)
 
-    @unittest.skip('Scipy optimize minimizer seems to be bugged')
     def test_parameter_values_match_expectation_scipy(self):
         self._set_xy_fits(minimizer='scipy')
         # FIXME results for split fit are wrong by ~1%
@@ -325,12 +350,22 @@ class TestMultiFitIntegrityXY(TestMultiFit):
         TestMultiFit._assert_fits_valid_and_equal(self._fit_xy_split_2, self._fit_xy_split_2_multi)
 
     @unittest.skipIf(_cannot_import_IMinuit, 'Cannot import iminuit')
-    @unittest.skip('Splitting data between fits does not work as intended')
     def test_split_fit_vs_regular_fit_iminuit(self):
         self._set_xy_fits(minimizer='iminuit')
         TestMultiFit._assert_fits_valid_and_equal(self._fit_xy_all, self._fit_xy_split_multi)
 
-    @unittest.skip('Splitting data between fits does not work as intended')
+    @unittest.skip('scipy optimize minimizer seems to be bugged')
     def test_split_fit_vs_regular_fit_scipy(self):
         self._set_xy_fits(minimizer='scipy')
         TestMultiFit._assert_fits_valid_and_equal(self._fit_xy_all, self._fit_xy_split_multi)
+
+    @unittest.skipIf(_cannot_import_IMinuit, 'Cannot import iminuit')
+    def test_double_fit_vs_regular_fit_iminuit(self):
+        self._set_xy_fits(minimizer='iminuit')
+        TestMultiFit._assert_fits_valid_and_equal_double(self._fit_xy_all, self._fit_xy_all_double)
+
+    @unittest.skip('scipy optimize minimizer seems to be bugged')
+    def test_double_fit_vs_regular_fit_scipy(self):
+        self._set_xy_fits(minimizer='scipy')
+        TestMultiFit._assert_fits_valid_and_equal_double(self._fit_xy_all, self._fit_xy_all_double)
+

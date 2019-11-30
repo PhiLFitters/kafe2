@@ -107,6 +107,7 @@ class XYFit(FitBase):
 
         self._fit_param_constraints = []
         self._loaded_result_dict = None
+        self._fitter_parameter_indices = None
 
         # set the data after the cost_function has been set and nexus has been initialized
         self.data = xy_data
@@ -179,7 +180,6 @@ class XYFit(FitBase):
         )
 
         _node = self._add_property_to_nexus('projected_xy_total_error')
-        _node.add_parent(self._nexus.get('y_model'))
         _node = self._add_property_to_nexus('projected_xy_total_cov_mat')
         self._nexus.add_function(
             invert_matrix,
@@ -355,8 +355,11 @@ class XYFit(FitBase):
                 getattr(_node, action)()
 
     def _calculate_y_error_band(self):
+        _num_points = 100  # TODO: config
+        if self.parameter_cov_mat is None:
+            return np.zeros(_num_points)
         _xmin, _xmax = self._data_container.x_range
-        _band_x = np.linspace(_xmin, _xmax, 100)  # TODO: config
+        _band_x = np.linspace(_xmin, _xmax, 100)
         _f_deriv_by_params = self._param_model.eval_model_function_derivative_by_parameters(
             x=_band_x,
             model_parameters=self.poi_values
@@ -885,7 +888,7 @@ class XYFit(FitBase):
         _poi_values = []
         for _name in self.poi_names:
             _poi_values.append(self.parameter_name_value_dict[_name])
-        return tuple(_poi_values)
+        return np.array(_poi_values)
 
     @property
     def poi_names(self):

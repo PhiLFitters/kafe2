@@ -70,7 +70,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
 
         # reference initial values
-        self._ref_initial_pars = (14., 3.)
+        self._ref_initial_pars = np.array([14., 3.])
         self._ref_initial_model = (
             hist_model_density_antideriv(self._ref_bin_edges[1:], *self._ref_initial_pars) -
             hist_model_density_antideriv(self._ref_bin_edges[:-1], *self._ref_initial_pars)) * len(self._ref_entries)
@@ -87,8 +87,8 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         self._ref_initial_cost_chi2 = simple_chi2(self._ref_data, self._ref_initial_model)
 
         # reference fit result values
-        self._nominal_fit_result_pars_nll = (14.18443871, 3.0148702)
-        self._nominal_fit_result_pars_chi2 = (13.82779355, 2.62031141)
+        self._nominal_fit_result_pars_nll = np.array([14.18443871, 3.0148702])
+        self._nominal_fit_result_pars_chi2 = np.array([13.82779355, 2.62031141])
 
         self._nominal_fit_result_model_nll = (
             hist_model_density_antideriv(self._ref_bin_edges[1:], *self._nominal_fit_result_pars_nll) -
@@ -244,8 +244,8 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
             _fit,
             dict(
                 data=_ref_data,
-                parameter_values=(19.83815938,  1.1729322),
-                poi_values=(19.83815938,  1.1729322),
+                parameter_values=np.array([19.83815938,  1.1729322]),
+                poi_values=np.array([19.83815938,  1.1729322]),
             ),
             rtol=1e-2
         )

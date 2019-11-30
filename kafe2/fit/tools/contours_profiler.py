@@ -247,7 +247,7 @@ class ContoursProfiler(object):
         """
         _kwargs = dict(bins=self._profile_kwargs['points'], bound=self._profile_kwargs['bound'],
                        args=None, subtract_min=self._profile_kwargs['subtract_min'])
-        return self._fit._fitter.profile(parameter, **_kwargs)
+        return self._fit._fitter.profile(parameter, **_kwargs)  # TODO fix for single fit inside multifit
 
     def get_contours(self, parameter_1, parameter_2, smoothing_sigma=None):
         """
@@ -269,6 +269,7 @@ class ContoursProfiler(object):
             _contour_method_kwargs = self._contour_kwargs.get('method_kwargs', dict())
             if _contour_method_kwargs is None:
                 _contour_method_kwargs = dict()
+            # TODO fix for single fit inside multifit
             _cont = self._fit._fitter.contour(parameter_1, parameter_2, sigma=_cl_obj.sigma,
                                               **_contour_method_kwargs)
 

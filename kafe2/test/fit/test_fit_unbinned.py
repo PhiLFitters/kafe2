@@ -47,14 +47,14 @@ class TestUnbinnedFitBasicInterface(AbstractTestFit, unittest.TestCase):
         self._ref_cont = UnbinnedContainer(self._ref_data)
 
         # reference initial values
-        self._ref_initial_pars = (2.2, 0.1)
+        self._ref_initial_pars = np.array([2.2, 0.1])
         self._ref_initial_model = unbinned_model_density(self._ref_data, *self._ref_initial_pars)
 
         # pre-fit cost value
         self._ref_initial_cost = -2*np.sum(np.log(self._ref_initial_model))
 
         # reference fit result values
-        self._nominal_fit_result_pars = (2.12814778, 0.10562081)
+        self._nominal_fit_result_pars = np.array([2.12814778, 0.10562081])
         self._nominal_fit_result_model = unbinned_model_density(self._ref_data, *self._nominal_fit_result_pars)
 
         self._nominal_fit_result_cost = -2*np.sum(np.log(self._nominal_fit_result_model))
@@ -154,8 +154,8 @@ class TestUnbinnedFitBasicInterface(AbstractTestFit, unittest.TestCase):
             _fit,
             dict(
                 data=_new_data,
-                parameter_values=(1.64499273, 0.11695081),
-                poi_values=(1.64499273, 0.11695081),
+                parameter_values=np.array([1.64499273, 0.11695081]),
+                poi_values=np.array([1.64499273, 0.11695081]),
             ),
             rtol=1e-2
         )

@@ -16,7 +16,7 @@ class MinimizerScipyOptimizeException(Exception):
 class MinimizerScipyOptimize(MinimizerBase):
     def __init__(self,
                  parameter_names, parameter_values, parameter_errors,
-                 function_to_minimize, method="slsqp"):
+                 function_to_minimize, method=None):
         self._par_names = parameter_names
         self.parameter_values = parameter_values
         self._par_err = parameter_errors
