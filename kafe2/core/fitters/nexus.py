@@ -345,12 +345,18 @@ class NodeBase(object):
     def update(self):
         self._stale = False
 
-    def replace(self, other, transfer_children=False):
-        '''replace all instances of this node with `other`'''
+    def replace(self, other, other_children=True):
+        """replace all instances of this node with `other`.
+        :arg other: the node that this node should be replaced with.
+        :type other: any
+        :arg other_children: if True, `other` will keep its own children after the replacement.
+        If False, only `other` will be replaced: after the replacement other will have the same children as this node.
+        :type other_children: bool
+        """
         if not isinstance(other, NodeBase):
             other = Parameter(other)
 
-        if transfer_children:
+        if not other_children:
             other.set_children(self.get_children())
 
         for _parent in self.get_parents():
@@ -673,9 +679,9 @@ class Function(ValueNode):
     def clone_no_children(self, clone_namespace):
         return Function(func=self.func, name=clone_namespace+self.name, parameters=[])
 
-    def replace(self, other, transfer_children=False):
-        NodeBase.replace(self, other, transfer_children)
-        if transfer_children and isinstance(other, Function):
+    def replace(self, other, other_children=True):
+        NodeBase.replace(self, other, other_children)
+        if not other_children and isinstance(other, Function):
             other.parameters = self.parameters
 
     def replace_child(self, current_child, new_child):
