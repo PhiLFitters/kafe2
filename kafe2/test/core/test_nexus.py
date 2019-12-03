@@ -211,8 +211,8 @@ class TestNodes(unittest.TestCase):
         _children_after = par_new.get_children()
         _parents_after = par_new.get_parents()
 
-        self.assertEqual(_children_after, _children_after)
-        self.assertEqual(_parents_after, _parents_after)
+        self.assertEqual(_children_before, _children_after)
+        self.assertEqual(_parents_before, _parents_after)
 
     def test_parameter_replace_literal(self):
         par = Parameter(3, name='par')
@@ -252,7 +252,7 @@ class TestNodes(unittest.TestCase):
 
         # replace node
         selector_new = Function(lambda *args: args[2], name='selector_new')
-        selector.replace(selector_new, transfer_children=True)
+        selector.replace(selector_new, other_children=False)
 
         # retrieve new parents and children for comparison
         _children_after = selector_new.get_children()
