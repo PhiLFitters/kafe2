@@ -512,7 +512,10 @@ class Plot(object):
 
         # set the managed fit objects
         if isinstance(fit_objects, MultiFit):
+            self._multifit = fit_objects
             fit_objects = fit_objects.fits
+        else:
+            self._multifit = None
         try:
             iter(fit_objects)
         except TypeError:
@@ -638,16 +641,20 @@ class Plot(object):
 
         return _plots
 
-    @classmethod
-    def _get_fit_info(cls, plot_adapter, format_as_latex, asymmetric_parameter_errors):
-
-        plot_adapter._fit._update_parameter_formatters(
-            update_asymmetric_errors=asymmetric_parameter_errors
-        )
+    def _get_fit_info(self, plot_adapter, format_as_latex, asymmetric_parameter_errors):
+        if self._multifit is None:
+            plot_adapter._fit._update_parameter_formatters(
+                update_asymmetric_errors=asymmetric_parameter_errors
+            )
+        else:
+            self._multifit.asymmetric_parameter_errors
+            self._multifit._update_parameter_formatters(
+                update_asymmetric_errors=asymmetric_parameter_errors
+            )
 
         _cost_func = plot_adapter._fit._cost_function  # TODO: public interface
 
-        return cls.FIT_INFO_STRING_FORMAT.format(
+        return self.FIT_INFO_STRING_FORMAT.format(
             model_function=plot_adapter.get_formatted_model_function(
                 with_par_values=False,
                 n_significant_digits=2,

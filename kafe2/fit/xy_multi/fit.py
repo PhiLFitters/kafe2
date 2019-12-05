@@ -116,7 +116,6 @@ class XYMultiFit(FitBase):
         # initialize the Fitter
         self._initialize_fitter(minimizer, minimizer_kwargs)
         # create the child ParametricModel object
-        self._fitter_parameter_indices = None
         self._set_new_parametric_model()
         # TODO: check where to update this (set/release/etc.)
         # FIXME: nicer way than len()?
