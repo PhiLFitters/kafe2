@@ -30,6 +30,7 @@ MOCK_MODULES = [
     'matplotlib.legend_handler',
     'matplotlib.pyplot',
     'matplotlib.collections',
+    'matplotlib.axes',
     'iminuit',
     'numdifftools',
     'numpy',
