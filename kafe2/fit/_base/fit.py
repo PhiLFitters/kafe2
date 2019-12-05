@@ -39,7 +39,6 @@ class FitBase(FileIOMixin, object):
         self._param_model = None
         self._nexus = None
         self._fitter = None
-        self._fitter_parameter_indices = None
         self._fit_param_names = None
         self._fit_param_constraints = None
         self._model_function = None
@@ -269,10 +268,7 @@ class FitBase(FileIOMixin, object):
     @property
     def parameter_names(self):
         """the current parameter names"""
-        _par_names = self._fitter.parameters_to_fit
-        if self._fitter_parameter_indices is not None:
-            _par_names = tuple([_par_names[_index] for _index in self._fitter_parameter_indices])
-        return _par_names
+        return self._fitter.parameters_to_fit
 
     @property
     def parameter_errors(self):
@@ -280,10 +276,7 @@ class FitBase(FileIOMixin, object):
         if self._loaded_result_dict is not None:
             return self._loaded_result_dict['parameter_errors']
         else:
-            _par_errs = self._fitter.fit_parameter_errors
-            if _par_errs is not None and self._fitter_parameter_indices is not None:
-                _par_errs = _par_errs[self._fitter_parameter_indices]
-            return _par_errs
+            return self._fitter.fit_parameter_errors
 
     @property
     def parameter_cov_mat(self):
@@ -291,10 +284,7 @@ class FitBase(FileIOMixin, object):
         if self._loaded_result_dict is not None:
             return self._loaded_result_dict['parameter_cov_mat']
         else:
-            _par_cov_mat = self._fitter.fit_parameter_cov_mat
-            if _par_cov_mat is not None and self._fitter_parameter_indices is not None:
-                _par_cov_mat = _par_cov_mat[self._fitter_parameter_indices][:, self._fitter_parameter_indices]
-            return _par_cov_mat
+            return self._fitter.fit_parameter_cov_mat
 
     @property
     def parameter_cor_mat(self):
@@ -302,10 +292,7 @@ class FitBase(FileIOMixin, object):
         if self._loaded_result_dict is not None:
             return self._loaded_result_dict['parameter_cor_mat']
         else:
-            _par_cor_mat = self._fitter.fit_parameter_cor_mat
-            if _par_cor_mat is not None and self._fitter_parameter_indices is not None:
-                _par_cor_mat = _par_cor_mat[self._fitter_parameter_indices][:, self._fitter_parameter_indices]
-            return _par_cor_mat
+            return self._fitter.fit_parameter_cor_mat
 
     @property
     def asymmetric_parameter_errors(self):
@@ -313,18 +300,12 @@ class FitBase(FileIOMixin, object):
         if self._loaded_result_dict is not None and self._loaded_result_dict['asymmetric_parameter_errors'] is not None:
             return self._loaded_result_dict['asymmetric_parameter_errors']
         else:
-            _asymmetric_par_errs = self._fitter.asymmetric_fit_parameter_errors
-            if _asymmetric_par_errs is not None and self._fitter_parameter_indices is not None:
-                _asymmetric_par_errs = _asymmetric_par_errs[self._fitter_parameter_indices]
-            return _asymmetric_par_errs
+            return self._fitter.asymmetric_fit_parameter_errors
 
     @property
     def parameter_name_value_dict(self):
         """a dictionary mapping each parameter name to its current value"""
-        _par_name_val_dict = self._fitter.get_fit_parameter_values()
-        if self._fitter_parameter_indices is not None and False:
-            _par_name_val_dict = _par_name_val_dict[self._fitter_parameter_indices]
-        return _par_name_val_dict
+        return self._fitter.get_fit_parameter_values()
 
     @property
     def parameter_constraints(self):
@@ -334,7 +315,7 @@ class FitBase(FileIOMixin, object):
     @property
     def cost_function_value(self):
         """the current value of the cost function"""
-        return self._fitter.parameter_to_minimize_value  # TODO fix for singular fits in multifit
+        return self._fitter.parameter_to_minimize_value
 
     @property
     def data_size(self):
@@ -400,13 +381,7 @@ class FitBase(FileIOMixin, object):
 
         :param param_value_list: list of parameter values (mind the order)
         """
-        if self._fitter_parameter_indices is not None:
-            _total_parameter_values = self.parameter_values
-            for _new_par_val, _index_i in zip(param_value_list, self._fitter_parameter_indices):
-                _total_parameter_values[_index_i] = _new_par_val
-            return self._fitter.set_all_fit_parameter_values(_total_parameter_values)
-        else:
-            return self._fitter.set_all_fit_parameter_values(param_value_list)
+        return self._fitter.set_all_fit_parameter_values(param_value_list)
 
     def fix_parameter(self, name, value=None):
         """
@@ -699,10 +674,7 @@ class FitBase(FileIOMixin, object):
         if self._loaded_result_dict is not None and self._loaded_result_dict['asymmetric_parameter_errors'] is not None:
             _result_dict['asymmetric_parameter_errors'] = self._loaded_result_dict['asymmetric_parameter_errors']
         else:
-            _asymmetric_par_errs = self._fitter.asymmetric_fit_parameter_errors_if_calculated
-            if _asymmetric_par_errs is not None and self._fitter_parameter_indices is not None:
-                _asymmetric_par_errs = _asymmetric_par_errs[self._fitter_parameter_indices]
-            _result_dict['asymmetric_parameter_errors'] = _asymmetric_par_errs
+            _result_dict['asymmetric_parameter_errors'] = self._fitter.asymmetric_fit_parameter_errors_if_calculated
 
         return _result_dict
 

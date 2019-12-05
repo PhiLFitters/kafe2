@@ -66,7 +66,6 @@ class UnbinnedFit(FitBase):
 
         self._fit_param_constraints = []
         self._loaded_result_dict = None
-        self._fitter_parameter_indices = None
 
         self.data = data
 

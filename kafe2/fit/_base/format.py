@@ -204,7 +204,7 @@ class ModelParameterFormatter(FileIOMixin, object):
                     _display_err_dn = round(self.error_down, _sig)
                     _display_err_up = round(self.error_up, _sig)
                     if format_as_latex:
-                        _display_string += "$%g^{%+g}_{%g}$" % (_display_val, _display_err_up, _display_err_dn)
+                        _display_string += "${%g}^{%+g}_{%g}$" % (_display_val, _display_err_up, _display_err_dn)
                     else:
                         _display_string += "%g + %g (up) - %g (down)" % (_display_val, _display_err_up,
                                                                          abs(_display_err_dn))

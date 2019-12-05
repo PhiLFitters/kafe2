@@ -168,12 +168,6 @@ class NodeBase(object):
                 **(_cb['kwargs'] or {})
             )
 
-    def get_new_node_name(self, namespace, namespace_exempt_parameters):
-        if self.name in namespace_exempt_parameters:
-            return self.name
-        else:
-            return namespace + self.name
-
     # -- properties
 
     @property
@@ -202,7 +196,7 @@ class NodeBase(object):
 
         self._children.append(node)
         node.add_parent(self)
-        #self.mark_for_update()
+        self.mark_for_update()
 
         return self
 
@@ -239,7 +233,7 @@ class NodeBase(object):
 
         # remove self node from node parents
         node.remove_parent(self)
-        #self.mark_for_update()
+        self.mark_for_update()
 
         return self
 
@@ -353,6 +347,10 @@ class NodeBase(object):
         If False, only `other` will be replaced: after the replacement other will have the same children as this node.
         :type other_children: bool
         """
+        # Do nothing if a node is supposed to be replaced with itself
+        if self is other:
+            return
+
         if not isinstance(other, NodeBase):
             other = Parameter(other)
 
@@ -376,25 +374,6 @@ class NodeBase(object):
     def print_descendants(self):
         NodeChildrenPrinter(self).run()
 
-    @abc.abstractmethod
-    def clone_no_children(self, clone_namespace):
-        pass
-
-    def clone_to_other_nexus(self, other_nexus, namespace, namespace_exempt_nodes):
-        _existing_node = other_nexus.get(self.get_new_node_name(namespace, namespace_exempt_nodes))
-        if _existing_node is None:
-            _clone_namespace = '' if self.name in namespace_exempt_nodes else namespace
-            _self_clone = self.clone_no_children(_clone_namespace)
-            for _child in self.get_children():
-                _child_clone = _child.clone_to_other_nexus(other_nexus, namespace, namespace_exempt_nodes)
-                if isinstance(self, Function) and _child in self.parameters:
-                    _self_clone.add_parameter(_child_clone)
-                else:
-                    _self_clone.add_child(_child_clone)
-            other_nexus.add(_self_clone)
-            return _self_clone
-        else:
-            return _existing_node
 
 class RootNode(NodeBase):
     """
@@ -427,14 +406,6 @@ class RootNode(NodeBase):
 
     def notify_parents(self):
         pass
-
-    def clone_no_children(self, clone_namespace):
-        raise NodeException("Root node cannot be cloned!")
-
-    def clone_to_other_nexus(self, other_nexus, namespace, namespace_exempt_nodes):
-        _child_clones = []
-        for _child in self.get_children():
-            _child_clone = _child.clone_to_other_nexus(other_nexus, namespace, namespace_exempt_nodes)
 
 
 @_add_common_operators
@@ -524,9 +495,6 @@ class ValueNode(NodeBase):
         # notify parents that a child value has changed
         self.notify_parents()
 
-    def clone_no_children(self, clone_namespace):
-        return ValueNode(value=self.value, name=clone_namespace+self.name)
-
 
 class Empty(ValueNode):
     """A graph node that acts as a placeholder for a ValueNode.
@@ -561,9 +529,6 @@ class Empty(ValueNode):
             )
         )
 
-    def clone_no_children(self, clone_namespace):
-        return Empty(name=clone_namespace + self.name)
-
 
 class Parameter(ValueNode):
     def __init__(self, value, name=None):
@@ -574,9 +539,6 @@ class Parameter(ValueNode):
         # simple parameters are always up-to-date
         return
 
-    def clone_no_children(self, clone_namespace):
-        return Parameter(value=self.value, name=clone_namespace+self.name)
-
 
 class Alias(ValueNode):
     """
@@ -586,8 +548,7 @@ class Alias(ValueNode):
     def __init__(self, ref, name=None):
         ValueNode.__init__(self, value=None, name=name)
 
-        if ref is not None:
-            self.ref = ref
+        self.ref = ref
 
         self._stale = True
 
@@ -618,9 +579,6 @@ class Alias(ValueNode):
 
     def update(self):
         self._value = self.ref.value
-
-    def clone_no_children(self, clone_namespace):
-        return Alias(ref=None, name=clone_namespace+self.name)
 
 
 class Function(ValueNode):
@@ -676,9 +634,6 @@ class Function(ValueNode):
         self._value = self()
         self._stale = False
 
-    def clone_no_children(self, clone_namespace):
-        return Function(func=self.func, name=clone_namespace+self.name, parameters=[])
-
     def replace(self, other, other_children=True):
         NodeBase.replace(self, other, other_children)
         if not other_children and isinstance(other, Function):
@@ -724,9 +679,6 @@ class Fallback(ValueNode):
     def update(self):
         self._value = self()
         self._stale = False
-
-    def clone_no_children(self, clone_namespace):
-        return Fallback(try_nodes=[], exception_type=self._exception_type, name=clone_namespace+self.name)
 
 
 class Tuple(ValueNode):
@@ -777,9 +729,6 @@ class Tuple(ValueNode):
         for _val in self.value:
             yield _val
 
-    def clone_no_children(self, clone_namespace):
-        return Tuple(nodes=[], name=clone_namespace+self.name)
-
 
 class Array(Tuple):
 
@@ -804,9 +753,6 @@ class Array(Tuple):
 
     def iter_values(self):
         return self.value.__iter__()
-
-    def clone_no_children(self, clone_namespace):
-        return Array(nodes=[], name=clone_namespace+self.name, dtype=self._dtype)
 
 
 # -- Node visitors
@@ -1006,7 +952,7 @@ class Nexus(object):
         }
         self._root_ref = weakref.ref(self._nodes['__root__'])  # convenience
 
-    def add(self, node, node_namespace=None, child_namespaces=None, existing_behavior='fail'):
+    def add(self, node, add_children=True, node_namespace=None, child_namespaces=None, existing_behavior='fail'):
         """Add a node to the nexus.
 
         The `node` type should be derived from
@@ -1083,10 +1029,11 @@ class Nexus(object):
                     )
                 )
             elif existing_behavior == 'replace':
-                # add all dependent children to the nexus first
-                for _child, _child_namespace in zip(node.iter_children(), child_namespaces):
-                    self.add(_child, node_namespace=_child_namespace, child_namespaces=_child_namespace,
-                             existing_behavior='ignore')
+                if add_children:
+                    # add all dependent children to the nexus first
+                    for _child, _child_namespace in zip(node.iter_children(), child_namespaces):
+                        self.add(_child, node_namespace=_child_namespace, child_namespaces=_child_namespace,
+                                 existing_behavior='ignore')
                 # replace node
                 self._nodes[_effective_node_name].replace(node)
             elif existing_behavior == 'ignore':
@@ -1096,10 +1043,11 @@ class Nexus(object):
 
         # node has not been added before
         else:
-            # add all dependent children to the nexus first
-            for _child, _child_namespace in zip(node.iter_children(), child_namespaces):
-                self.add(_child, node_namespace=_child_namespace, child_namespaces=_child_namespace,
-                         existing_behavior='ignore')
+            if add_children:
+                # add all dependent children to the nexus first
+                for _child, _child_namespace in zip(node.iter_children(), child_namespaces):
+                    self.add(_child, node_namespace=_child_namespace, child_namespaces=_child_namespace,
+                             existing_behavior='ignore')
 
             # add new node as child of root node
             self._root_ref().add_child(node)
@@ -1466,12 +1414,3 @@ class Nexus(object):
     def print_state(self):
         """Print a representation of the nexus state."""
         NodeChildrenPrinter(self._root_ref()).run()
-
-    def source_from(self, other_nexus, namespace=None, namespace_exempt_nodes=None):
-        if namespace is None:
-            namespace = ''
-        if namespace_exempt_nodes is None:
-            namespace_exempt_nodes = []
-
-        other_nexus.get('__root__').clone_to_other_nexus(
-            other_nexus=self, namespace=namespace, namespace_exempt_nodes=namespace_exempt_nodes)

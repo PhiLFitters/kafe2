@@ -6,13 +6,13 @@ from .._base import CostFunctionBase
 
 class MultiCostFunction(CostFunctionBase):
 
-    def __init__(self, singular_cost_functions, fit_namespaces):
+    def __init__(self, singular_cost_functions):
         self._cost_function_handle = MultiCostFunction.cost_sum
-        self._cost_function_signature = Signature(
-            parameters=[Parameter(name='%scost' % _fit_namespace, kind=Parameter.POSITIONAL_OR_KEYWORD)
-                        for _fit_namespace in fit_namespaces]
-        )
         self._cost_function_argcount = len(singular_cost_functions)
+        self._cost_function_signature = Signature(
+            parameters=[Parameter(name='cost%s' % _i, kind=Parameter.POSITIONAL_OR_KEYWORD)
+                        for _i in range(self._cost_function_argcount)]
+        )
         self._assign_function_formatter()
 
         self._flags = {}
