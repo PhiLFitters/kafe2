@@ -5,7 +5,7 @@ from .._base import FitBase
 from ...core import Nexus, NexusFitter
 from ...core.fitters.nexus import Alias, Parameter
 from .cost import MultiCostFunction
-
+from collections import OrderedDict
 
 class MultiFit(FitBase):
 
@@ -18,7 +18,7 @@ class MultiFit(FitBase):
         except TypeError:
             self._fits = [self._fits]
 
-        _combined_parameter_node_dict = dict()
+        _combined_parameter_node_dict = OrderedDict()
         _cost_alias_names = []
         self._nexus = Nexus()
         for _i, _fit_i in enumerate(self._fits):
