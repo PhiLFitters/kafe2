@@ -657,6 +657,12 @@ class Plot(object):
 
         _cost_func = plot_adapter._fit._cost_function  # TODO: public interface
 
+        if self._multifit is None:
+            _ndf = _cost_func.ndf
+            _cost_function_value = plot_adapter._fit.cost_function_value
+        else:
+            _ndf = self._multifit.ndf
+            _cost_function_value = self._multifit.cost_function_value
         return self.FIT_INFO_STRING_FORMAT.format(
             model_function=plot_adapter.get_formatted_model_function(
                 with_par_values=False,
@@ -675,8 +681,8 @@ class Plot(object):
                 for _pf in plot_adapter.model_function_argument_formatters
             ]),
             fit_quality=_cost_func._formatter.get_formatted(
-                value=plot_adapter._fit.cost_function_value,
-                n_degrees_of_freedom=_cost_func.ndf,
+                value=_cost_function_value,
+                n_degrees_of_freedom=_ndf,
                 with_value_per_ndf=True,
                 format_as_latex=format_as_latex
             ),
