@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 """
 kafe2 example: Linear Regression
 ================================
@@ -31,14 +31,14 @@ line_fit = XYFit(xy_data=xy_data)
 
 # Perform the fit: Find values for a and b that minimize the
 #     difference between the model function and the data.
-line_fit.do_fit() #This will throw an exception if no errors were specified.
+line_fit.do_fit()  # This will throw an exception if no errors were specified.
 
 # Optional: Print out a report on the fit results on the console.
 line_fit.report()
 
 # Optional: Create a plot of the fit results using Plot.
-plot = Plot(fit_objects=line_fit) # Create a kafe2 plot object.
-plot.plot(with_fit_info=True) # Do the plot.
+plot = Plot(fit_objects=line_fit)  # Create a kafe2 plot object.
+plot.plot(with_fit_info=True)  # Do the plot.
 
 # Show the fit result.
 plt.show()

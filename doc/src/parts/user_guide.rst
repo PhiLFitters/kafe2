@@ -41,13 +41,19 @@ To perform the fit, simply run
 
 Using Python
 ------------
-When using `kafe2` via a `Python`-Script a fine control of the fitting- and
-plotting-procedure is possible.
+When using `kafe2` via a `Python` script a fine control of the fitting- and
+plotting-procedure is possible. For using `kafe2` inside a `python` script, import the required
+`kafe2` modules:
 
-Example 1 - linear regression
-=============================
+.. code-block:: python
+
+    from kafe2 import XYFit, Plot
+
+
+Example 1: Line Fit
+===================
 The first example is the simplest use of a fitting framework, performing a line fit.
-A linear function of the form :math:`f(x;\ a, b) = a x + b` is made to align with
+A linear function of the form :math:`f(x;a, b) = a x + b` is made to align with
 a series of xy data points that have some uncertainty along the x-axis
 and the y-axis.
 This example demonstrates how to perform such a line fit in kafe2 and
@@ -58,7 +64,7 @@ kafe2go
 To run this example, open a text editor and save the following file contents
 as a YAML-file named ``line_fit.yml``.
 
-.. literalinclude:: ../../../examples/201_kafe2go/line_fit.yml
+.. literalinclude:: ../../../examples/001_line_fit/line_fit.yml
 
 Then open a terminal, navigate to the directory where the file is
 located and run
@@ -71,4 +77,8 @@ Python
 ------
 The same fit can also be performed by using a `Python` script.
 
-.. literalinclude:: ../../../examples/001_linear_regression/linear_regression.py
+.. bootstrap_collapsible::
+    :control_type: link
+    :control_text: python code
+    .. literalinclude:: ../../../examples/001_line_fit/line_fit.py
+        :lines: 15-

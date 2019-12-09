@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 """
 kafe2 example: Gaussian approximation of Poisson distributions for small N
 ==========================================================================
