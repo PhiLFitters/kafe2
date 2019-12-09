@@ -42,7 +42,7 @@ To perform the fit, simply run
 Using Python
 ------------
 When using `kafe2` via a `Python` script a fine control of the fitting- and
-plotting-procedure is possible. For using `kafe2` inside a `python` script, import the required
+plotting-procedure is possible. For using `kafe2` inside a `Python` script, import the required
 `kafe2` modules:
 
 .. code-block:: python
@@ -80,5 +80,41 @@ The same fit can also be performed by using a `Python` script.
 .. bootstrap_collapsible::
     :control_type: link
     :control_text: python code
+
     .. literalinclude:: ../../../examples/001_line_fit/line_fit.py
         :lines: 15-
+
+
+Example 2: Model Functions
+==========================
+
+In experimental physics a line fit will only suffice for a small number
+of applications. In most cases you will need a more complex model function
+with more parameters to accurately model physical reality.
+This example demonstrates how to specify arbitrary model functions for
+a kafe2 fit.
+When a different function has to be fitted, those functions need to be defined either in the
+``yml``-file or the `Python` script.
+
+Python
+------
+Inside a `Python` script a custom function ist defined like this:
+
+.. literalinclude:: ../../../examples/002_model_functions/model_functions.py
+    :lines: 18-27
+
+Those functions are passed on to the Fit objects:
+
+.. literalinclude:: ../../../examples/002_model_functions/model_functions.py
+    :lines: 34-36
+
+It' also possible to assign LaTeX expressions to the function and its variables.
+
+.. bootstrap_collapsible::
+    :control_type: link
+    :control_text: python code
+
+    .. literalinclude:: ../../../examples/002_model_functions/model_functions.py
+        :lines: 13-
+        :emphasize-lines: 38-42
+
