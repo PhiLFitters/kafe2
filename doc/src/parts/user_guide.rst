@@ -28,5 +28,47 @@ can be divided into the following steps:
 5. Extracting the fit results
 
 This document will gradually introduce the above steps via example code.
-.. TODO: link
-The full code snippets can be found under /examples. 
+
+Using kafe2go
+-------------
+Using `kafe2go` is the simplest way of performing a fit. Here all the necessary
+information like data and uncertainties is specified in the YAML-Data format.
+To perform the fit, simply run
+
+.. code-block:: bash
+
+    kafe2go path/to/fit.yml
+
+Using Python
+------------
+When using `kafe2` via a `Python`-Script a fine control of the fitting- and
+plotting-procedure is possible.
+
+Example 1 - linear regression
+=============================
+The first example is the simplest use of a fitting framework, performing a line fit.
+A linear function of the form :math:`f(x;\ a, b) = a x + b` is made to align with
+a series of xy data points that have some uncertainty along the x-axis
+and the y-axis.
+This example demonstrates how to perform such a line fit in kafe2 and
+how to extract the results.
+
+kafe2go
+-------
+To run this example, open a text editor and save the following file contents
+as a YAML-file named ``line_fit.yml``.
+
+.. literalinclude:: ../../../examples/201_kafe2go/line_fit.yml
+
+Then open a terminal, navigate to the directory where the file is
+located and run
+
+.. code-block:: bash
+
+    kafe2go line_fit.yml
+
+Python
+------
+The same fit can also be performed by using a `Python` script.
+
+.. literalinclude:: ../../../examples/001_linear_regression/linear_regression.py
