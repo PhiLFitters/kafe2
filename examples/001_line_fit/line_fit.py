@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
-kafe2 example: Linear Regression
-================================
+kafe2 example: Line Fit
+=======================
 
 The simplest, and also the most common use case of a fitting framework
 lies in linear regression, also known as a line fit:

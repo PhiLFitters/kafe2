@@ -59,6 +59,9 @@ and the y-axis.
 This example demonstrates how to perform such a line fit in kafe2 and
 how to extract the results.
 
+.. figure:: ../_static/img/001_line_fit.png
+    :alt: Plot of a line fit performed with kafe2.
+
 kafe2go
 -------
 To run this example, open a text editor and save the following file contents
@@ -116,5 +119,5 @@ It' also possible to assign LaTeX expressions to the function and its variables.
 
     .. literalinclude:: ../../../examples/002_model_functions/model_functions.py
         :lines: 13-
-        :emphasize-lines: 38-42
+        :emphasize-lines: 30-44
 
