@@ -933,6 +933,7 @@ class Plot(object):
         configured, it will be overridden.
 
         Passing the following special values for a keyword will have the following effects:
+
         * ``'__del__'``: the value will be removed from the keyword arguments. This includes
           default values, meaning that the plot call will be made **without** the keyword
           argument even if a default value for it exists.
@@ -1040,13 +1041,15 @@ class Plot(object):
         overridden.
 
         The `values` can be specified in two ways:
-        * as a list with a length corresponding to the number of `fit` objects managed
-          by this `Plot` instance. The special value ``'__skip__'`` can be used to skip
-          `fit` objects.
-        # as a list of tuples of the form ``(index, value)``, where `index` denotes the
-          index of the `fit` object for which the `value` should be used.
+
+        #. as a list with a length corresponding to the number of `fit` objects managed
+           by this `Plot` instance. The special value ``'__skip__'`` can be used to skip
+           `fit` objects.
+        #. as a list of tuples of the form ``(index, value)``, where `index` denotes the
+           index of the `fit` object for which the `value` should be used.
 
         Passing the following special values for a keyword will have the following effects:
+
         * ``'__del__'``: the value will be removed from the keyword arguments. This includes
           default values, meaning that the plot call will be made **without** the keyword
           argument even if a default value for it exists.
