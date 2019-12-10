@@ -1,7 +1,7 @@
 from funcsigs import Signature, Parameter
 import numpy as np
 
-from .._base import CostFunctionBase
+from .._base import CostFunctionBase, CostFunctionBase_Chi2
 
 
 class MultiCostFunction(CostFunctionBase):
@@ -26,3 +26,8 @@ class MultiCostFunction(CostFunctionBase):
     @staticmethod
     def cost_sum(*single_costs):
         return np.sum(single_costs)
+
+
+class SharedChi2CostFunction(CostFunctionBase_Chi2):
+    def __init__(self, errors_to_use='covariance', fallback_on_singular=True):
+        CostFunctionBase_Chi2.__init__(self, errors_to_use=errors_to_use, fallback_on_singular=fallback_on_singular)

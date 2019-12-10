@@ -113,8 +113,12 @@ class XYMultiFit(FitBase):
         # initialize the Nexus
         self._init_nexus()
 
+        # save minimizer, minimizer_kwargs for serialization
+        self._minimizer = minimizer
+        self._minimizer_kwargs = minimizer_kwargs
+
         # initialize the Fitter
-        self._initialize_fitter(minimizer, minimizer_kwargs)
+        self._initialize_fitter()
         # create the child ParametricModel object
         self._set_new_parametric_model()
         # TODO: check where to update this (set/release/etc.)
@@ -683,7 +687,7 @@ class XYMultiFit(FitBase):
         # possibly relevant for nuisance parameters
         self._init_nexus()
         # initialize the Fitter
-        self._initialize_fitter(self._minimizer, self._minimizer_kwargs)
+        self._initialize_fitter()
 
         return _ret
 

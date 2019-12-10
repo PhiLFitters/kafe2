@@ -272,6 +272,10 @@ class GaussianErrorBase(object):
         """'Fully correlated' part of relative covariance matrix for error."""
         pass
 
+    @abc.abstractproperty
+    def fit_indices(self):
+        """Indices of fits that have this error when used inside a MultiFit."""
+
     def get_cov_mat_object(self):
         """Returns the internal-use `CovMat` object used to represent measurement errors. (advanced)"""
         return self._cov_mat
@@ -292,12 +296,13 @@ class SimpleGaussianError(GaussianErrorBase):
     used to convert 'absolute' ('relative') error arrays or covariance matrices to 'relative' ('absolute') ones.
 
     """
-    def __init__(self, err_val, corr_coeff, relative=False, reference=None):
+    def __init__(self, err_val, corr_coeff, relative=False, reference=None, fit_indices=None):
         if not (0.0 <= corr_coeff <= 1.0):
             raise ValueError("Correlation must be between 0 and 1, %g given," % (corr_coeff,))
         self._corr_coeff = float(corr_coeff)
         self._is_relative = relative
         self.reference = reference
+        self._fit_indices = fit_indices
         if self.relative:
             self.error_rel = err_val
         else:
@@ -460,7 +465,6 @@ class SimpleGaussianError(GaussianErrorBase):
             self._cov_mat_rel = None
             self._err_rel = None
 
-
     @property
     def cov_mat(self):
         if self._cov_mat is None:
@@ -520,6 +524,11 @@ class SimpleGaussianError(GaussianErrorBase):
     def corr_coeff(self):
         return self._corr_coeff
 
+    @property
+    def fit_indices(self):
+        return self._fit_indices
+
+
 class MatrixGaussianError(GaussianErrorBase):
     """
     A Gaussian Error constructed from a covariance matrix, or a correlation matrix together with
@@ -534,9 +543,10 @@ class MatrixGaussianError(GaussianErrorBase):
     used to convert 'absolute' ('relative') error arrays or covariance matrices to 'relative' ('absolute') ones.
 
     """
-    def __init__(self, err_matrix, matrix_type, err_val=None, relative=False, reference=None):
+    def __init__(self, err_matrix, matrix_type, err_val=None, relative=False, reference=None, fit_indices=None):
         self._is_relative = relative
         self.reference = reference
+        self._fit_indices = fit_indices
 
         if err_val is not None:
             err_val = np.asarray(err_val)
@@ -697,7 +707,6 @@ class MatrixGaussianError(GaussianErrorBase):
             self._cov_mat_rel = None
             self._err_rel = None
 
-
     @property
     def error_uncor(self):
         raise AttributeError("Cannot get the uncorrelated part of a 'matrix-type' error!")
@@ -738,7 +747,9 @@ class MatrixGaussianError(GaussianErrorBase):
         else:
             return self._cov_mat.cor_mat
 
-
+    @property
+    def fit_indices(self):
+        return self._fit_indices
 
 
 if __name__ == '__main__':
