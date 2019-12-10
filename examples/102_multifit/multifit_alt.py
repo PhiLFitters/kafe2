@@ -96,19 +96,16 @@ T -= T0  # Measurements are in Kelvin, convert to °C
 
 # -- Finally, go through the fitting procedure
 
-# TODO shared x errors
 # Step 1: construct the singular fit objects
 fit_1 = XYFit(xy_data=[U, T], model_function=empirical_T_U_model)
-fit_1.add_simple_error(axis='x', err_val=sigU)  # declare errors on U
 fit_1.add_simple_error(axis='y', err_val=sigT)  # declare errors on T
 
 fit_2 = XYFit(xy_data=[U, I], model_function=I_U_model)
-fit_2.add_simple_error(axis='x', err_val=sigU)  # declare errors on U
 fit_2.add_simple_error(axis='y', err_val=sigI)  # declare errors on I
 
 # Step 2: construct a MultiFit object
-multi_fit = MultiFit(fit_list=[fit_1, fit_2], minimizer='iminuit')  # FIXME scipy optimizer delivers incorrect results
-
+multi_fit = MultiFit(fit_list=[fit_1, fit_2], minimizer='iminuit')
+multi_fit.add_simple_error(axis='x', err_val=sigU, fits='all')
 
 # (Optional): assign names for models and parameters
 multi_fit.assign_parameter_latex_names(x='U', p2='p_2', p1='p_1', p0='p_0', R0='R_0', alph=r'\alpha_\mathrm{T}')

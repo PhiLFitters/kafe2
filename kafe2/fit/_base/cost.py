@@ -166,6 +166,7 @@ class CostFunctionBase(FileIOMixin, object):
         self._flags = {}
         self._ndf = None
         self._needs_errors = True
+        self._is_chi2 = False
         self._no_errors_warning_printed = False
         super(CostFunctionBase, self).__init__()
 
@@ -269,6 +270,11 @@ class CostFunctionBase(FileIOMixin, object):
         """Whether the cost function needs errors for a meaningful result"""
         return self._needs_errors
 
+    @property
+    def is_chi2(self):
+        """Whether the cost function is a chi2 cost function."""
+        return self._is_chi2
+
     def get_uncertainty_gaussian_approximation(self, data):
         """
         Get the gaussian approximation of the uncertainty inherent to the cost function, returns 0 by default.
@@ -337,6 +343,7 @@ class CostFunctionBase_Chi2(CostFunctionBase):
         self._formatter.name = "chi2"
         self._formatter.description = _cost_function_description
         self._needs_errors = _chi2_func is not self.chi2_no_errors
+        self._is_chi2 = True
 
     def on_no_errors(self):
         if not self._no_errors_warning_printed:

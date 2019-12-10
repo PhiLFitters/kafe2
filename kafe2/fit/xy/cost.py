@@ -199,6 +199,7 @@ class XYCostFunction_Chi2(CostFunctionBase_Chi2):
             self._formatter.latex_name = "\chi^2"
             self._formatter.name = "chi2"
             self._formatter.description = _cost_function_description
+            self._is_chi2 = True
         else:
             raise CostFunctionException("Unknown value '%s' for 'axes_to_use': must be one of ('xy', 'y')")
 

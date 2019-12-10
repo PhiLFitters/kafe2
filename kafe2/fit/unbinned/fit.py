@@ -61,8 +61,12 @@ class UnbinnedFit(FitBase):
         # initialize the Nexus
         self._init_nexus()
 
+        # save minimizer, minimizer_kwargs for serialization
+        self._minimizer = minimizer
+        self._minimizer_kwargs = minimizer_kwargs
+
         # initialize the Fitter
-        self._initialize_fitter(minimizer, minimizer_kwargs)
+        self._initialize_fitter()
 
         self._fit_param_constraints = []
         self._loaded_result_dict = None

@@ -3,9 +3,12 @@ import numpy as np
 
 from .._base import FitBase
 from ...core import Nexus, NexusFitter
-from ...core.fitters.nexus import Alias, Parameter
-from .cost import MultiCostFunction
+from ...core.error import SimpleGaussianError, MatrixGaussianError
+from ...core.fitters.nexus import Alias, Function, Array
+from ...tools import random_alphanumeric
+from .cost import MultiCostFunction, SharedChi2CostFunction
 from collections import OrderedDict
+
 
 class MultiFit(FitBase):
 
@@ -18,42 +21,15 @@ class MultiFit(FitBase):
         except TypeError:
             self._fits = [self._fits]
 
-        _combined_parameter_node_dict = OrderedDict()
-        _cost_alias_names = []
-        self._nexus = Nexus()
-        for _i, _fit_i in enumerate(self._fits):
-            _original_cost_i = _fit_i._nexus.get('cost')
-            _cost_alias_name_i = 'cost%s' % _i
-            _cost_alias_i = Alias(ref=_original_cost_i, name=_cost_alias_name_i)
-            self._nexus.add(_cost_alias_i, add_children=False)
-            _cost_alias_names.append(_cost_alias_name_i)
-            for _par_node in _fit_i.poi_names:
-                # TODO handle conflicting parameter defaults
-                _combined_parameter_node_dict[_par_node] = _fit_i._nexus.get(_par_node)
-        for _par_node in _combined_parameter_node_dict.values():
-            self._nexus.add(_par_node)
-            for _fit in self._fits:
-                if _par_node.name in _fit.poi_names:
-                    _fit._nexus.add(node=_par_node, existing_behavior='replace')
-        for _fit in self._fits:
-            _fit._initialize_fitter()
-
-        _singular_cost_functions = [_fit._cost_function for _fit in self._fits]
-        self._cost_function = MultiCostFunction(singular_cost_functions=_singular_cost_functions)
-        self._cost_function.ndf = self.data_size - len(_combined_parameter_node_dict.keys())
-        _cost_function_node = self._nexus.add_function(func=self._cost_function.func, par_names=_cost_alias_names)
-        self._nexus.add_alias(name='cost', alias_for=_cost_function_node.name)
         self._minimizer = minimizer
         self._minimizer_kwargs = minimizer_kwargs
-        self._fitter = NexusFitter(
-            nexus=self._nexus, parameters_to_fit=list(_combined_parameter_node_dict.keys()),
-            parameter_to_minimize=self._cost_function.name, minimizer=self._minimizer,
-            minimizer_kwargs=self._minimizer_kwargs
-        )
+        self._shared_error_dicts = dict()
+        self._derivative_precision = None
+        self._rebuild_nexus()
+        self._initialize_fitter()
 
         self._fit_param_constraints = []
         self._loaded_result_dict = None
-        self._fitter_parameter_indices = None
 
     # -- private methods
 
@@ -101,6 +77,213 @@ class MultiFit(FitBase):
                 asymmetric_parameter_errors=_asymmetric_parameter_errors
             )
         self._update_parameter_formatters()
+
+    def _rebuild_nexus(self):
+        self._nexus = Nexus()
+        self._nexus.add_function(
+            lambda: self.parameter_constraints, func_name='parameter_constraints')
+        self._combined_parameter_node_dict = OrderedDict()
+        _cost_names = []
+        for _i, _fit_i in enumerate(self._fits):
+            _original_cost_i = _fit_i._nexus.get('cost')
+            _cost_alias_name_i = 'cost%s' % _i
+            _cost_alias_i = Alias(ref=_original_cost_i, name=_cost_alias_name_i)
+            self._nexus.add(_cost_alias_i, add_children=False)
+            _cost_names.append(_cost_alias_name_i)
+            for _par_node in _fit_i.poi_names:
+                self._combined_parameter_node_dict[_par_node] = _fit_i._nexus.get(_par_node)
+        for _par_node in self._combined_parameter_node_dict.values():
+            self._nexus.add(_par_node)
+            for _fit in self._fits:
+                if _par_node.name in _fit.poi_names:
+                    _fit._nexus.add(node=_par_node, existing_behavior='replace')
+        self._nexus.add(
+            Array(nodes=self._combined_parameter_node_dict.values(), name='parameter_values'))
+        for _fit in self._fits:
+            _fit._initialize_fitter()
+
+        if not self._shared_error_dicts:
+            _cost_functions = [_fit._cost_function for _fit in self._fits]
+        else:
+            _chi2_indices = []  # Indices of fits with chi2 cost function
+            _data_indices = [0]  # Indices of edges of covariance block in combined matrix
+            _cost_functions = []
+            _cost_names = []
+            _x_cov_mat_names = []
+            _derivative_names = []
+            _y_data_names = []
+            _y_model_names = []
+            _y_cov_mat_names = []
+            _has_shared_x_error = False
+            for _err_dict in self._shared_error_dicts.values():
+                if _err_dict['axis'] == 'x':
+                    _has_shared_x_error = True
+                    break
+            for _i, _fit_i in enumerate(self._fits):
+                if _fit_i._cost_function.is_chi2:
+                    _chi2_indices.append(_i)
+                    _data_indices.append(_data_indices[-1] + _fit_i.data_size)
+
+                    if _has_shared_x_error:
+                        _x_cov_mat_name = 'x_cov_mat%s' % _i
+                        self._nexus.add(
+                            Alias(ref=_fit_i._nexus.get('x_total_cov_mat'), name=_x_cov_mat_name),
+                            add_children=False)
+                        _x_cov_mat_names.append(_x_cov_mat_name)
+
+                        _derivatives_name = 'derivatives%s' % _i
+
+                        # Bind fit object (Python is call-by-value), otherwise all derivatives would
+                        # use the same fit.
+                        def _get_derivatives_func(fit):
+                            return lambda: fit._param_model.eval_model_function_derivative_by_x(
+                                model_parameters=fit.poi_values,
+                                dx=self._derivative_precision
+                            )
+
+                        self._nexus.add(
+                            Function(func=_get_derivatives_func(_fit_i), name=_derivatives_name),
+                            add_children=False)
+                        self._nexus.add_dependency(
+                            name=_derivatives_name, depends_on='parameter_values')
+                        _derivative_names.append(_derivatives_name)
+
+                    _y_data_name = 'y_data%s' % _i
+                    self._nexus.add(
+                        Alias(ref=_fit_i._nexus.get('y_data'), name=_y_data_name),
+                        add_children=False)
+                    _y_data_names.append(_y_data_name)
+
+                    _y_model_name = 'y_model%s' % _i
+                    self._nexus.add(
+                        Alias(ref=_fit_i._nexus.get('y_model'), name=_y_model_name),
+                        add_children=False)
+                    _y_model_names.append(_y_model_name)
+
+                    _y_cov_mat_name = 'y_cov_mat%s' % _i
+                    self._nexus.add(
+                        Alias(ref=_fit_i._nexus.get('y_total_cov_mat'), name=_y_cov_mat_name),
+                        add_children=False)
+                    _y_cov_mat_names.append(_y_cov_mat_name)
+                else:
+                    _cost_functions.append(_fit_i._cost_function)
+                    _cost_names.append('cost%s' % _i)
+
+            def _combine_1d(*single_fit_properties):
+                _combined_property = np.zeros(shape=_data_indices[-1])
+                for _j, (_single_fit_property, _chi2_index) in enumerate(
+                        zip(single_fit_properties, _chi2_indices)):
+                    _lower = _data_indices[_j]
+                    _upper = _data_indices[_j + 1]
+                    _combined_property[_lower:_upper] = _single_fit_property
+                return _combined_property
+
+            def _combine_2d(axis_name, *single_fit_properties):
+                _combined_property = np.zeros(shape=(_data_indices[-1], _data_indices[-1]))
+                for _j, (_single_fit_property, _chi2_index) in enumerate(
+                        zip(single_fit_properties, _chi2_indices)):
+                    _lower = _data_indices[_j]
+                    _upper = _data_indices[_j + 1]
+                    _combined_property[_lower:_upper, _lower:_upper] = _single_fit_property
+                for _error_dict in self._shared_error_dicts.values():
+                    if _error_dict['axis'] == axis_name:
+                        _error = _error_dict['err']
+                        for _j in range(len(_error.fit_indices)):
+                            _lower_1 = _data_indices[_j]
+                            _upper_1 = _data_indices[_j + 1]
+                            _combined_property[
+                                    _lower_1:_upper_1, _lower_1:_upper_1] += _error.cov_mat
+                            for _k in range(_j):
+                                _lower_2 = _data_indices[_k]
+                                _upper_2 = _data_indices[_k + 1]
+                                _combined_property[
+                                        _lower_1:_upper_1, _lower_2:_upper_2] += _error.cov_mat
+                                _combined_property[
+                                        _lower_2:_upper_2, _lower_1:_upper_1] += _error.cov_mat
+                return _combined_property
+
+            if _has_shared_x_error:
+                self._nexus.add_function(
+                    func=lambda *p: _combine_2d('x', *p),
+                    func_name='x_cov_mat', par_names=_x_cov_mat_names, add_children=False)
+                self._nexus.add_function(
+                    func=_combine_1d, func_name='derivatives', par_names=_derivative_names,
+                    add_children=False)
+
+            self._nexus.add_function(
+                func=_combine_1d, func_name='y_data', par_names=_y_data_names, add_children=False)
+            self._nexus.add_alias(name='data', alias_for='y_data')
+            self._nexus.add_function(
+                func=_combine_1d, func_name='y_model', par_names=_y_model_names, add_children=False)
+            self._nexus.add_alias(name='model', alias_for='y_model')
+            self._nexus.add_function(
+                func=lambda *p: _combine_2d('y', *p),
+                func_name='y_cov_mat', par_names=_y_cov_mat_names, add_children=False)
+
+            if _has_shared_x_error:
+                def total_cov_mat_inverse(x_cov_mat, derivatives, y_cov_mat):
+                    _cov_mat = y_cov_mat + x_cov_mat * np.outer(derivatives, derivatives)
+                    return np.linalg.inv(_cov_mat)
+            else:
+                def total_cov_mat_inverse(y_cov_mat):
+                    return np.linalg.inv(y_cov_mat)
+            self._nexus.add_function(total_cov_mat_inverse)
+            _shared_chi2_cost_function = SharedChi2CostFunction()
+            self._nexus.add_function(func=_shared_chi2_cost_function.func, func_name='cost_shared')
+            _cost_functions.append(_shared_chi2_cost_function)
+            _cost_names.append('cost_shared')
+
+        self._cost_function = MultiCostFunction(singular_cost_functions=_cost_functions)
+        self._cost_function.ndf = self.data_size - len(self._combined_parameter_node_dict.keys())
+        _cost_function_node = self._nexus.add_function(
+            func=self._cost_function.func, par_names=_cost_names)
+        self._nexus.add_alias(name='cost', alias_for=_cost_function_node.name)
+        self._initialize_fitter()
+
+    def _initialize_fitter(self):
+        self._fitter = NexusFitter(
+            nexus=self._nexus, parameters_to_fit=list(self._combined_parameter_node_dict.keys()),
+            parameter_to_minimize=self._cost_function.name, minimizer=self._minimizer,
+            minimizer_kwargs=self._minimizer_kwargs
+        )
+
+    def _add_error_object(self, error_object, name=None, axis=None):
+        from ..indexed import IndexedFit
+        from ..xy import XYFit
+
+        if axis not in [None, 'x', 'y']:
+            raise ValueError("axis must be one of: None, 'x', 'y'")
+        _data_size_0 = self._fits[error_object.fit_indices[0]].data_size
+        for _fit_index in error_object.fit_indices:
+            if not self._fits[_fit_index]._cost_function.is_chi2:
+                raise ValueError(
+                    "Cannot add shared error because cost function of fit %s is not chi2!"
+                    % _fit_index)
+            if isinstance(self._fits[_fit_index], XYFit) and axis is None:
+                raise ValueError("axis=None is ambiguous for fit %s because it is an XYFit!" % axis)
+            if isinstance(self._fits[_fit_index], IndexedFit) and axis == 'x':
+                raise ValueError(
+                    "axis='x' is incompatible with fit %s because it is an IndexedFit!")
+            if self._fits[_fit_index].data_size != _data_size_0:
+                raise ValueError("Fit %s data_size not the same as data_size of Fit 0!")
+        if name in self._shared_error_dicts:
+            raise ValueError("Error with name=%s already exists!" % name)
+        name = random_alphanumeric(8)
+        while name in self._shared_error_dicts:
+            name = random_alphanumeric(8)
+        if axis is None:
+            axis = 'y'
+        elif axis == 'x':
+            _new_error_min = np.min(error_object.error)
+            if self._derivative_precision is None:
+                self._derivative_precision = _new_error_min
+            else:
+                self._derivative_precision = min(
+                    self._derivative_precision, _new_error_min
+                )
+        _error_dict = dict(err=error_object, enabled=True, axis=axis)
+        self._shared_error_dicts[name] = _error_dict
+        self._rebuild_nexus()
 
     def _set_new_data(self, new_data):
         raise NotImplementedError()
@@ -150,33 +333,43 @@ class MultiFit(FitBase):
 
     # -- public methods
 
-    def add_matrix_error(self, err_matrix, matrix_type, fit_index=None,
-                         name=None, err_val=None, relative=False, reference='data', **kwargs):
-        if fit_index is None:
-            for _fit in self._fits:
-                _fit[fit_index].add_matrix_error(
-                    err_matrix=err_matrix, matrix_type=matrix_type, name=name, err_val=err_val, relative=relative,
-                    reference=reference, **kwargs
-                )
-        else:
-            self._fits[fit_index].add_matrix_error(
-                err_matrix=err_matrix, matrix_type=matrix_type, name=name, err_val=err_val, relative=relative,
-                reference=reference, **kwargs
+    def add_matrix_error(self, err_matrix, matrix_type, fits, axis=None, name=None, err_val=None, relative=False,
+                         reference='data', **kwargs):
+        # TODO relative errors
+        if isinstance(fits, int):
+            self._fits[fits].add_matrix_error(
+                err_matrix=err_matrix, matrix_type=matrix_type, name=name, err_val=err_val,
+                relative=relative, **kwargs
             )
+        else:
+            _matrix_error = MatrixGaussianError(
+                err_matrix=err_matrix, matrix_type=matrix_type, err_val=err_val, relative=relative,
+                fit_indices=fits
+            )
+            self._add_error_object(error_object=_matrix_error, name=name, axis=axis)
 
-    def add_simple_error(self, err_val, fit_index=None, name=None, correlation=0, relative=False, reference='data',
-                         **kwargs):
-        if fit_index is None:
-            for _fit in self._fits:
-                _fit[fit_index].add_simple_error(
-                    err_val=err_val, name=name, correlation=correlation, relative=relative, reference=reference,
-                    **kwargs
-                )
-        else:
-            self._fits[fit_index].add_simple_error(
-                err_val=err_val, name=name, correlation=correlation, relative=relative, reference=reference,
-                **kwargs
+    def add_simple_error(
+            self, err_val, fits, axis=None, name=None, correlation=0, relative=False,
+            reference='data', **kwargs):
+        if isinstance(fits, int):
+            self._fits[fits].add_simple_error(
+                err_val=err_val, name=name, correlation=correlation, relative=relative, **kwargs
             )
+        else:
+            if fits == 'all':
+                fits = list(range(len(self._fits)))
+            try:
+                err_val.ndim  # will raise if simple float
+            except AttributeError:
+                err_val = np.asarray(err_val, dtype=float)
+
+            if err_val.ndim == 0:  # if dimensionless numpy array (i.e. float64), add a dimension
+                err_val = np.ones(self._fits[fits[0]].data_size) * err_val
+                # Consistent data size is checked later.
+            _simple_error = SimpleGaussianError(
+                err_val=err_val, corr_coeff=correlation, relative=relative, fit_indices=fits
+            )
+            self._add_error_object(error_object=_simple_error, name=name, axis=axis)
 
     def assign_model_function_expression(self, expression_format_string, fit_index=None):
         if fit_index is None:
