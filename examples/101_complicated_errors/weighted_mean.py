@@ -64,5 +64,3 @@ p.plot(with_fit_info=True)
 
 # show the fit result
 plt.show()
-
-

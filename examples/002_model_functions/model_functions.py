@@ -55,5 +55,3 @@ p.plot(with_fit_info=True, with_ratio=True, ratio_range=(0.5, 1.5))
 
 # Show the fit results.
 plt.show()
-
-

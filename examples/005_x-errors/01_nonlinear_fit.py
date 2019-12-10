@@ -63,4 +63,3 @@ profiler = ContoursProfiler(nonlinear_fit)
 profiler.plot_profiles_contours_matrix(show_grid_for='all')
 
 plt.show()
-

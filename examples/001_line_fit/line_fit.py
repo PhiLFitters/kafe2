@@ -42,5 +42,3 @@ plot.plot(with_fit_info=True)  # Do the plot.
 
 # Show the fit result.
 plt.show()
-
-
