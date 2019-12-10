@@ -112,12 +112,17 @@ Those functions are passed on to the Fit objects:
     :lines: 34-36
 
 It' also possible to assign LaTeX expressions to the function and its variables.
+The according lines are highlighted in the full code example below.
 
 .. bootstrap_collapsible::
     :control_type: link
     :control_text: python code
 
     .. literalinclude:: ../../../examples/002_model_functions/model_functions.py
+        :emphasize-lines: 38-42
         :lines: 13-
-        :emphasize-lines: 30-44
 
+Please note, that the function LaTeX expression needs to contain all parameters present in the
+function definition. The placeholders are then automatically replaced by their corresponding LaTeX
+names. Due to the way `Python` handles the string formatting, curly braces used in LaTeX need to
+be doubled, as in the code example above.
