@@ -645,10 +645,6 @@ class FitBase(FileIOMixin, object):
             if _pln is not None:
                 _pf.latex_name = _pln
 
-    def generate_plot(self):
-        from kafe2.fit._base.plot import Plot
-        return Plot(self)
-
     def get_result_dict_for_robots(self):
         """Return a dictionary of the fit results."""
         _result_dict = dict()
