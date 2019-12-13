@@ -53,7 +53,7 @@ Approach 2: multi-model fit
 ---------------------------
 
 There are several ways to achieve this with *kafe2*. The method chosen
-here is to use the :py:object:`~kafe.fit.xy_multi.XYMultifit` functionality
+here is to use the :py:object:`~kafe.fit.multi.Multifit` functionality
 to fit both models simultaneously to the :math:`T(U)` and :math:`I(U)`
 datasets.
 
@@ -66,7 +66,7 @@ parameter constraints, which is demonstrated in the example called
 import numpy as np
 import matplotlib.pyplot as plt
 
-from kafe2 import XYMultiFit, Plot
+from kafe2 import XYFit, MultiFit, Plot
 
 
 # empirical model for T(U): a parabola
@@ -96,37 +96,34 @@ T -= T0  # Measurements are in Kelvin, convert to °C
 
 # -- Finally, go through the fitting procedure
 
-# Step 1: construct an XYMultiFit object
-fit = XYMultiFit(xy_data=[[U, T], [U, I]],
-                 model_function=[empirical_T_U_model, I_U_model])
+# Step 1: construct the singular fit objects
+fit_1 = XYFit(xy_data=[U, T], model_function=empirical_T_U_model)
+fit_1.add_simple_error(axis='y', err_val=sigT)  # declare errors on T
 
-# declare errors on U
-fit.add_simple_shared_x_error(err_val=sigU)
+fit_2 = XYFit(xy_data=[U, I], model_function=I_U_model)
+fit_2.add_simple_error(axis='y', err_val=sigI)  # declare errors on I
 
-# declare errors on T
-fit.add_simple_error(axis='y', err_val=sigT, model_index=0)
+# Step 2: construct a MultiFit object
+multi_fit = MultiFit(fit_list=[fit_1, fit_2], minimizer='iminuit')
 
-# declare errors on I
-fit.add_simple_error(axis='y', err_val=sigI, model_index=1)
-
+# Step 3: Add a shared error error for the x axis.
+multi_fit.add_simple_error(axis='x', err_val=sigU, fits='all')
 
 # (Optional): assign names for models and parameters
-fit.assign_parameter_latex_names(x='U', p2='p_2', p1='p_1', p0='p_0', R0='R_0', alph=r'\alpha_\mathrm{T}')
+multi_fit.assign_parameter_latex_names(x='U', p2='p_2', p1='p_1', p0='p_0', R0='R_0', alph=r'\alpha_\mathrm{T}')
 
-fit.assign_model_function_expression('{0}*{x}^2 + {1}*{x} + {2}', model_index=0)
-fit.assign_model_function_latex_expression(r'{0}\,{x}^2 + {1}\,{x} + {2}', model_index=0)
-fit.assign_model_function_expression('{x} / ({0} * (1 + ({2}*{x}^2 + {3}*{x} + {4}) * {1}))', model_index=1)
-fit.assign_model_function_latex_expression(r'\frac{{{x}}}{{{0} \cdot (1 + ({2}{x}^2 + {3}{x} + {4}) \cdot {1})}}',
-                                           model_index=1)
+multi_fit.assign_model_function_expression('{0}*{x}^2 + {1}*{x} + {2}', fit_index=0)
+multi_fit.assign_model_function_latex_expression(r'{0}\,{x}^2 + {1}\,{x} + {2}', fit_index=0)
+multi_fit.assign_model_function_expression('{x} / ({0} * (1 + ({2}*{x}^2 + {3}*{x} + {4}) * {1}))', fit_index=1)
+multi_fit.assign_model_function_latex_expression(r'\frac{{{x}}}{{{0} \cdot (1 + ({2}{x}^2 + {3}{x} + {4}) \cdot {1})}}', fit_index=1)
 
-# Step 2: do the fit
-fit.do_fit()
+# Step 4: do the fit
+multi_fit.do_fit()
 
 # (Optional): print the results
-fit.report()
+multi_fit.report()
 
 # (Optional): plot the results
-plot = Plot(fit, separate_figures=True)
-plot.plot(with_asymmetric_parameter_errors=True)
-
+plot = Plot(multi_fit, separate_figures=True)
+plot.plot()
 plt.show()
