@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from kafe2 import Plot
 from kafe2.fit._base.fit import FitBase
 from kafe2.fit.tools.contours_profiler import ContoursProfiler
+from kafe2.fit.xy.plot import XYPlotAdapter
 
 
 class Kafe2GoException(Exception):
@@ -12,54 +13,54 @@ class Kafe2GoException(Exception):
 #TODO documentation
 
 def kafe2go():
-    _parser = argparse.ArgumentParser(description='Perform a fit with the kafe2 package driven by input file')
+    _parser = argparse.ArgumentParser(description='Perform a fit with the kafe2 package driven by an input file.\n'
+                                                  'Example files are located inside the kafe2 installation directory.')
     
-    _parser.add_argument('filenames', type=str, nargs='+',
+    _parser.add_argument('filename', type=str, nargs='+',
                          help="name(s) of fit input file(s)")
     _parser.add_argument('-if', '--inputformat',
                          type=str, default='yaml',
                          help="file input format, default=yaml")
-    _parser.add_argument('-c', '--contours', 
+    _parser.add_argument('-s', '--saveplot',
                          action='store_true',
-                         help="plot contours and profiles")
-    _parser.add_argument('--noreport',
-                         action='store_true',
-                         help="don't print fit report after fitting")
+                         help="save plot(s) in file(s)")
+    _parser.add_argument('-pf', '--plotformat',
+                         type=str, default='pdf',
+                         help="graphics output format, default=pdf")
     _parser.add_argument('-n', '--noplot',
                          action='store_true',
                          help="don't show plots on screen")
     _parser.add_argument('-r', '--ratio',
                          action='store_true',
-                         help="Show the data/model ratio below the main plot")
-    # TODO: check how to handle this with multiple fits in one plot
-    # _parser.add_argument('--noband',
-    #                      action='store_true',
-    #                      help="don't draw 1-sigma band around function")
+                         help="show data/model ratio below the main plot")
+    _parser.add_argument('-c', '--contours', 
+                         action='store_true',
+                         help="plot contours and profiles")
+    _parser.add_argument('--noband',
+                         action='store_true',
+                         help="don't draw 1-sigma band around function")
     _parser.add_argument('--noinfobox',
                          action='store_true',
                          help="don't add model info boxes to plots")
-    _parser.add_argument('--separate_figures', '-sf',
+    _parser.add_argument('--separate',
                          action='store_true',
                          help="create a separate figure for each fit when plotting")
-    _parser.add_argument('-pf', '--plotformat',
-                         type=str, default='pdf',
-                         help="graphics output format, default=pdf")
-    _parser.add_argument('-s', '--saveplot', 
+    _parser.add_argument('--noreport',
                          action='store_true',
-                         help="save plot(s) in file(s)")
+                         help="don't print fit report(s) to the terminal after fitting")
 
     if len(sys.argv) == 1:  # print help message if no input given
         _parser.print_help()
         sys.exit(1)
     _args = _parser.parse_args()
 
-    _filenames = _args.filenames
-    # _band = not _args.noband
+    _filenames = _args.filename
+    _band = not _args.noband
     _contours = _args.contours
     _report = not _args.noreport
     _infobox = not _args.noinfobox
     _ratio = _args.ratio
-    _separate = _args.separate_figures
+    _separate = _args.separate
     _input_format = _args.inputformat
     _plot_format = _args.plotformat
     _save_plot = _args.saveplot
@@ -74,12 +75,10 @@ def kafe2go():
             _fit.report()
         _fits.append(_fit)
     
+    if not _band:
+        XYPlotAdapter.PLOT_SUBPLOT_TYPES.pop('model_error_band')
+
     _plot = Plot(fit_objects=_fits, separate_figures=_separate)
-    
-    # if not _band:
-    #     _plot._defined_plot_types.remove('model_error_band')
-    #     _plot.PLOT_SUBPLOT_TYPES.pop('model_error_band', None)
-        
     _plot.plot(with_fit_info=_infobox, with_ratio=_ratio)
 
     _basenames = [name.rsplit('.', 1)[0] for name in _filenames]
