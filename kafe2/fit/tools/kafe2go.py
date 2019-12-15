@@ -26,7 +26,7 @@ def kafe2go():
                          help="save plot(s) in file(s)")
     _parser.add_argument('-pf', '--plotformat',
                          type=str, default='pdf',
-                         help="graphics output format, default=pdf")
+                         help="graphics output file format, e.g. pdf, png, svg, ... default=pdf")
     _parser.add_argument('-n', '--noplot',
                          action='store_true',
                          help="don't show plots on screen")
