@@ -132,11 +132,19 @@ class HistParametricModel(ParametricModelBaseMixin, HistContainer):
         else:
             import scipy.integrate as integrate
             _integrand_func = lambda x: self._model_function_object(x, *self._model_parameters)
-            # TODO: find more efficient alternative
-            _int_val = np.zeros(self.size)
-            for _i, (_a, _b) in enumerate(zip(_as, _bs)):
-                _int_val[_i], _ = integrate.quad(_integrand_func, _a, _b)
-        return _int_val
+            if six.PY3:
+                from concurrent.futures import ThreadPoolExecutor
+                from itertools import repeat
+                _calc_integral = lambda arguments: integrate.quad(*arguments)
+                _args = list(zip(repeat(_integrand_func),
+                            _as, _bs))
+                with ThreadPoolExecutor(4) as ex:
+                    _int_val = np.array(list(ex.map(_calc_integral, _args)))[:, 0]
+            else:
+                _int_val = np.zeros(self.size)
+                for _i, (_a, _b) in enumerate(zip(_as, _bs)):
+                    _int_val[_i], _ = integrate.quad(_integrand_func, _a, _b)
+        return np.array(_int_val)
 
     def _recalculate(self):
         # don't use parent class setter for 'data' -> set directly
