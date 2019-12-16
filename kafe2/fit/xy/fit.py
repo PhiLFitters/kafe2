@@ -1091,9 +1091,3 @@ class XYFit(FitBase):
         _nuisance_vector = np.linalg.solve(_left_side, np.transpose(_right_side))
 
         return _nuisance_vector
-
-    def generate_plot(self):
-        _plot = super(XYFit, self).generate_plot()
-        _plot.x_label = self.x_label
-        _plot.y_label = self.y_label
-        return _plot
