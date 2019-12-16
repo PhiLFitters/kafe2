@@ -50,8 +50,8 @@ linear_fit.report()
 exponential_fit.report()
 
 # Optional: Create a plot of the fit results using Plot.
-p = Plot(fit_objects=[linear_fit, exponential_fit])
-p.plot(with_fit_info=True, with_ratio=True, ratio_range=(0.5, 1.5))
+p = Plot(fit_objects=[linear_fit, exponential_fit], separate_figures=False)
+p.plot(with_fit_info=True)
 
 # Show the fit results.
 plt.show()

@@ -99,11 +99,17 @@ a kafe2 fit.
 When a different function has to be fitted, those functions need to be defined either in the
 ``yml``-file or the `Python` script.
 
+.. figure:: ../_static/img/002_model_comparison.png
+    :alt: Comparison of a line and exponential fit with kafe2.
+
+The expectation value of :math:`\chi^2/\mathrm{ndf}` is 1. Thus the exponential function
+more accurately describes the dataset than a line function.
+
 kafe2go
 -------
 Inside a ``yml``-File custom fit functions are defined with the ``model_function`` keyword.
 The custom function must be a custom python function. Numpy functions are supported as shown in the example.
-For more advanced fit functions, consider using ``kafe2`` inside a ``Python`` script.
+For more advanced fit functions, consider using ``kafe2`` inside a `Python` script.
 
 .. bootstrap_collapsible::
     :control_type: link
@@ -117,6 +123,18 @@ For more advanced fit functions, consider using ``kafe2`` inside a ``Python`` sc
     :control_text: line_fit.yml
 
     .. literalinclude:: ../../../examples/002_model_functions/line_fit.yml
+
+To use multiple input files with kafe2go, simply run
+
+.. code-block:: bash
+
+    kafe2go path/to/fit1.yml path/to/fit2.yml
+
+To plot the fits in two separate figures append the ``--separate`` flag to the kafe2go command.
+
+.. code-block:: bash
+
+    kafe2go path/to/fit1.yml path/to/fit2.yml --separate
 
 
 Python

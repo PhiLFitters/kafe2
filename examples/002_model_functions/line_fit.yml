@@ -15,7 +15,7 @@ x_data:
 x_errors:
 - correlation_coefficient: 0.0
   error_value: 0.3
-  relative: false
+  relative: false  # use absolute errors, in this case always 0.3
   type: simple
 y_data:
 - 1.604521233331755
@@ -33,7 +33,7 @@ y_data:
 y_errors:
 - correlation_coefficient: 0.0
   error_value: 0.05
-  relative: true
+  relative: true  # use relative errors, in this case 5% of each value
   type: simple
 
 model_function: |

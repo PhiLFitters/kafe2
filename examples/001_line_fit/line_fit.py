@@ -38,7 +38,7 @@ line_fit.report()
 
 # Optional: Create a plot of the fit results using Plot.
 plot = Plot(fit_objects=line_fit)  # Create a kafe2 plot object.
-plot.plot(with_fit_info=True)  # Do the plot.
+plot.plot()  # Do the plot.
 
 # Show the fit result.
 plt.show()
