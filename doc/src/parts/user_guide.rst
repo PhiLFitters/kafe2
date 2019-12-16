@@ -4,13 +4,11 @@
    :robots: index, follow
 
 .. role:: python(code)
-   :language: python
 
 
 **********
 User Guide
 **********
-
 
 This user guide covers the basics of using *kafe2* for
 fitting parametric models to data.
@@ -34,8 +32,8 @@ This document will gradually introduce the above steps via example code.
 
 Using kafe2go
 -------------
-Using `kafe2go` is the simplest way of performing a fit. Here all the necessary
-information like data and uncertainties is specified in the YAML-Data format.
+Using *kafe2go* is the simplest way of performing a fit. Here all the necessary
+information like data and uncertainties is specified in the *YAML* data format.
 To perform the fit, simply run
 
 .. code-block:: bash
@@ -44,9 +42,9 @@ To perform the fit, simply run
 
 Using Python
 ------------
-When using `kafe2` via a `Python` script a fine control of the fitting- and
-plotting-procedure is possible. For using `kafe2` inside a `Python` script, import the required
-`kafe2` modules:
+When using *kafe2* via a *Python* script a fine control of the fitting- and
+plotting-procedure is possible. For using *kafe2* inside a *Python* script, import the required
+*kafe2* modules:
 
 .. code-block:: python
 
@@ -68,7 +66,7 @@ how to extract the results.
 kafe2go
 -------
 To run this example, open a text editor and save the following file contents
-as a YAML-file named ``line_fit.yml``.
+as a *YAML* file named :file:`line_fit.yml`.
 
 .. literalinclude:: ../../../examples/001_line_fit/line_fit.yml
 
@@ -81,7 +79,7 @@ located and run
 
 Python
 ------
-The same fit can also be performed by using a `Python` script.
+The same fit can also be performed by using a *Python* script.
 
 .. bootstrap_collapsible::
     :control_type: link
@@ -100,7 +98,7 @@ with more parameters to accurately model physical reality.
 This example demonstrates how to specify arbitrary model functions for
 a kafe2 fit.
 When a different function has to be fitted, those functions need to be defined either in the
-``yml``-file or the `Python` script.
+*YAML* file or the *Python* script.
 
 .. figure:: ../_static/img/002_model_comparison.png
     :alt: Comparison of a line and exponential fit with kafe2.
@@ -110,20 +108,20 @@ more accurately describes the dataset than a line function.
 
 An exponential function is a **non-linear** function! Therefore the fit parameters can be heavily
 correlated. To verify this, please create a contour plot of the fitted parameters.
-This can be done by appending the ``-c`` or ``--contours`` option to ``kafe2go``. Additionally a
+This can be done by appending the ``-c`` or ``--contours`` option to *kafe2go*. Additionally a
 grid can be added to the contour plots with the ``--grid all`` flag.
-To achieve the same with a `Python` script, import the ``ContoursProfiler`` with
+To achieve the same with a *Python* script, import the ``ContoursProfiler`` with
 :python:`from kafe2 import ContoursProfiler` and create a contour plot:
 
 .. literalinclude:: ../../../examples/002_model_functions/model_functions.py
     :lines: 55-57
 
-By creating the contours in a `Python` script the user has a finer control on which parameters to
+By creating the contours in a *Python* script the user has a finer control on which parameters to
 use as well on the appearance of the contour plot via various keyword arguments.
 
 The according contour plot to the exponential fit shown above looks like this:
 
-.. figure:: ../static/img/002_exponential_contours.png
+.. figure:: ../_static/img/002_exponential_contours.png
     :alt: Contour plot corresponding to the exponential fit.
 
 When looking at the :math:`1\sigma` contour it's slightly visible, that the contour is not
@@ -133,9 +131,9 @@ uncertainties from the fit. This illustrates the correlation of the parameters.
 
 kafe2go
 -------
-Inside a ``yml``-File custom fit functions are defined with the ``model_function`` keyword.
+Inside a *YAML* file custom fit functions are defined with the ``model_function`` keyword.
 The custom function must be a custom python function. Numpy functions are supported as shown in the example.
-For more advanced fit functions, consider using ``kafe2`` inside a `Python` script.
+For more advanced fit functions, consider using *kafe2* inside a *Python* script.
 
 .. bootstrap_collapsible::
     :control_type: link
@@ -165,18 +163,27 @@ To plot the fits in two separate figures append the ``--separate`` flag to the k
 
 Python
 ------
-Inside a `Python` script a custom function ist defined like this:
+Inside a *Python* script a custom function ist defined like this:
 
 .. literalinclude:: ../../../examples/002_model_functions/model_functions.py
-    :lines: 18-27
+    :lines: 17-26
 
 Those functions are passed on to the Fit objects:
 
 .. literalinclude:: ../../../examples/002_model_functions/model_functions.py
-    :lines: 34-36
+    :lines: 33-35
 
-It' also possible to assign LaTeX expressions to the function and its variables.
-The according lines are highlighted in the full code example below.
+It's also possible to assign LaTeX expressions to the function and its variables.
+
+.. literalinclude:: ../../../examples/002_model_functions/model_functions.py
+    :lines: 37-41
+
+Please note, that the function LaTeX expression needs to contain all parameters present in the
+function definition. The placeholders are then automatically replaced by their corresponding LaTeX
+names. Due to the way *Python* handles the string formatting, curly braces used in LaTeX need to
+be doubled, as in the code example.
+
+The full example additionally contains the creation of a contour plot.
 
 .. bootstrap_collapsible::
     :control_type: link
@@ -184,9 +191,3 @@ The according lines are highlighted in the full code example below.
 
     .. literalinclude:: ../../../examples/002_model_functions/model_functions.py
         :lines: 13-
-        :emphasize-lines: 26-30
-
-Please note, that the function LaTeX expression needs to contain all parameters present in the
-function definition. The placeholders are then automatically replaced by their corresponding LaTeX
-names. Due to the way `Python` handles the string formatting, curly braces used in LaTeX need to
-be doubled, as in the code example above.
