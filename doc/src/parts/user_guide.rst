@@ -111,10 +111,8 @@ correlated. To verify this, please create a contour plot of the fitted parameter
 This can be done by appending the ``-c`` or ``--contours`` option to *kafe2go*. Additionally a
 grid can be added to the contour plots with the ``--grid all`` flag.
 To achieve the same with a *Python* script, import the ``ContoursProfiler`` with
-:python:`from kafe2 import ContoursProfiler` and create a contour plot:
-
-.. literalinclude:: ../../../examples/002_model_functions/model_functions.py
-    :lines: 55-57
+:python:`from kafe2 import ContoursProfiler`. This class can create contour and profile plots.
+The usage is shown in the following code example.
 
 By creating the contours in a *Python* script the user has a finer control on which parameters to
 use as well on the appearance of the contour plot via various keyword arguments.
@@ -132,7 +130,7 @@ uncertainties from the fit. This illustrates the correlation of the parameters.
 kafe2go
 -------
 Inside a *YAML* file custom fit functions are defined with the ``model_function`` keyword.
-The custom function must be a custom python function. Numpy functions are supported as shown in the example.
+The custom function must be a python function. Numpy is supported as shown in the example.
 For more advanced fit functions, consider using *kafe2* inside a *Python* script.
 
 .. bootstrap_collapsible::
@@ -184,7 +182,8 @@ function definition. The placeholders are then automatically replaced by their c
 names. Due to the way *Python* handles the string formatting, curly braces used in LaTeX need to
 be doubled, as in the code example.
 
-The full example additionally contains the creation of a contour plot.
+The full example additionally contains the creation of a contour plot. The corresponding lines are
+highlighted in the following example.
 
 .. bootstrap_collapsible::
     :control_type: link
@@ -192,6 +191,7 @@ The full example additionally contains the creation of a contour plot.
 
     .. literalinclude:: ../../../examples/002_model_functions/model_functions.py
         :lines: 13-
+        :emphasize-lines: 43-45
 
 
 Example 3: Parameter Constraints
