@@ -17,37 +17,41 @@ def kafe2go():
                                                   'Example files are located inside the kafe2 installation directory.')
     
     _parser.add_argument('filename', type=str, nargs='+',
-                         help="name(s) of fit input file(s)")
+                         help="Name(s) of fit input file(s).")
     _parser.add_argument('-if', '--inputformat',
                          type=str, default='yaml',
-                         help="file input format, default=yaml")
+                         help="File input format. The default format is yaml.")
     _parser.add_argument('-s', '--saveplot',
                          action='store_true',
-                         help="save plot(s) in file(s)")
+                         help="Save plot(s) to file(s). The plot(s) will be saved in the current working directory.")
     _parser.add_argument('-pf', '--plotformat',
                          type=str, default='pdf',
-                         help="graphics output file format, e.g. pdf, png, svg, ... default=pdf")
+                         help="Graphics output file format. E.g. pdf, png, svg, ... The default format is pdf.")
     _parser.add_argument('-n', '--noplot',
                          action='store_true',
-                         help="don't show plots on screen")
+                         help="Don't show plots on screen.")
     _parser.add_argument('-r', '--ratio',
                          action='store_true',
-                         help="show data/model ratio below the main plot")
+                         help="Show data/model ratio below the main plot.")
     _parser.add_argument('-c', '--contours', 
                          action='store_true',
-                         help="plot contours and profiles")
+                         help="Plot contours and profiles.")
+    _parser.add_argument('--grid', type=str, nargs=1, default=[None],
+                         help="Add a grid to the contour profiles. Available options are either all, "
+                              "contours or profiles.")
     _parser.add_argument('--noband',
                          action='store_true',
-                         help="don't draw 1-sigma band around function")
+                         help="Don't draw the 1-sigma band around the fitted function."
+                              "This will only affect plots of XY-fits.")
     _parser.add_argument('--noinfobox',
                          action='store_true',
-                         help="don't add model info boxes to plots")
+                         help="Don't add the model info boxes to the plot(s).")
     _parser.add_argument('--separate',
                          action='store_true',
-                         help="create a separate figure for each fit when plotting")
+                         help="Create a separate figure for each fit when plotting.")
     _parser.add_argument('--noreport',
                          action='store_true',
-                         help="don't print fit report(s) to the terminal after fitting")
+                         help="Don't print fit report(s) to the terminal after fitting.")
 
     if len(sys.argv) == 1:  # print help message if no input given
         _parser.print_help()
@@ -65,6 +69,7 @@ def kafe2go():
     _plot_format = _args.plotformat
     _save_plot = _args.saveplot
     _show_plot = not _args.noplot
+    _grid = _args.grid[0]
 
     _fits = []
 
@@ -94,7 +99,7 @@ def kafe2go():
     if _contours:
         for _fit, name in zip(_fits, _basenames):
             _profiler = ContoursProfiler(_fit)
-            _profiler.plot_profiles_contours_matrix()
+            _profiler.plot_profiles_contours_matrix(show_grid_for=_grid)
             if _save_plot:
                 for i, fig in enumerate(_profiler.figures):
                     fig.savefig(fname='{}_contours_{}.{}'.format(name, i, _plot_format), format=_plot_format)
