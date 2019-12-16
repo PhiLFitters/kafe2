@@ -140,13 +140,14 @@ For more advanced fit functions, consider using *kafe2* inside a *Python* script
     :control_text: exponential_fit.yml
 
     .. literalinclude:: ../../../examples/002_model_functions/exponential_fit.yml
-        :emphasize-lines: 39-43
+        :emphasize-lines: 28-32
 
 .. bootstrap_collapsible::
     :control_type: link
     :control_text: line_fit.yml
 
     .. literalinclude:: ../../../examples/002_model_functions/line_fit.yml
+        :emphasize-lines: 28-31
 
 To use multiple input files with kafe2go, simply run
 
@@ -191,3 +192,64 @@ The full example additionally contains the creation of a contour plot.
 
     .. literalinclude:: ../../../examples/002_model_functions/model_functions.py
         :lines: 13-
+
+
+Example 3: Parameter Constraints
+================================
+
+The models used to describe physical phenomena usually depend on a multitude of parameters.
+However, for many experiments only one of the parameters is of actual interest to the experimenter.
+Still, because model parameters are generally not uncorrelated the experimenter has to factor in
+the nuisance parameters for their estimation of the parameter of interest.
+
+Historically this has been done by propagating the uncertainties of the nuisance parameters onto
+the y-axis of the data and then performing a fit with those uncertainties.
+Thanks to computers, however, this process can also be done numerically by applying parameter
+constraints. This example demonstrates the usage of those constraints in the kafe2 framework.
+
+More specifically, this example will simulate the following experiment:
+
+A steel ball of radius :math:`r` has been connected to the ceiling by a string of length :math:`l`,
+forming a pendulum. Due to earth's gravity providing a restoring force this system is a harmonic
+oscillator. Because of friction between the steel ball and the surrounding air the oscillator is
+also damped by the viscous damping coefficient :math:`c`.
+
+The goal of the experiment is to determine the local strength of earth's gravity :math:`g`. Since
+the earth is shaped like an ellipsoid the gravitational pull varies with latitude: it's strongest
+at the poles with :math:`g_p=9.832\,\mathrm{m}/\mathrm{s}^2` and it's weakest at the equator with
+:math:`g_e=9.780\,\mathrm{m}/\mathrm{s}^2`. For reference, at Germany's latitude g lies at
+approximately :math:`9.81\,\mathrm{m}/\mathrm{s}^2`.
+
+.. figure:: ../_static/img/003_constraints.png
+    :alt: Fit of a damped harmonic oscillator with parameter constraints to determine the
+          gravitational pull g.
+
+kafe2go
+-------
+
+Parameter constraints are straightforward to use with *kafe2go*. After defining the model function
+parameter constraints can be set. The constraints require an index to be set. This index
+corresponds with the parameter order of the fit function. So the first free parameter uses index 0,
+the second index 1.
+The according lines are highlighted in the example file below.
+
+.. bootstrap_collapsible::
+    :control_type: link
+    :control_text: constraints.yml
+
+    .. literalinclude:: ../../../examples/003_constraints/constraints.yml
+        :emphasize-lines: 47-
+
+Python
+------
+
+Using *kafe2* inside a *Python* script, parameter constraints can be set with
+``fit.add_parameter_constraint()``. The according section is highlighted in the code example below.
+
+.. bootstrap_collapsible::
+    :control_type: link
+    :control_text: constraints.yml
+
+    .. literalinclude:: ../../../examples/003_constraints/constraints.py
+        :lines: 26-
+        :emphasize-lines: 28-31

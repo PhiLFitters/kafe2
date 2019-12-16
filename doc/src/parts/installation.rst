@@ -5,9 +5,9 @@
    :robots: index, follow
 
 
-******************
+==================
 Installing *kafe2*
-******************
+==================
 
 Requirements
 ============
@@ -109,7 +109,6 @@ For Python 3, Fedora/RHEL/CentOS:
     yum install python3-tkinter
 
 
-------------------------
 Optional: Install *ROOT*
 ------------------------
 
@@ -141,7 +140,6 @@ the following environment variables have to be set correctly (:
 For more info, refer to `<http://root.cern.ch/drupal/content/pyroot>`_.
 
 
----------------------------
 Optional: Install `iminuit`
 ---------------------------
 
@@ -175,6 +173,7 @@ In Fedora/RHEL/CentOS, do:
 .. todo::
 
     Update this section
+
 
 Installation notes (Windows)
 ============================

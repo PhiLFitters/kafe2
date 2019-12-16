@@ -96,7 +96,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'kafe2'
-copyright = u'2019, D. Savoiu, G. Quast'
+copyright = u'2019, J. Gäßler, C. Verstege, D. Savoiu and G. Quast'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

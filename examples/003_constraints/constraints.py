@@ -19,7 +19,7 @@ Because of friction between the steel ball and the surrounding air the oscillato
 coefficient c.
 The goal of the experiment is to determine the local strength of earth's gravity g.
 Since the earth is shaped like an ellipsoid the gravitational pull varies with latitude: it's strongest at the poles
-with g_p=9,780 m/s^2 and it's weakest at the equator with g_e=9.832 m/s^2.
+with g_p=9.832 m/s^2 and it's weakest at the equator with g_e=9.780 m/s^2.
 For reference, at Germany's latitude g lies at approximately 9.81 m/s^2.
 """
 
@@ -70,6 +70,6 @@ fit.report()
 
 # Optional: plot the fit results
 plot = Plot(fit)
-plot.plot(with_fit_info=True, with_ratio=True)
+plot.plot(with_fit_info=True)
 
 plt.show()
