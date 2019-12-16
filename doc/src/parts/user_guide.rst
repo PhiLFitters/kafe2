@@ -99,6 +99,26 @@ a kafe2 fit.
 When a different function has to be fitted, those functions need to be defined either in the
 ``yml``-file or the `Python` script.
 
+kafe2go
+-------
+Inside a ``yml``-File custom fit functions are defined with the ``model_function`` keyword.
+The custom function must be a custom python function. Numpy functions are supported as shown in the example.
+For more advanced fit functions, consider using ``kafe2`` inside a ``Python`` script.
+
+.. bootstrap_collapsible::
+    :control_type: link
+    :control_text: exponential_fit.yml
+
+    .. literalinclude:: ../../../examples/002_model_functions/exponential_fit.yml
+        :emphasize-lines: 39-43
+
+.. bootstrap_collapsible::
+    :control_type: link
+    :control_text: line_fit.yml
+
+    .. literalinclude:: ../../../examples/002_model_functions/line_fit.yml
+
+
 Python
 ------
 Inside a `Python` script a custom function ist defined like this:
@@ -119,8 +139,8 @@ The according lines are highlighted in the full code example below.
     :control_text: python code
 
     .. literalinclude:: ../../../examples/002_model_functions/model_functions.py
-        :emphasize-lines: 38-42
         :lines: 13-
+        :emphasize-lines: 26-30
 
 Please note, that the function LaTeX expression needs to contain all parameters present in the
 function definition. The placeholders are then automatically replaced by their corresponding LaTeX
