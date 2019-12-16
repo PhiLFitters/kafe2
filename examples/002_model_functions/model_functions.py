@@ -10,9 +10,8 @@ This example demonstrates how to specify arbitrary model functions for
 a kafe2 fit.
 """
 
+from kafe2 import XYContainer, XYFit, Plot, ContoursProfiler
 import numpy as np
-
-from kafe2 import XYContainer, XYFit, Plot
 import matplotlib.pyplot as plt
 
 # To define a model function for kafe2 simply write it as a python function
@@ -52,6 +51,10 @@ exponential_fit.report()
 # Optional: Create a plot of the fit results using Plot.
 p = Plot(fit_objects=[linear_fit, exponential_fit], separate_figures=False)
 p.plot(with_fit_info=True)
+
+# Optional: Create a contour plot for the exponential fit, to show the parameter correlation
+cpf = ContoursProfiler(exponential_fit)
+cpf.plot_profiles_contours_matrix(show_grid_for='contours')
 
 # Show the fit results.
 plt.show()

@@ -3,6 +3,9 @@
                          models to several types of data with
    :robots: index, follow
 
+.. role:: python(code)
+   :language: python
+
 
 **********
 User Guide
@@ -104,6 +107,29 @@ When a different function has to be fitted, those functions need to be defined e
 
 The expectation value of :math:`\chi^2/\mathrm{ndf}` is 1. Thus the exponential function
 more accurately describes the dataset than a line function.
+
+An exponential function is a **non-linear** function! Therefore the fit parameters can be heavily
+correlated. To verify this, please create a contour plot of the fitted parameters.
+This can be done by appending the ``-c`` or ``--contours`` option to ``kafe2go``. Additionally a
+grid can be added to the contour plots with the ``--grid all`` flag.
+To achieve the same with a `Python` script, import the ``ContoursProfiler`` with
+:python:`from kafe2 import ContoursProfiler` and create a contour plot:
+
+.. literalinclude:: ../../../examples/002_model_functions/model_functions.py
+    :lines: 55-57
+
+By creating the contours in a `Python` script the user has a finer control on which parameters to
+use as well on the appearance of the contour plot via various keyword arguments.
+
+The according contour plot to the exponential fit shown above looks like this:
+
+.. figure:: ../static/img/002_exponential_contours.png
+    :alt: Contour plot corresponding to the exponential fit.
+
+When looking at the :math:`1\sigma` contour it's slightly visible, that the contour is not
+perfectly elliptical. But in this case the deformation is very small and is negligible.
+If a contour is not elliptical it is good practice to show the contour plot in addition to the
+uncertainties from the fit. This illustrates the correlation of the parameters.
 
 kafe2go
 -------
