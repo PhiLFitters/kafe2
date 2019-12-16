@@ -238,7 +238,7 @@ The according lines are highlighted in the example file below.
     :control_text: constraints.yml
 
     .. literalinclude:: ../../../examples/003_constraints/constraints.yml
-        :emphasize-lines: 47-
+        :emphasize-lines: 50-
 
 Python
 ------
@@ -252,4 +252,4 @@ Using *kafe2* inside a *Python* script, parameter constraints can be set with
 
     .. literalinclude:: ../../../examples/003_constraints/constraints.py
         :lines: 26-
-        :emphasize-lines: 28-31
+        :emphasize-lines: 28-32
