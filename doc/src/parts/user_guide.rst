@@ -303,7 +303,7 @@ and model function is shown below the plot. This can be done by appending the ``
     :control_type: link
     :control_text: non_linear_fit.yml
 
-    .. literalinclude:: ../../../examples/004_non_linear_fit.yml
+    .. literalinclude:: ../../../examples/004_non_linear_fit/non_linear_fit.yml
 
 Python
 ------
@@ -315,6 +315,6 @@ highlighted in the code example below.
     :control_type: link
     :control_text: non_linear_fit.py
 
-    .. literalinclude:: ../../../examples/004_non_linear_fit.py
+    .. literalinclude:: ../../../examples/004_non_linear_fit/non_linear_fit.py
         :lines: 27-
-        :emphasize-lines: 23, 26, 29-31
+        :emphasize-lines: 23, 27, 29-31
