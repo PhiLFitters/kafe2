@@ -33,6 +33,10 @@ def kafe2go():
     _parser.add_argument('-r', '--ratio',
                          action='store_true',
                          help="Show data/model ratio below the main plot.")
+    _parser.add_argument('-a', '--asymmetric',
+                         action='store_true',
+                         help='Show asymmetric parameter uncertainties when displaying the fit information. This'
+                              'affects the fit report to the terminal as well as the information box of the plot.')
     _parser.add_argument('-c', '--contours', 
                          action='store_true',
                          help="Plot contours and profiles.")
@@ -64,6 +68,7 @@ def kafe2go():
     _report = not _args.noreport
     _infobox = not _args.noinfobox
     _ratio = _args.ratio
+    _asymmetric = _args.asymmetric
     _separate = _args.separate
     _input_format = _args.inputformat
     _plot_format = _args.plotformat
@@ -77,14 +82,14 @@ def kafe2go():
         _fit = FitBase.from_file(_fname, format=_input_format)
         _fit.do_fit()
         if _report:
-            _fit.report()
+            _fit.report(asymmetric_parameter_errors=_asymmetric)
         _fits.append(_fit)
     
     if not _band:
         XYPlotAdapter.PLOT_SUBPLOT_TYPES.pop('model_error_band')
 
     _plot = Plot(fit_objects=_fits, separate_figures=_separate)
-    _plot.plot(with_fit_info=_infobox, with_ratio=_ratio)
+    _plot.plot(with_fit_info=_infobox, with_asymmetric_parameter_errors=_asymmetric, with_ratio=_ratio)
 
     _basenames = [name.rsplit('.', 1)[0] for name in _filenames]
 
