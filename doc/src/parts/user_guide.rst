@@ -106,8 +106,8 @@ When a different function has to be fitted, those functions need to be defined e
 The expectation value of :math:`\chi^2/\mathrm{ndf}` is 1. Thus the exponential function
 more accurately describes the dataset than a line function.
 
-An exponential function is a **non-linear** function! Therefore the fit parameters can be heavily
-correlated. To verify this, please create a contour plot of the fitted parameters.
+An exponential function is a **non linear** function! Therefore the :math:`\chi^2` can have a non
+parabolic shape. To verify this, please create a contour plot of the fitted parameters.
 This can be done by appending the ``-c`` or ``--contours`` option to *kafe2go*. Additionally a
 grid can be added to the contour plots with the ``--grid all`` flag.
 To achieve the same with a *Python* script, import the ``ContoursProfiler`` with
@@ -122,10 +122,9 @@ The according contour plot to the exponential fit shown above looks like this:
 .. figure:: ../_static/img/002_exponential_contours.png
     :alt: Contour plot corresponding to the exponential fit.
 
-When looking at the :math:`1\sigma` contour it's slightly visible, that the contour is not
-perfectly elliptical. But in this case the deformation is very small and is negligible.
-If a contour is not elliptical it is good practice to show the contour plot in addition to the
-uncertainties from the fit. This illustrates the correlation of the parameters.
+When looking at the :math:`1\sigma` contour it's slightly visible, that the profiles are not
+perfectly parabolic. But in this case the deformation is very small and is negligible. More
+information about **non linear** fits follows in :ref:`non-linear-fits`.
 
 kafe2go
 -------
@@ -253,3 +252,69 @@ Using *kafe2* inside a *Python* script, parameter constraints can be set with
     .. literalinclude:: ../../../examples/003_constraints/constraints.py
         :lines: 26-
         :emphasize-lines: 28-32
+
+
+.. _non-linear-fits:
+
+Example 4: Non Linear Fits
+==========================
+
+Very often, when the fit model is a non-linear function of the parameters, the :math:`\chi^2`
+function is not parabolic around the minimum.
+A very common example of such a case is an exponential function
+parametrized as shown in this example.
+
+In the case of a nonlinear fit, the minimum of a :math:`\chi^2` cost function is not longer shaped
+like a parabola (with a model parameter on the x axis and chi2 on the y axis).
+Now, you might be wondering why you should care about the shape of the chi2 function.
+The reason why it's important is that the common notation of :math:`p\pm\sigma` for fit results
+is only valid for a parabola-shaped cost function.
+If the :math:`\chi^2` function is distorted it will also affect your fit results!
+
+Luckily nonlinear fits oftentimes still produce meaningful fit results as long as the distortion is
+not too big - you just need to be more careful during the evaluation of your fit results.
+A common approach for handling nonlinearity is to trace the profile of the cost function (in this
+case chi2) in either direction of the cost function minimum and find the points at which the cost
+function value has increased by a specified amount relative to the cost function minimum.
+In other words, two cuts are made on either side of the cost function minimum at a specified
+height.
+
+The two points found with this approach span a confidence interval for the fit parameter around the
+cost function minimum.
+The confidence level of the interval depends on how high you set the cuts for the cost increase
+relative to the cost function minimum.
+The one sigma interval described by conventional parameter errors is achieved by a cut at the fit
+minimum plus :math:`1^2=1` and has a confidence level of about 68%.
+The two sigma interval is achieved by a cut at the fit minimum plus :math:`2^2=4` and has a
+confidence level of about 95%, and so on.
+The one sigma interval is commonly described by what is called asymmetric errors:
+the interval limits are described relative to the cost function minimum as
+:math:`p^{+\sigma_\mathrm{up}}_{-\sigma_\mathrm{down}}`.
+
+kafe2go
+-------
+
+To display asymmetric parameter uncertainties use the flag ``-a``. In addition the profiles and
+contours can be shown by using the ``-c`` flag. In the *Python* example a ratio between the data
+and model function is shown below the plot. This can be done by appending the ``-r`` flag to
+*kafe2go*.
+
+.. bootstrap_collapsible::
+    :control_type: link
+    :control_text: non_linear_fit.yml
+
+    .. literalinclude:: ../../../examples/004_non_linear_fit.yml
+
+Python
+------
+
+The according lines to display asymmetric uncertainties and to create the contour plot are
+highlighted in the code example below.
+
+.. bootstrap_collapsible::
+    :control_type: link
+    :control_text: non_linear_fit.py
+
+    .. literalinclude:: ../../../examples/004_non_linear_fit.py
+        :lines: 27-
+        :emphasize-lines: 23, 26, 29-31
