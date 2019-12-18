@@ -534,7 +534,7 @@ class FitBase(FileIOMixin, object):
 
     def add_simple_error(self, err_val, name=None, correlation=0, relative=False, reference='data', **kwargs):
         """
-        Add a simple uncertainty source to the data container.
+        Add a simple uncertainty source to the fit.
         Returns an error id which uniquely identifies the created error source.
 
         :param err_val: pointwise uncertainty/uncertainties for all data points
@@ -549,7 +549,7 @@ class FitBase(FileIOMixin, object):
         :param reference: which reference values to use when calculating absolute errors from relative errors
         :type reference: 'data' or 'model'
         :return: error id
-        :rtype: int
+        :rtype: str
         """
         if reference == 'data':
             # delegate to data container
@@ -585,7 +585,7 @@ class FitBase(FileIOMixin, object):
         :param reference: which reference values to use when calculating absolute errors from relative errors
         :type reference: 'data' or 'model'
         :return: error id
-        :rtype: int
+        :rtype: str
         """
         if reference == 'data':
             # delegate to data container
@@ -608,7 +608,7 @@ class FitBase(FileIOMixin, object):
         total uncertainty.
 
         :param err_id: error id
-        :type err_id: int
+        :type err_id: str
         """
         try:
             # try to find error in data container

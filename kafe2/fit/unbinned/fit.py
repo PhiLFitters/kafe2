@@ -42,8 +42,10 @@ class UnbinnedFit(FitBase):
         :param model_density_function: the model density
         :type model_density_function: :py:class:`~kafe2.fit.unbinned.UnbinnedModelPDF` or unwrapped native Python function
         :param cost_function: the cost function
-        :param minimizer: the minimizer to use
-        :param minimizer_kwargs:
+        :param minimizer: the minimizer to use for fitting.
+        :type minimizer: None, "iminuit", "tminuit", or "scipy".
+        :param minimizer_kwargs: dictionary with kwargs for the minimizer.
+        :type minimizer_kwargs: dict
         """
         # set/construct the model function object
         if isinstance(model_density_function, self.__class__.MODEL_FUNCTION_TYPE):
