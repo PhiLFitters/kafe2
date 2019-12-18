@@ -62,11 +62,11 @@ g_initial = 9.81  # initial guess for g
 c_initial = 0.01  # initial guess for c
 fit.set_parameter_values(g=g_initial, c=c_initial)
 
-# Optional: Print out a report on the fit results on the console.
-fit.report()
-
 # Perform the fit
 fit.do_fit()
+
+# Optional: Print out a report on the fit results on the console.
+fit.report()
 
 # Optional: plot the fit results
 plot = Plot(fit)
