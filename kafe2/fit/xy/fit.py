@@ -61,6 +61,10 @@ class XYFit(FitBase):
         :type cost_function: :py:class:`~kafe2.fit._base.CostFunctionBase`-derived or unwrapped native Python function
         :param x_error_algorithm: algorithm for handling x errors. Can be one of: ``'iterative linear'``, ``'nonlinear'``
         :type x_error_algorithm: str
+        :param minimizer: the minimizer to use for fitting.
+        :type minimizer: None, "iminuit", "tminuit", or "scipy".
+        :param minimizer_kwargs: dictionary with kwargs for the minimizer.
+        :type minimizer_kwargs: dict
         """
         # set the labels
         self.labels = [None, None]

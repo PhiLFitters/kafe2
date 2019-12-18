@@ -50,6 +50,10 @@ class HistFit(FitBase):
         :type model_density_function: :py:class:`~kafe2.fit.hist.HistModelFunction` or unwrapped native Python function
         :param cost_function: the cost function
         :type cost_function: :py:class:`~kafe2.fit._base.CostFunctionBase`-derived or unwrapped native Python function
+        :param minimizer: the minimizer to use for fitting.
+        :type minimizer: None, "iminuit", "tminuit", or "scipy".
+        :param minimizer_kwargs: dictionary with kwargs for the minimizer.
+        :type minimizer_kwargs: dict
         """
         # set/construct the model function object
         if isinstance(model_density_function, self.__class__.MODEL_FUNCTION_TYPE):
