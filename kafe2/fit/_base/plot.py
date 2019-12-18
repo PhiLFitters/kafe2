@@ -1125,18 +1125,3 @@ class Plot(object):
             ]
 
         return self.set_keywords(plot_type, _dicts)
-
-    def show_fit_info_box(self, asymmetric_parameter_errors=False, format_as_latex=True):
-        """[DEPRECATED] Render text information about each plot on the figure.
-
-        :param format_as_latex: if ``True``, the infobox text will be formatted as a LaTeX string
-        :type format_as_latex: bool
-        :param asymmetric_parameter_errors: if ``True``, use two different parameter errors for up/down directions
-        :type asymmetric_parameter_errors: bool
-        """
-
-        # API is deprecated
-        warnings.warn(
-            "Method `show_fit_info_box` of `{}` object is deprecated. "
-            "This call will have no effect. Pass 'with_fit_info=True' to `plot` "
-            "method to show fit results as part of the legend instead.".format(self.__class__.__name__), UserWarning)
