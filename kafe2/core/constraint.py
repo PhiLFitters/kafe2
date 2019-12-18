@@ -199,7 +199,7 @@ class GaussianMatrixParameterConstraint(ParameterConstraint):
     def cov_mat(self):
         """the absolute covariance matrix between the parameter uncertainties"""
         if self._cov_mat_abs is None:
-            if self.matrix_type is 'cov':
+            if self.matrix_type == 'cov':
                 self._cov_mat_abs = self._cov_mat_rel * np.outer(self.values, self.values)
             else:
                 self._cov_mat_abs = self._cor_mat * np.outer(self.uncertainties, self.uncertainties)

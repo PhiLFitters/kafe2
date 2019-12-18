@@ -34,13 +34,13 @@ class ConstraintYamlWriter(YamlWriterMixin, ConstraintDReprBase):
             _yaml_doc['indices'] = constraint.indices.tolist()
             _yaml_doc['values'] = constraint.values.tolist()
             if constraint.relative:
-                if constraint.matrix_type is 'cov':
+                if constraint.matrix_type == 'cov':
                     _yaml_doc['matrix'] = constraint.cov_mat_rel.tolist()
                 else:
                     _yaml_doc['matrix'] = constraint.cor_mat.tolist()
                     _yaml_doc['uncertainties'] = constraint.uncertainties_rel.tolist()
             else:
-                if constraint.matrix_type is 'cov':
+                if constraint.matrix_type == 'cov':
                     _yaml_doc['matrix'] = constraint.cov_mat.tolist()
                 else:
                     _yaml_doc['matrix'] = constraint.cor_mat.tolist()
