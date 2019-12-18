@@ -50,6 +50,10 @@ plotting-procedure is possible. For using *kafe2* inside a *Python* script, impo
 
     from kafe2 import XYFit, Plot
 
+If a code example contains a line similar to :python:`data = XYContainer.from_file("data.yml")`
+the according dataset can be found in the corresponding examples folder. Those are located inside the
+installation directory of *kafe2*. Additionally the examples can be found on
+`GitHub <https://github.com/dsavoiu/kafe2/tree/master/examples>`_.
 
 Example 1: Line Fit
 ===================
@@ -264,6 +268,9 @@ function is not parabolic around the minimum.
 A very common example of such a case is an exponential function
 parametrized as shown in this example.
 
+.. figure:: ../_static/img/004_non_linear_fit.png
+    :alt: Fit of a non linear function.
+
 In the case of a nonlinear fit, the minimum of a :math:`\chi^2` cost function is not longer shaped
 like a parabola (with a model parameter on the x axis and chi2 on the y axis).
 Now, you might be wondering why you should care about the shape of the chi2 function.
@@ -291,6 +298,31 @@ The one sigma interval is commonly described by what is called asymmetric errors
 the interval limits are described relative to the cost function minimum as
 :math:`p^{+\sigma_\mathrm{up}}_{-\sigma_\mathrm{down}}`.
 
+.. figure:: ../_static/img/004_non_linear_fit_contours.png
+    :alt: Contour and profiles of an non-linear fit.
+
+In addition to non linear function, the usage of x data errors leads to a non linear fits as well.
+kafe2 fits support the addition of x data errors - in fact we've been using them since the very
+first example.
+To take them into account the x errors are converted to y errors via multiplication with the
+derivative of the model function.
+In other words, kafe2 fits extrapolate the derivative of the model function at the x data values
+and calculate how a difference in the x direction would translate to the y direction.
+Unfortunately this approach is not perfect though.
+Since we're extrapolating the derivative at the x data values, we will only receive valid results
+if the derivative doesn't change too much at the scale of the x error.
+Also, since the effective y error has now become dependent on the derivative of the model function
+it will vary depending on our choice of model parameters.
+This distorts our likelihood function - the minimum of a chi2 cost function will no longer be
+shaped like a parabola (with a model parameter on the x axis and chi2 on the y axis).
+
+To demonstrate this, the second file ``x_errors`` will perform a line-fit with much bigger
+uncertainties on the x axis than on the y axis. The non parabolic shape can be seen in the one
+dimensional profile scans.
+
+.. figure:: ../_static/img/004_x_erros_contours.png
+    :alt: Profiles and contour of a line fit with big x errors.
+
 kafe2go
 -------
 
@@ -305,6 +337,19 @@ and model function is shown below the plot. This can be done by appending the ``
 
     .. literalinclude:: ../../../examples/004_non_linear_fit/non_linear_fit.yml
 
+The dataset used to show that big uncertainties on the x axis can cause the fit to be non linear
+follows here.
+Keep in mind, that *kafe2go* will perform a line fit if no fit function has been specified.
+In order do add a grid to the contours, run *kafe2go* with the ``--grid all`` flag.
+So to plot with asymmetric errors, the profiles and contour as well as a grid run
+``kafe2go x_errors.yml -a -c --grid all``
+
+.. bootstrap_collapsible::
+    :control_type: link
+    :control_text: x_errors.yml
+
+    .. literalinclude:: ../../../examples/004_non_linear_fit/x_errors.yml
+
 Python
 ------
 
@@ -318,3 +363,13 @@ highlighted in the code example below.
     .. literalinclude:: ../../../examples/004_non_linear_fit/non_linear_fit.py
         :lines: 27-
         :emphasize-lines: 23, 27, 29-31
+
+The example to show that uncertainties on the x axis can cause a non linear fit uses the *YAML*
+dataset given in the *kafe2go* section.
+
+.. bootstrap_collapsible::
+    :control_type: link
+    :control_text: non_linear_fit.py
+
+    .. literalinclude:: ../../../examples/004_non_linear_fit/x_errors.py
+        :lines: 19-
