@@ -428,13 +428,16 @@ likelihood of each data point is fitted.
 .. figure:: ../_static/img/006_unbinned_fit.png
     :alt: An unbinned likelihood fit performed with kafe2.
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: unbinned_fit.py
+kafe2go
+-------
 
-    .. literalinclude:: ../../../examples/006_unbinned_fit/unbinned.py
-        :lines: 17-
-        :empahsize-lines: 32-34
+Unbinned fits are currently not supported by *kafe2go*.
+This feature will be added in a future update.
+
+Python
+------
+
+The fitting procedure is similar to the one of a histogram fit.
 
 Inside a *kafe2* fit, single parameters can be fixated as highlighted in the example.
 When fixing a parameter, there must be a good reason to do so. In this case it's the normalization
@@ -442,3 +445,10 @@ of the probability distribution function.
 This, of course, could have been done inside the function itself.
 But if the user wants to change to normalization without touching the distribution function, this
 is a better way.
+.. bootstrap_collapsible::
+    :control_type: link
+    :control_text: unbinned_fit.py
+
+    .. literalinclude:: ../../../examples/006_unbinned_fit/unbinned.py
+        :lines: 17-
+        :empahsize-lines: 32-34
