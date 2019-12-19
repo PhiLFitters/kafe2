@@ -687,6 +687,8 @@ class FitBase(FileIOMixin, object):
         elif reference == 'model':
             # delegate to model container
             _reference_object = self._param_model
+            if relative:
+                raise NotImplementedError("Errors relative to model not implemented!")
         else:
             raise FitException("Cannot add error: unknown reference "
                                "specification '{}', expected one of: 'data', 'model'...".format(reference))
@@ -723,6 +725,8 @@ class FitBase(FileIOMixin, object):
         elif reference == 'model':
             # delegate to model container
             _reference_object = self._param_model
+            if relative:
+                raise NotImplementedError("Errors relative to model not implemented!")
         else:
             raise FitException("Cannot add matrix error: unknown reference "
                                "specification '{}', expected one of: 'data', 'model'...".format(reference))
