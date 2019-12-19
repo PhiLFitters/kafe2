@@ -445,6 +445,7 @@ of the probability distribution function.
 This, of course, could have been done inside the function itself.
 But if the user wants to change to normalization without touching the distribution function, this
 is a better way.
+
 .. bootstrap_collapsible::
     :control_type: link
     :control_text: unbinned_fit.py
