@@ -36,7 +36,7 @@ class MultiFit(FitBase):
         self._minimizer = minimizer
         self._minimizer_kwargs = minimizer_kwargs
         self._shared_error_dicts = dict()
-        self._derivative_precision = None
+        self._min_x_error = None
         self._rebuild_nexus()
         self._initialize_fitter()
 
@@ -111,8 +111,27 @@ class MultiFit(FitBase):
                     _fit._nexus.add(node=_par_node, existing_behavior='replace')
         self._nexus.add(
             Array(nodes=self._combined_parameter_node_dict.values(), name='parameter_values'))
-        for _fit in self._fits:
-            _fit._initialize_fitter()
+
+        _x_data_names = []
+        _y_data_names = []
+        for _i, _fit_i in enumerate(self._fits):
+            _fit_i._initialize_fitter()
+
+            _x_data_node = _fit_i._nexus.get('x_data')
+            if _x_data_node is not None:
+                _x_data_name = 'x_data%s' % _i
+                self._nexus.add(
+                    Alias(ref=_x_data_node, name=_x_data_name),
+                    add_children=False)
+                _x_data_names.append(_x_data_name)
+
+            _y_data_node = _fit_i._nexus.get('y_data')
+            if _y_data_node is not None:
+                _y_data_name = 'y_data%s' % _i
+                self._nexus.add(
+                    Alias(ref=_y_data_node, name=_y_data_name),
+                    add_children=False)
+                _y_data_names.append(_y_data_name)
 
         if not self._shared_error_dicts:
             _cost_functions = [_fit._cost_function for _fit in self._fits]
@@ -123,7 +142,6 @@ class MultiFit(FitBase):
             _cost_names = []
             _x_cov_mat_names = []
             _derivative_names = []
-            _y_data_names = []
             _y_model_names = []
             _y_cov_mat_names = []
             _has_shared_x_error = False
@@ -150,7 +168,7 @@ class MultiFit(FitBase):
                         def _get_derivatives_func(fit):
                             return lambda: fit._param_model.eval_model_function_derivative_by_x(
                                 model_parameters=fit.poi_values,
-                                dx=self._derivative_precision
+                                dx=0.01*self._min_x_error
                             )
 
                         self._nexus.add(
@@ -159,12 +177,6 @@ class MultiFit(FitBase):
                         self._nexus.add_dependency(
                             name=_derivatives_name, depends_on='parameter_values')
                         _derivative_names.append(_derivatives_name)
-
-                    _y_data_name = 'y_data%s' % _i
-                    self._nexus.add(
-                        Alias(ref=_fit_i._nexus.get('y_data'), name=_y_data_name),
-                        add_children=False)
-                    _y_data_names.append(_y_data_name)
 
                     _y_model_name = 'y_model%s' % _i
                     self._nexus.add(
@@ -259,7 +271,7 @@ class MultiFit(FitBase):
             minimizer_kwargs=self._minimizer_kwargs
         )
 
-    def _add_error_object(self, error_object, name=None, axis=None):
+    def _add_error_object(self, error_object, reference, name=None, axis=None):
         from ..indexed import IndexedFit
         from ..xy import XYFit
 
@@ -283,17 +295,50 @@ class MultiFit(FitBase):
         name = random_alphanumeric(8)
         while name in self._shared_error_dicts:
             name = random_alphanumeric(8)
+
+        if error_object.relative:
+            if not reference == 'data' or reference == 'model':
+                raise ValueError(
+                    "Error reference must be either 'model' or 'data' but received %s" % reference)
+            if axis == 'x' and reference == 'data':
+                _node_name = 'x_data%s'
+            elif axis == 'y' and reference == 'data':
+                _node_name = 'y_data%s'
+            elif axis == 'x' and reference == 'model':
+                _node_name = 'x_model%s'
+                raise NotImplementedError("Errors relative to model not implemented")
+            elif axis == 'y' and reference == 'model':
+                _node_name = 'y_model%s'
+                raise NotImplementedError("Errors relative to model not implemented")
+            else:
+                raise AssertionError()
+            _reference_value = None
+            _first_index = None
+            for _fit_index in error_object.fit_indices:
+                if _reference_value is None:
+                    _reference_value = self._nexus.get(_node_name % _fit_index).value
+                    _first_index = _fit_index
+                else:
+                    _other_reference_value = self._nexus.get(_node_name % _fit_index).value
+                    if _reference_value.shape != _other_reference_value.shape or np.any(
+                            (_reference_value - _other_reference_value) != 0):
+                        raise ValueError(
+                            "Cannot add a relative error for fits %s and %s because they have "
+                            "conflicting references." % (_first_index, _fit_index))
+            error_object.reference = _reference_value
+
         if axis is None:
             axis = 'y'
         elif axis == 'x':
-            _new_error_min = np.min(error_object.error)
-            if self._derivative_precision is None:
-                self._derivative_precision = _new_error_min
+            _min_of_new_error = np.min(error_object.error)
+            if self._min_x_error is None:
+                self._min_x_error = _min_of_new_error
             else:
-                self._derivative_precision = min(
-                    self._derivative_precision, _new_error_min
+                self._min_x_error = min(
+                    self._min_x_error, _min_of_new_error
                 )
-        _error_dict = dict(err=error_object, enabled=True, axis=axis)
+
+        _error_dict = dict(err=error_object, enabled=True, axis=axis, reference_name=reference)
         self._shared_error_dicts[name] = _error_dict
         self._rebuild_nexus()
         return name
@@ -394,7 +439,8 @@ class MultiFit(FitBase):
                 err_matrix=err_matrix, matrix_type=matrix_type, err_val=err_val, relative=relative,
                 fit_indices=fits
             )
-            return self._add_error_object(error_object=_matrix_error, name=name, axis=axis)
+            return self._add_error_object(error_object=_matrix_error, reference=reference,
+                                          name=name, axis=axis)
 
     def add_simple_error(
             self, err_val, fits, axis=None, name=None, correlation=0, relative=False,
@@ -440,7 +486,8 @@ class MultiFit(FitBase):
             _simple_error = SimpleGaussianError(
                 err_val=err_val, corr_coeff=correlation, relative=relative, fit_indices=fits
             )
-            return self._add_error_object(error_object=_simple_error, name=name, axis=axis)
+            return self._add_error_object(error_object=_simple_error, reference=reference,
+                                          name=name, axis=axis)
 
     def assign_model_function_expression(self, expression_format_string, fit_index=None):
         """Assign a plain-text-formatted expression string to the model function of one of the
