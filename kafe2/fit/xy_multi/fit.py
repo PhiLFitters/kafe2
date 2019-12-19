@@ -111,6 +111,7 @@ class XYMultiFit(FitBase):
         self._validate_model_function_for_fit_raise()
 
         # initialize the Nexus
+        self._init_nexus_callbacks = []
         self._init_nexus()
 
         # save minimizer, minimizer_kwargs for serialization
@@ -132,6 +133,8 @@ class XYMultiFit(FitBase):
 
     def _init_nexus(self):
         six.get_unbound_function(XYFit._init_nexus)(self)  # same nexus wiring as for simple XYFit
+        for _callback in self._init_nexus_callbacks:
+            _callback()
 
     def _calculate_y_error_band(self, num_points=100):
         # TODO: config for num_points

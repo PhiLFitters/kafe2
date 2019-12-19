@@ -37,13 +37,14 @@ class FitBase(FileIOMixin, object):
     def __init__(self):
         self._data_container = None
         self._param_model = None
+        self._init_nexus_callbacks = []
         self._nexus = None
         self._fitter = None
         self._fit_param_names = None
         self._fit_param_constraints = None
         self._model_function = None
         self._cost_function = None
-        self._loaded_result_dict = None  # contains potential fit results when loading from a file or multifit
+        self._loaded_result_dict = None  # contains potential fit results from a file or multifit
         super(FitBase, self).__init__()
 
     # -- private methods

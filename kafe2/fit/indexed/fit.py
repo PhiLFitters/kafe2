@@ -81,6 +81,7 @@ class IndexedFit(FitBase):
             # TODO: validate user-defined cost function? how?
 
         # initialize the Nexus
+        self._init_nexus_callbacks = []
         self._init_nexus()
 
         # save minimizer, minimizer_kwargs for serialization
@@ -210,6 +211,9 @@ class IndexedFit(FitBase):
                 'model_error',
             )
         )
+        for _callback in self._init_nexus_callbacks:
+            _callback()
+
     def _report_data(self, output_stream, indent, indentation_level):
         output_stream.write(indent * indentation_level + '########\n')
         output_stream.write(indent * indentation_level + '# Data #\n')
