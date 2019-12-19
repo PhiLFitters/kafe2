@@ -373,3 +373,72 @@ dataset given in the *kafe2go* section.
 
     .. literalinclude:: ../../../examples/004_non_linear_fit/x_errors.py
         :lines: 19-
+
+
+Example 5: Histogram Fit
+========================
+
+*kafe2* is not only capable of performing XY-Fits. This example shows how to handle a one
+dimensional dataset.
+The distribution of a random stochastic variable follows a probability density function.
+This density needs to be normalized.
+The fit will determine the parameters of that density function, which the dataset is most likely to
+follow.
+If the given function is not normalized, please make sure to add an independent scale factor.
+The hist fit will try to normalize the function to one for the bin range.
+To get to the height of a bin, please multiply the results of the fitted function with the amount
+of entries N of the histogram.
+
+.. figure:: ../_static/img/005_hist_fit.png
+    :alt: A histogram fit performed with kafe2.
+
+kafe2go
+-------
+
+*kafe2go* currently requires extra formatting to perform a histogram fit. This will be changed in a
+future update. At the moment it's simpler to creat a *Python* script.
+
+Python
+------
+
+To use a histogram fit in a *Python* script, just import it with
+:python:`from kafe2 import HistContainer, HistFit`.
+
+The creation a a histogram requires the user to set the limits of the histogram and the amount of
+bins.
+Alternatively the bin edges for each bin can be set.
+
+.. bootstrap_collapsible::
+    :control_type: link
+    :control_text: histogram_fit.py
+
+    .. literalinclude:: ../../../examples/005_histogram_fit/histogram_fit.py
+        :lines: 16-
+
+
+Example 6: Unbinned Fit
+=======================
+
+An unbinned fit is needed, when there are too few data points to create a (good) histogram.
+If a histogram is created from too few data points, information can be lost or even changed, by
+changing the exact value of one data point to the range of a bin.
+With an unbinned likelihood fit it's still possible to fit the pdf to the data points, as the
+likelihood of each data point is fitted.
+
+.. figure:: ../_static/img/006_unbinned_fit.png
+    :alt: An unbinned likelihood fit performed with kafe2.
+
+.. bootstrap_collapsible::
+    :control_type: link
+    :control_text: unbinned_fit.py
+
+    .. literalinclude:: ../../../examples/006_unbinned_fit/unbinned.py
+        :lines: 17-
+        :empahsize-lines: 32-34
+
+Inside a *kafe2* fit, single parameters can be fixated as highlighted in the example.
+When fixing a parameter, there must be a good reason to do so. In this case it's the normalization
+of the probability distribution function.
+This, of course, could have been done inside the function itself.
+But if the user wants to change to normalization without touching the distribution function, this
+is a better way.

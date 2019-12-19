@@ -3,10 +3,10 @@
 kafe2 example: Unbinned Fit
 ================================
 
-An unbinned fit is needed, when there are too few data points to create a (good) histogram. If a probability density
-function (pdf) is fitted to a histogram generated from too few data points, the result won't be accurate. With an
-unbinned likelihood fit it's still possible to fit the pdf to the data points, as the likelihood and not the shape of
-the histogram is fitted.
+An unbinned fit is needed, when there are too few data points to create a (good) histogram. If a histogram is created
+from too few data points, information can be lost or even changed, by changing the exact value of one data point to the
+range of a bin. With an unbinned likelihood fit it's still possible to fit the pdf to the data points, as the likelihood
+of each data point is fitted.
 
 In this example the decay time of myons is calculated. Tha data was collected using the Kamiokanne-Experiment (a
 water-Cherenkov detector with photomultiplier readout). For more information on the experimental setup visit
@@ -45,9 +45,7 @@ dT = np.loadtxt(infile)
 data = UnbinnedContainer(dT)  # create the kafe data object
 fit = UnbinnedFit(data=data, model_density_function=pdf)  # create the fit object and set the pdf for the fit
 
-# Fix the parameters a and b, as they are a fix value. Those parameters might change for different experimental setups.
-# Because the data is from one experiment only, the minimum and maximum of the decay time which can be measured is the
-# same for all data points
+# Fix the parameters a and b. Those are responsible for the normalization of the pdf for the range (a, b).
 fit.fix_parameter("a", 1)
 fit.fix_parameter("b", 11.5)
 
