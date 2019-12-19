@@ -37,11 +37,15 @@ class MultiFit(FitBase):
         self._minimizer_kwargs = minimizer_kwargs
         self._shared_error_dicts = dict()
         self._min_x_error = None
-        self._rebuild_nexus()
+        self._init_nexus_callbacks = []
+        self._init_nexus()
         self._initialize_fitter()
 
         self._fit_param_constraints = []
         self._loaded_result_dict = None
+
+        for _fit in self._fits:
+            _fit._init_nexus_callbacks.append(self._init_nexus)
 
     # -- private methods
 
@@ -90,7 +94,7 @@ class MultiFit(FitBase):
             )
         self._update_parameter_formatters()
 
-    def _rebuild_nexus(self):
+    def _init_nexus(self):
         self._nexus = Nexus()
         self._nexus.add_function(
             lambda: self.parameter_constraints, func_name='parameter_constraints')
@@ -263,6 +267,8 @@ class MultiFit(FitBase):
             func=self._cost_function.func, par_names=_cost_names)
         self._nexus.add_alias(name='cost', alias_for=_cost_function_node.name)
         self._initialize_fitter()
+        for _callback in self._init_nexus_callbacks:
+            _callback()
 
     def _initialize_fitter(self):
         self._fitter = NexusFitter(
@@ -340,7 +346,7 @@ class MultiFit(FitBase):
 
         _error_dict = dict(err=error_object, enabled=True, axis=axis, reference_name=reference)
         self._shared_error_dicts[name] = _error_dict
-        self._rebuild_nexus()
+        self._init_nexus()
         return name
 
     def _set_new_data(self, new_data):
@@ -430,7 +436,7 @@ class MultiFit(FitBase):
         if isinstance(fits, int):
             self._fits[fits].add_matrix_error(
                 err_matrix=err_matrix, matrix_type=matrix_type, name=name, err_val=err_val,
-                relative=relative, **kwargs
+                axis=axis, reference=reference, relative=relative, **kwargs
             )
         else:
             if fits == 'all':
@@ -470,7 +476,8 @@ class MultiFit(FitBase):
         """
         if isinstance(fits, int):
             self._fits[fits].add_simple_error(
-                err_val=err_val, name=name, correlation=correlation, relative=relative, **kwargs
+                err_val=err_val, name=name, correlation=correlation, relative=relative,
+                axis=axis, reference=reference, **kwargs
             )
         else:
             if fits == 'all':
