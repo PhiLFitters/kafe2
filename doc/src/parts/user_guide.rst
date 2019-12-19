@@ -451,4 +451,4 @@ is a better way.
 
     .. literalinclude:: ../../../examples/006_unbinned_fit/unbinned.py
         :lines: 17-
-        :empahsize-lines: 32-34
+        :emphasize-lines: 32-34
