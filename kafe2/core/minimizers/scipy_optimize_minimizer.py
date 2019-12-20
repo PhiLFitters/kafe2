@@ -9,6 +9,7 @@ except ImportError:
 
 import numpy as np
 import numdifftools as nd
+from scipy.optimize import brentq
 
 class MinimizerScipyOptimizeException(Exception):
     pass
@@ -51,18 +52,36 @@ class MinimizerScipyOptimize(MinimizerBase):
         self._save_state_dict['parameter_values'] = self.parameter_values
         self._save_state_dict['parameter_errors'] = self.parameter_errors
         self._save_state_dict['function_value'] = self._fval
+        self._save_state_dict['par_fixed'] = np.array(self._par_fixed)
         super(MinimizerScipyOptimize, self)._save_state()
 
     def _load_state(self):
         self.parameter_values = self._save_state_dict['parameter_values']
         self._par_err = np.array(self._save_state_dict['parameter_errors'])
         self._fval = self._save_state_dict['function_value']
+        self._par_fixed = self._save_state_dict['par_fixed']
         super(MinimizerScipyOptimize, self)._load_state()
 
     def _get_opt_result(self):
         if self._opt_result is None:
             raise MinimizerScipyOptimizeException("Cannot get requested information: No fitters performed!")
         return self._opt_result
+
+    def _find_chi_2_cut(self, parameter_name, low, high, target_chi_2, min_parameters):
+        _par_would_be_fixed = np.array(self._par_fixed)
+        _par_index = self.parameter_names.index(parameter_name)
+        _par_would_be_fixed[_par_index] = True
+        if not np.all(_par_would_be_fixed):
+            return MinimizerBase._find_chi_2_cut(
+                self, parameter_name, low, high, target_chi_2, min_parameters)
+        else:
+            def _profile(parameter_value):
+                self.set_several(self.parameter_names, min_parameters)
+                self.set(parameter_name, parameter_value)
+                self._fval = None  # Clear fval cache
+                return self.function_value - target_chi_2
+
+            return brentq(f=_profile, a=low, b=high, xtol=self.tolerance)
 
     # -- public properties
 
@@ -120,6 +139,10 @@ class MinimizerScipyOptimize(MinimizerBase):
     def fix(self, parameter_name):
         _par_id = self._par_names.index(parameter_name)
         self._par_fixed[_par_id] = True
+
+    def is_fixed(self, parameter_name):
+        _par_id = self._par_names.index(parameter_name)
+        return self._par_fixed[_par_id]
 
     def fix_several(self, parameter_names):
         for _pn in parameter_names:
@@ -190,6 +213,8 @@ class MinimizerScipyOptimize(MinimizerBase):
             self.parameter_values = self._opt_result.x
 
         self._fval = self._opt_result.fun
+        # Write back parameter values to nexus parameter nodes:
+        self._func_wrapper_unpack_args(self.parameter_values)
 
     def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, **minimizer_contour_kwargs):
         _algorithm = minimizer_contour_kwargs.pop("algorithm", "heuristic_grid")

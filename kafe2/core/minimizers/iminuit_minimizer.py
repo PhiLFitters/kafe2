@@ -275,6 +275,9 @@ class MinimizerIMinuit(MinimizerBase):
         self._minimizer_param_dict["fix_" + parameter_name] = True
         self._reset()
 
+    def is_fixed(self, parameter_name):
+        return self._minimizer_param_dict["fix_%s" % parameter_name]
+
     def fix_several(self, parameter_names):
         for _pn in parameter_names:
             self.fix(_pn)

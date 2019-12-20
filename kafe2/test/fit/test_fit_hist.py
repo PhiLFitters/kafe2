@@ -87,8 +87,8 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         self._ref_initial_cost_chi2 = simple_chi2(self._ref_data, self._ref_initial_model)
 
         # reference fit result values
-        self._nominal_fit_result_pars_nll = np.array([14.18443871, 3.0148702])
-        self._nominal_fit_result_pars_chi2 = np.array([13.82779355, 2.62031141])
+        self._nominal_fit_result_pars_nll = np.array([14.18427759, 3.02257722])
+        self._nominal_fit_result_pars_chi2 = np.array([13.82779489, 2.62746457])
 
         self._nominal_fit_result_model_nll = (
             hist_model_density_antideriv(self._ref_bin_edges[1:], *self._nominal_fit_result_pars_nll) -
