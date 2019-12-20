@@ -51,6 +51,8 @@ class ModelParameterFormatter(FileIOMixin, object):
 
         self._name = name
         self.latex_name = latex_name  # latex_name setter requires self._name to be set beforehand
+
+        self._fixed = False
         super(ModelParameterFormatter, self).__init__()
 
     @classmethod
@@ -140,6 +142,15 @@ class ModelParameterFormatter(FileIOMixin, object):
             return None
         return self.asymmetric_error[0]
 
+    @property
+    def fixed(self):
+        """if the parameter has been fixed by the user."""
+        return self._fixed
+
+    @fixed.setter
+    def fixed(self, fixed):
+        self._fixed = fixed
+
     def get_formatted(self, with_name=False, with_value=True, with_errors=True, n_significant_digits=2,
                       round_value_to_error=True, asymmetric_error=False, format_as_latex=False):
         """
@@ -186,6 +197,11 @@ class ModelParameterFormatter(FileIOMixin, object):
                     _display_string += "$%g$" % (_display_val,)
                 else:
                     _display_string += "%g" % (_display_val,)
+            elif self.fixed:
+                if format_as_latex:
+                    _display_string += r"$%g$ (fixed)" % self._value
+                else:
+                    _display_string += "%g (fixed)" % self._value
             else:
                 if asymmetric_error:
                     _min_err = min(abs(self.error_up), abs(self.error_down))
