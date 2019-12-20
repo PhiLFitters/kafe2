@@ -34,7 +34,8 @@ class MinimizerBase(object):
         self._hessian = np.array(self._save_state_dict['hessian'])
         self._hessian_inv = np.array(self._save_state_dict['hessian_inv'])
         self._par_cov_mat = np.array(self._save_state_dict['par_cov_mat'])
-        self._func_wrapper_unpack_args(self.parameter_values)  # call the function to propagate the changes to the nexus
+        # Write back parameter values to nexus parameter nodes:
+        self._func_wrapper_unpack_args(self.parameter_values)
 
     def _func_wrapper(self, *args):
         _fval = self._func_handle(*args)
@@ -52,20 +53,24 @@ class MinimizerBase(object):
         self._save_state()
         _asymm_par_errs = np.zeros(shape=self.parameter_values.shape + (2,))
         for _par_index, _par_name in enumerate(self.parameter_names):
-            _target_chi_2 = self.function_value + 1.0
-            _min_parameters = self.parameter_values
+            if self.is_fixed(_par_name):
+                _asymm_par_errs[_par_index, 0] = np.nan
+                _asymm_par_errs[_par_index, 1] = np.nan
+            else:
+                _target_chi_2 = self.function_value + 1.0
+                _min_parameters = self.parameter_values
 
-            _par_min = self.parameter_values[_par_index]
-            _par_err = self.parameter_errors[_par_index]
+                _par_min = self.parameter_values[_par_index]
+                _par_err = self.parameter_errors[_par_index]
 
-            _cut_dn = self._find_chi_2_cut(_par_name, _par_min - 2 * _par_err, _par_min, _target_chi_2,
-                                           _min_parameters)
-            _asymm_par_errs[_par_index, 0] = _cut_dn - _par_min
+                _cut_dn = self._find_chi_2_cut(_par_name, _par_min - 2 * _par_err, _par_min, _target_chi_2,
+                                               _min_parameters)
+                _asymm_par_errs[_par_index, 0] = _cut_dn - _par_min
 
-            _cut_up = self._find_chi_2_cut(_par_name, _par_min, _par_min + 2 * _par_err, _target_chi_2,
-                                           _min_parameters)
-            _asymm_par_errs[_par_index, 1] = _cut_up - _par_min
-            self._load_state()
+                _cut_up = self._find_chi_2_cut(_par_name, _par_min, _par_min + 2 * _par_err, _target_chi_2,
+                                               _min_parameters)
+                _asymm_par_errs[_par_index, 1] = _cut_up - _par_min
+                self._load_state()
         return _asymm_par_errs
 
     def _find_chi_2_cut(self, parameter_name, low, high, target_chi_2, min_parameters):
@@ -132,6 +137,8 @@ class MinimizerBase(object):
         if self._hessian is None:
             self._hessian = nd.Hessian(self._func_wrapper_unpack_args)(self.parameter_values)
             assert(np.all(self._hessian == self._hessian.T))
+        # Write back parameter values to nexus parameter nodes:
+        self._func_wrapper_unpack_args(self.parameter_values)
         return self._hessian
 
     @property
@@ -167,6 +174,9 @@ class MinimizerBase(object):
         raise NotImplementedError()
 
     def fix(self, parameter_name):
+        raise NotImplementedError()
+
+    def is_fixed(self, parameter_name):
         raise NotImplementedError()
 
     def release(self, parameter_name):
