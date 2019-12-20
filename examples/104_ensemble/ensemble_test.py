@@ -36,11 +36,13 @@ fit_ensemble = XYFitEnsemble(n_experiments=1000,
 
 RELATIVE_TO_WHAT = 'data'
 
-# Scenario 2: use the *fitted model* as a reference
-#             for converting *relative* errors into
-#             *absolute* errors.
-
-# RELATIVE_TO_WHAT = 'model'
+# Note: this case has not been fully implemented
+#       in kafe2 yet -> disabled for now
+## Scenario 2: use the *fitted model* as a reference
+##             for converting *relative* errors into
+##             *absolute* errors.
+#
+#RELATIVE_TO_WHAT = 'model'
 
 # -- add a single, uncorrelated, relative *y* error of 30%
 
