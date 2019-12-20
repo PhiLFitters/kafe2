@@ -81,8 +81,12 @@ class MinimizerIMinuit(MinimizerBase):
         _asymm_par_errs = np.zeros(shape=self.parameter_values.shape + (2,))
         for _par_name in self.parameter_names:
             _index = self.parameter_names.index(_par_name)
-            _asymm_par_errs[_index, 0] = _minos_result_dict[_par_name]['lower']
-            _asymm_par_errs[_index, 1] = _minos_result_dict[_par_name]['upper']
+            if _par_name in _minos_result_dict:
+                _asymm_par_errs[_index, 0] = _minos_result_dict[_par_name]['lower']
+                _asymm_par_errs[_index, 1] = _minos_result_dict[_par_name]['upper']
+            else:
+                _asymm_par_errs[_index, 0] = np.nan
+                _asymm_par_errs[_index, 1] = np.nan
         return _asymm_par_errs
 
     def _fill_in_zeroes_for_fixed(self, submatrix):
@@ -191,11 +195,15 @@ class MinimizerIMinuit(MinimizerBase):
             if not self._get_iminuit().is_clean_state():
                 # if the fit has been performed at least once
                 _param_struct = self._get_iminuit().get_param_states()
-                self._par_err = np.array([p.error for p in _param_struct])
+                self._par_err = np.array(
+                    [p.error if not self._minimizer_param_dict["fix_%s" % pname] else np.nan
+                     for p, pname in zip(_param_struct, self.parameter_names)])
             else:
                 # need to hack to get initial parameter errors
                 _e = self._get_iminuit().errors
-                self._par_err = np.array([_e[pname] for pname in _e])
+                self._par_err = np.array(
+                    [_e[pname] if not self._minimizer_param_dict["fix_%s" % pname] else np.nan
+                     for pname in _e])
         return self._par_err
 
     @property
