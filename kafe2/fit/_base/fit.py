@@ -391,6 +391,8 @@ class FitBase(FileIOMixin, object):
         :type value: float
         """
         self._fitter.fix_parameter(par_name=name, par_value=value)
+        _par_index = self.parameter_names.index(name)
+        self._get_model_function_argument_formatters()[_par_index].fixed = True
 
     def release_parameter(self, par_name):
         """
@@ -400,6 +402,8 @@ class FitBase(FileIOMixin, object):
         :type par_name: str
         """
         self._fitter.release_parameter(par_name=par_name)
+        _par_index = self.parameter_names.index(par_name)
+        self._get_model_function_argument_formatters()[_par_index].fixed = False
 
     def limit_parameter(self, par_name, par_limits):
         """
