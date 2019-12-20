@@ -16,7 +16,7 @@ kafe2 - Karlsruhe Fit Environment 2
 About
 =====
 
-*kafe2* is an open-source Python package designed to provide a flexible 
+*kafe2* is an open-source Python package designed to provide a flexible
 Python interface for the estimation of model parameters from measured
 data. It is the spiritual successor to the original *kafe* package.
 
@@ -26,9 +26,6 @@ uncertainty models, as well as arbitrarily complex parametric
 models. The numeric aspects are handled using the scientific Python
 stack (numpy, scipy, ...). Visualization of the data and the estimated
 model are provided by matplotlib.
-
-.. note:: kafe2 is still in development and not yet ready for production
-          use.
 
 
 ============
@@ -71,14 +68,14 @@ dependencies. Please note that commands below should be run as root.
 For Python 2:
 
     .. code:: bash
-    
+
         pip install kafe2
 
 
 For Python 3:
 
     .. code:: bash
-    
+
         pip3 install kafe2
 
 
@@ -108,30 +105,30 @@ or use ``easy_install`` (included with `setuptools <https://pypi.python.org/pypi
 You will also need to install *Tkinter* if it didn't already come with your Python distribution.
 
 For Python 2, Ubuntu/Mint/Debian:
-	
+
 	.. code:: bash
-	
+
 	    apt-get install python-tk
 
 
 For Python 2, Fedora/RHEL/CentOS:
-	
+
 	.. code:: bash
-	
+
 	    yum install tkinter
 
 
 For Python 3, Ubuntu/Mint/Debian:
-	
+
 	.. code:: bash
-	
+
 	    apt-get install python3-tk
 
 
 For Python 3, Fedora/RHEL/CentOS:
-	
+
 	.. code:: bash
-	
+
 	    yum install python3-tkinter
 
 
@@ -139,12 +136,15 @@ For Python 3, Fedora/RHEL/CentOS:
 Optional: Install *ROOT*
 ------------------------
 
-ROOT and its Python bindings can be obtained via the package manager in
-Ubuntu/Mint/Debian:
+**Note: Starting with Ubuntu 16.10, ROOT is no longer available in the official repositories.**
+
+In older versions of Ubuntu (and related Linux distributions), ROOT and its Python bindings
+can be obtained via the package manager via:
 
     .. code:: bash
 
         apt-get install root-system libroot-bindings-python5.34 libroot-bindings-python-dev
+
 
 Or, in Fedora/RHEL/CentOS:
 
@@ -155,7 +155,7 @@ Or, in Fedora/RHEL/CentOS:
 
 This setup is usually sufficient. However, you may decide to build ROOT yourself. In this case,
 be sure to compile with *PyROOT* support. Additionally, for Python to see the *PyROOT* bindings,
-the following environment variables have to be set correctly (:
+the following environment variables have to be set correctly:
 
     .. code:: bash
 
