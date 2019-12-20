@@ -27,12 +27,18 @@ models. The numeric aspects are handled using the scientific Python
 stack (numpy, scipy, ...). Visualization of the data and the estimated
 model are provided by matplotlib.
 
+.. note:: kafe2 is currently in alpha state. Most features are working as intended. However bugs
+          may occur during use. If you encounter any bugs or have an improvement proposal, please let us
+          know by opening an issue `here <https://github.com/dsavoiu/kafe2/issues>`_.
+
+A user guide can be found on `kafe2.readthedocs.io <https://kafe2.readthedocs.io/en/latest/parts/user_guide.html>`_.
 
 ============
 Requirements
 ============
 
-*kafe2* needs some additional Python packages:
+*kafe2* needs some additional Python packages. When *kafe2* is installed via *pip*, those packages
+are automatically installed as dependencies:
 
 * `NumPy <http://www.numpy.org>`_
 * `Numdifftools <https://pypi.org/project/Numdifftools/>`_
@@ -40,7 +46,6 @@ Requirements
 * `matplotlib <http://matplotlib.org>`_
 * `tabulate <https://pypi.org/project/tabulate/>`_
 * `PyYAML <https://pypi.org/project/PyYAML/>`_
-
 
 Since *kafe2* relies on *matplotlib* for graphics it might be necessary to install external programs:
 
@@ -69,7 +74,7 @@ For Python 2:
 
     .. code:: bash
 
-        pip install kafe2
+        pip2 install kafe2
 
 
 For Python 3:
@@ -85,14 +90,14 @@ In Ubuntu/Mint/Debian, do:
 
     .. code:: bash
 
-        apt-get install python-pip
+        apt-get install python-pip python3-pip
 
 
 In Fedora/RHEL/CentOS, do:
 
     .. code:: bash
 
-        yum install python-pip
+        yum install python2-pip python3-pip
 
 
 or use ``easy_install`` (included with `setuptools <https://pypi.python.org/pypi/setuptools>`_):
@@ -106,30 +111,30 @@ You will also need to install *Tkinter* if it didn't already come with your Pyth
 
 For Python 2, Ubuntu/Mint/Debian:
 
-	.. code:: bash
+    .. code:: bash
 
-	    apt-get install python-tk
+        apt-get install python-tk
 
 
 For Python 2, Fedora/RHEL/CentOS:
 
-	.. code:: bash
+    .. code:: bash
 
-	    yum install tkinter
+        yum install tkinter
 
 
 For Python 3, Ubuntu/Mint/Debian:
 
-	.. code:: bash
+    .. code:: bash
 
-	    apt-get install python3-tk
+        apt-get install python3-tk
 
 
 For Python 3, Fedora/RHEL/CentOS:
 
-	.. code:: bash
+    .. code:: bash
 
-	    yum install python3-tkinter
+        yum install python3-tkinter
 
 
 ------------------------
@@ -172,8 +177,7 @@ Optional: Install `iminuit`
 ---------------------------
 
 *iminuit* is a Python wrapper for the Minuit minimizer which is
-independent of ROOT. If compiling/installing ROOT is not possible,
-this minimizer can be used instead.
+independent of ROOT. This minimizer can be used instead of ROOT.
 
 To install the *iminuit* package for Python, the `Pip installer
 <http://www.pip-installer.org/>`_ is recommended:
@@ -189,11 +193,11 @@ In Ubuntu/Mint/Debian, do:
 
     .. code:: bash
 
-        apt-get install libpython2.7-dev
+        apt-get install libpython2-dev libpython3-dev
 
 In Fedora/RHEL/CentOS, do:
 
     .. code:: bash
 
-        yum install python-devel
+        yum install python2-devel python3-devel
 
