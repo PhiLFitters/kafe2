@@ -5,20 +5,22 @@
    :robots: index, follow
 
 
-******************
+==================
 Installing *kafe2*
-******************
+==================
 
 Requirements
 ============
 
-*kafe2* needs some additional Python packages:
+*kafe2* needs some additional Python packages. When *kafe2* is installed via *pip*, those packages
+are automatically installed as dependencies:
 
 * `NumPy <http://www.numpy.org>`_
 * `Numdifftools <https://pypi.org/project/Numdifftools/>`_
 * `SciPy <http://www.scipy.org>`_
 * `matplotlib <http://matplotlib.org>`_
-
+* `tabulate <https://pypi.org/project/tabulate/>`_
+* `PyYAML <https://pypi.org/project/PyYAML/>`_
 
 Since *kafe2* relies on *matplotlib* for graphics it might be necessary to install external programs:
 
@@ -44,151 +46,145 @@ dependencies. Please note that commands below should be run as root.
 
 For Python 2:
 
-.. code:: bash
+    .. code:: bash
 
-    pip install kafe2
+        pip2 install kafe2
 
 
 For Python 3:
 
-.. code:: bash
+    .. code:: bash
 
-    pip3 install kafe2
+        pip3 install kafe2
 
 
 If you don't have *pip* installed, get it from the package manager.
 
 In Ubuntu/Mint/Debian, do:
 
-.. code:: bash
+    .. code:: bash
 
-    apt-get install python-pip
+        apt-get install python-pip python3-pip
 
 
 In Fedora/RHEL/CentOS, do:
 
-.. code:: bash
+    .. code:: bash
 
-    yum install python-pip
+        yum install python2-pip python3-pip
 
 
 or use ``easy_install`` (included with `setuptools <https://pypi.python.org/pypi/setuptools>`_):
 
-.. code:: bash
+    .. code:: bash
 
-    easy_install pip
+        easy_install pip
 
 
 You will also need to install *Tkinter* if it didn't already come with your Python distribution.
 
 For Python 2, Ubuntu/Mint/Debian:
 
-.. code:: bash
+    .. code:: bash
 
-    apt-get install python-tk
+        apt-get install python-tk
 
 
 For Python 2, Fedora/RHEL/CentOS:
 
-.. code:: bash
+    .. code:: bash
 
-    yum install tkinter
+        yum install tkinter
 
 
 For Python 3, Ubuntu/Mint/Debian:
 
-.. code:: bash
+    .. code:: bash
 
-    apt-get install python3-tk
+        apt-get install python3-tk
 
 
 For Python 3, Fedora/RHEL/CentOS:
 
-.. code:: bash
+    .. code:: bash
 
-    yum install python3-tkinter
+        yum install python3-tkinter
 
 
-------------------------
 Optional: Install *ROOT*
 ------------------------
 
 ROOT and its Python bindings can be obtained via the package manager in
 Ubuntu/Mint/Debian:
 
-.. code:: bash
+    .. code:: bash
 
-    apt-get install root-system libroot-bindings-python5.34 libroot-bindings-python-dev
+        apt-get install root-system libroot-bindings-python5.34 libroot-bindings-python-dev
 
 Or, in Fedora/RHEL/CentOS:
 
-.. code:: bash
+    .. code:: bash
 
-    yum install root root-python
+        yum install root root-python
 
 
 This setup is usually sufficient. However, you may decide to build ROOT yourself. In this case,
 be sure to compile with *PyROOT* support. Additionally, for Python to see the *PyROOT* bindings,
 the following environment variables have to be set correctly (:
 
-.. code:: bash
+    .. code:: bash
 
-    export ROOTSYS=<directory where ROOT is installed>
-    export LD_LIBRARY_PATH=$ROOTSYS/lib:$PYTHONDIR/lib:$LD_LIBRARY_PATH
-    export PYTHONPATH=$ROOTSYS/lib:$PYTHONPATH
+        export ROOTSYS=<directory where ROOT is installed>
+        export LD_LIBRARY_PATH=$ROOTSYS/lib:$PYTHONDIR/lib:$LD_LIBRARY_PATH
+        export PYTHONPATH=$ROOTSYS/lib:$PYTHONPATH
 
 
 For more info, refer to `<http://root.cern.ch/drupal/content/pyroot>`_.
 
 
----------------------------
 Optional: Install `iminuit`
 ---------------------------
 
 *iminuit* is a Python wrapper for the Minuit minimizer which is
-independent of ROOT. If compiling/installing ROOT is not possible,
-this minimizer can be used instead.
+independent of ROOT. This minimizer can be used instead of ROOT.
 
 To install the *iminuit* package for Python, the `Pip installer
 <http://www.pip-installer.org/>`_ is recommended:
 
-.. code:: bash
+    .. code:: bash
 
-    pip install iminuit
+        pip install iminuit
 
 You might also need to install the Python headers for *iminuit* to
 compile properly.
 
 In Ubuntu/Mint/Debian, do:
 
-.. code:: bash
+    .. code:: bash
 
-    apt-get install libpython2.7-dev
+        apt-get install libpython2-dev libpython3-dev
 
 In Fedora/RHEL/CentOS, do:
 
-.. code:: bash
+    .. code:: bash
 
-    yum install python-devel
+        yum install python2-devel python3-devel
 
-
-.. todo::
-
-    Update this section
 
 Installation notes (Windows)
 ============================
 
-*kafe* can be installed under Windows, but requires some additional configuration.
+.. todo::
 
-The recommended Python distribution for working with *kafe* under Windows is
+    Update and test this section
+
+*kafe2* can be installed under Windows, but requires some additional configuration.
+
+The recommended Python distribution for working with *kafe2* under Windows is
 `WinPython <https://winpython.github.io/>`_, which has the advantage that it is
 portable and comes with a number of useful pre-installed packages. Particularly,
 *NumPy*, *SciPy* and *matplotlib* are all pre-installed in *WinPython*, as are
 all *Qt*-related dependencies.
-
-Be sure to install *WinPython* version **2.7**, since *kafe* does not currently
-run under Python 3.
 
 
 Install `iminuit`
@@ -202,18 +198,18 @@ After installing *WinPython*, start 'WinPython Command Prompt.exe' in the
     pip install iminuit
 
 
-Install `kafe`
+Install `kafe2`
 --------------
 
 Now *kafe* can be installed from PyPI by running:
 
 .. code:: bash
 
-    pip install kafe
+    pip install kafe2
 
 Alternatively, it may be installed directly using *setuptools*. Just run
 the following in 'WinPython Command Prompt.exe' after switching to the
-directory into which you have downloaded *kafe*:
+directory into which you have downloaded *kafe2*:
 
 .. code:: bash
 
@@ -267,4 +263,3 @@ if everything has been set up correctly.
 
 For more information please refer to ROOT's official
 `PyROOT Guide <https://root.cern.ch/pyroot>`_.
-

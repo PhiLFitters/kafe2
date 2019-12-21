@@ -1,0 +1,13 @@
+# This is an example for a non-linear fit
+# Please run with 'kafe2go -a -c' to show asymmetric uncertainties and the contour profiles
+
+x_data: [0.8018943, 1.839664, 1.941974, 1.276013, 2.839654, 3.488302, 3.775855, 4.555187, 4.477186, 5.376026]
+x_errors: 0.3
+y_data: [0.2650644, 0.1472682, 0.08077234, 0.1850181, 0.05326301, 0.01984233, 0.01866309, 0.01230001, 0.009694612,
+         0.002412357]
+y_errors: [0.1060258, 0.05890727, 0.03230893, 0.07400725, 0.0213052, 0.00793693, 0.007465238, 0.004920005, 0.003877845,
+           0.0009649427]
+
+model_function: |
+  def exponential(x, A0=1, tau=1):
+      return A0 * np.exp(-x/tau)

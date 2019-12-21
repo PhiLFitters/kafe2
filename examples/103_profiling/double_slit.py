@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 """
 kafe2 example: Fit a double slit diffraction pattern
 ====================================================
@@ -123,5 +123,3 @@ p.plot(with_fit_info=True)
 
 # show the fit result
 plt.show()
-
-

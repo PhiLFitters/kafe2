@@ -41,7 +41,3 @@ y_errors: 0.4
 # y_1: 4.2 +- 0.4
 # y_2: 7.5 +- 0.4
 # y_3: 9.4 +- 0.4
-
-# The axis labels are defined by strings
-x_label: '$x$-label'
-y_label: '$y$-label'

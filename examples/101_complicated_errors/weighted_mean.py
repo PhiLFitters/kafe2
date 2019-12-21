@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 """
 kafe2 example: Weighted average of measurements
 ===============================================
@@ -64,5 +64,3 @@ p.plot(with_fit_info=True)
 
 # show the fit result
 plt.show()
-
-

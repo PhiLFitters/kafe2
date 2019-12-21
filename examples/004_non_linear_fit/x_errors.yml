@@ -34,3 +34,6 @@ y_data:
 - 12.126133797209802
 - 15.805993018808897
 - 15.3488445186788
+# The x errors are much bigger than the y errors. This will strongly distort the likelihood function.
+x_errors: 1.0
+y_errors: 0.1
