@@ -62,6 +62,10 @@ g_initial = 9.81  # initial guess for g
 c_initial = 0.01  # initial guess for c
 fit.set_parameter_values(g=g_initial, c=c_initial)
 
+# Optional: Set the initial values of the remaining parameters to correspond to their constraint values
+# (this may help some minimization algorithms converge)
+fit.set_parameter_values(y_0=y_0, l=l, r=r)
+
 # Perform the fit
 fit.do_fit()
 
