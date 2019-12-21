@@ -8,7 +8,7 @@ from too few data points, information can be lost or even changed, by changing t
 range of a bin. With an unbinned likelihood fit it's still possible to fit the pdf to the data points, as the likelihood
 of each data point is fitted.
 
-In this example the decay time of myons is calculated. Tha data was collected using the Kamiokanne-Experiment (a
+In this example the decay time of muons is calculated. Tha data was collected using the Kamiokanne experiment (a
 water-Cherenkov detector with photomultiplier readout). For more information on the experimental setup visit
 https://github.com/GuenterQuast/picoCosmo. A visual representation of the data can be found here:
 https://github.com/GuenterQuast/picoCosmo/blob/master/doc/dpFigs_Kanne.pdf

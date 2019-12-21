@@ -35,7 +35,7 @@ y_data: [0.6055317575993914, 0.5169107902610475, 0.3293169273559535, 0.063758597
 y_errors: 0.01
 
 # Because the model function is oscillating the fit needs to be initialized with near guesses for unconstrained
-# parameters in order to converge
+# parameters in order to converge.
 # To use starting values for the fit, specify them as default values in the fit function.
 model_function: |
     def damped_harmonic_oscillator(x, y_0=1.0, l=1.0, r=1.0, g=9.81, c=0.01):
@@ -49,13 +49,13 @@ model_function: |
 
 parameter_constraints:  # add parameter constraints
 - index: 0              # index 0 corresponds to the first free variable of the fit function, here y_0
-  relative: true        # use a relative uncertainty
+  relative: true        # Make constraint uncertainty relative to value.
   type: simple
   uncertainty: 0.006
   value: 0.6            # y_0 = 0.6+-0.6%
 
 - index: 1              # index 1 corresponds to the second free variable of the fit function, here l
-  relative: false       # use an absolute uncertainty
+  relative: false       # Uncertainty is absolute.
   type: simple
   uncertainty: 0.001
   value: 10.0           # l = 10.0+-0.001

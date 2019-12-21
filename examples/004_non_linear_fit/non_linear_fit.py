@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-kafe2 example: non linear fit
+kafe2 example: non-linear fit
 =============================
 Very often, when the fit model is a non-linear function of the parameters, the chi2 function is not parabolic around
 the minimum. A very common example of such a case is an exponential function parametrized as shown in this example.
@@ -31,7 +31,7 @@ from kafe2 import XYFit, Plot, ContoursProfiler
 def exponential(x, A0=1, tau=1):
     return A0 * np.exp(-x/tau)
 
-# define the data as simple Python arrays
+# define the data as simple Python lists
 x = [8.018943e-01, 1.839664e+00, 1.941974e+00, 1.276013e+00, 2.839654e+00, 3.488302e+00, 3.775855e+00, 4.555187e+00,
      4.477186e+00, 5.376026e+00]
 xerr = 3.000000e-01
@@ -48,11 +48,11 @@ fit.add_simple_error(axis='y', err_val=yerr)  # add the y-errors to the fit
 fit.do_fit()  # perform the fit
 fit.report(asymmetric_parameter_errors=True)  # print a report with asymmetric uncertainties
 
-# optional create a plot
+# Optional: create a plot
 plot = Plot(fit)
 plot.plot(with_ratio=True, with_asymmetric_parameter_errors=True)  # add the ratio data/function and asymmetric errors
 
-# optional create the contours profiler
+# Optional: create the contours profiler
 cpf = ContoursProfiler(fit)
 cpf.plot_profiles_contours_matrix()  # plot the contour profile matrix for all parameters
 

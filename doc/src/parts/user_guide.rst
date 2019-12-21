@@ -32,9 +32,9 @@ This document will gradually introduce the above steps via example code.
 
 Using kafe2go
 -------------
-Using *kafe2go* is the simplest way of performing a fit. Here all the necessary
-information like data and uncertainties is specified in the *YAML* data format.
-To perform the fit, simply run
+Using *kafe2go* is the simplest way of performing a fit. Here all the necessary information and
+properties like data and uncertainties is specified in a *YAML* file (`.yml` file extension).
+To perform the fit, simply run:
 
 .. code-block:: bash
 
@@ -42,17 +42,19 @@ To perform the fit, simply run
 
 Using Python
 ------------
-When using *kafe2* via a *Python* script a fine control of the fitting- and
-plotting-procedure is possible. For using *kafe2* inside a *Python* script, import the required
-*kafe2* modules:
+When using *kafe2* via a *Python* script it is possible to precisely control how fits are performed
+and plotted.
+For using *kafe2* inside a *Python* script, import the required *kafe2* modules:
 
 .. code-block:: python
 
     from kafe2 import XYFit, Plot
 
 If a code example contains a line similar to :python:`data = XYContainer.from_file("data.yml")`
-the according dataset can be found in the corresponding examples folder. Those are located inside the
-installation directory of *kafe2*. Additionally the examples can be found on
+the corresponding YAML file can be found in the same directory that contains the example Python
+script.
+Those are located inside the installation directory of *kafe2*.
+Additionally the examples can be found on
 `GitHub <https://github.com/dsavoiu/kafe2/tree/master/examples>`_.
 
 Example 1: Line Fit
@@ -107,33 +109,50 @@ When a different function has to be fitted, those functions need to be defined e
 .. figure:: ../_static/img/002_model_comparison.png
     :alt: Comparison of a line and exponential fit with kafe2.
 
-The expectation value of :math:`\chi^2/\mathrm{ndf}` is 1. Thus the exponential function
-more accurately describes the dataset than a line function.
+:math:`\chi^2/\mathrm{ndf}` has an expected value of 1, if both the model function and the error
+estimates are correct.
+When using the same dataset and error estimates a smaller value of :math:`\chi^2/\mathrm{ndf}`
+means a better fit.
+Thus the exponential function more accurately describes the the given dataset than a line function.
 
-An exponential function is a **non linear** function! Therefore the :math:`\chi^2` can have a non
-parabolic shape. To verify this, please create a contour plot of the fitted parameters.
-This can be done by appending the ``-c`` or ``--contours`` option to *kafe2go*. Additionally a
-grid can be added to the contour plots with the ``--grid all`` flag.
+An exponential function is a **non-linear** function of it's parameters!
+**Non-linear** refers to the linearity of the parameters.
+So any parabola or polynomial like :math:`ax^2+bx+c` is a linear function of the parameters
+:math:`a`, :math:`b` and :math:`c`.
+So an exponential function :math:`A_0 e^{(x/x_0)}` is **non-linear** in its parameter :math:`x_0`.
+Thus the profile :math:`\chi^2` can have a non parabolic shape.
+If that is the case, uncertainties of the form :math:`a\pm\delta_a` won't be accurate.
+Please refer to :ref:`non-linear-fits` for more information.
+
+To see the shape of the profiles and contours, please create a contour plot of the fitted
+parameters.
+This can be done by appending the ``-c`` or ``--contours`` option to *kafe2go*.
+Additionally a grid can be added to the contour plots with the ``--grid all`` flag.
+
 To achieve the same with a *Python* script, import the ``ContoursProfiler`` with
-:python:`from kafe2 import ContoursProfiler`. This class can create contour and profile plots.
+:python:`from kafe2 import ContoursProfiler`.
+This class can create contour and profile plots.
 The usage is shown in the following code example.
+By creating the contours in a *Python* script the user can more precisely control the appearance of
+the contour plot as well as which parameters to profile.
 
-By creating the contours in a *Python* script the user has a finer control on which parameters to
-use as well on the appearance of the contour plot via various keyword arguments.
-
-The according contour plot to the exponential fit shown above looks like this:
+The corresponding contour plot for the exponential fit shown above looks like this:
 
 .. figure:: ../_static/img/002_exponential_contours.png
-    :alt: Contour plot corresponding to the exponential fit.
+    :alt: Corresponding contour plot for the exponential fit.
 
-When looking at the :math:`1\sigma` contour it's slightly visible, that the profiles are not
-perfectly parabolic. But in this case the deformation is very small and is negligible. More
-information about **non linear** fits follows in :ref:`non-linear-fits`.
+When looking at the :math:`\chi^2` profiles of the parameters, the deformation is effectively not
+present.
+In this case the fit results and uncertainties are perfectly fine and are can be used as is.
+If a profile has a non parabolic shape, uncertainties of the form :math:`a\pm\delta_a` won't be
+accurate.
+Please refer to :ref:`non-linear-fits` for more information.
 
 kafe2go
 -------
-Inside a *YAML* file custom fit functions are defined with the ``model_function`` keyword.
-The custom function must be a python function. Numpy is supported as shown in the example.
+Inside a *YAML* file custom fit functions can be defined with the ``model_function`` keyword.
+The custom function must be a *Python* function. *NumPy* functions are supported without extra import
+statements, as shown in the example.
 For more advanced fit functions, consider using *kafe2* inside a *Python* script.
 
 .. bootstrap_collapsible::
@@ -141,14 +160,14 @@ For more advanced fit functions, consider using *kafe2* inside a *Python* script
     :control_text: exponential_fit.yml
 
     .. literalinclude:: ../../../examples/002_model_functions/exponential_fit.yml
-        :emphasize-lines: 28-32
+        :emphasize-lines: 38-42
 
 .. bootstrap_collapsible::
     :control_type: link
     :control_text: line_fit.yml
 
     .. literalinclude:: ../../../examples/002_model_functions/line_fit.yml
-        :emphasize-lines: 28-31
+        :emphasize-lines: 38-41
 
 To use multiple input files with kafe2go, simply run
 
@@ -180,10 +199,10 @@ It's also possible to assign LaTeX expressions to the function and its variables
 .. literalinclude:: ../../../examples/002_model_functions/model_functions.py
     :lines: 37-41
 
-Please note, that the function LaTeX expression needs to contain all parameters present in the
-function definition. The placeholders are then automatically replaced by their corresponding LaTeX
-names. Due to the way *Python* handles the string formatting, curly braces used in LaTeX need to
-be doubled, as in the code example.
+Please note that the function *LaTeX* expression needs to contain all parameters present in the
+function definition. The placeholders are then automatically replaced by their corresponding
+*LaTeX* names. Due to the way *Python* implements string formatting, curly braces used in *LaTeX*
+need to be doubled, as shown in the code example.
 
 The full example additionally contains the creation of a contour plot. The corresponding lines are
 highlighted in the following example.

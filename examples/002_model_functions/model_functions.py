@@ -52,7 +52,7 @@ exponential_fit.report()
 p = Plot(fit_objects=[linear_fit, exponential_fit], separate_figures=False)
 p.plot(with_fit_info=True)
 
-# Optional: Create a contour plot for the exponential fit, to show the parameter correlation
+# Optional: Create a contour plot for the exponential fit to show the parameter correlations.
 cpf = ContoursProfiler(exponential_fit)
 cpf.plot_profiles_contours_matrix(show_grid_for='contours')
 

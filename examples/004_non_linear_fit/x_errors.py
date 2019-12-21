@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 kafe2 example: x_errors
-============================
+=======================
 
 kafe2 fits support the addition of x data errors - in fact we've been using them since the very first example. To take
 them into account the x errors are converted to y errors via multiplication with the derivative of the model function.
