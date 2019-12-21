@@ -1,3 +1,4 @@
+import matplotlib as mpl
 import numpy as np
 import six
 
@@ -129,14 +130,22 @@ class HistPlotAdapter(PlotAdapterBase):
         """
         #_pad = kwargs.pop('bar_width_pad')
         _sf = kwargs.pop('bar_width_scale_factor')
-        return target_axes.bar(
-                             x=self.model_x,
-                             align='center',
-                             height=self.model_y,
-                             width=self.model_xerr*2.0 * _sf,
-                             bottom=None,
-                             **kwargs
-                             )
+
+        # default call signature (matplotlib >= 2)
+        _call_dict = dict(
+            x=self.model_x,
+            align='center',
+            height=self.model_y,
+            width=self.model_xerr*2.0 * _sf,
+            bottom=None,
+            **kwargs
+        )
+
+        # adjust call signature for matplotlib < 2
+        if mpl.__version__.startswith('1'):
+            _call_dict['left'] = _call_dict.pop('x')
+
+        return target_axes.bar(**_call_dict)
 
     def plot_model_density(self, target_axes, **kwargs):
         """

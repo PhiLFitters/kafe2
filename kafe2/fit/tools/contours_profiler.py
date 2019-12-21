@@ -1,3 +1,4 @@
+import matplotlib as mpl
 import numpy as np
 import six
 
@@ -32,6 +33,13 @@ def _linear_range_transform(range_, factor, asymmetry=0.0):
     _asymm_factor = (1.0 + asymmetry)
 
     return _m - factor*(2.0 - _asymm_factor) * _d, _m + factor*_asymm_factor*_d
+
+
+def _maybe_set_tight_layout(figure):
+    """Enable 'tight_layout' for a figure if the matplotlib version is high enough."""
+    # older versions of matplotlib cause problems with 'tight_layout'
+    if not mpl.__version__.startswith('1'):
+        figure.set_tight_layout(True)
 
 
 class ConfidenceLevelFormatted(ConfidenceLevel):
@@ -170,7 +178,11 @@ class ContoursProfiler(object):
     def _make_figure_gs(self, nrows=1, ncols=1):
         _fig = plt.figure(figsize=(8, 8))  # defaults from matplotlibrc
 
-        _gs = gs.GridSpec(nrows=nrows, ncols=ncols, figure=_fig)
+        if mpl.__version__.startswith('1'):
+            # old API does not support passing 'figure'
+            _gs = gs.GridSpec(nrows=nrows, ncols=ncols)
+        else:
+            _gs = gs.GridSpec(nrows=nrows, ncols=ncols, figure=_fig)
 
         self._figures.append(_fig)  # store figure
 
@@ -409,7 +421,7 @@ class ContoursProfiler(object):
 
         # if own figure created -> set tight layout
         if target_axes is None:
-            _fig.set_tight_layout(True)
+            _maybe_set_tight_layout(_fig)
 
         return _axes.get_figure()
 
@@ -514,7 +526,7 @@ class ContoursProfiler(object):
 
         # if own figure created -> set tight layout
         if target_axes is None:
-            _fig.set_tight_layout(True)
+            _maybe_set_tight_layout(_fig)
 
         return _axes.get_figure()
 
@@ -701,8 +713,12 @@ class ContoursProfiler(object):
                         _label.set_rotation(90)
 
         # align x and y axis labels
-        _fig.align_ylabels(_subplots[:, 0])
-        _fig.align_xlabels(_subplots[_npar - 1, :])
+        try:
+            _fig.align_ylabels(_subplots[:, 0])
+            _fig.align_xlabels(_subplots[_npar - 1, :])
+        except AttributeError:
+            # API call not supported by matplotlib version -> ignore
+            pass
 
         if show_legend:
             # suppress multiple entries for the same label
@@ -738,6 +754,7 @@ class ContoursProfiler(object):
                     borderaxespad=0
                 )
 
-        _fig.set_tight_layout(True)  # maintain tight layout on resize
+        # old versions cause problems with 'tight_layout'
+        _maybe_set_tight_layout(_fig)
 
         return _fig
