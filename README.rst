@@ -27,9 +27,11 @@ models. The numeric aspects are handled using the scientific Python
 stack (numpy, scipy, ...). Visualization of the data and the estimated
 model are provided by matplotlib.
 
-.. note:: kafe2 is currently in alpha state. Most features are working as intended. However bugs
-          may occur during use. If you encounter any bugs or have an improvement proposal, please let us
-          know by opening an issue `here <https://github.com/dsavoiu/kafe2/issues>`_.
+**Note**
+
+kafe2 is currently in an *alpha* state. Most features are working as intended. However, bugs
+may occur during use. If you encounter any bugs or have an improvement proposal, please let us
+know by opening an issue `here <https://github.com/dsavoiu/kafe2/issues>`_.
 
 A user guide can be found on `kafe2.readthedocs.io <https://kafe2.readthedocs.io/en/latest/parts/user_guide.html>`_.
 
