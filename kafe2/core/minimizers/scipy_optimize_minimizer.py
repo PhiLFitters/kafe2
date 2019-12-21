@@ -108,13 +108,17 @@ class MinimizerScipyOptimize(MinimizerBase):
         parameters should go.
         """
         # TODO: move implementation to base
+        _mat = submatrix
+
         _fixed_par_indices = [_idx for _idx, _fixed in enumerate(self._par_fixed) if _fixed]
-        _mat = np.insert(np.insert(submatrix, _fixed_par_indices, 0., axis=0), _fixed_par_indices, 0., axis=1)
+        for _id in _fixed_par_indices:
+            _mat = np.insert(np.insert(_mat, _id, 0., axis=0), _id, 0., axis=1)
 
         assert(_mat.shape[0] == len(self._par_fixed))
         assert(_mat.shape[1] == len(self._par_fixed))
 
         return _mat
+
 
     # -- public properties
 
