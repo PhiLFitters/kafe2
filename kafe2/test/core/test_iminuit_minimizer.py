@@ -106,6 +106,21 @@ class TestMinimizerIMinuit(unittest.TestCase):
         self.assertAlmostEqual(_v[1], 4.32)
         self.assertAlmostEqual(_v[2], 9.81)
 
+    def test_compare_par_errors_minimize_fcn3_fix_release_x(self):
+        self.m3.fix('x')
+        self.m3.minimize()
+        _e = self.m3.parameter_errors
+        self.assertAlmostEqual(_e[0], 0., places=4)
+        self.assertAlmostEqual(_e[1], np.sqrt(1./0.5), places=4)
+        self.assertAlmostEqual(_e[2], np.sqrt(1./3.), places=4)
+
+        self.m3.release('x')
+        self.m3.minimize()
+        _e = self.m3.parameter_errors
+        self.assertAlmostEqual(_e[0], 1., places=4)
+        self.assertAlmostEqual(_e[1], np.sqrt(1./0.5), places=4)
+        self.assertAlmostEqual(_e[2], np.sqrt(1./3.), places=4)
+
 
     def test_compare_par_values_minimize_fcn3_limit_unlimit_x(self):
         self.m3.limit('x', (-1., 0.7))
