@@ -1,6 +1,8 @@
 from __future__ import print_function
 from .minimizer_base import MinimizerBase
 from kafe2.core.contour import ContourFactory
+from kafe2.core.error import CovMat
+
 try:
     import scipy.optimize as opt
 except ImportError:
@@ -9,7 +11,9 @@ except ImportError:
 
 import numpy as np
 import numdifftools as nd
+
 from scipy.optimize import brentq
+
 
 class MinimizerScipyOptimizeException(Exception):
     pass
@@ -82,6 +86,35 @@ class MinimizerScipyOptimize(MinimizerBase):
                 return self.function_value - target_chi_2
 
             return brentq(f=_profile, a=low, b=high, xtol=self.tolerance)
+
+    def _remove_zeroes_for_fixed(self, matrix):
+        """
+        Takes a full error matrix and removes the rows and
+        columns that correspong to fixed parameters.
+        """
+        # TODO: move implementation to base
+        assert(matrix.shape[0] == len(self._par_fixed))
+        assert(matrix.shape[1] == len(self._par_fixed))
+
+        _fixed_par_indices = [_idx for _idx, _fixed in enumerate(self._par_fixed) if _fixed]
+        _submat = np.delete(np.delete(matrix, _fixed_par_indices, axis=0), _fixed_par_indices, axis=1)
+
+        return _submat
+
+    def _fill_in_zeroes_for_fixed(self, submatrix):
+        """
+        Takes the partial error matrix (submatrix) and adds
+        rows and columns with 0.0 where the fixed
+        parameters should go.
+        """
+        # TODO: move implementation to base
+        _fixed_par_indices = [_idx for _idx, _fixed in enumerate(self._par_fixed) if _fixed]
+        _mat = np.insert(np.insert(submatrix, _fixed_par_indices, 0., axis=0), _fixed_par_indices, 0., axis=1)
+
+        assert(_mat.shape[0] == len(self._par_fixed))
+        assert(_mat.shape[1] == len(self._par_fixed))
+
+        return _mat
 
     # -- public properties
 
@@ -639,3 +672,45 @@ class MinimizerScipyOptimize(MinimizerBase):
             _y[i] = self._calc_fun_with_constraints([{"type" : "eq", "fun" : lambda x: x[_par_id] - _par[i]}])
         self._func_wrapper_unpack_args(self._par_val)
         return np.asarray([_par, _y - _y_offset])
+
+    def _func_wrapper(self, *parameter_values):
+        '''call FCN, but ensure fixed parameters are passed with their fixed value'''
+        # Note: this is needed in order to ensure that derivatives of `_func_wrapper`
+        #       take parameter fixing into account
+        assert(len(self.parameter_values) == len(self._par_fixed) == len(parameter_values))
+        # replace parameter values
+        parameter_values = [
+            _fixed_val if _is_fixed else _call_val
+            for _call_val, _fixed_val, _is_fixed in zip(parameter_values, self.parameter_values, self._par_fixed)
+        ]
+        return MinimizerBase._func_wrapper(self, *parameter_values)
+
+    @property
+    def hessian(self):
+        if self._hessian is None:
+            self._hessian = nd.Hessian(self._func_wrapper_unpack_args)(self.parameter_values)
+            assert(np.all(self._hessian == self._hessian.T))
+        # final call to ensure no side effects from Hessian calls
+        # (needed by e.g. NexusFitter to update the nexus parameter nodes)
+        self._func_wrapper_unpack_args(self.parameter_values)
+        return self._hessian
+
+    @property
+    def hessian_inv(self):
+        if self._hessian_inv is None:
+            _hessian = self.hessian  # including zeroes for fixed parameter
+            _subhessian = self._remove_zeroes_for_fixed(_hessian)
+            _subhessian_inv = np.linalg.inv(_subhessian)
+            self._hessian_inv = self._fill_in_zeroes_for_fixed(_subhessian_inv)
+            # ensure symmetric
+            self._hessian_inv = 0.5 * (self._hessian_inv + self._hessian_inv.T)
+        assert (np.all(self._hessian_inv == self._hessian_inv.T))
+        return self._hessian_inv
+
+    @property
+    def cor_mat(self):
+        if self._par_cor_mat is None:
+            _subcov_mat = self._remove_zeroes_for_fixed(self.cov_mat)
+            _subcor_mat = CovMat(_subcov_mat).cor_mat
+            self._par_cor_mat = self._fill_in_zeroes_for_fixed(_subcor_mat)
+        return self._par_cor_mat
