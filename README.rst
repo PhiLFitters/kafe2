@@ -29,7 +29,7 @@ model are provided by matplotlib.
 
 **Note**
 
-kafe2 is currently in an *alpha* state. Most features are working as intended. However, bugs
+kafe2 is currently in a *beta* state. Most features are working as intended. However, bugs
 may occur during use. If you encounter any bugs or have an improvement proposal, please let us
 know by opening an issue `here <https://github.com/dsavoiu/kafe2/issues>`_.
 
@@ -70,8 +70,6 @@ Installation notes (Linux)
 The easiest way to install *kafe2* is via `pip <https://pip.pypa.io/en/stable/>`_, which is
 already included for Python >= 2.7.9. Installing via *pip* will automatically install the minimal
 dependencies. Please note that commands below should be run as root.
-
-**Note: kafe2 has not yet been added to the Python Packaging Index. The instructions below do not yet work.**
 
 For Python 2:
 
