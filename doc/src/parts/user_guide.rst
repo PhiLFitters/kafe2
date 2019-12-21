@@ -339,7 +339,7 @@ To demonstrate this, the second file ``x_errors`` will perform a line-fit with m
 uncertainties on the x axis than on the y axis. The non parabolic shape can be seen in the one
 dimensional profile scans.
 
-.. figure:: ../_static/img/004_x_erros_contours.png
+.. figure:: ../_static/img/004_x_errors_contours.png
     :alt: Profiles and contour of a line fit with big x errors.
 
 kafe2go
@@ -432,7 +432,7 @@ Alternatively the bin edges for each bin can be set.
     :control_text: histogram_fit.py
 
     .. literalinclude:: ../../../examples/005_histogram_fit/histogram_fit.py
-        :lines: 16-
+        :lines: 14-
 
 
 Example 6: Unbinned Fit

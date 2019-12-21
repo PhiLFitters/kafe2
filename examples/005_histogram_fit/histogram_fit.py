@@ -5,10 +5,8 @@ kafe2 example: Histogram Fit
 ============================
 
 kafe2 is not only capable of performing XY-Fits. One way to handle one-dimensional data with kafe2 is by fitting a
-histogram. The distribution of a random stochastic variable follows a probability density function. This density needs
-to be normalized. The fit will determine the parameters of that density function, which the dataset is most likely to
-follow. If the given function is not normalized, please make sure to add an independent scale factor. The hist fit will
-try to normalize the function to one for the bin range.
+histogram. The distribution of a random stochastic variable follows a probability density function. The fit will
+determine the parameters of that density function, which the dataset is most likely to follow.
 To get to the height of a bin, please multiply the results of the fitted function with the amount of entries N of the
 histogram.
 """
