@@ -196,13 +196,13 @@ class MinimizerIMinuit(MinimizerBase):
                 # if the fit has been performed at least once
                 _param_struct = self._get_iminuit().get_param_states()
                 self._par_err = np.array(
-                    [p.error if not self._minimizer_param_dict["fix_%s" % pname] else np.nan
+                    [p.error if not self._minimizer_param_dict["fix_%s" % pname] else 0.0
                      for p, pname in zip(_param_struct, self.parameter_names)])
             else:
                 # need to hack to get initial parameter errors
                 _e = self._get_iminuit().errors
                 self._par_err = np.array(
-                    [_e[pname] if not self._minimizer_param_dict["fix_%s" % pname] else np.nan
+                    [_e[pname] if not self._minimizer_param_dict["fix_%s" % pname] else 0.0
                      for pname in _e])
         return self._par_err
 
