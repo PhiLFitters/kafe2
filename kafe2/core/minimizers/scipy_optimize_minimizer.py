@@ -683,7 +683,11 @@ class MinimizerScipyOptimize(MinimizerBase):
             _fixed_val if _is_fixed else _call_val
             for _call_val, _fixed_val, _is_fixed in zip(parameter_values, self.parameter_values, self._par_fixed)
         ]
-        return MinimizerBase._func_wrapper(self, *parameter_values)
+        _res = MinimizerBase._func_wrapper(self, *parameter_values)
+        # some scipy methods handle 'nan' incorrectly -> return MAX_FLOAT instead
+        if np.isnan(_res):
+            return np.finfo(float).max
+        return _res
 
     @property
     def hessian(self):
