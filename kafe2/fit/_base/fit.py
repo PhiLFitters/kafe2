@@ -226,6 +226,14 @@ class FitBase(FileIOMixin, object):
         self._cost_function.ndf = self._data_container.size - len(self._param_model.parameters)
 
     @property
+    def data_container(self):
+        """The data container used in this fit.
+
+        :rtype: kafe2.fit._base.DataContainerBase
+        """
+        return self._data_container
+
+    @property
     @abc.abstractmethod
     def model(self): pass
 
@@ -255,6 +263,23 @@ class FitBase(FileIOMixin, object):
     #
     # @abc.abstractproperty
     # def total_cov_mat_inverse(self): pass
+
+    @property
+    def model_label(self):
+        """The label of the model used in this fit.
+
+        :rtype: str or None
+        """
+        return self._param_model.label
+
+    @model_label.setter
+    def model_label(self, label):
+        """Change the model label.
+
+        :param label: The new label.
+        :type label: str
+        """
+        self._param_model.label = label
 
     @property
     def parameter_values(self):

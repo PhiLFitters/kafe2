@@ -29,6 +29,8 @@ class DataContainerBase(FileIOMixin, object):
     def __init__(self):
         self._error_dicts = dict()
         self._total_error = None
+        self._label = None
+        self._axis_labels = (None, None)
         super(DataContainerBase, self).__init__()
 
     # -- private methods
@@ -72,6 +74,76 @@ class DataContainerBase(FileIOMixin, object):
         if _err_dict is None:
             raise DataContainerException("No error with name '{}'!".format(error_name))
         return _err_dict
+
+    @property
+    def label(self):
+        """The label describing the dataset.
+
+        :rtype: str or None
+        """
+        return self._label
+
+    @label.setter
+    def label(self, label):
+        """The label describing the dataset.
+
+        :param label: The new label.
+        :type label: str
+        """
+        self._label = label
+
+    @property
+    def axis_labels(self):
+        """The axis labels describing the dataset.
+
+        :rtype: tuple[str or None, str or None]
+        """
+        return self._axis_labels
+
+    @axis_labels.setter
+    def axis_labels(self, labels):
+        """The axis labels describing the dataset.
+
+        :param labels: Tuple of the new axis labels.
+        :type labels: tuple[str, str]
+        """
+        self._axis_labels = labels
+
+    @property
+    def x_label(self):
+        """The x-axis label.
+
+        :return: str or None
+        """
+        return self._axis_labels[0]
+
+    @x_label.setter
+    def x_label(self, label):
+        """The x-axis label.
+
+        :param label: The new label.
+        :type label: str
+        """
+        _, _y_label = self._axis_labels
+        self._axis_labels = (label, _y_label)
+
+    @property
+    def y_label(self):
+        """The y-axis label.
+
+        :return: str or None
+        """
+        return self._axis_labels[1]
+
+    @y_label.setter
+    def y_label(self, label):
+        """The y-axis label.
+
+        :param label: The new label.
+        :type label: str
+        """
+        _x_label, _ = self._axis_labels
+        self._axis_labels = (_x_label, label)
 
     @abc.abstractproperty
     def size(self):

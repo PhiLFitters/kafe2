@@ -125,8 +125,6 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
             did_fit=False,
             model_count=1,
             cost_function_value=self._ref_initial_cost,
-            x_label=None,
-            y_label=None,
 
             x_data_cov_mat=self._ref_matrix_eye * 0,
             y_data_cov_mat=self._ref_matrix_eye,

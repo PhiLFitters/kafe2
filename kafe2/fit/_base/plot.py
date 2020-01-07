@@ -156,23 +156,37 @@ class PlotAdapterBase(object):
         ),
     )
 
-    def __init__(self, fit_object, axis_labels=None):
+    def __init__(self, fit_object, axis_labels=(None, None)):
         """
         Construct a :py:obj:`PlotAdapter` for a :py:obj:`Fit` object:
 
         :param fit_object: an object derived from :py:obj:`~kafe2.fit._base.FitBase`
+        :type fit_object: kafe2.fit._base.FitBase
+        :param axis_labels: The x- and y-axis labels as a tuple
+        :type axis_labels: tuple[str, str]
         """
         self._fit = fit_object
 
-        self._axis_labels = axis_labels
-        if self._axis_labels is None:
-            self._axis_labels = (
-                kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'x'),
-                kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'y')
-            )
+        _x_label, _y_label = axis_labels
+        if _x_label is None:
+            _x_label = self._fit.data_container.axis_labels[0]
+            if _x_label is None:
+                _x_label = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'x')
+        if _y_label is None:
+            _y_label = self._fit.data_container.axis_labels[1]
+            if _y_label is None:
+                _y_label = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'y')
+        self._axis_labels = (_x_label, _y_label)
 
         # specification of subplots for which this adapter provided plot routines
         self._subplots = None
+
+        # set labels if present
+        if self._fit.data_container.label is not None:
+            self.update_plot_kwargs('data', dict(label=self._fit.data_container.label))
+        if self._fit.model_label is not None:
+            self.update_plot_kwargs('model_line', dict(label=self._fit.model_label))
+            self.update_plot_kwargs('model_error_band', dict(label="{} error".format(self._fit.model_label)))
 
     def _get_subplots(self):
         '''create dictionary containing all subplot specifications'''
