@@ -36,9 +36,8 @@ class XYContainer(IndexedContainer):
         # TODO: check user input (?)
         if len(x_data) != len(y_data):
             raise XYContainerException("x_data and y_data must have the same length!")
-        self._xy_data = np.array([x_data, y_data], dtype=dtype)
-        self._error_dicts = {}
-        self._xy_total_errors = None
+        super(XYContainer, self).__init__(np.zeros(len(x_data)))  # super constructor doesn't allow 2D arrays
+        self._data = np.array([x_data, y_data], dtype=dtype)  # overwrite internal data storage
 
 
     # -- private methods
@@ -56,7 +55,7 @@ class XYContainer(IndexedContainer):
         return _axis_id
 
     def _get_data_for_axis(self, axis_id):
-        return self._xy_data[axis_id]
+        return self._data[axis_id]
 
     def _calculate_total_error(self):
         _sz = self.size
@@ -73,11 +72,11 @@ class XYContainer(IndexedContainer):
 
         _total_err_x = MatrixGaussianError(_tmp_cov_mat_x, 'cov', relative=False, reference=self.x)
         _total_err_y = MatrixGaussianError(_tmp_cov_mat_y, 'cov', relative=False, reference=self.y)
-        self._xy_total_errors = [_total_err_x, _total_err_y]
+        self._total_error = [_total_err_x, _total_err_y]
 
     def _clear_total_error_cache(self):
         """recalculate total errors next time they are needed"""
-        self._xy_total_errors = None
+        self._total_error = None
 
     def _calculate_uncor_error_cov_mat(self, axis):
         #calculate y uncorrelated covariance matrix
@@ -138,12 +137,12 @@ class XYContainer(IndexedContainer):
     @property
     def size(self):
         """number of data points"""
-        return self._xy_data.shape[1]
+        return self._data.shape[1]
 
     @property
     def data(self):
         """container data (both *x* and *y*, two-dimensional :py:obj:`numpy.ndarray`)"""
-        return self._xy_data.copy()  # copy to ensure no modification by user
+        return self._data.copy()  # copy to ensure no modification by user
 
     @data.setter
     def data(self, new_data):
@@ -151,9 +150,9 @@ class XYContainer(IndexedContainer):
         if _new_data.ndim != 2:
             raise XYContainerException("XYContainer data must be 2-d array of floats! Got shape: %r..." % (_new_data.shape,))
         if _new_data.shape[0] == 2:
-            self._xy_data = _new_data.copy()
+            self._data = _new_data.copy()
         elif _new_data.shape[1] == 2:
-            self._xy_data = _new_data.T.copy()
+            self._data = _new_data.T.copy()
         else:
             raise XYContainerException(
                 "XYContainer data length must be 2 in at least one axis! Got shape: %r..." % (_new_data.shape,))
@@ -169,7 +168,7 @@ class XYContainer(IndexedContainer):
         _new_x_data = np.squeeze(np.array(new_x))
         if len(_new_x_data.shape) > 1:
             raise XYContainerException("XYContainer 'x' data must be 1-d array of floats! Got shape: %r..." % (_new_x_data.shape,))
-        self._xy_data[0,:] = new_x
+        self._data[0, :] = new_x
         for _err_dict in self._error_dicts.values():
             if _err_dict['axis'] == 0:
                 _err_dict['err'].reference = self._get_data_for_axis(0)
@@ -209,7 +208,7 @@ class XYContainer(IndexedContainer):
         _new_y_data = np.squeeze(np.array(new_y))
         if len(_new_y_data.shape) > 1:
             raise XYContainerException("XYContainer 'y' data must be 1-d array of floats! Got shape: %r..." % (_new_y_data.shape,))
-        self._xy_data[1,:] = new_y
+        self._data[1, :] = new_y
         for _err_dict in self._error_dicts.values():
             if _err_dict['axis'] == 1:
                 _err_dict['err'].reference = self._get_data_for_axis(1)
@@ -359,9 +358,9 @@ class XYContainer(IndexedContainer):
         :rtype: :py:class:`~kafe2.core.error.MatrixGaussianError`
         """
         _axis = self._find_axis_raise(axis)
-        if self._xy_total_errors is None:
+        if self._total_error is None:
             self._calculate_total_error()
-        return self._xy_total_errors[_axis]
+        return self._total_error[_axis]
 
     @property
     def has_x_errors(self):

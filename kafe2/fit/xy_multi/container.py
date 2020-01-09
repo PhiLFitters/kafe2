@@ -29,6 +29,7 @@ class XYMultiContainer(IndexedContainer):
         :param dtype: data type of the measurements
         :type dtype: type
         """
+        super(XYMultiContainer, self).__init__(data=np.zeros(len(xy_data)))
         
         try:
             xy_data[0][0] #raises IndexError if xy_data has < 2 dimensions
@@ -48,12 +49,12 @@ class XYMultiContainer(IndexedContainer):
             _xy_datasets.append(_xy_dataset)
             _total_length += _xy_dataset.shape[1]
             self._data_indices.append(_total_length)
-        self._xy_data = np.empty((2, _total_length), dtype=dtype)
+        self._data = np.empty((2, _total_length), dtype=dtype)
         for _index, _xy_dataset in enumerate(_xy_datasets):
             _upper = self._data_indices[_index + 1]
             _lower = self._data_indices[_index]
-            self._xy_data[0][_lower : _upper] = _xy_dataset[0]
-            self._xy_data[1][_lower : _upper] = _xy_dataset[1]
+            self._data[0][_lower: _upper] = _xy_dataset[0]
+            self._data[1][_lower: _upper] = _xy_dataset[1]
 
         self._error_dicts = {}
         self._xy_total_errors = None
@@ -74,7 +75,7 @@ class XYMultiContainer(IndexedContainer):
         return _axis_id
 
     def _get_data_for_axis(self, axis_id):
-        return self._xy_data[axis_id]
+        return self._data[axis_id]
 
     def _calculate_total_error(self):
         _sz = self.size
@@ -156,12 +157,12 @@ class XYMultiContainer(IndexedContainer):
     @property
     def size(self):
         """total number of data points"""
-        return self._xy_data.shape[1]
+        return self._data.shape[1]
 
     @property
     def data(self):
         """container data (both *x* and *y*, two-dimensional :py:obj:`numpy.ndarray`)"""
-        return self._xy_data.copy()  # copy to ensure no modification by user
+        return self._data.copy()  # copy to ensure no modification by user
 
     @data.setter
     def data(self, new_data):
@@ -170,9 +171,9 @@ class XYMultiContainer(IndexedContainer):
         if _new_data.ndim != 2:
             raise XYMultiContainerException("XYMultiContainer data must be 2-d array of floats! Got shape: %r..." % (_new_data.shape,))
         if _new_data.shape[0] == 2:
-            self._xy_data = _new_data.copy()
+            self._data = _new_data.copy()
         elif _new_data.shape[1] == 2:
-            self._xy_data = _new_data.T.copy()
+            self._data = _new_data.T.copy()
         else:
             raise XYMultiContainerException(
                 "XYMultiContainer data length must be 2 in at least one axis! Got shape: %r..." % (_new_data.shape,))
@@ -188,7 +189,7 @@ class XYMultiContainer(IndexedContainer):
         _new_x_data = np.squeeze(np.array(new_x))
         if len(_new_x_data.shape) > 1:
             raise XYMultiContainerException("XYMultiContainer 'x' data must be 1-d array of floats! Got shape: %r..." % (_new_x_data.shape,))
-        self._xy_data[0,:] = new_x
+        self._data[0, :] = new_x
         for _err_dict in self._error_dicts.values():
             if _err_dict['axis'] == 0:
                 _err_dict['err'].reference = self._get_data_for_axis(0)
@@ -228,7 +229,7 @@ class XYMultiContainer(IndexedContainer):
         _new_y_data = np.squeeze(np.array(new_y))
         if len(_new_y_data.shape) > 1:
             raise XYMultiContainerException("XYMultiContainer 'y' data must be 1-d array of floats! Got shape: %r..." % (_new_y_data.shape,))
-        self._xy_data[1,:] = new_y
+        self._data[1, :] = new_y
         for _err_dict in self._error_dicts.values():
             if _err_dict['axis'] == 1:
                 _err_dict['err'].reference = self._get_data_for_axis(1)
