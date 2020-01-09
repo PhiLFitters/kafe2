@@ -191,6 +191,11 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
             _override_dict['latex_x_name'] = 'parametric_model'
         else:
             raise YamlReaderException("Unknown fit type")
+        # override labels for every fit type
+        _override_dict['label'] = 'dataset'
+        _override_dict['model_label'] = 'parametric_model'
+        _override_dict['x_label'] = 'dataset'
+        _override_dict['y_label'] = 'dataset'
         return _override_dict
     
     @classmethod
