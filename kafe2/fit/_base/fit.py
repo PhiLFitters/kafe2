@@ -653,8 +653,10 @@ class FitBase(FileIOMixin, object):
             if _pln is not None:
                 _pf.latex_name = _pln
 
-    def get_result_dict_for_robots(self):
-        """Return a dictionary of the fit results."""
+    def get_result_dict(self):
+        """Return a dictionary of the fit results.
+
+        :rtype: dict"""
         _result_dict = dict()
 
         _result_dict['did_fit'] = self.did_fit
