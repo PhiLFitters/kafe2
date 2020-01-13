@@ -190,7 +190,8 @@ class PlotAdapterBase(object):
             if self._fit.model_label == '__del__':
                 self.update_plot_kwargs('model_error_band', dict(label="__del__"))
             else:
-                self.update_plot_kwargs('model_error_band', dict(label="{} error".format(self._fit.model_label)))
+                self.update_plot_kwargs('model_error_band',
+                                        dict(label="{} $\\pm 1\\sigma$".format(self._fit.model_label)))
 
     def _get_subplots(self):
         '''create dictionary containing all subplot specifications'''

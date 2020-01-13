@@ -9,7 +9,7 @@ class TestXYPlot(unittest.TestCase):
         self._ref_x_label = '$U$ [V]'
         self._ref_y_label = '$I$ [A]'
         self._ref_model_label = 'My Model'
-        self._ref_error_label = self._ref_model_label + ' error'
+        self._ref_error_label = self._ref_model_label + r' $\pm 1\sigma$'
 
         self.fit = XYFit(xy_data=self._ref_data)
         self.fit.add_simple_error('y', 0.1)
