@@ -167,16 +167,17 @@ class PlotAdapterBase(object):
         """
         self._fit = fit_object
 
-        _x_label, _y_label = axis_labels
-        if _x_label is None:
-            _x_label = self._fit.data_container.axis_labels[0]
-            if _x_label is None:
-                _x_label = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'x')
-        if _y_label is None:
-            _y_label = self._fit.data_container.axis_labels[1]
-            if _y_label is None:
-                _y_label = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', 'y')
-        self._axis_labels = (_x_label, _y_label)
+        _axes = ('x', 'y')
+        _axis_labels = []
+        for i, label in enumerate(axis_labels):
+            if label is None:  # check for label from init arguments
+                label = self._fit.data_container.axis_labels[i]
+                if label is None:  # check for dataset axis label
+                    label = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', _axes[i])  # use default
+            if label == '__del__':  # set axis label to None for special string __del__
+                label = None
+            _axis_labels.append(label)
+        self._axis_labels = tuple(_axis_labels)
 
         # specification of subplots for which this adapter provided plot routines
         self._subplots = None
@@ -186,7 +187,10 @@ class PlotAdapterBase(object):
             self.update_plot_kwargs('data', dict(label=self._fit.data_container.label))
         if self._fit.model_label is not None:
             self.update_plot_kwargs('model_line', dict(label=self._fit.model_label))
-            self.update_plot_kwargs('model_error_band', dict(label="{} error".format(self._fit.model_label)))
+            if self._fit.model_label == '__del__':
+                self.update_plot_kwargs('model_error_band', dict(label="__del__"))
+            else:
+                self.update_plot_kwargs('model_error_band', dict(label="{} error".format(self._fit.model_label)))
 
     def _get_subplots(self):
         '''create dictionary containing all subplot specifications'''
@@ -283,6 +287,11 @@ class PlotAdapterBase(object):
             return _total_err
 
     def get_axis_labels(self):
+        """Get the axis labels used with this Plot Adapter.
+
+        :return: Tuple containing the axis labels.
+        :rtype: tuple[str or None, str or None]
+        """
         return self._axis_labels
 
     # -- public API
@@ -799,8 +808,8 @@ class Plot(object):
                     _seen_labels.append(_labels)
 
             # use concatenation of labels as axis label
-            _ax.set_xlabel(', '.join([_l[0] for _l in _seen_labels]))
-            _ax.set_ylabel(', '.join([_l[1] for _l in _seen_labels]))
+            _ax.set_xlabel(', '.join(filter(None, [_l[0] for _l in _seen_labels])))  # use filter to skip None labels
+            _ax.set_ylabel(', '.join(filter(None, [_l[1] for _l in _seen_labels])))  # use filter to skip None labels
 
         # hide x tick labels in all but the lowest axes
         for _key in axes_keys[:-1]:
