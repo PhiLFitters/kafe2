@@ -99,12 +99,6 @@ class FitBase(FileIOMixin, object):
                                    minimizer_kwargs=self._minimizer_kwargs)
 
     @staticmethod
-    def _latexify_ascii(ascii_string):
-        """function computing a fallback LaTeX representation of an plain-text string"""
-        _lpn = ascii_string.replace('_', r"\_")
-        return r"{\tt %s}" % (_lpn,)
-
-    @staticmethod
     def _get_default_values(model_function=None, x_name=None):
         """
         :param model_function: model function handle
@@ -673,6 +667,9 @@ class FitBase(FileIOMixin, object):
 
     def assign_parameter_latex_names(self, **par_latex_names_dict):
         """Assign LaTeX-formatted strings to the model function parameters."""
+        x_name = par_latex_names_dict.pop('x', None)
+        if x_name is not None:
+            self._model_function.formatter.latex_x_name = x_name
         for _pf in self._get_model_function_argument_formatters():
             _pln = par_latex_names_dict.get(_pf.name, None)
             if _pln is not None:

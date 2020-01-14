@@ -14,27 +14,49 @@ class IndexedModelFunctionFormatter(ModelFunctionFormatter):
         :param latex_name: a LaTeX-formatted string indicating the function name
         :param index_name: a plain-text-formatted string representing the index
         :param latex_index_name: a LaTeX-formatted string representing the index
-        :param arg_formatters: list of :py:obj:`ModelParameterFormatter`-derived objects,
+        :param arg_formatters: list of :py:obj:`ParameterFormatter`-derived objects,
                                formatters for function arguments
         :param expression_string:  a plain-text-formatted string indicating the function expression
         :param latex_expression_string:  a LaTeX-formatted string indicating the function expression
         """
-        self._index_name = index_name
-        self._latex_index_name = latex_index_name
-        if self._latex_index_name is None:
-            self._latex_index_name = self._latexify_ascii(self._index_name)
-
         super(IndexedModelFunctionFormatter, self).__init__(
-            name, latex_name=latex_name, arg_formatters=arg_formatters,
+            name, latex_name=latex_name,
+            x_name=index_name, latex_x_name=latex_index_name,
+            arg_formatters=arg_formatters,
             expression_string=expression_string,
             latex_expression_string=latex_expression_string
         )
 
     def _get_format_kwargs(self, format_as_latex=False):
+        _dct = super(IndexedModelFunctionFormatter, self)._get_format_kwargs(format_as_latex=format_as_latex)
         if format_as_latex:
-            return dict(x=self._latex_index_name)
+            _dct.append(x=self._latex_x_name)
         else:
-            return dict(x=self._index_name)
+            _dct.append(x=self._x_name)
+        return _dct
+
+    @property
+    def index_name(self):
+        """The parameter name of the index.
+
+        :rtype: str
+        """
+        return self.x_name
+
+    @index_name.setter
+    def index_name(self, index_name):
+        self.x_name = index_name
+
+    @property
+    def latex_index_name(self):
+        """The LaTeX parameter name of the index.
+
+        :rtype: str"""
+        return self.latex_x_name
+
+    @latex_index_name.setter
+    def latex_index_name(self, latex_index_name):
+        self.latex_x_name = latex_index_name
 
     def get_formatted(self, with_par_values=True, n_significant_digits=2, format_as_latex=False, with_expression=False):
         """
@@ -56,12 +78,12 @@ class IndexedModelFunctionFormatter(ModelFunctionFormatter):
             _par_expr_string = self._get_formatted_expression(format_as_latex=format_as_latex)
 
         if format_as_latex:
-            _out_string = r"%s_{%s}\left(%s\right)" % (self._latex_name, self._latex_index_name, ", ".join(_par_strings))
+            _out_string = r"%s_{%s}\left(%s\right)" % (self._latex_name, self.latex_index_name, ", ".join(_par_strings))
             if _par_expr_string:
                 _out_string += " = " + _par_expr_string
             _out_string = "$%s$" % (_out_string,)
         else:
-            _out_string = "%s_%s(%s)" % (self._name, self._index_name, ", ".join(_par_strings))
+            _out_string = "%s_%s(%s)" % (self._name, self.index_name, ", ".join(_par_strings))
             if _par_expr_string:
                 _out_string += " = " + _par_expr_string
         return _out_string

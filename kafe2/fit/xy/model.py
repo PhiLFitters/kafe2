@@ -3,11 +3,9 @@ import numpy as np
 
 from scipy.misc import derivative
 
-from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException, ModelParameterFormatter
+from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException, ParameterFormatter
 from .container import XYContainer, XYContainerException
-from .format import XYModelFunctionFormatter
 from ..util import function_library
-
 
 
 __all__ = ["XYParametricModel", "XYModelFunction"]
@@ -16,9 +14,9 @@ __all__ = ["XYParametricModel", "XYModelFunction"]
 class XYModelFunctionException(ModelFunctionException):
     pass
 
+
 class XYModelFunction(ModelFunctionBase):
     EXCEPTION_TYPE = XYModelFunctionException
-    FORMATTER_TYPE = XYModelFunctionFormatter
 
     def __init__(self, model_function=function_library.linear_model):
         """
@@ -47,7 +45,7 @@ class XYModelFunction(ModelFunctionBase):
 
     def _get_parameter_formatters(self):
         _start_at_arg = 1
-        return [ModelParameterFormatter(name=_pn, value=_pv, error=None)
+        return [ParameterFormatter(name=_pn, value=_pv, error=None)
                 for _pn, _pv in zip(list(self.signature.parameters)[_start_at_arg:], self.argvals[_start_at_arg:])]
 
     def _assign_function_formatter(self):
