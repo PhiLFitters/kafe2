@@ -3,7 +3,7 @@ import inspect
 import numpy as np
 import six
 
-from .format import ModelParameterFormatter, ModelFunctionFormatter
+from .format import ParameterFormatter, ModelFunctionFormatter
 from ..io.file import FileIOMixin
 from inspect import ArgSpec
 from ..util import function_library
@@ -166,7 +166,7 @@ class ModelFunctionBase(FileIOMixin, object):
                 )
 
     def _get_parameter_formatters(self):
-        return [ModelParameterFormatter(name=_pn, value=_pv, error=None)
+        return [ParameterFormatter(name=_pn, value=_pv, error=None)
                 for _pn, _pv in zip(self.signature.parameters, self.argvals)]
 
     def _assign_function_formatter(self):
@@ -215,7 +215,7 @@ class ModelFunctionBase(FileIOMixin, object):
 
     @property
     def argument_formatters(self):
-        """The :py:obj:`ModelParameterFormatter`-derived objects for the function arguments"""
+        """The :py:obj:`ParameterFormatter`-derived objects for the function arguments"""
         return self._formatter.arg_formatters
 
     @property

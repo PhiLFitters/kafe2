@@ -5,7 +5,7 @@ import re
 import string
 import six
 
-from .format import ModelParameterFormatter, CostFunctionFormatter
+from .format import ParameterFormatter, CostFunctionFormatter
 
 from scipy.stats import poisson, norm
 from kafe2.fit.io.file import FileIOMixin
@@ -206,7 +206,7 @@ class CostFunctionBase(FileIOMixin, object):
         # TODO: fail if cost function does not depend on data or model
 
     def _get_parameter_formatters(self):
-        return [ModelParameterFormatter(name=_pn, value=_pv, error=None)
+        return [ParameterFormatter(name=_pn, value=_pv, error=None)
                 for _pn, _pv in zip(self.signature.parameters, self.argvals)]
 
     def _assign_function_formatter(self):
