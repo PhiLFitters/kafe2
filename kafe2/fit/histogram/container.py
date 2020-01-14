@@ -108,7 +108,7 @@ class HistContainer(IndexedContainer):
             #     _current_entry_index, _current_entry_value, _current_bin_index, _current_bin_lower_edge, _current_bin_upper_edge)
             # add to processed entries
             self._processed_entries.append(_current_entry_value)
-            self._idx_data[_current_bin_index] += 1
+            self._data[_current_bin_index] += 1
             _current_entry_index += 1
             if _current_entry_index >= len(_entries_sorted):    # important BUGFIX!!!!!!!!!!
                 break
@@ -118,7 +118,7 @@ class HistContainer(IndexedContainer):
         if _current_entry_index < len(_entries_sorted):    # important BUGFIX!!!!!!!!!!
 
             _overflow_entries = _entries_sorted[_current_entry_index:]
-            self._idx_data[-1] += len(_overflow_entries)
+            self._data[-1] += len(_overflow_entries)
             # print "Bin %d (of): add %d entries" % (_current_bin_index+1, len(_overflow_entries))
             # for i in _overflow_entries:
             #     print '\t', i
@@ -131,7 +131,7 @@ class HistContainer(IndexedContainer):
     @property
     def size(self):
         """the number of bins (excluding underflow and overflow bins)"""
-        return len(self._idx_data) - 2  # don't consider underflow and overflow bins
+        return len(self._data) - 2  # don't consider underflow and overflow bins
 
     @property
     def n_entries(self):
@@ -144,7 +144,7 @@ class HistContainer(IndexedContainer):
         if self._unprocessed_entries:  # process outstanding entries
             self._fill_unprocessed()
         # NOTE: returned array starts at 0
-        return self._idx_data[1:-1].copy()  # don't consider underflow and overflow bins
+        return self._data[1:-1].copy()  # don't consider underflow and overflow bins
 
     @data.setter
     def data(self, data):
@@ -174,12 +174,12 @@ class HistContainer(IndexedContainer):
     @property
     def overflow(self):
         """the number of entries in the overflow bin"""
-        return self._idx_data[-1]
+        return self._data[-1]
 
     @property
     def underflow(self):
         """the number of entries in the underflow bin"""
-        return self._idx_data[0]
+        return self._data[0]
 
     @property
     def n_bins(self):
@@ -230,7 +230,7 @@ class HistContainer(IndexedContainer):
             raise HistContainerException(
                 "Invalid bin edge specification! Edge sequence must be sorted in ascending order!")
         self._bin_edges = _new_bin_edges
-        self._idx_data = np.zeros(len(self._bin_edges) -1 + 2)
+        self._data = np.zeros(len(self._bin_edges) -1 + 2)
 
         # mark all entries as unprocessed
         self._unprocessed_entries += self._processed_entries

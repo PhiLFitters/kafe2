@@ -140,7 +140,7 @@ class HistParametricModel(ParametricModelBaseMixin, HistContainer):
 
     def _recalculate(self):
         # don't use parent class setter for 'data' -> set directly
-        self._idx_data[1:-1] = self._eval_model_func_density_integral_over_bins()
+        self._data[1:-1] = self._eval_model_func_density_integral_over_bins()
         self._pm_calculation_stale = False
 
 

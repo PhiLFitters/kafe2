@@ -172,8 +172,6 @@ class XYMultiFit(FitBase):
                                       % (type(new_data), self.CONTAINER_TYPE))
         else:
             self._data_container = self._new_data_container(new_data, dtype=float)
-        # TODO: Think of a better way when setting new data to not always delete all labels
-        self._axis_labels = [[None, None] for _ in range(self._data_container.num_datasets)]
         # mark nexus nodes for update
         # hasattr is needed, because data needs to be set before the nexus can be initialized
         if hasattr(self, '_nexus'):
@@ -282,22 +280,6 @@ class XYMultiFit(FitBase):
     def data(self):
         """(2, N)-array containing *x* and *y* measurement values"""
         return self._data_container.data
-
-    @property
-    def axis_labels(self):
-        """the axis-labels to be passed on to the plot"""
-        return self._axis_labels
-
-    @axis_labels.setter
-    def axis_labels(self, labels):
-        """sets the axis-labels to be passed on to the plot
-
-        :param labels: list of axis labels
-        :type labels: list
-        """
-        if len(labels) != len(self._axis_labels) or len(labels[0]) != len(self._axis_labels[0]):
-            raise XYMultiFitException("The dimensions of labels must fit the dimension of the data")
-        self._axis_labels = labels
 
     @property
     def model(self):

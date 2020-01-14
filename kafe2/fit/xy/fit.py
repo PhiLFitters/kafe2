@@ -66,8 +66,6 @@ class XYFit(FitBase):
         :param minimizer_kwargs: dictionary with kwargs for the minimizer.
         :type minimizer_kwargs: dict
         """
-        # set the labels
-        self.labels = [None, None]
 
         # set/construct the model function object
         if isinstance(model_function, self.__class__.MODEL_FUNCTION_TYPE):
@@ -490,19 +488,6 @@ class XYFit(FitBase):
         return self._data_container.x
 
     @property
-    def x_label(self):
-        """x-label to be passed on to the plot"""
-        return self.labels[0]
-
-    @x_label.setter
-    def x_label(self, x_label):
-        """sets the x-label to be passed onto the plot
-
-        :param x_label: str
-        """
-        self.labels[0] = x_label
-
-    @property
     def x_model(self):
         # if cost function uses x-nuisance parameters, consider these
         if self._cost_function.get_flag("need_x_nuisance") and self._data_container.has_uncor_x_errors:
@@ -524,20 +509,6 @@ class XYFit(FitBase):
     def y_data(self):
         """array of measurement data *y* values"""
         return self._data_container.y
-
-    @property
-    def y_label(self):
-        """y-label to be passed onto the plot"""
-        return self.labels[1]
-
-    @y_label.setter
-    def y_label(self, y_label):
-        """sets the y-label to be passed onto the plot
-
-        :param y_label: str
-        :return:
-        """
-        self.labels[1] = y_label
 
     @FitBase.data.getter
     def data(self):

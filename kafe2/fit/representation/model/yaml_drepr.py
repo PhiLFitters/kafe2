@@ -206,6 +206,12 @@ class ParametricModelYamlWriter(YamlWriterMixin, ParametricModelDReprBase):
     
     @classmethod
     def _make_representation(cls, parametric_model):
+        """Create a dictionary representation of a parametric model.
+
+        :param parametric_model: The parametric model to convert.
+        :type parametric_model: kafe2.fit.histogram.HistParametricModel | kafe2.fit.indexed.IndexedParametricModel |
+                                kafe2.fit.xy.XYParametricModel
+        """
         _yaml_doc = dict()
 
         # -- determine model function type
@@ -243,6 +249,9 @@ class ParametricModelYamlWriter(YamlWriterMixin, ParametricModelDReprBase):
 
         # convert all numpy array entries to regular float, then convert to list, improves readability
         _yaml_doc['model_parameters'] = np.array(parametric_model.parameters, dtype=float).tolist()
+
+        # write model label for all types
+        _yaml_doc['model_label'] = parametric_model.label
 
         # -- write error representation for all container types
         if parametric_model.has_errors:
@@ -414,6 +423,9 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
         
         _constructor_kwargs.update({key: yaml_doc.pop(key, None) for key in _kwarg_list})
         _parametric_model_object = _class(**_constructor_kwargs)
+
+        # add the label for all types
+        _parametric_model_object.label = yaml_doc.pop('model_label', None)
         
         # -- process error sources
         if _class in (XYParametricModel, XYMultiParametricModel):

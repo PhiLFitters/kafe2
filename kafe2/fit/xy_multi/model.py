@@ -221,10 +221,10 @@ class XYMultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
         """
         # print "XYMultiParametricModel.__init__(x_data=%r, model_func=%r, model_parameters=%r)" % (x_data, model_func, model_parameters)
         _x_data_array = np.asarray(x_data)
-        _xy_data = np.empty([2, _x_data_array.size])
-        _xy_data[0] = _x_data_array
-        _xy_data[1] = model_func(_x_data_array, *model_parameters)
-        super(XYMultiParametricModel, self).__init__(model_func, model_parameters, _xy_data)
+        _data = np.empty([2, _x_data_array.size])
+        _data[0] = _x_data_array
+        _data[1] = model_func(_x_data_array, *model_parameters)
+        super(XYMultiParametricModel, self).__init__(model_func, model_parameters, _data)
 
     # -- private methods
 
@@ -258,8 +258,8 @@ class XYMultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
         if len(new_x) != len(self.x):
             raise XYMultiParametricModelException("When setting a new x for an XYMultiParametricModel, the length must stay the same!",
                                                 "To change the length, simultaneously provide a new set of data indices via set_x!")
-        self._xy_data = np.zeros((2, len(new_x)))
-        self._xy_data[0] = new_x
+        self._data = np.zeros((2, len(new_x)))
+        self._data[0] = new_x
         self._pm_calculation_stale = True
         self._clear_total_error_cache()
 
@@ -267,8 +267,8 @@ class XYMultiParametricModel(ParametricModelBaseMixin, XYMultiContainer):
         if len(self._data_indices) != len(new_data_indices):
             raise XYMultiParametricModelException("When assigning new data indices the length cannot change!")
         self.data_indices = new_data_indices
-        self._xy_data = np.zeros((2, len(new_x)))
-        self._xy_data[0] = new_x
+        self._data = np.zeros((2, len(new_x)))
+        self._data[0] = new_x
         self._pm_calculation_stale = True
         self._clear_total_error_cache()
 

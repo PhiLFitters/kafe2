@@ -150,6 +150,11 @@ class DataContainerYamlWriter(YamlWriterMixin, DataContainerDReprBase):
     
     @classmethod
     def _make_representation(cls, container):
+        """Create a dictionary representing a data container.
+
+        :param container: The data container which will be converted.
+        :type container: kafe2.fit._base.DataContainerBase
+        """
         _yaml_doc = dict()
         _class = container.__class__
 
@@ -178,6 +183,15 @@ class DataContainerYamlWriter(YamlWriterMixin, DataContainerDReprBase):
         # -- write error representation for all container types
         if container.has_errors:
             cls._write_errors_to_yaml(container, _yaml_doc)
+
+        # write labels for all container types
+        if container.label is not None:
+            _yaml_doc['label'] = container.label
+        _x_axis_label, _y_axis_label = container.axis_labels
+        if _x_axis_label is not None:
+            _yaml_doc['x_label'] = _x_axis_label
+        if _y_axis_label is not None:
+            _yaml_doc['y_label'] = _y_axis_label
 
         return _yaml_doc
 
@@ -262,10 +276,14 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
         else:
             raise DReprError("Container type unknown or not supported: {}".format(_container_type))
 
+        # get labels for all container types
+        _container_obj.label = yaml_doc.pop('label', None)
+        _container_obj.axis_labels = (yaml_doc.pop('x_label', None), yaml_doc.pop('y_label', None))
+
         # -- process error sources
         # errors can be specified as a single float, a list of floats, or a kafe2 error object
         # lists of the above are also valid, if the error object is not a list
-        if _class in  (XYContainer, XYMultiContainer):
+        if _class in (XYContainer, XYMultiContainer):
             _xerrs = yaml_doc.pop('x_errors', [])
             if not isinstance(_xerrs, list) or (len(_xerrs) > 0 and isinstance(_xerrs[0], float)):
                 _xerrs = [_xerrs]
