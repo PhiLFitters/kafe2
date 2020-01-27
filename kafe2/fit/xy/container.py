@@ -55,7 +55,7 @@ class XYContainer(IndexedContainer):
         return _axis_id
 
     def _get_data_for_axis(self, axis_id):
-        return self._data[axis_id]
+        return np.array(self._data[axis_id])
 
     def _calculate_total_error(self):
         _sz = self.size
