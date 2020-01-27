@@ -24,16 +24,36 @@ class MinimizerBase(object):
         self._par_cov_mat = None
 
     def _save_state(self):
-        self._save_state_dict['asymmetric_parameter_error'] = np.array(self._par_asymm_err)
-        self._save_state_dict['hessian'] = np.array(self._hessian)
-        self._save_state_dict['hessian_inv'] = np.array(self._hessian_inv)
-        self._save_state_dict['par_cov_mat'] = np.array(self._par_cov_mat)
+        if self._par_asymm_err is None:
+            self._save_state_dict['asymmetric_parameter_error'] = self._par_asymm_err
+        else:
+            self._save_state_dict['asymmetric_parameter_error'] = np.array(self._par_asymm_err)
+        if self._hessian is None:
+            self._save_state_dict['hessian'] = self._hessian
+        else:
+            self._save_state_dict['hessian'] = np.array(self._hessian)
+        if self._hessian_inv is None:
+            self._save_state_dict['hessian_inv'] = self._hessian_inv
+        else:
+            self._save_state_dict['hessian_inv'] = np.array(self._hessian_inv)
+        if self._par_cov_mat is None:
+            self._save_state_dict['par_cov_mat'] = self._par_cov_mat
+        else:
+            self._save_state_dict['par_cov_mat'] = np.array(self._par_cov_mat)
 
     def _load_state(self):
-        self._par_asymm_err = np.array(self._save_state_dict['asymmetric_parameter_error'])
-        self._hessian = np.array(self._save_state_dict['hessian'])
-        self._hessian_inv = np.array(self._save_state_dict['hessian_inv'])
-        self._par_cov_mat = np.array(self._save_state_dict['par_cov_mat'])
+        self._par_asymm_err = self._save_state_dict['asymmetric_parameter_error']
+        if self._par_asymm_err is not None:
+            self._par_asymm_err = np.array(self._par_asymm_err)
+        self._hessian = self._save_state_dict['hessian']
+        if self._hessian is not None:
+            self._hessian = np.array(self._hessian)
+        self._hessian_inv = self._save_state_dict['hessian_inv']
+        if self._hessian_inv is not None:
+            self._hessian_inv = np.array(self._hessian_inv)
+        self._par_cov_mat = self._save_state_dict['par_cov_mat']
+        if self._par_cov_mat is not None:
+            self._par_cov_mat = np.array(self._par_cov_mat)
         # Write back parameter values to nexus parameter nodes:
         self._func_wrapper_unpack_args(self.parameter_values)
 
