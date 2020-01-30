@@ -2,14 +2,15 @@ import unittest2 as unittest
 import numpy as np
 from six import StringIO
 
-from kafe2.fit.histogram import HistModelFunction, HistModelDensityFunctionFormatter
+from kafe2.fit._base import ModelFunctionFormatter
+from kafe2.fit.histogram import HistModelFunction
 from kafe2.fit.indexed import IndexedModelFunction, IndexedModelFunctionFormatter
-from kafe2.fit.xy import XYModelFunction, XYModelFunctionFormatter
+from kafe2.fit.xy import XYModelFunction
 from kafe2.fit.representation import ModelFunctionYamlWriter, ModelFunctionYamlReader
 from kafe2.fit.io.handle import IOStreamHandle
 from kafe2.fit.representation._yaml_base import YamlReaderException
 
-TEST_MODEL_FUNCTION_HIST="""
+TEST_MODEL_FUNCTION_HIST = """
 type: histogram
 python_code: |
     def linear_model(x, a, b):
@@ -26,7 +27,6 @@ extra_keyword: 3.14
 
 TEST_MODEL_FUNCTION_HIST_WITH_FORMATTER = TEST_MODEL_FUNCTION_HIST + r"""
 model_function_formatter:
-    type: histogram
     name: linear_model
     latex_name: linear model
     x_name: r
@@ -99,7 +99,7 @@ class TestHistModelFunctionYamlRepresenter(unittest.TestCase):
             )
         )
         _read_formatter = _read_model_function.formatter
-        self.assertTrue(isinstance(_read_formatter, HistModelDensityFunctionFormatter))
+        self.assertTrue(isinstance(_read_formatter, ModelFunctionFormatter))
         _read_arg_formatters = _read_formatter.arg_formatters
         self.assertTrue(_read_formatter.name == 'linear_model')
         self.assertTrue(_read_formatter.latex_name == 'linear model')
@@ -128,7 +128,7 @@ class TestHistModelFunctionYamlRepresenter(unittest.TestCase):
         _given_formatter = self._model_function.formatter
         _read_formatter = _read_model_function.formatter
         
-        self.assertTrue(isinstance(_read_formatter, HistModelDensityFunctionFormatter))
+        self.assertTrue(isinstance(_read_formatter, ModelFunctionFormatter))
         
         _given_arg_formatters = _given_formatter.arg_formatters
         _read_arg_formatters = _read_formatter.arg_formatters
@@ -143,6 +143,7 @@ class TestHistModelFunctionYamlRepresenter(unittest.TestCase):
         self.assertTrue(_read_arg_formatters[1].latex_name == _given_arg_formatters[1].latex_name)
         self.assertTrue(_read_formatter.expression_format_string ==  _given_formatter.expression_format_string)
         self.assertTrue(_read_formatter.latex_expression_format_string ==  _given_formatter.latex_expression_format_string)
+
 
 TEST_MODEL_FUNCTION_INDEXED = """
 type: indexed
@@ -161,7 +162,6 @@ extra_keyword: 3.14
 
 TEST_MODEL_FUNCTION_INDEXED_WITH_FORMATTER = TEST_MODEL_FUNCTION_INDEXED + r"""
 model_function_formatter:
-    type: indexed
     name: linear_model
     latex_name: linear model
     index_name: r
@@ -174,6 +174,7 @@ model_function_formatter:
     expression_string: '{0} * {x} + {1}'
     latex_expression_string: '{0}{x} + {1}' 
 """
+
 
 class TestIndexedModelFunctionYamlRepresenter(unittest.TestCase):
 
@@ -241,8 +242,8 @@ class TestIndexedModelFunctionYamlRepresenter(unittest.TestCase):
         _read_arg_formatters = _read_formatter.arg_formatters
         self.assertTrue(_read_formatter.name == 'linear_model')
         self.assertTrue(_read_formatter.latex_name == 'linear model')
-        self.assertTrue(_read_formatter._index_name == 'r')
-        self.assertTrue(_read_formatter._latex_index_name == 'r')
+        self.assertTrue(_read_formatter.index_name == 'r')
+        self.assertTrue(_read_formatter.latex_index_name == 'r')
         self.assertTrue(_read_arg_formatters[0].name == 'alpha')
         self.assertTrue(_read_arg_formatters[0].latex_name == r'{\alpha}')
         self.assertTrue(_read_arg_formatters[1].name == 'beta')
@@ -273,8 +274,8 @@ class TestIndexedModelFunctionYamlRepresenter(unittest.TestCase):
         
         self.assertTrue(_read_formatter.name == _given_formatter.name)
         self.assertTrue(_read_formatter.latex_name == _given_formatter.latex_name)
-        self.assertTrue(_read_formatter._index_name == _given_formatter._index_name)
-        self.assertTrue(_read_formatter._latex_index_name == _given_formatter._latex_index_name)
+        self.assertTrue(_read_formatter.index_name == _given_formatter.index_name)
+        self.assertTrue(_read_formatter.latex_index_name == _given_formatter.latex_index_name)
         self.assertTrue(_read_arg_formatters[0].name == _given_arg_formatters[0].name)
         self.assertTrue(_read_arg_formatters[0].latex_name == _given_arg_formatters[0].latex_name)
         self.assertTrue(_read_arg_formatters[1].name == _given_arg_formatters[1].name)
@@ -282,14 +283,15 @@ class TestIndexedModelFunctionYamlRepresenter(unittest.TestCase):
         self.assertTrue(_read_formatter.expression_format_string ==  _given_formatter.expression_format_string)
         self.assertTrue(_read_formatter.latex_expression_format_string ==  _given_formatter.latex_expression_format_string)
 
-TEST_MODEL_FUNCTION_XY="""
+
+TEST_MODEL_FUNCTION_XY = """
 type: xy
 python_code: |
     def linear_model(x, a, b):
         return a * x + b
 """
 
-TEST_MODEL_FUNCTION_XY_MISSING_KEYWORD="""
+TEST_MODEL_FUNCTION_XY_MISSING_KEYWORD = """
 type: xy
 """
 
@@ -299,7 +301,6 @@ extra_keyword: 3.14
 
 TEST_MODEL_FUNCTION_XY_WITH_FORMATTER = TEST_MODEL_FUNCTION_XY + r"""
 model_function_formatter:
-    type: xy
     name: linear_model
     latex_name: linear model
     x_name: r
@@ -312,6 +313,7 @@ model_function_formatter:
     expression_string: '{0} * {x} + {1}'
     latex_expression_string: '{0}{x} + {1}' 
 """
+
 
 class TestXYModelFunctionYamlRepresenter(unittest.TestCase):
 
@@ -372,7 +374,7 @@ class TestXYModelFunctionYamlRepresenter(unittest.TestCase):
             )
         )
         _read_formatter = _read_model_function.formatter
-        self.assertTrue(isinstance(_read_formatter, XYModelFunctionFormatter))
+        self.assertTrue(isinstance(_read_formatter, ModelFunctionFormatter))
         _read_arg_formatters = _read_formatter.arg_formatters
         self.assertTrue(_read_formatter.name == 'linear_model')
         self.assertTrue(_read_formatter.latex_name == 'linear model')
@@ -401,7 +403,7 @@ class TestXYModelFunctionYamlRepresenter(unittest.TestCase):
         _given_formatter = self._model_function.formatter
         _read_formatter = _read_model_function.formatter
         
-        self.assertTrue(isinstance(_read_formatter, XYModelFunctionFormatter))
+        self.assertTrue(isinstance(_read_formatter, ModelFunctionFormatter))
         
         _given_arg_formatters = _given_formatter.arg_formatters
         _read_arg_formatters = _read_formatter.arg_formatters

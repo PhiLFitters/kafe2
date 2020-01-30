@@ -30,9 +30,9 @@ class IndexedModelFunctionFormatter(ModelFunctionFormatter):
     def _get_format_kwargs(self, format_as_latex=False):
         _dct = super(IndexedModelFunctionFormatter, self)._get_format_kwargs(format_as_latex=format_as_latex)
         if format_as_latex:
-            _dct.append(x=self._latex_x_name)
+            _dct.update(x=self._latex_x_name)
         else:
-            _dct.append(x=self._x_name)
+            _dct.update(x=self._x_name)
         return _dct
 
     @property
