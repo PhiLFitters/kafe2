@@ -1,9 +1,8 @@
 import abc
 import six
 
+from ..._base.format import ModelFunctionFormatter
 from kafe2.fit.indexed import IndexedModelFunctionFormatter
-from kafe2.fit.histogram import HistModelDensityFunctionFormatter
-from kafe2.fit.xy import XYModelFunctionFormatter
 from kafe2.fit.representation._base import GenericDReprBase
 
 __all__ = ["ModelFunctionFormatterDReprBase", "ModelParameterFormatterDReprBase"]
@@ -15,14 +14,12 @@ class ModelFunctionFormatterDReprBase(GenericDReprBase):
 
     #TODO type aliases
     _CLASS_TO_OBJECT_TYPE_NAME = {
-        HistModelDensityFunctionFormatter: 'histogram',
-        IndexedModelFunctionFormatter: 'indexed',
-        XYModelFunctionFormatter: 'xy'
+        ModelFunctionFormatter: 'base',
+        IndexedModelFunctionFormatter: 'indexed'
     }
     _OBJECT_TYPE_NAME_TO_CLASS = {
-        'histogram': HistModelDensityFunctionFormatter,
-        'indexed': IndexedModelFunctionFormatter,
-        'xy': XYModelFunctionFormatter
+        'base': ModelFunctionFormatter,
+        'indexed': IndexedModelFunctionFormatter
     }
 
     def __init__(self, model_function_formatter=None):
