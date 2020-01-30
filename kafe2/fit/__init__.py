@@ -154,6 +154,5 @@ from .multi import *
 from .tools import *
 from .util import *
 from .xy import *
-from .xy_multi import *
 
 from ._base.plot import Plot

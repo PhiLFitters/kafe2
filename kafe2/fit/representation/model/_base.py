@@ -4,7 +4,6 @@ import six
 from kafe2.fit.histogram import HistModelFunction, HistParametricModel
 from kafe2.fit.indexed import IndexedModelFunction, IndexedParametricModel
 from kafe2.fit.xy import XYModelFunction, XYParametricModel
-from kafe2.fit.xy_multi import XYMultiModelFunction, XYMultiParametricModel
 from kafe2.fit.representation._base import GenericDReprBase
 
 __all__ = ["ModelFunctionDReprBase", "ParametricModelDReprBase"]
@@ -17,14 +16,12 @@ class ModelFunctionDReprBase(GenericDReprBase):
     _CLASS_TO_OBJECT_TYPE_NAME = {
         HistModelFunction: 'histogram',
         IndexedModelFunction: 'indexed',
-        XYModelFunction: 'xy',
-        XYMultiModelFunction: 'xy_multi'
+        XYModelFunction: 'xy'
     }
     _OBJECT_TYPE_NAME_TO_CLASS = {
         'histogram': HistModelFunction,
         'indexed': IndexedModelFunction,
-        'xy': XYModelFunction,
-        'xy_multi': XYMultiModelFunction
+        'xy': XYModelFunction
     }
 
     def __init__(self, model_function=None):
@@ -39,17 +36,14 @@ class ParametricModelDReprBase(GenericDReprBase):
     _CLASS_TO_OBJECT_TYPE_NAME = {
         HistParametricModel: 'histogram',
         IndexedParametricModel: 'indexed',
-        XYParametricModel: 'xy',
-        XYMultiParametricModel: 'xy_multi'
+        XYParametricModel: 'xy'
     }
     _OBJECT_TYPE_NAME_TO_CLASS = {
         'histogram': HistParametricModel,
         'indexed': IndexedParametricModel,
-        'xy': XYParametricModel,
-        'xy_multi': XYMultiParametricModel
+        'xy': XYParametricModel
     }
 
     def __init__(self, parametric_model=None):
         self._kafe_object = parametric_model
         super(ParametricModelDReprBase, self).__init__()
-
