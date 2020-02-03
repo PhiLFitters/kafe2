@@ -7,7 +7,6 @@ from kafe2.fit._base.cost import *
 from kafe2.fit.histogram.cost import *
 from kafe2.fit.indexed.cost import *
 from kafe2.fit.xy.cost import *
-from kafe2.fit.xy_multi.cost import *
 
 
 class TestCostBase(unittest.TestCase):
@@ -131,10 +130,3 @@ class TestCostXY(TestCostBase):
     CHI2_COST_FUNCTION = XYCostFunction_Chi2
     NLL_COST_FUNCTION = XYCostFunction_NegLogLikelihood
     NLLR_COST_FUNCTION = XYCostFunction_NegLogLikelihoodRatio
-
-
-class TestCostXYMulti(TestCostBase):
-
-    CHI2_COST_FUNCTION = XYMultiCostFunction_Chi2
-    NLL_COST_FUNCTION = XYMultiCostFunction_NegLogLikelihood
-    NLLR_COST_FUNCTION = XYMultiCostFunction_NegLogLikelihoodRatio

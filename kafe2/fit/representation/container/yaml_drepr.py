@@ -3,7 +3,7 @@ import re
 import yaml
 
 from ....core.error import SimpleGaussianError, MatrixGaussianError
-from ....fit import HistContainer, IndexedContainer, XYContainer, XYMultiContainer
+from ....fit import HistContainer, IndexedContainer, XYContainer
 from .. import _AVAILABLE_REPRESENTATIONS
 from ._base import DataContainerDReprBase
 from .._base import DReprError
@@ -173,10 +173,6 @@ class DataContainerYamlWriter(YamlWriterMixin, DataContainerDReprBase):
         elif _class is XYContainer:
             _yaml_doc['x_data'] = container.x.tolist()
             _yaml_doc['y_data'] = container.y.tolist()
-        elif _class is XYMultiContainer:
-            for _i in range(container.num_datasets):
-                _yaml_doc['x_data_%s' % _i] = container.get_splice(container.x, _i).tolist()
-                _yaml_doc['y_data_%s' % _i] = container.get_splice(container.y, _i).tolist()
         else:
             raise DReprError("Container type unknown or not supported: {}".format(_type))
 
@@ -219,10 +215,8 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
             return ['raw_data']
         elif container_class is IndexedContainer:
             return ['data']
-        elif container_class is (XYContainer):
+        elif container_class is XYContainer:
             return ['x_data', 'y_data']
-        elif container_class is (XYMultiContainer):
-            return ['x_data_0', 'y_data_0']
         else:
             raise YamlReaderException("Unknown container type")
 
@@ -255,24 +249,6 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
             _x_data = yaml_doc.pop('x_data')
             _y_data = yaml_doc.pop('y_data')
             _container_obj = XYContainer(_x_data, _y_data)
-        elif _class is XYMultiContainer:
-            _xy_data = []
-            _i = 0 #xy dataset index
-            _x_data_i = yaml_doc.pop('x_data_%s' % _i, None)
-            _y_data_i = yaml_doc.pop('y_data_%s' % _i, None)
-            #TODO same procedure for errors?
-            while _x_data_i  and _y_data_i :
-                _xy_data.append([_x_data_i, _y_data_i])
-                _i += 1
-                _x_data_i = yaml_doc.pop('x_data_%s' % _i, None)
-                _y_data_i = yaml_doc.pop('y_data_%s' % _i, None)
-            # if only one out of _x_data_i and _y_data_i isn't None there's probably
-            # a missing/misspelled keyword
-            if _x_data_i:
-                raise YamlReaderException("Missing corresponding y_data_%s for x_data_%s!" % (_i, _i))
-            if _y_data_i:
-                raise YamlReaderException("Missing corresponding x_data_%s for y_data_%s!" % (_i, _i))
-            _container_obj = XYMultiContainer(_xy_data)
         else:
             raise DReprError("Container type unknown or not supported: {}".format(_container_type))
 
@@ -283,7 +259,7 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
         # -- process error sources
         # errors can be specified as a single float, a list of floats, or a kafe2 error object
         # lists of the above are also valid, if the error object is not a list
-        if _class in (XYContainer, XYMultiContainer):
+        if _class is XYContainer:
             _xerrs = yaml_doc.pop('x_errors', [])
             if not isinstance(_xerrs, list) or (len(_xerrs) > 0 and isinstance(_xerrs[0], float)):
                 _xerrs = [_xerrs]
@@ -328,8 +304,6 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
                                      "Valid: {}".format(_err_type, ('simple', 'matrix')))
 
                 _add_kwargs['relative'] = _err.get('relative', False)
-                if _class is XYMultiContainer:
-                    _add_kwargs['model_index'] = _err.get('model_index', None)
 
                 # if needed, specify the axis (only for 'xy' containers)
                 if _axis is not None:
@@ -342,6 +316,7 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
             cls._add_error_to_container(_err_type, _container_obj, **_add_kwargs)
 
         return _container_obj, yaml_doc
+
 
 # register the above classes in the module-level dictionary
 DataContainerYamlReader._register_class(_AVAILABLE_REPRESENTATIONS)

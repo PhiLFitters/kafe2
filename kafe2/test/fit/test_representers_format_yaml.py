@@ -5,7 +5,6 @@ from kafe2.fit._base import ModelParameterFormatter
 from kafe2.fit.histogram import HistModelDensityFunctionFormatter
 from kafe2.fit.indexed import IndexedModelFunctionFormatter
 from kafe2.fit.xy import XYModelFunctionFormatter
-from kafe2.fit.xy_multi import XYMultiModelFunctionFormatter
 from kafe2.fit.representation import ModelFunctionFormatterYamlWriter, ModelFunctionFormatterYamlReader
 from kafe2.fit.representation import ModelParameterFormatterYamlWriter, ModelParameterFormatterYamlReader
 from kafe2.fit.io.handle import IOStreamHandle
@@ -315,127 +314,6 @@ class TestXYModelFunctionFormatterYamlRepresenter(unittest.TestCase):
         self.assertTrue(isinstance(_read_model_function_formatter, XYModelFunctionFormatter))
         self._assert_model_function_formatters_equal(_read_model_function_formatter, self._model_function_formatter)
 
-TEST_MODEL_FUNCTION_FORMATTER_XY_MULTI="""
-type: xy_multi
-singular_formatters:
-  - type: xy
-    name: linear_model
-    latex_name: linear model
-    x_name: x
-    latex_x_name: X
-    expression_string: '{0} * {x} + {1}'
-    latex_expression_string: '{0}{x} + {1}' 
-  - type: xy
-    name: quadratic_model
-    latex_name: quadratic model
-    x_name: x
-    latex_x_name: X
-    expression_string: '{0} * {x} ** 2 + {1} * {x} + {2}'
-    latex_expression_string: '{0}{x}^2 + {1}{x} + {2}' 
-arg_formatters:
-  - name: a
-    latex_name: A
-  - name: b
-    latex_name: B
-  - name: c
-    latex_name: C
-"""
-
-TEST_MODEL_FUNCTION_FORMATTER_XY_MULTI_MISSING_KEYWORD="""
-type: xy_multi
-arg_formatters:
-  - name: a
-    latex_name: A
-  - name: b
-    latex_name: B
-  - name: c
-    latex_name: C
-"""
-
-TEST_MODEL_FUNCTION_FORMATTER_XY_MULTI_EXTRA_KEYWORD = TEST_MODEL_FUNCTION_FORMATTER_XY_MULTI + """
-extra_keyword: 3.14
-"""
-
-class TestXYMultiModelFunctionFormatterYamlRepresenter(unittest.TestCase):
-
-    def setUp(self):
-        _arg_formatters=[
-            ModelParameterFormatter(name='a', value=1.1, error=0.1, latex_name='A'),
-            ModelParameterFormatter(name='b', value=2.2, error=0.1, latex_name='B'),
-            ModelParameterFormatter(name='c', value=3.3, error=0.1, latex_name='C')
-        ]
-        self._singular_formatter_1 = XYModelFunctionFormatter(
-            name='linear_model',
-            latex_name='linear model',
-            x_name='x',
-            latex_x_name='X',
-            arg_formatters=_arg_formatters,
-            expression_string='{0} * {x} + {1}',
-            latex_expression_string='{0}{x} + {1}' 
-        )
-        self._singular_formatter_2 = XYModelFunctionFormatter(
-            name='quadratic_model',
-            latex_name='quadratic model',
-            x_name='x',
-            latex_x_name='X',
-            arg_formatters=_arg_formatters,
-            expression_string='{0} * {x} ** 2 + {1} * {x} + {2}',
-            latex_expression_string='{0}{x}^2 + {1}{x} + {2}' 
-        )
-        self._model_function_formatter = XYMultiModelFunctionFormatter(
-            singular_formatters=[self._singular_formatter_1, self._singular_formatter_2],
-            arg_formatters=_arg_formatters
-        )
-        
-        self._roundtrip_stringstream = IOStreamHandle(StringIO())
-        self._testfile_stringstream = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_FORMATTER_XY_MULTI))
-
-        self._roundtrip_streamreader = ModelFunctionFormatterYamlReader(self._roundtrip_stringstream)
-        self._roundtrip_streamwriter = ModelFunctionFormatterYamlWriter(self._model_function_formatter, self._roundtrip_stringstream)
-        self._testfile_streamreader = ModelFunctionFormatterYamlReader(self._testfile_stringstream)
-
-        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_FORMATTER_XY_MULTI_MISSING_KEYWORD))
-        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_FORMATTER_XY_MULTI_EXTRA_KEYWORD))
-        self._testfile_streamreader_missing_keyword = ModelFunctionFormatterYamlReader(self._testfile_stringstream_missing_keyword)
-        self._testfile_streamreader_extra_keyword = ModelFunctionFormatterYamlReader(self._testfile_stringstream_extra_keyword)
-    
-    def _assert_model_function_formatters_equal(self, formatter_1, formatter_2):
-        for _arg_formatter_1, _arg_formatter_2 in zip(
-                formatter_1._arg_formatters, formatter_2._arg_formatters):
-            self.assertTrue(_arg_formatter_1.name == _arg_formatter_2.name)
-            self.assertTrue(_arg_formatter_1.latex_name == _arg_formatter_2.latex_name)
-        self.assertTrue(len(formatter_1._singular_formatters) == len(formatter_2._singular_formatters))
-        for _singular_formatter_1, _singular_formatter_2 in zip(
-                formatter_1._singular_formatters, formatter_2._singular_formatters):
-            self.assertTrue(_singular_formatter_1.name == _singular_formatter_2.name)
-            self.assertTrue(_singular_formatter_1.latex_name == _singular_formatter_2.latex_name)
-            self.assertTrue(_singular_formatter_1._x_name == _singular_formatter_2._x_name)
-            self.assertTrue(_singular_formatter_1._latex_x_name == _singular_formatter_2._latex_x_name)
-            self.assertTrue(_singular_formatter_1.expression_format_string == _singular_formatter_2.expression_format_string)
-            self.assertTrue(_singular_formatter_1.latex_expression_format_string == _singular_formatter_2.latex_expression_format_string)
-
-    def test_write_to_roundtrip_stringstream(self):
-        self._roundtrip_streamwriter.write()
-
-    def test_read_from_testfile_stream(self):
-        _read_model_function_formatter = self._testfile_streamreader.read()
-        self.assertTrue(isinstance(_read_model_function_formatter, XYMultiModelFunctionFormatter))
-        self._assert_model_function_formatters_equal(_read_model_function_formatter, self._model_function_formatter)
-
-    def test_read_from_testfile_stream_missing_keyword(self):
-        with self.assertRaises(YamlReaderException):
-            self._testfile_streamreader_missing_keyword.read()
-
-    def test_read_from_testfile_stream_extra_keyword(self):
-        with self.assertRaises(YamlReaderException):
-            self._testfile_streamreader_extra_keyword.read()
-
-    def test_round_trip_with_stringstream(self):
-        self._roundtrip_streamwriter.write()
-        self._roundtrip_stringstream.seek(0)  # return to beginning
-        _read_model_function_formatter = self._roundtrip_streamreader.read()
-        self.assertTrue(isinstance(_read_model_function_formatter, XYMultiModelFunctionFormatter))
-        self._assert_model_function_formatters_equal(_read_model_function_formatter, self._model_function_formatter)
 
 TEST_MODEL_PARAMETER_FORMATTER = """
 name: phi

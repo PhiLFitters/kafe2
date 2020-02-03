@@ -4,7 +4,6 @@ import six
 from kafe2.fit.histogram import HistContainer
 from kafe2.fit.indexed import IndexedContainer
 from kafe2.fit.xy import XYContainer
-from kafe2.fit.xy_multi import XYMultiContainer
 from kafe2.fit.representation._base import GenericDReprBase
 
 __all__ = ["DataContainerDReprBase"]
@@ -17,14 +16,12 @@ class DataContainerDReprBase(GenericDReprBase):
     _CLASS_TO_OBJECT_TYPE_NAME = {
         HistContainer: 'histogram',
         IndexedContainer: 'indexed',
-        XYContainer: 'xy',
-        XYMultiContainer: 'xy_multi'
+        XYContainer: 'xy'
     }
     _OBJECT_TYPE_NAME_TO_CLASS = {
         'histogram': HistContainer,
         'indexed': IndexedContainer,
-        'xy': XYContainer,
-        'xy_multi': XYMultiContainer
+        'xy': XYContainer
     }
 
     def __init__(self, data_container=None):
