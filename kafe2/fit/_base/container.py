@@ -145,27 +145,32 @@ class DataContainerBase(FileIOMixin, object):
         _x_label, _ = self._axis_labels
         self._axis_labels = (_x_label, label)
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def size(self):
         """The size of the data (number of measurement points)"""
         return 0
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def data(self):
         """A numpy array containing the data values"""
         return np.empty(tuple())
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def err(self):
         """A numpy array containing the pointwise data uncertainties"""
         return np.empty(tuple())
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def cov_mat(self):
         """A numpy matrix containing the covariance matrix of the data"""
         return np.array(np.empty(tuple()))
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def cov_mat_inverse(self):
         """A numpy matrix containing inverse of the data covariance matrix (or ``None`` if not invertible)"""
         return np.array(np.empty(tuple()))

@@ -199,80 +199,94 @@ class GaussianErrorBase(object):
     """
     Purely abstract class. Defines the minimal interface required by all specializations.
     """
-
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def error(self):
         """Pointwise error array."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def error_rel(self):
         """Pointwise error array (relative errors)."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def reference(self):
         """Array of reference values for the error."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def cov_mat(self):
         """Full absolute covariance matrix for error."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def cov_mat_rel(self):
         """Full relative covariance matrix for error."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def cor_mat(self):
         """Correlation matrix for error."""
         pass
 
     # TODO: remove _uncor/_cor from base interface?
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def error_uncor(self):
         """Pointwise array of 'uncorrelated' parts of absolute errors."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def error_cor(self):
         """Pointwise array of 'correlated' parts of absolute errors."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def error_rel_uncor(self):
         """Pointwise array of 'uncorrelated' parts of relative errors."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def error_rel_cor(self):
         """Pointwise array of 'correlated' parts of relative errors."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def cov_mat_uncor(self):
         """'Uncorrelated' part of absolute covariance matrix for error."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def cov_mat_cor(self):
         """'Fully correlated' part of absolute covariance matrix for error."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def cov_mat_rel_uncor(self):
         """'Uncorrelated' part of relative covariance matrix for error."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def cov_mat_rel_cor(self):
         """'Fully correlated' part of relative covariance matrix for error."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def fit_indices(self):
         """Indices of fits that have this error when used inside a MultiFit."""
 

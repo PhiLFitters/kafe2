@@ -58,9 +58,8 @@ class FitterBase(object):
     Purely abstract class. Defines the minimal interface required by all specializations.
     """
 
-    @abc.abstractproperty
+    @abc.abstractmethod
     def do_fit(self): pass
-
 
     @abc.abstractmethod
     def _fcn_wrapper(self): pass

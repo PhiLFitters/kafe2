@@ -376,7 +376,8 @@ class PlotAdapterBase(object):
 
     # -- properties
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def data_x(self):
         """
         The 'x' coordinates of the data (used by :py:meth:`~plot_data`).
@@ -385,7 +386,8 @@ class PlotAdapterBase(object):
         """
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def data_y(self):
         """
         The 'y' coordinates of the data (used by :py:meth:`~plot_data`).
@@ -394,7 +396,8 @@ class PlotAdapterBase(object):
         """
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def data_xerr(self):
         """
         The magnitude of the data 'x' error bars (used by :py:meth:`~plot_data`).
@@ -403,7 +406,8 @@ class PlotAdapterBase(object):
         """
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def data_yerr(self):
         """
         The magnitude of the data 'y' error bars (used by :py:meth:`~plot_data`).
@@ -412,7 +416,8 @@ class PlotAdapterBase(object):
         """
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def model_x(self):
         """
         The 'x' coordinates of the model (used by :py:meth:`~plot_model`).
@@ -421,7 +426,8 @@ class PlotAdapterBase(object):
         """
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def model_y(self):
         """
         The 'y' coordinates of the model (used by :py:meth:`~plot_model`).
@@ -430,7 +436,8 @@ class PlotAdapterBase(object):
         """
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def model_xerr(self):
         """
         The magnitude of the model 'x' error bars (used by :py:meth:`~plot_model`).
@@ -439,7 +446,8 @@ class PlotAdapterBase(object):
         """
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def model_yerr(self):
         """
         The magnitude of the model 'y' error bars (used by :py:meth:`~plot_model`).
@@ -448,7 +456,8 @@ class PlotAdapterBase(object):
         """
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def x_range(self):
         """
         The 'x' axis plot range.
@@ -457,7 +466,8 @@ class PlotAdapterBase(object):
         """
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def y_range(self):
         """
         The 'y' axis plot range.
