@@ -1,11 +1,11 @@
 import numpy as np
 import six
 
-from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException, ModelParameterFormatter
+from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException, ParameterFormatter
 from .container import HistContainer, HistContainerException
-from .format import HistModelDensityFunctionFormatter
 from ..util import function_library
 
+from inspect import signature
 
 if six.PY2:
     from funcsigs import signature, Signature, Parameter
@@ -22,17 +22,19 @@ class HistModelFunctionException(ModelFunctionException):
 
 class HistModelFunction(ModelFunctionBase):
     EXCEPTION_TYPE = HistModelFunctionException
-    FORMATTER_TYPE = HistModelDensityFunctionFormatter
 
-    def __init__(self, model_density_function=None, model_density_antiderivative=None):
+    def __init__(self, model_density_function=None, model_density_antiderivative=None, x_name=None):
         """
         Construct :py:class:`XYModelFunction` object (a wrapper for a native Python function):
 
         :param model_density_function: function handle
         :param model_density_antiderivative: function handle for model density antiderivative
         """
-        #TODO default model function
-        self._x_name = 'x'
+        # first index is name of independent variable
+        if x_name is None:
+          self._x_name = list(signature(model_density_function).parameters.keys())[0]
+        else:
+          self._x_name= x_name
         super(HistModelFunction, self).__init__(model_function=model_density_function)
 
         # special handling of numpy vectorized antiderivative functions
@@ -85,7 +87,7 @@ class HistModelFunction(ModelFunctionBase):
 
     def _get_parameter_formatters(self):
         _start_at_arg = 1
-        return [ModelParameterFormatter(name=_pn, value=_pv, error=None)
+        return [ParameterFormatter(name=_pn, value=_pv, error=None)
                 for _pn, _pv in zip(list(self.signature.parameters)[_start_at_arg:], self.argvals[_start_at_arg:])]
 
     def _assign_function_formatter(self):

@@ -47,12 +47,47 @@ class MinimizerIMinuit(MinimizerBase):
         super(MinimizerIMinuit, self)._invalidate_cache()
 
     def _save_state(self):
+        if self._par_val is None:
+            self._save_state_dict["par_val"] = self._par_val
+        else:
+            self._save_state_dict["par_val"] = np.array(self._par_val)
+        if self._par_err is None:
+            self._save_state_dict["par_err"] = self._par_err
+        else:
+            self._save_state_dict["par_err"] = np.array(self._par_err)
+        if self._par_cor_mat is None:
+            self._save_state_dict["par_cor_mat"] = self._par_cor_mat
+        else:
+            self._save_state_dict["par_cor_mat"] = np.array(self._par_cor_mat)
+        if self._fmin_struct is None:
+            self._save_state_dict["fmin_struct"] = self._fmin_struct
+        else:
+            self._save_state_dict["fmin_struct"] = np.array(self._fmin_struct)
+        if self._pars_contour is None:
+            self._save_state_dict["pars_contour"] = self._pars_contour
+        else:
+            self._save_state_dict["pars_contour"] = np.array(self._pars_contour)
         self._save_state_dict['minimizer_param_dict'] = self._minimizer_param_dict
         self._save_state_dict['iminuit'] = self.__iminuit
         super(MinimizerIMinuit, self)._save_state()
 
     def _load_state(self):
         self._reset()
+        self._par_val = self._save_state_dict["par_val"]
+        if self._par_val is not None:
+            self._par_val = np.array(self._par_val)
+        self._par_err = self._save_state_dict["par_err"]
+        if self._par_err is not None:
+            self._par_err = np.array(self._par_err)
+        self._par_cor_mat = self._save_state_dict["par_cor_mat"]
+        if self._par_cor_mat is not None:
+            self._par_cor_mat = np.array(self._par_cor_mat)
+        self._fmin_struct = self._save_state_dict["fmin_struct"]
+        if self._fmin_struct is not None:
+            self._fmin_struct = np.array(self._fmin_struct)
+        self._pars_contour = self._save_state_dict["pars_contour"]
+        if self._pars_contour is not None:
+            self._pars_contour = np.array(self._pars_contour)
         self._minimizer_param_dict = self._save_state_dict['minimizer_param_dict']
         self.__iminuit = self._save_state_dict['iminuit']
         self._func_handle(*self.parameter_values)  # call the function to propagate the changes to the nexus
@@ -87,6 +122,7 @@ class MinimizerIMinuit(MinimizerBase):
             else:
                 _asymm_par_errs[_index, 0] = np.nan
                 _asymm_par_errs[_index, 1] = np.nan
+        self.minimize()
         return _asymm_par_errs
 
     def _fill_in_zeroes_for_fixed(self, submatrix):
@@ -135,6 +171,7 @@ class MinimizerIMinuit(MinimizerBase):
     @property
     def cov_mat(self):
         if self._par_cov_mat is None:
+            self._save_state()
             try:
                 self._get_iminuit().hesse()
                 # FIX_UPSTREAM we need skip_fixed=False, but this is unsupported
@@ -144,16 +181,18 @@ class MinimizerIMinuit(MinimizerBase):
                 _mat = self._get_iminuit().matrix(correlation=False, skip_fixed=True)
                 _mat = np.asarray(_mat)  # reshape into numpy matrix
                 _mat = self._fill_in_zeroes_for_fixed(_mat)  # fill in fixed par 'gaps'
-                self._par_cov_mat = _mat
                 # TODO without the call below parameter values are changed by calling this method. Why?
                 self._func_wrapper_unpack_args(self.parameter_values)
             except RuntimeError:
                 pass
+            self._load_state()
+            self._par_cov_mat = _mat
         return self._par_cov_mat
 
     @property
     def cor_mat(self):
         if self._par_cor_mat is None:
+            self._save_state()
             try:
                 self._get_iminuit().hesse()
                 # FIX_UPSTREAM we need skip_fixed=False, but this is unsupported
@@ -163,11 +202,12 @@ class MinimizerIMinuit(MinimizerBase):
                 _mat = self._get_iminuit().matrix(correlation=True, skip_fixed=True)
                 _mat = np.asarray(_mat)  # reshape into numpy matrix
                 _mat = self._fill_in_zeroes_for_fixed(_mat)  # fill in fixed par 'gaps'
-                self._par_cor_mat = _mat
                 # TODO without the call below parameter values are changed by calling this method. Why?
                 self._func_wrapper_unpack_args(self.parameter_values)
             except RuntimeError:
                 pass
+            self._load_state()
+            self._par_cor_mat = _mat
         return self._par_cor_mat
 
     @property

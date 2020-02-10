@@ -3,12 +3,11 @@ import numpy as np
 
 from scipy.misc import derivative
 
-from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException, ModelParameterFormatter
+from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException, ParameterFormatter
 from .container import XYContainer, XYContainerException
-from .format import XYModelFunctionFormatter
 from ..util import function_library
 
-
+from inspect import signature
 
 __all__ = ["XYParametricModel", "XYModelFunction"]
 
@@ -16,17 +15,21 @@ __all__ = ["XYParametricModel", "XYModelFunction"]
 class XYModelFunctionException(ModelFunctionException):
     pass
 
+
 class XYModelFunction(ModelFunctionBase):
     EXCEPTION_TYPE = XYModelFunctionException
-    FORMATTER_TYPE = XYModelFunctionFormatter
 
-    def __init__(self, model_function=function_library.linear_model):
+    def __init__(self, model_function=function_library.linear_model, x_name=None):
         """
         Construct :py:class:`XYModelFunction` object (a wrapper for a native Python function):
 
         :param model_function: function handle
         """
-        self._x_name = 'x'
+# first index of model function is name of independent variable
+        if x_name is None:
+          self._x_name = list(signature(model_function).parameters.keys())[0]
+        else:
+          self._x_name= x_name
         super(XYModelFunction, self).__init__(model_function=model_function)
 
     def _validate_model_function_raise(self):
@@ -47,7 +50,7 @@ class XYModelFunction(ModelFunctionBase):
 
     def _get_parameter_formatters(self):
         _start_at_arg = 1
-        return [ModelParameterFormatter(name=_pn, value=_pv, error=None)
+        return [ParameterFormatter(name=_pn, value=_pv, error=None)
                 for _pn, _pv in zip(list(self.signature.parameters)[_start_at_arg:], self.argvals[_start_at_arg:])]
 
     def _assign_function_formatter(self):

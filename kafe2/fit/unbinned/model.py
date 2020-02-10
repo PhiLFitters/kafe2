@@ -2,11 +2,12 @@ import numpy as np
 
 from types import FunctionType
 
-from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException, ModelParameterFormatter
+from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException, ModelFunctionFormatter,\
+    ParameterFormatter
 from .container import UnbinnedContainer, UnbinnedContainerException
-from ..xy.format import XYModelFunctionFormatter
 from ..util import function_library
 
+from inspect import signature
 
 class UnbinnedModelPDFException(ModelFunctionException):
     pass
@@ -14,10 +15,15 @@ class UnbinnedModelPDFException(ModelFunctionException):
 
 class UnbinnedModelPDF(ModelFunctionBase):
     EXCEPTION_TYPE = UnbinnedModelPDFException
-    FORMATTER_TYPE = XYModelFunctionFormatter  # TODO: check for more duplicates and use the xy Formatter where possible
 
-    def __init__(self, model_density_function=None):
-        self._x_name = 'x'
+    def __init__(self, model_density_function=None, x_name=None):
+
+    # first index of model pdf is name of independent variable
+        if x_name is None:
+          self._x_name = list(signature(model_density_function).parameters.keys())[0]
+        else:
+          self._x_name= x_name
+
         if isinstance(model_density_function, FunctionType):
             _pdf = model_density_function
         elif model_density_function.lower() == "gaussian":
@@ -45,7 +51,7 @@ class UnbinnedModelPDF(ModelFunctionBase):
 
     def _get_parameter_formatters(self):
         _start_at_arg = 1
-        return [ModelParameterFormatter(name=_pn, value=_pv, error=None)
+        return [ParameterFormatter(name=_pn, value=_pv, error=None)
                 for _pn, _pv in zip(list(self.signature.parameters)[_start_at_arg:], self.argvals[_start_at_arg:])]
 
     def _assign_function_formatter(self):

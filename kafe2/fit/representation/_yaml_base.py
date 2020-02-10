@@ -130,4 +130,3 @@ class YamlReaderMixin(DReprReaderMixin):
         with self._ihandle as _h:
             self._yaml_doc = yaml.load(_h, self.LOADER)
         return self._make_object(self._yaml_doc)
-

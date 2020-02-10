@@ -7,10 +7,10 @@ import numpy as np
 from ...config import kc
 from ...core import NexusFitter, Nexus
 from ...core.fitters.nexus import Parameter, Alias
-from .._base import (FitException, FitBase, DataContainerBase,
-                     ModelParameterFormatter, CostFunctionBase)
+from .._base import FitException, FitBase, DataContainerBase, CostFunctionBase
 from .container import HistContainer
-from .cost import HistCostFunction_NegLogLikelihood, HistCostFunction_UserDefined, STRING_TO_COST_FUNCTION
+from .cost import (HistCostFunction_NegLogLikelihood, HistCostFunction_NegLogLikelihoodRatio,
+    HistCostFunction_UserDefined, STRING_TO_COST_FUNCTION)
 from .model import HistParametricModel, HistModelFunction
 from .plot import HistPlotAdapter
 from ..util import function_library, add_in_quadrature, collect, invert_matrix
@@ -20,7 +20,6 @@ __all__ = ["HistFit"]
 
 class HistFitException(FitException):
     pass
-
 
 class HistFit(FitBase):
     CONTAINER_TYPE = HistContainer
@@ -36,7 +35,8 @@ class HistFit(FitBase):
     def __init__(self,
                  data,
                  model_density_function=function_library.normal_distribution_pdf,
-                 cost_function=HistCostFunction_NegLogLikelihood(
+#                 cost_function=HistCostFunction_NegLogLikelihood(
+                 cost_function=HistCostFunction_NegLogLikelihoodRatio(
                     data_point_distribution='poisson'),
                  model_density_antiderivative=None,
                  minimizer=None,

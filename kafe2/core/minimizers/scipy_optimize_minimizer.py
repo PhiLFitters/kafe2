@@ -44,6 +44,7 @@ class MinimizerScipyOptimize(MinimizerBase):
         self._pars_contour = None
 
         self._opt_result = None
+        self._x0 = None  # Stores initial value for x0 when profiling a parameter
         super(MinimizerScipyOptimize, self).__init__(function_to_minimize=function_to_minimize)
 
     # -- private methods
@@ -53,17 +54,27 @@ class MinimizerScipyOptimize(MinimizerBase):
         super(MinimizerScipyOptimize, self)._invalidate_cache()
 
     def _save_state(self):
-        self._save_state_dict['parameter_values'] = self.parameter_values
-        self._save_state_dict['parameter_errors'] = self.parameter_errors
+        if self._par_val is None:
+            self._save_state_dict['parameter_values'] = self._par_val
+        else:
+            self._save_state_dict['parameter_values'] = np.array(self._par_val)
+        if self._par_err is None:
+            self._save_state_dict['parameter_errors'] = self._par_err
+        else:
+            self._save_state_dict['parameter_errors'] = np.array(self._par_err)
         self._save_state_dict['function_value'] = self._fval
         self._save_state_dict['par_fixed'] = np.array(self._par_fixed)
         super(MinimizerScipyOptimize, self)._save_state()
 
     def _load_state(self):
-        self.parameter_values = self._save_state_dict['parameter_values']
-        self._par_err = np.array(self._save_state_dict['parameter_errors'])
+        self._par_val = self._save_state_dict['parameter_values']
+        if self._par_val is not None:
+            self._par_val = np.array(self._par_val)
+        self._par_err = self._save_state_dict['parameter_errors']
+        if self._par_err is not None:
+            self._par_err = np.array(self._par_err)
         self._fval = self._save_state_dict['function_value']
-        self._par_fixed = self._save_state_dict['par_fixed']
+        self._par_fixed = np.array(self._save_state_dict['par_fixed'])
         super(MinimizerScipyOptimize, self)._load_state()
 
     def _get_opt_result(self):
@@ -650,10 +661,14 @@ class MinimizerScipyOptimize(MinimizerBase):
         _grad = nd.Gradient(_meta_cost_function_gradient)(coords)
         return np.arctan2(_grad[0], _grad[1]) + np.pi / 2
 
-    def _calc_fun_with_constraints(self, additional_constraints):
+    def _calc_fun_with_constraints(self, additional_constraints, continuous_x0=False):
         _local_constraints = self._par_constraints + additional_constraints
+        if continuous_x0:
+            _x0 = self._x0
+        else:
+            _x0 = self._par_val
         _result = opt.minimize(self._func_wrapper_unpack_args,
-                                        self._par_val,
+                                        _x0,
                                         args=(),
                                         method="slsqp",
                                         jac=None,
@@ -662,6 +677,7 @@ class MinimizerScipyOptimize(MinimizerBase):
                                         tol=self.tolerance,
                                         callback=None,
                                         options=dict(maxiter=6000, disp=False))
+        self._x0 = _result.x
         return _result.fun
         
     def profile(self, parameter_name, bins=21, bound=2, args=None, subtract_min=False):
@@ -672,8 +688,11 @@ class MinimizerScipyOptimize(MinimizerBase):
         _y_offset = self.function_value if subtract_min else 0
         
         _y = np.empty(bins)
+        self._x0 = self._par_val
         for i in range(bins):
-            _y[i] = self._calc_fun_with_constraints([{"type" : "eq", "fun" : lambda x: x[_par_id] - _par[i]}])
+            _y[i] = self._calc_fun_with_constraints(
+                [{"type" : "eq", "fun" : lambda x: x[_par_id] - _par[i]}], continuous_x0=True
+            )
         self._func_wrapper_unpack_args(self._par_val)
         return np.asarray([_par, _y - _y_offset])
 
