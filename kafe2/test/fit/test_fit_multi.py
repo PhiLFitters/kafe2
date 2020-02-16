@@ -368,4 +368,3 @@ class TestMultiFitIntegrityXY(TestMultiFit):
     def test_double_fit_vs_regular_fit_scipy(self):
         self._set_xy_fits(minimizer='scipy')
         TestMultiFit._assert_fits_valid_and_equal_double(self._fit_xy_all, self._fit_xy_all_double)
-

@@ -103,4 +103,3 @@ class SimpleFitter(object):
 
     def do_fit(self):
         self._minimize()
-

@@ -385,5 +385,3 @@ class XYContainer(IndexedContainer):
             if _err_dict['axis'] == 1:
                 return True
         return False
-
-

@@ -768,5 +768,3 @@ class MatrixGaussianError(GaussianErrorBase):
 
 if __name__ == '__main__':
     pass
-
-

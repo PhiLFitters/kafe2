@@ -227,9 +227,3 @@ class NexusFitter(object):
 
         # set flags
         self.__state_is_from_minimizer = False
-
-
-
-
-
-

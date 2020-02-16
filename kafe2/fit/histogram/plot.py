@@ -174,4 +174,3 @@ class HistPlotAdapter(PlotAdapterBase):
             error_contributions=error_contributions,
             **kwargs
         )
-

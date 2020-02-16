@@ -729,4 +729,3 @@ class EnsembleVariablePlotter(object):
         _plot_result_dict['legend_labels'] = _ls
 
         return _plot_result_dict
-

@@ -101,4 +101,3 @@ class DReprReaderMixin(object):
         with self._ihandle as _h:
             self._representation = _h.read()
         return self._make_object(self._representation)
-

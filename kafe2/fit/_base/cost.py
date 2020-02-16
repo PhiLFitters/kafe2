@@ -874,6 +874,3 @@ class CostFunctionBase_Chi2_Nuisance(CostFunctionBase_Chi2):
         return CostFunctionBase_Chi2.chi2_pointwise_errors_fallback(
             data=data, model=model, total_error=total_error, parameter_values=parameter_values,
             parameter_constraints=parameter_constraints)
-
-
-

@@ -142,4 +142,3 @@ class IndexedPlotAdapter(PlotAdapterBase):
                                     xerr=self.data_xerr,
                                     yerr=_yerr / self.model_y,
                                     **kwargs)
-
