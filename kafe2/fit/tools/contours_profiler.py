@@ -171,7 +171,7 @@ class ContoursProfiler(object):
 
         self._cost_function_formatted_name = "${}$".format(self._fit._cost_function.formatter.latex_name)
         # FIXME MultiFit does not have an internal _model_function field
-        self._parameters_formatted_names = ["${}$".format(pf.latex_name) for pf in self._fit._model_function.argument_formatters]
+        self._parameters_formatted_names = ["${}$".format(pf.latex_name) for pf in self._fit._get_model_function_parameter_formatters()]
 
         self._figures = []
 

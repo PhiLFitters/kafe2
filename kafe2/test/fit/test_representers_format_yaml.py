@@ -12,9 +12,9 @@ from kafe2.fit.representation._yaml_base import YamlReaderException
 TEST_MODEL_FUNCTION_FORMATTER = """
 name: quadratic_model
 latex_name: quadratic model
-x_name: x
-latex_x_name: X
 arg_formatters:
+  - name: x
+    latex_name: X
   - name: a
     latex_name: A
   - name: b
@@ -27,9 +27,9 @@ latex_expression_string: '{0}{x}^2 + {1}{x} + {2}'
 
 TEST_MODEL_FUNCTION_FORMATTER_MISSING_KEYWORD = """
 latex_name: quadratic model
-x_name: x
-latex_x_name: X
 arg_formatters:
+  - name: x
+    latex_name: X
   - name: a
     latex_name: A
   - name: b
@@ -49,9 +49,8 @@ class TestModelFunctionFormatterYamlRepresenter(unittest.TestCase):
         self._model_function_formatter = ModelFunctionFormatter(
             name='quadratic_model',
             latex_name='quadratic model',
-            x_name='x',
-            latex_x_name='X',
             arg_formatters=[
+                ParameterFormatter(name='x', latex_name='X'),
                 ParameterFormatter(name='a', value=1.1, error=0.1, latex_name='A'),
                 ParameterFormatter(name='b', value=2.2, error=0.1, latex_name='B'),
                 ParameterFormatter(name='c', value=3.3, error=0.1, latex_name='C')
@@ -76,8 +75,6 @@ class TestModelFunctionFormatterYamlRepresenter(unittest.TestCase):
     def _assert_model_function_formatters_equal(self, formatter1, formatter2):
         self.assertTrue(formatter1.name == formatter2.name)
         self.assertTrue(formatter1.latex_name == formatter2.latex_name)
-        self.assertTrue(formatter1._x_name == formatter2._x_name)
-        self.assertTrue(formatter1._latex_x_name == formatter2._latex_x_name)
         for _arg_formatter_1, _arg_formatter_2 in zip(
                 formatter1._arg_formatters, formatter2._arg_formatters):
             self.assertTrue(_arg_formatter_1.name == _arg_formatter_2.name)

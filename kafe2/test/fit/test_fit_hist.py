@@ -273,7 +273,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
                     minimizer=self.MINIMIZER)
 
         self.assertIn(
-            'must have independent variable',
+            "needs at least one parameter",
             _exc.exception.args[0])
 
     def test_model_no_pars_beside_x_raise(self):
@@ -287,7 +287,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
                     minimizer=self.MINIMIZER)
 
         self.assertIn(
-            'needs at least one parameter beside independent variable',
+            "needs at least one parameter besides",
             _exc.exception.args[0])
 
     def test_model_varargs_raise(self):
@@ -347,7 +347,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
                     model_density_antiderivative=dummy_model_antiderivative,
                     minimizer=self.MINIMIZER)
 
-        self.assertIn('different argument structures', _exc.exception.args[0])
+        self.assertIn('require the same argument structures', _exc.exception.args[0])
         self.assertIn('data', _exc.exception.args[0])
 
     def test_model_and_antiderivative_no_defaults(self):

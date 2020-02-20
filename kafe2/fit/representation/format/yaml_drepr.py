@@ -33,7 +33,7 @@ class ModelFunctionFormatterYamlWriter(YamlWriterMixin, ModelFunctionFormatterDR
             raise DReprError("Model function formatter unknown or not supported: %s" % _class)
         
         #TODO should there be a property for _arg_formatters?
-        _yaml_doc['arg_formatters'] = [ModelParameterFormatterYamlWriter._make_representation(_arg_formatter) 
+        _yaml_doc['arg_formatters'] = [ModelParameterFormatterYamlWriter._make_representation(_arg_formatter)
                                        for _arg_formatter in model_function_formatter._arg_formatters]
 
         _yaml_doc['name'] = model_function_formatter.name
@@ -44,12 +44,11 @@ class ModelFunctionFormatterYamlWriter(YamlWriterMixin, ModelFunctionFormatterDR
         _yaml_doc['latex_expression_string'] = model_function_formatter.latex_expression_format_string
 
         # TODO should there be properties for these calls?
-        if _class is ModelFunctionFormatter:
-            _yaml_doc['x_name'] = model_function_formatter.x_name
-            _yaml_doc['latex_x_name'] = model_function_formatter.latex_x_name
-        elif _class is IndexedModelFunctionFormatter:
+        if _class is IndexedModelFunctionFormatter:
             _yaml_doc['index_name'] = model_function_formatter.index_name
             _yaml_doc['latex_index_name'] = model_function_formatter.latex_index_name
+        elif _class is ModelFunctionFormatter:
+            pass
         else:
             raise YamlWriterException("Unknown formatter type!")
 
@@ -78,12 +77,11 @@ class ModelFunctionFormatterYamlReader(YamlReaderMixin, ModelFunctionFormatterDR
         _class = cls._OBJECT_TYPE_NAME_TO_CLASS.get(_type)
 
         _kwarg_list = ['name', 'latex_name', 'expression_string', 'latex_expression_string']
-        if _class is ModelFunctionFormatter:
-            _kwarg_list.append('x_name')
-            _kwarg_list.append('latex_x_name')
-        elif _class is IndexedModelFunctionFormatter:
+        if _class is IndexedModelFunctionFormatter:
             _kwarg_list.append('index_name')
             _kwarg_list.append('latex_index_name')
+        elif _class is ModelFunctionFormatter:
+            pass
         else:
             raise YamlReaderException("Unknown formatter type!")
         _constructor_kwargs = {key: yaml_doc.pop(key, None) for key in _kwarg_list}

@@ -1,8 +1,8 @@
 import abc
 import numpy as np
 import sys
-import textwrap
 import six
+import warnings
 
 from collections import OrderedDict
 from functools import partial
@@ -124,8 +124,15 @@ class FitBase(FileIOMixin, object):
     @abc.abstractmethod
     def _set_new_parametric_model(self): pass
 
+    # Overwritten by MultiFit
     def _get_model_function_argument_formatters(self):
-        return self._model_function.argument_formatters
+        """All arguments of the model function including independent variables."""
+        return self._model_function.formatter.arg_formatters
+
+    # Overwritten by MultiFit
+    def _get_model_function_parameter_formatters(self):
+        """Only the parameters which are fitted. Excludes independent variables."""
+        return self.model_function.formatter.par_formatters
 
     def _report_data(self, output_stream, indent, indentation_level):
         pass
@@ -146,7 +153,7 @@ class FitBase(FileIOMixin, object):
         output_stream.write(indent * (indentation_level + 1) + "================\n\n")
 
         self._update_parameter_formatters(update_asymmetric_errors=asymmetric_parameter_errors)
-        for _pf in self._get_model_function_argument_formatters():
+        for _pf in self._get_model_function_parameter_formatters():
             output_stream.write(indent * (indentation_level + 2))
             output_stream.write(
                 _pf.get_formatted(with_name=True,
@@ -190,11 +197,11 @@ class FitBase(FileIOMixin, object):
 
     def _update_parameter_formatters(self, update_asymmetric_errors=False):
         for _fpf, _pv, _pe in zip(
-                self._get_model_function_argument_formatters(), self.parameter_values, self.parameter_errors):
+                self._get_model_function_parameter_formatters(), self.parameter_values, self.parameter_errors):
             _fpf.value = _pv
             _fpf.error = _pe
         if update_asymmetric_errors:
-            for _fpf, _ape in zip(self._get_model_function_argument_formatters(), self.asymmetric_parameter_errors):
+            for _fpf, _ape in zip(self._get_model_function_parameter_formatters(), self.asymmetric_parameter_errors):
                 _fpf.asymmetric_error = _ape
 
     # -- public properties
@@ -257,6 +264,12 @@ class FitBase(FileIOMixin, object):
     #
     # @abc.abstractproperty
     # def total_cov_mat_inverse(self): pass
+
+    @property
+    def model_function(self):
+        """The wrapped :py:obj:``ModelFunctionBase`` or derived objects used in the fit. This object contains the model
+        function as well as formatting information."""
+        return self._model_function
 
     @property
     def model_label(self):
@@ -411,7 +424,7 @@ class FitBase(FileIOMixin, object):
         """
         self._fitter.fix_parameter(par_name=name, par_value=value)
         _par_index = self.parameter_names.index(name)
-        self._get_model_function_argument_formatters()[_par_index].fixed = True
+        self._get_model_function_parameter_formatters()[_par_index].fixed = True
 
     def release_parameter(self, par_name):
         """
@@ -422,7 +435,7 @@ class FitBase(FileIOMixin, object):
         """
         self._fitter.release_parameter(par_name=par_name)
         _par_index = self.parameter_names.index(par_name)
-        self._get_model_function_argument_formatters()[_par_index].fixed = False
+        self._get_model_function_parameter_formatters()[_par_index].fixed = False
 
     def limit_parameter(self, par_name, par_limits):
         """
@@ -666,14 +679,13 @@ class FitBase(FileIOMixin, object):
         self._model_function.formatter.latex_expression_format_string = latex_expression_format_string
 
     def assign_parameter_latex_names(self, **par_latex_names_dict):
-        """Assign LaTeX-formatted strings to the model function parameters."""
-        x_name = par_latex_names_dict.pop('x', None)
-        if x_name is not None:
-            self._model_function.formatter.latex_x_name = x_name
-        for _pf in self._get_model_function_argument_formatters():
-            _pln = par_latex_names_dict.get(_pf.name, None)
-            if _pln is not None:
-                _pf.latex_name = _pln
+        """Assign LaTeX-formatted strings to all model function arguments."""
+        for _af in self._get_model_function_argument_formatters():
+            _aln = par_latex_names_dict.pop(_af.name, None)
+            if _aln is not None:
+                _af.latex_name = _aln
+        if par_latex_names_dict:
+            warnings.warn("Could not assign all latex names to a parameter. Leftover: {}".format(par_latex_names_dict))
 
     def get_result_dict(self):
         """Return a dictionary of the fit results.
@@ -733,5 +745,5 @@ class FitBase(FileIOMixin, object):
     def to_file(self, filename, format=None, calculate_asymmetric_errors=False):
         """Write kafe2 object to file"""
         if calculate_asymmetric_errors:
-            self.asymmetric_parameter_errors
+            self.asymmetric_parameter_errors()
         super(FitBase, self).to_file(filename=filename, format=None)

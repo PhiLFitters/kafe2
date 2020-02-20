@@ -110,8 +110,8 @@ auxiliary_fit = XYFit(
 
 # (Optional): Assign names for models and parameters
 auxiliary_fit.assign_parameter_latex_names(x='U', p2='p_2', p1='p_1', p0='p_0')
-auxiliary_fit.assign_model_function_expression('{0}*{x}^2 + {1}*{x} + {2}')
-auxiliary_fit.assign_model_function_latex_expression(r'{0}\,{x}^2 + {1}\,{x} + {2}')
+auxiliary_fit.assign_model_function_expression('{1}*{x}^2 + {2}*{x} + {3}')
+auxiliary_fit.assign_model_function_latex_expression(r'{1}\,{x}^2 + {2}\,{x} + {3}')
 
 # declare errors on U
 auxiliary_fit.add_simple_error(axis='x', err_val=sigU)

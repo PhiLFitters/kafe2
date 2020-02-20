@@ -509,13 +509,13 @@ class PlotAdapterBase(object):
     #Overridden by multi plot adapters
     def get_formatted_model_function(self, **kwargs):
         """return model function string"""
-        return self._fit._model_function.formatter.get_formatted(**kwargs)
+        return self._fit.model_function.formatter.get_formatted(**kwargs)
 
     #Overridden by multi plot adapters
     @property
-    def model_function_argument_formatters(self):
-        """return model function argument formatters"""
-        return self._fit._model_function.argument_formatters
+    def model_function_parameter_formatters(self):
+        """The model function parameter formatters, excluding the independent variable."""
+        return self._fit.model_function.formatter.par_formatters
 
 # -- must come last!
 
@@ -712,7 +712,7 @@ class Plot(object):
                     asymmetric_error=asymmetric_parameter_errors,
                     format_as_latex=format_as_latex
                 )
-                for _pf in plot_adapter.model_function_argument_formatters
+                for _pf in plot_adapter.model_function_parameter_formatters
             ]),
             fit_quality=_cost_func._formatter.get_formatted(
                 value=_cost_function_value,
