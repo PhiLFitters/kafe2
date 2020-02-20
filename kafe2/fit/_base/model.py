@@ -93,11 +93,14 @@ class ModelFunctionBase(FileIOMixin, object):
     EXCEPTION_TYPE = ModelFunctionException
     FORMATTER_TYPE = ModelFunctionFormatter
 
-    def __init__(self, model_function=function_library.linear_model):
+    def __init__(self, model_function=function_library.linear_model, independent_argcount=1):
         """
         Construct :py:class:`ModelFunction` object (a wrapper for a native Python function):
 
         :param model_function: function handle
+        :param independent_argcount: The amount of independent variables for this model. The first n variables of the
+                                      model function will be treated as independent variables and will not be fitted.
+        :type independent_argcount: int
         """
         # determine library function from string specification
         if isinstance(model_function, str):
@@ -121,6 +124,8 @@ class ModelFunctionBase(FileIOMixin, object):
             raise ModelFunctionException("Cannot use {} as model function: "
                                          "object not callable!".format(model_function))
 
+        assert int(independent_argcount) >= 0, "The number of independent parameters must be greater than 0"
+        self._independent_argcount = int(independent_argcount)
         self._assign_model_function_signature_and_argcount()
         self._validate_model_function_raise()
         self._assign_function_formatter()
@@ -142,8 +147,8 @@ class ModelFunctionBase(FileIOMixin, object):
     def _assign_model_function_signature_and_argcount(self):
         self._model_function_signature = signature(self._model_function_handle)
         self._model_function_argcount = self._model_function_handle.__code__.co_argcount
-        #for most model function types there is exactly one argument that is not a parameter (x)
-        self._model_function_parcount = self._model_function_argcount - 1
+        # remove the amount of independent variables from the parameter count
+        self._model_function_parcount = self._model_function_argcount - self._independent_argcount
 
     def _validate_model_function_raise(self):
         # evaluate general model function requirements
@@ -164,14 +169,17 @@ class ModelFunctionBase(FileIOMixin, object):
                         _par.name,
                     )
                 )
+        # require at least one parameter to fit
+        if self._model_function_parcount < 1:
+            raise self.__class__.EXCEPTION_TYPE("Model function {0!r} needs at least one parameter besides the "
+                                                "first {0!s} independent variable(s)!".format(
+                                                 self._model_function_handle, self._independent_argcount))
 
-    def _get_parameter_formatters(self):
-        return [ParameterFormatter(name=_pn, value=_pv, error=None)
-                for _pn, _pv in zip(self.signature.parameters, self.argvals)]
+    def _get_argument_formatters(self):
+        return [ParameterFormatter(name=_pn) for _pn in self.signature.parameters.keys()]
 
     def _assign_function_formatter(self):
-        self._formatter = self.__class__.FORMATTER_TYPE(
-            self.name, arg_formatters=self._get_parameter_formatters())
+        self._formatter = self.__class__.FORMATTER_TYPE(self.name, arg_formatters=self._get_argument_formatters())
 
     def __call__(self, *args, **kwargs):
         return self._callable(*args, **kwargs)
@@ -193,7 +201,7 @@ class ModelFunctionBase(FileIOMixin, object):
 
     @property
     def argcount(self):
-        """The number of arguments the model function accepts
+        """The number of arguments the model function accepts.
         (including any independent variables which are not parameters)"""
         return self._model_function_argcount
 
@@ -203,20 +211,20 @@ class ModelFunctionBase(FileIOMixin, object):
         return self._model_function_parcount
 
     @property
-    def argvals(self):
-        """The current values of the function arguments (**not yet implemented**, returns an array of zeros)"""
-        # TODO: decide whether to store these (that's actually what ParametricModelMixin is for...)
-        return [0.0] * (self.argcount)
+    def x_name(self):
+        """The name of the independent variable. ``None`` for 0 independent variables."""
+        # TODO: don't use case differentiation to maintain compatibility with current fit objects
+        if self._independent_argcount == 0:
+            return None
+        _pars = list(self.signature.parameters.keys())
+        if self._independent_argcount == 1:
+            return _pars[0]
+        return _pars[0:self._independent_argcount]
 
     @property
     def formatter(self):
         """The :py:obj:`ModelFunctionFormatter`-derived object for this function"""
         return self._formatter
-
-    @property
-    def argument_formatters(self):
-        """The :py:obj:`ParameterFormatter`-derived objects for the function arguments"""
-        return self._formatter.arg_formatters
 
     @property
     def defaults(self):
@@ -230,7 +238,7 @@ class ModelFunctionBase(FileIOMixin, object):
 
     @defaults.setter
     def defaults(self, new_defaults):
-        if self.parcount != len(new_defaults): #first arg is x, but x is not a parameter
+        if self.parcount != len(new_defaults):  # first arg is independent variable, but not a parameter
             raise ModelFunctionException('Expected %s parameter defaults (1 per parameter), but received %s'
                                          % (self.parcount, len(new_defaults)))
 

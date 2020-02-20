@@ -59,6 +59,16 @@ class MultiFit(FitBase):
                     _included_argument_names.add(_argument_formatter.name)
         return _combined_argument_formatters
 
+    def _get_model_function_parameter_formatters(self):
+        _included_parameter_names = set()
+        _combined_parameter_formatters = []
+        for _fit in self._fits:
+            for _parameter_formatter in _fit._get_model_function_parameter_formatters():
+                if _parameter_formatter.name not in _included_parameter_names:
+                    _combined_parameter_formatters.append(_parameter_formatter)
+                    _included_parameter_names.add(_parameter_formatter.name)
+        return _combined_parameter_formatters
+
     def _invalidate_total_error_cache(self):
         pass
 

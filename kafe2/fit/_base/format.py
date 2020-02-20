@@ -1,12 +1,12 @@
 import re
-import string
+import copy
 
 import numpy as np
 from kafe2.fit.io.file import FileIOMixin
 
 
 __all__ = ["FormatterException", "ParameterFormatter", "FunctionFormatter", "ModelFunctionFormatter",
-           "CostFunctionFormatter"]
+           "CostFunctionFormatter", "latexify_ascii"]
 
 
 # -- formatters for model parameters and model functions
@@ -19,6 +19,9 @@ def latexify_ascii(ascii_string):
     """
     _lpn = ascii_string.replace('_', r"\_")
     return r"{\tt %s}" % _lpn
+
+# Naming convention: Arguments describe all arguments of a function, parameters only the fitted parameters excluding
+# the independent variable(s)
 
 
 class FormatterException(Exception):
@@ -45,13 +48,14 @@ class ParameterFormatter(FileIOMixin, object):
         :param name: a plain-text-formatted string indicating the parameter name
         :type name: str
         :param value: the parameter value
-        :type value: float
+        :type value: float or None
         :param error: the symmetric parameter error
-        :type error: float
+        :type error: float or None
         :param asymmetric_error: the asymmetric parameter errors
-        :type asymmetric_error: tuple[float, float]
+        :type asymmetric_error: tuple[float, float] or None
         :param latex_name: a LaTeX-formatted string indicating the parameter name
-        :type latex_name: str
+        :type latex_name: str or None
+        :rtype: ParameterFormatter
         """
         self.value = value
         self.error = error
@@ -293,15 +297,15 @@ class FunctionFormatter(FileIOMixin, object):
         return 'function_formatter'
 
     def _get_format_kwargs(self, format_as_latex=False):
-        """Create a dictionary containing parameter name and format pairs.
+        """Create a dictionary containing argument name and format pairs.
 
         :param format_as_latex: If the format string is a latex formatted string.
-        :return: Dictionary containing parameter name and format pairs.
+        :return: Dictionary containing argument name and format pairs.
         """
         if format_as_latex:
-            _par_name_string_dict = {_af.name: _af.latex_name for _af in self._arg_formatters}
+            _par_name_string_dict = {_af.name: _af.latex_name for _af in self.arg_formatters}
         else:
-            _par_name_string_dict = {_af.name: _af.name for _af in self._arg_formatters}
+            _par_name_string_dict = {_af.name: _af.name for _af in self.arg_formatters}
         return _par_name_string_dict
 
     def _get_formatted_name(self, format_as_latex=False):
@@ -315,8 +319,8 @@ class FunctionFormatter(FileIOMixin, object):
         else:
             return self._name
 
-    def _get_formatted_args(self, with_par_values=True, n_significant_digits=2, format_as_latex=False):
-        """Get a list of the formatted arguments including their values. This can be turned off.
+    def _get_formatted_pars(self, with_par_values=True, n_significant_digits=2, format_as_latex=False):
+        """Get a list of the formatted parameters including their values. This can be turned off.
 
         :param with_par_values: If the strings should contain the parameter values.
         :param n_significant_digits: The number of significant digits when using the parameter values.
@@ -324,14 +328,14 @@ class FunctionFormatter(FileIOMixin, object):
         :return: List of formatted parameter strings.
         """
         if format_as_latex:
-            _par_name_strings = [_af.latex_name for _af in self._arg_formatters]
+            _par_name_strings = [_pf.latex_name for _pf in self.par_formatters]
         else:
-            _par_name_strings = [_af.name for _af in self._arg_formatters]
+            _par_name_strings = [_pf.name for _pf in self.par_formatters]
 
         if with_par_values:
             _par_val_strings = []
-            for _af in self._arg_formatters:
-                _par_val_strings.append(_af.get_formatted(with_name=False,
+            for _pf in self.par_formatters:
+                _par_val_strings.append(_pf.get_formatted(with_name=False,
                                                           with_value=True,
                                                           with_errors=False,
                                                           n_significant_digits=n_significant_digits,
@@ -348,9 +352,10 @@ class FunctionFormatter(FileIOMixin, object):
         """
         _kwargs = self._get_format_kwargs(format_as_latex=format_as_latex)
         if format_as_latex and self._latex_expr_string is not None:
-            _par_expr_string = self._latex_expr_string.format(*[_af.latex_name for _af in self._arg_formatters], **_kwargs)
+            # use all arguments to format the expression string
+            _par_expr_string = self._latex_expr_string.format(*[_af.latex_name for _af in self.arg_formatters], **_kwargs)
         elif not format_as_latex and self._expr_string is not None:
-            _par_expr_string = self._expr_string.format(*[_af.name for _af in self._arg_formatters], **_kwargs)
+            _par_expr_string = self._expr_string.format(*[_af.name for _af in self.arg_formatters], **_kwargs)
         elif format_as_latex and self._latex_expr_string is None:
             _par_expr_string = self.DEFAULT_LATEX_EXPRESSION_STRING
         else:
@@ -373,7 +378,7 @@ class FunctionFormatter(FileIOMixin, object):
         try:
             self._get_formatted_expression(format_as_latex=False)
         except LookupError:  # fetch key and index errors. Other Errors have other causes.
-            _af_names = [_af.name for _af in self._arg_formatters] if self._arg_formatters else None
+            _af_names = [_af.name for _af in self.arg_formatters] if self.arg_formatters else None
             raise FormatterException("Expression string %s does not match argument structure %s"
                                      % (expression_format_string, _af_names))
 
@@ -399,7 +404,7 @@ class FunctionFormatter(FileIOMixin, object):
         try:
             self._get_formatted_expression(format_as_latex=True)
         except LookupError:  # fetch key and index errors. Other Errors have other causes.
-            _af_latex_names = [_af.latex_name for _af in self._arg_formatters] if self._arg_formatters else None
+            _af_latex_names = [_af.latex_name for _af in self.arg_formatters] if self.arg_formatters else None
             raise FormatterException("LaTeX expression string %s does not match argument structure %s"
                                      % (latex_expression_format_string, _af_latex_names))
 
@@ -438,13 +443,15 @@ class FunctionFormatter(FileIOMixin, object):
 
     @property
     def arg_formatters(self):
-        """The list of :py:obj:`ParameterFormatter`-derived objects used for formatting model function
-        arguments."""
+        """The list of :py:obj:`ParameterFormatter`-derived objects used for formatting all model function arguments."""
         return self._arg_formatters
+    # Don't use setter. The ParameterFormatter objects can be customized set individually. Setter requires validation
 
-    @arg_formatters.setter
-    def arg_formatters(self, arg_formatters):
-        self._arg_formatters = arg_formatters
+    @property
+    def par_formatters(self):
+        """List of :py:obj:`ParameterFormatter`-derived objects used for formatting the fit parameters,
+        excluding the independent parameter(s)."""
+        return self._arg_formatters  # same as all arguments for base, overwrite when necessary
 
     def get_formatted(self, with_par_values=True, n_significant_digits=2, format_as_latex=False, with_expression=False):
         """Get a formatted string representing this model function.
@@ -456,7 +463,7 @@ class FunctionFormatter(FileIOMixin, object):
         :param with_expression: if ``True``, the returned string will include the expression assigned to the function
         """
         # FIXME: default should actually *not* show the parameter values
-        _par_strings = self._get_formatted_args(with_par_values=with_par_values,
+        _par_strings = self._get_formatted_pars(with_par_values=with_par_values,
                                                 n_significant_digits=n_significant_digits,
                                                 format_as_latex=format_as_latex)
         _par_expr_string = ""
@@ -532,71 +539,15 @@ class ModelFunctionFormatter(FunctionFormatter):
     The formatted string is obtained by calling the :py:meth:`~ModelFunctionFormatter.get_formatted` method.
     """
 
-    def __init__(self, name, latex_name=None, x_name='x', latex_x_name=None, arg_formatters=None,
-                 expression_string=None, latex_expression_string=None):
-        """
-        Construct a :py:obj:`Formatter` for a model function:
-
-        :param name: a plain-text-formatted string indicating the function name
-        :type name: str
-        :param latex_name: a LaTeX-formatted string indicating the function name
-        :type latex_name: str
-        :param x_name: a plain-text-formatted string representing the independent variable
-        :param latex_x_name: a LaTeX-formatted string representing the independent variable
-        :type latex_x_name: str
-        :param arg_formatters: list of :py:obj:`ParameterFormatter`-derived objects,
-                               formatters for function arguments
-        :type arg_formatters: list[kafe2.fit._base.ParameterFormatter]
-        :param expression_string:  a plain-text-formatted string indicating the function expression
-        :type expression_string: str
-        :param latex_expression_string:  a LaTeX-formatted string indicating the function expression
-        :type latex_expression_string: str
-        """
-        # TODO should name be allowed to be None?
-        self._x_name = x_name
-        self.latex_x_name = latex_x_name
-
-        super(ModelFunctionFormatter, self).__init__(name=name, latex_name=latex_name, arg_formatters=arg_formatters,
-                                                     expression_string=expression_string,
-                                                     latex_expression_string=latex_expression_string)
-
     @classmethod
     def _get_object_type_name(cls):
         return 'model_function_formatter'
 
-    def _get_format_kwargs(self, format_as_latex=False):
-        """Create a dictionary containing parameter name and format pairs.
-
-        :param format_as_latex: If the format string is a latex formatted string.
-        :return: Dictionary containing parameter name and format pairs.
-        """
-        _dct = super(ModelFunctionFormatter, self)._get_format_kwargs(format_as_latex=format_as_latex)
-        if format_as_latex:
-            _dct.update(x=self.latex_x_name)
-        else:
-            _dct.update(x=self.x_name)
-        return _dct
-
     @property
-    def x_name(self):
-        """The name of the independent variable."""
-        return self._x_name
-
-    @x_name.setter
-    def x_name(self, x_name):
-        self._x_name = x_name
-
-    @property
-    def latex_x_name(self):
-        """The latex name of the independent variable."""
-        return self._latex_x_name
-
-    @latex_x_name.setter
-    def latex_x_name(self, latex_x_name):
-        if latex_x_name is None:
-            self._latex_x_name = latexify_ascii(self.x_name)
-        else:
-            self._latex_x_name = latex_x_name
+    def par_formatters(self):
+        formatters = copy.copy(self.arg_formatters)  # copy so we don't modify the original formatters
+        formatters.pop(0)  # first formatter is independent var, delete it
+        return formatters
 
     def get_formatted(self, with_par_values=True, n_significant_digits=2, format_as_latex=False, with_expression=False):
         """Get a formatted string representing this model function.
@@ -608,20 +559,21 @@ class ModelFunctionFormatter(FunctionFormatter):
         :param with_expression: if ``True``, the returned string will include the expression assigned to the function
         """
         # FIXME: default should actually *not* show the parameter values
-        _par_strings = self._get_formatted_args(with_par_values=with_par_values,
+        _par_strings = self._get_formatted_pars(with_par_values=with_par_values,
                                                 n_significant_digits=n_significant_digits,
                                                 format_as_latex=format_as_latex)
         _par_expr_string = ""
         if with_expression:
             _par_expr_string = self._get_formatted_expression(format_as_latex=format_as_latex)
 
+        x_formatter = self.arg_formatters[0]
         if format_as_latex:
-            _out_string = r"%s\left(%s;%s\right)" % (self._latex_name, self._latex_x_name, ", ".join(_par_strings))
+            _out_string = r"%s\left(%s;%s\right)" % (self._latex_name, x_formatter.latex_name, ", ".join(_par_strings))
             if _par_expr_string:
                 _out_string += " = " + _par_expr_string
             _out_string = "$%s$" % (_out_string,)
         else:
-            _out_string = "%s(%s; %s)" % (self._name, self._x_name, ", ".join(_par_strings))
+            _out_string = "%s(%s; %s)" % (self._name, x_formatter.name, ", ".join(_par_strings))
             if _par_expr_string:
                 _out_string += " = " + _par_expr_string
         return _out_string

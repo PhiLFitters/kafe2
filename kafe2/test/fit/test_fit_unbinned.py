@@ -182,7 +182,7 @@ class TestUnbinnedFitBasicInterface(AbstractTestFit, unittest.TestCase):
                     minimizer=self.MINIMIZER)
 
         self.assertIn(
-            'must have independent variable',
+            'needs at least one parameter',
             _exc.exception.args[0])
 
     def test_model_no_pars_beside_x_raise(self):
@@ -195,7 +195,7 @@ class TestUnbinnedFitBasicInterface(AbstractTestFit, unittest.TestCase):
                     minimizer=self.MINIMIZER)
 
         self.assertIn(
-            'needs at least one parameter beside independent variable',
+            'needs at least one parameter besides',
             _exc.exception.args[0])
 
     def test_model_varargs_raise(self):

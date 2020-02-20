@@ -20,6 +20,7 @@ __all__ = ["IndexedParametricModel", "IndexedModelFunction"]
 class IndexedModelFunctionException(ModelFunctionException):
     pass
 
+
 class IndexedModelFunction(ModelFunctionBase):
     EXCEPTION_TYPE = IndexedModelFunctionException
     FORMATTER_TYPE = IndexedModelFunctionFormatter
@@ -30,28 +31,8 @@ class IndexedModelFunction(ModelFunctionBase):
 
         :param model_function: function handle
         """
-        self._index_name = 'i'
-        super(IndexedModelFunction, self).__init__(model_function=model_function)
-
-    def _validate_model_function_raise(self):
-        # require 'indexed' model functions to have at least one argument
-        if self.argcount < 1:
-            raise self.__class__.EXCEPTION_TYPE(
-                "Model function '%r' needs at least one parameter!!"
-                % (self.func,))
-
-        super(IndexedModelFunction, self)._validate_model_function_raise()
-
-    def _assign_model_function_signature_and_argcount(self):
-        self._model_function_signature = signature(self._model_function_handle)
-        self._model_function_argcount = self._model_function_handle.__code__.co_argcount
-        #for indexed model functions pars == args
-        self._model_function_parcount = self._model_function_argcount
-
-    @property
-    def index_name(self):
-        """the name of the index variable"""
-        return self._index_name
+        # Indexed Fit Functions don't have independent arguments. They solely consist of parameters to be fitted.
+        super(IndexedModelFunction, self).__init__(model_function=model_function, independent_argcount=0)
 
 
 class IndexedParametricModelException(IndexedContainerException):
