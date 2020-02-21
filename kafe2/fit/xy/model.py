@@ -1,31 +1,13 @@
-import inspect
 import numpy as np
 
 from scipy.misc import derivative
 
-from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException
+from .._base import ParametricModelBaseMixin
 from .container import XYContainer, XYContainerException
 from ..util import function_library
 
 
-__all__ = ["XYParametricModel", "XYModelFunction"]
-
-
-class XYModelFunctionException(ModelFunctionException):
-    pass
-
-
-# TODO: remove XYModelFunction, same as ModelFunctionBase
-class XYModelFunction(ModelFunctionBase):
-    EXCEPTION_TYPE = XYModelFunctionException
-
-    def __init__(self, model_function=function_library.linear_model):
-        """
-        Construct :py:class:`XYModelFunction` object (a wrapper for a native Python function):
-
-        :param model_function: function handle
-        """
-        super(XYModelFunction, self).__init__(model_function=model_function, independent_argcount=1)
+__all__ = ["XYParametricModel"]
 
 
 class XYParametricModelException(XYContainerException):

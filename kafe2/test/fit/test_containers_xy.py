@@ -2,9 +2,9 @@ import unittest2 as unittest
 import numpy as np
 
 from kafe2.fit import XYContainer, XYParametricModel
-from kafe2.fit._base import DataContainerException
+from kafe2.fit._base import DataContainerException, ModelFunctionBase
 from kafe2.fit.xy.container import XYContainerException
-from kafe2.fit.xy.model import XYParametricModelException, XYModelFunction
+from kafe2.fit.xy.model import XYParametricModelException
 from kafe2.core.error import cov_mat_from_float_list
 
 
@@ -190,7 +190,7 @@ class TestDatastoreXYParametricModel(unittest.TestCase):
 
         self.xy_param_model = XYParametricModel(
             x_data=self._ref_x, 
-            model_func=XYModelFunction(self._ref_model_func), 
+            model_func=ModelFunctionBase(self._ref_model_func),
             model_parameters=self._ref_params)
 
         self._test_params = (3.4, -5.23)

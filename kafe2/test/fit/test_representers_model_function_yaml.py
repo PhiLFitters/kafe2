@@ -2,10 +2,9 @@ import unittest2 as unittest
 import numpy as np
 from six import StringIO
 
-from kafe2.fit._base import ModelFunctionFormatter
+from kafe2.fit._base import ModelFunctionFormatter, ModelFunctionBase
 from kafe2.fit.histogram import HistModelFunction
 from kafe2.fit.indexed import IndexedModelFunction, IndexedModelFunctionFormatter
-from kafe2.fit.xy import XYModelFunction
 from kafe2.fit.representation import ModelFunctionYamlWriter, ModelFunctionYamlReader
 from kafe2.fit.io.handle import IOStreamHandle
 from kafe2.fit.representation._yaml_base import YamlReaderException
@@ -287,22 +286,21 @@ class TestIndexedModelFunctionYamlRepresenter(unittest.TestCase):
         self.assertTrue(_read_formatter.latex_expression_format_string ==  _given_formatter.latex_expression_format_string)
 
 
-TEST_MODEL_FUNCTION_XY = """
-type: xy
+TEST_MODEL_FUNCTION_BASE = """
 python_code: |
     def linear_model(x, a, b):
         return a * x + b
 """
 
-TEST_MODEL_FUNCTION_XY_MISSING_KEYWORD = """
-type: xy
+TEST_MODEL_FUNCTION_BASE_MISSING_KEYWORD = """
+type: base
 """
 
-TEST_MODEL_FUNCTION_XY_EXTRA_KEYWORD = TEST_MODEL_FUNCTION_XY + """
+TEST_MODEL_FUNCTION_XY_EXTRA_KEYWORD = TEST_MODEL_FUNCTION_BASE + """
 extra_keyword: 3.14
 """
 
-TEST_MODEL_FUNCTION_XY_WITH_FORMATTER = TEST_MODEL_FUNCTION_XY + r"""
+TEST_MODEL_FUNCTION_XY_WITH_FORMATTER = TEST_MODEL_FUNCTION_BASE + r"""
 model_function_formatter:
     name: linear_model
     latex_name: linear model
@@ -318,7 +316,7 @@ model_function_formatter:
 """
 
 
-class TestXYModelFunctionYamlRepresenter(unittest.TestCase):
+class TestModelFunctionBaseYamlRepresenter(unittest.TestCase):
 
     @staticmethod
     def linear_model(x, a, b):
@@ -330,10 +328,10 @@ class TestXYModelFunctionYamlRepresenter(unittest.TestCase):
         self._test_b = -1.0
         self._test_y = self.linear_model(self._test_x, self._test_a, self._test_b)
         
-        self._model_function = XYModelFunction(self.linear_model)
+        self._model_function = ModelFunctionBase(self.linear_model)
         
         self._roundtrip_stringstream = IOStreamHandle(StringIO())
-        self._testfile_stringstream = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_XY))
+        self._testfile_stringstream = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_BASE))
         self._testfile_stringstream_with_formatter = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_XY_WITH_FORMATTER))
         
         self._roundtrip_streamreader = ModelFunctionYamlReader(self._roundtrip_stringstream)
@@ -341,7 +339,7 @@ class TestXYModelFunctionYamlRepresenter(unittest.TestCase):
         self._testfile_streamreader = ModelFunctionYamlReader(self._testfile_stringstream)
         self._testfile_streamreader_with_formatter = ModelFunctionYamlReader(self._testfile_stringstream_with_formatter)
 
-        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_XY_MISSING_KEYWORD))
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_BASE_MISSING_KEYWORD))
         self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_XY_EXTRA_KEYWORD))
         self._testfile_streamreader_missing_keyword = ModelFunctionYamlReader(self._testfile_stringstream_missing_keyword)
         self._testfile_streamreader_extra_keyword = ModelFunctionYamlReader(self._testfile_stringstream_extra_keyword)
@@ -351,7 +349,7 @@ class TestXYModelFunctionYamlRepresenter(unittest.TestCase):
 
     def test_read_from_testfile_stream(self):
         _read_model_function = self._testfile_streamreader.read()
-        self.assertTrue(isinstance(_read_model_function, XYModelFunction))
+        self.assertTrue(isinstance(_read_model_function, ModelFunctionBase))
         self.assertTrue(
             np.allclose(
                 _read_model_function.func(self._test_x, self._test_a, self._test_b),
@@ -369,7 +367,7 @@ class TestXYModelFunctionYamlRepresenter(unittest.TestCase):
 
     def test_read_from_testfile_stream_with_formatter(self):
         _read_model_function = self._testfile_streamreader_with_formatter.read()
-        self.assertTrue(isinstance(_read_model_function, XYModelFunction))
+        self.assertTrue(isinstance(_read_model_function, ModelFunctionBase))
         self.assertTrue(
             np.allclose(
                 _read_model_function.func(self._test_x, self._test_a, self._test_b),
@@ -394,7 +392,7 @@ class TestXYModelFunctionYamlRepresenter(unittest.TestCase):
         self._roundtrip_streamwriter.write()
         self._roundtrip_stringstream.seek(0)  # return to beginning
         _read_model_function = self._roundtrip_streamreader.read()
-        self.assertTrue(isinstance(_read_model_function, XYModelFunction))
+        self.assertTrue(isinstance(_read_model_function, ModelFunctionBase))
 
         self.assertTrue(
             np.allclose(

@@ -10,10 +10,10 @@ from ...tools import print_dict_as_table
 from ...core import NexusFitter, Nexus
 from ...core.fitters.nexus import Parameter, Alias, NexusError
 from ...config import kc
-from .._base import FitException, FitBase, DataContainerBase, CostFunctionBase
+from .._base import FitException, FitBase, DataContainerBase, CostFunctionBase, ModelFunctionBase
 from .container import XYContainer
 from .cost import XYCostFunction_Chi2, XYCostFunction_UserDefined, STRING_TO_COST_FUNCTION
-from .model import XYParametricModel, XYModelFunction
+from .model import XYParametricModel
 from .plot import XYPlotAdapter
 from ..util import function_library, add_in_quadrature, collect, invert_matrix
 
@@ -28,7 +28,7 @@ class XYFitException(FitException):
 class XYFit(FitBase):
     CONTAINER_TYPE = XYContainer
     MODEL_TYPE = XYParametricModel
-    MODEL_FUNCTION_TYPE = XYModelFunction
+    MODEL_FUNCTION_TYPE = ModelFunctionBase
     PLOT_ADAPTER_TYPE = XYPlotAdapter
     EXCEPTION_TYPE = XYFitException
     RESERVED_NODE_NAMES = {'y_data', 'y_model', 'cost',

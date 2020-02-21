@@ -567,7 +567,6 @@ parametric_model:
     type: xy
     x_data: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
     model_function:
-        type: xy
         python_code: |
             def linear_model(x, a, b):
                 return a * x + b
@@ -593,7 +592,6 @@ parametric_model:
     type: xy
     x_data: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
     model_function:
-        type: xy
         python_code: |
             def linear_model(x, a, b):
                 return a * x + b

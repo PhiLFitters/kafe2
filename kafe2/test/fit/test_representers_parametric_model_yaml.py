@@ -2,9 +2,9 @@ import unittest2 as unittest
 import numpy as np
 from six import StringIO
 
+from kafe2.fit._base import ModelFunctionBase
 from kafe2.fit.histogram import HistModelFunction
 from kafe2.fit.indexed import IndexedModelFunction
-from kafe2.fit.xy import XYModelFunction
 from kafe2.fit.representation import ParametricModelYamlWriter, ParametricModelYamlReader
 from kafe2.fit.histogram.model import HistParametricModel
 from kafe2.fit.indexed.model import IndexedParametricModel
@@ -489,13 +489,13 @@ class TestXYParametricModelYamlRepresenter(unittest.TestCase):
         self._test_model_parameters = np.array([1.1, -1.5])
         self._test_parametric_model = XYParametricModel(
             self._test_x, 
-            XYModelFunction(TestXYParametricModelYamlRepresenter.linear_model),
+            ModelFunctionBase(TestXYParametricModelYamlRepresenter.linear_model),
             self._test_model_parameters
         )
 
         self._test_parametric_model_with_errors = XYParametricModel(
             self._test_x, 
-            XYModelFunction(TestXYParametricModelYamlRepresenter.linear_model),
+            ModelFunctionBase(TestXYParametricModelYamlRepresenter.linear_model),
             self._test_model_parameters
         )
         self._test_parametric_model_with_errors.add_simple_error(
