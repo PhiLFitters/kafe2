@@ -3,7 +3,8 @@ import six
 
 from kafe2.fit.histogram import HistModelFunction, HistParametricModel
 from kafe2.fit.indexed import IndexedModelFunction, IndexedParametricModel
-from kafe2.fit.xy import XYModelFunction, XYParametricModel
+from kafe2.fit.xy import XYParametricModel
+from ..._base import ModelFunctionBase
 from kafe2.fit.representation._base import GenericDReprBase
 
 __all__ = ["ModelFunctionDReprBase", "ParametricModelDReprBase"]
@@ -16,12 +17,13 @@ class ModelFunctionDReprBase(GenericDReprBase):
     _CLASS_TO_OBJECT_TYPE_NAME = {
         HistModelFunction: 'histogram',
         IndexedModelFunction: 'indexed',
-        XYModelFunction: 'xy'
+        ModelFunctionBase: 'base'
     }
     _OBJECT_TYPE_NAME_TO_CLASS = {
         'histogram': HistModelFunction,
         'indexed': IndexedModelFunction,
-        'xy': XYModelFunction
+        'xy': ModelFunctionBase,  # type from fit is passed to model function, needs to be resolved
+        'base': ModelFunctionBase
     }
 
     def __init__(self, model_function=None):

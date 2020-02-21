@@ -8,9 +8,10 @@ from kafe2.core.fitters import NexusFitterException
 
 from kafe2.config import kc
 
+from kafe2.fit._base import ModelFunctionException
 from kafe2.fit import XYFit
 from kafe2.fit.xy.fit import XYFitException
-from kafe2.fit.xy.model import XYModelFunctionException, XYParametricModelException
+from kafe2.fit.xy.model import XYParametricModelException
 from kafe2.fit.xy.cost import XYCostFunction_Chi2
 
 from kafe2.test.fit.test_fit import AbstractTestFit
@@ -437,7 +438,7 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model():
             pass
 
-        with self.assertRaises(XYModelFunctionException) as _exc:
+        with self.assertRaises(ModelFunctionException) as _exc:
             XYFit(xy_data=self._ref_xy_data,
                   model_function=dummy_model,
                   minimizer=self.MINIMIZER)
@@ -450,7 +451,7 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model(x):
             pass
 
-        with self.assertRaises(XYModelFunctionException) as _exc:
+        with self.assertRaises(ModelFunctionException) as _exc:
             XYFit(xy_data=self._ref_xy_data,
                   model_function=dummy_model,
                   minimizer=self.MINIMIZER)
@@ -464,7 +465,7 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model(x, par, *varargs):
             pass
 
-        with self.assertRaises(XYModelFunctionException) as _exc:
+        with self.assertRaises(ModelFunctionException) as _exc:
             XYFit(xy_data=self._ref_xy_data,
                   model_function=dummy_model,
                   minimizer=self.MINIMIZER)
@@ -477,7 +478,7 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model(x, par, **varkwargs):
             pass
 
-        with self.assertRaises(XYModelFunctionException) as _exc:
+        with self.assertRaises(ModelFunctionException) as _exc:
             XYFit(xy_data=self._ref_xy_data,
                   model_function=dummy_model,
                   minimizer=self.MINIMIZER)
@@ -490,7 +491,7 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model(x, par, *varargs, **varkwargs):
             pass
 
-        with self.assertRaises(XYModelFunctionException) as _exc:
+        with self.assertRaises(ModelFunctionException) as _exc:
             XYFit(xy_data=self._ref_xy_data,
                   model_function=dummy_model,
                   minimizer=self.MINIMIZER)

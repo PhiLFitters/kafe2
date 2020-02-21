@@ -11,11 +11,15 @@ from ..format import ModelFunctionFormatterYamlWriter, ModelFunctionFormatterYam
 from ._base import ModelFunctionDReprBase, ParametricModelDReprBase
 from .. import _AVAILABLE_REPRESENTATIONS
 from ....fit import (HistModelFunction, HistParametricModel, IndexedParametricModel, IndexedModelFunction,
-                     XYParametricModel, XYModelFunction)
+                     XYParametricModel)
+from ..._base import ModelFunctionBase
 from .._yaml_base import YamlWriterException, YamlReaderException
 from ....fit.util import function_library
 
 __all__ = ['ModelFunctionYamlWriter', 'ModelFunctionYamlReader', 'ParametricModelYamlWriter', 'ParametricModelYamlReader']
+KNOWN_MODEL_FUNCTIONS = (ModelFunctionBase, HistModelFunction, IndexedModelFunction)
+KNOWN_PARAMETRIC_MODELS = (XYParametricModel, HistParametricModel, IndexedParametricModel)
+
 
 class ModelFunctionYamlWriter(YamlWriterMixin, ModelFunctionDReprBase):
 
@@ -33,17 +37,19 @@ class ModelFunctionYamlWriter(YamlWriterMixin, ModelFunctionDReprBase):
         _type = cls._CLASS_TO_OBJECT_TYPE_NAME.get(_class, None)
         if _type is None:
             raise DReprError("Model function type unknown or not supported: %s" % _class)
-        _yaml_doc['type'] = _type
+        if _type != 'base':  # 'base' is default, no need to store type
+            _yaml_doc['type'] = _type  # store all other custom types
         _yaml_doc['model_function_formatter'] = ModelFunctionFormatterYamlWriter._make_representation(model_function.formatter)
 
         _python_code = model_function.source_code
-        _python_code = textwrap.dedent(_python_code) #remove indentation
-        _python_code = _python_code.replace("@staticmethod\n","") #remove @staticmethod decorator
+        _python_code = textwrap.dedent(_python_code)  # remove indentation
+        _python_code = _python_code.replace("@staticmethod\n", "")  # remove @staticmethod decorator
         #TODO what about other decorators?
         _yaml_doc['python_code'] = _python_code
         
         return _yaml_doc
-    
+
+
 class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
 
     FORBIDDEN_TOKENS = ['compile', 'eval', 'exec', 'execfile', 'file', 'global', 'globals', 'import', '__import__', 
@@ -72,7 +78,7 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
         try:
             import scipy
             _imports += "import scipy\n"
-        except:
+        except ImportError:
             pass
         
         
@@ -100,36 +106,19 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
     
     @classmethod
     def _get_subspace_override_dict(cls, model_function_class):
-        _override_dict = {'arg_formatters':'model_function_formatter'}
-
-        if model_function_class is HistModelFunction:
-            _override_dict['model_density_function_name'] = 'model_function_formatter'
-            _override_dict['latex_model_density_function_name'] = 'model_function_formatter'
-            _override_dict['x_name'] = 'model_function_formatter'
-            _override_dict['latex_x_name'] = 'model_function_formatter'
-            _override_dict['expression_string'] = 'model_function_formatter'
-            _override_dict['latex_expression_string'] = 'model_function_formatter'
-        elif model_function_class is IndexedModelFunction:
-            _override_dict['model_function_name'] = 'model_function_formatter'
-            _override_dict['latex_model_function_name'] = 'model_function_formatter'
+        _override_dict = {'arg_formatters': 'model_function_formatter',
+                          'model_function_name': 'model_function_formatter',
+                          'latex_model_function_name': 'model_function_formatter',
+                          'expression_string': 'model_function_formatter',
+                          'latex_expression_string': 'model_function_formatter'}
+        if model_function_class is IndexedModelFunction:
             _override_dict['index_name'] = 'model_function_formatter'
             _override_dict['latex_index_name'] = 'model_function_formatter'
-            _override_dict['expression_string'] = 'model_function_formatter'
-            _override_dict['latex_expression_string'] = 'model_function_formatter'
-        elif model_function_class is XYModelFunction:
-            _override_dict['model_function_name'] = 'model_function_formatter'
-            _override_dict['latex_model_function_name'] = 'model_function_formatter'
-            _override_dict['x_name'] = 'model_function_formatter'
-            _override_dict['latex_x_name'] = 'model_function_formatter'
-            _override_dict['expression_string'] = 'model_function_formatter'
-            _override_dict['latex_expression_string'] = 'model_function_formatter'
-        else:
-            raise YamlReaderException("Unknown model function class: %s" % model_function_class)
         return _override_dict
 
     @classmethod
     def _get_required_keywords(cls, yaml_doc, model_function_class):
-        if model_function_class in (HistModelFunction, IndexedModelFunction, XYModelFunction):
+        if issubclass(model_function_class, ModelFunctionBase):
             return ['python_code']
         else:
             raise YamlReaderException("Unknown model function class: %s" % model_function_class)
@@ -140,27 +129,36 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
     
     @classmethod
     def _convert_yaml_doc_to_object(cls, yaml_doc):
+        """Converts the given yaml dictionary to a :py:obj:``ModelFunctionBase`` or derived object.
+
+        :param yaml_doc: the yaml doc to convert
+        :type yaml_doc: dict"""
         # -- determine model function class from type
-        _model_function_type = yaml_doc.pop('type')
+        _model_function_type = yaml_doc.pop('type', 'base')  # if no type is specified assume base
         _class = cls._OBJECT_TYPE_NAME_TO_CLASS.get(_model_function_type)
+        if _class not in KNOWN_MODEL_FUNCTIONS:
+            raise YamlReaderException("Unknown model function class: %s" % _class)
 
         _raw_string = yaml_doc.pop("python_code")
         _function_library_entry = function_library.STRING_TO_FUNCTION.get(_raw_string, None)
         if _function_library_entry:
             _model_function_object = _class(_function_library_entry)
+        # TODO: parse antiderivative for histograms
         else:
             _parsed_function = ModelFunctionYamlReader._parse_model_function(_raw_string)
             _model_function_object = _class(_parsed_function)
             _model_function_object._source_code = _raw_string
         
         #construct model function formatter if specified
+        # TODO: only overwrite given arguments, use defaults if one arg is not specified
         _model_function_formatter_yaml = yaml_doc.pop('model_function_formatter', None)
         if _model_function_formatter_yaml:
             _model_function_object._formatter = ModelFunctionFormatterYamlReader._make_object(
                 _model_function_formatter_yaml)
         
         return _model_function_object, yaml_doc
-    
+
+
 class ParametricModelYamlWriter(YamlWriterMixin, ParametricModelDReprBase):
 
     def __init__(self, parametric_model, output_io_handle):
