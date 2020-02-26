@@ -1,18 +1,16 @@
-from collections import OrderedDict
 from copy import deepcopy
 
 import sys
 import six
 
-from ...core import NexusFitter, Nexus
-from ...core.fitters.nexus import Parameter, Alias
-from ...config import kc
+from ...core import Nexus
+from ...core.fitters.nexus import Parameter, NexusError
 from .._base import FitException, FitBase, DataContainerBase
 from .container import UnbinnedContainer
-from .cost import UnbinnedCostFunction_UserDefined, UnbinnedCostFunction_NegLogLikelihood
+from .cost import UnbinnedCostFunction_NegLogLikelihood
 from .model import UnbinnedModelPDF, UnbinnedParametricModel
 from .plot import UnbinnedPlotAdapter
-from ..util import function_library, add_in_quadrature, collect, invert_matrix
+from ..util import collect
 
 __all__ = ["UnbinnedFit"]
 
@@ -31,7 +29,7 @@ class UnbinnedFit(FitBase):
 
     def __init__(self,
                  data,
-                 model_density_function='gaussian',
+                 model_density_function='normal_distribution_pdf',
                  cost_function=UnbinnedCostFunction_NegLogLikelihood(),
                  minimizer=None,
                  minimizer_kwargs=None):

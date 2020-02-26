@@ -23,6 +23,7 @@ __all__ = [
     "Fallback",
     "Tuple",
     "Nexus",
+    "NexusError"
 ]
 
 # -- helpers

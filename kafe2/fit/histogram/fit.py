@@ -6,7 +6,7 @@ import numpy as np
 
 from ...config import kc
 from ...core import NexusFitter, Nexus
-from ...core.fitters.nexus import Parameter, Alias
+from ...core.fitters.nexus import Parameter, Alias, NexusError
 from .._base import FitException, FitBase, DataContainerBase, CostFunctionBase
 from .container import HistContainer
 from .cost import HistCostFunction_NegLogLikelihood, HistCostFunction_UserDefined, STRING_TO_COST_FUNCTION
