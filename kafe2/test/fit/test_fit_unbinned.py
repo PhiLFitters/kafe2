@@ -11,8 +11,8 @@ from kafe2.core.fitters import NexusFitterException
 from kafe2.config import kc
 
 from kafe2.fit import UnbinnedFit, UnbinnedContainer
+from kafe2.fit._base import ModelFunctionException
 from kafe2.fit.unbinned.fit import UnbinnedFitException
-from kafe2.fit.unbinned.model import UnbinnedModelPDFException, UnbinnedParametricModelException
 from kafe2.fit.unbinned.cost import UnbinnedCostFunction_NegLogLikelihood
 
 from kafe2.test.fit.test_fit import AbstractTestFit
@@ -176,7 +176,7 @@ class TestUnbinnedFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model():
             pass
 
-        with self.assertRaises(UnbinnedModelPDFException) as _exc:
+        with self.assertRaises(ModelFunctionException) as _exc:
             UnbinnedFit(data=self._ref_cont,
                     model_density_function=dummy_model,
                     minimizer=self.MINIMIZER)
@@ -189,7 +189,7 @@ class TestUnbinnedFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model(x):
             pass
 
-        with self.assertRaises(UnbinnedModelPDFException) as _exc:
+        with self.assertRaises(ModelFunctionException) as _exc:
             UnbinnedFit(data=self._ref_cont,
                     model_density_function=dummy_model,
                     minimizer=self.MINIMIZER)
@@ -203,7 +203,7 @@ class TestUnbinnedFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model(x, par, *varargs):
             pass
 
-        with self.assertRaises(UnbinnedModelPDFException) as _exc:
+        with self.assertRaises(ModelFunctionException) as _exc:
             UnbinnedFit(data=self._ref_cont,
                     model_density_function=dummy_model,
                     minimizer=self.MINIMIZER)
@@ -216,7 +216,7 @@ class TestUnbinnedFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model(x, par, **varkwargs):
             pass
 
-        with self.assertRaises(UnbinnedModelPDFException) as _exc:
+        with self.assertRaises(ModelFunctionException) as _exc:
             UnbinnedFit(data=self._ref_cont,
                     model_density_function=dummy_model,
                     minimizer=self.MINIMIZER)
@@ -229,7 +229,7 @@ class TestUnbinnedFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model(x, par, *varargs, **varkwargs):
             pass
 
-        with self.assertRaises(UnbinnedModelPDFException) as _exc:
+        with self.assertRaises(ModelFunctionException) as _exc:
             UnbinnedFit(data=self._ref_cont,
                     model_density_function=dummy_model,
                     minimizer=self.MINIMIZER)

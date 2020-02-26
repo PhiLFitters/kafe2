@@ -1,34 +1,8 @@
 import numpy as np
 
-from types import FunctionType
-
-from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException, ModelFunctionFormatter,\
-    ParameterFormatter
+from .._base import ParametricModelBaseMixin
 from .container import UnbinnedContainer, UnbinnedContainerException
 from ..util import function_library
-
-
-class UnbinnedModelPDFException(ModelFunctionException):
-    pass
-
-
-class UnbinnedModelPDF(ModelFunctionBase):
-    EXCEPTION_TYPE = UnbinnedModelPDFException
-
-    def __init__(self, model_density_function=None):
-        """Create a model function used in unbinned fits.
-
-        :param model_density_function: The probability density function for the unbinned fit.
-        :type model_density_function: FunctionType or str
-        """
-        if isinstance(model_density_function, FunctionType):
-            _pdf = model_density_function
-        elif model_density_function.lower() == "gaussian":
-            _pdf = function_library.normal_distribution_pdf
-        else:
-            raise UnbinnedModelPDFException("Unknown value '%s' for 'model_density_function':"
-                                            "It must be a function or one of ('gaussian')!")
-        super(UnbinnedModelPDF, self).__init__(model_function=_pdf, independent_argcount=1)
 
 
 class UnbinnedParametricModelException(UnbinnedContainerException):

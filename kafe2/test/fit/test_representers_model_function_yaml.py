@@ -100,9 +100,6 @@ class TestHistModelFunctionYamlRepresenter(unittest.TestCase):
         _read_formatter = _read_model_function.formatter
         self.assertTrue(isinstance(_read_formatter, ModelFunctionFormatter))
         _read_arg_formatters = _read_formatter.arg_formatters
-        for formatter in _read_arg_formatters:
-            print(formatter.name, formatter.latex_name)
-        print(_read_arg_formatters)
         self.assertTrue(_read_formatter.name == 'linear_model')
         self.assertTrue(_read_formatter.latex_name == 'linear model')
         self.assertTrue(_read_arg_formatters[0].name == 'x')

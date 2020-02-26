@@ -5,10 +5,10 @@ import six
 
 from ...core import Nexus
 from ...core.fitters.nexus import Parameter, NexusError
-from .._base import FitException, FitBase, DataContainerBase
+from .._base import FitException, FitBase, DataContainerBase, ModelFunctionBase
 from .container import UnbinnedContainer
 from .cost import UnbinnedCostFunction_NegLogLikelihood
-from .model import UnbinnedModelPDF, UnbinnedParametricModel
+from .model import UnbinnedParametricModel
 from .plot import UnbinnedPlotAdapter
 from ..util import collect
 
@@ -22,7 +22,7 @@ class UnbinnedFitException(FitException):
 class UnbinnedFit(FitBase):
     CONTAINER_TYPE = UnbinnedContainer
     MODEL_TYPE = UnbinnedParametricModel
-    MODEL_FUNCTION_TYPE = UnbinnedModelPDF
+    MODEL_FUNCTION_TYPE = ModelFunctionBase
     PLOT_ADAPTER_TYPE = UnbinnedPlotAdapter
     EXCEPTION_TYPE = UnbinnedFitException
     RESERVED_NODE_NAMES = {'data', 'model', 'cost', 'parameter_values', 'parameter_constraints'}
@@ -38,7 +38,7 @@ class UnbinnedFit(FitBase):
 
         :param data: the data points
         :param model_density_function: the model density
-        :type model_density_function: :py:class:`~kafe2.fit.unbinned.UnbinnedModelPDF` or unwrapped native Python function
+        :type model_density_function: :py:class:`~kafe2.fit._base.ModelFunctionBase` or unwrapped native Python function
         :param cost_function: the cost function
         :param minimizer: the minimizer to use for fitting.
         :type minimizer: None, "iminuit", "tminuit", or "scipy".
