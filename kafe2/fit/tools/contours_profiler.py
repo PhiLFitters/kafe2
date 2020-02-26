@@ -134,7 +134,7 @@ class ContoursProfiler(object):
     _DEFAULT_PLOT_FILL_CONTOUR_KWARGS = dict(alpha=0.3, linewidth=2)
 
     def __init__(self, fit_object,
-                 profile_points=100, profile_subtract_min=True, profile_bound=2,
+                 profile_points=100, profile_subtract_min=True, profile_bound=2.45,
                  contour_points=100, contour_sigma_values=(1.0, 2.0), contour_smoothing_sigma=0.0,
                  contour_method_kwargs=None):
         """

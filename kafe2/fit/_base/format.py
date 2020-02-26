@@ -258,8 +258,8 @@ class FunctionFormatter(FileIOMixin, object):
 
     The formatted string is obtained by calling the :py:meth:`~ModelFunctionFormatter.get_formatted` method.
     """
-    DEFAULT_EXPRESSION_STRING = "<not_specified>"
-    DEFAULT_LATEX_EXPRESSION_STRING = r"\langle{\it not\,\,specified}\rangle"
+    DEFAULT_EXPRESSION_STRING = None
+    DEFAULT_LATEX_EXPRESSION_STRING = None
 
     def __init__(self, name, latex_name=None, arg_formatters=None, expression_string=None, latex_expression_string=None):
         """
