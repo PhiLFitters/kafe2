@@ -21,9 +21,8 @@ def calculate_expected_fit_parameters_xy(x_data, y_data, model_function, y_error
     _result = minimize(fun=chi2, x0=initial_parameter_values)
     if x_error is None:
         return _result.x
-    else:
-        _result_2 = minimize(fun=chi2_xy, x0=_result.x)
-        return _result_2.x
+    _result_2 = minimize(fun=chi2_xy, x0=_result.x)
+    return _result_2.x
 
 
 def calculate_expected_multi_xy_chi2_cost(

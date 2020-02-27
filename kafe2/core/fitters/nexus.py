@@ -1018,7 +1018,7 @@ class Nexus(object):
                         node.name
                     )
                 )
-            elif existing_behavior == 'replace':
+            if existing_behavior == 'replace':
                 if add_children:
                     # add all dependent children to the nexus first
                     for _child in node.iter_children():
@@ -1374,8 +1374,8 @@ class Nexus(object):
                 _val = _node.value
             except Exception as e:
                 if error_behavior == 'fail':
-                    raise
-                elif error_behavior == 'none':
+                    raise e
+                if error_behavior == 'none':
                     _val = None
                 elif error_behavior == 'exception_as_value':
                     _val = e
@@ -1385,7 +1385,7 @@ class Nexus(object):
                     _result_dict.setdefault('__error__', []).append(_name)
                     continue
                 else:
-                    assert False  # should not get here
+                    assert False, "Something went terribly wrong. Unknown error behaviour {}".format(error_behavior)
             else:
                 _result_dict[_name] = _val
 

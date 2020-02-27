@@ -312,32 +312,28 @@ class FitBase(FileIOMixin, object):
         """the current parameter uncertainties"""
         if self._loaded_result_dict is not None:
             return self._loaded_result_dict['parameter_errors']
-        else:
-            return self._fitter.fit_parameter_errors
+        return self._fitter.fit_parameter_errors
 
     @property
     def parameter_cov_mat(self):
         """the current parameter covariance matrix"""
         if self._loaded_result_dict is not None:
             return self._loaded_result_dict['parameter_cov_mat']
-        else:
-            return self._fitter.fit_parameter_cov_mat
+        return self._fitter.fit_parameter_cov_mat
 
     @property
     def parameter_cor_mat(self):
         """the current parameter correlation matrix"""
         if self._loaded_result_dict is not None:
             return self._loaded_result_dict['parameter_cor_mat']
-        else:
-            return self._fitter.fit_parameter_cor_mat
+        return self._fitter.fit_parameter_cor_mat
 
     @property
     def asymmetric_parameter_errors(self):
         """the current asymmetric parameter uncertainties"""
         if self._loaded_result_dict is not None and self._loaded_result_dict['asymmetric_parameter_errors'] is not None:
             return self._loaded_result_dict['asymmetric_parameter_errors']
-        else:
-            return self._fitter.asymmetric_fit_parameter_errors
+        return self._fitter.asymmetric_fit_parameter_errors
 
     @property
     def parameter_name_value_dict(self):
@@ -394,8 +390,7 @@ class FitBase(FileIOMixin, object):
         """whether a fit was performed for the given data and model"""
         if self._loaded_result_dict is not None:
             return self._loaded_result_dict['did_fit']
-        else:
-            return self._fitter.state_is_from_minimizer
+        return self._fitter.state_is_from_minimizer
 
     @property
     def ndf(self):
@@ -558,9 +553,9 @@ class FitBase(FileIOMixin, object):
             _crit_ref_value = matching_criteria.pop('reference', None)
             if _crit_ref_value == 'data':
                 return self._data_container.get_matching_errors(matching_criteria, matching_type=matching_type)
-            elif _crit_ref_value == 'model':
+            if _crit_ref_value == 'model':
                 return self._param_model.get_matching_errors(matching_criteria, matching_type=matching_type)
-            elif _crit_ref_value is None:
+            if _crit_ref_value is None:
                 pass  # don't raise, continue evaluation below
             else:
                 raise ValueError("Unknown value '{}' for matching "

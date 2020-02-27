@@ -34,8 +34,7 @@ class FileIOMixin(object):
         if format is None and _ext is None:
             raise FileIOException("Cannot detect file format from "
                                   "filename '{}' and no format specified!".format(filename))
-        else:
-            _format = format or _ext  # choose 'format' if specified, otherwise use filename extension
+        _format = format or _ext  # choose 'format' if specified, otherwise use filename extension
 
         _reader_class = get_reader(cls._get_object_type_name(), _format)
         _object = _reader_class(InputFileHandle(filename=filename)).read()
@@ -63,8 +62,7 @@ class FileIOMixin(object):
         if format is None and _ext is None:
             raise FileIOException("Cannot detect file format from "
                                   "filename '{}' and no format specified!".format(filename))
-        else:
-            _format = format or _ext  # choose 'format' if specified, otherwise use filename extension
+        _format = format or _ext  # choose 'format' if specified, otherwise use filename extension
 
         _writer_class = get_writer(self._get_object_type_name(), _format)
         _writer_class(self, OutputFileHandle(filename=filename)).write()

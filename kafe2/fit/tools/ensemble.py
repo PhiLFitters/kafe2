@@ -74,7 +74,7 @@ def broadcast_to_shape(array, shape, scheme='default'):
         #      ---------------------
         #       result:  a x b x c
         return np.broadcast_to(array, shape=shape)
-    elif scheme == 'expand_right_successive':
+    if scheme == 'expand_right_successive':
         # dimensions are added to the array (on the right) until
         # a broadcastable situation is reached
         # target shape to the array shape:
@@ -89,7 +89,7 @@ def broadcast_to_shape(array, shape, scheme='default'):
                 break
             _new_array = np.expand_dims(_new_array, -1)
         return _new_array
-    elif scheme == 'expand_left_successive':
+    if scheme == 'expand_left_successive':
         # dimensions are added to the array (on the left) until
         # a broadcastable situation is reached
         # target shape to the array shape:
@@ -104,7 +104,7 @@ def broadcast_to_shape(array, shape, scheme='default'):
                 break
             _new_array = np.expand_dims(_new_array, 0)
         return _new_array
-    elif scheme == 'transposed':
+    if scheme == 'transposed':
         # "transposed" numpy broadcasting scheme:
         # (broadcasting is done on the transposed arrays
         #  and the result is transposed back)
@@ -113,7 +113,7 @@ def broadcast_to_shape(array, shape, scheme='default'):
         #      ---------------------
         #       result:  a x b x c
         return np.broadcast_to(array.T, shape=reversed(shape)).T
-    elif scheme == 'expand_right':
+    if scheme == 'expand_right':
         # `len(shape)` axes are added to the array shape (to the right)
         # and then broadcasting is done normally
         #        shape:          a x b x c  (self.ndim = 3)
@@ -123,7 +123,7 @@ def broadcast_to_shape(array, shape, scheme='default'):
         # _new_shape = tuple(len(self._shape) * [1] + list(reversed(array.shape)))
         _new_shape = tuple(list(reversed(shape)) + list(reversed(array.shape)))
         return np.broadcast_to(array.T, _new_shape).T
-    elif scheme == 'expand_left':
+    if scheme == 'expand_left':
         # `len(shape)` axes are added to the array shape (to the left)
         # and then the 'transposed' broadcasting is applied
         #        shape:  a x b x c          (self.ndim = 3)
@@ -132,11 +132,9 @@ def broadcast_to_shape(array, shape, scheme='default'):
         #       result:  a x b x c x n x m
         _new_shape = tuple(list(shape) + list(array.shape))
         return np.broadcast_to(array, _new_shape)
-    else:
-        raise EnsembleError("Cannot broadcast array to ensemble shape: unknown scheme '{}'! "
-                            "Available: {}".format(scheme, ('default', 'transposed',
-                                                            'expand_right', 'expand_left',
-                                                            'expand_right_successive', 'expand_left_successive')))
+    raise EnsembleError("Cannot broadcast array to ensemble shape: unknown scheme '{}'! "
+                        "Available: {}".format(scheme, ('default', 'transposed', 'expand_right', 'expand_left',
+                                                        'expand_right_successive', 'expand_left_successive')))
 
 
 class EnsembleError(Exception):
@@ -237,7 +235,7 @@ class EnsembleVariable(object):
         if self.ndim == 0:
             # trivial covariance matrix
             return np.array([[self.std**2]])
-        elif self.ndim == 1:
+        if self.ndim == 1:
             return np.cov(self._array.T)
 
         raise EnsembleError("Cannot calculate covariance matrix: ensemble variable must "

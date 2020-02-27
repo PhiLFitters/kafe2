@@ -99,6 +99,7 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
         _yaml_doc['fit_results'] = _fit_results
         return _yaml_doc
 
+
 class FitYamlReader(YamlReaderMixin, FitDReprBase):
     
     def __init__(self, input_io_handle):
@@ -110,8 +111,7 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
     def _get_required_keywords(cls, yaml_doc, fit_class):
         if fit_class in (HistFit, XYFit):
             return ['dataset']
-        else:
-            return ['dataset', 'parametric_model']
+        return ['dataset', 'parametric_model']
     
     @classmethod
     def _modify_yaml_doc(cls, yaml_doc, kafe_object_class):

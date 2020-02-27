@@ -310,7 +310,7 @@ class DataContainerBase(FileIOMixin, object):
 
         if matching_type == 'regex':
             raise NotImplementedError("Matching type 'regex' not yet implemented!")
-        elif matching_type != 'equal':
+        if matching_type != 'equal':
             raise NotImplementedError("Unknown matching type: '{}'! "
                                       "Available: ['equals']".format(matching_type))
 

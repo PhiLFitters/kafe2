@@ -40,8 +40,6 @@ def _generic_xy_chi2_nuisance_pointwise(
     if x_total_error.any() == 0.0:
         if fail_on_zeros:
             raise CostFunctionException("'x_err' must not contain any zero values!")
-        else:
-            pass
     else:
         #with x-erros
         _x_penalties = np.sum(_x_res ** 2 * x_total_error)
@@ -49,12 +47,10 @@ def _generic_xy_chi2_nuisance_pointwise(
             if y_total_error.any() == 0.0:
                 if fail_on_zeros:
                     raise CostFunctionException("'y_err' must not contain any zero values!")
-                else:
-                    return _y_res.dot(_y_res) + _x_penalties + _par_cost
-            else:
-                _y_res = _y_res / y_total_error
-                _chi2 = np.sum(_y_res ** 2)
-                return _chi2 + _x_penalties + _par_cost
+                return _y_res.dot(_y_res) + _x_penalties + _par_cost
+            _y_res = _y_res / y_total_error
+            _chi2 = np.sum(_y_res ** 2)
+            return _chi2 + _x_penalties + _par_cost
         else:
             _chi2 = _y_res.dot(_y_res)
             return _chi2 + _x_penalties + _par_cost
@@ -64,8 +60,6 @@ def _generic_xy_chi2_nuisance_pointwise(
         if y_total_error.any() == 0.0:
             if fail_on_zeros:
                 raise CostFunctionException("'y_err' must not contain any zero values!")
-            else:
-                pass
         else:
             _y_res = _y_res / y_total_error
             _chi2 = np.sum(_y_res ** 2)
@@ -104,46 +98,40 @@ def _generic_xy_chi2_nuisance_covariance(
     if x_uncor_cov_mat_inverse is None:
         if fail_on_no_x_matrix:
             raise np.linalg.LinAlgError("Uncorrelated X Covariance matrix is singular!")
-        else:
-            if y_uncor_cov_mat_inverse is None:
-                if y_nuisance_vector.all() ==0.0:
-                    # raise if uncorrelated matrix is None and the correlated is not None
-                    raise CostFunctionException('Is not working for only fullcorrelated y-errors')
-                else:
-                    if fail_on_no_y_matrix:
-                        raise np.linalg.LinAlgError("Uncorrelated Y Covariance matrix is singular!")
-                    else:
-                        # cost function values without any errors
-                        _chisquare = _y_res.dot(_y_res)
-                        return _chisquare + _par_cost
+        if y_uncor_cov_mat_inverse is None:
+            if y_nuisance_vector.all() == 0.0:
+                # raise if uncorrelated matrix is None and the correlated is not None
+                raise CostFunctionException('Is not working for only fullcorrelated y-errors')
+            if fail_on_no_y_matrix:
+                raise np.linalg.LinAlgError("Uncorrelated Y Covariance matrix is singular!")
+            # cost function values without any errors
+            _chisquare = _y_res.dot(_y_res)
+            return _chisquare + _par_cost
 
-            else:
-                # with y-errors but without x-errors
-                _inner_sum = np.squeeze(np.asarray(y_nuisance_vector.dot(y_nuisance_cor_design_mat)))
-                _y_penalties = y_nuisance_vector.dot(y_nuisance_vector)
-                _chisquare = (_y_res - _inner_sum).dot(y_uncor_cov_mat_inverse).dot(_y_res - _inner_sum)
-                return (_y_penalties + _chisquare) + _par_cost
+        else:
+            # with y-errors but without x-errors
+            _inner_sum = np.squeeze(np.asarray(y_nuisance_vector.dot(y_nuisance_cor_design_mat)))
+            _y_penalties = y_nuisance_vector.dot(y_nuisance_vector)
+            _chisquare = (_y_res - _inner_sum).dot(y_uncor_cov_mat_inverse).dot(_y_res - _inner_sum)
+            return (_y_penalties + _chisquare) + _par_cost
 
     else:
         _x_penalties = np.transpose(_x_res).dot(x_uncor_cov_mat_inverse).dot(_x_res)
         if y_uncor_cov_mat_inverse is None:
             if y_nuisance_vector.all() == 0.0:
                 raise CostFunctionException('Is not working for only fullcorrelated y-errors')
-            else:
-                if fail_on_no_y_matrix:
-
-                    raise np.linalg.LinAlgError("Uncorrelated Y Covariance matrix is singular!")
-                else:
-                    # with x-errors but without y-errors
-                    _chisquare = _y_res.dot(_y_res)
-                    return (_chisquare +_x_penalties) + _par_cost
+            if fail_on_no_y_matrix:
+                raise np.linalg.LinAlgError("Uncorrelated Y Covariance matrix is singular!")
+            # with x-errors but without y-errors
+            _chisquare = _y_res.dot(_y_res)
+            return (_chisquare + _x_penalties) + _par_cost
 
         else:
-                # with x- and y-errors
-                _inner_sum = np.squeeze(np.asarray(y_nuisance_vector.dot(y_nuisance_cor_design_mat)))
-                _y_penalties = y_nuisance_vector.dot(y_nuisance_vector)
-                _chi2 = (_y_res - _inner_sum).dot(y_uncor_cov_mat_inverse).dot(_y_res- _inner_sum)
-                return (_chi2 + _x_penalties + _y_penalties) + _par_cost
+            # with x- and y-errors
+            _inner_sum = np.squeeze(np.asarray(y_nuisance_vector.dot(y_nuisance_cor_design_mat)))
+            _y_penalties = y_nuisance_vector.dot(y_nuisance_vector)
+            _chi2 = (_y_res - _inner_sum).dot(y_uncor_cov_mat_inverse).dot(_y_res - _inner_sum)
+            return (_chi2 + _x_penalties + _y_penalties) + _par_cost
 
 
 class XYCostFunction_UserDefined(CostFunctionBase):

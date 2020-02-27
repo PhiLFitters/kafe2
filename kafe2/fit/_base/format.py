@@ -124,8 +124,7 @@ class ParameterFormatter(FileIOMixin, object):
         :rtype: float or None"""
         if self._error is None:
             return None
-        else:
-            return self._error/self._value
+        return self._error/self._value
 
     @property
     def asymmetric_error(self):
@@ -316,8 +315,7 @@ class FunctionFormatter(FileIOMixin, object):
         """
         if format_as_latex:
             return self._latex_name
-        else:
-            return self._name
+        return self._name
 
     def _get_formatted_pars(self, with_par_values=True, n_significant_digits=2, format_as_latex=False):
         """Get a list of the formatted parameters including their values. This can be turned off.

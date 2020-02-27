@@ -89,14 +89,14 @@ class MinimizerScipyOptimize(MinimizerBase):
         if not np.all(_par_would_be_fixed):
             return MinimizerBase._find_chi_2_cut(
                 self, parameter_name, low, high, target_chi_2, min_parameters)
-        else:
-            def _profile(parameter_value):
-                self.set_several(self.parameter_names, min_parameters)
-                self.set(parameter_name, parameter_value)
-                self._fval = None  # Clear fval cache
-                return self.function_value - target_chi_2
 
-            return brentq(f=_profile, a=low, b=high, xtol=self.tolerance)
+        def _profile(parameter_value):
+            self.set_several(self.parameter_names, min_parameters)
+            self.set(parameter_name, parameter_value)
+            self._fval = None  # Clear fval cache
+            return self.function_value - target_chi_2
+
+        return brentq(f=_profile, a=low, b=high, xtol=self.tolerance)
 
     def _remove_zeroes_for_fixed(self, matrix):
         """
@@ -281,7 +281,7 @@ class MinimizerScipyOptimize(MinimizerBase):
         
         if _algorithm == "beacon":
             return self._contour_beacon(parameter_name_1, parameter_name_2, sigma=sigma)
-        elif _algorithm == "heuristic_grid":
+        if _algorithm == "heuristic_grid":
             return self._contour_heuristic_grid(parameter_name_1, parameter_name_2, sigma=sigma, 
                                                 initial_points=_initial_points, iterations=_iterations,
                                                 area_scale_factor=_area_scale_factor)

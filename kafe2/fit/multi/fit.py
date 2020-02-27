@@ -574,9 +574,8 @@ class MultiFit(FitBase):
                     assert _key not in _combined_matching_errors
                     _combined_matching_errors[_key] = _matching_errors[_key]
             return _combined_matching_errors
-        else:
-            return self._fits[fit_index].get_matching_errors(
-                matching_criteria=matching_criteria, matching_type=matching_type)
+        return self._fits[fit_index].get_matching_errors(matching_criteria=matching_criteria,
+                                                         matching_type=matching_type)
 
     def report(self, output_stream=sys.stdout, show_data=True, show_model=True, show_fit_results=True,
                asymmetric_parameter_errors=False):

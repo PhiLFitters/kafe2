@@ -64,10 +64,9 @@ class ConstraintYamlReader(YamlReaderMixin, ConstraintDReprBase):
     def _get_required_keywords(cls, yaml_doc, constraint_class):
         if constraint_class is GaussianSimpleParameterConstraint:
             return ['index', 'value', 'uncertainty']
-        elif constraint_class is GaussianMatrixParameterConstraint:
+        if constraint_class is GaussianMatrixParameterConstraint:
             return ['indices', 'values', 'matrix']
-        else:
-            raise DReprError('Unknown constraint class: %s' % constraint_class)
+        raise DReprError('Unknown constraint class: %s' % constraint_class)
 
     @classmethod
     def _modify_yaml_doc(cls, yaml_doc, kafe_object_class, parameter_names=None, **kwargs):

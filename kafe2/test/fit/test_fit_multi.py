@@ -22,10 +22,9 @@ class TestMultiFit(unittest.TestCase):
         _split_indices_2 = np.argwhere(_random >= 0.5).flatten()
         if axis == 0:
             return data[_split_indices_1], data[_split_indices_2]
-        elif axis == 1:
+        if axis == 1:
             return data[:, _split_indices_1], data[:, _split_indices_2]
-        else:
-            raise Exception()
+        raise Exception()
 
     @staticmethod
     def _assert_fits_valid_and_equal(_fit_1, _fit_2, tol=1e-3, check_cost_function_value=True):

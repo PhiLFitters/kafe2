@@ -41,8 +41,10 @@ class _DataContainerYamlLoader(yaml.Loader):
 
         return _np_mat
 
+
 _DataContainerYamlLoader.add_constructor('!matrix', _DataContainerYamlLoader.matrix)
 _DataContainerYamlLoader.add_constructor('!symmetric_matrix', _DataContainerYamlLoader.symmetric_matrix)
+
 
 class _DataContainerYamlDumper(yaml.Dumper):
 
@@ -74,7 +76,6 @@ class _DataContainerYamlDumper(yaml.Dumper):
 
         # write full matrix using the '|'-style
         return self.represent_scalar('!matrix', _string_repr, style='|')
-
 
 
 # representers for covariance matrices errors
@@ -191,6 +192,7 @@ class DataContainerYamlWriter(YamlWriterMixin, DataContainerDReprBase):
 
         return _yaml_doc
 
+
 class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
     LOADER = _DataContainerYamlLoader
 
@@ -213,12 +215,11 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
     def _get_required_keywords(cls, yaml_doc, container_class):
         if container_class is HistContainer:
             return ['raw_data']
-        elif container_class is IndexedContainer:
+        if container_class is IndexedContainer:
             return ['data']
-        elif container_class is XYContainer:
+        if container_class is XYContainer:
             return ['x_data', 'y_data']
-        else:
-            raise YamlReaderException("Unknown container type")
+        raise YamlReaderException("Unknown container type")
 
     @classmethod
     def _convert_yaml_doc_to_object(cls, yaml_doc):

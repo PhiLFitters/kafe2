@@ -184,8 +184,7 @@ class XYPlotAdapter(PlotAdapterBase):
                 self.model_line_x,
                 _y - _band_y, _y + _band_y,
                 **kwargs)
-        else:
-            return None  # don't plot error band if fitter input data has no errors...
+        return None  # don't plot error band if fitter input data has no errors...
 
     def plot_ratio(self, target_axes, error_contributions=('data',), **kwargs):
         """
@@ -224,5 +223,4 @@ class XYPlotAdapter(PlotAdapterBase):
                 self.model_line_x,
                 1 - _band_y/_y, 1 + _band_y/_y,
                 **kwargs)
-        else:
-            return None  # don't plot error band if fitter input data has no errors...
+        return None  # don't plot error band if fitter input data has no errors...

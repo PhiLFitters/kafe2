@@ -524,8 +524,7 @@ class SimpleGaussianError(GaussianErrorBase):
     def cor_mat(self):
         if self.relative:
             return self.cov_mat_rel.cor_mat
-        else:
-            return self.cov_mat.cor_mat
+        return self.cov_mat.cor_mat
 
     @property
     def corr_coeff(self):
@@ -751,8 +750,7 @@ class MatrixGaussianError(GaussianErrorBase):
         # TODO: check if these are equal
         if self.relative:
             return self._cov_mat_rel.cor_mat
-        else:
-            return self._cov_mat.cor_mat
+        return self._cov_mat.cor_mat
 
     @property
     def fit_indices(self):

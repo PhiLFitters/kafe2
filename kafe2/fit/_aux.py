@@ -109,8 +109,8 @@ def step_fill_between(axes,
     if p_cv is not None and p_fb is not None:
         #return (p_fb, p_cv)  # doesn't work!
         return p_fb
-    elif p_cv is None:
+    if p_cv is None:
         return p_fb
-    elif p_fb is None:
+    if p_fb is None:
         #return p_cv  # doesn't work!
         return p_cv[0]

@@ -161,7 +161,7 @@ class ModelFunctionBase(FileIOMixin, object):
                         _par.name,
                     )
                 )
-            elif _par.kind == _par.VAR_KEYWORD:
+            if _par.kind == _par.VAR_KEYWORD:
                 raise self.__class__.EXCEPTION_TYPE(
                     "Model function '{}' with variable number of keyword "
                     "arguments (**{}) is not supported".format(
@@ -261,5 +261,4 @@ class ModelFunctionBase(FileIOMixin, object):
     def source_code(self):
         if self._source_code is None:
             return inspect.getsource(self.func)
-        else:
-            return self._source_code
+        return self._source_code

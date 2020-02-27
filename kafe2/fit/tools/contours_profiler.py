@@ -229,13 +229,11 @@ class ContoursProfiler(object):
     def _plot_contour_xy(target_axes, contour, label, contour_color):
         _kwargs = ContoursProfiler._DEFAULT_PLOT_FILL_CONTOUR_KWARGS.copy()
         if contour.xy_points is not None:
-            return [target_axes.fill(contour.xy_points[0], contour.xy_points[1],
-                                    label=label, **_kwargs)]
-        else:
-            return [target_axes.contour(contour.grid_x, contour.grid_y, contour.grid_z.T, levels=[0,contour.sigma],
-                                       colors="gray", **_kwargs),
-                    target_axes.contourf(contour.grid_x, contour.grid_y, contour.grid_z.T, levels=[0,contour.sigma],
-                                       colors=contour_color, label=label, **_kwargs)]
+            return [target_axes.fill(contour.xy_points[0], contour.xy_points[1], label=label, **_kwargs)]
+        return [target_axes.contour(contour.grid_x, contour.grid_y, contour.grid_z.T, levels=[0, contour.sigma],
+                                    colors="gray", **_kwargs),
+                target_axes.contourf(contour.grid_x, contour.grid_y, contour.grid_z.T, levels=[0, contour.sigma],
+                                     colors=contour_color, label=label, **_kwargs)]
 
     # -- public properties
 

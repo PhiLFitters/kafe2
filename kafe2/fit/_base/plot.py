@@ -282,10 +282,9 @@ class PlotAdapterBase(object):
 
         _total_err = np.sqrt(_total_err)
 
-        if np.all(_total_err==0):
+        if np.all(_total_err == 0):
             return None
-        else:
-            return _total_err
+        return _total_err
 
     def get_axis_labels(self):
         """Get the axis labels used with this Plot Adapter.
@@ -324,7 +323,7 @@ class PlotAdapterBase(object):
                 "Cannot call plot method: missing key `plot_adapter_method` "
                 "in configuration for plot type '{}'!".format(
                     plot_type))
-        elif not callable(_callable):
+        if not callable(_callable):
             raise ValueError(
                 "Cannot call plot method: registered `plot_adapter_method` "
                 "with type {!r} in configuration for plot type '{}' "

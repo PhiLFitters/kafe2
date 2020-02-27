@@ -91,15 +91,10 @@ class XYFit(FitBase):
 
         # validate x error algorithm
         if x_error_algorithm not in XYFit.X_ERROR_ALGORITHMS:
-            raise ValueError(
-                "Unknown value for 'x_error_algorithm': "
-                "{}. Expected one of:".format(
-                    x_error_algorithm,
-                    ', '.join(['iterative linear', 'nonlinear'])
-                )
-            )
-        else:
-            self._x_error_algorithm = x_error_algorithm
+            raise ValueError("Unknown value for 'x_error_algorithm': "
+                             "{}. Expected one of:".format(x_error_algorithm,
+                                                           ', '.join(['iterative linear', 'nonlinear'])))
+        self._x_error_algorithm = x_error_algorithm
 
         # initialize the Nexus
         self._init_nexus_callbacks = []
@@ -478,8 +473,7 @@ class XYFit(FitBase):
         # if cost function uses x-nuisance parameters, consider these
         if self._cost_function.get_flag("need_x_nuisance") and self._data_container.has_uncor_x_errors:
             return self.x_data + (self.x_uncor_nuisance_values * self.x_data_error)
-        else:
-            return self.x_data
+        return self.x_data
 
     @property
     def x_error(self):

@@ -120,8 +120,7 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
     def _get_required_keywords(cls, yaml_doc, model_function_class):
         if issubclass(model_function_class, ModelFunctionBase):
             return ['python_code']
-        else:
-            raise YamlReaderException("Unknown model function class: %s" % model_function_class)
+        raise YamlReaderException("Unknown model function class: %s" % model_function_class)
         
     @classmethod
     def _process_string(cls, string_representation, default_type):
@@ -212,10 +211,10 @@ class ParametricModelYamlWriter(YamlWriterMixin, ParametricModelDReprBase):
         # -- write error representation for all container types
         if parametric_model.has_errors:
             DataContainerYamlWriter._write_errors_to_yaml(parametric_model, _yaml_doc)
-        
-        
+
         return _yaml_doc
-    
+
+
 class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
     
     def __init__(self, input_io_handle):
@@ -257,9 +256,9 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
     def _get_required_keywords(cls, yaml_doc, parametric_model_class):
         if parametric_model_class is HistParametricModel:
             return []
-        elif parametric_model_class is IndexedParametricModel:
+        if parametric_model_class is IndexedParametricModel:
             return ['model_function']
-        elif parametric_model_class is XYParametricModel:
+        if parametric_model_class is XYParametricModel:
             return ['x_data']
     
     @classmethod
