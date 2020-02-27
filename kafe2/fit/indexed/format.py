@@ -68,7 +68,8 @@ class IndexedModelFunctionFormatter(FunctionFormatter):
         else:
             self._latex_index_name = '{'+latex_index_name+'}'
 
-    def get_formatted(self, with_par_values=True, n_significant_digits=2, format_as_latex=False, with_expression=False):
+    def get_formatted(self, with_par_values=False, n_significant_digits=2, format_as_latex=False,
+                      with_expression=False):
         """
         Get a formatted string representing this model function.
 

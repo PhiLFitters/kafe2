@@ -138,7 +138,14 @@ class FitBase(FileIOMixin, object):
         pass
 
     def _report_model(self, output_stream, indent, indentation_level):
-        pass
+        output_stream.write(indent * indentation_level + '#########\n')
+        output_stream.write(indent * indentation_level + '# Model #\n')
+        output_stream.write(indent * indentation_level + '#########\n\n')
+        output_stream.write(indent * (indentation_level + 1) + "Model Function\n")
+        output_stream.write(indent * (indentation_level + 1) + "==============\n\n")
+        output_stream.write(indent * (indentation_level + 2))
+        output_stream.write(self._model_function.formatter.get_formatted(with_expression=True))
+        output_stream.write('\n\n')
 
     def _report_fit_results(self, output_stream, indent, indentation_level, asymmetric_parameter_errors):
         output_stream.write(indent * indentation_level + '###############\n')

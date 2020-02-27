@@ -435,23 +435,9 @@ class XYFit(FitBase):
         output_stream.write('\n')
 
     def _report_model(self, output_stream, indent, indentation_level):
-        output_stream.write(indent * indentation_level + '#########\n')
-        output_stream.write(indent * indentation_level + '# Model #\n')
-        output_stream.write(indent * indentation_level + '#########\n\n')
-
-        output_stream.write(indent * (indentation_level + 1) + "Model Function\n")
-        output_stream.write(indent * (indentation_level + 1) + "==============\n\n")
-        output_stream.write(indent * (indentation_level + 2))
-        output_stream.write(
-            self._model_function.formatter.get_formatted(
-                with_par_values=False,
-                n_significant_digits=2,
-                format_as_latex=False,
-                with_expression=True
-            )
-        )
-        output_stream.write('\n\n\n')
-
+        # call base method to show header and model function
+        super(XYFit, self)._report_model(output_stream, indent, indentation_level)
+        # print model values at POIs
         _data_table_dict = OrderedDict()
         _data_table_dict['X Model'] = self.x_model
         if self.has_model_errors:

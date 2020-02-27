@@ -453,7 +453,7 @@ class FunctionFormatter(FileIOMixin, object):
         excluding the independent parameter(s)."""
         return self._arg_formatters  # same as all arguments for base, overwrite when necessary
 
-    def get_formatted(self, with_par_values=True, n_significant_digits=2, format_as_latex=False, with_expression=False):
+    def get_formatted(self, with_par_values=False, n_significant_digits=2, format_as_latex=False, with_expression=False):
         """Get a formatted string representing this model function.
 
         :param with_par_values: if ``True``, output will include the value of each function parameter
@@ -462,7 +462,6 @@ class FunctionFormatter(FileIOMixin, object):
         :param format_as_latex: if ``True``, the returned string will be formatted using LaTeX syntax
         :param with_expression: if ``True``, the returned string will include the expression assigned to the function
         """
-        # FIXME: default should actually *not* show the parameter values
         _par_strings = self._get_formatted_pars(with_par_values=with_par_values,
                                                 n_significant_digits=n_significant_digits,
                                                 format_as_latex=format_as_latex)
@@ -484,9 +483,8 @@ class FunctionFormatter(FileIOMixin, object):
 
 class CostFunctionFormatter(FunctionFormatter):
 
-    def get_formatted(self, value=None, n_degrees_of_freedom=None,
-                      with_name=True,
-                      with_value_per_ndf=True, format_as_latex=False):
+    def get_formatted(self, value=None, n_degrees_of_freedom=None, with_name=True, with_value_per_ndf=True,
+                      format_as_latex=False):
         """
         Get a formatted string representing this cost function.
 
@@ -549,7 +547,8 @@ class ModelFunctionFormatter(FunctionFormatter):
         formatters.pop(0)  # first formatter is independent var, delete it
         return formatters
 
-    def get_formatted(self, with_par_values=True, n_significant_digits=2, format_as_latex=False, with_expression=False):
+    def get_formatted(self, with_par_values=False, n_significant_digits=2, format_as_latex=False,
+                      with_expression=False):
         """Get a formatted string representing this model function.
 
         :param with_par_values: if ``True``, output will include the value of each function parameter
@@ -558,7 +557,6 @@ class ModelFunctionFormatter(FunctionFormatter):
         :param format_as_latex: if ``True``, the returned string will be formatted using LaTeX syntax
         :param with_expression: if ``True``, the returned string will include the expression assigned to the function
         """
-        # FIXME: default should actually *not* show the parameter values
         _par_strings = self._get_formatted_pars(with_par_values=with_par_values,
                                                 n_significant_digits=n_significant_digits,
                                                 format_as_latex=format_as_latex)
