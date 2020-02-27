@@ -1,10 +1,10 @@
+"""
+Create an XYContainer holding the measurement data and uncertainties and write it to a file.
+"""
+
 import numpy as np
 from kafe2 import XYContainer
 
-"""
-Create an XYContainer holding the measurement data
-and the errors and write it to a file.
-"""
 
 START, STOP, NUM_DATAPOINTS = 0, 20, 7
 X_ERROR = 0.3  # Absolute error

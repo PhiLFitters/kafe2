@@ -26,7 +26,7 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
 
     def __init__(self, unbinned_fit_object, n_plot_points_model=100):
         """
-        Construct an :py:obj:`UnbinnedPlotContainer` for a :py:obj:`~kafe2.fit.unbinned.UnbinnedFit` object:
+        Construct an :py:obj:`UnbinnedPlotAdapter` for a :py:obj:`~kafe2.fit.unbinned.UnbinnedFit` object:
         :param unbinned_fit_object: an :py:obj:`~kafe2.fit.unbinned.UnbinnedFit` object
         :param n_plot_points_model: Number of data points for plotting the model
         :type n_plot_points_model: int
@@ -178,12 +178,6 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
         Method called by the main plot routine to plot the model to a specified matplotlib ``Axes`` object.
 
         :param target_axes: ``matplotlib`` ``Axes`` object
-        :return: plot handle(s)
-        """
-        """
-        Plot the model predictions to a specified matplotlib ``Axes`` object.
-
-        :param target_axes: ``matplotlib`` ``Axes`` object
         :param kwargs: keyword arguments accepted by the :py:func:`~kafe2._aux.step_fill_between` method
         :return: plot handle(s)
         """
@@ -202,12 +196,6 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
     def plot_model_line(self, target_axes, **kwargs):
         """
         Method called by the main plot routine to plot the model to a specified matplotlib ``Axes`` object.
-
-        :param target_axes: ``matplotlib`` ``Axes`` object
-        :return: plot handle(s)
-        """
-        """
-        Plot the model predictions to a specified matplotlib ``Axes`` object.
 
         :param target_axes: ``matplotlib`` ``Axes`` object
         :param kwargs: keyword arguments accepted by the :py:func:`~kafe2._aux.step_fill_between` method

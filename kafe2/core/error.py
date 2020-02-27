@@ -1,6 +1,7 @@
 """
-# TODO: make all setters copy and own data members
+Classes for handling of uncertainties in kafe2 fits.
 """
+# TODO: make all setters copy and own data members
 
 import abc
 import copy
@@ -33,11 +34,7 @@ def cov_mat_from_float_list(value_list, correlation=0.0):
     return CovMat(_mat)
 
 
-"""
-Data structure for Covariance Matrices
-"""
-
-
+# Data structure for Covariance Matrices
 class CovMat(object):
     def __init__(self, matrix):
         # -- member definitions
@@ -189,11 +186,7 @@ class CovMat(object):
         return _l
 
 
-"""
-Data structures for Gaussian Errors
-"""
-
-
+# Data structures for Gaussian Errors
 @six.add_metaclass(abc.ABCMeta)
 class GaussianErrorBase(object):
     """
