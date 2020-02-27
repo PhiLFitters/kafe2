@@ -689,8 +689,8 @@ class Tuple(ValueNode):
         self.nodes = nodes
         self._value = None
 
-        if name is None and len(self.nodes):
-            self.name =  '__'.join([_n.name for _n in self.nodes])
+        if name is None and self.nodes:
+            self.name = '__'.join([_n.name for _n in self.nodes])
 
     def __iter__(self):
         for _n in self.nodes:
@@ -738,8 +738,8 @@ class Array(Tuple):
         self._dtype = dtype
         self.nodes = nodes
 
-        if name is None and len(self.nodes):
-            self.name =  'array_' + '__'.join([_n.name for _n in self.nodes])
+        if name is None and self.nodes:
+            self.name = 'array_' + '__'.join([_n.name for _n in self.nodes])
 
     @Tuple.nodes.setter
     def nodes(self, nodes):
