@@ -1295,10 +1295,8 @@ class Nexus(object):
                 "not exist!".format(name)
             )
 
-        if not (isinstance(depends_on, tuple) or
-                isinstance(depends_on, list)):
+        if not isinstance(depends_on, (tuple, list)):
             depends_on = (depends_on,)
-
 
         _not_found = [_dep for _dep in depends_on if self.get(_dep) is None]
 
