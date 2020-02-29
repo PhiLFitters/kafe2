@@ -651,11 +651,26 @@ class FitBase(FileIOMixin, object):
         """
         try:
             # try to find error in data container
-            _ret = self._data_container.disable_error(err_id)
+            _ret = self._data_container.disable_error(err_id)  # TODO: this call does not return anything
         except DataContainerException:
             # try to find error in model container
-            _ret = self._param_model.disable_error(err_id)
+            _ret = self._param_model.disable_error(err_id)  # TODO: this call does not return anything
+        return _ret
 
+    def enable_error(self, err_id):
+        """
+        (Re-)Enable an uncertainty source so that it counts towards calculating the
+        total uncertainty.
+
+        :param err_id: error id
+        :type err_id: str
+        """
+        try:
+            # try to find error in data container
+            _ret = self._data_container.enable_error(err_id)  # TODO: this call does not return anything
+        except DataContainerException:
+            # try to find error in model container
+            _ret = self._param_model.enable_error(err_id)  # TODO: this call does not return anything
         return _ret
 
     def do_fit(self):
