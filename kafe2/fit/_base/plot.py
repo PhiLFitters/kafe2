@@ -182,16 +182,18 @@ class PlotAdapterBase(object):
         # specification of subplots for which this adapter provided plot routines
         self._subplots = None
 
-        # set labels if present
-        if self._fit.data_container.label is not None:
+        # set labels if present and according subplots are available
+        _subplots = self._get_subplots()
+        if self._fit.data_container.label is not None and 'data' in _subplots:
             self.update_plot_kwargs('data', dict(label=self._fit.data_container.label))
-        if self._fit.model_label is not None:
+        if self._fit.model_label is not None and 'model_line' in _subplots:
             self.update_plot_kwargs('model_line', dict(label=self._fit.model_label))
-            if self._fit.model_label == '__del__':
-                self.update_plot_kwargs('model_error_band', dict(label="__del__"))
-            else:
-                self.update_plot_kwargs('model_error_band',
-                                        dict(label="{} $\\pm 1\\sigma$".format(self._fit.model_label)))
+            if 'model_error_band' in _subplots:
+                if self._fit.model_label == '__del__':
+                    self.update_plot_kwargs('model_error_band', dict(label="__del__"))
+                else:
+                    self.update_plot_kwargs('model_error_band',
+                                            dict(label="{} $\\pm 1\\sigma$".format(self._fit.model_label)))
 
     def _get_subplots(self):
         '''create dictionary containing all subplot specifications'''
