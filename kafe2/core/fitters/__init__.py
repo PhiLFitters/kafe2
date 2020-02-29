@@ -59,7 +59,9 @@ class FitterBase(object):
     """
 
     @abc.abstractmethod
-    def do_fit(self): pass
+    def do_fit(self):
+        pass
 
     @abc.abstractmethod
-    def _fcn_wrapper(self): pass
+    def _fcn_wrapper(self):
+        pass

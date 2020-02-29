@@ -85,16 +85,20 @@ class MinimizerBase(object):
     """
 
     @abc.abstractmethod
-    def minimize(self): pass
+    def minimize(self):
+        pass
 
     @property
     @abc.abstractmethod
-    def hessian(self): pass
+    def hessian(self):
+        pass
 
     @property
     @abc.abstractmethod
-    def hessian_inv(self): pass
+    def hessian_inv(self):
+        pass
 
     @property
     @abc.abstractmethod
-    def function_value(self): pass
+    def function_value(self):
+        pass

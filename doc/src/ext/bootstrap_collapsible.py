@@ -5,7 +5,9 @@ from sphinx.locale import _
 from sphinx.util.docutils import SphinxDirective
 
 
-class BootstrapCollapsibleControlNode(nodes.Element): pass
+class BootstrapCollapsibleControlNode(nodes.Element):
+    pass
+
 
 def visit_bootstrap_control_html(self, node):
     _is_button = False
@@ -58,7 +60,10 @@ def visit_bootstrap_control_html(self, node):
 def depart_bootstrap_control(self, node):
     pass
 
-class BootstrapCollapsibleContainerNode(nodes.Element): pass
+
+class BootstrapCollapsibleContainerNode(nodes.Element):
+    pass
+
 
 def visit_bootstrap_container_html(self, node):
     self.body.append(
@@ -72,11 +77,15 @@ def visit_bootstrap_container_html(self, node):
         )
     )
 
+
 def depart_bootstrap_container_html(self, node):
     self.body.append('</div>\n')
 
+
 def visit_bootstrap_container_latex(self, node):
     self.visit_container(node)
+
+
 def depart_bootstrap_container_latex(self, node):
     self.depart_container(node)
 

@@ -119,10 +119,12 @@ class FitBase(FileIOMixin, object):
         return _nexus_new_dict
 
     @abc.abstractmethod
-    def _set_new_data(self, new_data): pass
+    def _set_new_data(self, new_data):
+        pass
 
     @abc.abstractmethod
-    def _set_new_parametric_model(self): pass
+    def _set_new_parametric_model(self):
+        pass
 
     # Overwritten by MultiFit
     def _get_model_function_argument_formatters(self):
@@ -215,7 +217,8 @@ class FitBase(FileIOMixin, object):
 
     @property
     @abc.abstractmethod
-    def data(self): pass
+    def data(self):
+        pass
 
     @data.setter
     def data(self, new_data):
@@ -243,7 +246,8 @@ class FitBase(FileIOMixin, object):
 
     @property
     @abc.abstractmethod
-    def model(self): pass
+    def model(self):
+        pass
 
     # @abc.abstractproperty
     # def data_error(self): pass
