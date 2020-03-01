@@ -1,9 +1,10 @@
 import abc
 import six
 
+from .._base import GenericDReprBase
+# import formatter classes
 from ..._base.format import ModelFunctionFormatter
-from kafe2.fit.indexed import IndexedModelFunctionFormatter
-from kafe2.fit.representation._base import GenericDReprBase
+from ...indexed import IndexedModelFunctionFormatter
 
 __all__ = ["ModelFunctionFormatterDReprBase", "ModelParameterFormatterDReprBase"]
 

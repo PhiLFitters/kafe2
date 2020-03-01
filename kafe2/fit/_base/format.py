@@ -2,7 +2,7 @@ import re
 import copy
 
 import numpy as np
-from kafe2.fit.io.file import FileIOMixin
+from ..io.file import FileIOMixin
 
 
 __all__ = ["FormatterException", "ParameterFormatter", "FunctionFormatter", "ModelFunctionFormatter",

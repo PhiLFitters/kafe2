@@ -2,7 +2,7 @@ from .._base import DReprError
 from .._yaml_base import YamlWriterMixin, YamlReaderMixin
 from ._base import ConstraintDReprBase
 from .. import _AVAILABLE_REPRESENTATIONS
-from kafe2.core.constraint import GaussianSimpleParameterConstraint, GaussianMatrixParameterConstraint
+from ....core.constraint import GaussianSimpleParameterConstraint, GaussianMatrixParameterConstraint
 
 __all__ = ['ConstraintYamlWriter', 'ConstraintYamlReader']
 

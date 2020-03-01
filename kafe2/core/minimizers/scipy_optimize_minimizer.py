@@ -1,7 +1,7 @@
 from __future__ import print_function
 from .minimizer_base import MinimizerBase
-from kafe2.core.contour import ContourFactory
-from kafe2.core.error import CovMat
+from ..contour import ContourFactory
+from ..error import CovMat
 
 try:
     import scipy.optimize as opt

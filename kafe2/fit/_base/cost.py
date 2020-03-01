@@ -1,14 +1,10 @@
 import abc
-import inspect
 import numpy as np
-import re
-import string
 import six
 
-from .format import ParameterFormatter, CostFunctionFormatter
-
 from scipy.stats import poisson, norm
-from kafe2.fit.io.file import FileIOMixin
+from ..io.file import FileIOMixin
+from .format import ParameterFormatter, CostFunctionFormatter
 
 
 if six.PY2:

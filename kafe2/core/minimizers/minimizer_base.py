@@ -2,7 +2,7 @@ import numpy as np
 import numdifftools as nd
 from scipy.optimize import brentq
 
-from kafe2.core.error import CovMat
+from ..error import CovMat
 
 
 class MinimizerBase(object):

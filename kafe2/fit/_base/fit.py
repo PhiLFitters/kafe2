@@ -7,12 +7,12 @@ import warnings
 from collections import OrderedDict
 from functools import partial
 
-from kafe2.core.constraint import GaussianMatrixParameterConstraint, GaussianSimpleParameterConstraint
-from ...tools import print_dict_as_table
 from ...core import NexusFitter
+from ...core.constraint import GaussianMatrixParameterConstraint, GaussianSimpleParameterConstraint
+from ...tools import print_dict_as_table
 from ...config import kc
-from .container import DataContainerException
 from ..io.file import FileIOMixin
+from .container import DataContainerException
 
 __all__ = ["FitBase", "FitException"]
 

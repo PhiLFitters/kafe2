@@ -6,9 +6,9 @@ import six
 
 from copy import copy
 
-from ...tools import random_alphanumeric
+from ...tools import random_alphanumeric  # relative import of kafe2.tools not kafe2.fit.tools
 from ...core.error import SimpleGaussianError, MatrixGaussianError
-from kafe2.fit.io.file import FileIOMixin
+from ..io.file import FileIOMixin
 
 __all__ = ["DataContainerBase", "DataContainerException"]
 

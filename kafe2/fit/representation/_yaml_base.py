@@ -1,9 +1,11 @@
 import yaml
 
-from kafe2.fit.representation._base import DReprWriterMixin, DReprReaderMixin
+from ._base import DReprWriterMixin, DReprReaderMixin
+
 
 class YamlWriterException(Exception):
     pass
+
 
 class YamlWriterMixin(DReprWriterMixin):
  

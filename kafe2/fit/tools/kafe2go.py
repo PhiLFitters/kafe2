@@ -1,6 +1,8 @@
 #!/usr/bin/env python
-import argparse, sys
+import sys
+import argparse
 import matplotlib.pyplot as plt
+# do not use relative imports here as the working directory of kafe2go can be anywhere on the system
 from kafe2 import Plot
 from kafe2.fit._base.fit import FitBase
 from kafe2.fit.tools.contours_profiler import ContoursProfiler

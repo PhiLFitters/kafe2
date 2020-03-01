@@ -2,7 +2,7 @@ import abc
 import numpy as np
 import six
 
-from kafe2.fit.io.file import FileIOMixin
+from ..fit.io.file import FileIOMixin
 
 
 class ParameterConstraintException(Exception):

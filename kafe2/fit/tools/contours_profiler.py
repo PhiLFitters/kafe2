@@ -1,10 +1,9 @@
-import matplotlib as mpl
 import numpy as np
 import six
 
-from kafe2.config import matplotlib as mpl
-from kafe2.core.confidence import ConfidenceLevel
-from kafe2.fit._base import FitBase
+from ...config import matplotlib as mpl
+from ...core.confidence import ConfidenceLevel
+from .._base import FitBase
 from matplotlib import pyplot as plt, rcParams
 from matplotlib import gridspec as gs
 from matplotlib import ticker as plticker

@@ -6,10 +6,11 @@ import numpy as np
 import scipy.stats
 import six
 
-from kafe2.core.error import CovMat
+from ...core.error import CovMat
 
 
 __all__ = ['EnsembleVariable', 'EnsembleVariableProbabilityDistribution', 'EnsembleVariablePlotter']
+
 
 def cycle_axes(array, k):
     """

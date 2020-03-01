@@ -1,10 +1,11 @@
 import abc
 import six
 
-from kafe2.fit.indexed import IndexedFit
-from kafe2.fit.xy import XYFit
-from kafe2.fit.histogram import HistFit
-from kafe2.fit.representation._base import GenericDReprBase
+from .._base import GenericDReprBase
+# import fit classes
+from ...indexed import IndexedFit
+from ...xy import XYFit
+from ...histogram import HistFit
 
 __all__ = ["FitDReprBase"]
 

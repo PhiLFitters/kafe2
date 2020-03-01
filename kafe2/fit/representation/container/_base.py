@@ -1,10 +1,11 @@
 import abc
 import six
 
-from kafe2.fit.histogram import HistContainer
-from kafe2.fit.indexed import IndexedContainer
-from kafe2.fit.xy import XYContainer
-from kafe2.fit.representation._base import GenericDReprBase
+from .._base import GenericDReprBase
+# import data container classes
+from ...histogram import HistContainer
+from ...indexed import IndexedContainer
+from ...xy import XYContainer
 
 __all__ = ["DataContainerDReprBase"]
 

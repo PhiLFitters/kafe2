@@ -1,8 +1,8 @@
 import abc
 import six
 
-from kafe2.fit.representation._base import GenericDReprBase
-from kafe2.core.constraint import GaussianSimpleParameterConstraint, GaussianMatrixParameterConstraint
+from .._base import GenericDReprBase
+from ....core.constraint import GaussianSimpleParameterConstraint, GaussianMatrixParameterConstraint
 
 __all__ = ["ConstraintDReprBase"]
 

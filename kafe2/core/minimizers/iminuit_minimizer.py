@@ -1,5 +1,5 @@
 from .minimizer_base import MinimizerBase
-from kafe2.core.contour import ContourFactory
+from ..contour import ContourFactory
 try:
     import iminuit
 except ImportError:

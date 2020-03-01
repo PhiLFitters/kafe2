@@ -1,11 +1,12 @@
 import abc
 import six
 
-from kafe2.fit.histogram import HistModelFunction, HistParametricModel
-from kafe2.fit.indexed import IndexedModelFunction, IndexedParametricModel
-from kafe2.fit.xy import XYParametricModel
+from .._base import GenericDReprBase
+# import ModelFunction classes
 from ..._base import ModelFunctionBase
-from kafe2.fit.representation._base import GenericDReprBase
+from ...histogram import HistModelFunction, HistParametricModel
+from ...indexed import IndexedModelFunction, IndexedParametricModel
+from ...xy import XYParametricModel
 
 __all__ = ["ModelFunctionDReprBase", "ParametricModelDReprBase"]
 

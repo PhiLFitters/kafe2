@@ -1,7 +1,7 @@
 from __future__ import print_function
 import six
 from .minimizer_base import MinimizerBase
-from kafe2.core.contour import ContourFactory
+from ..contour import ContourFactory
 try:
     from ROOT import TMinuit, Double, Long
     from ROOT import TMath  # for using ROOT's chi2prob function
