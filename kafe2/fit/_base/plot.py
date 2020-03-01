@@ -184,16 +184,28 @@ class PlotAdapterBase(object):
 
         # set labels if present and according subplots are available
         _subplots = self._get_subplots()
-        if self._fit.data_container.label is not None and 'data' in _subplots:
-            self.update_plot_kwargs('data', dict(label=self._fit.data_container.label))
-        if self._fit.model_label is not None and 'model_line' in _subplots:
-            self.update_plot_kwargs('model_line', dict(label=self._fit.model_label))
-            if 'model_error_band' in _subplots:
-                if self._fit.model_label == '__del__':
-                    self.update_plot_kwargs('model_error_band', dict(label="__del__"))
-                else:
-                    self.update_plot_kwargs('model_error_band',
-                                            dict(label="{} $\\pm 1\\sigma$".format(self._fit.model_label)))
+        if self._fit.data_container.label is not None:
+            try:
+                self.update_plot_kwargs('data', dict(label=self._fit.data_container.label))
+            except ValueError:
+                warnings.warn('Could not set data label in plot. Try setting it manually with the update_plot_kwargs() '
+                              'method.')
+        if self._fit.model_label is not None:
+            try:
+                self.update_plot_kwargs('model_line', dict(label=self._fit.model_label))
+            except ValueError:  # if model_line is not present assume hist fit or similar
+                try:
+                    self.update_plot_kwargs('model', dict(label=self._fit.model_label))
+                    self.update_plot_kwargs('model_density', dict(label="{} density".format(self._fit.model_label)))
+                except ValueError:
+                    warnings.warn('Could not set model and/or model_density label in plot. Try setting it manually with'
+                                  ' the update_plot_kwargs() method.')
+            _model_error_name = "{} $\\pm 1\\sigma$".format(self._fit.model_label) \
+                if self._fit.model_label != '__del__' else '__del__'
+            try:
+                self.update_plot_kwargs('model_error_band', dict(label=_model_error_name))
+            except ValueError:
+                pass  # no error band available
 
     def _get_subplots(self):
         '''create dictionary containing all subplot specifications'''
