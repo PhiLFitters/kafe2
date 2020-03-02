@@ -35,6 +35,9 @@ class NexusFitter(object):
             **minimizer_kwargs
         )
 
+        self._fixed_pars = dict()
+        self._limited_pars = dict()
+
         # flags
         self.__minimizing = False  # minimization ongoing?
         self.__state_is_from_minimizer = False
@@ -146,6 +149,14 @@ class NexusFitter(object):
     def state_is_from_minimizer(self):
         return self.__state_is_from_minimizer
 
+    @property
+    def fixed_parameters(self):
+        return self._fixed_pars.copy()
+
+    @property
+    def limited_parameters(self):
+        return self._limited_pars.copy()
+
     # -- public methods
 
     def do_fit(self):
@@ -156,15 +167,20 @@ class NexusFitter(object):
             self.set_fit_parameter_values(**{par_name: par_value})
 
         self._minimizer.fix(par_name)
+        _fixed_par_dict = self.get_fit_parameter_values([par_name])
+        self._fixed_pars.update(_fixed_par_dict)
 
     def release_parameter(self, par_name):
         self._minimizer.release(par_name)
+        self._fixed_pars.pop(par_name, None)
 
     def limit_parameter(self, par_name, par_limits):
         self._minimizer.limit(par_name, par_limits)
+        self._limited_pars.update({par_name: par_limits})
 
     def unlimit_parameter(self, par_name):
         self._minimizer.unlimit(par_name)
+        self._limited_pars.pop(par_name, None)
 
     def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, **kwargs):
         if not self.__state_is_from_minimizer:
