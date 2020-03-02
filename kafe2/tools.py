@@ -136,16 +136,21 @@ def get_compact_representation(parameter_names, parameter_values, parameter_erro
         for _i, (_par_name, _par_val, _par_err, _cor_mat_row_str) in enumerate(
                 zip(parameter_names, parameter_values, parameter_errors, _cor_mat_row_strs)):
             _row = [_par_name]
-            _sig_fig_err = max(2, -int(np.log10(np.abs(_par_err))) + 1)
-            _sig_fig_val = max(_sig_fig_err, -int(np.log10(np.abs(_par_val))) + 2)
-            _row.append(round(_par_val, _sig_fig_val))
-            _row.append(round(_par_err, _sig_fig_err))
+            if np.isnan(_par_err) or _par_err == 0.0:  # check if parameter is fixed
+                _row.append(_par_val)
+                _row.append('fixed')
+            else:  # parameter is not fixed, round and add errors
+                _sig_fig_err = max(2, -int(np.log10(np.abs(_par_err))) + 1)
+                _sig_fig_val = max(_sig_fig_err, -int(np.log10(np.abs(_par_val))) + 2)
+                _row.append(round(_par_val, _sig_fig_val))
+                _row.append(round(_par_err, _sig_fig_err))
             if asymmetric_parameter_errors is not None:
-                _err_down, _err_up = asymmetric_parameter_errors[_i]
-                _sig_fig_err_down = max(2, -int(np.log10(np.abs(_err_down))) + 1)
-                _row.append(round(_err_down, _sig_fig_err_down))
-                _sig_fig_err_up = max(2, -int(np.log10(np.abs(_err_up))) + 1)
-                _row.append(round(_err_up, _sig_fig_err_up))
+                for _err in asymmetric_parameter_errors[_i]:  # iterate over up and down error
+                    if np.isnan(_err):  # parameter is fixed, no error available
+                        _row.append('N/A')
+                    else:
+                        _sig_err = max(2, -int(np.log10(np.abs(_err))) + 1)
+                        _row.append(round(_err, _sig_err))
             _row.append(_cor_mat_row_str)
             _data.append(_row)
 

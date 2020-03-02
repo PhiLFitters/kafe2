@@ -6,6 +6,7 @@ from .._base import GenericDReprBase
 from ..._base import ModelFunctionBase
 from ...histogram import HistModelFunction, HistParametricModel
 from ...indexed import IndexedModelFunction, IndexedParametricModel
+from ...unbinned import UnbinnedParametricModel
 from ...xy import XYParametricModel
 
 __all__ = ["ModelFunctionDReprBase", "ParametricModelDReprBase"]
@@ -23,6 +24,7 @@ class ModelFunctionDReprBase(GenericDReprBase):
     _OBJECT_TYPE_NAME_TO_CLASS = {
         'histogram': HistModelFunction,
         'indexed': IndexedModelFunction,
+        'unbinned': ModelFunctionBase,
         'xy': ModelFunctionBase,  # type from fit is passed to model function, needs to be resolved
         'base': ModelFunctionBase
     }
@@ -39,11 +41,13 @@ class ParametricModelDReprBase(GenericDReprBase):
     _CLASS_TO_OBJECT_TYPE_NAME = {
         HistParametricModel: 'histogram',
         IndexedParametricModel: 'indexed',
+        UnbinnedParametricModel: 'unbinned',
         XYParametricModel: 'xy'
     }
     _OBJECT_TYPE_NAME_TO_CLASS = {
         'histogram': HistParametricModel,
         'indexed': IndexedParametricModel,
+        'unbinned': UnbinnedParametricModel,
         'xy': XYParametricModel
     }
 

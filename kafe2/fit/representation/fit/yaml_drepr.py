@@ -4,7 +4,7 @@ from .._base import DReprError
 from .._yaml_base import YamlWriterMixin, YamlReaderMixin, YamlReaderException
 from ._base import FitDReprBase
 from .. import _AVAILABLE_REPRESENTATIONS
-from ....fit import IndexedFit, HistFit, XYFit
+from ....fit import IndexedFit, HistFit, UnbinnedFit, XYFit
 from ..container.yaml_drepr import DataContainerYamlReader, DataContainerYamlWriter
 from ..model.yaml_drepr import ParametricModelYamlReader, ParametricModelYamlWriter
 from ..constraint.yaml_drepr import ConstraintYamlReader, ConstraintYamlWriter
@@ -119,9 +119,9 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
     
     @classmethod
     def _get_subspace_override_dict(cls, fit_class):
-        _override_dict = {'model_parameters':'parametric_model',
-                          'arg_formatters':'parametric_model',
-                          'model_function_formatter':'parametric_model'}
+        _override_dict = {'model_parameters': 'parametric_model',
+                          'arg_formatters': 'parametric_model',
+                          'model_function_formatter': 'parametric_model'}
 
         if fit_class is HistFit:
             _override_dict['n_bins'] = ['dataset', 'parametric_model']
@@ -132,8 +132,6 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
             _override_dict['model_density_function'] = 'parametric_model'
             _override_dict['model_density_function_name'] = 'parametric_model'
             _override_dict['latex_model_density_function_name'] = 'parametric_model'
-            _override_dict['x_name'] = 'parametric_model'
-            _override_dict['latex_x_name'] = 'parametric_model'
             _override_dict['expression_string'] = 'parametric_model'
             _override_dict['latex_expression_string'] = 'parametric_model'
         elif fit_class is IndexedFit:
@@ -146,6 +144,13 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
             _override_dict['latex_index_name'] = 'parametric_model'
             _override_dict['expression_string'] = 'parametric_model'
             _override_dict['latex_expression_string'] = 'parametric_model'
+        elif fit_class is UnbinnedFit:
+            _override_dict['data'] = ['dataset', 'parametric_model']
+            _override_dict['model_function'] = 'parametric_model'
+            _override_dict['model_function_name'] = 'parametric_model'
+            _override_dict['latex_model_function_name'] = 'parametric_model'
+            _override_dict['expression_string'] = 'parametric_model'
+            _override_dict['latex_expression_string'] = 'parametric_model'
         elif fit_class is XYFit:
             _override_dict['x_data'] = ['dataset', 'parametric_model']
             _override_dict['y_data'] = 'dataset'
@@ -154,8 +159,6 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
             _override_dict['model_function'] = 'parametric_model'
             _override_dict['model_function_name'] = 'parametric_model'
             _override_dict['latex_model_function_name'] = 'parametric_model'
-            _override_dict['x_name'] = 'parametric_model'
-            _override_dict['latex_x_name'] = 'parametric_model'
             _override_dict['expression_string'] = 'parametric_model'
             _override_dict['latex_expression_string'] = 'parametric_model'
         else:
@@ -196,6 +199,13 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
             _fit_object = IndexedFit(
                 data=_data,
                 model_function=_read_model_function,
+                minimizer=_minimizer,
+                minimizer_kwargs=_minimizer_kwargs
+            )
+        elif _class is UnbinnedFit:
+            _fit_object = UnbinnedFit(
+                data=_data,
+                model_density_function=_read_model_function,
                 minimizer=_minimizer,
                 minimizer_kwargs=_minimizer_kwargs
             )

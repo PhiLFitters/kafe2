@@ -13,7 +13,8 @@ __all__ = ["ModelFunctionFormatterDReprBase", "ModelParameterFormatterDReprBase"
 class ModelFunctionFormatterDReprBase(GenericDReprBase):
     BASE_OBJECT_TYPE_NAME = 'model_function_formatter'
 
-    #TODO type aliases
+    # This dict is currently not used. Because there are only two different formatters adn most fits use the base format
+    # Case separation is currently only handled in the yaml_drepr.py
     _CLASS_TO_OBJECT_TYPE_NAME = {
         ModelFunctionFormatter: 'base',
         IndexedModelFunctionFormatter: 'indexed'

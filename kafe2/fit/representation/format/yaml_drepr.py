@@ -2,8 +2,8 @@ from .._base import DReprError
 from .._yaml_base import YamlWriterMixin, YamlReaderMixin
 from ._base import ModelFunctionFormatterDReprBase, ModelParameterFormatterDReprBase
 from .. import _AVAILABLE_REPRESENTATIONS
-from ....fit._base import ParameterFormatter, ModelFunctionFormatter
-from ....fit import IndexedModelFunctionFormatter
+from ..._base import ParameterFormatter, ModelFunctionFormatter
+from ...indexed import IndexedModelFunctionFormatter
 from .._yaml_base import YamlReaderException, YamlWriterException
 
 __all__ = ['ModelFunctionFormatterYamlWriter', 'ModelFunctionFormatterYamlReader', 
