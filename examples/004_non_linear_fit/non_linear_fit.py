@@ -50,7 +50,7 @@ fit.report(asymmetric_parameter_errors=True)  # print a report with asymmetric u
 
 # Optional: create a plot
 plot = Plot(fit)
-plot.plot(with_ratio=True, with_asymmetric_parameter_errors=True)  # add the ratio data/function and asymmetric errors
+plot.plot(asymmetric_parameter_errors=True, ratio=True)  # add the ratio data/function and asymmetric errors
 
 # Optional: create the contours profiler
 cpf = ContoursProfiler(fit)

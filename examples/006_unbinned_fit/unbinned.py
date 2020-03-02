@@ -66,7 +66,7 @@ fit.do_fit()  # perform the fit
 fit.report(asymmetric_parameter_errors=True)  # print a fit report to the terminal
 
 plot = Plot(fit)  # create a plot object
-plot.plot(with_fit_info=True, with_asymmetric_parameter_errors=True)  # plot the data and the fit
+plot.plot(fit_info=True, asymmetric_parameter_errors=True)  # plot the data and the fit
 
 cpf = ContoursProfiler(fit, profile_subtract_min=False)  # Optional: create a contours profile
 cpf.plot_profiles_contours_matrix(parameters=['tau', 'fbg'])  # Optional: plot the contour matrix for tau and fbg

@@ -735,8 +735,8 @@ class Plot(object):
             ),
         )
 
-    def _render_legend(self, plot_results, axes_keys, with_fit_info=True, with_asymmetric_parameter_errors=False, **kwargs):
-        '''render the legend for axes `axes_keys`'''
+    def _render_legend(self, plot_results, axes_keys, fit_info=True, asymmetric_parameter_errors=False, **kwargs):
+        """render the legend for axes `axes_keys`"""
         for _axes_key in axes_keys:
             _axes = self._get_axes(_axes_key)
 
@@ -761,14 +761,14 @@ class Plot(object):
                 _hs_sorted.append(_hs_unsorted[_artist_index])
                 _ls_sorted.append(_ls_unsorted[_artist_index])
 
-                if with_fit_info:
+                if fit_info:
                     _fit_index = _plot_dict['fit_index']
                     if _fit_index not in _fit_info_texts_positions:
                         # compute fit info text for this fit index (if not done already)
                         _fit_info_texts_positions[_fit_index] = [self._get_fit_info(
                                 _plot_dict['adapter'],
                                 format_as_latex=True,
-                                asymmetric_parameter_errors=with_asymmetric_parameter_errors
+                                asymmetric_parameter_errors=asymmetric_parameter_errors
                             ), _i_plot]
                     else:
                         # update the legend position at which to insert the text
@@ -856,22 +856,15 @@ class Plot(object):
 
     # -- public methods
 
-    def plot(self,
-             with_legend=True,
-             with_fit_info=True,
-             with_asymmetric_parameter_errors=False,
-             with_ratio=False,
-             ratio_range=None,
-             ratio_height_share=0.25,
-             plot_width_share=0.5,
-             figsize=None):
+    def plot(self, legend=True, fit_info=True, asymmetric_parameter_errors=False, ratio=False, ratio_range=None,
+             ratio_height_share=0.25, plot_width_share=0.5, figsize=None):
         """
         Plot data, model (and other subplots) for all child :py:obj:`Fit` objects.
 
-        :param with_legend: if ``True``, a legend is rendered
-        :param with_fit_info: if ``True``, fit results will be shown in the legend
-        :param with_asymmetric_parameter_errors: if ``True``, parameter errors in fit results will be asymmetric
-        :param with_ratio: if ``True``, a secondary plot containing data/model ratios is shown below the main plot
+        :param legend: if ``True``, a legend is rendered
+        :param fit_info: if ``True``, fit results will be shown in the legend
+        :param asymmetric_parameter_errors: if ``True``, parameter errors in fit results will be asymmetric
+        :param ratio: if ``True``, a secondary plot containing data/model ratios is shown below the main plot
         :param ratio_range: the *y* range to set in the secondary plot
         :type ratio_range: tuple of 2 floats
         :param ratio_height_share: share of the total height to be taken up by the secondary plot
@@ -889,7 +882,7 @@ class Plot(object):
         _height_ratios = None
         _width_ratios = (plot_width_share, 1.0 - plot_width_share)
 
-        if with_ratio:
+        if ratio:
             _axes_keys += ('ratio',)
             _height_ratios = (1.0 - ratio_height_share, ratio_height_share)
 
@@ -904,13 +897,9 @@ class Plot(object):
 
             _plot_results = self._plot_and_get_results(plot_indices=(i,) if self._separate_figs else None)
 
-            if with_legend:
-                self._render_legend(
-                    plot_results=_plot_results,
-                    axes_keys=('main',),
-                    with_fit_info=with_fit_info,
-                    with_asymmetric_parameter_errors=with_asymmetric_parameter_errors
-                )
+            if legend:
+                self._render_legend(plot_results=_plot_results, axes_keys=('main',), fit_info=fit_info,
+                                    asymmetric_parameter_errors=asymmetric_parameter_errors)
 
             self._adjust_plot_ranges(_plot_results)
             self._set_axis_labels(_plot_results, axes_keys=_axes_keys)
@@ -920,7 +909,7 @@ class Plot(object):
                 # matplotlib < 2.0.0
                 pass
 
-            if with_ratio:
+            if ratio:
                 _ratio_label = kc('fit', 'plot', 'ratio_label')
                 self._current_axes['ratio'].set_ylabel(_ratio_label)
                 if ratio_range is None:

@@ -119,7 +119,7 @@ cpf.plot_profiles_contours_matrix(parameters=['I0', 'b', 'g'],
 
 # to see the fit results, plot using Plot
 p = Plot(fit_objects=f)
-p.plot(with_fit_info=True)
+p.plot(fit_info=True)
 
 # show the fit result
 plt.show()

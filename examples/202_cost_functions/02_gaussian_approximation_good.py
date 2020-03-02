@@ -65,6 +65,6 @@ xy_fit.report()
 
 # Optional: create a plot of the fit results using Plot
 xy_plot = Plot(xy_fit)
-xy_plot.plot(with_fit_info=True)
+xy_plot.plot(fit_info=True)
 
 plt.show()

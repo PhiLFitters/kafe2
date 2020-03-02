@@ -91,7 +91,7 @@ def kafe2go():
         XYPlotAdapter.PLOT_SUBPLOT_TYPES.pop('model_error_band')
 
     _plot = Plot(fit_objects=_fits, separate_figures=_separate)
-    _plot.plot(with_fit_info=_infobox, with_asymmetric_parameter_errors=_asymmetric, with_ratio=_ratio)
+    _plot.plot(fit_info=_infobox, asymmetric_parameter_errors=_asymmetric, ratio=_ratio)
 
     _basenames = [name.rsplit('.', 1)[0] for name in _filenames]
 

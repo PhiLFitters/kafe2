@@ -60,7 +60,7 @@ f.report()
 
 # to see the fit results, plot using Plot
 p = Plot(f)
-p.plot(with_fit_info=True)
+p.plot(fit_info=True)
 
 # show the fit result
 plt.show()

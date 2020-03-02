@@ -74,6 +74,6 @@ fit.report()
 
 # Optional: plot the fit results
 plot = Plot(fit)
-plot.plot(with_fit_info=True)
+plot.plot(fit_info=True)
 
 plt.show()
