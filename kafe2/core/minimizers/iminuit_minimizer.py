@@ -1,3 +1,4 @@
+import logging
 from .minimizer_base import MinimizerBase
 from ..contour import ContourFactory
 try:
@@ -105,7 +106,15 @@ class MinimizerIMinuit(MinimizerBase):
                                         forced_parameters=self.parameter_names,
                                         errordef=self.errordef,
                                         **self._minimizer_param_dict)
-            self.__iminuit.set_print_level(-1)
+            # set logging level in iminuit arcording to the root logger
+            if logging.root.level < logging.DEBUG:
+                self.__iminuit.set_print_level(3)
+            elif logging.root.level == logging.DEBUG:
+                self.__iminuit.set_print_level(2)
+            elif logging.root.level <= logging.INFO:
+                self.__iminuit.set_print_level(1)
+            else:  # default is logging.WARN, show nothing
+                self.__iminuit.set_print_level(0)
             self.__iminuit.set_strategy(self._strategy)
             self.__iminuit.tol = self.tolerance
         return self.__iminuit
