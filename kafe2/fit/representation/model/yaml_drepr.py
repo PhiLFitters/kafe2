@@ -10,15 +10,15 @@ from ..container import DataContainerYamlWriter, DataContainerYamlReader
 from ..format import ModelFunctionFormatterYamlWriter, ModelFunctionFormatterYamlReader
 from ._base import ModelFunctionDReprBase, ParametricModelDReprBase
 from .. import _AVAILABLE_REPRESENTATIONS
-from ....fit import (HistModelFunction, HistParametricModel, IndexedParametricModel, IndexedModelFunction,
-                     XYParametricModel)
 from ..._base import ModelFunctionBase
+from ... import HistModelFunction, IndexedModelFunction
+from ... import HistParametricModel, IndexedParametricModel, UnbinnedParametricModel, XYParametricModel
 from .._yaml_base import YamlWriterException, YamlReaderException
 from ....fit.util import function_library
 
 __all__ = ['ModelFunctionYamlWriter', 'ModelFunctionYamlReader', 'ParametricModelYamlWriter', 'ParametricModelYamlReader']
 KNOWN_MODEL_FUNCTIONS = (ModelFunctionBase, HistModelFunction, IndexedModelFunction)
-KNOWN_PARAMETRIC_MODELS = (XYParametricModel, HistParametricModel, IndexedParametricModel)
+KNOWN_PARAMETRIC_MODELS = (XYParametricModel, HistParametricModel, IndexedParametricModel, UnbinnedParametricModel)
 
 
 class ModelFunctionYamlWriter(YamlWriterMixin, ModelFunctionDReprBase):
@@ -68,10 +68,10 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
             if _tokval in ModelFunctionYamlReader.FORBIDDEN_TOKENS:
                 raise DReprError("Encountered forbidden token '%s' in user-entered code on line '%s'."
                                     % (_tokval, _line_string))
-    
+
         if "__" in input_string:
             raise DReprError("Model function input must not contain '__'!")
-    
+
         _imports = ""
         _imports += "import numpy as np\n" #import numpy
         #import scipy if installed
@@ -80,8 +80,8 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
             _imports += "import scipy\n"
         except ImportError:
             pass
-        
-        
+
+
         __locals_pointer = [None, None] #TODO better solution?
         #save locals before function definition
         _exec_string = _imports + "__locals_pointer[0] = __locals().copy()\n" + input_string
@@ -103,7 +103,7 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
                 "Expected to receive exactly one new reference as a model function but instead received %s in the following string:\n%s"
                 % (len(_new_references), input_string))
         return _new_references[0]
-    
+
     @classmethod
     def _get_subspace_override_dict(cls, model_function_class):
         _override_dict = {'arg_formatters': 'model_function_formatter',
@@ -194,6 +194,10 @@ class ParametricModelYamlWriter(YamlWriterMixin, ParametricModelDReprBase):
             _yaml_doc['shape_like'] = parametric_model.data.tolist()
             _yaml_doc['model_function'] = ModelFunctionYamlWriter._make_representation(
                 parametric_model._model_function_object)
+        elif _class is UnbinnedParametricModel:
+            _yaml_doc['data'] = parametric_model.support.tolist()
+            _yaml_doc['model_function'] = ModelFunctionYamlWriter._make_representation(
+                parametric_model._model_function_object)
         elif _class is XYParametricModel:
             _yaml_doc['x_data'] = parametric_model.x.tolist()
             _yaml_doc['y_data'] = parametric_model.y.tolist()
@@ -224,14 +228,12 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
 
     @classmethod
     def _get_subspace_override_dict(cls, parametric_model_class):
-        _override_dict = {'arg_formatters':'model_function',
-                          'model_function_formatter':'model_function'}
+        _override_dict = {'arg_formatters': 'model_function',
+                          'model_function_formatter': 'model_function'}
 
         if parametric_model_class is HistParametricModel:
             _override_dict['model_density_function_name'] = 'model_function'
             _override_dict['latex_model_density_function_name'] = 'model_function'
-            _override_dict['x_name'] = 'model_function'
-            _override_dict['latex_x_name'] = 'model_function'
             _override_dict['expression_string'] = 'model_function'
             _override_dict['latex_expression_string'] = 'model_function'
         elif parametric_model_class is IndexedParametricModel:
@@ -241,11 +243,9 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
             _override_dict['latex_index_name'] = 'model_function'
             _override_dict['expression_string'] = 'model_function'
             _override_dict['latex_expression_string'] = 'model_function'
-        elif parametric_model_class is XYParametricModel:
+        elif parametric_model_class is XYParametricModel or parametric_model_class is UnbinnedParametricModel:
             _override_dict['model_function_name'] = 'model_function'
             _override_dict['latex_model_function_name'] = 'model_function'
-            _override_dict['x_name'] = 'model_function'
-            _override_dict['latex_x_name'] = 'model_function'
             _override_dict['expression_string'] = 'model_function'
             _override_dict['latex_expression_string'] = 'model_function'
         else:
@@ -256,6 +256,8 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
     def _get_required_keywords(cls, yaml_doc, parametric_model_class):
         if parametric_model_class is HistParametricModel:
             return []
+        if parametric_model_class is UnbinnedParametricModel:
+            return ['data']
         if parametric_model_class is IndexedParametricModel:
             return ['model_function']
         if parametric_model_class is XYParametricModel:
@@ -290,11 +292,13 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
             _kwarg_list.append('model_density_func_antiderivative')
         elif _class is IndexedParametricModel:
             _kwarg_list.append('shape_like')
+        elif _class is UnbinnedParametricModel:
+            _kwarg_list.append('data')
         elif _class is XYParametricModel:
             _kwarg_list.append('x_data')
-            yaml_doc.pop('y_data', None) # remove y_data from dict
+            yaml_doc.pop('y_data', None)  # remove y_data from dict
         else:
-            raise YamlReaderException("Unkonwn parametric model type")
+            raise YamlReaderException("Unknown parametric model type")
 
         _model_func = None
         if _class is HistParametricModel:
@@ -302,6 +306,11 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
             if _model_func_entry:
                 _model_func = ModelFunctionYamlReader._make_object(_model_func_entry, default_type=_parametric_model_type)
                 _constructor_kwargs['model_density_func'] = _model_func
+        elif _class is UnbinnedParametricModel:
+            _model_func_entry = yaml_doc.pop('model_function', None)
+            if _model_func_entry:
+                _model_func = ModelFunctionYamlReader._make_object(_model_func_entry, default_type=_parametric_model_type)
+                _constructor_kwargs['model_density_function'] = _model_func
         elif _class in (IndexedParametricModel, XYParametricModel):
             _model_func_entry = yaml_doc.pop('model_function', None)
             if _model_func_entry:
@@ -319,8 +328,7 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
                 _constructor_kwargs['model_parameters'] = _given_parameters
             else:
                 _constructor_kwargs['model_parameters'] = _model_func.defaults
-        
-        
+
         _constructor_kwargs.update({key: yaml_doc.pop(key, None) for key in _kwarg_list})
         _parametric_model_object = _class(**_constructor_kwargs)
 

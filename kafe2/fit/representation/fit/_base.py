@@ -6,6 +6,7 @@ from .._base import GenericDReprBase
 from ...indexed import IndexedFit
 from ...xy import XYFit
 from ...histogram import HistFit
+from ...unbinned import UnbinnedFit
 
 __all__ = ["FitDReprBase"]
 
@@ -17,11 +18,13 @@ class FitDReprBase(GenericDReprBase):
     _CLASS_TO_OBJECT_TYPE_NAME = {
         HistFit: 'histogram',
         IndexedFit: 'indexed',
+        UnbinnedFit: 'unbinned',
         XYFit: 'xy'
     }
     _OBJECT_TYPE_NAME_TO_CLASS = {
         'histogram': HistFit,
         'indexed': IndexedFit,
+        'unbinned': UnbinnedFit,
         'xy': XYFit
     }
 

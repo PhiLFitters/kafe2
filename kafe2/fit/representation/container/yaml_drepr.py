@@ -3,7 +3,7 @@ import re
 import yaml
 
 from ....core.error import SimpleGaussianError, MatrixGaussianError
-from ....fit import HistContainer, IndexedContainer, XYContainer
+from ....fit import HistContainer, IndexedContainer, XYContainer, UnbinnedContainer
 from .. import _AVAILABLE_REPRESENTATIONS
 from ._base import DataContainerDReprBase
 from .._base import DReprError
@@ -169,7 +169,7 @@ class DataContainerYamlWriter(YamlWriterMixin, DataContainerDReprBase):
         if _class is HistContainer:
             _yaml_doc['bin_edges'] = container.bin_edges.tolist()
             _yaml_doc['raw_data'] = list(map(float, container.raw_data))  # float64 -> float
-        elif _class is IndexedContainer:
+        elif _class is IndexedContainer or _class is UnbinnedContainer:
             _yaml_doc['data'] = container.data.tolist()
         elif _class is XYContainer:
             _yaml_doc['x_data'] = container.x.tolist()
@@ -215,7 +215,7 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
     def _get_required_keywords(cls, yaml_doc, container_class):
         if container_class is HistContainer:
             return ['raw_data']
-        if container_class is IndexedContainer:
+        if container_class is IndexedContainer or container_class is UnbinnedContainer:
             return ['data']
         if container_class is XYContainer:
             return ['x_data', 'y_data']
@@ -246,6 +246,9 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
         elif _class is IndexedContainer:
             _data = yaml_doc.pop('data')
             _container_obj = IndexedContainer(_data)
+        elif _class is UnbinnedContainer:
+            _data = yaml_doc.pop('data')
+            _container_obj = UnbinnedContainer(_data)
         elif _class is XYContainer:
             _x_data = yaml_doc.pop('x_data')
             _y_data = yaml_doc.pop('y_data')
