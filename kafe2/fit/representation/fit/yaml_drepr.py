@@ -88,6 +88,10 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
 
         _yaml_doc['parameter_constraints'] = [ConstraintYamlWriter._make_representation(_parameter_constraint)
                                               for _parameter_constraint in fit.parameter_constraints]
+        _yaml_doc['fixed_parameters'] = [[_par, _val] for _par, _val in fit._fitter.fixed_parameters.items()]
+        _yaml_doc['limited_parameters'] = [[_par, list(_limits)] for _par, _limits in
+                                           fit._fitter.limited_parameters.items()]
+
         _fit_results = fit.get_result_dict()
         _fit_results['parameter_values'] = list(_fit_results['parameter_values'])
         if _fit_results['did_fit']:
@@ -216,14 +220,27 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
                 minimizer=_minimizer,
                 minimizer_kwargs=_minimizer_kwargs
             )
+
         if _read_parametric_model is not None:
             _fit_object._param_model = _read_parametric_model
+
         _constraint_yaml_list = yaml_doc.pop('parameter_constraints', None)
         if _constraint_yaml_list is not None:
             _fit_object._fit_param_constraints = [
                 ConstraintYamlReader._make_object(_constraint_yaml, parameter_names=_fit_object.poi_names)
                 for _constraint_yaml in _constraint_yaml_list
             ]
+
+        _fixed_par_list = yaml_doc.pop('fixed_parameters', None)
+        if _fixed_par_list is not None:
+            for _par, _val in _fixed_par_list:
+                _fit_object.fix_parameter(_par, _val)
+
+        _limited_par_list = yaml_doc.pop('limited_parameters', None)
+        if _limited_par_list is not None:
+            for _par, _limits in _limited_par_list:
+                _fit_object.limit_parameter(_par, _limits)
+
         _fit_results = yaml_doc.pop('fit_results', None)
         if _fit_results is not None:
             if _fit_results['did_fit']:
