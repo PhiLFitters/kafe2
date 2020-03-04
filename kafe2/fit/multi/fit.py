@@ -372,6 +372,10 @@ class MultiFit(FitBase):
         """list of the data of the individual fits."""
         return [_fit.data for _fit in self._fits]
 
+    @data.setter
+    def data(self, new_data):
+        raise NotImplementedError("Use data setters for individual fits instead.")
+
     @property
     def data_size(self):
         """combined size of the data containers of the individual fits"""
@@ -398,6 +402,14 @@ class MultiFit(FitBase):
     def model_count(self):
         """the number of model functions contained in the fit, 1 by default"""
         return np.sum([_fit.model_count for _fit in self._fits])
+
+    @property
+    def model_label(self):
+        return [_fit.model_label for _fit in self._fits]
+
+    @model_label.setter
+    def model_label(self, label):
+        raise NotImplementedError("Use model_label setters for individual fits instead.")
 
     @property
     def fits(self):
@@ -551,6 +563,22 @@ class MultiFit(FitBase):
         """
         for _fit in self._fits:
             _fit.disable_error(err_id=err_id)
+
+    def fix_parameter(self, name, value=None):
+        self._fitter.fix_parameter(par_name=name, par_value=value)
+        # get fixed value before setting it in the individual fits
+        _val = self._fitter.fixed_parameters[name]
+        for fit in self._fits:
+            if name not in fit.parameter_names:
+                continue  # skip if sub fit is not dependent on the given par
+            fit.fix_parameter(name, _val)  # default values might not have been overwritten, use _val
+
+    def release_parameter(self, par_name):
+        self._fitter.release_parameter(par_name)
+        for fit in self._fits:  # update formatters of individual fits
+            if par_name not in fit.parameter_names:
+                continue  # skip if sub fit is not dependent on the given par
+            fit.release_parameter(par_name)
 
     def do_fit(self):
         """
