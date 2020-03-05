@@ -748,39 +748,55 @@ class Plot(object):
 
             _axes_plots = plot_results[_axes_key]['plots']
 
-            _prev_fit_index = None
-            _fit_info_texts_positions = {}
-            for _i_plot, _plot_dict in enumerate(_axes_plots):
+            # -- go through each plot in order and generate the legend entry
 
+            _prev_fit_index = None
+            _fit_info = {}
+            for _i_plot, _plot_dict in enumerate(_axes_plots):
+                # check if artist available for this plot
                 try:
+                    # if multiple artists were stored for a plot,
+                    # only show the first  in the legend
                     try:
                         _artist_index = _hs_unsorted.index(_plot_dict['artist'][0])
                     except (ValueError, TypeError):
                         _artist_index = _hs_unsorted.index(_plot_dict['artist'])
+
                 except (KeyError, ValueError):
                     # artist not available or not plottable -> skip
                     continue
 
+                # append handle and label to the legend
                 _hs_sorted.append(_hs_unsorted[_artist_index])
                 _ls_sorted.append(_ls_unsorted[_artist_index])
 
+                # if requested, compute info of fit associated to this artist
                 if fit_info:
                     _fit_index = _plot_dict['fit_index']
-                    if _fit_index not in _fit_info_texts_positions:
-                        # compute fit info text for this fit index (if not done already)
-                        _fit_info_texts_positions[_fit_index] = [self._get_fit_info(
+
+                    # compute fit info string (if not computed yet)
+                    if _fit_index not in _fit_info:
+                        _fit_info[_fit_index] = dict(
+                            text=self._get_fit_info(
                                 _plot_dict['adapter'],
                                 format_as_latex=True,
                                 asymmetric_parameter_errors=asymmetric_parameter_errors
-                            ), _i_plot]
-                    else:
-                        # update the legend position at which to insert the text
-                        _fit_info_texts_positions[_fit_index][1] = _i_plot
+                            )
+                        )
+
+                    # update the legend position at which to insert the text
+                    _fit_info[_fit_index].update(
+                        # put fit info directly after the last visible legend
+                        # entry that corresponds to this fit
+                        pos=len(_hs_sorted)
+                    )
 
             # insert fit infos at the right positions
-            for _i, (_t, _pos) in enumerate(_fit_info_texts_positions.values()):
-                _hs_sorted.insert(_i + _pos + 1, '_nokey_')
-                _ls_sorted.insert(_i + _pos + 1, _t)
+            for _i, _fi_dict in _fit_info.items():
+                _hs_sorted.insert(_fi_dict['pos'] + _i, '_nokey_')
+                _ls_sorted.insert(_fi_dict['pos'] + _i, _fi_dict['text'])
+
+            # -- legend layout
 
             _zorder = kwargs.pop('zorder', 999)
             _bbox_to_anchor = kwargs.pop('bbox_to_anchor', None)
