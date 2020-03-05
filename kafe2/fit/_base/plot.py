@@ -637,6 +637,9 @@ class Plot(object):
 
     def _plot_and_get_results(self, plot_indices=None):
         plot_indices = plot_indices or range(len(self._fits))
+        for _fit in self._fits:
+            if not _fit.did_fit:
+                warnings.warn("No fit has been performed for {}. Did you forget to run fit.do_fit()?".format(_fit))
 
         _plot_adapters = self._get_plot_adapters(plot_indices)
 

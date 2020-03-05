@@ -42,3 +42,11 @@ class TestXYPlot(unittest.TestCase):
         self.assertEqual(self.plot.axes[0]['main'].get_xlabel(), '')
         self.assertEqual(self.plot.axes[0]['main'].get_ylabel(), '')
         self.assertTrue(len(labels) == 0)
+
+    def test_warning_no_fit_performed(self):
+        _fit = XYFit(xy_data=self._ref_data)
+        _fit.add_simple_error('y', 0.1)
+        _plot = Plot(fit_objects=_fit)
+        with self.assertWarns(Warning) as w:
+            _plot.plot()
+        self.assertIn("Did you forget to run fit.do_fit()?", str(w.warning))
