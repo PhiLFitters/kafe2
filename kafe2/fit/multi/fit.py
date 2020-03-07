@@ -207,7 +207,8 @@ class MultiFit(FitBase):
                     _cost_functions.append(_fit_i._cost_function)
                     _cost_names.append('cost%s' % _i)
 
-            def _combine_1d(*single_fit_properties):
+            # Combines 1-dimensional properties by concatenating them.
+            def _combine_1d_property(*single_fit_properties):
                 _combined_property = np.zeros(shape=_data_indices[-1])
                 for _j, (_single_fit_property, _chi2_index) in enumerate(
                         zip(single_fit_properties, _chi2_indices)):
@@ -216,7 +217,10 @@ class MultiFit(FitBase):
                     _combined_property[_lower:_upper] = _single_fit_property
                 return _combined_property
 
-            def _combine_2d(axis_name, *single_fit_properties):
+            # Combines cov mats of single fits.
+            # Shared errors are not added to the main diagonal blocks because they have already been
+            # added to the individual fits.
+            def _combine_cov_mats(axis_name, *single_fit_properties):
                 _combined_property = np.zeros(shape=(_data_indices[-1], _data_indices[-1]))
                 for _j, (_single_fit_property, _chi2_index) in enumerate(
                         zip(single_fit_properties, _chi2_indices)):
@@ -229,8 +233,6 @@ class MultiFit(FitBase):
                         for _j in range(len(_error.fit_indices)):
                             _lower_1 = _data_indices[_j]
                             _upper_1 = _data_indices[_j + 1]
-                            _combined_property[
-                                    _lower_1:_upper_1, _lower_1:_upper_1] += _error.cov_mat
                             for _k in range(_j):
                                 _lower_2 = _data_indices[_k]
                                 _upper_2 = _data_indices[_k + 1]
@@ -242,20 +244,20 @@ class MultiFit(FitBase):
 
             if _has_shared_x_error:
                 self._nexus.add_function(
-                    func=lambda *p: _combine_2d('x', *p),
+                    func=lambda *p: _combine_cov_mats('x', *p),
                     func_name='x_cov_mat', par_names=_x_cov_mat_names, add_children=False)
                 self._nexus.add_function(
-                    func=_combine_1d, func_name='derivatives', par_names=_derivative_names,
+                    func=_combine_1d_property, func_name='derivatives', par_names=_derivative_names,
                     add_children=False)
 
             self._nexus.add_function(
-                func=_combine_1d, func_name='y_data', par_names=_y_data_names, add_children=False)
+                func=_combine_1d_property, func_name='y_data', par_names=_y_data_names, add_children=False)
             self._nexus.add_alias(name='data', alias_for='y_data')
             self._nexus.add_function(
-                func=_combine_1d, func_name='y_model', par_names=_y_model_names, add_children=False)
+                func=_combine_1d_property, func_name='y_model', par_names=_y_model_names, add_children=False)
             self._nexus.add_alias(name='model', alias_for='y_model')
             self._nexus.add_function(
-                func=lambda *p: _combine_2d('y', *p),
+                func=lambda *p: _combine_cov_mats('y', *p),
                 func_name='y_cov_mat', par_names=_y_cov_mat_names, add_children=False)
 
             if _has_shared_x_error:
@@ -306,11 +308,6 @@ class MultiFit(FitBase):
                     "axis='x' is incompatible with fit %s because it is an IndexedFit!")
             if self._fits[_fit_index].data_size != _data_size_0:
                 raise ValueError("Fit %s data_size not the same as data_size of Fit 0!")
-        if name in self._shared_error_dicts:
-            raise ValueError("Error with name=%s already exists!" % name)
-        name = random_alphanumeric(8)
-        while name in self._shared_error_dicts:
-            name = random_alphanumeric(8)
 
         if error_object.relative:
             if not reference == 'data' or reference == 'model':
@@ -354,9 +351,35 @@ class MultiFit(FitBase):
                     self._min_x_error, _min_of_new_error
                 )
 
+        if name in self._shared_error_dicts:
+            raise ValueError("Error with name=%s already exists!" % name)
+        if name is None:
+            _name_is_unique = False
+            while not _name_is_unique:
+                name = random_alphanumeric(8)
+                if name in self._shared_error_dicts:
+                    continue
+                for _fit_index in error_object.fit_indices:
+                    _fit = self._fits[_fit_index]
+                    if name in _fit._data_container._error_dicts:
+                        continue
+                    if name in _fit._param_model._error_dicts:
+                        continue
+                _name_is_unique = True
+
         _error_dict = dict(err=error_object, enabled=True, axis=axis, reference_name=reference)
         self._shared_error_dicts[name] = _error_dict
-        self._init_nexus()
+        for _fit_index in error_object.fit_indices:
+            _fit = self._fits[_fit_index]
+            if reference == "data":
+                _target = _fit._data_container
+            elif reference == "model":
+                _target = _fit._param_model
+            else:
+                raise ValueError()
+            _target._add_error_object(name=name, error_object=error_object, axis=axis)
+            _fit._init_nexus()
+        # self._init_nexus()  # Don't have to call self._init_nexus due to callback in single fits
         return name
 
     def _set_new_data(self, new_data):

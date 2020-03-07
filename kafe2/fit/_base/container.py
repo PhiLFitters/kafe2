@@ -63,6 +63,14 @@ class DataContainerBase(FileIOMixin, object):
             _name = random_alphanumeric(size=8)
 
         additional_error_dict_keys.setdefault('enabled', True)  # enable error source, unless explicitly disabled
+
+        axis = additional_error_dict_keys.get("axis", None)
+        if axis is not None:
+            if axis == "x":
+                additional_error_dict_keys["axis"] = 0
+            elif axis == "y":
+                additional_error_dict_keys["axis"] = 1
+
         _new_err_dict = dict(err=error_object, **additional_error_dict_keys)
         self._error_dicts[_name] = _new_err_dict
         self._clear_total_error_cache()
