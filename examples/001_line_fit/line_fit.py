@@ -4,10 +4,9 @@ kafe2 example: Line Fit
 =======================
 
 The simplest, and also the most common use case of a fitting framework
-lies in linear regression, also known as a line fit:
-A linear function of the form f(x) = a * x + b is made to align with
-a series of xy data points that have some uncertainty along the x-axis 
-and the y-axis.
+is performing a line fit: A linear function of the form
+f(x) = a * x + b is made to align with a series of xy data points that
+have some uncertainty along the x-axis and the y-axis.
 This example demonstrates how to perform such a line fit in kafe2 and
 how to extract the results.
 """
