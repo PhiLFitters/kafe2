@@ -13,9 +13,6 @@ class MinimizerBase(object):
         self._save_state_dict = dict()
         self._printed_inf_cost_warning = False
 
-    def _reset(self):
-        self._invalidate_cache()
-
     def _invalidate_cache(self):
         self._fval = None
         self._par_asymm_err = None
@@ -188,6 +185,10 @@ class MinimizerBase(object):
         if self._par_cor_mat is None:
             self._par_cor_mat = CovMat(self.cov_mat).cor_mat
         return self._par_cor_mat
+
+    def reset(self):
+        """Clears caches and resets the internal state of used backends."""
+        self._invalidate_cache()
 
     def set(self, parameter_name, parameter_value):
         raise NotImplementedError()

@@ -31,6 +31,7 @@ class DataContainerBase(FileIOMixin, object):
         self._total_error = None
         self._label = None
         self._axis_labels = (None, None)
+        self._on_error_change_callback = None
         super(DataContainerBase, self).__init__()
 
     # -- private methods
@@ -73,7 +74,7 @@ class DataContainerBase(FileIOMixin, object):
 
         _new_err_dict = dict(err=error_object, **additional_error_dict_keys)
         self._error_dicts[_name] = _new_err_dict
-        self._clear_total_error_cache()
+        self._on_error_change()
         return _name
 
     def _get_error_by_name_raise(self, error_name):
@@ -82,6 +83,11 @@ class DataContainerBase(FileIOMixin, object):
         if _err_dict is None:
             raise DataContainerException("No error with name '{}'!".format(error_name))
         return _err_dict
+
+    def _on_error_change(self):
+        self._clear_total_error_cache()
+        if self._on_error_change_callback is not None:
+            self._on_error_change_callback()
 
     @property
     def label(self):
@@ -264,7 +270,7 @@ class DataContainerBase(FileIOMixin, object):
         """
         _err_dict = self._get_error_by_name_raise(error_name)
         _err_dict['enabled'] = False
-        self._clear_total_error_cache()
+        self._on_error_change()
 
     def enable_error(self, error_name):
         """
@@ -276,7 +282,7 @@ class DataContainerBase(FileIOMixin, object):
         """
         _err_dict = self._get_error_by_name_raise(error_name)
         _err_dict['enabled'] = True
-        self._clear_total_error_cache()
+        self._on_error_change()
 
     def get_matching_errors(self, matching_criteria=None, matching_type='equal'):
         """

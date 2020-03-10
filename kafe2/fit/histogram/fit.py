@@ -31,6 +31,7 @@ class HistFit(FitBase):
                           'data_error', 'model_error', 'total_error',
                           'data_cov_mat', 'model_cov_mat', 'total_cov_mat',
                           'data_cor_mat', 'model_cor_mat', 'total_cor_mat'}
+    _BASIC_ERROR_NAMES = {'data_error', 'model_error', 'data_cov_mat', 'model_cov_mat'}
 
     def __init__(self,
                  data,
@@ -230,6 +231,7 @@ class HistFit(FitBase):
                                    .format(type(new_data), self.CONTAINER_TYPE))
         else:
             raise HistFitException("Fitting a histogram requires a HistContainer!")
+        self._data_container._on_error_change_callback = self._on_error_change
 
         self._nexus.get('data').mark_for_update()
 
@@ -242,6 +244,7 @@ class HistFit(FitBase):
                                                        self._data_container.bin_edges,
                                                        model_density_func_antiderivative=
                                                        self._model_function.antiderivative)
+        self._param_model._on_error_change_callbacks = [self._on_error_change]
 
     # -- public properties
 

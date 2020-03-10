@@ -40,6 +40,10 @@ class XYFit(FitBase):
                            'nuisance_y_data_cor_cov_mat','nuisance_y_model_cor_cov_mat','nuisance_y_total_cor_cov_mat',
                            'nuisance_para', 'y_nuisance_vector',
                            'x_data_cov_mat'}
+    _BASIC_ERROR_NAMES = {
+        'x_data_error', 'x_model_error', 'x_data_cov_mat', 'x_model_cov_mat',
+        'y_data_error', 'y_model_error', 'y_data_cov_mat', 'y_model_cov_mat'
+    }
 
     X_ERROR_ALGORITHMS = ('iterative linear', 'nonlinear')
 
@@ -396,6 +400,8 @@ class XYFit(FitBase):
             _x_data = new_data[0]
             _y_data = new_data[1]
             self._data_container = self._new_data_container(_x_data, _y_data, dtype=float)
+        self._data_container._on_error_change_callback = self._on_error_change
+
         # update nexus data nodes
         self._nexus.get('x_data').mark_for_update()
         self._nexus.get('y_data').mark_for_update()
@@ -406,6 +412,7 @@ class XYFit(FitBase):
             self._model_function,
             self.poi_values
         )
+        self._param_model._on_error_change_callbacks = [self._on_error_change]
 
     def _report_data(self, output_stream, indent, indentation_level):
         output_stream.write(indent * indentation_level + '########\n')
@@ -884,20 +891,12 @@ class XYFit(FitBase):
         :return: error id
         :rtype: int
         """
-        _ret = super(XYFit, self).add_simple_error(err_val=err_val,
+        return super(XYFit, self).add_simple_error(err_val=err_val,
                                                    name=name,
                                                    correlation=correlation,
                                                    relative=relative,
                                                    reference=reference,
                                                    axis=axis)
-
-        # need to reinitialize the nexus, since simple errors are
-        # possibly relevant for nuisance parameters
-        self._init_nexus()
-        # initialize the Fitter
-        self._initialize_fitter()
-
-        return _ret
 
     def add_matrix_error(self, axis, err_matrix, matrix_type,
                          name=None, err_val=None, relative=False, reference='data'):
@@ -919,21 +918,13 @@ class XYFit(FitBase):
         :return: error id
         :rtype: int
         """
-        _ret = super(XYFit, self).add_matrix_error(err_matrix=err_matrix,
+        return super(XYFit, self).add_matrix_error(err_matrix=err_matrix,
                                                    matrix_type=matrix_type,
                                                    name=name,
                                                    err_val=err_val,
                                                    relative=relative,
                                                    reference=reference,
                                                    axis=axis)
-
-        # do not reinitialize the nexus, since matrix errors are not
-        # relevant for nuisance parameters
-
-        # but *do* update projected xy error nodes
-        self._with_projected_nodes('update')
-
-        return _ret
 
     def set_poi_values(self, param_values):
         """set the start values of all parameters of interests"""
