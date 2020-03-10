@@ -378,8 +378,7 @@ class MultiFit(FitBase):
             else:
                 raise ValueError()
             _target._add_error_object(name=name, error_object=error_object, axis=axis)
-            _fit._init_nexus()
-        # self._init_nexus()  # Don't have to call self._init_nexus due to callback in single fits
+        self._on_error_change()
         return name
 
     def _set_new_data(self, new_data):

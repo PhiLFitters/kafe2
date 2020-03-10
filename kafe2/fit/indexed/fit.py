@@ -35,6 +35,7 @@ class IndexedFit(FitBase):
                           'data_error', 'model_error', 'total_error',
                           'data_cov_mat', 'model_cov_mat', 'total_cov_mat',
                           'data_cor_mat', 'model_cor_mat', 'total_cor_mat'}
+    _BASIC_ERROR_NAMES = {'data_error', 'model_error', 'data_cov_mat', 'model_cov_mat'}
 
     def __init__(self,
                  data,
@@ -260,6 +261,7 @@ class IndexedFit(FitBase):
                                       % (type(new_data), self.CONTAINER_TYPE))
         else:
             self._data_container = self._new_data_container(new_data, dtype=float)
+        self._data_container._on_error_change_callback = self._on_error_change
 
         self._nexus.get('data').mark_for_update()
 
@@ -269,6 +271,7 @@ class IndexedFit(FitBase):
             self.parameter_values,
             shape_like=self.data
         )
+        self._param_model._on_error_change_callbacks = [self._on_error_change]
 
     # -- public properties
 

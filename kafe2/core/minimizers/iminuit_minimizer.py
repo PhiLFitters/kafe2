@@ -28,16 +28,12 @@ class MinimizerIMinuit(MinimizerBase):
             self._minimizer_param_dict["fix_" + _pn] = False
             self._minimizer_param_dict["limit_" + _pn] = None
 
-        self._reset()  # sets self.__iminuit and caches to None
+        self.reset()  # sets self.__iminuit and caches to None
         self.errordef = 1.0
         self.tolerance = 1e-6
         super(MinimizerIMinuit, self).__init__(function_to_minimize=function_to_minimize)
 
     # -- private methods
-
-    def _reset(self):
-        self.__iminuit = None
-        self._invalidate_cache()
 
     def _invalidate_cache(self):
         self._par_val = None
@@ -69,7 +65,7 @@ class MinimizerIMinuit(MinimizerBase):
         super(MinimizerIMinuit, self)._save_state()
 
     def _load_state(self):
-        self._reset()
+        self.reset()
         self._par_val = self._save_state_dict["par_val"]
         if self._par_val is not None:
             self._par_val = np.array(self._par_val)
@@ -153,7 +149,7 @@ class MinimizerIMinuit(MinimizerBase):
     def errordef(self, err_def):
         assert err_def > 0
         self._err_def = err_def
-        self._reset()
+        self.reset()
 
     @property
     def tolerance(self):
@@ -163,7 +159,7 @@ class MinimizerIMinuit(MinimizerBase):
     def tolerance(self, tolerance):
         assert tolerance > 0
         self._tol = tolerance
-        self._reset()
+        self.reset()
 
     @property
     def hessian(self):
@@ -279,8 +275,11 @@ class MinimizerIMinuit(MinimizerBase):
         _fmin = self._get_fmin_struct()
         return _fmin.has_accurate_covar
 
-
     # -- public methods
+
+    def reset(self):
+        self.__iminuit = None
+        self._invalidate_cache()
 
     def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, **minimizer_contour_kwargs):
         if self.__iminuit is None:
@@ -307,7 +306,7 @@ class MinimizerIMinuit(MinimizerBase):
         if parameter_name not in self._minimizer_param_dict:
             raise MinimizerIMinuitException("No parameter named '%s'!" % (parameter_name,))
         self._minimizer_param_dict[parameter_name] = parameter_value
-        self._reset()
+        self.reset()
 
     def set_several(self, parameter_names, parameter_values):
         for _pn, _pv in zip(parameter_names,parameter_values):
@@ -315,7 +314,7 @@ class MinimizerIMinuit(MinimizerBase):
 
     def fix(self, parameter_name):
         self._minimizer_param_dict["fix_" + parameter_name] = True
-        self._reset()
+        self.reset()
 
     def is_fixed(self, parameter_name):
         return self._minimizer_param_dict["fix_%s" % parameter_name]
@@ -326,7 +325,7 @@ class MinimizerIMinuit(MinimizerBase):
 
     def release(self, parameter_name):
         self._minimizer_param_dict["fix_" + parameter_name] = False
-        self._reset()
+        self.reset()
 
     def release_several(self, parameter_names):
         for _pn in parameter_names:
@@ -335,11 +334,11 @@ class MinimizerIMinuit(MinimizerBase):
     def limit(self, parameter_name, parameter_bounds):
         assert len(parameter_bounds) == 2
         self._minimizer_param_dict["limit_" + parameter_name] = (parameter_bounds[0], parameter_bounds[1])
-        self._reset()
+        self.reset()
 
     def unlimit(self, parameter_name):
         self._minimizer_param_dict["limit_" + parameter_name] = None
-        self._reset()
+        self.reset()
 
     def minimize(self, max_calls=6000):
         self._get_iminuit().migrad(ncall=max_calls)

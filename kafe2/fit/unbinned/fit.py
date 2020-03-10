@@ -157,6 +157,7 @@ class UnbinnedFit(FitBase):
                                        % (type(new_data), self.CONTAINER_TYPE))
         else:
             self._data_container = self._new_data_container(new_data, dtype=float)
+        self._data_container._on_error_change_callback = self._on_error_change
 
         self._nexus.get('x').mark_for_update()
         # TODO: make 'Alias' nodes pass on 'mark_for_update'
@@ -168,6 +169,7 @@ class UnbinnedFit(FitBase):
             model_density_function=self._model_function,
             model_parameters=self.parameter_values
         )
+        self._param_model._on_error_change_callbacks = [self._on_error_change]
 
     @FitBase.data.getter
     def data(self):

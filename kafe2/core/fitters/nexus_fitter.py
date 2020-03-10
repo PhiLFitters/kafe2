@@ -243,3 +243,6 @@ class NexusFitter(object):
 
         # set flags
         self.__state_is_from_minimizer = False
+
+    def reset_minimizer(self):
+        self._minimizer.reset()

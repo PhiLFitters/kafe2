@@ -33,6 +33,7 @@ class FitBase(FileIOMixin, object):
     PLOT_ADAPTER_TYPE = None
     EXCEPTION_TYPE = FitException
     RESERVED_NODE_NAMES = None
+    _BASIC_ERROR_NAMES = {}
 
     def __init__(self):
         self._data_container = None
@@ -90,6 +91,9 @@ class FitBase(FileIOMixin, object):
             raise self.__class__.EXCEPTION_TYPE(
                 "The following names are reserved and cannot be used as model function arguments: %r"
                 % (_invalid_args,))
+
+    def _init_nexus(self):
+        pass
 
     def _initialize_fitter(self):
         self._fitter = NexusFitter(nexus=self._nexus,
@@ -212,6 +216,11 @@ class FitBase(FileIOMixin, object):
         if update_asymmetric_errors:
             for _fpf, _ape in zip(self._get_model_function_parameter_formatters(), self.asymmetric_parameter_errors):
                 _fpf.asymmetric_error = _ape
+
+    def _on_error_change(self):
+        self._fitter.reset_minimizer()
+        for _error_name in self._BASIC_ERROR_NAMES:
+            self._nexus.get(_error_name).mark_for_update()
 
     # -- public properties
 
