@@ -22,6 +22,7 @@ class MinimizerBase(object):
         self._hessian = None
         self._hessian_inv = None
         self._par_cov_mat = None
+        self._par_cor_mat = None
 
     def _save_state(self):
         if self._par_asymm_err is None:
@@ -40,6 +41,10 @@ class MinimizerBase(object):
             self._save_state_dict['par_cov_mat'] = self._par_cov_mat
         else:
             self._save_state_dict['par_cov_mat'] = np.array(self._par_cov_mat)
+        if self._par_cor_mat is None:
+            self._save_state_dict['par_cor_mat'] = self._par_cor_mat
+        else:
+            self._save_state_dict['par_cor_mat'] = np.array(self._par_cor_mat)
 
     def _load_state(self):
         self._par_asymm_err = self._save_state_dict['asymmetric_parameter_error']
@@ -54,6 +59,9 @@ class MinimizerBase(object):
         self._par_cov_mat = self._save_state_dict['par_cov_mat']
         if self._par_cov_mat is not None:
             self._par_cov_mat = np.array(self._par_cov_mat)
+        self._par_cor_mat = self._save_state_dict['par_cor_mat']
+        if self._par_cor_mat is not None:
+            self._par_cor_mat = np.array(self._par_cor_mat)
         # Write back parameter values to nexus parameter nodes:
         self._func_wrapper_unpack_args(self.parameter_values)
 

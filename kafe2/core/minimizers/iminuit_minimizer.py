@@ -56,10 +56,6 @@ class MinimizerIMinuit(MinimizerBase):
             self._save_state_dict["par_err"] = self._par_err
         else:
             self._save_state_dict["par_err"] = np.array(self._par_err)
-        if self._par_cor_mat is None:
-            self._save_state_dict["par_cor_mat"] = self._par_cor_mat
-        else:
-            self._save_state_dict["par_cor_mat"] = np.array(self._par_cor_mat)
         if self._fmin_struct is None:
             self._save_state_dict["fmin_struct"] = self._fmin_struct
         else:
@@ -80,9 +76,6 @@ class MinimizerIMinuit(MinimizerBase):
         self._par_err = self._save_state_dict["par_err"]
         if self._par_err is not None:
             self._par_err = np.array(self._par_err)
-        self._par_cor_mat = self._save_state_dict["par_cor_mat"]
-        if self._par_cor_mat is not None:
-            self._par_cor_mat = np.array(self._par_cor_mat)
         self._fmin_struct = self._save_state_dict["fmin_struct"]
         if self._fmin_struct is not None:
             self._fmin_struct = np.array(self._fmin_struct)
