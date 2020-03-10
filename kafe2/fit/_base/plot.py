@@ -1,18 +1,18 @@
 import abc
-import matplotlib as mpl
 import numpy as np
 import six
 import textwrap
 import warnings
+import matplotlib as mpl
 
 from ..multi.fit import MultiFit
-from ...config import matplotlib as mpl
-from ...config import kc, ConfigError
+from ...config import kc, ConfigError, kafe2_rc
 
 from collections import OrderedDict
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gs
 from matplotlib.legend_handler import HandlerBase
+from matplotlib import rc_context
 
 __all__ = ["PlotAdapterBase", "Plot", "PlotAdapterException", "PlotFigureException",
            "kc_plot_style"]
@@ -904,53 +904,54 @@ class Plot(object):
         :rtype: dict
         """
 
-        _axes_keys = ('main',)
-        _height_ratios = None
-        _width_ratios = (plot_width_share, 1.0 - plot_width_share)
-
-        if ratio:
-            _axes_keys += ('ratio',)
-            _height_ratios = (1.0 - ratio_height_share, ratio_height_share)
-
-        _all_plot_results = []
-        for i in range(len(self._fits) if self._separate_figs else 1):
-            self._create_figure_axes(
-                _axes_keys,
-                width_ratios=_width_ratios,
-                height_ratios=_height_ratios,
-                figsize=figsize,
-            )
-
-            _plot_results = self._plot_and_get_results(plot_indices=(i,) if self._separate_figs else None)
-
-            if legend:
-                self._render_legend(plot_results=_plot_results, axes_keys=('main',), fit_info=fit_info,
-                                    asymmetric_parameter_errors=asymmetric_parameter_errors)
-
-            self._adjust_plot_ranges(_plot_results)
-            self._set_axis_labels(_plot_results, axes_keys=_axes_keys)
-            try:
-                self._current_figure.align_ylabels()
-            except AttributeError:
-                # matplotlib < 2.0.0
-                pass
+        with rc_context(kafe2_rc):
+            _axes_keys = ('main',)
+            _height_ratios = None
+            _width_ratios = (plot_width_share, 1.0 - plot_width_share)
 
             if ratio:
-                _ratio_label = kc('fit', 'plot', 'ratio_label')
-                self._current_axes['ratio'].set_ylabel(_ratio_label)
-                if ratio_range is None:
-                    # shift automatic plot range so that 1.0 is centered
-                    _ymin, _ymax = self._current_axes['ratio'].get_ylim()
-                    _yshift = 1.0 - 0.5 * (_ymin + _ymax)
-                    self._current_axes['ratio'].set_ylim((_ymin + _yshift, _ymax + _yshift))
-                else:
-                    self._current_axes['ratio'].set_ylim(ratio_range)
+                _axes_keys += ('ratio',)
+                _height_ratios = (1.0 - ratio_height_share, ratio_height_share)
 
-            _all_plot_results.append(_plot_results)
+            _all_plot_results = []
+            for i in range(len(self._fits) if self._separate_figs else 1):
+                self._create_figure_axes(
+                    _axes_keys,
+                    width_ratios=_width_ratios,
+                    height_ratios=_height_ratios,
+                    figsize=figsize,
+                )
 
-        self._current_results = _all_plot_results
+                _plot_results = self._plot_and_get_results(plot_indices=(i,) if self._separate_figs else None)
 
-        return _all_plot_results
+                if legend:
+                    self._render_legend(plot_results=_plot_results, axes_keys=('main',), fit_info=fit_info,
+                                        asymmetric_parameter_errors=asymmetric_parameter_errors)
+
+                self._adjust_plot_ranges(_plot_results)
+                self._set_axis_labels(_plot_results, axes_keys=_axes_keys)
+                try:
+                    self._current_figure.align_ylabels()
+                except AttributeError:
+                    # matplotlib < 2.0.0
+                    pass
+
+                if ratio:
+                    _ratio_label = kc('fit', 'plot', 'ratio_label')
+                    self._current_axes['ratio'].set_ylabel(_ratio_label)
+                    if ratio_range is None:
+                        # shift automatic plot range so that 1.0 is centered
+                        _ymin, _ymax = self._current_axes['ratio'].get_ylim()
+                        _yshift = 1.0 - 0.5 * (_ymin + _ymax)
+                        self._current_axes['ratio'].set_ylim((_ymin + _yshift, _ymax + _yshift))
+                    else:
+                        self._current_axes['ratio'].set_ylim(ratio_range)
+
+                _all_plot_results.append(_plot_results)
+
+            self._current_results = _all_plot_results
+
+            return _all_plot_results
 
     def get_keywords(self, plot_type):
         """Retrieve keyword arguments for plots with type `plot_type` as they would be used when calling `plot`.

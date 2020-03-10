@@ -4,7 +4,7 @@ Handle global kafe2 configuration
 
 import os
 import yaml
-
+from matplotlib import rc_params_from_file
 from copy import deepcopy
 
 
@@ -63,6 +63,5 @@ def kc(*keys):
 
     return _dict
 
-# -- import matplotlib and source matplotlibrc file
-import matplotlib
-matplotlib.rc_file(os.path.join(__path__[0], 'kafe2.matplotlibrc.conf'))
+
+kafe2_rc = rc_params_from_file(os.path.join(__path__[0], 'kafe2.matplotlibrc.conf'))
