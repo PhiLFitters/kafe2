@@ -26,6 +26,7 @@ class IndexedPlotAdapter(PlotAdapterBase):
         :param fit_object: an :py:obj:`~kafe2.fit.indexed.IndexedFit` object
         """
         super(IndexedPlotAdapter, self).__init__(fit_object=indexed_fit_object)
+        self.x_range = (-0.5, self._fit.data_size - 0.5)
 
     @property
     def data_x(self):
@@ -66,16 +67,6 @@ class IndexedPlotAdapter(PlotAdapterBase):
     def model_yerr(self):
         """y error bars for model: ``None`` for :py:obj:`IndexedPlotContainer`"""
         return None #self.fit.model_error
-
-    @property
-    def x_range(self):
-        """x plot range: (-0.5, N-0.5) for :py:obj:`IndexedPlotContainer`"""
-        return (-0.5, self._fit.data_size - 0.5)
-
-    @property
-    def y_range(self):
-        """y plot range: ``None`` for :py:obj:`IndexedPlotContainer`"""
-        return None  # no fixed range
 
     # public methods
 

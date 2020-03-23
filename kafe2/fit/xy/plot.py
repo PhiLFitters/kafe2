@@ -42,7 +42,7 @@ class XYPlotAdapter(PlotAdapterBase):
         super(XYPlotAdapter, self).__init__(fit_object=xy_fit_object)
         self._n_plot_points_model = n_plot_points_model
 
-        self._plot_range_x = None
+        self.x_range = self._compute_plot_range_x()
 
     # -- private methods
 
@@ -51,10 +51,8 @@ class XYPlotAdapter(PlotAdapterBase):
             additional_pad = (0, 0)
         _xmin, _xmax = self._fit.x_range
         _w = _xmax - _xmin
-        self._plot_range_x = (
-            0.5 * (_xmin + _xmax - _w * pad_coeff) - additional_pad[0],
-            0.5 * (_xmin + _xmax + _w * pad_coeff) + additional_pad[1]
-        )
+        return (0.5 * (_xmin + _xmax - _w * pad_coeff) - additional_pad[0],
+                0.5 * (_xmin + _xmax + _w * pad_coeff) + additional_pad[1])
 
     # -- public properties
 
@@ -108,18 +106,6 @@ class XYPlotAdapter(PlotAdapterBase):
     def model_line_y(self):
         """y values at support points for model function"""
         return self._fit.eval_model_function(x=self.model_line_x)
-
-    @property
-    def x_range(self):
-        """x plot range"""
-        if self._plot_range_x is None:
-            self._compute_plot_range_x()
-        return self._plot_range_x
-
-    @property
-    def y_range(self):
-        """y plot range: ``None`` for :py:obj:`XYPlotContainer`"""
-        return None
 
     @property
     def y_error_band(self):
