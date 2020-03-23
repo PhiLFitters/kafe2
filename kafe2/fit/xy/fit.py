@@ -354,29 +354,6 @@ class XYFit(FitBase):
                 _node = self._nexus.get(_node_name)
                 getattr(_node, action)()
 
-    def _calculate_y_error_band(self):
-        _num_points = 100  # TODO: config
-        if self.parameter_cov_mat is None:
-            return np.zeros(_num_points)
-        _xmin, _xmax = self._data_container.x_range
-        _band_x = np.linspace(_xmin, _xmax, 100)
-        _f_deriv_by_params = self._param_model.eval_model_function_derivative_by_parameters(
-            x=_band_x,
-            model_parameters=self.poi_values
-        )
-        # here: df/dp[par_idx]|x=x[x_idx] = _f_deriv_by_params[par_idx][x_idx]
-
-        _f_deriv_by_params = _f_deriv_by_params.T
-        # here: df/dp[par_idx]|x=x[x_idx] = _f_deriv_by_params[x_idx][par_idx]
-
-        _band_y = np.zeros_like(_band_x)
-        _n_poi = len(self.poi_values)
-        for _x_idx, _x_val in enumerate(_band_x):
-            _p_res = _f_deriv_by_params[_x_idx]
-            _band_y[_x_idx] = _p_res.dot(self.parameter_cov_mat[:_n_poi, :_n_poi]).dot(_p_res)
-
-        return np.sqrt(_band_y)
-
     def _get_poi_index_by_name(self, name):
         try:
             return self._poi_names.index(name)
@@ -824,16 +801,6 @@ class XYFit(FitBase):
             return None
 
     @property
-    def y_error_band(self):
-        """one-dimensional array representing the uncertainty band around the model function"""
-        if not self.did_fit:
-            raise XYFitException('Cannot calculate an error band without first performing a fit.')
-        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
-        self._param_model.x = self.x_model
-
-        return self._calculate_y_error_band()
-
-    @property
     def x_range(self):
         """range of the *x* measurement data"""
         return self._data_container.x_range
@@ -990,7 +957,6 @@ class XYFit(FitBase):
         self._loaded_result_dict = None
         self._update_parameter_formatters()
 
-
     def eval_model_function(self, x=None, model_parameters=None):
         """
         Evaluate the model function.
@@ -1005,6 +971,21 @@ class XYFit(FitBase):
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.eval_model_function(x=x, model_parameters=model_parameters)
+
+    def eval_model_function_derivative_by_parameters(self, x=None, model_parameters=None):
+        """
+        Evaluate the model function derivative for each parameter.
+
+        :param x: values of *x* at which to evaluate the model function (if ``None``, the data *x* values are used)
+        :type x: iterable of float
+        :param model_parameters: the model parameter values (if ``None``, the current values are used)
+        :type model_parameters: iterable of float
+        :return: model function values
+        :rtype: :py:class:`numpy.ndarray`
+        """
+        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
+        self._param_model.x = self.x_model
+        return self._param_model.eval_model_function_derivative_by_parameters(x=x, model_parameters=model_parameters)
 
     def calculate_nuisance_parameters(self):
         """

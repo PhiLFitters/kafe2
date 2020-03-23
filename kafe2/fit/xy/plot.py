@@ -36,7 +36,8 @@ class XYPlotAdapter(PlotAdapterBase):
         """
         Construct an :py:obj:`XYPlotContainer` for a :py:obj:`~kafe2.fit.xy.XYFit` object:
 
-        :param fit_object: an :py:obj:`~kafe2.fit.xy.XYFit` object
+        :param xy_fit_object: an :py:obj:`~kafe2.fit.xy.XYFit` object
+        :type xy_fit_object: :py:class:`~kafe2.fit.xy.XYFit`
         """
         super(XYPlotAdapter, self).__init__(fit_object=xy_fit_object)
         self._n_plot_points_model = n_plot_points_model
@@ -120,6 +121,31 @@ class XYPlotAdapter(PlotAdapterBase):
         """y plot range: ``None`` for :py:obj:`XYPlotContainer`"""
         return None
 
+    @property
+    def y_error_band(self):
+        """one-dimensional array representing the uncertainty band around the model function"""
+        if not self._fit.did_fit:
+            raise XYPlotAdapterException('Cannot calculate an error band without first performing a fit.')
+        _band_x = self.model_line_x
+        if self._fit.parameter_cov_mat is None:
+            return np.zeros_like(_band_x)
+
+        _f_deriv_by_params = self._fit.eval_model_function_derivative_by_parameters(
+            x=_band_x,
+            model_parameters=self._fit.poi_values)
+        # here: df/dp[par_idx]|x=x[x_idx] = _f_deriv_by_params[par_idx][x_idx]
+
+        _f_deriv_by_params = _f_deriv_by_params.T
+        # here: df/dp[par_idx]|x=x[x_idx] = _f_deriv_by_params[x_idx][par_idx]
+
+        _band_y = np.zeros_like(_band_x)
+        _n_poi = len(self._fit.poi_values)
+        for _x_idx, _x_val in enumerate(_band_x):
+            _p_res = _f_deriv_by_params[_x_idx]
+            _band_y[_x_idx] = _p_res.dot(self._fit.parameter_cov_mat[:_n_poi, :_n_poi]).dot(_p_res)
+
+        return np.sqrt(_band_y)
+
     # public methods
 
     def plot_data(self, target_axes, error_contributions=('data',), **kwargs):
@@ -178,7 +204,7 @@ class XYPlotAdapter(PlotAdapterBase):
         :return: plot handle(s)
         """
         if self._fit.did_fit and (self._fit.has_errors or not self._fit._cost_function.needs_errors):
-            _band_y = self._fit.y_error_band
+            _band_y = self.y_error_band
             _y = self.model_line_y
             return target_axes.fill_between(
                 self.model_line_x,
@@ -217,7 +243,7 @@ class XYPlotAdapter(PlotAdapterBase):
         :return: plot handle(s)
         """
         if self._fit.did_fit and (self._fit.has_errors or not self._fit._cost_function.needs_errors):
-            _band_y = self._fit.y_error_band
+            _band_y = self.y_error_band
             _y = self.model_line_y
             return target_axes.fill_between(
                 self.model_line_x,

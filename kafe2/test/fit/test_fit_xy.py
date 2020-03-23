@@ -92,24 +92,6 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
             y_data=self._ref_y_data,
             y_model=self._nominal_fit_result_y_model,
         )
-        self._nominal_fit_result_y_error_band = np.array([
-            0.78624539, 0.75683061, 0.72851823, 0.70133553, 0.67531087, 0.65047349,
-            0.62685308, 0.6044793 , 0.58338118, 0.56358629, 0.54511986, 0.52800367,
-            0.51225489, 0.49788481, 0.48489754, 0.47328885, 0.46304509, 0.45414241,
-            0.44654631, 0.44021158, 0.43508272, 0.43109475, 0.42817442, 0.42624171,
-            0.42521152, 0.42499547, 0.4255036 , 0.426646  , 0.42833427, 0.43048265,
-            0.43300903, 0.43583559, 0.43888936, 0.44210242, 0.44541208, 0.44876086,
-            0.4520964 , 0.45537126, 0.45854275, 0.46157262, 0.46442689, 0.46707555,
-            0.46949231, 0.47165442, 0.47354242, 0.47513997, 0.4764337 , 0.47741308,
-            0.47807029, 0.47840018, 0.47840018, 0.47807029, 0.47741308, 0.4764337 ,
-            0.47513997, 0.47354242, 0.47165442, 0.46949231, 0.46707555, 0.46442689,
-            0.46157262, 0.45854275, 0.45537126, 0.4520964 , 0.44876086, 0.44541208,
-            0.44210242, 0.43888936, 0.43583559, 0.43300903, 0.43048265, 0.42833427,
-            0.426646  , 0.4255036 , 0.42499547, 0.42521152, 0.42624171, 0.42817442,
-            0.43109475, 0.43508272, 0.44021158, 0.44654631, 0.45414241, 0.46304509,
-            0.47328885, 0.48489754, 0.49788481, 0.51225489, 0.52800367, 0.54511986,
-            0.56358629, 0.58338118, 0.6044793 , 0.62685308, 0.65047349, 0.67531087,
-            0.70133553, 0.72851823, 0.75683061, 0.78624539])
 
         # helper dict with all reference property values
         self._ref_prop_dict = dict(
@@ -214,8 +196,6 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
                 model=self._nominal_fit_result_xy_model,
                 did_fit=True,
                 cost_function_value=self._nominal_fit_result_cost,
-                # FIXME: remove hard coding
-                y_error_band=self._nominal_fit_result_y_error_band,
             ),
             call_before_fit=lambda f: f.do_fit(),
             rtol=1e-2
@@ -277,10 +257,6 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
             self._get_fit().set_poi_values(param_values=(1,))
         with self.assertRaises(XYFitException):
             self._get_fit().set_poi_values(param_values=(1,2,3,4,5))
-
-    def test_y_error_band_before_fit_raise(self):
-        with self.assertRaises(XYFitException):
-            self._get_fit().y_error_band
 
     def test_parameter_defaults(self):
         def dummy_model(x, a, b, c):
@@ -576,8 +552,6 @@ class TestXYFitWithSimpleYErrors(AbstractTestFit, unittest.TestCase):
                 model=self._nominal_fit_result_xy_model,
                 did_fit=True,
                 cost_function_value=self._nominal_fit_result_cost,
-                # FIXME: remove hard coding
-                y_error_band=self._nominal_fit_result_y_error_band,
             ),
             fit_names=['default', 'two_errors'],
             call_before_fit=lambda f: f.do_fit(),
@@ -720,8 +694,6 @@ class TestXYFitWithMatrixErrors(AbstractTestFit, unittest.TestCase):
                 model=self._nominal_fit_result_xy_model,
                 did_fit=True,
                 cost_function_value=self._nominal_fit_result_cost,
-                # FIXME: remove hard coding
-                y_error_band=self._nominal_fit_result_y_error_band,
             ),
             fit_names=['default', 'cor_matrix_and_error_vector',
                        'one_matrix_one_simple_error', 'two_matrix_errors'],
