@@ -35,6 +35,7 @@ class HistPlotAdapter(PlotAdapterBase):
         """
         super(HistPlotAdapter, self).__init__(fit_object=hist_fit_object)
         self._n_plot_points_model_density = n_plot_points_model_density
+        self.x_range = self._fit.data_container.bin_range
 
     # -- private methods
 
@@ -103,16 +104,6 @@ class HistPlotAdapter(PlotAdapterBase):
         _mean_bin_size = float(_hist_cont.high - _hist_cont.low)/_hist_cont.size
         _factor = _hist_cont.n_entries * _mean_bin_size
         return _factor * self._fit.eval_model_function_density(x=self.model_density_x)
-
-    @property
-    def x_range(self):
-        """x plot range (the histogram bin range)"""
-        return self._fit.data_container.bin_range
-
-    @property
-    def y_range(self):
-        """y plot range: ``None`` for :py:obj:`IndexedPlotContainer`"""
-        return None  # no fixed range
 
     # public methods
 

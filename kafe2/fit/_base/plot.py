@@ -3,6 +3,7 @@ import numpy as np
 import six
 import textwrap
 import warnings
+import itertools
 import matplotlib as mpl
 
 from ..multi.fit import MultiFit
@@ -161,12 +162,13 @@ class PlotAdapterBase(object):
         Construct a :py:obj:`PlotAdapter` for a :py:obj:`Fit` object:
 
         :param fit_object: an object derived from :py:obj:`~kafe2.fit._base.FitBase`
-        :type fit_object: kafe2.fit._base.FitBase
+        :type fit_object: :py:class:`~kafe2.fit._base.FitBase`
         :param axis_labels: The x- and y-axis labels as a tuple
         :type axis_labels: tuple[str, str]
         """
         self._fit = fit_object
-
+        self.x_range = None
+        self.y_range = None
         _axes = ('x', 'y')
         _axis_labels = []
         for i, label in enumerate(axis_labels):
@@ -470,24 +472,30 @@ class PlotAdapterBase(object):
         pass
 
     @property
-    @abc.abstractmethod
     def x_range(self):
         """
         The 'x' axis plot range.
 
-        :return: iterable
+        :rtype: tuple[float, float]
         """
-        pass
+        return self._x_range
+
+    @x_range.setter
+    def x_range(self, x_range):
+        self._x_range = x_range
 
     @property
-    @abc.abstractmethod
     def y_range(self):
         """
         The 'y' axis plot range.
 
-        :return: iterable
+        :rtype: tuple[float, float]
         """
-        pass
+        return self._y_range
+
+    @y_range.setter
+    def y_range(self, y_range):
+        self._y_range = y_range
 
     @abc.abstractmethod
     def plot_data(self, target_axes, **kwargs):
@@ -879,6 +887,48 @@ class Plot(object):
         """A list of dictionaries (one per figure) mapping names to
         ``matplotlib`` `Axes` objects contained in this figure."""
         return [_d['axes'] for _d in self._figure_dicts]
+
+    @property
+    def x_range(self):
+        return [_adapter.x_range for _adapter in self._get_plot_adapters()]
+
+    @x_range.setter
+    def x_range(self, x_range):
+        """The plotting x-range for each fit handled by this :py:obj:`~kafe2.Plot` object.
+        :param x_range: Iterable of tuples containing the x_ranges for each fit.
+        :type x_range: Iterable[tuple[float, float]] or tuple[float, float]"""
+        _adapters = self._get_plot_adapters()
+        if np.ndim(x_range) == 1:
+            if len(x_range) != 2:
+                raise PlotFigureException("x_range must contain two elements. A lower and an upper limit. Got {} "
+                                          "elements".format(len(x_range)))
+            x_range = itertools.repeat(x_range, len(_adapters))
+        elif len(_adapters) != len(x_range):
+            raise PlotFigureException("Amount of x_ranges and fits does not match. Got {} x_ranges and have {} "
+                                      "fits".format(len(x_range), len(_adapters)))
+        for i, _range in enumerate(x_range):
+            _adapters[i].x_range = _range
+
+    @property
+    def y_range(self):
+        return [_adapter.y_range for _adapter in self._get_plot_adapters()]
+
+    @y_range.setter
+    def y_range(self, y_range):
+        """Set the plotting y-range for each fit handled by this :py:obj:`~kafe2.Plot` object.
+        :param y_range: Iterable of tuples containing the y_ranges for each fit.
+        :type y_range: Iterable[tuple[float, float]] or tuple[float, float]"""
+        _adapters = self._get_plot_adapters()
+        if np.ndim(y_range) == 1:
+            if len(y_range) != 2:
+                raise PlotFigureException("y_range must contain two elements. A lower and an upper limit. Got {} "
+                                          "elements".format(len(y_range)))
+            y_range = itertools.repeat(y_range, len(_adapters))
+        elif len(_adapters) != len(y_range):
+            raise PlotFigureException("Amount of y_ranges and fits does not match. Got {} y_ranges and have {} "
+                                      "fits".format(len(y_range), len(_adapters)))
+        for i, _range in enumerate(y_range):
+            _adapters[i].y_range = _range
 
     # -- public methods
 
