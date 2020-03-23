@@ -25,15 +25,13 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
     )
     del PLOT_SUBPLOT_TYPES['model']  # don't show "model" points
 
-    def __init__(self, unbinned_fit_object, n_plot_points_model=100):
+    def __init__(self, unbinned_fit_object):
         """
         Construct an :py:obj:`UnbinnedPlotAdapter` for a :py:obj:`~kafe2.fit.unbinned.UnbinnedFit` object:
         :param unbinned_fit_object: an :py:obj:`~kafe2.fit.unbinned.UnbinnedFit` object
-        :param n_plot_points_model: Number of data points for plotting the model
-        :type n_plot_points_model: int
         """
         super(UnbinnedPlotAdapter, self).__init__(fit_object=unbinned_fit_object)
-        self._n_plot_points_model = n_plot_points_model
+        self.n_plot_points = 100 if len(self.data_x) < 100 else len(self.data_x)
         self.x_range = self._compute_plot_range_x()
         self.y_range = self._compute_plot_range_y()
 
@@ -107,7 +105,7 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
     def model_line_x(self):
         """x support values for model function"""
         _xmin, _xmax = self.x_range
-        return np.linspace(_xmin, _xmax, self._n_plot_points_model)
+        return np.linspace(_xmin, _xmax, self.n_plot_points)
 
     @property
     def model_line_y(self):

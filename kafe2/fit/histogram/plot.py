@@ -26,7 +26,7 @@ class HistPlotAdapter(PlotAdapterBase):
         ),
     )
 
-    def __init__(self, hist_fit_object, n_plot_points_model_density=100):
+    def __init__(self, hist_fit_object):
         """
         Construct an :py:obj:`HistPlotContainer` for a :py:obj:`~kafe2.fit.histogram.HistFit` object:
 
@@ -34,7 +34,7 @@ class HistPlotAdapter(PlotAdapterBase):
         :param n_plot_points_model_density: number of plot points to use for plotting the model density
         """
         super(HistPlotAdapter, self).__init__(fit_object=hist_fit_object)
-        self._n_plot_points_model_density = n_plot_points_model_density
+        self.n_plot_points = 100 if len(self.data_x) < 100 else len(self.data_x)
         self.x_range = self._fit.data_container.bin_range
 
     # -- private methods
@@ -95,7 +95,7 @@ class HistPlotAdapter(PlotAdapterBase):
     def model_density_x(self):
         """x support points for model density plot"""
         _xmin, _xmax = self.x_range
-        return np.linspace(_xmin, _xmax, self._n_plot_points_model_density)
+        return np.linspace(_xmin, _xmax, self.n_plot_points)
 
     @property
     def model_density_y(self):
