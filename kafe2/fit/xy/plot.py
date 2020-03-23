@@ -32,7 +32,7 @@ class XYPlotAdapter(PlotAdapterBase):
     )
     del PLOT_SUBPLOT_TYPES['model']  # don't plot model xy points
 
-    def __init__(self, xy_fit_object, n_plot_points_model=100):
+    def __init__(self, xy_fit_object):
         """
         Construct an :py:obj:`XYPlotContainer` for a :py:obj:`~kafe2.fit.xy.XYFit` object:
 
@@ -40,8 +40,7 @@ class XYPlotAdapter(PlotAdapterBase):
         :type xy_fit_object: :py:class:`~kafe2.fit.xy.XYFit`
         """
         super(XYPlotAdapter, self).__init__(fit_object=xy_fit_object)
-        self._n_plot_points_model = n_plot_points_model
-
+        self.n_plot_points = 100 if len(self.data_x) < 50 else 2*len(self.data_x)
         self.x_range = self._compute_plot_range_x()
 
     # -- private methods
@@ -100,7 +99,7 @@ class XYPlotAdapter(PlotAdapterBase):
     def model_line_x(self):
         """x support values for model function"""
         _xmin, _xmax = self.x_range
-        return np.linspace(_xmin, _xmax, self._n_plot_points_model)
+        return np.linspace(_xmin, _xmax, self.n_plot_points)
 
     @property
     def model_line_y(self):
