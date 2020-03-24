@@ -329,13 +329,6 @@ class XYFit(FitBase):
         )
 
         for _axis in ('x', 'y'):
-            self._nexus.add_dependency(
-                '{}_total_error'.format(_axis),
-                depends_on=(
-                    '{}_data_error'.format(_axis),
-                    '{}_model_error'.format(_axis),
-                )
-            )
             for _side in ('data', 'model', 'total'):
                 self._nexus.add_dependency(
                     '{}_{}_uncor_cov_mat'.format(_axis, _side),
