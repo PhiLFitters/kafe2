@@ -68,18 +68,18 @@ T -= T0  # Measurements are in Kelvin, convert to °C
 # We define a method for constructing a MultiFit with either shared or separate x errors:
 def construct_multi_fit(shared_x_error):
     fit_1 = XYFit(xy_data=[U, T], model_function=empirical_T_U_model)
-    fit_1.add_simple_error(axis='y', err_val=sigT)  # declare errors on T
+    fit_1.add_error(axis='y', err_val=sigT)  # declare errors on T
 
     fit_2 = XYFit(xy_data=[U, I], model_function=I_U_model)
-    fit_2.add_simple_error(axis='y', err_val=sigI)  # declare errors on I
+    fit_2.add_error(axis='y', err_val=sigI)  # declare errors on I
 
     multi_fit = MultiFit(fit_list=[fit_1, fit_2], minimizer='iminuit')
 
     if shared_x_error:
-        multi_fit.add_simple_error(axis='x', err_val=sigU, fits='all')
+        multi_fit.add_error(axis='x', err_val=sigU, fits='all')
     else:
-        fit_1.add_simple_error(axis='x', err_val=sigU)
-        fit_2.add_simple_error(axis='x', err_val=sigU)
+        fit_1.add_error(axis='x', err_val=sigU)
+        fit_2.add_error(axis='x', err_val=sigU)
 
     return multi_fit
 

@@ -584,9 +584,9 @@ class FitBase(FileIOMixin, object):
 
         return _result
 
-    def add_simple_error(self, err_val, name=None, correlation=0, relative=False, reference='data', **kwargs):
+    def add_error(self, err_val, name=None, correlation=0, relative=False, reference='data', **kwargs):
         """
-        Add a simple uncertainty source to the fit.
+        Add an uncertainty source to the fit.
         Returns an error id which uniquely identifies the created error source.
 
         :param err_val: pointwise uncertainty/uncertainties for all data points
@@ -610,11 +610,11 @@ class FitBase(FileIOMixin, object):
             # delegate to model container
             _reference_object = self._param_model
         else:
-            raise FitException("Cannot add simple error: unknown reference "
+            raise FitException("Cannot add error: unknown reference "
                                "specification '{}', expected one of: 'data', 'model'...".format(reference))
 
-        _ret = _reference_object.add_simple_error(err_val=err_val,
-                                                  name=name, correlation=correlation, relative=relative, **kwargs)
+        _ret = _reference_object.add_error(err_val=err_val,
+                                           name=name, correlation=correlation, relative=relative, **kwargs)
 
         return _ret
 

@@ -24,8 +24,8 @@ from kafe2.fit.tools import ContoursProfiler
 nonlinear_fit = XYFit(xy_data=XYContainer.from_file('x_errors.yml'))
 
 # The x errors are much bigger than the y errors. This will cause a distortion of the likelihood function.
-nonlinear_fit.add_simple_error('x', 1.0)
-nonlinear_fit.add_simple_error('y', 0.1)
+nonlinear_fit.add_error('x', 1.0)
+nonlinear_fit.add_error('y', 0.1)
 
 # Perform the fit.
 nonlinear_fit.do_fit()

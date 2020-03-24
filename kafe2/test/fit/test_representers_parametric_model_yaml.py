@@ -69,7 +69,7 @@ class TestHistParametricModelYamlRepresenter(unittest.TestCase):
             model_density_func=HistModelFunction(TestHistParametricModelYamlRepresenter.linear_model),
             model_parameters=self._test_model_parameters
         )
-        self._test_parametric_model_with_errors.add_simple_error(
+        self._test_parametric_model_with_errors.add_error(
             err_val=0.1, 
             name='test_error', 
             correlation=0, 
@@ -306,7 +306,7 @@ class TestIndexedParametricModelYamlRepresenter(unittest.TestCase):
             IndexedModelFunction(TestIndexedParametricModelYamlRepresenter.linear_model),
             self._test_model_parameters
         )
-        self._test_parametric_model_with_errors.add_simple_error(
+        self._test_parametric_model_with_errors.add_error(
             err_val=0.1, 
             name='test_x_error', 
             correlation=0, 
@@ -498,7 +498,7 @@ class TestXYParametricModelYamlRepresenter(unittest.TestCase):
             ModelFunctionBase(TestXYParametricModelYamlRepresenter.linear_model),
             self._test_model_parameters
         )
-        self._test_parametric_model_with_errors.add_simple_error(
+        self._test_parametric_model_with_errors.add_error(
             axis='x',
             err_val=0.1, 
             name='test_x_error', 

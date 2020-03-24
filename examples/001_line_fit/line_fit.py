@@ -21,8 +21,8 @@ xy_data = XYContainer(x_data=[1.0, 2.0, 3.0, 4.0],
 # The above translates to the points (1.0, 2.3), (2.0, 4.2), and (4.0, 9.4).
 
 # Important: Specify uncertainties for the data.
-xy_data.add_simple_error(axis='x', err_val=0.1)
-xy_data.add_simple_error(axis='y', err_val=0.4)
+xy_data.add_error(axis='x', err_val=0.1)
+xy_data.add_error(axis='y', err_val=0.4)
 
 # Create an XYFit object from the xy data container.
 # By default, a linear function f=a*x+b will be used as the model function.

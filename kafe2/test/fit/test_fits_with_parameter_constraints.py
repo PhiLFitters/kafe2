@@ -52,7 +52,7 @@ class TestParameterConstraintInHistFit(unittest.TestCase):
         self._cov_mat_simple_b_inv = np.array([[0.0, 0.0], [0.0, 1.0 / self._vars[1]]])
 
         self._data_container = HistContainer(n_bins=5, bin_range=(0.0, 5.0), fill_data=_data, dtype=float)
-        self._data_container.add_simple_error(err_val=1.0)
+        self._data_container.add_error(err_val=1.0)
 
         _a_test = np.linspace(start=1, stop=2, num=9, endpoint=True)
         _b_test = np.linspace(start=2, stop=3, num=9, endpoint=True)
@@ -148,7 +148,7 @@ class TestParameterConstraintInIndexedFit(unittest.TestCase):
         self._cov_mat_simple_b_inv = np.array([[0.0, 0.0], [0.0, 1.0 / self._vars[1]]])
 
         self._data_container = IndexedContainer(data=_data)
-        self._data_container.add_simple_error(err_val=1.0)
+        self._data_container.add_error(err_val=1.0)
 
         _a_test = np.linspace(start=0,  stop=4, num=9, endpoint=True)
         _b_test = np.linspace(start=-4, stop=0, num=9, endpoint=True)
@@ -234,7 +234,7 @@ class TestParameterConstraintInXYFit(unittest.TestCase):
         self._cov_mat_simple_b_inv = np.array([[0.0, 0.0], [0.0, 1.0 / self._vars[1]]])
 
         self._data_container = XYContainer(x_data=_x, y_data=_y)
-        self._data_container.add_simple_error(axis='y', err_val=1.0)
+        self._data_container.add_error(axis='y', err_val=1.0)
 
         _a_test = np.linspace(start=0,  stop=4, num=9, endpoint=True)
         _b_test = np.linspace(start=-4, stop=0, num=9, endpoint=True)

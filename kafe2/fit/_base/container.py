@@ -198,10 +198,10 @@ class DataContainerBase(FileIOMixin, object):
 
     # error-related methods
 
-    def add_simple_error(self, err_val,
-                         name=None, correlation=0, relative=False, reference=None):
+    def add_error(self, err_val,
+                  name=None, correlation=0, relative=False, reference=None):
         """
-        Add a simple uncertainty source to the data container.
+        Add an uncertainty source to the data container.
         Returns an error id which uniquely identifies the created error source.
 
         :param err_val: pointwise uncertainty/uncertainties for all data points

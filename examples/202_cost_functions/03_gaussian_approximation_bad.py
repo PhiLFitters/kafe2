@@ -53,7 +53,7 @@ xy_fit_gaussian_sparse = XYFit(
 
 # We use the Gaussian approximation of the Poisson distribution sqrt(y) for our y data error
 # Because we only have about 10 events per measurement this approximation will be bad.
-xy_fit_gaussian_sparse.add_simple_error(axis='y', err_val=np.sqrt(measured_c14_activity_sparse))
+xy_fit_gaussian_sparse.add_error(axis='y', err_val=np.sqrt(measured_c14_activity_sparse))
 
 # The half life of carbon-14 is only known with a precision of +-40 years
 xy_fit_gaussian_sparse.add_parameter_constraint(name='T_12_C14', value=5730, uncertainty=40)
@@ -90,7 +90,7 @@ xy_fit_gaussian_full = XYFit(
     xy_data=[years_of_death, measured_c14_activity_full],
     model_function=expected_activity_per_day
 )
-xy_fit_gaussian_full.add_simple_error(axis='y', err_val=np.sqrt(measured_c14_activity_full))
+xy_fit_gaussian_full.add_error(axis='y', err_val=np.sqrt(measured_c14_activity_full))
 xy_fit_gaussian_full.add_parameter_constraint(name='T_12_C14', value=5730, uncertainty=40)
 xy_fit_gaussian_full.do_fit()
 

@@ -130,7 +130,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
             cost_function=cost_function,
             minimizer=self.MINIMIZER
         )
-        _fit.add_simple_error(1.0)  # only considered for chi2
+        _fit.add_error(1.0)  # only considered for chi2
 
         return _fit
 
@@ -223,7 +223,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
             (17, 23),
             fill_data=_new_entries
         )
-        _fit.add_simple_error(err_val=1.0)
+        _fit.add_error(err_val=1.0)
 
         _ref_data, _ = np.histogram(
             _new_entries,

@@ -120,13 +120,13 @@ class TestDatastoreHistogram(unittest.TestCase):
                                 bin_edges=self._probe_bin_edges_variablespacing_unsorted)
 
     def test_raise_add_same_error_name_twice(self):
-        self.hist_cont_binedges_auto.add_simple_error(0.1,
-                                      name="MyNewError",
-                                      correlation=0, relative=False)
+        self.hist_cont_binedges_auto.add_error(0.1,
+                                               name="MyNewError",
+                                               correlation=0, relative=False)
         with self.assertRaises(DataContainerException):
-            self.hist_cont_binedges_auto.add_simple_error(0.1,
-                                          name="MyNewError",
-                                          correlation=0, relative=False)
+            self.hist_cont_binedges_auto.add_error(0.1,
+                                                   name="MyNewError",
+                                                   correlation=0, relative=False)
 
     def test_raise_get_inexistent_error(self):
         with self.assertRaises(DataContainerException):

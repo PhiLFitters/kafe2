@@ -15,7 +15,7 @@ class TestXYPlot(unittest.TestCase):
         self._ref_error_label = self._ref_model_label + r' $\pm 1\sigma$'
 
         self.fit = XYFit(xy_data=self._ref_data)
-        self.fit.add_simple_error('y', 0.1)
+        self.fit.add_error('y', 0.1)
         self.fit.do_fit()
 
         self.fit.data_container.label = self._ref_dataset_label
@@ -45,7 +45,7 @@ class TestXYPlot(unittest.TestCase):
 
     def test_warning_no_fit_performed(self):
         _fit = XYFit(xy_data=self._ref_data)
-        _fit.add_simple_error('y', 0.1)
+        _fit.add_error('y', 0.1)
         _plot = Plot(fit_objects=_fit)
         with self.assertWarns(Warning) as w:
             _plot.plot()

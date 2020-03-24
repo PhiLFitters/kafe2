@@ -52,7 +52,7 @@ xy_fit = XYFit(
 )
 
 # We use the Gaussian approximation of the Poisson distribution sqrt(y) for our y data error
-xy_fit.add_simple_error(axis='y', err_val=np.sqrt(measured_c14_activity))
+xy_fit.add_error(axis='y', err_val=np.sqrt(measured_c14_activity))
 
 # The half life of carbon-14 is only known with a precision of +-40 years
 xy_fit.add_parameter_constraint(name='T_12_C14', value=5730, uncertainty=40)

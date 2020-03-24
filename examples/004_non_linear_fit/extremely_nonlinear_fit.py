@@ -16,8 +16,8 @@ def model_function(x, a):
 
 _fit_iminuit = XYFit(xy_data=[_x, _y], model_function=model_function, minimizer='iminuit')
 
-_fit_iminuit.add_simple_error('x', _x_err)
-_fit_iminuit.add_simple_error('y', _y_err)
+_fit_iminuit.add_error('x', _x_err)
+_fit_iminuit.add_error('y', _y_err)
 
 _fit_iminuit.do_fit()
 
@@ -29,8 +29,8 @@ _a_profile_iminuit = _profiler_iminuit.get_profile('a')
 
 _fit_scipy = XYFit(xy_data=[_x, _y], model_function=model_function, minimizer='scipy')
 
-_fit_scipy.add_simple_error('x', _x_err)
-_fit_scipy.add_simple_error('y', _y_err)
+_fit_scipy.add_error('x', _x_err)
+_fit_scipy.add_error('y', _y_err)
 
 _fit_scipy.do_fit()
 

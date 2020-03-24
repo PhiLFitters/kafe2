@@ -492,11 +492,11 @@ class MultiFit(FitBase):
             return self._add_error_object(error_object=_matrix_error, reference=reference,
                                           name=name, axis=axis)
 
-    def add_simple_error(
+    def add_error(
             self, err_val, fits, axis=None, name=None, correlation=0, relative=False,
             reference='data', **kwargs):
         """
-        Add a simple uncertainty source to the fit.
+        Add an uncertainty source to the fit.
         Returns an error id which uniquely identifies the created error source.
 
         :param err_val: pointwise uncertainty/uncertainties for all data points
@@ -519,7 +519,7 @@ class MultiFit(FitBase):
         :rtype: str
         """
         if isinstance(fits, int):
-            self._fits[fits].add_simple_error(
+            self._fits[fits].add_error(
                 err_val=err_val, name=name, correlation=correlation, relative=relative,
                 axis=axis, reference=reference, **kwargs
             )

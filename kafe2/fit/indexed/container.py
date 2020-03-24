@@ -101,10 +101,10 @@ class IndexedContainer(DataContainerBase):
 
     # -- public methods
 
-    def add_simple_error(self, err_val,
-                         name=None, correlation=0, relative=False):
+    def add_error(self, err_val,
+                  name=None, correlation=0, relative=False):
         """
-        Add a simple uncertainty source to the data container.
+        Add an uncertainty source to the data container.
         Returns an error id which uniquely identifies the created error source.
 
         :param err_val: pointwise uncertainty/uncertainties for all data points
@@ -119,7 +119,7 @@ class IndexedContainer(DataContainerBase):
         :return: error name
         :rtype: str
         """
-        return super(IndexedContainer, self).add_simple_error(
+        return super(IndexedContainer, self).add_error(
             err_val=err_val,
             name=name,
             correlation=correlation,

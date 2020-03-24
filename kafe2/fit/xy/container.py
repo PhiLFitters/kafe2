@@ -286,9 +286,9 @@ class XYContainer(IndexedContainer):
 
     # -- public methods
 
-    def add_simple_error(self, axis, err_val, name=None, correlation=0, relative=False):
+    def add_error(self, axis, err_val, name=None, correlation=0, relative=False):
         """
-        Add a simple uncertainty source for an axis to the data container.
+        Add an uncertainty source for an axis to the data container.
         Returns an error id which uniquely identifies the created error source.
 
         :param axis: ``'x'``/``0`` or ``'y'``/``1``

@@ -28,7 +28,7 @@ y_data = y_data_0 * (1.0 + y_data_jitter)
 
 data = XYContainer(x_data=x_data, y_data=y_data)
 
-data.add_simple_error('x', X_ERROR)
-data.add_simple_error('y', Y_ERROR, relative=True)
+data.add_error('x', X_ERROR)
+data.add_error('y', Y_ERROR, relative=True)
 
 data.to_file('data.yml')

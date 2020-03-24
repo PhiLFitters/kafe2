@@ -865,10 +865,10 @@ class XYFit(FitBase):
 
     # -- public methods
 
-    def add_simple_error(self, axis, err_val,
-                         name=None, correlation=0, relative=False, reference='data'):
+    def add_error(self, axis, err_val,
+                  name=None, correlation=0, relative=False, reference='data'):
         """
-        Add a simple uncertainty source for axis to the data container.
+        Add an uncertainty source for axis to the data container.
         Returns an error id which uniquely identifies the created error source.
 
         :param axis: ``'x'``/``0`` or ``'y'``/``1``
@@ -884,12 +884,12 @@ class XYFit(FitBase):
         :return: error id
         :rtype: int
         """
-        return super(XYFit, self).add_simple_error(err_val=err_val,
-                                                   name=name,
-                                                   correlation=correlation,
-                                                   relative=relative,
-                                                   reference=reference,
-                                                   axis=axis)
+        return super(XYFit, self).add_error(err_val=err_val,
+                                            name=name,
+                                            correlation=correlation,
+                                            relative=relative,
+                                            reference=reference,
+                                            axis=axis)
 
     def add_matrix_error(self, axis, err_matrix, matrix_type,
                          name=None, err_val=None, relative=False, reference='data'):

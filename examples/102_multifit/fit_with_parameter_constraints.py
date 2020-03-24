@@ -114,10 +114,10 @@ auxiliary_fit.assign_model_function_expression('{1}*{x}^2 + {2}*{x} + {3}')
 auxiliary_fit.assign_model_function_latex_expression(r'{1}\,{x}^2 + {2}\,{x} + {3}')
 
 # declare errors on U
-auxiliary_fit.add_simple_error(axis='x', err_val=sigU)
+auxiliary_fit.add_error(axis='x', err_val=sigU)
 
 # declare errors on T
-auxiliary_fit.add_simple_error(axis='y', err_val=sigT)
+auxiliary_fit.add_error(axis='y', err_val=sigT)
 
 # perform the auxiliary fit
 auxiliary_fit.do_fit()
@@ -136,9 +136,9 @@ main_fit = XYFit(
 )
 
 # declare errors on U
-main_fit.add_simple_error(axis='x', err_val=sigU)
+main_fit.add_error(axis='x', err_val=sigU)
 # declare errors on I
-main_fit.add_simple_error(axis='y', err_val=sigI)
+main_fit.add_error(axis='y', err_val=sigI)
 
 # constrain the parameters
 main_fit.add_matrix_parameter_constraint(

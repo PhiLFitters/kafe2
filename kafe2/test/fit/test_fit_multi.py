@@ -142,7 +142,7 @@ class TestMultiFit(unittest.TestCase):
             cost_function='chi2',
             minimizer=minimizer
         )
-        _indexed_fit.add_simple_error(err)
+        _indexed_fit.add_error(err)
         return _indexed_fit
 
     def _set_indexed_fits(self, minimizer):
@@ -188,8 +188,8 @@ class TestMultiFit(unittest.TestCase):
             cost_function='chi2',
             minimizer=minimizer
         )
-        _xy_fit.add_simple_error('x', err_x)
-        _xy_fit.add_simple_error('y', err_y)
+        _xy_fit.add_error('x', err_x)
+        _xy_fit.add_error('y', err_y)
         return _xy_fit
 
     def _set_xy_fits(self, minimizer):

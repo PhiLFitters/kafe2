@@ -225,7 +225,7 @@ class TestHistFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
             data=_data,
             model_density_function=TestHistFitYamlRepresenter.hist_model_density
         )
-        self._fit.add_simple_error(err_val=0.1)
+        self._fit.add_error(err_val=0.1)
         
         self.setup_streams()
 
@@ -425,7 +425,7 @@ class TestIndexedFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresente
             model_function=TestIndexedFitYamlRepresenter.linear_model
         )
         self._fit.set_all_parameter_values(self._test_parameters_default)
-        self._fit.add_simple_error(err_val=0.1)
+        self._fit.add_error(err_val=0.1)
         self._fit.add_parameter_constraint(name='a', value=2.0, uncertainty=1.0)
         self._fit.add_parameter_constraint(name='b', value=-1.0, uncertainty=0.5)
         self._fit.add_matrix_parameter_constraint(names=['a', 'b'], values=[2.05, -0.95],
@@ -623,7 +623,7 @@ class TestXYFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
             xy_data=[self._test_x, self._test_y],
             model_function=TestXYFitYamlRepresenter.linear_model
         )
-        self._fit.add_simple_error(axis='y', err_val=0.1)
+        self._fit.add_error(axis='y', err_val=0.1)
         self._fit.add_parameter_constraint(name='a', value=2.0, uncertainty=1.0)
         self._fit.add_parameter_constraint(name='b', value=-1.0, uncertainty=0.5)
         self._fit.add_matrix_parameter_constraint(names=['a', 'b'], values=[2.05, -0.95],

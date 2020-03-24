@@ -204,7 +204,7 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
     def _add_error_to_container(err_type, container_obj, **kwargs):
         # TODO: check kwargs explicitly
         if err_type == 'simple':
-            container_obj.add_simple_error(**kwargs)
+            container_obj.add_error(**kwargs)
         elif err_type == 'matrix':
             container_obj.add_matrix_error(**kwargs)
         else:

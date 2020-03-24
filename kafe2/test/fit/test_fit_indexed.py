@@ -138,7 +138,7 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
             cost_function=cost_function,
             minimizer=self.MINIMIZER
         )
-        _fit.add_simple_error(err_val=error)
+        _fit.add_error(err_val=error)
 
         return _fit
 
@@ -228,7 +228,7 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
         _fit = self._get_fit()
 
         _fit.data = self._ref_data * 2
-        _fit.add_simple_error(err_val=1.0)
+        _fit.add_error(err_val=1.0)
 
         self._assert_fit_properties(
             _fit,
@@ -358,7 +358,7 @@ class TestIndexedFitWithSimpleErrors(AbstractTestFit, unittest.TestCase):
         )
 
         for _err in errors:
-            _fit.add_simple_error(**_err)
+            _fit.add_error(**_err)
 
         return _fit
 
@@ -477,7 +477,7 @@ class TestIndexedFitWithMatrixErrors(AbstractTestFit, unittest.TestCase):
                 if 'err_matrix' in _err:
                     _fit.add_matrix_error(**_err)
                 else:
-                    _fit.add_simple_error(**_err)
+                    _fit.add_error(**_err)
 
         return _fit
 

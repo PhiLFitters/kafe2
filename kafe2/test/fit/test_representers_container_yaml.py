@@ -94,9 +94,9 @@ class TestIndexedContainerYamlRepresentation(unittest.TestCase):
         _ndat = len(_data)
         self._container = IndexedContainer(data=_data)
 
-        self._container.add_simple_error(err_val=0.1, name="SUA", correlation=0.0, relative=False)
-        self._container.add_simple_error(err_val=0.1, name="SUR", correlation=0.0, relative=True)
-        self._container.add_simple_error(err_val=0.1, name="SCA", correlation=1.0, relative=False)
+        self._container.add_error(err_val=0.1, name="SUA", correlation=0.0, relative=False)
+        self._container.add_error(err_val=0.1, name="SUR", correlation=0.0, relative=True)
+        self._container.add_error(err_val=0.1, name="SCA", correlation=1.0, relative=False)
         self._container.add_matrix_error(err_matrix=np.eye(_ndat) * 0.1, name="MCov", relative=False, matrix_type='covariance')
         self._container.add_matrix_error(err_matrix=np.eye(_ndat), name="MCor", relative=False, matrix_type='correlation', err_val=0.1)
 
@@ -291,14 +291,14 @@ class TestXYContainerYamlRepresentation(unittest.TestCase):
         _ndat = len(_data[0])
         self._container = XYContainer(x_data=_data[0], y_data=_data[1])
 
-        self._container.add_simple_error(axis='y', name="ySUA", err_val=0.1, correlation=0.0, relative=False)
-        self._container.add_simple_error(axis='y', name="ySUR", err_val=0.1, correlation=0.0, relative=True)
-        self._container.add_simple_error(axis='y', name="ySCA", err_val=0.1, correlation=1.0, relative=False)
+        self._container.add_error(axis='y', name="ySUA", err_val=0.1, correlation=0.0, relative=False)
+        self._container.add_error(axis='y', name="ySUR", err_val=0.1, correlation=0.0, relative=True)
+        self._container.add_error(axis='y', name="ySCA", err_val=0.1, correlation=1.0, relative=False)
         self._container.add_matrix_error(axis='y', name="yMCov", err_matrix=np.eye(_ndat) * 0.1, relative=False, matrix_type='covariance')
         self._container.add_matrix_error(axis='y', name="yMCor", err_matrix=np.eye(_ndat), relative=False, matrix_type='correlation', err_val=0.1)
 
-        self._container.add_simple_error(axis='x', name="xSUA", err_val=0.1, correlation=0.0, relative=False)
-        self._container.add_simple_error(axis='x', name="xSUR", err_val=0.1, correlation=0.0, relative=True)
+        self._container.add_error(axis='x', name="xSUA", err_val=0.1, correlation=0.0, relative=False)
+        self._container.add_error(axis='x', name="xSUR", err_val=0.1, correlation=0.0, relative=True)
         self._container.add_matrix_error(axis='x', name="xMCov", err_matrix=np.eye(_ndat) * 0.1, relative=False, matrix_type='covariance')
 
         # self._container.add_simple_error(axis='x', err_val=0.1, correlation=0.0, relative=False)
@@ -538,8 +538,8 @@ class TestHistContainerYamlRepresentation(unittest.TestCase):
                                         bin_range=(0.0, 10.),
                                         fill_data=_data)
 
-        self._container.add_simple_error(err_val=0.1, name='SC5A_1', correlation=0.5, relative=False)
-        self._container.add_simple_error(err_val=[i/10. for i in range(1, _nbins+1)], name='SC5A_2', correlation=0.5, relative=False)
+        self._container.add_error(err_val=0.1, name='SC5A_1', correlation=0.5, relative=False)
+        self._container.add_error(err_val=[i / 10. for i in range(1, _nbins + 1)], name='SC5A_2', correlation=0.5, relative=False)
         self._container.add_matrix_error(err_matrix=np.eye(_nbins) * 0.1, name='MCov', relative=False, matrix_type='covariance')
         self._container.add_matrix_error(err_matrix=np.eye(_nbins), name='MCor', relative=False, matrix_type='correlation', err_val=0.03)
 
