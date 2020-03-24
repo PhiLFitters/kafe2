@@ -156,3 +156,4 @@ from .util import *
 from .xy import *
 
 from ._base.plot import Plot
+from .tools.fit_wrapper import Fit  # import after every fit to avoid import conflicts with other tools
