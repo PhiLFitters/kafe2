@@ -692,7 +692,7 @@ class Plot(object):
                         max(_xlim[1], _pdc.x_range[1])
                     )
 
-                if _pdc.y_range is not None:
+                if _pdc.y_range is not None and _axes_key != 'ratio':  # y_range of ratio can be adjusted by plot kwargs
                     _ylim = _axes_plot_dicts.setdefault(
                         'y_range', _pdc.y_range)
                     _axes_plot_dicts['y_range'] = (
