@@ -78,7 +78,7 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
             raise DReprError("Fit type unknown or not supported: %s" % fit.__class__)
         _yaml_doc['type'] = _type
 
-        _yaml_doc['dataset'] = DataContainerYamlWriter._make_representation(fit._data_container)
+        _yaml_doc['dataset'] = DataContainerYamlWriter._make_representation(fit.data_container)
         _yaml_doc['parametric_model'] = ParametricModelYamlWriter._make_representation(fit._param_model)
 
         #TODO cost function

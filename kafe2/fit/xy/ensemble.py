@@ -142,10 +142,10 @@ class XYFitEnsemble(FitEnsembleBase):
         # -- generate 'x' data
         _x_data = self._ref_x_data.copy()
 
-        if self._toy_fit._data_container.has_x_errors:
+        if self._toy_fit.data_container.has_x_errors:
             # smear x data according to the total 'x' covariance matrix
             # TODO: only gaussian smearing is implemented -> more?
-            _x_jitter =  np.random.multivariate_normal(
+            _x_jitter = np.random.multivariate_normal(
                 np.zeros_like(_x_data),
                 self._ref_x_cov_mat)
             _x_data += _x_jitter
@@ -161,8 +161,8 @@ class XYFitEnsemble(FitEnsembleBase):
         _y_data += _y_jitter
 
         # update toy fit data container
-        self._toy_fit._data_container.x = _x_data
-        self._toy_fit._data_container.y = _y_data
+        self._toy_fit.data_container.x = _x_data
+        self._toy_fit.data_container.y = _y_data
 
     def _gather_results_from_toy_fit(self, i_exp):
         for _var_name in self._requested_results:
@@ -329,7 +329,7 @@ class XYFitEnsemble(FitEnsembleBase):
     @property
     def n_dat(self):
         """the number of degrees of freedom for the fit"""
-        return self._toy_fit._data_container.size
+        return self._toy_fit.data_container.size
 
     @property
     def n_df(self):

@@ -361,7 +361,7 @@ class MultiFit(FitBase):
                     continue
                 for _fit_index in error_object.fit_indices:
                     _fit = self._fits[_fit_index]
-                    if name in _fit._data_container._error_dicts:
+                    if name in _fit.data_container._error_dicts:
                         continue
                     if name in _fit._param_model._error_dicts:
                         continue
@@ -372,7 +372,7 @@ class MultiFit(FitBase):
         for _fit_index in error_object.fit_indices:
             _fit = self._fits[_fit_index]
             if reference == "data":
-                _target = _fit._data_container
+                _target = _fit.data_container
             elif reference == "model":
                 _target = _fit._param_model
             else:

@@ -53,7 +53,7 @@ class HistPlotAdapter(PlotAdapterBase):
     @property
     def data_x(self):
         """data x values"""
-        return self._fit._data_container.bin_centers
+        return self._fit.data_container.bin_centers
 
     @property
     def data_y(self):
@@ -63,7 +63,7 @@ class HistPlotAdapter(PlotAdapterBase):
     @property
     def data_xerr(self):
         """x error bars for data (actually used to represent the bins)"""
-        return self._fit._data_container.bin_widths * 0.5
+        return self._fit.data_container.bin_widths * 0.5
 
     @property
     def data_yerr(self):
@@ -99,7 +99,7 @@ class HistPlotAdapter(PlotAdapterBase):
     @property
     def model_density_y(self):
         """value of model density at the support points"""
-        _hist_cont = self._fit._data_container
+        _hist_cont = self._fit.data_container
         _mean_bin_size = float(_hist_cont.high - _hist_cont.low)/_hist_cont.size
         _factor = _hist_cont.n_entries * _mean_bin_size
         return _factor * self._fit.eval_model_function_density(x=self.model_density_x)
@@ -107,7 +107,7 @@ class HistPlotAdapter(PlotAdapterBase):
     @property
     def x_range(self):
         """x plot range (the histogram bin range)"""
-        return self._fit._data_container.bin_range
+        return self._fit.data_container.bin_range
 
     @property
     def y_range(self):
