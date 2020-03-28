@@ -2,7 +2,8 @@ import matplotlib as mpl
 import numpy as np
 import six
 
-from .._base import PlotAdapterBase, PlotAdapterException, Plot
+from .._base import PlotAdapterBase, PlotAdapterException
+from .._base.plot import kc_plot_style
 
 from ..xy.plot import XYPlotAdapter
 
@@ -36,6 +37,18 @@ class HistPlotAdapter(PlotAdapterBase):
         self._n_plot_points_model_density = n_plot_points_model_density
 
     # -- private methods
+
+    def _set_plot_labels(self):
+        super(HistPlotAdapter, self)._set_plot_labels()
+        # set model density label according to model label
+        _model_label = self._fit.model_label
+        if _model_label is None:
+            _model_label = dict(kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'model', 'plot_kwargs'))['label']
+        _density_label = dict(kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'model_density', 'plot_kwargs'))['label']
+        _density_label = _density_label % dict(model_label=_model_label)
+        self.update_plot_kwargs('model_density', dict(label=_density_label))
+
+    # -- public methods
 
     @property
     def data_x(self):

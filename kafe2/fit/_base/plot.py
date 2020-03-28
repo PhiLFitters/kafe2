@@ -181,31 +181,10 @@ class PlotAdapterBase(object):
 
         # specification of subplots for which this adapter provided plot routines
         self._subplots = None
+        self._get_subplots()
 
         # set labels if present and according subplots are available
-        _subplots = self._get_subplots()
-        if self._fit.data_container.label is not None:
-            try:
-                self.update_plot_kwargs('data', dict(label=self._fit.data_container.label))
-            except ValueError:
-                warnings.warn('Could not set data label in plot. Try setting it manually with the update_plot_kwargs() '
-                              'method.')
-        if self._fit.model_label is not None:
-            try:
-                self.update_plot_kwargs('model_line', dict(label=self._fit.model_label))
-            except ValueError:  # if model_line is not present assume hist fit or similar
-                try:
-                    self.update_plot_kwargs('model', dict(label=self._fit.model_label))
-                    self.update_plot_kwargs('model_density', dict(label="{} density".format(self._fit.model_label)))
-                except ValueError:
-                    warnings.warn('Could not set model and/or model_density label in plot. Try setting it manually with'
-                                  ' the update_plot_kwargs() method.')
-            _model_error_name = "{} $\\pm 1\\sigma$".format(self._fit.model_label) \
-                if self._fit.model_label != '__del__' else '__del__'
-            try:
-                self.update_plot_kwargs('model_error_band', dict(label=_model_error_name))
-            except ValueError:
-                pass  # no error band available
+        self._set_plot_labels()
 
     def _get_subplots(self):
         '''create dictionary containing all subplot specifications'''
@@ -241,6 +220,27 @@ class PlotAdapterBase(object):
                 self._subplots[_pt].setdefault('plot_method_keywords', {})
 
         return self._subplots
+
+    def _set_plot_labels(self):
+        """Obtain the labels from data and model container and set them accordingly"""
+        if self._fit.data_container.label is not None:
+            try:
+                self.update_plot_kwargs('data', dict(label=self._fit.data_container.label))
+            except ValueError:
+                pass  # no data present
+        if self._fit.model_label is not None:
+            # setting those in the derived classes would cause lots of duplicates, do it here for now
+            for plot_model_name in ('model', 'model_line'):
+                try:
+                    self.update_plot_kwargs(plot_model_name, dict(label=self._fit.model_label))
+                except ValueError:
+                    pass  # no model plot function available
+            _model_error_name = kc('fit', 'plot', 'error_label') % dict(model_label=self._fit.model_label) \
+                if self._fit.model_label != '__del__' else '__del__'
+            try:
+                self.update_plot_kwargs('model_error_band', dict(label=_model_error_name))
+            except ValueError:
+                pass  # no error band available
 
     def _get_subplot_kwargs(self, plot_index, plot_type):
         '''resolve the keyword arguments passed to the plot method'''

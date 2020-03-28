@@ -85,7 +85,7 @@ histogram:
     plot_kwargs:
       linestyle: '-'
       marker: ''
-      label: 'density %(subplot_id)s'
+      label: '%(model_label)s density'
       linewidth: 2
       #zorder: -10
     property_cycler:
