@@ -1201,16 +1201,6 @@ class Nexus(object):
                                     ),
                                     UserWarning
                                 )
-                            except:
-                                # something else may have gone wrong
-                                warnings.warn(
-                                    "Ignoring default value {!r} for function parameter '{}': "
-                                    "non-empty nexus node already exists.".format(
-                                        _arg_default,
-                                        _node_name
-                                    ),
-                                    UserWarning
-                                )
 
                     # register existing node as parameter
                     _pars.append(_existing_node)
