@@ -1,6 +1,7 @@
 import sys
 from copy import copy
 import numpy as np
+import warnings
 
 from .._base import FitBase
 from ...core import Nexus, NexusFitter
@@ -572,8 +573,21 @@ class MultiFit(FitBase):
                 latex_expression_format_string=latex_expression_format_string)
 
     def assign_parameter_latex_names(self, **par_latex_names_dict):
-        for _fit in self._fits:
-            _fit.assign_parameter_latex_names(**par_latex_names_dict)
+        _keys = list(par_latex_names_dict.keys())
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message="Could not assign all latex names.*")
+            for _fit in self._fits:
+                _fit.assign_parameter_latex_names(**par_latex_names_dict)
+                for _arg_formatter in _fit._get_model_function_argument_formatters():
+                    try:
+                        _keys.remove(_arg_formatter.name)
+                    except ValueError:
+                        pass
+        if _keys:
+            warnings.warn(
+                "Could not assign all parameter latex names to single fits. Leftover: {}".format(
+                    _keys))
+
 
     def disable_error(self, err_id):
         """
