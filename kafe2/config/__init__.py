@@ -4,8 +4,9 @@ Handle global kafe2 configuration
 
 import os
 import yaml
-from matplotlib import rc_params_from_file
+import matplotlib as mpl
 from copy import deepcopy
+from tempfile import NamedTemporaryFile
 
 
 class ConfigError(Exception):
@@ -64,4 +65,16 @@ def kc(*keys):
     return _dict
 
 
-kafe2_rc = rc_params_from_file(os.path.join(__path__[0], 'kafe2.matplotlibrc.conf'))
+if mpl.__version__.startswith('2'):
+    kafe2_rc = mpl.rc_params_from_file(os.path.join(__path__[0], 'kafe2.matplotlibrc.conf'))
+    mpl.rcParams.update(**kafe2_rc)
+elif mpl.__version__.startswith('3'):
+    _fake_file = NamedTemporaryFile()
+    with open(os.path.join(__path__[0], 'kafe2.matplotlibrc.conf')) as _file:
+        for _line in _file.readlines():
+            if _line.startswith("text.latex.unicode"):
+                continue
+            _fake_file.write(_line.encode())
+            _fake_file.write('\n'.encode())
+    kafe2_rc = mpl.rc_params_from_file(_fake_file.name)
+    _fake_file.close()
