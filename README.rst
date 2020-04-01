@@ -27,6 +27,8 @@ models. The numeric aspects are handled using the scientific Python
 stack (numpy, scipy, ...). Visualization of the data and the estimated
 model are provided by matplotlib.
 
+While *kafe2* supports both Python 2 and Python 3, the use of Python 3 is recommended.
+
 **Note**
 
 kafe2 is currently in a *beta* state. Most features are working as intended. However, bugs
