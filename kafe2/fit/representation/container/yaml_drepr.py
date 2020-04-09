@@ -7,7 +7,7 @@ from ....fit import HistContainer, IndexedContainer, XYContainer, UnbinnedContai
 from .. import _AVAILABLE_REPRESENTATIONS
 from ._base import DataContainerDReprBase
 from .._base import DReprError
-from .._yaml_base import YamlWriterMixin, YamlReaderMixin, YamlReaderException
+from .._yaml_base import YamlWriterMixin, YamlReaderMixin, YamlReaderException, YamlWriterException
 
 __all__ = ["DataContainerYamlReader", "DataContainerYamlWriter"]
 
@@ -167,6 +167,9 @@ class DataContainerYamlWriter(YamlWriterMixin, DataContainerDReprBase):
 
         # -- write representation for container types
         if _class is HistContainer:
+            # TODO: Add manual bin height support
+            if container._manual_heights:
+                raise YamlWriterException("Manual set bins are not yet supported with kafe2go.")
             _yaml_doc['bin_edges'] = container.bin_edges.tolist()
             _yaml_doc['raw_data'] = list(map(float, container.raw_data))  # float64 -> float
         elif _class is IndexedContainer or _class is UnbinnedContainer:
