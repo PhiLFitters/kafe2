@@ -20,6 +20,7 @@ class TestDatastoreHistogram(unittest.TestCase):
         self._ref_bin_edges_manual_equalspacing = np.linspace(0, 10, self._ref_n_bins_manual + 1)
                                                     # [0 , 1 , 2 , 3 , 4 , 5 , 6 , 7 , 8 , 9 , 10]
         self._ref_data_manual_equalspacing = np.array([  0,  0,  1,  1,  0,  1,  0,  0,  1,  0])
+        self._ref_bin_heights_manual =       np.array([  5,  4, 10,  3,  0, 15,  7,  4, 20,  1])
 
         self._ref_bin_edges_manual_variablespacing =   [0 , 2 , 3 , 3.1 , 3.2 , 3.3 , 3.4 , 7 , 8.5 , 9 , 10]
         self._ref_data_manual_variablespacing = np.array([  0,  1,  0,    0,    0,    1,    1,  0,    1,  0])
@@ -88,6 +89,11 @@ class TestDatastoreHistogram(unittest.TestCase):
             np.allclose(self.hist_cont_binedges_auto.data, self._ref_data_manual_variablespacing)
         )
 
+    def test_manual_bin_height(self):
+        self.hist_cont_binedges_manual_equal.set_bins(self._ref_bin_heights_manual)
+        self.assertTrue(np.alltrue(self.hist_cont_binedges_manual_equal.data == self._ref_bin_heights_manual))
+        self.assertTrue(self.hist_cont_binedges_manual_equal._manual_heights)
+
     def test_construct_bin_edges_variablespacing_withedges(self):
         _hc = HistContainer(self._ref_n_bins_manual, self._ref_n_bin_range, bin_edges=self._probe_bin_edges_variablespacing_withedges)
 
@@ -131,6 +137,11 @@ class TestDatastoreHistogram(unittest.TestCase):
     def test_raise_get_inexistent_error(self):
         with self.assertRaises(DataContainerException):
             self.hist_cont_binedges_auto.get_error("MyInexistentError")
+
+    def test_raise_manual_bin_heights_rebin(self):
+        self.hist_cont_binedges_manual_equal.set_bins(self._ref_bin_heights_manual)
+        with self.assertRaises(DataContainerException):
+            self.hist_cont_binedges_manual_equal.rebin(self._ref_bin_edges_manual_variablespacing)
 
 
 class TestDatastoreHistParametricModel(unittest.TestCase):
