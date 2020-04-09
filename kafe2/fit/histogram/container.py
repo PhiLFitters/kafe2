@@ -47,21 +47,21 @@ class HistContainer(IndexedContainer):
         if len(bin_range) != 2:
             raise HistContainerException(
                 "Invalid bin range specification: %r! Must be tuple of 2 floats..." % (bin_range,))
-        self._bin_range = tuple(bin_range)
+        low, high = tuple(bin_range)
 
         if bin_edges is not None:
             # user specified bin edges -> check that these match the given 'n_bins' and 'bin_range'
             _sz = self.size
             if len(bin_edges) == _sz + 1:
                 # assume bin edges given including bin range
-                if not (bin_edges[0] == self.low and bin_edges[-1] == self.high):
+                if not (bin_edges[0] == low and bin_edges[-1] == high):
                     raise HistContainerException(
                         "Invalid bin edge specification! First and last elements %r must match histogram bin range %r."
-                        % ((bin_edges[0], bin_edges[-1]), self.bin_range))
+                        % ((bin_edges[0], bin_edges[-1]), bin_range))
                 _bin_edges_including_low_and_high = bin_edges
             elif len(bin_edges) == _sz - 1:
                 # <check if ordered and strictly within bin range>
-                _bin_edges_including_low_and_high = [self._bin_range[0]] + bin_edges + [self._bin_range[1]]
+                _bin_edges_including_low_and_high = [low] + bin_edges + [high]
             else:
                 raise HistContainerException(
                     "Invalid bin edge specification! Number of elements (%d) must match histogram bin number (%d) +/- 1."
@@ -69,7 +69,7 @@ class HistContainer(IndexedContainer):
             self.rebin(new_bin_edges=_bin_edges_including_low_and_high)
         else:
             # construct own bin edges
-            self._bin_edges = np.linspace(self.low, self.high, n_bins+1)
+            self._bin_edges = np.linspace(bin_range[0], bin_range[1], n_bins+1)
 
         if fill_data is not None:
             self.fill(fill_data)
@@ -136,7 +136,7 @@ class HistContainer(IndexedContainer):
     @property
     def n_entries(self):
         """the number of entries"""
-        return len(self._processed_entries) + len(self._unprocessed_entries)
+        return np.sum(self._data) + len(self._unprocessed_entries)
 
     @property
     def data(self):
@@ -159,17 +159,17 @@ class HistContainer(IndexedContainer):
     @property
     def low(self):
         """the lower edge of the histogram"""
-        return self._bin_range[0]
+        return self._bin_edges[0]
 
     @property
     def high(self):
         """the upper edge of the histogram"""
-        return self._bin_range[1]
+        return self._bin_edges[-1]
 
     @property
     def bin_range(self):
         """a tuple containing the lower and upper edges of the histogram"""
-        return self._bin_range
+        return self.low, self.high
 
     @property
     def overflow(self):
@@ -206,16 +206,16 @@ class HistContainer(IndexedContainer):
     # -- public methods
 
     def fill(self, entries):
-       """
-       Fill new entries into the histogram.
+        """
+        Fill new entries into the histogram.
 
-       :param entries: list of entries
-       :type entries: list of floats
-       """
-       try:
-           self._unprocessed_entries += list(entries)
-       except TypeError:
-           self._unprocessed_entries.append(entries)
+        :param entries: list of entries
+        :type entries: list of floats
+        """
+        try:
+            self._unprocessed_entries += list(entries)
+        except TypeError:
+            self._unprocessed_entries.append(entries)
 
     def rebin(self, new_bin_edges):
         """
