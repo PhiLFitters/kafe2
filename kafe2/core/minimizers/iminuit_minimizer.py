@@ -182,7 +182,7 @@ class MinimizerIMinuit(MinimizerBase):
                 # TODO without the call below parameter values are changed by calling this method. Why?
                 self._func_wrapper_unpack_args(self.parameter_values)
             except RuntimeError:
-                pass
+                _mat = None
             self._load_state()
             self._par_cov_mat = _mat
         return self._par_cov_mat
@@ -203,7 +203,7 @@ class MinimizerIMinuit(MinimizerBase):
                 # TODO without the call below parameter values are changed by calling this method. Why?
                 self._func_wrapper_unpack_args(self.parameter_values)
             except RuntimeError:
-                pass
+                _mat = None
             self._load_state()
             self._par_cor_mat = _mat
         return self._par_cor_mat
@@ -314,7 +314,7 @@ class MinimizerIMinuit(MinimizerBase):
 
     def fix(self, parameter_name):
         self._minimizer_param_dict["fix_" + parameter_name] = True
-        self.reset()
+        self._get_iminuit().fixed[parameter_name] = True
 
     def is_fixed(self, parameter_name):
         return self._minimizer_param_dict["fix_%s" % parameter_name]
@@ -325,7 +325,7 @@ class MinimizerIMinuit(MinimizerBase):
 
     def release(self, parameter_name):
         self._minimizer_param_dict["fix_" + parameter_name] = False
-        self.reset()
+        self._get_iminuit().fixed[parameter_name] = False
 
     def release_several(self, parameter_names):
         for _pn in parameter_names:
@@ -342,6 +342,11 @@ class MinimizerIMinuit(MinimizerBase):
 
     def minimize(self, max_calls=6000):
         self._get_iminuit().migrad(ncall=max_calls)
+
+        for (_pn, _pv, _pe) in zip(
+                self.parameter_names, self.parameter_values, self.parameter_errors):
+            self._minimizer_param_dict[_pn] = _pv
+            self._minimizer_param_dict["error_" + _pn] = _pe
 
         # invalidate cache
         self._invalidate_cache()
