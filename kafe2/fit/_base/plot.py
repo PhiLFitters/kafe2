@@ -708,7 +708,8 @@ class Plot(object):
                 update_asymmetric_errors=asymmetric_parameter_errors
             )
         else:
-            self._multifit.asymmetric_parameter_errors
+            if asymmetric_parameter_errors:
+                self._multifit.asymmetric_parameter_errors
             self._multifit._update_parameter_formatters(
                 update_asymmetric_errors=asymmetric_parameter_errors
             )
