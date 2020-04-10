@@ -214,6 +214,13 @@ class MinimizerScipyOptimize(MinimizerBase):
     def unlimit(self, parameter_name):
         _par_id = self._par_names.index(parameter_name)
         self._par_bounds[_par_id] = (None, None)
+        _all_pars_unbounded = True
+        for _par_bound in self._par_bounds:
+            if _par_bound != (None, None):
+                _all_pars_unbounded = False
+                break
+        if _all_pars_unbounded:
+            self._par_bounds = None
 
     def minimize(self, max_calls=6000):
         if np.any(self._par_fixed):
@@ -237,9 +244,19 @@ class MinimizerScipyOptimize(MinimizerBase):
                 _dyn_and_fixed_args[0, 0:-_n_fixed_parameters] = args
                 _selected_values = _dyn_and_fixed_args[_par_fixed_indices, _position_indices]
                 return self._func_wrapper_unpack_args(_selected_values)
+
+            if self._par_bounds is None:
+                _par_bounds = None
+            else:
+                _par_bounds = []
+                for _par_index, _par_fixed in enumerate(self._par_fixed):
+                    if not _par_fixed:
+                        _par_bounds.append(self._par_bounds[_par_index])
+
         else:
             _func = self._func_wrapper_unpack_args
             _par_vals = self.parameter_values
+            _par_bounds = self._par_bounds
 
         self._opt_result = opt.minimize(_func,
                                         _par_vals,
@@ -247,7 +264,7 @@ class MinimizerScipyOptimize(MinimizerBase):
                                         method=self._method,
                                         jac=None,
                                         hess=None, hessp=None,
-                                        bounds=self._par_bounds,
+                                        bounds=_par_bounds,
                                         constraints=self._par_constraints,
                                         tol=self.tolerance,
                                         callback=None,
