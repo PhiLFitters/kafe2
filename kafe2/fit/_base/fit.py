@@ -752,11 +752,17 @@ class FitBase(FileIOMixin, object):
             _result_dict['parameter_cor_mat'] = None
 
         if self._loaded_result_dict is not None and self._loaded_result_dict['asymmetric_parameter_errors'] is not None:
-            _result_dict['asymmetric_parameter_errors'] = self._loaded_result_dict['asymmetric_parameter_errors']
+            _asymm_errs = self._loaded_result_dict['asymmetric_parameter_errors']
         elif asymmetric_parameter_errors:
-            _result_dict['asymmetric_parameter_errors'] = self.asymmetric_parameter_errors
+            _asymm_errs = self.asymmetric_parameter_errors
         else:
-            _result_dict['asymmetric_parameter_errors'] = self._fitter.asymmetric_fit_parameter_errors_if_calculated
+            _asymm_errs = self._fitter.asymmetric_fit_parameter_errors_if_calculated
+        if _asymm_errs is not None:
+            _asymm_errs_dict = OrderedDict()
+            for _pn, _ape in zip(self.parameter_names, _asymm_errs):
+                _asymm_errs_dict[_pn] = _ape
+            _asymm_errs = _asymm_errs_dict
+        _result_dict['asymmetric_parameter_errors'] = _asymm_errs
 
         return _result_dict
 
