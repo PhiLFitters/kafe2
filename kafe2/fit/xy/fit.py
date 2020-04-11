@@ -898,8 +898,7 @@ class XYFit(FitBase):
         _par_val_dict = {_pn: _pv for _pn, _pv in zip(_param_names, param_values)}
         self.set_parameter_values(**_par_val_dict)
 
-    def do_fit(self):
-        """Perform the fit."""
+    def do_fit(self, asymmetric_parameter_errors=False):
         if self._cost_function.needs_errors and not self._data_container.has_y_errors:
             self._cost_function.on_no_errors()
 
@@ -956,6 +955,7 @@ class XYFit(FitBase):
         # clear loaded results and update parameter formatters
         self._loaded_result_dict = None
         self._update_parameter_formatters()
+        return self.get_result_dict(asymmetric_parameter_errors=asymmetric_parameter_errors)
 
     def eval_model_function(self, x=None, model_parameters=None):
         """

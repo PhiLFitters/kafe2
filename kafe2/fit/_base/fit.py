@@ -686,15 +686,21 @@ class FitBase(FileIOMixin, object):
             _ret = self._param_model.enable_error(err_id)  # TODO: this call does not return anything
         return _ret
 
-    def do_fit(self):
+    def do_fit(self, asymmetric_parameter_errors=False):
         """
         Perform the minimization of the cost function.
+
+        :param asymmetric_parameter_errors: if True, calculate asymmetric parameter errors
+        :type asymmetric_parameter_errors: bool
+        :return: a dictionary containing the fit results
+        :rtype: dict
         """
         if self._cost_function.needs_errors and not self._data_container.has_errors:
             self._cost_function.on_no_errors()
         self._fitter.do_fit()  # TODO specify other node to minimize
         self._loaded_result_dict = None
         self._update_parameter_formatters()
+        return self.get_result_dict(asymmetric_parameter_errors=asymmetric_parameter_errors)
 
     def assign_model_function_expression(self, expression_format_string):
         """Assign a plain-text-formatted expression string to the model function."""
@@ -717,9 +723,12 @@ class FitBase(FileIOMixin, object):
         if par_latex_names_dict:
             warnings.warn("Could not assign all latex names to a parameter. Leftover: {}".format(par_latex_names_dict))
 
-    def get_result_dict(self):
+    def get_result_dict(self, asymmetric_parameter_errors=False):
         """Return a dictionary of the fit results.
 
+        :param asymmetric_parameter_errors: if True, calculate asymmetric parameter errors
+        :type asymmetric_parameter_errors: bool
+        :return: a dictionary containing the fit results
         :rtype: dict"""
         _result_dict = dict()
 
@@ -729,10 +738,13 @@ class FitBase(FileIOMixin, object):
         _result_dict['cost'] = _cost
         _result_dict['ndf'] = _ndf
         _result_dict['cost/ndf'] = _cost / _ndf
-        _result_dict['parameter_values'] = self.parameter_values
+        _result_dict['parameter_values'] = self.parameter_name_value_dict
         if _result_dict['did_fit']:
             _result_dict['parameter_cov_mat'] = self.parameter_cov_mat
-            _result_dict['parameter_errors'] = self.parameter_errors
+            _parameter_errors = OrderedDict()
+            for _pn, _pe in zip(self.parameter_names, self.parameter_errors):
+                _parameter_errors[_pn] = _pe
+            _result_dict['parameter_errors'] = _parameter_errors
             _result_dict['parameter_cor_mat'] = self.parameter_cor_mat
         else:
             _result_dict['parameter_cov_mat'] = None
@@ -741,6 +753,8 @@ class FitBase(FileIOMixin, object):
 
         if self._loaded_result_dict is not None and self._loaded_result_dict['asymmetric_parameter_errors'] is not None:
             _result_dict['asymmetric_parameter_errors'] = self._loaded_result_dict['asymmetric_parameter_errors']
+        elif asymmetric_parameter_errors:
+            _result_dict['asymmetric_parameter_errors'] = self.asymmetric_parameter_errors
         else:
             _result_dict['asymmetric_parameter_errors'] = self._fitter.asymmetric_fit_parameter_errors_if_calculated
 
