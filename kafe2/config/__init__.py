@@ -8,6 +8,8 @@ import matplotlib as mpl
 from copy import deepcopy
 from tempfile import NamedTemporaryFile
 
+__all__ = ['ConfigLoader', 'ConfigError', 'ConfigTypeError', 'ConfigLookupError', 'kafe2_rc', 'kc']
+
 
 class ConfigError(Exception):
     pass

@@ -16,15 +16,7 @@ if six.PY2:
 else:
     from inspect import signature, Parameter as SigParameter
 
-
-__all__ = [
-    "Parameter",
-    "Function",
-    "Fallback",
-    "Tuple",
-    "Nexus",
-    "NexusError"
-]
+__all__ = ['Nexus', 'NexusError', 'Alias', 'Array', 'Fallback', 'Function', 'Parameter', 'Tuple']
 
 # -- helpers
 

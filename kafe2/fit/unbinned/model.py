@@ -4,6 +4,8 @@ from .._base import ParametricModelBaseMixin
 from .container import UnbinnedContainer, UnbinnedContainerException
 from ..util import function_library
 
+__all__ = ['UnbinnedParametricModel', 'UnbinnedParametricModelException']
+
 
 class UnbinnedParametricModelException(UnbinnedContainerException):
     pass

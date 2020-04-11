@@ -6,7 +6,7 @@ from ..indexed import IndexedContainer
 from ..indexed.container import IndexedContainerException
 
 
-__all__ = ["XYContainer"]
+__all__ = ['XYContainer', 'XYContainerException']
 
 
 class XYContainerException(IndexedContainerException):

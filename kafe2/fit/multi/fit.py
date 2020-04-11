@@ -11,6 +11,8 @@ from ...tools import random_alphanumeric
 from .cost import MultiCostFunction, SharedChi2CostFunction
 from collections import OrderedDict
 
+__all__ = ['MultiFit']
+
 
 class MultiFit(FitBase):
     """

@@ -18,7 +18,7 @@ from .plot import IndexedPlotAdapter
 from ..util import function_library, add_in_quadrature, collect, invert_matrix
 
 
-__all__ = ["IndexedFit"]
+__all__ = ['IndexedFit', 'IndexedFitException']
 
 
 class IndexedFitException(FitException):

@@ -1,7 +1,7 @@
 from ..indexed import IndexedContainer
 from ..indexed.container import IndexedContainerException
 
-__all__ = ["UnbinnedContainer"]
+__all__ = ['UnbinnedContainer', 'UnbinnedContainerException']
 
 
 class UnbinnedContainerException(IndexedContainerException):

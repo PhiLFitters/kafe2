@@ -14,7 +14,7 @@ from .model import HistParametricModel, HistModelFunction
 from .plot import HistPlotAdapter
 from ..util import function_library, add_in_quadrature, collect, invert_matrix
 
-__all__ = ["HistFit"]
+__all__ = ['HistFit', 'HistFitException']
 
 
 class HistFitException(FitException):

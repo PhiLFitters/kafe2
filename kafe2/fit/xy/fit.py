@@ -18,7 +18,7 @@ from .plot import XYPlotAdapter
 from ..util import function_library, add_in_quadrature, collect, invert_matrix
 
 
-__all__ = ["XYFit"]
+__all__ = ['XYFit', 'XYFitException']
 
 
 class XYFitException(FitException):

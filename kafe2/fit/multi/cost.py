@@ -3,6 +3,8 @@ import numpy as np
 
 from .._base import CostFunctionBase, CostFunctionBase_Chi2
 
+__all__ = ['MultiCostFunction', 'SharedChi2CostFunction']
+
 
 class MultiCostFunction(CostFunctionBase):
 

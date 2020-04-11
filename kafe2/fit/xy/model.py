@@ -7,7 +7,7 @@ from .container import XYContainer, XYContainerException
 from ..util import function_library
 
 
-__all__ = ["XYParametricModel"]
+__all__ = ['XYParametricModel', 'XYParametricModelException']
 
 
 class XYParametricModelException(XYContainerException):

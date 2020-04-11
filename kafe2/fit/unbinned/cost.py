@@ -7,7 +7,6 @@ from ..util import function_library
 __all__ = [
     "UnbinnedCostFunction_UserDefined",
     "UnbinnedCostFunction_NegLogLikelihood",
-    "STRING_TO_COST_FUNCTION"
 ]
 
 

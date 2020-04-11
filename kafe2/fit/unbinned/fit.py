@@ -12,7 +12,7 @@ from .model import UnbinnedParametricModel
 from .plot import UnbinnedPlotAdapter
 from ..util import collect
 
-__all__ = ["UnbinnedFit"]
+__all__ = ['UnbinnedFit', 'UnbinnedFitException']
 
 
 class UnbinnedFitException(FitException):
