@@ -167,8 +167,8 @@ class PlotAdapterBase(object):
         :type axis_labels: tuple[str, str]
         """
         self._fit = fit_object
-        self.x_range = None
-        self.y_range = None
+        self._x_range = None
+        self._y_range = None
         _axes = ('x', 'y')
         _axis_labels = []
         for i, label in enumerate(axis_labels):
