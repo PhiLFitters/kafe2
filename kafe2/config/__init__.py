@@ -65,17 +65,20 @@ def kc(*keys):
     return _dict
 
 
-if mpl.__version__.startswith('2'):
-    kafe2_rc = mpl.rc_params_from_file(os.path.join(__path__[0], 'kafe2.matplotlibrc.conf'))
-    mpl.rcParams.update(**kafe2_rc)
-elif mpl.__version__.startswith('3'):
-    _temp_file = NamedTemporaryFile(delete=False)
-    with open(os.path.join(__path__[0], 'kafe2.matplotlibrc.conf')) as _file:
-        for _line in _file.readlines():
-            if _line.startswith("text.latex.unicode"):
-                continue
-            _temp_file.write(_line.encode())
-            _temp_file.write('\n'.encode())
-    kafe2_rc = mpl.rc_params_from_file(_temp_file.name)
-    _temp_file.close()
-    os.remove(_temp_file.name)
+try:
+    if mpl.__version__.startswith('2'):
+        kafe2_rc = mpl.rc_params_from_file(os.path.join(__path__[0], 'kafe2.matplotlibrc.conf'))
+        mpl.rcParams.update(**kafe2_rc)
+    elif mpl.__version__.startswith('3'):
+        _temp_file = NamedTemporaryFile(delete=False)
+        with open(os.path.join(__path__[0], 'kafe2.matplotlibrc.conf')) as _file:
+            for _line in _file.readlines():
+                if _line.startswith("text.latex.unicode"):
+                    continue
+                _temp_file.write(_line.encode())
+                _temp_file.write('\n'.encode())
+        kafe2_rc = mpl.rc_params_from_file(_temp_file.name)
+        _temp_file.close()
+        os.remove(_temp_file.name)
+except AttributeError:
+    kafe2_rc = None  # if mpl is only a mock module
