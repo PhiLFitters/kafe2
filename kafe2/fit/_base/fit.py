@@ -1,18 +1,18 @@
 import abc
-import numpy as np
 import sys
-import six
 import warnings
-
 from collections import OrderedDict
 from functools import partial
 
+import numpy as np
+import six
+
+from .container import DataContainerBase, DataContainerException
+from ..io.file import FileIOMixin
+from ...config import kc
 from ...core import NexusFitter
 from ...core.constraint import GaussianMatrixParameterConstraint, GaussianSimpleParameterConstraint
 from ...tools import print_dict_as_table
-from ...config import kc
-from ..io.file import FileIOMixin
-from .container import DataContainerBase, DataContainerException
 
 __all__ = ["FitBase", "FitException"]
 
