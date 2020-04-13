@@ -19,9 +19,7 @@ class DataContainerException(Exception):
 
 @six.add_metaclass(abc.ABCMeta)
 class DataContainerBase(FileIOMixin, object):
-    """
-    This is a purely abstract class implementing the minimal interface required by all
-    types of data containers.
+    """This is a purely abstract class implementing the minimal interface required by all types of data containers.
 
     It stores measurement data and uncertainties.
     """
@@ -99,11 +97,6 @@ class DataContainerBase(FileIOMixin, object):
 
     @label.setter
     def label(self, label):
-        """The label describing the dataset.
-
-        :param label: The new label.
-        :type label: str
-        """
         self._label = label
 
     @property
@@ -116,28 +109,18 @@ class DataContainerBase(FileIOMixin, object):
 
     @axis_labels.setter
     def axis_labels(self, labels):
-        """The axis labels describing the dataset.
-
-        :param labels: Tuple of the new axis labels.
-        :type labels: tuple[str, str]
-        """
         self._axis_labels = labels
 
     @property
     def x_label(self):
         """The x-axis label.
 
-        :return: str or None
+        :rtype: str or None
         """
         return self._axis_labels[0]
 
     @x_label.setter
     def x_label(self, label):
-        """The x-axis label.
-
-        :param label: The new label.
-        :type label: str
-        """
         _, _y_label = self._axis_labels
         self._axis_labels = (label, _y_label)
 
@@ -145,77 +128,86 @@ class DataContainerBase(FileIOMixin, object):
     def y_label(self):
         """The y-axis label.
 
-        :return: str or None
+        :rtype: str or None
         """
         return self._axis_labels[1]
 
     @y_label.setter
     def y_label(self, label):
-        """The y-axis label.
-
-        :param label: The new label.
-        :type label: str
-        """
         _x_label, _ = self._axis_labels
         self._axis_labels = (_x_label, label)
 
     @property
     @abc.abstractmethod
     def size(self):
-        """The size of the data (number of measurement points)"""
+        """The size of the data (number of measurement points).
+
+        :rtype: int
+        """
         return 0
 
     @property
     @abc.abstractmethod
     def data(self):
-        """A numpy array containing the data values"""
+        """A numpy array containing the data values.
+
+        :rtype: np.ndarray[float]
+        """
         return np.empty(tuple())
 
     @property
     @abc.abstractmethod
     def err(self):
-        """A numpy array containing the pointwise data uncertainties"""
+        """A numpy array containing the pointwise data uncertainties.
+
+        :rtype: np.ndarray[float]
+        """
         return np.empty(tuple())
 
     @property
     @abc.abstractmethod
     def cov_mat(self):
-        """A numpy matrix containing the covariance matrix of the data"""
+        """A numpy matrix containing the covariance matrix of the data.
+
+        :rtype: np.ndarray[np.ndarray[float]]"""
         return np.array(np.empty(tuple()))
 
     @property
     @abc.abstractmethod
     def cov_mat_inverse(self):
-        """A numpy matrix containing inverse of the data covariance matrix (or ``None`` if not invertible)"""
+        """A numpy matrix containing inverse of the data covariance matrix (or ``None`` if not invertible).
+
+        :rtype: np.ndarray[np.ndarray[float]] or None
+        """
         return np.array(np.empty(tuple()))
 
     @property
     def has_errors(self):
-        """``True`` if at least one uncertainty source is defined for the data container"""
+        """``True`` if at least one uncertainty source is defined for the data container.
+
+        :rtype: bool
+        """
         return True if self._error_dicts else False
 
     # -- public methods
 
     # error-related methods
 
-    def add_error(self, err_val,
-                  name=None, correlation=0, relative=False, reference=None):
-        """
-        Add an uncertainty source to the data container.
-        Returns an error id which uniquely identifies the created error source.
+    def add_error(self, err_val, name=None, correlation=0, relative=False, reference=None):
+        """Add an uncertainty source to the data container.
 
-        :param err_val: pointwise uncertainty/uncertainties for all data points
-        :type err_val: float or iterable of float
-        :param name: unique name for this uncertainty source. If ``None``, the name
-                     of the error source will be set to a random alphanumeric string.
-        :type name: str or ``None``
-        :param correlation: correlation coefficient between any two distinct data points
+        :param err_val: Pointwise uncertainty/uncertainties for all data points.
+        :type err_val: float or np.ndarray[float]
+        :param name: Unique name for this uncertainty source. If ``None``, the name of the error source will be set to a
+                     random alphanumeric string.
+        :type name: str or None
+        :param correlation: Correlation coefficient between any two distinct data points.
         :type correlation: float
-        :param relative: if ``True``, **err_val** will be interpreted as a *relative* uncertainty
+        :param relative: If ``True``, **err_val** will be interpreted as a *relative* uncertainty.
         :type relative: bool
-        :param reference: the data values to use when computing absolute errors from relative ones (and vice-versa)
-        :type reference: iterable of float or ``None``
-        :return: error name
+        :param reference: The data values to use when computing absolute errors from relative ones (and vice-versa)
+        :type reference: collections.Iterable[float] or None
+        :return: An error id which uniquely identifies the created error source.
         :rtype: str
         """
         try:
@@ -234,24 +226,22 @@ class DataContainerBase(FileIOMixin, object):
 
     def add_matrix_error(self, err_matrix, matrix_type,
                          name=None, err_val=None, relative=False, reference=None):
-        """
-        Add a matrix uncertainty source to the data container.
-        Returns an error id which uniquely identifies the created error source.
+        """Add a matrix uncertainty source to the data container.
 
-        :param err_matrix: covariance or correlation matrix
-        :param matrix_type: one of ``'covariance'``/``'cov'`` or ``'correlation'``/``'cor'``
+        :param err_matrix: Covariance or correlation matrix.
+        :param matrix_type: One of ``'covariance'``/``'cov'`` or ``'correlation'``/``'cor'``.
         :type matrix_type: str
-        :param name: unique name for this uncertainty source. If ``None``, the name
-                     of the error source will be set to a random alphanumeric string.
-        :type name: str or ``None``
-        :param err_val: the pointwise uncertainties (mandatory if only a correlation matrix is given)
-        :type err_val: iterable of float
-        :param relative: if ``True``, the covariance matrix and/or **err_val** will be interpreted
-                         as a *relative* uncertainty
+        :param name: Unique name for this uncertainty source. If ``None``, the name of the error source will be set to a
+                     random alphanumeric string.
+        :type name: str or None
+        :param err_val: The pointwise uncertainties (mandatory if only a correlation matrix is given).
+        :type err_val: collections.Iterable[float]
+        :param relative: If ``True``, the covariance matrix and/or **err_val** will be interpreted as a *relative*
+                         uncertainty.
         :type relative: bool
         :param reference: the data values to use when computing absolute errors from relative ones (and vice-versa)
-        :type reference: iterable of float or ``None``
-        :return: error name
+        :type reference: collections.Iterable[float] or None
+        :return: An error id which uniquely identifies the created error source.
         :rtype: str
         """
         _err = MatrixGaussianError(err_matrix=err_matrix, matrix_type=matrix_type, err_val=err_val,
@@ -261,9 +251,7 @@ class DataContainerBase(FileIOMixin, object):
         return _name
 
     def disable_error(self, error_name):
-        """
-        Temporarily disable an uncertainty source so that it doesn't count towards calculating the
-        total uncertainty.
+        """Temporarily disable an uncertainty source so that it doesn't count towards calculating the total uncertainty.
 
         :param error_name: error name
         :type error_name: str
@@ -273,9 +261,7 @@ class DataContainerBase(FileIOMixin, object):
         self._on_error_change()
 
     def enable_error(self, error_name):
-        """
-        (Re-)Enable an uncertainty source so that it counts towards calculating the
-        total uncertainty.
+        """(Re-)Enable an uncertainty source so that it counts towards calculating the total uncertainty.
 
         :param error_name: error name
         :type error_name: str
@@ -285,37 +271,32 @@ class DataContainerBase(FileIOMixin, object):
         self._on_error_change()
 
     def get_matching_errors(self, matching_criteria=None, matching_type='equal'):
-        """
-        Return a list of uncertainty objects fulfilling the specified
-        matching criteria.
+        """Return a list of uncertainty objects fulfilling the specified matching criteria.
 
         Valid keys for ``matching_criteria``:
-
             * ``name`` (the unique error name)
             * ``type`` (either ``simple`` or ``matrix``)
             * ``correlated`` (bool, only matches simple errors!)
 
-        NOTE: The error objects contained in the dictionary are not copies,
-        but the original error objects.
-        Modifying them is possible, but not recommended. If you do modify any
-        of them, the changes will not be reflected in the total error calculation
-        until the error cache is cleared. This can be done by calling the
-        private method
-        :py:meth:`~kafe2.fit._base.container.DataContainerBase._clear_total_error_cache`.
+        .. note::
+            The error objects contained in the dictionary are not copies, but the original error objects.
+            Modifying them is possible, but not recommended.
+            If you do modify any of them, the changes will not be reflected in the total error calculation until the
+            error cache is cleared.
+            This can be done by calling the private method :py:meth:`~_clear_total_error_cache`.
 
-        :param matching_criteria: key-value pairs specifying matching criteria.
-                                  The resulting error array will only contain
-                                  error objects matching *all* provided criteria.
+        :param matching_criteria: Key-value pairs specifying matching criteria. The resulting error array will only
+                                  contain error objects matching *all* provided criteria.
                                   If ``None``, all error objects are returned.
-        :type matching_criteria: dict or ``None``
-        :param matching_type: how to perform the matching. If ``'equal'``, the
-                              value in ``matching_criteria`` is checked for equality
-                              against the stored value. If ``'regex', the
-                              value in ``matching_criteria`` is interpreted as a regular
-                              expression and is matched against the stored value.
-        :type matching_type: ``'equal'`` or ``'regex'``
-        :return: list of error objects
-        :rtype: dict mapping error name to `~kafe2.core.error.GausianErrorBase`-derived
+        :type matching_criteria: dict or None
+        :param matching_type: How to perform the matching.
+                              If ``'equal'``, the value in ``matching_criteria`` is checked for equality against the
+                              stored value.
+                              If ``'regex'``, the value in ``matching_criteria`` is interpreted as a regular expression
+                              and is matched against the stored value.
+        :type matching_type: str
+        :return: Dict mapping error name to :py:obj:`~kafe2.core.error.GaussianErrorBase`-derived error objects.
+        :rtype: dict[str, kafe2.core.error.GaussianErrorBase]
         """
         _result = copy(self._error_dicts)
 
@@ -366,27 +347,24 @@ class DataContainerBase(FileIOMixin, object):
         return {_name: _entry['err'] for _name, _entry in six.iteritems(_result)}
 
     def get_error(self, error_name):
-        """
-        Return the uncertainty object holding the uncertainty.
+        """Return the uncertainty object holding the uncertainty.
 
-        NOTE: If you modify this object, the changes will not be reflected
-        in the total error calculation until the error cache is cleared.
-        This can be forced by calling
-        :py:meth:`~kafe2.fit._base.container.DataContainerBase.enable_error`.
+        .. note::
+            If you modify this object, the changes will not be reflected in the total error calculation until the error
+            cache is cleared. This can be forced by calling :py:meth:`~enable_error`.
 
         :param error_name: error name
         :type error_name: str
         :return: error object
-        :rtype: `~kafe2.core.error.GausianErrorBase`-derived
+        :rtype: kafe2.core.error.GaussianErrorBase
         """
         return self._get_error_by_name_raise(error_name)
 
     def get_total_error(self):
-        """
-        Get the error object representing the total uncertainty.
+        """Get the error object representing the total uncertainty.
 
         :return: error object representing the total uncertainty
-        :rtype: :py:class:`~kafe2.core.error.MatrixGaussianError`
+        :rtype: kafe2.core.error.MatrixGaussianError
         """
         if self._total_error is None:
             self._calculate_total_error()
