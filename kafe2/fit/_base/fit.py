@@ -12,7 +12,7 @@ from ...core.constraint import GaussianMatrixParameterConstraint, GaussianSimple
 from ...tools import print_dict_as_table
 from ...config import kc
 from ..io.file import FileIOMixin
-from .container import DataContainerException
+from .container import DataContainerBase, DataContainerException
 
 __all__ = ["FitBase", "FitException"]
 
@@ -28,7 +28,7 @@ class FitBase(FileIOMixin, object):
     types of fitters.
     """
 
-    CONTAINER_TYPE = None
+    CONTAINER_TYPE = DataContainerBase
     MODEL_TYPE = None
     PLOT_ADAPTER_TYPE = None
     EXCEPTION_TYPE = FitException
@@ -314,10 +314,10 @@ class FitBase(FileIOMixin, object):
 
     @property
     def model_function(self):
-        """The wrapped model function as a :py:obj:`~kafe2.fit._base.model.ModelFunctionBase` or derived object.
+        """The wrapped model function as a :py:obj:`~kafe2.fit._base.ModelFunctionBase` or derived object.
         This object contains the model function as well as formatting information used for this fit.
 
-        :rtype: kafe2.fit._base.model.ModelFunctionBase"""
+        :rtype: kafe2.fit._base.ModelFunctionBase"""
         return self._model_function
 
     @property
@@ -457,7 +457,7 @@ class FitBase(FileIOMixin, object):
 
     @property
     def poi_values(self):
-        """The values of the parameters of interest, equal to :py:attr`~parameter_values` minus nuisance parameters.
+        """The values of the parameters of interest, equal to :py:attr:`~parameter_values` minus nuisance parameters.
 
         :rtype: np.ndarray[float]
         """
@@ -530,7 +530,7 @@ class FitBase(FileIOMixin, object):
         """Limit a parameter to a given range.
 
         :param str name: The name of the parameter to limit.
-        :param tuple[float, float] limits: The range to which the parameter should be limited.
+        :param tuple[float,float] limits: The range to which the parameter should be limited.
         """
         self._fitter.limit_parameter(name=name, limits=limits)
 
@@ -557,8 +557,8 @@ class FitBase(FileIOMixin, object):
             covariance matrix. Can also be interpreted as a correlation matrix by setting **matrix_type**.
             Must be of shape shape (N, N).
         :type matrix: collections.Iterable[float]
-        :param matrix_type: Either 'cov' or 'cor'. Defines whether the matrix should be interpreted as a covariance
-            matrix or as a correlation matrix.
+        :param matrix_type: Either ``'cov'`` or ``'cor'``. Defines whether the matrix should be interpreted as a
+            covariance matrix or as a correlation matrix.
         :type matrix_type: str
         :param uncertainties: The uncertainties to be used in conjunction with a correlation matrix.
             Must be of shape (N,)
@@ -610,8 +610,8 @@ class FitBase(FileIOMixin, object):
             The error objects contained in the dictionary are not copies, but the original error objects.
             Modifying them is possible, but not recommended.
             If you do modify any of them, the changes will not be reflected in the total error calculation until the
-            error cache is cleared. This can be done by calling the private method
-            :py:meth:`~kafe2.fit._base.container.DataContainerBase._clear_total_error_cache`.
+            error cache is cleared. This can be done by calling the private dataset method
+            :py:meth:`~kafe2.fit._base.DataContainerBase._clear_total_error_cache`.
 
         :param matching_criteria: Key-value pairs specifying matching criteria. The resulting error array will only
                                   contain error objects matching *all* provided criteria.
@@ -623,7 +623,7 @@ class FitBase(FileIOMixin, object):
                               If ``'regex'``, the value in ``matching_criteria`` is interpreted as a regular expression
                               and is matched against the stored value.
         :type matching_type: str
-        :return: Dict mapping error name to `~kafe2.core.error.GaussianErrorBase`-derived error objects.
+        :return: Dict mapping error name to :py:obj:`~kafe2.core.error.GaussianErrorBase`-derived error objects.
         :rtype: dict[str, kafe2.core.error.GaussianErrorBase]
         """
         if matching_criteria is not None:
@@ -774,9 +774,9 @@ class FitBase(FileIOMixin, object):
     def assign_model_function_latex_expression(self, latex_expression_format_string):
         """Assign a LaTeX-formatted expression string to the model function.
 
-        :param str latex_expression_format_string: The LaTeX string. Elements like ``{par_name}`` will be automatically
-            replaced with the corresponding latex names for the parameters. These can be set with
-            ``fit.assign_parameter_latex_names()``.
+        :param str latex_expression_format_string: The LaTeX string. Elements like ``'{par_name}'`` will be replaced
+            automatically with the corresponding LaTeX names for the given parameter. These can be set with
+            :py:meth:`~assign_parameter_latex_names`.
         """
         self._model_function.formatter.latex_expression_format_string = latex_expression_format_string
 
