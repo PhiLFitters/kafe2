@@ -437,38 +437,38 @@ class FitBase(FileIOMixin, object):
         :param value: The value to be given to the fixed parameter, optional
         :type value: float
         """
-        self._fitter.fix_parameter(par_name=name, par_value=value)
+        self._fitter.fix_parameter(name=name, value=value)
         _par_index = self.parameter_names.index(name)
         self._get_model_function_parameter_formatters()[_par_index].fixed = True
 
-    def release_parameter(self, par_name):
+    def release_parameter(self, name):
         """
         Release a fixed parameter so that its value once again changes when calling ``self.do_fit``.
 
-        :param par_name: The name of the fixed parameter to be released
-        :type par_name: str
+        :param name: The name of the fixed parameter to be released
+        :type name: str
         """
-        self._fitter.release_parameter(par_name=par_name)
-        _par_index = self.parameter_names.index(par_name)
+        self._fitter.release_parameter(name=name)
+        _par_index = self.parameter_names.index(name)
         self._get_model_function_parameter_formatters()[_par_index].fixed = False
 
-    def limit_parameter(self, par_name, par_limits):
+    def limit_parameter(self, name, limits):
         """
         Limit a parameter to a given range
-        :param par_name: The name of the parameter to limited
-        :type par_name: str
-        :param par_limits: The range of the parameter to be limited to
-        :type par_limits: tuple
+        :param name: The name of the parameter to limited
+        :type name: str
+        :param limits: The range of the parameter to be limited to
+        :type limits: tuple
         """
-        self._fitter.limit_parameter(par_name, par_limits)
+        self._fitter.limit_parameter(name=name, limits=limits)
 
-    def unlimit_parameter(self, par_name):
+    def unlimit_parameter(self, name):
         """
         Unlimit a parameter
-        :param par_name: The name of the parameter to unlimit
-        :type par_name: str
+        :param name: The name of the parameter to unlimit
+        :type name: str
         """
-        self._fitter.unlimit_parameter(par_name)
+        self._fitter.unlimit_parameter(name=name)
 
     def add_matrix_parameter_constraint(self, names, values, matrix, matrix_type='cov', uncertainties=None,
                                         relative=False):

@@ -603,7 +603,7 @@ class MultiFit(FitBase):
             _fit.disable_error(err_id=err_id)
 
     def fix_parameter(self, name, value=None):
-        self._fitter.fix_parameter(par_name=name, par_value=value)
+        self._fitter.fix_parameter(name=name, value=value)
         # get fixed value before setting it in the individual fits
         _val = self._fitter.fixed_parameters[name]
         for fit in self._fits:
@@ -611,12 +611,12 @@ class MultiFit(FitBase):
                 continue  # skip if sub fit is not dependent on the given par
             fit.fix_parameter(name, _val)  # default values might not have been overwritten, use _val
 
-    def release_parameter(self, par_name):
-        self._fitter.release_parameter(par_name)
+    def release_parameter(self, name):
+        self._fitter.release_parameter(name)
         for fit in self._fits:  # update formatters of individual fits
-            if par_name not in fit.parameter_names:
+            if name not in fit.parameter_names:
                 continue  # skip if sub fit is not dependent on the given par
-            fit.release_parameter(par_name)
+            fit.release_parameter(name)
 
     def do_fit(self):
         """

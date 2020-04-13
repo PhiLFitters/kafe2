@@ -162,25 +162,25 @@ class NexusFitter(object):
     def do_fit(self):
         self._minimize()
 
-    def fix_parameter(self, par_name, par_value=None):
-        if par_value is not None:
-            self.set_fit_parameter_values(**{par_name: par_value})
+    def fix_parameter(self, name, value=None):
+        if value is not None:
+            self.set_fit_parameter_values(**{name: value})
 
-        self._minimizer.fix(par_name)
-        _fixed_par_dict = self.get_fit_parameter_values([par_name])
+        self._minimizer.fix(name)
+        _fixed_par_dict = self.get_fit_parameter_values([name])
         self._fixed_pars.update(_fixed_par_dict)
 
-    def release_parameter(self, par_name):
-        self._minimizer.release(par_name)
-        self._fixed_pars.pop(par_name, None)
+    def release_parameter(self, name):
+        self._minimizer.release(name)
+        self._fixed_pars.pop(name, None)
 
-    def limit_parameter(self, par_name, par_limits):
-        self._minimizer.limit(par_name, par_limits)
-        self._limited_pars.update({par_name: par_limits})
+    def limit_parameter(self, name, limits):
+        self._minimizer.limit(name, limits)
+        self._limited_pars.update({name: limits})
 
-    def unlimit_parameter(self, par_name):
-        self._minimizer.unlimit(par_name)
-        self._limited_pars.pop(par_name, None)
+    def unlimit_parameter(self, name):
+        self._minimizer.unlimit(name)
+        self._limited_pars.pop(name, None)
 
     def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, **kwargs):
         if not self.__state_is_from_minimizer:
