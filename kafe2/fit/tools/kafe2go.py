@@ -81,7 +81,7 @@ def kafe2go():
     _fits = []
 
     for _fname in _filenames:
-        _fit = FitBase.from_file(_fname, format=_input_format)
+        _fit = FitBase.from_file(_fname, file_format=_input_format)
         _fit.do_fit()
         if _report:
             _fit.report(asymmetric_parameter_errors=_asymmetric)

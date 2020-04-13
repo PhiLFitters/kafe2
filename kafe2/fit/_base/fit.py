@@ -860,16 +860,16 @@ class FitBase(FileIOMixin, object):
             self._report_fit_results(output_stream=output_stream, indent=_indent, indentation_level=0,
                                      asymmetric_parameter_errors=asymmetric_parameter_errors)
 
-    def to_file(self, filename, format=None, calculate_asymmetric_errors=False):
+    def to_file(self, filename, file_format=None, calculate_asymmetric_errors=False):
         """Write kafe2 object to file
 
         :param filename: Filename for the output.
         :type filename: str
-        :param format: A format for the output file. If ``None``, the extension from the filename is used.
-        :type format: str or None
+        :param file_format: A format for the output file. If ``None``, the extension from the filename is used.
+        :type file_format: str or None
         :param calculate_asymmetric_errors: If asymmetric errors should be calculated before saving the results.
         :type calculate_asymmetric_errors: bool
         """
         if calculate_asymmetric_errors:
             _ = self.asymmetric_parameter_errors  # force calculation of asymmetric errors if not calculated yet
-        super(FitBase, self).to_file(filename=filename, file_format=format)
+        super(FitBase, self).to_file(filename=filename, file_format=file_format)
