@@ -218,7 +218,7 @@ class FitBase(FileIOMixin, object):
         output_stream.write(indent * (indentation_level + 1) + "Cost Function\n")
         output_stream.write(indent * (indentation_level + 1) + "=============\n\n")
 
-        _pf = self._cost_function._formatter
+        _pf = self._cost_function.formatter
         output_stream.write(indent * (indentation_level + 2) + "cost function: {}\n\n".format(_pf.description))
         output_stream.write(indent * (indentation_level + 2) + "cost / ndf = ")
         output_stream.write(
