@@ -872,4 +872,4 @@ class FitBase(FileIOMixin, object):
         """
         if calculate_asymmetric_errors:
             _ = self.asymmetric_parameter_errors  # force calculation of asymmetric errors if not calculated yet
-        super(FitBase, self).to_file(filename=filename, format=None)
+        super(FitBase, self).to_file(filename=filename, file_format=format)
