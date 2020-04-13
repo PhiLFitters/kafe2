@@ -51,7 +51,7 @@ class FitBase(FileIOMixin, object):
     # -- private methods
 
     def _add_property_to_nexus(self, prop, obj=None, name=None):
-        '''register a property of this object in the nexus as a function node'''
+        """register a property of this object in the nexus as a function node"""
         obj = obj if obj is not None else self
         return self._nexus.add_function(
             partial(getattr(obj.__class__, prop).fget, obj),
@@ -104,11 +104,12 @@ class FitBase(FileIOMixin, object):
 
     @staticmethod
     def _get_default_values(model_function=None, x_name=None):
-        """
+        """Gets the default values for all independent parameter names. If no default is present in the function
+            definition, the default from the kafe2 config is loaded.
         :param model_function: model function handle
-        :param x_name: name of the independent parameter
-        :return: ordered dict with default values for fit parameters
-        :rtype: dict
+        :param str x_name: name of the independent parameter
+        :return: Ordered dict with default values for fit parameters.
+        :rtype: OrderedDict[str, float]
         """
         _nexus_new_dict = OrderedDict()
         for _par in model_function.signature.parameters.values():
@@ -124,6 +125,7 @@ class FitBase(FileIOMixin, object):
 
     @abc.abstractmethod
     def _set_new_data(self, new_data):
+        """Private method called by the :py:attr:`~data` setter. Must be overwritten for each derived class."""
         pass
 
     @abc.abstractmethod
@@ -141,9 +143,21 @@ class FitBase(FileIOMixin, object):
         return self.model_function.formatter.par_formatters
 
     def _report_data(self, output_stream, indent, indentation_level):
+        """Report the data used in this fit to the given output stream.
+
+        :param io.TextIOBase output_stream: The output stream to which the report should be printed.
+        :param str indent: The string to use when indenting lines.
+        :param int indentation_level: How many times the indent str should be placed before each line.
+        """
         pass
 
     def _report_model(self, output_stream, indent, indentation_level):
+        """Report the fit model to the given output stream.
+
+        :param io.TextIOBase output_stream: The output stream to which the report should be printed.
+        :param str indent: The string to use when indenting lines.
+        :param int indentation_level: How many times the indent str should be placed before each line.
+        """
         output_stream.write(indent * indentation_level + '#########\n')
         output_stream.write(indent * indentation_level + '# Model #\n')
         output_stream.write(indent * indentation_level + '#########\n\n')
@@ -154,6 +168,14 @@ class FitBase(FileIOMixin, object):
         output_stream.write('\n\n')
 
     def _report_fit_results(self, output_stream, indent, indentation_level, asymmetric_parameter_errors):
+        """Report the fit results
+
+        :param io.TextIOBase output_stream: The output stream to which the report should be printed.
+        :param str indent: The string to use when indenting lines.
+        :param int indentation_level: How many times the indent str should be placed before each line.
+        :param bool asymmetric_parameter_errors: If asymmetric parameter uncertainties should be used instead of
+            symmetric uncertainties.
+        """
         output_stream.write(indent * indentation_level + '###############\n')
         output_stream.write(indent * indentation_level + '# Fit Results #\n')
         output_stream.write(indent * indentation_level + '###############\n\n')
@@ -209,6 +231,10 @@ class FitBase(FileIOMixin, object):
         output_stream.write('\n')
 
     def _update_parameter_formatters(self, update_asymmetric_errors=False):
+        """Update all parameter formatters with the current values and uncertainties.
+
+        :param bool update_asymmetric_errors: If the asymmetric parameter uncertainties should be updated as well.
+        """
         for _fpf, _pv, _pe in zip(
                 self._get_model_function_parameter_formatters(), self.parameter_values, self.parameter_errors):
             _fpf.value = _pv
@@ -218,6 +244,7 @@ class FitBase(FileIOMixin, object):
                 _fpf.asymmetric_error = _ape
 
     def _on_error_change(self):
+        """Mark all error nodes in :py:attr:`~_BASIC_ERROR_NAMES` for updates in the nexus."""
         self._fitter.reset_minimizer()
         for _error_name in self._BASIC_ERROR_NAMES:
             self._nexus.get(_error_name).mark_for_update()
@@ -227,14 +254,14 @@ class FitBase(FileIOMixin, object):
     @property
     @abc.abstractmethod
     def data(self):
+        """The data used in this fit.
+
+        :rtype: np.ndarray
+        """
         pass
 
     @data.setter
     def data(self, new_data):
-        """
-        Sets new data of the fit Object
-        :param new_data: Array or Data-Container with the new data
-        """
         self._set_new_data(new_data)
         # validate cost function
         _data_and_cost_compatible, _reason = self._cost_function.is_data_compatible(self.data)
@@ -287,8 +314,10 @@ class FitBase(FileIOMixin, object):
 
     @property
     def model_function(self):
-        """The wrapped :py:obj:``ModelFunctionBase`` or derived objects used in the fit. This object contains the model
-        function as well as formatting information."""
+        """The wrapped model function as a :py:obj:`~kafe2.fit._base.model.ModelFunctionBase` or derived object.
+        This object contains the model function as well as formatting information used for this fit.
+
+        :rtype: kafe2.fit._base.model.ModelFunctionBase"""
         return self._model_function
 
     @property
@@ -301,196 +330,241 @@ class FitBase(FileIOMixin, object):
 
     @model_label.setter
     def model_label(self, label):
-        """Change the model label.
-
-        :param label: The new label.
-        :type label: str
-        """
         self._param_model.label = label
 
     @property
     def parameter_values(self):
-        """the current parameter values"""
+        """The current parameter values.
+
+        :rtype: np.ndarray[float]
+        """
         _par_val_dict = self.parameter_name_value_dict
         _par_names = self.parameter_names
         return np.array([_par_val_dict[_par_name] for _par_name in _par_names])
 
     @property
     def parameter_names(self):
-        """the current parameter names"""
+        """The current parameter names.
+
+        :rtype: tuple[str]
+        """
         return self._fitter.parameters_to_fit
 
     @property
     def parameter_errors(self):
-        """the current parameter uncertainties"""
+        """The current parameter uncertainties.
+
+        :rtype: np.ndarray[float]
+        """
         if self._loaded_result_dict is not None:
             return self._loaded_result_dict['parameter_errors']
         return self._fitter.fit_parameter_errors
 
     @property
     def parameter_cov_mat(self):
-        """the current parameter covariance matrix"""
+        """The current parameter covariance matrix.
+
+        :rtype: None or np.ndarray[np.ndarray[float]]
+        """
         if self._loaded_result_dict is not None:
             return self._loaded_result_dict['parameter_cov_mat']
         return self._fitter.fit_parameter_cov_mat
 
     @property
     def parameter_cor_mat(self):
-        """the current parameter correlation matrix"""
+        """The current parameter correlation matrix.
+
+        :rtype: None or np.ndarray[np.ndarray[float]]
+        """
         if self._loaded_result_dict is not None:
             return self._loaded_result_dict['parameter_cor_mat']
         return self._fitter.fit_parameter_cor_mat
 
     @property
     def asymmetric_parameter_errors(self):
-        """the current asymmetric parameter uncertainties"""
+        """The current asymmetric parameter uncertainties.
+
+        :rtype: np.ndarray[np.ndarray[float, float]]
+        """
         if self._loaded_result_dict is not None and self._loaded_result_dict['asymmetric_parameter_errors'] is not None:
             return self._loaded_result_dict['asymmetric_parameter_errors']
         return self._fitter.asymmetric_fit_parameter_errors
 
     @property
     def parameter_name_value_dict(self):
-        """a dictionary mapping each parameter name to its current value"""
+        """A dictionary mapping each parameter name to its current value.
+
+        :rtype: OrderedDict[str, float]
+        """
         return self._fitter.get_fit_parameter_values()
 
     @property
     def parameter_constraints(self):
-        """the gaussian constraints given for the fit parameters"""
+        """The gaussian constraints given for the fit parameters.
+
+        :rtype: list[kafe2.core.constraint.GaussianSimpleParameterConstraint or
+            kafe2.core.constraint.GaussianMatrixParameterConstraint]
+        """
         return self._fit_param_constraints
 
     @property
     def cost_function_value(self):
-        """the current value of the cost function"""
+        """The current value of the cost function.
+
+        :rtype: float
+        """
         return self._fitter.parameter_to_minimize_value
 
     @property
     def data_size(self):
-        """the size (number of points) of the data container"""
+        """The size (number of points) of the data container.
+
+        :rtype: int
+        """
         return self._data_container.size
 
     @property
     def has_model_errors(self):
-        """``True`` if at least one uncertainty source is defined for the model"""
+        """``True`` if at least one uncertainty source is defined for the model.
+
+        :rtype: bool
+        """
         return self._param_model.has_errors
 
     @property
     def has_data_errors(self):
-        """``True`` if at least one uncertainty source is defined for the data"""
+        """``True`` if at least one uncertainty source is defined for the data.
+
+        :rtype: bool
+        """
         return self._data_container.has_errors
 
     @property
     def has_errors(self):
-        """``True`` if at least one uncertainty source is defined for either the data or the model"""
+        """``True`` if at least one uncertainty source is defined for either the data or the model.
+
+        :rtype: bool
+        """
         return True if self.has_data_errors or self.has_model_errors else False
 
     @property
     def model_count(self):
-        """the number of model functions contained in the fit, 1 by default"""
+        """The number of model functions contained in the fit, 1 by default.
+
+        :rtype: int
+        """
         return 1
 
     @property
     def poi_values(self):
-        """the values of the parameters of interest, equal to ``self.parameter_values`` minus nuisance parameters"""
+        """The values of the parameters of interest, equal to :py:attr`~parameter_values` minus nuisance parameters.
+
+        :rtype: np.ndarray[float]
+        """
         return self.parameter_values
 
     @property
     def poi_names(self):
-        """the names of the parameters of interest, equal to ``self.parameter_names`` minus nuisance parameter names"""
+        """The names of the parameters of interest, equal to :py:attr:`~parameter_names` minus nuisance parameter
+        names
+
+        :rtype: tuple[str]
+        """
         return self.parameter_names
 
     @property
     def did_fit(self):
-        """whether a fit was performed for the given data and model"""
+        """Whether a fit was performed for the given data and model.
+
+        :rtype: bool
+        """
         if self._loaded_result_dict is not None:
             return self._loaded_result_dict['did_fit']
         return self._fitter.state_is_from_minimizer
 
     @property
     def ndf(self):
+        """The degrees of freedom of this fit.
+
+        :rtype: int
+        """
         return self._cost_function.ndf
 
     # -- public methods
 
     def set_parameter_values(self, **param_name_value_dict):
-        """
-        Set the fit parameters to new values. Valid keyword arguments are the names
-        of the declared fit parameters.
+        """Set the fit parameters to new values. Valid keyword arguments are the names of the declared fit parameters.
 
         :param param_name_value_dict: new parameter values
         """
         return self._fitter.set_fit_parameter_values(**param_name_value_dict)
 
     def set_all_parameter_values(self, param_value_list):
-        """
-        Set all the fit parameters at the same time.
+        """Set all the fit parameters at the same time.
 
-        :param param_value_list: list of parameter values (mind the order)
+        :param collections.Iterable[float] param_value_list: List of parameter values (mind the order).
         """
         return self._fitter.set_all_fit_parameter_values(param_value_list)
 
     def fix_parameter(self, name, value=None):
-        """
-        Fix a parameter so that its value doesn't change when calling ``self.do_fit``.
+        """Fix a parameter so that its value doesn't change when calling :py:meth:`~do_fit()`.
 
-        :param name: The name of the parameter to be fixed
-        :type name: str
-        :param value: The value to be given to the fixed parameter, optional
-        :type value: float
+        :param str name: The name of the parameter to be fixed
+        :param float or None value: The value to be given to the fixed parameter. If ``None`` the current value from
+            :py:attr:`~parameter_values` will be used.
         """
         self._fitter.fix_parameter(name=name, value=value)
         _par_index = self.parameter_names.index(name)
         self._get_model_function_parameter_formatters()[_par_index].fixed = True
 
     def release_parameter(self, name):
-        """
-        Release a fixed parameter so that its value once again changes when calling ``self.do_fit``.
+        """Release a fixed parameter so that its value once again changes when calling :py:meth:`~do_fit()`.
 
-        :param name: The name of the fixed parameter to be released
-        :type name: str
+        :param str name: The name of the fixed parameter to be released
         """
         self._fitter.release_parameter(name=name)
         _par_index = self.parameter_names.index(name)
         self._get_model_function_parameter_formatters()[_par_index].fixed = False
 
     def limit_parameter(self, name, limits):
-        """
-        Limit a parameter to a given range
-        :param name: The name of the parameter to limited
-        :type name: str
-        :param limits: The range of the parameter to be limited to
-        :type limits: tuple
+        """Limit a parameter to a given range.
+
+        :param str name: The name of the parameter to limit.
+        :param tuple[float, float] limits: The range to which the parameter should be limited.
         """
         self._fitter.limit_parameter(name=name, limits=limits)
 
     def unlimit_parameter(self, name):
-        """
-        Unlimit a parameter
-        :param name: The name of the parameter to unlimit
-        :type name: str
+        """Unlimit a parameter.
+
+        :param str name: The name of the parameter to unlimit.
         """
         self._fitter.unlimit_parameter(name=name)
 
     def add_matrix_parameter_constraint(self, names, values, matrix, matrix_type='cov', uncertainties=None,
                                         relative=False):
-        """
-        Advanced class for applying correlated constraints to several parameters of a fit.
+        """Advanced class for applying correlated constraints to several parameters of a fit.
         The order of ``names``, ``values``, ``matrix``, and ``uncertainties`` must be aligned.
         In other words the first index must belong to the first value, the first row/column in the matrix, etc.
 
         Let N be the number of parameters to be constrained.
 
-        :param names: The names of the parameters to be constrained
-        :type names: iterable of str, shape (N,)
-        :param values: The values to which the parameters should be constrained
-        :type values: iterable of float, shape (N,)
+        :param names: The names of the parameters to be constrained. Must be of shape (N,).
+        :type names: collections.Collection[str]
+        :param values: The values to which the parameters should be constrained. Must be of shape shape (N,).
+        :type values: collections.Sized[float]
         :param matrix: The matrix that defines the correlation between the parameters. By default interpreted as a
-            covariance matrix. Can also be interpreted as a correlation matrix by setting ``matrix_type``
-        :type matrix: iterable of float, shape (N, N)
-        :param matrix_type: Whether the matrix should be interpreted as a covariance matrix or as a correlation matrix
-        :type matrix_type: str, either 'cov' or 'cor'
-        :param uncertainties: The uncertainties to be used in conjunction with a correlation matrix
-        :type uncertainties: ``None`` or iterable of float, shape (N,)
-        :param relative: Whether the covariance matrix/the uncertainties should be interpreted as relative to ``values``
+            covariance matrix. Can also be interpreted as a correlation matrix by setting **matrix_type**.
+            Must be of shape shape (N, N).
+        :type matrix: collections.Iterable[float]
+        :param matrix_type: Either 'cov' or 'cor'. Defines whether the matrix should be interpreted as a covariance
+            matrix or as a correlation matrix.
+        :type matrix_type: str
+        :param uncertainties: The uncertainties to be used in conjunction with a correlation matrix.
+            Must be of shape (N,)
+        :type uncertainties: None or collections.Iterable[float]
+        :param relative: Whether the covariance matrix/the uncertainties should be interpreted as relative to
+            **values**.
         :type relative: bool
         """
         if len(names) != len(values):
@@ -508,17 +582,12 @@ class FitBase(FileIOMixin, object):
         ))
 
     def add_parameter_constraint(self, name, value, uncertainty, relative=False):
-        """
-        Simple class for applying a gaussian constraint to a single fit parameter.
+        """Apply a simple gaussian constraint to a single fit parameter.
 
-        :param name: The name of the parameter to be constrained
-        :type name: str
-        :param value: The value to which the parameter should be constrained
-        :type value: float
-        :param uncertainty: The uncertainty with which the parameter should be constrained to the given value
-        :type uncertainty: float
-        :param relative: Whether the given uncertainty is relative to the given value
-        :type relative: bool
+        :param str name: The name of the parameter to be constrained.
+        :param float value: The value to which the parameter should be constrained.
+        :param float uncertainty: The uncertainty with which the parameter should be constrained to the given value.
+        :param bool relative: Whether the given uncertainty is relative to the given value.
         """
         try:
             _index = self.poi_names.index(name)
@@ -529,38 +598,33 @@ class FitBase(FileIOMixin, object):
         ))
 
     def get_matching_errors(self, matching_criteria=None, matching_type='equal'):
-        """
-        Return a list of uncertainty objects fulfilling the specified
-        matching criteria.
+        """Return a list of uncertainty objects fulfilling the specified matching criteria.
 
-        Valid keys for ``matching_criteria``:
-
+        Valid keys for **matching_criteria**:
             * ``name`` (the unique error name)
             * ``type`` (either ``'simple'`` or ``'matrix'``)
             * ``correlated`` (bool, only matches simple errors!)
             * ``reference`` (either ``'model'`` or ``'data'``)
 
-        NOTE: The error objects contained in the dictionary are not copies,
-        but the original error objects.
-        Modifying them is possible, but not recommended. If you do modify any
-        of them, the changes will not be reflected in the total error calculation
-        until the error cache is cleared. This can be done by calling the
-        private method
-        :py:meth:`~kafe2.fit._base.container.DataContainerBase._clear_total_error_cache`.
+        .. note::
+            The error objects contained in the dictionary are not copies, but the original error objects.
+            Modifying them is possible, but not recommended.
+            If you do modify any of them, the changes will not be reflected in the total error calculation until the
+            error cache is cleared. This can be done by calling the private method
+            :py:meth:`~kafe2.fit._base.container.DataContainerBase._clear_total_error_cache`.
 
-        :param matching_criteria: key-value pairs specifying matching criteria.
-                                  The resulting error array will only contain
-                                  error objects matching *all* provided criteria.
+        :param matching_criteria: Key-value pairs specifying matching criteria. The resulting error array will only
+                                  contain error objects matching *all* provided criteria.
                                   If ``None``, all error objects are returned.
-        :type matching_criteria: dict or ``None``
-        :param matching_type: how to perform the matching. If ``'equal'``, the
-                              value in ``matching_criteria`` is checked for equality
-                              against the stored value. If ``'regex', the
-                              value in ``matching_criteria`` is interpreted as a regular
-                              expression and is matched against the stored value.
-        :type matching_type: ``'equal'`` or ``'regex'``
-        :return: list of error objects
-        :rtype: dict mapping error name to `~kafe2.core.error.GausianErrorBase`-derived
+        :type matching_criteria: dict or None
+        :param matching_type: How to perform the matching.
+                              If ``'equal'``, the value in ``matching_criteria`` is checked for equality against the
+                              stored value.
+                              If ``'regex'``, the value in ``matching_criteria`` is interpreted as a regular expression
+                              and is matched against the stored value.
+        :type matching_type: str
+        :return: Dict mapping error name to `~kafe2.core.error.GaussianErrorBase`-derived error objects.
+        :rtype: dict[str, kafe2.core.error.GaussianErrorBase]
         """
         if matching_criteria is not None:
             _crit_ref_value = matching_criteria.pop('reference', None)
@@ -579,28 +643,27 @@ class FitBase(FileIOMixin, object):
 
         # be paranoid about collisions
         for _k in _result_model:
-            assert _k not in _result # FATAL: there is an error with the same name in the data and model containers
+            assert _k not in _result  # FATAL: there is an error with the same name in the data and model containers
             _result[_k] = _result_model[_k]
 
         return _result
 
     def add_error(self, err_val, name=None, correlation=0, relative=False, reference='data', **kwargs):
-        """
-        Add an uncertainty source to the fit.
-        Returns an error id which uniquely identifies the created error source.
+        """Add an uncertainty source to the fit.
 
-        :param err_val: pointwise uncertainty/uncertainties for all data points
-        :type err_val: float or iterable of float
-        :param name: unique name for this uncertainty source. If ``None``, the name
-                     of the error source will be set to a random alphanumeric string.
-        :type name: str or ``None``
-        :param correlation: correlation coefficient between any two distinct data points
+        :param err_val: Pointwise uncertainty/uncertainties for all data points.
+        :type err_val: float or collections.Iterable[float]
+        :param name: Unique name for this uncertainty source. If ``None``, the name of the error source will be set to a
+                     random alphanumeric string.
+        :type name: str or None
+        :param correlation: Correlation coefficient between any two distinct data points.
         :type correlation: float
-        :param relative: if ``True``, **err_val** will be interpreted as a *relative* uncertainty
+        :param relative: If ``True``, **err_val** will be interpreted as a *relative* uncertainty.
         :type relative: bool
-        :param reference: which reference values to use when calculating absolute errors from relative errors
-        :type reference: 'data' or 'model'
-        :return: error id
+        :param reference: Either ``'data'`` or ``'model'``. Specifies which reference values to use when calculating
+                          absolute errors from relative errors.
+        :type reference: str
+        :return: An error id which uniquely identifies the created error source.
         :rtype: str
         """
         if reference == 'data':
@@ -620,23 +683,23 @@ class FitBase(FileIOMixin, object):
 
     def add_matrix_error(self, err_matrix, matrix_type,
                          name=None, err_val=None, relative=False, reference='data', **kwargs):
-        """
-        Add a matrix uncertainty source for use in the fit.
-        Returns an error id which uniquely identifies the created error source.
+        """Add a matrix uncertainty source for use in the fit.
 
         :param err_matrix: covariance or correlation matrix
-        :param matrix_type: one of ``'covariance'``/``'cov'`` or ``'correlation'``/``'cor'``
+        :param matrix_type: One of ``'covariance'``/``'cov'`` or ``'correlation'``/``'cor'``
         :type matrix_type: str
-        :param name: unique name for this uncertainty source. If ``None``, the name
-                     of the error source will be set to a random alphanumeric string.
-        :type name: str or ``None``
-        :param err_val: the pointwise uncertainties (mandatory if only a correlation matrix is given)
-        :type err_val: iterable of float
-        :param relative: if ``True``, the covariance matrix and/or **err_val** will be interpreted as a *relative* uncertainty
+        :param name: Unique name for this uncertainty source. If ``None``, the name of the error source will be set to a
+            random alphanumeric string.
+        :type name: str or None
+        :param err_val: The pointwise uncertainties (mandatory if only a correlation matrix is given).
+        :type err_val: collections.Iterable[float]
+        :param relative: If ``True``, the covariance matrix and/or **err_val** will be interpreted as a *relative*
+                         uncertainty.
         :type relative: bool
-        :param reference: which reference values to use when calculating absolute errors from relative errors
-        :type reference: 'data' or 'model'
-        :return: error id
+        :param reference: Either ``'data'`` or ``'model'``. Specifies which reference values to use when calculating
+                          absolute errors from relative errors.
+        :type reference: str
+        :return: An error id which uniquely identifies the created error source.
         :rtype: str
         """
         if reference == 'data':
@@ -655,12 +718,9 @@ class FitBase(FileIOMixin, object):
         return _ret
 
     def disable_error(self, err_id):
-        """
-        Temporarily disable an uncertainty source so that it doesn't count towards calculating the
-        total uncertainty.
+        """Temporarily disable an uncertainty source so that it doesn't count towards calculating the total uncertainty.
 
-        :param err_id: error id
-        :type err_id: str
+        :param str err_id: error id
         """
         try:
             # try to find error in data container
@@ -671,12 +731,9 @@ class FitBase(FileIOMixin, object):
         return _ret
 
     def enable_error(self, err_id):
-        """
-        (Re-)Enable an uncertainty source so that it counts towards calculating the
-        total uncertainty.
+        """(Re-)Enable an uncertainty source so that it counts towards calculating the total uncertainty.
 
-        :param err_id: error id
-        :type err_id: str
+        :param str err_id: error id
         """
         try:
             # try to find error in data container
@@ -687,12 +744,10 @@ class FitBase(FileIOMixin, object):
         return _ret
 
     def do_fit(self, asymmetric_parameter_errors=False):
-        """
-        Perform the minimization of the cost function.
+        """Perform the minimization of the cost function.
 
-        :param asymmetric_parameter_errors: if True, calculate asymmetric parameter errors
-        :type asymmetric_parameter_errors: bool
-        :return: a dictionary containing the fit results
+        :param bool asymmetric_parameter_errors: If ``True``, calculate asymmetric parameter errors.
+        :return: A dictionary containing the fit results.
         :rtype: dict
         """
         if self._cost_function.needs_errors and not self._data_container.has_errors:
@@ -703,19 +758,33 @@ class FitBase(FileIOMixin, object):
         return self.get_result_dict(asymmetric_parameter_errors=asymmetric_parameter_errors)
 
     def assign_model_function_expression(self, expression_format_string):
-        """Assign a plain-text-formatted expression string to the model function."""
+        """Assign a plain-text-formatted expression string to the model function.
+
+        :param str expression_format_string: The plain text string.
+        """
         self._model_function.formatter.expression_format_string = expression_format_string
 
     def assign_model_function_latex_name(self, latex_name):
-        """Assign a LaTeX-formatted string to be the model function name."""
+        """Assign a LaTeX-formatted string to be the model function name.
+
+        :param str latex_name: The LaTeX string.
+        """
         self._model_function.formatter.latex_name = latex_name
 
     def assign_model_function_latex_expression(self, latex_expression_format_string):
-        """Assign a LaTeX-formatted expression string to the model function."""
+        """Assign a LaTeX-formatted expression string to the model function.
+
+        :param str latex_expression_format_string: The LaTeX string. Elements like ``{par_name}`` will be automatically
+            replaced with the corresponding latex names for the parameters. These can be set with
+            ``fit.assign_parameter_latex_names()``.
+        """
         self._model_function.formatter.latex_expression_format_string = latex_expression_format_string
 
     def assign_parameter_latex_names(self, **par_latex_names_dict):
-        """Assign LaTeX-formatted strings to all model function arguments."""
+        """Assign LaTeX-formatted strings to all model function arguments.
+
+        :param par_latex_names_dict: Dictionary mapping the parameter names to their latex names
+        """
         for _af in self._get_model_function_argument_formatters():
             _aln = par_latex_names_dict.pop(_af.name, None)
             if _aln is not None:
@@ -726,10 +795,10 @@ class FitBase(FileIOMixin, object):
     def get_result_dict(self, asymmetric_parameter_errors=False):
         """Return a dictionary of the fit results.
 
-        :param asymmetric_parameter_errors: if True, calculate asymmetric parameter errors
-        :type asymmetric_parameter_errors: bool
-        :return: a dictionary containing the fit results
-        :rtype: dict"""
+        :param bool asymmetric_parameter_errors: If True, calculate asymmetric parameter errors.
+        :return: A dictionary containing the fit results.
+        :rtype: dict
+        """
         _result_dict = dict()
 
         _result_dict['did_fit'] = self.did_fit
@@ -768,18 +837,17 @@ class FitBase(FileIOMixin, object):
 
     def report(self, output_stream=sys.stdout, show_data=True, show_model=True, show_fit_results=True,
                asymmetric_parameter_errors=False):
-        """
-        Print a summary of the fit state and/or results.
+        """Print a summary of the fit state and/or results.
 
-        :param output_stream: the output stream to which the report should be printed
-        :type output_stream: TextIOBase
-        :param show_data: if ``True``, print out information about the data
+        :param output_stream: The output stream to which the report should be printed.
+        :type output_stream: io.TextIOBase
+        :param show_data: If ``True``, print out information about the data.
         :type show_data: bool
-        :param show_model: if ``True``, print out information about the parametric model
+        :param show_model: If ``True``, print out information about the parametric model.
         :type show_model: bool
-        :param show_fit_results: if ``True``, print out information about the fit results
+        :param show_fit_results: If ``True``, print out information about the fit results.
         :type show_fit_results: bool
-        :param asymmetric_parameter_errors: if ``True``, use two different parameter errors for up/down directions
+        :param asymmetric_parameter_errors: If ``True``, use two different parameter errors for up/down directions.
         :type asymmetric_parameter_errors: bool
         """
 
@@ -793,7 +861,15 @@ class FitBase(FileIOMixin, object):
                                      asymmetric_parameter_errors=asymmetric_parameter_errors)
 
     def to_file(self, filename, format=None, calculate_asymmetric_errors=False):
-        """Write kafe2 object to file"""
+        """Write kafe2 object to file
+
+        :param filename: Filename for the output.
+        :type filename: str
+        :param format: A format for the output file. If ``None``, the extension from the filename is used.
+        :type format: str or None
+        :param calculate_asymmetric_errors: If asymmetric errors should be calculated before saving the results.
+        :type calculate_asymmetric_errors: bool
+        """
         if calculate_asymmetric_errors:
-            self.asymmetric_parameter_errors()
+            _ = self.asymmetric_parameter_errors  # force calculation of asymmetric errors if not calculated yet
         super(FitBase, self).to_file(filename=filename, format=None)
