@@ -1,14 +1,14 @@
 from __future__ import print_function
 
 import abc
+from copy import copy
+
 import numpy as np
 import six
 
-from copy import copy
-
-from ...tools import random_alphanumeric  # relative import of kafe2.tools not kafe2.fit.tools
-from ...core.error import SimpleGaussianError, MatrixGaussianError
 from ..io.file import FileIOMixin
+from ...core.error import SimpleGaussianError, MatrixGaussianError
+from ...tools import random_alphanumeric  # relative import of kafe2.tools not kafe2.fit.tools
 
 __all__ = ["DataContainerBase", "DataContainerException"]
 
@@ -35,7 +35,7 @@ class DataContainerBase(FileIOMixin, object):
         super(DataContainerBase, self).__init__()
 
     # -- private methods
-    
+
     @classmethod
     def _get_base_class(cls):
         return DataContainerBase
@@ -219,7 +219,7 @@ class DataContainerBase(FileIOMixin, object):
         :rtype: str
         """
         try:
-            err_val.ndim   # will raise if simple float
+            err_val.ndim  # will raise if simple float
         except AttributeError:
             err_val = np.asarray(err_val, dtype=float)
 
@@ -337,7 +337,7 @@ class DataContainerBase(FileIOMixin, object):
                     # type 'simple'
                     _err_obj = _error_dict['err']
                     if ((_crit_value == 'simple' and isinstance(_err_obj, SimpleGaussianError)) or
-                        (_crit_value == 'matrix' and isinstance(_err_obj, MatrixGaussianError))):
+                            (_crit_value == 'matrix' and isinstance(_err_obj, MatrixGaussianError))):
                         continue
                 elif _crit_key == 'correlated':
                     _err_obj = _error_dict['err']
