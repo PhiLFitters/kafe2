@@ -401,6 +401,11 @@ class MultiFit(FitBase):
         raise NotImplementedError("Use data setters for individual fits instead.")
 
     @property
+    def data_container(self):
+        """List of the data containers of the individual fits."""
+        return [_fit.data_container for _fit in self._fits]
+
+    @property
     def data_size(self):
         """combined size of the data containers of the individual fits"""
         return np.sum([_fit.data_size for _fit in self._fits])
