@@ -618,16 +618,20 @@ class MultiFit(FitBase):
                 continue  # skip if sub fit is not dependent on the given par
             fit.release_parameter(name)
 
-    def do_fit(self):
-        """
-        Perform the minimization of the cost function.
+    def do_fit(self, asymmetric_parameter_errors=False):
+        """Perform the minimization of the cost function.
+
+        :param bool asymmetric_parameter_errors: If ``True``, calculate asymmetric parameter errors.
+        :return: A dictionary containing the fit results.
+        :rtype: dict
         """
         for _i, _fit_i in enumerate(self._fits):
-            if _fit_i._cost_function.needs_errors and not _fit_i._data_container.has_errors:
+            if _fit_i._cost_function.needs_errors and not _fit_i.data_container.has_errors:
                 raise self.EXCEPTION_TYPE('No data errors defined for fit %s' % _i)
         self._fitter.do_fit()
         self._update_singular_fits()
         self._loaded_result_dict = None
+        return self.get_result_dict(asymmetric_parameter_errors=asymmetric_parameter_errors)
 
     def get_matching_errors(self, fit_index=None, matching_criteria=None, matching_type='equal'):
         if fit_index is None:
