@@ -1,15 +1,16 @@
 import sys
-from copy import copy
-import numpy as np
 import warnings
+from collections import OrderedDict
+from copy import copy
 
+import numpy as np
+
+from .cost import MultiCostFunction, SharedChi2CostFunction
 from .._base import FitBase
 from ...core import Nexus, NexusFitter
 from ...core.error import SimpleGaussianError, MatrixGaussianError
 from ...core.fitters.nexus import Alias, Function, Array
 from ...tools import random_alphanumeric
-from .cost import MultiCostFunction, SharedChi2CostFunction
-from collections import OrderedDict
 
 __all__ = ['MultiFit']
 
@@ -184,7 +185,7 @@ class MultiFit(FitBase):
                         def _get_derivatives_func(fit):
                             return lambda: fit._param_model.eval_model_function_derivative_by_x(
                                 model_parameters=fit.poi_values,
-                                dx=0.01*self._min_x_error
+                                dx=0.01 * self._min_x_error
                             )
 
                         self._nexus.add(
@@ -238,10 +239,8 @@ class MultiFit(FitBase):
                             for _k in range(_j):
                                 _lower_2 = _data_indices[_k]
                                 _upper_2 = _data_indices[_k + 1]
-                                _combined_property[
-                                        _lower_1:_upper_1, _lower_2:_upper_2] += _error.cov_mat
-                                _combined_property[
-                                        _lower_2:_upper_2, _lower_1:_upper_1] += _error.cov_mat
+                                _combined_property[_lower_1:_upper_1, _lower_2:_upper_2] += _error.cov_mat
+                                _combined_property[_lower_2:_upper_2, _lower_1:_upper_1] += _error.cov_mat
                 return _combined_property
 
             if _has_shared_x_error:
