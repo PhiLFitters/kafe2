@@ -29,12 +29,12 @@ class MultiFit(FitBase):
         :type minimizer: None, "iminuit", "tminuit", or "scipy".
         :param minimizer_kwargs: dictionary with kwargs for the minimizer.
         :type minimizer_kwargs: dict
+
+        :raises TypeError: If **fit_list** is not iterable.
         """
-        self._fits = fit_list
-        try:
-            iter(self._fits)
-        except TypeError:
-            self._fits = [self._fits]
+        super(MultiFit, self).__init__()
+        # Cast Iterable to List, so that indexing works. Indexing is needed for some methods.
+        self._fits = list(fit_list)  # will raise TypeError if fit_list is not iterable
 
         self._minimizer = minimizer
         self._minimizer_kwargs = minimizer_kwargs
@@ -45,7 +45,6 @@ class MultiFit(FitBase):
         self._initialize_fitter()
 
         self._fit_param_constraints = []
-        self._loaded_result_dict = None
 
         for _fit in self._fits:
             _fit._init_nexus_callbacks.append(self._init_nexus)

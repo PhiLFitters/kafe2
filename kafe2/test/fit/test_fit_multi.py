@@ -100,15 +100,15 @@ class TestMultiFit(unittest.TestCase):
         _raw_data = TestMultiFit._get_hist_data()
         self._fit_hist_all = TestMultiFit._get_hist_fit(_raw_data, minimizer)
         _split_data_1, _split_data_2 = TestMultiFit._split_data(_raw_data)
-        self._fit_hist_all_multi = MultiFit(TestMultiFit._get_hist_fit(_raw_data, minimizer))
+        self._fit_hist_all_multi = MultiFit([TestMultiFit._get_hist_fit(_raw_data, minimizer)])
         self._fit_hist_split_multi = MultiFit(fit_list=[
             TestMultiFit._get_hist_fit(_split_data_1, minimizer),
             TestMultiFit._get_hist_fit(_split_data_2, minimizer),
         ])
         self._fit_hist_split_1 = TestMultiFit._get_hist_fit(_split_data_1, minimizer)
-        self._fit_hist_split_1_multi = MultiFit(TestMultiFit._get_hist_fit(_split_data_1, minimizer))
+        self._fit_hist_split_1_multi = MultiFit([TestMultiFit._get_hist_fit(_split_data_1, minimizer)])
         self._fit_hist_split_2 = TestMultiFit._get_hist_fit(_split_data_2, minimizer)
-        self._fit_hist_split_2_multi = MultiFit(TestMultiFit._get_hist_fit(_split_data_2, minimizer))
+        self._fit_hist_split_2_multi = MultiFit([TestMultiFit._get_hist_fit(_split_data_2, minimizer)])
 
     @staticmethod
     def _get_indexed_data(err_y=0.01, a=1.2, b=2.3, c=3.4):
@@ -151,8 +151,8 @@ class TestMultiFit(unittest.TestCase):
             _data, TestMultiFit.quadratic_model_indexed_all, minimizer)
         _split_data_1 = _data[:50]
         _split_data_2 = _data[50:]
-        self._fit_indexed_all_multi = MultiFit(TestMultiFit._get_indexed_fit(
-            _data, TestMultiFit.quadratic_model_indexed_all, minimizer))
+        self._fit_indexed_all_multi = MultiFit([TestMultiFit._get_indexed_fit(
+            _data, TestMultiFit.quadratic_model_indexed_all, minimizer)])
         self._fit_indexed_split_multi = MultiFit(fit_list=[
             TestMultiFit._get_indexed_fit(
                 _split_data_1, TestMultiFit.quadratic_model_indexed_split_1, minimizer),
@@ -161,12 +161,12 @@ class TestMultiFit(unittest.TestCase):
         ])
         self._fit_indexed_split_1 = TestMultiFit._get_indexed_fit(
             _split_data_1, TestMultiFit.quadratic_model_indexed_split_1, minimizer)
-        self._fit_indexed_split_1_multi = MultiFit(TestMultiFit._get_indexed_fit(
-            _split_data_1, TestMultiFit.quadratic_model_indexed_split_1, minimizer))
+        self._fit_indexed_split_1_multi = MultiFit([TestMultiFit._get_indexed_fit(
+            _split_data_1, TestMultiFit.quadratic_model_indexed_split_1, minimizer)])
         self._fit_indexed_split_2 = TestMultiFit._get_indexed_fit(
             _split_data_2, TestMultiFit.quadratic_model_indexed_split_2, minimizer)
-        self._fit_indexed_split_2_multi = MultiFit(TestMultiFit._get_indexed_fit(
-            _split_data_2, TestMultiFit.quadratic_model_indexed_split_2, minimizer))
+        self._fit_indexed_split_2_multi = MultiFit([TestMultiFit._get_indexed_fit(
+            _split_data_2, TestMultiFit.quadratic_model_indexed_split_2, minimizer)])
 
     @staticmethod
     def _get_xy_data(err_x=0.01, err_y=0.01, a=1.2, b=2.3, c=3.4):
@@ -196,15 +196,15 @@ class TestMultiFit(unittest.TestCase):
         _xy_data = TestMultiFit._get_xy_data()
         self._fit_xy_all = TestMultiFit._get_xy_fit(_xy_data, minimizer)
         _split_data_1, _split_data_2 = TestMultiFit._split_data(_xy_data, axis=1)
-        self._fit_xy_all_multi = MultiFit(TestMultiFit._get_xy_fit(_xy_data, minimizer))
+        self._fit_xy_all_multi = MultiFit([TestMultiFit._get_xy_fit(_xy_data, minimizer)])
         self._fit_xy_split_multi = MultiFit(fit_list=[
             TestMultiFit._get_xy_fit(_split_data_1, minimizer),
             TestMultiFit._get_xy_fit(_split_data_2, minimizer)
         ])
         self._fit_xy_split_1 = TestMultiFit._get_xy_fit(_split_data_1, minimizer)
-        self._fit_xy_split_1_multi = MultiFit(TestMultiFit._get_xy_fit(_split_data_1, minimizer))
+        self._fit_xy_split_1_multi = MultiFit([TestMultiFit._get_xy_fit(_split_data_1, minimizer)])
         self._fit_xy_split_2 = TestMultiFit._get_xy_fit(_split_data_2, minimizer)
-        self._fit_xy_split_2_multi = MultiFit(TestMultiFit._get_xy_fit(_split_data_2, minimizer))
+        self._fit_xy_split_2_multi = MultiFit([TestMultiFit._get_xy_fit(_split_data_2, minimizer)])
         self._fit_xy_all_double = MultiFit([
             TestMultiFit._get_xy_fit(_xy_data, minimizer),
             TestMultiFit._get_xy_fit(_xy_data, minimizer)
