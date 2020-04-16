@@ -716,7 +716,7 @@ class Plot(object):
 
         _cost_func = plot_adapter._fit._cost_function  # TODO: public interface
 
-        _ndf = _cost_func.ndf
+        _ndf = plot_adapter._fit.ndf
         _cost_function_value = plot_adapter._fit.cost_function_value
         _info_text = self.FIT_INFO_STRING_FORMAT.format(
             model_function=plot_adapter.get_formatted_model_function(

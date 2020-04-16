@@ -45,7 +45,7 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
 
         if _did_fit:
             _cost = self._kafe_object.cost_function_value
-            _ndf = self._kafe_object._cost_function.ndf
+            _ndf = self._kafe_object.ndf
             _round_cost_sig = max(2, int(-np.floor(np.log(_cost)/np.log(10))) + 1)
             _rounded_cost = round(_cost, _round_cost_sig)
             _preface_comment += "# Cost: %s\n" % _rounded_cost

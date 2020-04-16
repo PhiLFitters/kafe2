@@ -223,7 +223,7 @@ class FitBase(FileIOMixin, object):
         output_stream.write(indent * (indentation_level + 2) + "cost / ndf = ")
         output_stream.write(
             _pf.get_formatted(value=self.cost_function_value,
-                              n_degrees_of_freedom=self._cost_function.ndf,
+                              n_degrees_of_freedom=self.ndf,
                               with_name=False,
                               with_value_per_ndf=True,
                               format_as_latex=False)
@@ -488,7 +488,7 @@ class FitBase(FileIOMixin, object):
 
         :rtype: int
         """
-        return self._cost_function.ndf
+        return self._cost_function.ndf + len(self._fitter.fixed_parameters)
 
     # -- public methods
 
@@ -803,7 +803,7 @@ class FitBase(FileIOMixin, object):
 
         _result_dict['did_fit'] = self.did_fit
         _cost = float(self.cost_function_value)  # convert numpy scalar to float for yaml representation
-        _ndf = self._cost_function.ndf
+        _ndf = self.ndf
         _result_dict['cost'] = _cost
         _result_dict['ndf'] = _ndf
         _result_dict['cost/ndf'] = _cost / _ndf
