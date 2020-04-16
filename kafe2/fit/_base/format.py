@@ -191,14 +191,12 @@ class ParameterFormatter(FileIOMixin, object):
             if self._value:
                 _log_abs_value = np.log10(np.abs(self._value))
 
-            if not with_errors or (not asymmetric_error and self.error is None) or \
-                    (asymmetric_error and self.asymmetric_error is None):
-                _sig = int(-np.floor(_log_abs_value)) + n_significant_digits - 1
-                _display_val = round(self._value, _sig)
+            if not with_errors or (not asymmetric_error and self.error in (None, 0)) or \
+                    (asymmetric_error and self.asymmetric_error in (None, (0, 0))):
                 if format_as_latex:
-                    _display_string += "$%g$" % (_display_val,)
+                    _display_string += "$%g$" % self.value
                 else:
-                    _display_string += "%g" % (_display_val,)
+                    _display_string += "%g" % self.value
             elif self.fixed:
                 if format_as_latex:
                     _display_string += r"$%g$ (fixed)" % self._value
