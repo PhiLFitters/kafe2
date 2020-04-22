@@ -8,7 +8,7 @@ from ..xy import XYContainer, XYFit
 __all__ = ['Fit']
 
 
-def Fit(data_container, model_function=None, minimizer=None):
+def Fit(data_container, model_function=None, minimizer=None, **kwargs):
     """A convenience wrapper for simple fit creation. For more control over the fit creation use the corresponding Fit
     classes.
 
@@ -19,6 +19,8 @@ def Fit(data_container, model_function=None, minimizer=None):
     :param minimizer: The minimizer backend to use for the fit. This can be ``'scipy'``, ``'iminuit'`` or ``'tminuit'``,
         depending on the installed backends.
     :type minimizer: str or None
+    :param kwargs: Any further keyword arguments for the according fit types. For more information, refer to their
+        respective documentation.
     """
     container_to_fit = {IndexedContainer: IndexedFit,
                         HistContainer: HistFit,
@@ -32,6 +34,6 @@ def Fit(data_container, model_function=None, minimizer=None):
         raise TypeError("Unknown or unsupported data container. Supported types are {}".format(container_to_fit.keys()))
     # other errors will raise during creation of the fit object
     if model_function is None:
-        return fit_class(data_container, minimizer=minimizer)  # use default model function
+        return fit_class(data_container, minimizer=minimizer, **kwargs)  # use default model function
     # model function is not always called model_function e.g. histogram fit, don't use keyword!
-    return fit_class(data_container, model_function, minimizer=minimizer)
+    return fit_class(data_container, model_function, minimizer=minimizer, **kwargs)
