@@ -50,3 +50,6 @@ class TestXYPlot(unittest.TestCase):
         with self.assertWarns(Warning) as w:
             _plot.plot()
         self.assertIn("Did you forget to run fit.do_fit()?", str(w.warning))
+
+    def test_plot_with_asymmetric_errors(self):
+        self.plot.plot(asymmetric_parameter_errors=True)

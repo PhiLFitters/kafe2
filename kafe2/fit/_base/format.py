@@ -192,7 +192,8 @@ class ParameterFormatter(FileIOMixin, object):
                 _log_abs_value = np.log10(np.abs(self._value))
 
             if not with_errors or (not asymmetric_error and self.error in (None, 0)) or \
-                    (asymmetric_error and self.asymmetric_error in (None, (0, 0))):
+                    (asymmetric_error and (
+                            self.asymmetric_error is None or np.all(self.asymmetric_error == 0))):
                 if format_as_latex:
                     _display_string += "$%g$" % self.value
                 else:
