@@ -1,15 +1,4 @@
-r"""
-.. module:: kafe2.fit
-    :platform: Unix
-    :synopsis: This module contains specialized objects for storing measurement data,
-               defining and fitting parametric models to these data and producing
-               graphical representations ("plots") of the result.
-               It relies on the :py:mod:`kafe2.core` module for basic functionality.
-
-.. moduleauthor:: Daniel Savoiu <daniel.savoiu@cern.ch>
-
-
-The :py:mod:`kafe2.fit` module provides an essential toolkit for estimating model
+r"""The :py:mod:`kafe2.fit` module provides an essential toolkit for estimating model
 parameters from data ("fitting").
 
 It distinguishes between a number of different data types:
@@ -141,6 +130,13 @@ The following objects are provided for handling histograms:
 For creating graphical representations of fits, the :py:obj:`~kafe2.fit.Plot` is provided. It can be instantiated
 with any fit object (or list of fit objects) as an argument and will produce one or more plots accordingly
 using `matplotlib`.
+
+:synopsis: This module contains specialized objects for storing measurement data,
+           defining and fitting parametric models to these data and producing
+           graphical representations ("plots") of the result.
+           It relies on the :py:mod:`kafe2.core` module for basic functionality.
+
+.. moduleauthor:: Daniel Savoiu <daniel.savoiu@cern.ch>
 """
 
 

@@ -1,7 +1,7 @@
-"""
-.. module:: kafe2.fit.io.representation
-    :platform: Unix
-    :synopsis: This submodule contains objects for handling different data representations.
+"""This submodule contains objects for handling different data representations. Whole fit objects can be saved and
+loaded to and from a YAML file. Support for more file formats might follow in future updates.
+
+:synopsis: This submodule contains objects for handling different data representations.
 
 .. moduleauthor:: Daniel Savoiu <daniel.savoiu@cern.ch>
 """
@@ -20,6 +20,7 @@ from .container import *
 from .fit import *
 from .format import *
 from .model import *
+
 
 def _get_representer(object_type_name, role, file_format):
     _d_roles = _AVAILABLE_REPRESENTATIONS.get(object_type_name, None)
@@ -48,12 +49,14 @@ def _get_representer(object_type_name, role, file_format):
 
     return _representer
 
+
 # -- convenience functions
 
 def get_reader(object_type_name, file_format):
     return _get_representer(object_type_name=object_type_name,
                             role='reader',
                             file_format=file_format)
+
 
 def get_writer(object_type_name, file_format):
     return _get_representer(object_type_name=object_type_name,
