@@ -366,7 +366,8 @@ class FunctionFormatter(FileIOMixin, object):
         For example the string "{a}*{x}+{b}" will turn into "A*x + B" when the name of the parameter a was set
         to "A", and the name of b is set to "B".
 
-        :rtype: str"""
+        :rtype: str
+        """
         return self._expr_string
 
     @expression_format_string.setter
@@ -381,18 +382,19 @@ class FunctionFormatter(FileIOMixin, object):
 
     @property
     def latex_expression_format_string(self):
-        """A LaTeX-formatted expression for the function.
+        r"""A LaTeX-formatted expression for the function.
         This function will replace all function parameters with their corresponding latex string.
-        For example the string "{a}{x}+{b}" will turn into "A_0 x + B" when the latex name of the parameter a was set
-        to "A_0", and the latex name of b is set to "B".
+        For example the string ``"{a}{x}+{b}"`` will turn into ``"A_0 x + B"`` when the latex name of the parameter
+        ``a`` was set to ``"A_0"``, and the latex name of ``b`` is set to ``"B"``.
 
         .. note:
             Due to the way python handles string formatting, please always use two curly braces in standard LaTeX
-            expressions. E.g. "\\frac{{{a}*{b}}}{{{x}-{c}}}"
+            expressions. E.g. ``"\\frac{{{a}*{b}}}{{{x}-{c}}}"``.
             When not using a raw string, please double all backslashes as well! When using a raw string the above
-            translates to r"\frac{{{a}*{b}}}{{{x}-{c}}}"
+            translates to ``r"\frac{{{a}*{b}}}{{{x}-{c}}}"``.
 
-        :rtype: str"""
+        :rtype: str
+        """
         return self._latex_expr_string
 
     @latex_expression_format_string.setter
