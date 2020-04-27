@@ -199,7 +199,7 @@ After installing *WinPython*, start 'WinPython Command Prompt.exe' in the
 
 
 Install `kafe2`
---------------
+---------------
 
 Now *kafe* can be installed from PyPI by running:
 
