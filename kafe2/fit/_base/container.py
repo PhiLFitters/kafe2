@@ -151,7 +151,7 @@ class DataContainerBase(FileIOMixin, object):
     def data(self):
         """A numpy array containing the data values.
 
-        :rtype: np.ndarray[float]
+        :rtype: numpy.ndarray[float]
         """
         return np.empty(tuple())
 
@@ -160,7 +160,7 @@ class DataContainerBase(FileIOMixin, object):
     def err(self):
         """A numpy array containing the pointwise data uncertainties.
 
-        :rtype: np.ndarray[float]
+        :rtype: numpy.ndarray[float]
         """
         return np.empty(tuple())
 
@@ -169,21 +169,21 @@ class DataContainerBase(FileIOMixin, object):
     def cov_mat(self):
         """A numpy matrix containing the covariance matrix of the data.
 
-        :rtype: np.ndarray[np.ndarray[float]]"""
+        :rtype: numpy.ndarray[numpy.ndarray[float]]"""
         return np.array(np.empty(tuple()))
 
     @property
     @abc.abstractmethod
     def cov_mat_inverse(self):
-        """A numpy matrix containing inverse of the data covariance matrix (or ``None`` if not invertible).
+        """A numpy matrix containing inverse of the data covariance matrix (or :py:obj`None` if not invertible).
 
-        :rtype: np.ndarray[np.ndarray[float]] or None
+        :rtype: numpy.ndarray[numpy.ndarray[float]] or None
         """
         return np.array(np.empty(tuple()))
 
     @property
     def has_errors(self):
-        """``True`` if at least one uncertainty source is defined for the data container.
+        """:py:obj:`True` if at least one uncertainty source is defined for the data container.
 
         :rtype: bool
         """
@@ -197,16 +197,16 @@ class DataContainerBase(FileIOMixin, object):
         """Add an uncertainty source to the data container.
 
         :param err_val: Pointwise uncertainty/uncertainties for all data points.
-        :type err_val: float or np.ndarray[float]
-        :param name: Unique name for this uncertainty source. If ``None``, the name of the error source will be set to a
-                     random alphanumeric string.
+        :type err_val: float or numpy.ndarray[float]
+        :param name: Unique name for this uncertainty source. If :py:obj:`None`, the name of the error source will be
+                     set to a random alphanumeric string.
         :type name: str or None
         :param correlation: Correlation coefficient between any two distinct data points.
         :type correlation: float
-        :param relative: If ``True``, **err_val** will be interpreted as a *relative* uncertainty.
+        :param relative: If :py:obj:`True`, **err_val** will be interpreted as a *relative* uncertainty.
         :type relative: bool
         :param reference: The data values to use when computing absolute errors from relative ones (and vice-versa)
-        :type reference: collections.Iterable[float] or None
+        :type reference: typing.Iterable[float] or None
         :return: An error id which uniquely identifies the created error source.
         :rtype: str
         """
@@ -231,16 +231,16 @@ class DataContainerBase(FileIOMixin, object):
         :param err_matrix: Covariance or correlation matrix.
         :param matrix_type: One of ``'covariance'``/``'cov'`` or ``'correlation'``/``'cor'``.
         :type matrix_type: str
-        :param name: Unique name for this uncertainty source. If ``None``, the name of the error source will be set to a
+        :param name: Unique name for this uncertainty source. If :py:obj`None`, the name of the error source will be set to a
                      random alphanumeric string.
         :type name: str or None
         :param err_val: The pointwise uncertainties (mandatory if only a correlation matrix is given).
-        :type err_val: collections.Iterable[float]
-        :param relative: If ``True``, the covariance matrix and/or **err_val** will be interpreted as a *relative*
+        :type err_val: typing.Iterable[float]
+        :param relative: If :py:obj:`True`, the covariance matrix and/or **err_val** will be interpreted as a *relative*
                          uncertainty.
         :type relative: bool
         :param reference: the data values to use when computing absolute errors from relative ones (and vice-versa)
-        :type reference: collections.Iterable[float] or None
+        :type reference: typing.Iterable[float] or None
         :return: An error id which uniquely identifies the created error source.
         :rtype: str
         """
@@ -273,7 +273,7 @@ class DataContainerBase(FileIOMixin, object):
     def get_matching_errors(self, matching_criteria=None, matching_type='equal'):
         """Return a list of uncertainty objects fulfilling the specified matching criteria.
 
-        Valid keys for ``matching_criteria``:
+        Valid keys for **matching_criteria**:
             * ``name`` (the unique error name)
             * ``type`` (either ``simple`` or ``matrix``)
             * ``correlated`` (bool, only matches simple errors!)
@@ -287,12 +287,12 @@ class DataContainerBase(FileIOMixin, object):
 
         :param matching_criteria: Key-value pairs specifying matching criteria. The resulting error array will only
                                   contain error objects matching *all* provided criteria.
-                                  If ``None``, all error objects are returned.
+                                  If :py:obj:`None`, all error objects are returned.
         :type matching_criteria: dict or None
         :param matching_type: How to perform the matching.
-                              If ``'equal'``, the value in ``matching_criteria`` is checked for equality against the
+                              If ``'equal'``, the value in **matching_criteria** is checked for equality against the
                               stored value.
-                              If ``'regex'``, the value in ``matching_criteria`` is interpreted as a regular expression
+                              If ``'regex'``, the value in **matching_criteria** is interpreted as a regular expression
                               and is matched against the stored value.
         :type matching_type: str
         :return: Dict mapping error name to :py:obj:`~kafe2.core.error.GaussianErrorBase`-derived error objects.

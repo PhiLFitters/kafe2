@@ -256,7 +256,7 @@ class FitBase(FileIOMixin, object):
     def data(self):
         """The data used in this fit.
 
-        :rtype: np.ndarray
+        :rtype: numpy.ndarray
         """
         pass
 
@@ -336,7 +336,7 @@ class FitBase(FileIOMixin, object):
     def parameter_values(self):
         """The current parameter values.
 
-        :rtype: np.ndarray[float]
+        :rtype: numpy.ndarray[float]
         """
         _par_val_dict = self.parameter_name_value_dict
         _par_names = self.parameter_names
@@ -354,7 +354,7 @@ class FitBase(FileIOMixin, object):
     def parameter_errors(self):
         """The current parameter uncertainties.
 
-        :rtype: np.ndarray[float]
+        :rtype: numpy.ndarray[float]
         """
         if self._loaded_result_dict is not None:
             return self._loaded_result_dict['parameter_errors']
@@ -364,7 +364,7 @@ class FitBase(FileIOMixin, object):
     def parameter_cov_mat(self):
         """The current parameter covariance matrix.
 
-        :rtype: None or np.ndarray[np.ndarray[float]]
+        :rtype: None or numpy.ndarray[numpy.ndarray[float]]
         """
         if self._loaded_result_dict is not None:
             return self._loaded_result_dict['parameter_cov_mat']
@@ -374,7 +374,7 @@ class FitBase(FileIOMixin, object):
     def parameter_cor_mat(self):
         """The current parameter correlation matrix.
 
-        :rtype: None or np.ndarray[np.ndarray[float]]
+        :rtype: None or numpy.ndarray[numpy.ndarray[float]]
         """
         if self._loaded_result_dict is not None:
             return self._loaded_result_dict['parameter_cor_mat']
@@ -384,7 +384,7 @@ class FitBase(FileIOMixin, object):
     def asymmetric_parameter_errors(self):
         """The current asymmetric parameter uncertainties.
 
-        :rtype: np.ndarray[np.ndarray[float, float]]
+        :rtype: numpy.ndarray[numpy.ndarray[float, float]]
         """
         if self._loaded_result_dict is not None and self._loaded_result_dict['asymmetric_parameter_errors'] is not None:
             return self._loaded_result_dict['asymmetric_parameter_errors']
@@ -425,7 +425,7 @@ class FitBase(FileIOMixin, object):
 
     @property
     def has_model_errors(self):
-        """``True`` if at least one uncertainty source is defined for the model.
+        """:py:obj:`True` if at least one uncertainty source is defined for the model.
 
         :rtype: bool
         """
@@ -433,7 +433,7 @@ class FitBase(FileIOMixin, object):
 
     @property
     def has_data_errors(self):
-        """``True`` if at least one uncertainty source is defined for the data.
+        """:py:obj:`True` if at least one uncertainty source is defined for the data.
 
         :rtype: bool
         """
@@ -441,7 +441,7 @@ class FitBase(FileIOMixin, object):
 
     @property
     def has_errors(self):
-        """``True`` if at least one uncertainty source is defined for either the data or the model.
+        """:py:obj:`True` if at least one uncertainty source is defined for either the data or the model.
 
         :rtype: bool
         """
@@ -459,7 +459,7 @@ class FitBase(FileIOMixin, object):
     def poi_values(self):
         """The values of the parameters of interest, equal to :py:attr:`~parameter_values` minus nuisance parameters.
 
-        :rtype: np.ndarray[float]
+        :rtype: numpy.ndarray[float]
         """
         return self.parameter_values
 
@@ -502,7 +502,7 @@ class FitBase(FileIOMixin, object):
     def set_all_parameter_values(self, param_value_list):
         """Set all the fit parameters at the same time.
 
-        :param collections.Iterable[float] param_value_list: List of parameter values (mind the order).
+        :param typing.Iterable[float] param_value_list: List of parameter values (mind the order).
         """
         return self._fitter.set_all_fit_parameter_values(param_value_list)
 
@@ -510,8 +510,8 @@ class FitBase(FileIOMixin, object):
         """Fix a parameter so that its value doesn't change when calling :py:meth:`~do_fit()`.
 
         :param str name: The name of the parameter to be fixed
-        :param float or None value: The value to be given to the fixed parameter. If ``None`` the current value from
-            :py:attr:`~parameter_values` will be used.
+        :param float or None value: The value to be given to the fixed parameter. If :py:obj:`None` the current value
+            from :py:attr:`~parameter_values` will be used.
         """
         self._fitter.fix_parameter(name=name, value=value)
         _par_index = self.parameter_names.index(name)
@@ -544,25 +544,25 @@ class FitBase(FileIOMixin, object):
     def add_matrix_parameter_constraint(self, names, values, matrix, matrix_type='cov', uncertainties=None,
                                         relative=False):
         """Advanced class for applying correlated constraints to several parameters of a fit.
-        The order of ``names``, ``values``, ``matrix``, and ``uncertainties`` must be aligned.
+        The order of **names**, **values**, **matrix**, and **uncertainties** must be aligned.
         In other words the first index must belong to the first value, the first row/column in the matrix, etc.
 
         Let N be the number of parameters to be constrained.
 
         :param names: The names of the parameters to be constrained. Must be of shape (N,).
-        :type names: collections.Collection[str]
+        :type names: typing.Collection[str]
         :param values: The values to which the parameters should be constrained. Must be of shape shape (N,).
-        :type values: collections.Sized[float]
+        :type values: typing.Sized[float]
         :param matrix: The matrix that defines the correlation between the parameters. By default interpreted as a
             covariance matrix. Can also be interpreted as a correlation matrix by setting **matrix_type**.
             Must be of shape shape (N, N).
-        :type matrix: collections.Iterable[float]
+        :type matrix: typing.Iterable[float]
         :param matrix_type: Either ``'cov'`` or ``'cor'``. Defines whether the matrix should be interpreted as a
             covariance matrix or as a correlation matrix.
         :type matrix_type: str
         :param uncertainties: The uncertainties to be used in conjunction with a correlation matrix.
             Must be of shape (N,)
-        :type uncertainties: None or collections.Iterable[float]
+        :type uncertainties: None or typing.Iterable[float]
         :param relative: Whether the covariance matrix/the uncertainties should be interpreted as relative to
             **values**.
         :type relative: bool
@@ -615,12 +615,12 @@ class FitBase(FileIOMixin, object):
 
         :param matching_criteria: Key-value pairs specifying matching criteria. The resulting error array will only
                                   contain error objects matching *all* provided criteria.
-                                  If ``None``, all error objects are returned.
+                                  If :py:obj:`None`, all error objects are returned.
         :type matching_criteria: dict or None
         :param matching_type: How to perform the matching.
-                              If ``'equal'``, the value in ``matching_criteria`` is checked for equality against the
+                              If ``'equal'``, the value in **matching_criteria** is checked for equality against the
                               stored value.
-                              If ``'regex'``, the value in ``matching_criteria`` is interpreted as a regular expression
+                              If ``'regex'``, the value in **matching_criteria** is interpreted as a regular expression
                               and is matched against the stored value.
         :type matching_type: str
         :return: Dict mapping error name to :py:obj:`~kafe2.core.error.GaussianErrorBase`-derived error objects.
@@ -652,13 +652,13 @@ class FitBase(FileIOMixin, object):
         """Add an uncertainty source to the fit.
 
         :param err_val: Pointwise uncertainty/uncertainties for all data points.
-        :type err_val: float or collections.Iterable[float]
-        :param name: Unique name for this uncertainty source. If ``None``, the name of the error source will be set to a
-                     random alphanumeric string.
+        :type err_val: float or typing.Iterable[float]
+        :param name: Unique name for this uncertainty source. If :py:obj:`None`, the name of the error source will be
+                     set to a random alphanumeric string.
         :type name: str or None
         :param correlation: Correlation coefficient between any two distinct data points.
         :type correlation: float
-        :param relative: If ``True``, **err_val** will be interpreted as a *relative* uncertainty.
+        :param relative: If :py:obj:`True`, **err_val** will be interpreted as a *relative* uncertainty.
         :type relative: bool
         :param reference: Either ``'data'`` or ``'model'``. Specifies which reference values to use when calculating
                           absolute errors from relative errors.
@@ -688,12 +688,12 @@ class FitBase(FileIOMixin, object):
         :param err_matrix: covariance or correlation matrix
         :param matrix_type: One of ``'covariance'``/``'cov'`` or ``'correlation'``/``'cor'``
         :type matrix_type: str
-        :param name: Unique name for this uncertainty source. If ``None``, the name of the error source will be set to a
-            random alphanumeric string.
+        :param name: Unique name for this uncertainty source. If :py:obj:`None`, the name of the error source will be
+                     set to a random alphanumeric string.
         :type name: str or None
         :param err_val: The pointwise uncertainties (mandatory if only a correlation matrix is given).
-        :type err_val: collections.Iterable[float]
-        :param relative: If ``True``, the covariance matrix and/or **err_val** will be interpreted as a *relative*
+        :type err_val: typing.Iterable[float]
+        :param relative: If :py:obj:`True`, the covariance matrix and/or **err_val** will be interpreted as a *relative*
                          uncertainty.
         :type relative: bool
         :param reference: Either ``'data'`` or ``'model'``. Specifies which reference values to use when calculating
@@ -746,7 +746,7 @@ class FitBase(FileIOMixin, object):
     def do_fit(self, asymmetric_parameter_errors=False):
         """Perform the minimization of the cost function.
 
-        :param bool asymmetric_parameter_errors: If ``True``, calculate asymmetric parameter errors.
+        :param bool asymmetric_parameter_errors: If :py:obj:`True`, calculate asymmetric parameter errors.
         :return: A dictionary containing the fit results.
         :rtype: dict
         """
@@ -783,7 +783,7 @@ class FitBase(FileIOMixin, object):
     def assign_parameter_latex_names(self, **par_latex_names_dict):
         """Assign LaTeX-formatted strings to all model function arguments.
 
-        :param par_latex_names_dict: Dictionary mapping the parameter names to their latex names
+        :param par_latex_names_dict: Dictionary mapping the parameter names to their latex names.
         """
         for _af in self._get_model_function_argument_formatters():
             _aln = par_latex_names_dict.pop(_af.name, None)
@@ -795,7 +795,7 @@ class FitBase(FileIOMixin, object):
     def get_result_dict(self, asymmetric_parameter_errors=False):
         """Return a dictionary of the fit results.
 
-        :param bool asymmetric_parameter_errors: If True, calculate asymmetric parameter errors.
+        :param bool asymmetric_parameter_errors: If :py:obj:`True`, calculate asymmetric parameter errors.
         :return: A dictionary containing the fit results.
         :rtype: dict
         """
@@ -841,13 +841,14 @@ class FitBase(FileIOMixin, object):
 
         :param output_stream: The output stream to which the report should be printed.
         :type output_stream: io.TextIOBase
-        :param show_data: If ``True``, print out information about the data.
+        :param show_data: If :py:obj:`True`, print out information about the data.
         :type show_data: bool
-        :param show_model: If ``True``, print out information about the parametric model.
+        :param show_model: If :py:obj:`True`, print out information about the parametric model.
         :type show_model: bool
-        :param show_fit_results: If ``True``, print out information about the fit results.
+        :param show_fit_results: If :py:obj:`True`, print out information about the fit results.
         :type show_fit_results: bool
-        :param asymmetric_parameter_errors: If ``True``, use two different parameter errors for up/down directions.
+        :param asymmetric_parameter_errors: If :py:obj:`True`, use two different parameter errors for up/down
+            directions.
         :type asymmetric_parameter_errors: bool
         """
 
@@ -865,7 +866,7 @@ class FitBase(FileIOMixin, object):
 
         :param filename: Filename for the output.
         :type filename: str
-        :param file_format: A format for the output file. If ``None``, the extension from the filename is used.
+        :param file_format: A format for the output file. If :py:obj:`None`, the extension from the filename is used.
         :type file_format: str or None
         :param calculate_asymmetric_errors: If asymmetric errors should be calculated before saving the results.
         :type calculate_asymmetric_errors: bool
