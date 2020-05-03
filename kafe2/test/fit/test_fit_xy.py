@@ -912,3 +912,7 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
             rtol=1e-3,
             atol=1e-2,
         )
+
+    def test_limit_parameter_raise(self):
+        with self.assertRaises(ValueError):
+            self._get_fit().limit_parameter("a")

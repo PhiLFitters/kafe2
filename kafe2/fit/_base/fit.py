@@ -526,13 +526,16 @@ class FitBase(FileIOMixin, object):
         _par_index = self.parameter_names.index(name)
         self._get_model_function_parameter_formatters()[_par_index].fixed = False
 
-    def limit_parameter(self, name, limits):
+    def limit_parameter(self, name, lower=None, upper=None):
         """Limit a parameter to a given range.
 
         :param str name: The name of the parameter to limit.
-        :param tuple[float,float] limits: The range to which the parameter should be limited.
+        :param float lower: The minimum parameter value.
+        :param float upper: The maximum parameter value.
         """
-        self._fitter.limit_parameter(name=name, limits=limits)
+        if lower is None and upper is None:
+            raise ValueError("Either a lower or an upper bound must be provided!")
+        self._fitter.limit_parameter(name=name, limits=(lower, upper))
 
     def unlimit_parameter(self, name):
         """Unlimit a parameter.
