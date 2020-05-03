@@ -34,4 +34,5 @@ analysis framework `ROOT` or in the Python package `iminuit`.
    parts/installation
    parts/mathematical_foundations
    parts/user_guide
+   parts/developer_guide
    parts/api_documentation/index
