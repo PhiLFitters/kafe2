@@ -1,0 +1,13 @@
+numpy
+scipy
+iminuit
+matplotlib
+numdifftools
+pyyaml
+six
+funcsigs
+tabulate
+unittest2
+coverage
+sphinx
+mock
