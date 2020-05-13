@@ -6,9 +6,9 @@
 .. role:: python(code)
 
 
-**********
-User Guide
-**********
+***************
+Beginners Guide
+***************
 
 This user guide covers the basics of using *kafe2* for
 fitting parametric models to data.
