@@ -98,8 +98,8 @@ In *kafe2* the Python package *SciPy* can be used to minimize cost
 functions via its ``scipy.optimize`` module.
 Alternatively,  *kafe2* can use the *MINUIT* implementations *TMinuit*
 or *iminuit* when they are installed.
- 
-.. TODO: add link to future page with minimizer overview
+More information on how to use the Minimizers can be found in the :ref:`User Guide <minimizers>`.
+
 
 Choosing a cost function
 ------------------------
@@ -110,6 +110,9 @@ the **sum of residuals** and the  **negative logarithm of the likelihood**,
 which are used in the **least squares** or the **maximum likelihood** methods,
 respectively. Incidentally, these are also the two basic types of cost functions that
 have been implemented in *kafe2*.
+
+
+.. _least-squares:
 
 Least-squares ("chi-squared")
 -----------------------------
@@ -146,6 +149,8 @@ Computation-wise there is no noticeable difference for small datasets
 of the full covariance matrix takes significantly longer than simply dividing
 by the point-wise uncertainties.
 
+
+.. _negative-log-likelihood:
 
 Negative log-likelihood
 -----------------------
