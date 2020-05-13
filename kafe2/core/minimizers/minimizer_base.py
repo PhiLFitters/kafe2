@@ -199,7 +199,7 @@ class MinimizerBase(object):
     def limit(self, parameter_name, parameter_value):
         raise NotImplementedError()
 
-    def unlimit(self, parameter_name, parameter_value):
+    def unlimit(self, parameter_name):
         raise NotImplementedError()
 
     def fix(self, parameter_name):
