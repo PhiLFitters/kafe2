@@ -32,7 +32,7 @@ analysis framework `ROOT` or in the Python package `iminuit`.
    :includehidden:
 
    parts/installation
+   parts/beginners_guide
    parts/mathematical_foundations
-   parts/user_guide
    parts/developer_guide
    parts/api_documentation/index

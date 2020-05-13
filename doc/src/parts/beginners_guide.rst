@@ -1,26 +1,33 @@
 .. meta::
-   :description lang=en: kafe2 - a Python-package for fitting parametric
-                         models to several types of data with
+   :description lang=en: kafe2 - a Python package for fitting parametric
+                         models to several types of data
    :robots: index, follow
 
 .. role:: python(code)
 
+.. _beginners_guide:
 
-**********
-User Guide
-**********
+***************
+Beginners Guide
+***************
 
-This user guide covers the basics of using *kafe2* for
-fitting parametric models to data.
-Specifically, it teaches users how to specify measurement 
-data and uncertainties, how to specify model functions, 
-and how to extract the fit results.
+This section covers the basics of using *kafe2* for fitting parametric models to data by
+showing examples.
+Specifically, it teaches users how to specify measurement data and uncertainties, how to specify
+model functions, and how to extract the fit results.
+
+An interactive `Jupyter <https://jupyter.org/>`_ Notebook teaching the usage of *kafe2* with
+*Python* is available in
+`English <https://github.com/dsavoiu/kafe2/blob/master/examples/jupyter_tutorial_en.ipynb>`_ and
+`German <https://github.com/dsavoiu/kafe2/blob/master/examples/jupyter_tutorial_de.ipynb>`_.
+
+More detailed information for the advanced use of *kafe2* is found in the :ref:`user-guide` and
+in the :ref:`api-documentation`.
 
 Basic Fitting Procedure
 =======================
 
-Generally, any simple fit performed with the *kafe2* framework 
-can be divided into the following steps:
+Generally, any simple fit performed by *kafe2* can be divided into the following steps:
 
 1. Specifying the data
 2. Specifying the uncertainties
@@ -53,13 +60,12 @@ For using *kafe2* inside a *Python* script, import the required *kafe2* modules:
 If a code example contains a line similar to :python:`data = XYContainer.from_file("data.yml")`
 the corresponding YAML file can be found in the same directory that contains the example Python
 script.
-Those are located inside the installation directory of *kafe2*.
-Additionally the examples can be found on
+The example files can be found on
 `GitHub <https://github.com/dsavoiu/kafe2/tree/master/examples>`_.
 
 Example 1: Line Fit
 ===================
-The first example is the simplest use of a fitting framework, performing a line fit.
+The first example is the simplest use of a fitting framework: performing a line fit.
 A linear function of the form :math:`f(x;a, b) = a x + b` is made to align with
 a series of xy data points that have some uncertainty along the x-axis
 and the y-axis.
@@ -113,16 +119,15 @@ When a different function has to be fitted, those functions need to be defined e
 estimates are correct.
 When using the same dataset and error estimates a smaller value of :math:`\chi^2/\mathrm{ndf}`
 means a better fit.
-Thus the exponential function more accurately describes the the given dataset than a line function.
+Thus the exponential function describes the dataset more accurately than the line function.
 
-An exponential function is a **non-linear** function of it's parameters!
+An exponential function is a **non-linear** function!
 **Non-linear** refers to the linearity of the parameters.
-So any parabola or polynomial like :math:`ax^2+bx+c` is a linear function of the parameters
+So any polynomial like :math:`ax^2+bx+c` is a linear function of the parameters
 :math:`a`, :math:`b` and :math:`c`.
 So an exponential function :math:`A_0 e^{(x/x_0)}` is **non-linear** in its parameter :math:`x_0`.
-Thus the profile :math:`\chi^2` can have a non parabolic shape.
+Thus the profile of :math:`\chi^2` can have a non-parabolic shape.
 If that is the case, uncertainties of the form :math:`a\pm\delta_a` won't be accurate.
-Please refer to :ref:`non-linear-fits` for more information.
 
 To see the shape of the profiles and contours, please create a contour plot of the fitted
 parameters.
@@ -144,7 +149,7 @@ The corresponding contour plot for the exponential fit shown above looks like th
 When looking at the :math:`\chi^2` profiles of the parameters, the deformation is effectively not
 present.
 In this case the fit results and uncertainties are perfectly fine and are can be used as is.
-If a profile has a non parabolic shape, uncertainties of the form :math:`a\pm\delta_a` won't be
+If a profile has a non-parabolic shape, uncertainties of the form :math:`a\pm\delta_a` won't be
 accurate.
 Please refer to :ref:`non-linear-fits` for more information.
 
@@ -184,7 +189,7 @@ To plot the fits in two separate figures append the ``--separate`` flag to the k
 
 Python
 ------
-Inside a *Python* script a custom function ist defined like this:
+Inside a *Python* script a custom function is defined like this:
 
 .. literalinclude:: ../../../examples/002_model_functions/model_functions.py
     :lines: 17-26
@@ -202,7 +207,7 @@ It's also possible to assign LaTeX expressions to the function and its variables
 Please note that the function *LaTeX* expression needs to contain all parameters present in the
 function definition. The placeholders are then automatically replaced by their corresponding
 *LaTeX* names. Due to the way *Python* implements string formatting, curly braces used in *LaTeX*
-need to be doubled, as shown in the code example.
+need to be typed twice, as shown in the code example.
 
 The full example additionally contains the creation of a contour plot. The corresponding lines are
 highlighted in the following example.
@@ -239,7 +244,7 @@ also damped by the viscous damping coefficient :math:`c`.
 The goal of the experiment is to determine the local strength of earth's gravity :math:`g`. Since
 the earth is shaped like an ellipsoid the gravitational pull varies with latitude: it's strongest
 at the poles with :math:`g_p=9.832\,\mathrm{m}/\mathrm{s}^2` and it's weakest at the equator with
-:math:`g_e=9.780\,\mathrm{m}/\mathrm{s}^2`. For reference, at Germany's latitude g lies at
+:math:`g_e=9.780\,\mathrm{m}/\mathrm{s}^2`. For reference, at Germany's latitude :math:`g` lies at
 approximately :math:`9.81\,\mathrm{m}/\mathrm{s}^2`.
 
 .. figure:: ../_static/img/003_constraints.png
@@ -251,7 +256,7 @@ kafe2go
 
 Parameter constraints are straightforward to use with *kafe2go*. After defining the model function
 parameter constraints can be set. The constraints require an index to be set. This index
-corresponds with the parameter order of the fit function. So the first free parameter uses index 0,
+corresponds to the parameter order of the fit function. So the first free parameter uses index 0,
 the second index 1.
 The according lines are highlighted in the example file below.
 
@@ -279,7 +284,7 @@ Using *kafe2* inside a *Python* script, parameter constraints can be set with
 
 .. _non-linear-fits:
 
-Example 4: Non Linear Fits
+Example 4: Non-Linear Fits
 ==========================
 
 Very often, when the fit model is a non-linear function of the parameters, the :math:`\chi^2`
@@ -288,20 +293,20 @@ A very common example of such a case is an exponential function
 parametrized as shown in this example.
 
 .. figure:: ../_static/img/004_non_linear_fit.png
-    :alt: Fit of a non linear function.
+    :alt: Fit of a non-linear function.
 
-In the case of a nonlinear fit, the minimum of a :math:`\chi^2` cost function is not longer shaped
-like a parabola (with a model parameter on the x axis and chi2 on the y axis).
-Now, you might be wondering why you should care about the shape of the chi2 function.
+In the case of a non-linear fit, the minimum of a :math:`\chi^2` cost function is no longer shaped
+like a parabola (with a model parameter on the x axis and :math:`\chi^2` on the y axis).
+Now, you might be wondering why you should care about the shape of the :math:`\chi^2` function.
 The reason why it's important is that the common notation of :math:`p\pm\sigma` for fit results
 is only valid for a parabola-shaped cost function.
 If the :math:`\chi^2` function is distorted it will also affect your fit results!
 
-Luckily nonlinear fits oftentimes still produce meaningful fit results as long as the distortion is
+Luckily non-linear fits oftentimes still produce meaningful fit results as long as the distortion is
 not too big - you just need to be more careful during the evaluation of your fit results.
-A common approach for handling nonlinearity is to trace the profile of the cost function (in this
-case chi2) in either direction of the cost function minimum and find the points at which the cost
-function value has increased by a specified amount relative to the cost function minimum.
+A common approach for handling non-linearity is to trace the profile of the cost function (in this
+case :math:`\chi^2`) in either direction of the cost function minimum and find the points at which
+the cost function value has increased by a specified amount relative to the cost function minimum.
 In other words, two cuts are made on either side of the cost function minimum at a specified
 height.
 
@@ -320,7 +325,7 @@ the interval limits are described relative to the cost function minimum as
 .. figure:: ../_static/img/004_non_linear_fit_contours.png
     :alt: Contour and profiles of an non-linear fit.
 
-In addition to non linear function, the usage of x data errors leads to a non linear fits as well.
+In addition to non-linear function, the usage of x data errors leads to a non-linear fits as well.
 kafe2 fits support the addition of x data errors - in fact we've been using them since the very
 first example.
 To take them into account the x errors are converted to y errors via multiplication with the
@@ -332,12 +337,13 @@ Since we're extrapolating the derivative at the x data values, we will only rece
 if the derivative doesn't change too much at the scale of the x error.
 Also, since the effective y error has now become dependent on the derivative of the model function
 it will vary depending on our choice of model parameters.
-This distorts our likelihood function - the minimum of a chi2 cost function will no longer be
-shaped like a parabola (with a model parameter on the x axis and chi2 on the y axis).
+This distorts our likelihood function - the minimum of a :math:`\chi^2` cost function will no
+longer be shaped like a parabola (with a model parameter on the x axis and :math:`\chi^2` on the
+y axis).
 
-To demonstrate this, the second file ``x_errors`` will perform a line-fit with much bigger
-uncertainties on the x axis than on the y axis. The non parabolic shape can be seen in the one
-dimensional profile scans.
+To demonstrate this, the second file ``x_errors`` will perform a line fit with much bigger
+uncertainties on the x axis than on the y axis. The non-parabolic shape can be seen in the
+one-dimensional profile scans.
 
 .. figure:: ../_static/img/004_x_errors_contours.png
     :alt: Profiles and contour of a line fit with big x errors.
@@ -356,9 +362,9 @@ and model function is shown below the plot. This can be done by appending the ``
 
     .. literalinclude:: ../../../examples/004_non_linear_fit/non_linear_fit.yml
 
-The dataset used to show that big uncertainties on the x axis can cause the fit to be non linear
+The dataset used to show that big uncertainties on the x axis can cause the fit to be non-linear
 follows here.
-Keep in mind, that *kafe2go* will perform a line fit if no fit function has been specified.
+Keep in mind that *kafe2go* will perform a line fit if no fit function has been specified.
 In order do add a grid to the contours, run *kafe2go* with the ``--grid all`` flag.
 So to plot with asymmetric errors, the profiles and contour as well as a grid run
 ``kafe2go x_errors.yml -a -c --grid all``
@@ -372,7 +378,7 @@ So to plot with asymmetric errors, the profiles and contour as well as a grid ru
 Python
 ------
 
-The according lines to display asymmetric uncertainties and to create the contour plot are
+The relevant lines to display asymmetric uncertainties and to create the contour plot are
 highlighted in the code example below.
 
 .. bootstrap_collapsible::
@@ -383,7 +389,7 @@ highlighted in the code example below.
         :lines: 27-
         :emphasize-lines: 23, 27, 29-31
 
-The example to show that uncertainties on the x axis can cause a non linear fit uses the *YAML*
+The example to show that uncertainties on the x axis can cause a non-linear fit uses the *YAML*
 dataset given in the *kafe2go* section.
 
 .. bootstrap_collapsible::
@@ -397,8 +403,8 @@ dataset given in the *kafe2go* section.
 Example 5: Histogram Fit
 ========================
 
-*kafe2* is not only capable of performing XY-Fits. This example shows how to handle a one
-dimensional dataset.
+In addition to the xy fits shown above *kafe2* can also perform fits on one-dimensional datasets
+by binning the data.
 The distribution of a random stochastic variable follows a probability density function.
 This density needs to be normalized.
 The fit will determine the parameters of that density function, which the dataset is most likely to
@@ -415,7 +421,7 @@ kafe2go
 -------
 
 *kafe2go* currently requires extra formatting to perform a histogram fit. This will be changed in a
-future update. At the moment it's simpler to creat a *Python* script.
+future update. At the moment it's simpler to create a *Python* script.
 
 Python
 ------
@@ -425,7 +431,7 @@ To use a histogram fit in a *Python* script, just import it with
 
 The creation a a histogram requires the user to set the limits of the histogram and the amount of
 bins.
-Alternatively the bin edges for each bin can be set.
+Alternatively the bin edges for each bin can be set manually.
 
 .. bootstrap_collapsible::
     :control_type: link
@@ -438,11 +444,11 @@ Alternatively the bin edges for each bin can be set.
 Example 6: Unbinned Fit
 =======================
 
-An unbinned fit is needed, when there are too few data points to create a (good) histogram.
-If a histogram is created from too few data points, information can be lost or even changed, by
+An unbinned fit is needed when there are too few data points to create a (good) histogram.
+If a histogram is created from too few data points information can be lost or even changed by
 changing the exact value of one data point to the range of a bin.
-With an unbinned likelihood fit it's still possible to fit the pdf to the data points, as the
-likelihood of each data point is fitted.
+With an unbinned likelihood fit it's still possible to fit the probability density function to the
+data points, as the likelihood of each data point is fitted.
 
 .. figure:: ../_static/img/006_unbinned_fit.png
     :alt: An unbinned likelihood fit performed with kafe2.
@@ -458,7 +464,7 @@ Python
 
 The fitting procedure is similar to the one of a histogram fit.
 
-Inside a *kafe2* fit, single parameters can be fixated as highlighted in the example.
+Inside a *kafe2* fit, single parameters can be fixed as highlighted in the example.
 When fixing a parameter, there must be a good reason to do so. In this case it's the normalization
 of the probability distribution function.
 This, of course, could have been done inside the function itself.
