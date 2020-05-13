@@ -28,7 +28,7 @@ analysis framework `ROOT` or in the Python package `iminuit`.
 
 .. toctree::
    :name: mastertoc
-   :maxdepth: 3
+   :maxdepth: 2
    :includehidden:
 
    parts/installation
