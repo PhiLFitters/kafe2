@@ -1,4 +1,7 @@
 from __future__ import print_function
+
+import logging
+
 from .minimizer_base import MinimizerBase
 from ..contour import ContourFactory
 from ..error import CovMat
@@ -257,6 +260,10 @@ class MinimizerScipyOptimize(MinimizerBase):
             _par_vals = self.parameter_values
             _par_bounds = self._par_bounds
 
+        disp = False
+        if logging.root.level <= logging.INFO:
+            disp = True
+
         self._opt_result = opt.minimize(_func,
                                         _par_vals,
                                         args=(),
@@ -267,7 +274,7 @@ class MinimizerScipyOptimize(MinimizerBase):
                                         constraints=self._par_constraints,
                                         tol=self.tolerance,
                                         callback=None,
-                                        options=dict(maxiter=max_calls, disp=False))
+                                        options=dict(maxiter=max_calls, disp=disp))
         self._invalidate_cache()
 
         if np.any(self._par_fixed):
