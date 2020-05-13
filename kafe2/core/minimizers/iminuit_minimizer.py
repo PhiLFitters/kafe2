@@ -1,6 +1,8 @@
 import logging
+
 from .minimizer_base import MinimizerBase
 from ..contour import ContourFactory
+
 try:
     import iminuit
 except ImportError:
@@ -9,13 +11,15 @@ except ImportError:
 
 import numpy as np
 
+
 class MinimizerIMinuitException(Exception):
     pass
+
 
 class MinimizerIMinuit(MinimizerBase):
     def __init__(self,
                  parameter_names, parameter_values, parameter_errors,
-                 function_to_minimize, strategy = 1):
+                 function_to_minimize, strategy=1):
         self._par_names = parameter_names
         self._strategy = strategy
 
@@ -92,9 +96,9 @@ class MinimizerIMinuit(MinimizerBase):
     def _get_iminuit(self):
         if self.__iminuit is None:
             self.__iminuit = iminuit.Minuit(self._func_wrapper,
-                                        forced_parameters=self.parameter_names,
-                                        errordef=self.errordef,
-                                        **self._minimizer_param_dict)
+                                            forced_parameters=self.parameter_names,
+                                            errordef=self.errordef,
+                                            **self._minimizer_param_dict)
             # set logging level in iminuit arcording to the root logger
             if logging.root.level < logging.DEBUG:
                 self.__iminuit.set_print_level(3)
@@ -137,7 +141,6 @@ class MinimizerIMinuit(MinimizerBase):
             _mat = np.insert(np.insert(_mat, _id, 0., axis=0), _id, 0., axis=1)
 
         return _mat
-
 
     # -- public properties
 
@@ -194,7 +197,7 @@ class MinimizerIMinuit(MinimizerBase):
             try:
                 self._get_iminuit().hesse()
                 # FIX_UPSTREAM we need skip_fixed=False, but this is unsupported
-                #_mat = self._get_iminuit().matrix(correlation, skip_fixed=False)
+                # _mat = self._get_iminuit().matrix(correlation, skip_fixed=False)
 
                 # ... so use skip_fixed=True instead and fill in the gaps
                 _mat = self._get_iminuit().matrix(correlation=True, skip_fixed=True)
@@ -286,8 +289,9 @@ class MinimizerIMinuit(MinimizerBase):
             raise MinimizerIMinuitException("Need to perform a fit before calling contour()!")
         _numpoints = minimizer_contour_kwargs.pop("numpoints", 100)
         if minimizer_contour_kwargs:
-            raise MinimizerIMinuitException("Unknown keyword arguments for contour(): {}".format(minimizer_contour_kwargs.keys()))
-        _x_errs, _y_errs, _contour_line = self.__iminuit.mncontour(parameter_name_1, parameter_name_2, 
+            raise MinimizerIMinuitException(
+                "Unknown keyword arguments for contour(): {}".format(minimizer_contour_kwargs.keys()))
+        _x_errs, _y_errs, _contour_line = self.__iminuit.mncontour(parameter_name_1, parameter_name_2,
                                                                    numpoints=_numpoints, sigma=sigma)
         self.minimize()  # return to minimum
         if len(_contour_line) == 0:
@@ -297,7 +301,8 @@ class MinimizerIMinuit(MinimizerBase):
     def profile(self, parameter_name, bins=20, bound=2, args=None, subtract_min=False):
         if self.__iminuit is None:
             raise MinimizerIMinuitException("Need to perform a fit before calling profile()!")
-        _bins, _vals, _statuses = self.__iminuit.mnprofile(parameter_name, bins=bins, bound=bound, subtract_min=subtract_min)
+        _bins, _vals, _statuses = self.__iminuit.mnprofile(parameter_name, bins=bins, bound=bound,
+                                                           subtract_min=subtract_min)
         # TODO: check statuses (?)
         self.minimize()  # return to minimum
         return np.array([_bins, _vals])
@@ -309,7 +314,7 @@ class MinimizerIMinuit(MinimizerBase):
         self.reset()
 
     def set_several(self, parameter_names, parameter_values):
-        for _pn, _pv in zip(parameter_names,parameter_values):
+        for _pn, _pv in zip(parameter_names, parameter_values):
             self.set(_pn, _pv)
 
     def fix(self, parameter_name):
