@@ -535,6 +535,18 @@ class FitBase(FileIOMixin, object):
         """
         if lower is None and upper is None:
             raise ValueError("Either a lower or an upper bound must be provided!")
+
+        # make sure these are numeric values (otherwise minimizer will
+        # fail on `do_fit` with a cryptic error)
+        for _lim in (lower, upper):
+            try:
+                assert _lim is None or float(_lim) == _lim
+            except (TypeError, ValueError, AssertionError):
+                six.raise_from(
+                    TypeError("Expecting `None` or numeric value for parameter limit, got {}: {}".format(type(_lim), repr(_lim))),
+                    None
+                )
+
         self._fitter.limit_parameter(name=name, limits=(lower, upper))
 
     def unlimit_parameter(self, name):

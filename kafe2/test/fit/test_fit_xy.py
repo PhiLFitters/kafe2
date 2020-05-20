@@ -916,3 +916,14 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
     def test_limit_parameter_raise(self):
         with self.assertRaises(ValueError):
             self._get_fit().limit_parameter("a")
+
+    def test_limit_parameter_raise_if_not_numeric(self):
+        with self.assertRaises(TypeError):
+            # old tuple syntax no longer supported
+            self._get_fit().limit_parameter("a", (0, 1))
+        with self.assertRaises(TypeError):
+            # non-numeric types invalid (except None)
+            self._get_fit().limit_parameter("a", "invalid", "limits")
+        with self.assertRaises(TypeError):
+            # string representations of numerics should also fail
+            self._get_fit().limit_parameter("a", "0.3", "14")
