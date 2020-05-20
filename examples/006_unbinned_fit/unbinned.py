@@ -52,7 +52,7 @@ fit = UnbinnedFit(data=data, model_density_function=pdf)  # create the fit objec
 fit.fix_parameter("a", 1)
 fit.fix_parameter("b", 11.5)
 # constrain parameter fbg to avoid unphysical region
-fit.limit_parameter("fbg", (0., 1.))
+fit.limit_parameter("fbg", 0., 1.)
 
 # assign latex names for the parameters for nicer display
 fit.model_label = "exponential decay law + flat background"
