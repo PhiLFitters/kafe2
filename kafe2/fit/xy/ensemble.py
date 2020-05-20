@@ -240,7 +240,7 @@ class XYFitEnsemble(FitEnsembleBase):
                 ensemble_variable=self._ensemble_variables['parameter_pulls'],
                 value_ranges=(-3, 3),
                 variable_labels=["Pull ${}$".format(_arg_formatter.latex_name)
-                                 for _arg_formatter in self._toy_fit._model_function.argument_formatters]
+                                 for _arg_formatter in self._toy_fit._model_function.formatter.arg_formatters]
             )
 
         if 'cost' in self._requested_results:
