@@ -240,7 +240,8 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
         _limited_par_list = yaml_doc.pop('limited_parameters', None)
         if _limited_par_list is not None:
             for _par, _limits in _limited_par_list:
-                _fit_object.limit_parameter(_par, _limits)
+                _low, _high = _limits
+                _fit_object.limit_parameter(_par, _low, _high)
 
         _fit_results = yaml_doc.pop('fit_results', None)
         if _fit_results is not None:
