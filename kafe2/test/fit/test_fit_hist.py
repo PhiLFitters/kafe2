@@ -130,7 +130,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
             cost_function=cost_function,
             minimizer=self.MINIMIZER
         )
-        _fit.add_simple_error(1.0)  # only considered for chi2
+        _fit.add_error(1.0)  # only considered for chi2
 
         return _fit
 
@@ -223,7 +223,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
             (17, 23),
             fill_data=_new_entries
         )
-        _fit.add_simple_error(err_val=1.0)
+        _fit.add_error(err_val=1.0)
 
         _ref_data, _ = np.histogram(
             _new_entries,
@@ -273,7 +273,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
                     minimizer=self.MINIMIZER)
 
         self.assertIn(
-            'must have independent variable',
+            "needs at least one parameter",
             _exc.exception.args[0])
 
     def test_model_no_pars_beside_x_raise(self):
@@ -287,7 +287,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
                     minimizer=self.MINIMIZER)
 
         self.assertIn(
-            'needs at least one parameter beside independent variable',
+            "needs at least one parameter besides",
             _exc.exception.args[0])
 
     def test_model_varargs_raise(self):
@@ -347,7 +347,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
                     model_density_antiderivative=dummy_model_antiderivative,
                     minimizer=self.MINIMIZER)
 
-        self.assertIn('different argument structures', _exc.exception.args[0])
+        self.assertIn('require the same argument structures', _exc.exception.args[0])
         self.assertIn('data', _exc.exception.args[0])
 
     def test_model_and_antiderivative_no_defaults(self):

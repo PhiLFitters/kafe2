@@ -1,7 +1,6 @@
 .. meta::
-   :description lang=en: kafe - a general, Python-based approach to fit a
-      model function to two-dimensional data points with correlated
-      uncertainties in both dimensions
+   :description lang=en: kafe2 - a Python-package for fitting parametric
+                         models to several types of data with
    :robots: index, follow
 
 
@@ -199,7 +198,7 @@ After installing *WinPython*, start 'WinPython Command Prompt.exe' in the
 
 
 Install `kafe2`
---------------
+---------------
 
 Now *kafe* can be installed from PyPI by running:
 

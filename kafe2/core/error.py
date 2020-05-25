@@ -1,6 +1,7 @@
 """
-# TODO: make all setters copy and own data members
+Classes for handling of uncertainties in kafe2 fits.
 """
+# TODO: make all setters copy and own data members
 
 import abc
 import copy
@@ -33,11 +34,7 @@ def cov_mat_from_float_list(value_list, correlation=0.0):
     return CovMat(_mat)
 
 
-"""
-Data structure for Covariance Matrices
-"""
-
-
+# Data structure for Covariance Matrices
 class CovMat(object):
     def __init__(self, matrix):
         # -- member definitions
@@ -189,90 +186,100 @@ class CovMat(object):
         return _l
 
 
-"""
-Data structures for Gaussian Errors
-"""
-
-
+# Data structures for Gaussian Errors
 @six.add_metaclass(abc.ABCMeta)
 class GaussianErrorBase(object):
     """
     Purely abstract class. Defines the minimal interface required by all specializations.
     """
-
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def error(self):
         """Pointwise error array."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def error_rel(self):
         """Pointwise error array (relative errors)."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def reference(self):
         """Array of reference values for the error."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def cov_mat(self):
         """Full absolute covariance matrix for error."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def cov_mat_rel(self):
         """Full relative covariance matrix for error."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def cor_mat(self):
         """Correlation matrix for error."""
         pass
 
     # TODO: remove _uncor/_cor from base interface?
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def error_uncor(self):
         """Pointwise array of 'uncorrelated' parts of absolute errors."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def error_cor(self):
         """Pointwise array of 'correlated' parts of absolute errors."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def error_rel_uncor(self):
         """Pointwise array of 'uncorrelated' parts of relative errors."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def error_rel_cor(self):
         """Pointwise array of 'correlated' parts of relative errors."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def cov_mat_uncor(self):
         """'Uncorrelated' part of absolute covariance matrix for error."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def cov_mat_cor(self):
         """'Fully correlated' part of absolute covariance matrix for error."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def cov_mat_rel_uncor(self):
         """'Uncorrelated' part of relative covariance matrix for error."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def cov_mat_rel_cor(self):
         """'Fully correlated' part of relative covariance matrix for error."""
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def fit_indices(self):
         """Indices of fits that have this error when used inside a MultiFit."""
 
@@ -517,8 +524,7 @@ class SimpleGaussianError(GaussianErrorBase):
     def cor_mat(self):
         if self.relative:
             return self.cov_mat_rel.cor_mat
-        else:
-            return self.cov_mat.cor_mat
+        return self.cov_mat.cor_mat
 
     @property
     def corr_coeff(self):
@@ -744,8 +750,7 @@ class MatrixGaussianError(GaussianErrorBase):
         # TODO: check if these are equal
         if self.relative:
             return self._cov_mat_rel.cor_mat
-        else:
-            return self._cov_mat.cor_mat
+        return self._cov_mat.cor_mat
 
     @property
     def fit_indices(self):
@@ -754,5 +759,3 @@ class MatrixGaussianError(GaussianErrorBase):
 
 if __name__ == '__main__':
     pass
-
-

@@ -4,7 +4,7 @@ from ...core.error import MatrixGaussianError, SimpleGaussianError
 from .._base import DataContainerException, DataContainerBase
 
 
-__all__ = ["IndexedContainer"]
+__all__ = ['IndexedContainer', 'IndexedContainerException']
 
 
 class IndexedContainerException(DataContainerException):
@@ -25,9 +25,8 @@ class IndexedContainer(DataContainerBase):
         :param dtype: data type of the measurements
         :type dtype: type
         """
-        self._idx_data = np.array(data, dtype=dtype)
-        self._error_dicts = {}
-        self._total_error = None
+        super(IndexedContainer, self).__init__()
+        self._data = np.array(data, dtype=dtype)
 
     # -- private methods
 
@@ -50,22 +49,22 @@ class IndexedContainer(DataContainerBase):
     @property
     def size(self):
         """number of data points"""
-        return len(self._idx_data)
+        return len(self._data)
 
     @property
     def data(self):
         """container data (one-dimensional :py:obj:`numpy.ndarray`)"""
-        return self._idx_data.copy()  # copy to ensure no modification by user
+        return self._data.copy()  # copy to ensure no modification by user
 
     @data.setter
     def data(self, data):
         _data = np.squeeze(np.array(data, dtype=float))
         if len(_data.shape) > 1:
             raise IndexedContainerException("IndexedContainer data must be 1-d array of floats! Got shape: %r..." % (_data.shape,))
-        self._idx_data[:] = _data
+        self._data[:] = _data
         # reset member error references to the new data values
         for _err_dict in self._error_dicts.values():
-            _err_dict['err'].reference = self._idx_data
+            _err_dict['err'].reference = self._data
         self._clear_total_error_cache()
 
     @property
@@ -102,10 +101,10 @@ class IndexedContainer(DataContainerBase):
 
     # -- public methods
 
-    def add_simple_error(self, err_val,
-                         name=None, correlation=0, relative=False):
+    def add_error(self, err_val,
+                  name=None, correlation=0, relative=False):
         """
-        Add a simple uncertainty source to the data container.
+        Add an uncertainty source to the data container.
         Returns an error id which uniquely identifies the created error source.
 
         :param err_val: pointwise uncertainty/uncertainties for all data points
@@ -120,12 +119,12 @@ class IndexedContainer(DataContainerBase):
         :return: error name
         :rtype: str
         """
-        return super(IndexedContainer, self).add_simple_error(
+        return super(IndexedContainer, self).add_error(
             err_val=err_val,
             name=name,
             correlation=correlation,
             relative=relative,
-            reference=self._idx_data  # set the reference appropriately
+            reference=self._data  # set the reference appropriately
         )
 
     def add_matrix_error(self, err_matrix, matrix_type,
@@ -154,6 +153,5 @@ class IndexedContainer(DataContainerBase):
             name=name,
             err_val=err_val,
             relative=relative,
-            reference=self._idx_data  # set the reference appropriately
+            reference=self._data  # set the reference appropriately
         )
-

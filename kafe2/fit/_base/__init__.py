@@ -1,8 +1,5 @@
 """
-.. module:: kafe2.fit._base
-    :platform: Unix
-    :synopsis: This submodule contains the abstract base classes for all objects
-               used by the :py:mod:`kafe2.fit` module.
+:synopsis: This submodule contains the abstract base classes for all objects used by the :py:mod:`kafe2.fit` module.
 
 .. moduleauthor:: Daniel Savoiu <daniel.savoiu@cern.ch>
 """

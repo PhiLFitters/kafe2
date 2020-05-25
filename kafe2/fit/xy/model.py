@@ -1,64 +1,13 @@
-import inspect
 import numpy as np
 
 from scipy.misc import derivative
 
-from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException, ModelParameterFormatter
+from .._base import ParametricModelBaseMixin
 from .container import XYContainer, XYContainerException
-from .format import XYModelFunctionFormatter
 from ..util import function_library
 
 
-
-__all__ = ["XYParametricModel", "XYModelFunction"]
-
-
-class XYModelFunctionException(ModelFunctionException):
-    pass
-
-class XYModelFunction(ModelFunctionBase):
-    EXCEPTION_TYPE = XYModelFunctionException
-    FORMATTER_TYPE = XYModelFunctionFormatter
-
-    def __init__(self, model_function=function_library.linear_model):
-        """
-        Construct :py:class:`XYModelFunction` object (a wrapper for a native Python function):
-
-        :param model_function: function handle
-        """
-        self._x_name = 'x'
-        super(XYModelFunction, self).__init__(model_function=model_function)
-
-    def _validate_model_function_raise(self):
-        # require 'xy' model function agruments to include 'x'
-        if self.x_name not in self.signature.parameters:
-            raise self.__class__.EXCEPTION_TYPE(
-                "Model function '%r' must have independent variable '%s' among its arguments!"
-                % (self.func, self.x_name))
-
-        # require 'xy' model functions to have at least two arguments
-        if self.argcount < 2:
-            raise self.__class__.EXCEPTION_TYPE(
-                "Model function '%r' needs at least one parameter beside independent variable '%s'!"
-                % (self.func, self.x_name))
-
-        # evaluate general model function requirements
-        super(XYModelFunction, self)._validate_model_function_raise()
-
-    def _get_parameter_formatters(self):
-        _start_at_arg = 1
-        return [ModelParameterFormatter(name=_pn, value=_pv, error=None)
-                for _pn, _pv in zip(list(self.signature.parameters)[_start_at_arg:], self.argvals[_start_at_arg:])]
-
-    def _assign_function_formatter(self):
-        self._formatter = self.__class__.FORMATTER_TYPE(self.name,
-                                                        arg_formatters=self._get_parameter_formatters(),
-                                                        x_name=self.x_name)
-
-    @property
-    def x_name(self):
-        """the name of the independent variable"""
-        return self._x_name
+__all__ = ['XYParametricModel', 'XYParametricModelException']
 
 
 class XYParametricModelException(XYContainerException):
@@ -109,8 +58,8 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
     @x.setter
     def x(self, new_x):
         # resetting 'x' -> must reset entire data array
-        self._xy_data = np.zeros((2, len(new_x)))
-        self._xy_data[0] = new_x
+        self._data = np.zeros((2, len(new_x)))
+        self._data[0] = new_x
         self._pm_calculation_stale = True
         self._clear_total_error_cache()
 

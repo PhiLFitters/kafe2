@@ -10,15 +10,15 @@ from ...tools import print_dict_as_table
 from ...core import NexusFitter, Nexus
 from ...core.fitters.nexus import Parameter, Alias, NexusError
 from ...config import kc
-from .._base import FitException, FitBase, DataContainerBase, CostFunctionBase
+from .._base import FitException, FitBase, DataContainerBase, CostFunctionBase, ModelFunctionBase
 from .container import XYContainer
 from .cost import XYCostFunction_Chi2, XYCostFunction_UserDefined, STRING_TO_COST_FUNCTION
-from .model import XYParametricModel, XYModelFunction
+from .model import XYParametricModel
 from .plot import XYPlotAdapter
 from ..util import function_library, add_in_quadrature, collect, invert_matrix
 
 
-__all__ = ["XYFit"]
+__all__ = ['XYFit', 'XYFitException']
 
 
 class XYFitException(FitException):
@@ -28,7 +28,7 @@ class XYFitException(FitException):
 class XYFit(FitBase):
     CONTAINER_TYPE = XYContainer
     MODEL_TYPE = XYParametricModel
-    MODEL_FUNCTION_TYPE = XYModelFunction
+    MODEL_FUNCTION_TYPE = ModelFunctionBase
     PLOT_ADAPTER_TYPE = XYPlotAdapter
     EXCEPTION_TYPE = XYFitException
     RESERVED_NODE_NAMES = {'y_data', 'y_model', 'cost',
@@ -40,6 +40,10 @@ class XYFit(FitBase):
                            'nuisance_y_data_cor_cov_mat','nuisance_y_model_cor_cov_mat','nuisance_y_total_cor_cov_mat',
                            'nuisance_para', 'y_nuisance_vector',
                            'x_data_cov_mat'}
+    _BASIC_ERROR_NAMES = {
+        'x_data_error', 'x_model_error', 'x_data_cov_mat', 'x_model_cov_mat',
+        'y_data_error', 'y_model_error', 'y_data_cov_mat', 'y_model_cov_mat'
+    }
 
     X_ERROR_ALGORITHMS = ('iterative linear', 'nonlinear')
 
@@ -66,8 +70,6 @@ class XYFit(FitBase):
         :param minimizer_kwargs: dictionary with kwargs for the minimizer.
         :type minimizer_kwargs: dict
         """
-        # set the labels
-        self.labels = [None, None]
 
         # set/construct the model function object
         if isinstance(model_function, self.__class__.MODEL_FUNCTION_TYPE):
@@ -93,15 +95,10 @@ class XYFit(FitBase):
 
         # validate x error algorithm
         if x_error_algorithm not in XYFit.X_ERROR_ALGORITHMS:
-            raise ValueError(
-                "Unknown value for 'x_error_algorithm': "
-                "{}. Expected one of:".format(
-                    x_error_algorithm,
-                    ', '.join(['iterative linear', 'nonlinear'])
-                )
-            )
-        else:
-            self._x_error_algorithm = x_error_algorithm
+            raise ValueError("Unknown value for 'x_error_algorithm': "
+                             "{}. Expected one of:".format(x_error_algorithm,
+                                                           ', '.join(['iterative linear', 'nonlinear'])))
+        self._x_error_algorithm = x_error_algorithm
 
         # initialize the Nexus
         self._init_nexus_callbacks = []
@@ -332,13 +329,6 @@ class XYFit(FitBase):
         )
 
         for _axis in ('x', 'y'):
-            self._nexus.add_dependency(
-                '{}_total_error'.format(_axis),
-                depends_on=(
-                    '{}_data_error'.format(_axis),
-                    '{}_model_error'.format(_axis),
-                )
-            )
             for _side in ('data', 'model', 'total'):
                 self._nexus.add_dependency(
                     '{}_{}_uncor_cov_mat'.format(_axis, _side),
@@ -364,29 +354,6 @@ class XYFit(FitBase):
                 _node = self._nexus.get(_node_name)
                 getattr(_node, action)()
 
-    def _calculate_y_error_band(self):
-        _num_points = 100  # TODO: config
-        if self.parameter_cov_mat is None:
-            return np.zeros(_num_points)
-        _xmin, _xmax = self._data_container.x_range
-        _band_x = np.linspace(_xmin, _xmax, 100)
-        _f_deriv_by_params = self._param_model.eval_model_function_derivative_by_parameters(
-            x=_band_x,
-            model_parameters=self.poi_values
-        )
-        # here: df/dp[par_idx]|x=x[x_idx] = _f_deriv_by_params[par_idx][x_idx]
-
-        _f_deriv_by_params = _f_deriv_by_params.T
-        # here: df/dp[par_idx]|x=x[x_idx] = _f_deriv_by_params[x_idx][par_idx]
-
-        _band_y = np.zeros_like(_band_x)
-        _n_poi = len(self.poi_values)
-        for _x_idx, _x_val in enumerate(_band_x):
-            _p_res = _f_deriv_by_params[_x_idx]
-            _band_y[_x_idx] = _p_res.dot(self.parameter_cov_mat[:_n_poi, :_n_poi]).dot(_p_res)
-
-        return np.sqrt(_band_y)
-
     def _get_poi_index_by_name(self, name):
         try:
             return self._poi_names.index(name)
@@ -403,6 +370,8 @@ class XYFit(FitBase):
             _x_data = new_data[0]
             _y_data = new_data[1]
             self._data_container = self._new_data_container(_x_data, _y_data, dtype=float)
+        self._data_container._on_error_change_callback = self._on_error_change
+
         # update nexus data nodes
         self._nexus.get('x_data').mark_for_update()
         self._nexus.get('y_data').mark_for_update()
@@ -413,6 +382,7 @@ class XYFit(FitBase):
             self._model_function,
             self.poi_values
         )
+        self._param_model._on_error_change_callbacks = [self._on_error_change]
 
     def _report_data(self, output_stream, indent, indentation_level):
         output_stream.write(indent * indentation_level + '########\n')
@@ -437,23 +407,9 @@ class XYFit(FitBase):
         output_stream.write('\n')
 
     def _report_model(self, output_stream, indent, indentation_level):
-        output_stream.write(indent * indentation_level + '#########\n')
-        output_stream.write(indent * indentation_level + '# Model #\n')
-        output_stream.write(indent * indentation_level + '#########\n\n')
-
-        output_stream.write(indent * (indentation_level + 1) + "Model Function\n")
-        output_stream.write(indent * (indentation_level + 1) + "==============\n\n")
-        output_stream.write(indent * (indentation_level + 2))
-        output_stream.write(
-            self._model_function.formatter.get_formatted(
-                with_par_values=False,
-                n_significant_digits=2,
-                format_as_latex=False,
-                with_expression=True
-            )
-        )
-        output_stream.write('\n\n\n')
-
+        # call base method to show header and model function
+        super(XYFit, self)._report_model(output_stream, indent, indentation_level)
+        # print model values at POIs
         _data_table_dict = OrderedDict()
         _data_table_dict['X Model'] = self.x_model
         if self.has_model_errors:
@@ -490,25 +446,11 @@ class XYFit(FitBase):
         return self._data_container.x
 
     @property
-    def x_label(self):
-        """x-label to be passed on to the plot"""
-        return self.labels[0]
-
-    @x_label.setter
-    def x_label(self, x_label):
-        """sets the x-label to be passed onto the plot
-
-        :param x_label: str
-        """
-        self.labels[0] = x_label
-
-    @property
     def x_model(self):
         # if cost function uses x-nuisance parameters, consider these
         if self._cost_function.get_flag("need_x_nuisance") and self._data_container.has_uncor_x_errors:
             return self.x_data + (self.x_uncor_nuisance_values * self.x_data_error)
-        else:
-            return self.x_data
+        return self.x_data
 
     @property
     def x_error(self):
@@ -524,20 +466,6 @@ class XYFit(FitBase):
     def y_data(self):
         """array of measurement data *y* values"""
         return self._data_container.y
-
-    @property
-    def y_label(self):
-        """y-label to be passed onto the plot"""
-        return self.labels[1]
-
-    @y_label.setter
-    def y_label(self, y_label):
-        """sets the y-label to be passed onto the plot
-
-        :param y_label: str
-        :return:
-        """
-        self.labels[1] = y_label
 
     @FitBase.data.getter
     def data(self):
@@ -873,16 +801,6 @@ class XYFit(FitBase):
             return None
 
     @property
-    def y_error_band(self):
-        """one-dimensional array representing the uncertainty band around the model function"""
-        if not self.did_fit:
-            raise XYFitException('Cannot calculate an error band without first performing a fit.')
-        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
-        self._param_model.x = self.x_model
-
-        return self._calculate_y_error_band()
-
-    @property
     def x_range(self):
         """range of the *x* measurement data"""
         return self._data_container.x_range
@@ -914,10 +832,10 @@ class XYFit(FitBase):
 
     # -- public methods
 
-    def add_simple_error(self, axis, err_val,
-                         name=None, correlation=0, relative=False, reference='data'):
+    def add_error(self, axis, err_val,
+                  name=None, correlation=0, relative=False, reference='data'):
         """
-        Add a simple uncertainty source for axis to the data container.
+        Add an uncertainty source for axis to the data container.
         Returns an error id which uniquely identifies the created error source.
 
         :param axis: ``'x'``/``0`` or ``'y'``/``1``
@@ -933,20 +851,12 @@ class XYFit(FitBase):
         :return: error id
         :rtype: int
         """
-        _ret = super(XYFit, self).add_simple_error(err_val=err_val,
-                                                   name=name,
-                                                   correlation=correlation,
-                                                   relative=relative,
-                                                   reference=reference,
-                                                   axis=axis)
-
-        # need to reinitialize the nexus, since simple errors are
-        # possibly relevant for nuisance parameters
-        self._init_nexus()
-        # initialize the Fitter
-        self._initialize_fitter()
-
-        return _ret
+        return super(XYFit, self).add_error(err_val=err_val,
+                                            name=name,
+                                            correlation=correlation,
+                                            relative=relative,
+                                            reference=reference,
+                                            axis=axis)
 
     def add_matrix_error(self, axis, err_matrix, matrix_type,
                          name=None, err_val=None, relative=False, reference='data'):
@@ -968,21 +878,13 @@ class XYFit(FitBase):
         :return: error id
         :rtype: int
         """
-        _ret = super(XYFit, self).add_matrix_error(err_matrix=err_matrix,
+        return super(XYFit, self).add_matrix_error(err_matrix=err_matrix,
                                                    matrix_type=matrix_type,
                                                    name=name,
                                                    err_val=err_val,
                                                    relative=relative,
                                                    reference=reference,
                                                    axis=axis)
-
-        # do not reinitialize the nexus, since matrix errors are not
-        # relevant for nuisance parameters
-
-        # but *do* update projected xy error nodes
-        self._with_projected_nodes('update')
-
-        return _ret
 
     def set_poi_values(self, param_values):
         """set the start values of all parameters of interests"""
@@ -996,8 +898,7 @@ class XYFit(FitBase):
         _par_val_dict = {_pn: _pv for _pn, _pv in zip(_param_names, param_values)}
         self.set_parameter_values(**_par_val_dict)
 
-    def do_fit(self):
-        """Perform the fit."""
+    def do_fit(self, asymmetric_parameter_errors=False):
         if self._cost_function.needs_errors and not self._data_container.has_y_errors:
             self._cost_function.on_no_errors()
 
@@ -1054,7 +955,7 @@ class XYFit(FitBase):
         # clear loaded results and update parameter formatters
         self._loaded_result_dict = None
         self._update_parameter_formatters()
-
+        return self.get_result_dict(asymmetric_parameter_errors=asymmetric_parameter_errors)
 
     def eval_model_function(self, x=None, model_parameters=None):
         """
@@ -1070,6 +971,21 @@ class XYFit(FitBase):
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.eval_model_function(x=x, model_parameters=model_parameters)
+
+    def eval_model_function_derivative_by_parameters(self, x=None, model_parameters=None):
+        """
+        Evaluate the model function derivative for each parameter.
+
+        :param x: values of *x* at which to evaluate the model function (if ``None``, the data *x* values are used)
+        :type x: iterable of float
+        :param model_parameters: the model parameter values (if ``None``, the current values are used)
+        :type model_parameters: iterable of float
+        :return: model function values
+        :rtype: :py:class:`numpy.ndarray`
+        """
+        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
+        self._param_model.x = self.x_model
+        return self._param_model.eval_model_function_derivative_by_parameters(x=x, model_parameters=model_parameters)
 
     def calculate_nuisance_parameters(self):
         """

@@ -1,14 +1,10 @@
 import abc
-import inspect
 import numpy as np
-import re
-import string
 import six
 
-from .format import ModelParameterFormatter, CostFunctionFormatter
-
 from scipy.stats import poisson, norm
-from kafe2.fit.io.file import FileIOMixin
+from ..io.file import FileIOMixin
+from .format import ParameterFormatter, CostFunctionFormatter
 
 
 if six.PY2:
@@ -67,11 +63,9 @@ def _generic_chi2(data, model,
         elif err_relative_to is not None:
             raise CostFunctionException("'err_relative_to' must be either 'data', 'model' or None")
 
-        if np.any(err==0.0):
+        if np.any(err == 0.0):
             if fail_on_zero_errors:
                 raise CostFunctionException("'err' must not contain any zero values!")
-            else:
-                pass  # assume err=1.0
         else:
             _res = _res/err
 
@@ -115,12 +109,11 @@ def _generic_chi2_nuisance(data, model,
 
     if fail_on_no_matrix:
         raise np.linalg.LinAlgError("Uncorrelated Covariance matrix is singular!")
-    else:
-        # chisquare without errors
-        _chisquare = (data -model).dot(data-model)
-        if np.isnan(_chisquare):
-            return np.inf
-        return _chisquare + _par_cost
+    # chisquare without errors
+    _chisquare = (data -model).dot(data-model)
+    if np.isnan(_chisquare):
+        return np.inf
+    return _chisquare + _par_cost
 
 
 class CostFunctionException(Exception):
@@ -187,26 +180,18 @@ class CostFunctionBase(FileIOMixin, object):
         # evaluate general cost function requirements
         for _par in self._cost_func_signature.parameters.values():
             if _par.kind == _par.VAR_POSITIONAL:
-                raise self.__class__.EXCEPTION_TYPE(
-                    "Cost function '{}' with variable number of positional "
-                    "arguments (*{}) is not supported".format(
-                        _cost_function_handle.__name__,
-                        _par.name,
-                    )
-                )
-            elif _par.kind == _par.VAR_KEYWORD:
-                raise self.__class__.EXCEPTION_TYPE(
-                    "Cost function '{}' with variable number of keyword "
-                    "arguments (**{}) is not supported".format(
-                        _cost_function_handle.__name__,
-                        _par.name,
-                    )
-                )
+                raise self.__class__.EXCEPTION_TYPE("Cost function '{}' with variable number of positional arguments "
+                                                    "(*{}) is not supported".format(self._cost_function_handle.__name__,
+                                                                                    _par.name))
+            if _par.kind == _par.VAR_KEYWORD:
+                raise self.__class__.EXCEPTION_TYPE("Cost function '{}' with variable number of keyword arguments "
+                                                    "(**{}) is not supported".format(self._cost_function_handle.__name__,
+                                                                                     _par.name,))
 
         # TODO: fail if cost function does not depend on data or model
 
     def _get_parameter_formatters(self):
-        return [ModelParameterFormatter(name=_pn, value=_pv, error=None)
+        return [ParameterFormatter(name=_pn, value=_pv, error=None)
                 for _pn, _pv in zip(self.signature.parameters, self.argvals)]
 
     def _assign_function_formatter(self):
@@ -559,14 +544,12 @@ class CostFunctionBase_NegLogLikelihood(CostFunctionBase):
     def is_data_compatible(self, data):
         if self._cost_function_handle is self.nll_poisson and (np.count_nonzero(data % 1) > 0 or np.any(data < 0)):
             return False, "poisson distribution can only have non-negative integers as y data."
-        else:
-            return True, None
+        return True, None
 
     def get_uncertainty_gaussian_approximation(self, data):
         if self._cost_function_handle is self.nll_poisson:
             return np.sqrt(data)
-        else:
-            return 0
+        return 0
 
 
 class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
@@ -693,14 +676,12 @@ class CostFunctionBase_NegLogLikelihoodRatio(CostFunctionBase):
     def is_data_compatible(self, data):
         if self._cost_function_handle is self.nllr_poisson and (np.count_nonzero(data % 1) > 0 or np.any(data < 0)):
             return False, "poisson distribution can only have non-negative integers as y data."
-        else:
-            return True, None
+        return True, None
 
     def get_uncertainty_gaussian_approximation(self, data):
         if self._cost_function_handle is self.nllr_poisson:
             return np.sqrt(data)
-        else:
-            return 0
+        return 0
 
 
 class CostFunctionBase_Chi2_Nuisance(CostFunctionBase_Chi2):
@@ -874,6 +855,3 @@ class CostFunctionBase_Chi2_Nuisance(CostFunctionBase_Chi2):
         return CostFunctionBase_Chi2.chi2_pointwise_errors_fallback(
             data=data, model=model, total_error=total_error, parameter_values=parameter_values,
             parameter_constraints=parameter_constraints)
-
-
-

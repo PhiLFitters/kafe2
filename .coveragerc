@@ -1,0 +1,5 @@
+[run]
+source = kafe2
+omit = kafe2/test/*
+command_line= -m unittest discover -v -s kafe2/test -p "*.py"
+

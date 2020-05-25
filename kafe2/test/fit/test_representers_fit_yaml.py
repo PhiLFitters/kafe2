@@ -1,16 +1,85 @@
 import unittest2 as unittest
 import numpy as np
 from scipy.stats import norm
+import six
 from six import StringIO
+import abc
 
 from kafe2.fit.representation import FitYamlWriter, FitYamlReader
 from kafe2.fit.io.handle import IOStreamHandle
 from kafe2.fit.histogram import HistFit
 from kafe2.fit.indexed import IndexedFit
+from kafe2.fit.unbinned import UnbinnedFit
 from kafe2.fit.xy import XYFit
-from kafe2.fit.xy_multi import XYMultiFit
 from kafe2.fit.histogram.container import HistContainer
 from kafe2.fit.representation._yaml_base import YamlReaderException
+
+
+@six.add_metaclass(abc.ABCMeta)
+class AbstractTestFitRepresenter(object):
+    FIT_CLASS = None
+    TEST_FIT = None
+    TEST_FIT_SIMPLE = None
+    TEST_FIT_MISSING_KEYWORD = None
+    TEST_FIT_EXTRA_KEYWORD = None
+
+    @abc.abstractmethod
+    def setUp(self):
+        pass
+
+    def setup_streams(self):
+        self._testfile_stringstream = IOStreamHandle(StringIO(self.TEST_FIT))
+        self._testfile_stringstream_simple = IOStreamHandle(StringIO(self.TEST_FIT_SIMPLE))
+        self._testfile_streamreader = FitYamlReader(self._testfile_stringstream)
+        self._testfile_streamreader_simple = FitYamlReader(self._testfile_stringstream_simple)
+
+        self._roundtrip_stringstream = IOStreamHandle(StringIO())
+        self._roundtrip_streamreader = FitYamlReader(self._roundtrip_stringstream)
+        self._roundtrip_streamwriter = FitYamlWriter(self._fit, self._roundtrip_stringstream)
+
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(self.TEST_FIT_MISSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(self.TEST_FIT_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = FitYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = FitYamlReader(self._testfile_stringstream_extra_keyword)
+
+    def test_write_to_roundtrip_stringstream(self):
+        self._roundtrip_streamwriter.write()
+
+    def test_read_from_testfile_stream_missing_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_missing_keyword.read()
+
+    def test_read_from_testfile_stream_extra_keyword(self):
+        with self.assertRaises(YamlReaderException):
+            self._testfile_streamreader_extra_keyword.read()
+
+    def test_round_trip_save_results(self):
+        self._fit.do_fit()
+        self._roundtrip_streamwriter.write()
+        self._roundtrip_stringstream.seek(0)  # return to beginning
+        _read_fit = self._roundtrip_streamreader.read()
+        self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
+
+        self.assertTrue(self._fit.did_fit == _read_fit.did_fit)
+        self.assertTrue(
+            np.allclose(
+                self._fit.parameter_cov_mat,
+                _read_fit.parameter_cov_mat
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                self._fit.parameter_errors,
+                _read_fit.parameter_errors
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                self._fit.parameter_cor_mat,
+                _read_fit.parameter_cor_mat
+            )
+        )
+
 
 TEST_FIT_HIST="""
 type: histogram
@@ -106,7 +175,12 @@ errors: 0.1
 """
 
 
-class TestHistFitYamlRepresenter(unittest.TestCase):
+class TestHistFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
+    FIT_CLASS = HistFit
+    TEST_FIT = TEST_FIT_HIST
+    TEST_FIT_SIMPLE = TEST_FIT_HIST_SIMPLE
+    TEST_FIT_EXTRA_KEYWORD = TEST_FIT_HIST_EXTRA_KEYWORD
+    TEST_FIT_MISSING_KEYWORD = TEST_FIT_HIST_MISSING_KEYWORD
 
     @staticmethod
     def hist_model_density(x, mu=0.1, sigma=1.0):
@@ -151,28 +225,13 @@ class TestHistFitYamlRepresenter(unittest.TestCase):
             data=_data,
             model_density_function=TestHistFitYamlRepresenter.hist_model_density
         )
-        self._fit.add_simple_error(err_val=0.1)
+        self._fit.add_error(err_val=0.1)
         
-        self._roundtrip_stringstream = IOStreamHandle(StringIO())
-        self._testfile_stringstream = IOStreamHandle(StringIO(TEST_FIT_HIST))
-        self._testfile_stringstream_simple = IOStreamHandle(StringIO(TEST_FIT_HIST_SIMPLE))
-        
-        self._roundtrip_streamreader = FitYamlReader(self._roundtrip_stringstream)
-        self._roundtrip_streamwriter = FitYamlWriter(self._fit, self._roundtrip_stringstream)
-        self._testfile_streamreader = FitYamlReader(self._testfile_stringstream)
-        self._testfile_streamreader_simple = FitYamlReader(self._testfile_stringstream_simple)
-
-        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_FIT_HIST_MISSING_KEYWORD))
-        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_FIT_HIST_EXTRA_KEYWORD))
-        self._testfile_streamreader_missing_keyword = FitYamlReader(self._testfile_stringstream_missing_keyword)
-        self._testfile_streamreader_extra_keyword = FitYamlReader(self._testfile_stringstream_extra_keyword)
-
-    def test_write_to_roundtrip_stringstream(self):
-        self._roundtrip_streamwriter.write()
+        self.setup_streams()
 
     def test_read_from_testfile_stream(self):
         _read_fit = self._testfile_streamreader.read()
-        self.assertTrue(isinstance(_read_fit, HistFit))
+        self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
         self.assertTrue(
             np.allclose(
                 self._test_parameters_default,
@@ -205,7 +264,7 @@ class TestHistFitYamlRepresenter(unittest.TestCase):
 
     def test_read_from_testfile_stream_simple(self):
         _read_fit = self._testfile_streamreader_simple.read()
-        self.assertTrue(isinstance(_read_fit, HistFit))
+        self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
         self.assertTrue(
             np.allclose(
                 self._test_parameters_default_simple,
@@ -236,19 +295,11 @@ class TestHistFitYamlRepresenter(unittest.TestCase):
         #    )
         #)
 
-    def test_read_from_testfile_stream_missing_keyword(self):
-        with self.assertRaises(YamlReaderException):
-            self._testfile_streamreader_missing_keyword.read()
-
-    def test_read_from_testfile_stream_extra_keyword(self):
-        with self.assertRaises(YamlReaderException):
-            self._testfile_streamreader_extra_keyword.read()
-
     def test_round_trip_with_stringstream(self):
         self._roundtrip_streamwriter.write()
         self._roundtrip_stringstream.seek(0)  # return to beginning
         _read_fit = self._roundtrip_streamreader.read()
-        self.assertTrue(isinstance(_read_fit, HistFit))
+        self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
 
         self.assertTrue(
             np.allclose(
@@ -278,33 +329,6 @@ class TestHistFitYamlRepresenter(unittest.TestCase):
         #        _read_fit.eval_model_function_density(self._test_x)
         #    )
         #)
-
-    def test_round_trip_save_results(self):
-        self._fit.do_fit()
-        self._roundtrip_streamwriter.write()
-        self._roundtrip_stringstream.seek(0)  # return to beginning
-        _read_fit = self._roundtrip_streamreader.read()
-        self.assertTrue(isinstance(_read_fit, HistFit))
-
-        self.assertTrue(self._fit.did_fit == _read_fit.did_fit)
-        self.assertTrue(
-            np.allclose(
-                self._fit.parameter_cov_mat,
-                _read_fit.parameter_cov_mat
-            )
-        )
-        self.assertTrue(
-            np.allclose(
-                self._fit.parameter_errors,
-                _read_fit.parameter_errors
-            )
-        )
-        self.assertTrue(
-            np.allclose(
-                self._fit.parameter_cor_mat,
-                _read_fit.parameter_cor_mat
-            )
-        )
 
 
 TEST_FIT_INDEXED="""
@@ -369,7 +393,12 @@ model_function: |
 """
 
 
-class TestIndexedFitYamlRepresenter(unittest.TestCase):
+class TestIndexedFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
+    FIT_CLASS = IndexedFit
+    TEST_FIT = TEST_FIT_INDEXED
+    TEST_FIT_SIMPLE = TEST_FIT_INDEXED_SIMPLE
+    TEST_FIT_EXTRA_KEYWORD = TEST_FIT_INDEXED_EXTRA_KEYWORD
+    TEST_FIT_MISSING_KEYWORD = TEST_FIT_INDEXED_MISSING_KEYWORD
 
     @staticmethod
     def linear_model(a=1.5, b=-0.5):
@@ -396,32 +425,17 @@ class TestIndexedFitYamlRepresenter(unittest.TestCase):
             model_function=TestIndexedFitYamlRepresenter.linear_model
         )
         self._fit.set_all_parameter_values(self._test_parameters_default)
-        self._fit.add_simple_error(err_val=0.1)
+        self._fit.add_error(err_val=0.1)
         self._fit.add_parameter_constraint(name='a', value=2.0, uncertainty=1.0)
         self._fit.add_parameter_constraint(name='b', value=-1.0, uncertainty=0.5)
         self._fit.add_matrix_parameter_constraint(names=['a', 'b'], values=[2.05, -0.95],
                                                   matrix=[[1.1, 0.1], [0.1, 2.4]])
 
-        self._roundtrip_stringstream = IOStreamHandle(StringIO())
-        self._testfile_stringstream = IOStreamHandle(StringIO(TEST_FIT_INDEXED))
-        self._testfile_stringstream_simple = IOStreamHandle(StringIO(TEST_FIT_INDEXED_SIMPLE))
-        
-        self._roundtrip_streamreader = FitYamlReader(self._roundtrip_stringstream)
-        self._roundtrip_streamwriter = FitYamlWriter(self._fit, self._roundtrip_stringstream)
-        self._testfile_streamreader = FitYamlReader(self._testfile_stringstream)
-        self._testfile_streamreader_simple = FitYamlReader(self._testfile_stringstream_simple)
-
-        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_FIT_INDEXED_MISSING_KEYWORD))
-        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_FIT_INDEXED_EXTRA_KEYWORD))
-        self._testfile_streamreader_missing_keyword = FitYamlReader(self._testfile_stringstream_missing_keyword)
-        self._testfile_streamreader_extra_keyword = FitYamlReader(self._testfile_stringstream_extra_keyword)
-
-    def test_write_to_roundtrip_stringstream(self):
-        self._roundtrip_streamwriter.write()
+        self.setup_streams()
 
     def test_read_from_testfile_stream(self):
         _read_fit = self._testfile_streamreader.read()
-        self.assertTrue(isinstance(_read_fit, IndexedFit))
+        self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
         self.assertTrue(
             np.allclose(
                 self._test_parameters_default,
@@ -434,7 +448,7 @@ class TestIndexedFitYamlRepresenter(unittest.TestCase):
                 _read_fit.model
             )
         )
-        
+
         _read_fit.do_fit()
 
         self.assertTrue(
@@ -452,7 +466,7 @@ class TestIndexedFitYamlRepresenter(unittest.TestCase):
 
     def test_read_from_testfile_stream_simple(self):
         _read_fit = self._testfile_streamreader_simple.read()
-        self.assertTrue(isinstance(_read_fit, IndexedFit))
+        self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
         self.assertTrue(
             np.allclose(
                 self._test_parameters_default_simple,
@@ -481,19 +495,11 @@ class TestIndexedFitYamlRepresenter(unittest.TestCase):
             )
         )
 
-    def test_read_from_testfile_stream_missing_keyword(self):
-        with self.assertRaises(YamlReaderException):
-            self._testfile_streamreader_missing_keyword.read()
-
-    def test_read_from_testfile_stream_extra_keyword(self):
-        with self.assertRaises(YamlReaderException):
-            self._testfile_streamreader_extra_keyword.read()
-
     def test_round_trip_with_stringstream(self):
         self._roundtrip_streamwriter.write()
         self._roundtrip_stringstream.seek(0)  # return to beginning
         _read_fit = self._roundtrip_streamreader.read()
-        self.assertTrue(isinstance(_read_fit, IndexedFit))
+        self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
 
         self.assertTrue(
             np.allclose(
@@ -523,33 +529,6 @@ class TestIndexedFitYamlRepresenter(unittest.TestCase):
             )
         )
 
-    def test_round_trip_save_results(self):
-        self._fit.do_fit()
-        self._roundtrip_streamwriter.write()
-        self._roundtrip_stringstream.seek(0)  # return to beginning
-        _read_fit = self._roundtrip_streamreader.read()
-        self.assertTrue(isinstance(_read_fit, IndexedFit))
-
-        self.assertTrue(self._fit.did_fit == _read_fit.did_fit)
-        self.assertTrue(
-            np.allclose(
-                self._fit.parameter_cov_mat,
-                _read_fit.parameter_cov_mat
-            )
-        )
-        self.assertTrue(
-            np.allclose(
-                self._fit.parameter_errors,
-                _read_fit.parameter_errors
-            )
-        )
-        self.assertTrue(
-            np.allclose(
-                self._fit.parameter_cor_mat,
-                _read_fit.parameter_cor_mat
-            )
-        )
-
 
 TEST_FIT_XY="""
 type: xy
@@ -568,7 +547,6 @@ parametric_model:
     type: xy
     x_data: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
     model_function:
-        type: xy
         python_code: |
             def linear_model(x, a, b):
                 return a * x + b
@@ -594,7 +572,6 @@ parametric_model:
     type: xy
     x_data: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
     model_function:
-        type: xy
         python_code: |
             def linear_model(x, a, b):
                 return a * x + b
@@ -613,7 +590,13 @@ model_function: linear
 y_errors: 0.1
 """
 
-class TestXYFitYamlRepresenter(unittest.TestCase):
+
+class TestXYFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
+    FIT_CLASS = XYFit
+    TEST_FIT = TEST_FIT_XY
+    TEST_FIT_SIMPLE = TEST_FIT_XY_SIMPLE
+    TEST_FIT_EXTRA_KEYWORD = TEST_FIT_XY_EXTRA_KEYWORD
+    TEST_FIT_MISSING_KEYWORD = TEST_FIT_XY_MISSING_KEYWORD
 
     @staticmethod
     def linear_model(x, a=1.5, b=-0.5):
@@ -624,9 +607,9 @@ class TestXYFitYamlRepresenter(unittest.TestCase):
         self._test_parameters = np.array([2.0, -1.0])
         self._test_parameters_default = np.array([1.5, -0.5])
         self._test_parameters_default_simple = np.array([1.0, 1.0])
-        self._test_parameters_do_fit= np.array([2.0115580399995032, -1.0889949779758534])
+        self._test_parameters_do_fit = np.array([2.0115580399995032, -1.0889949779758534])
         self._test_parameters_do_fit_simple = np.array([2.0117809129092095, -1.090410559090481])
-        self._test_y = [ -1.0804945, 0.97336504, 2.75769933, 4.91093935, 6.98511206,
+        self._test_y = [-1.0804945, 0.97336504, 2.75769933, 4.91093935, 6.98511206,
                         9.15059627, 10.9665515, 13.06741151, 14.95081026, 16.94404467]
         self._test_y_default = self.linear_model(self._test_x, *self._test_parameters_default)
         self._test_y_default_simple = self.linear_model(self._test_x, *self._test_parameters_default_simple)
@@ -640,32 +623,17 @@ class TestXYFitYamlRepresenter(unittest.TestCase):
             xy_data=[self._test_x, self._test_y],
             model_function=TestXYFitYamlRepresenter.linear_model
         )
-        self._fit.add_simple_error(axis='y', err_val=0.1)
+        self._fit.add_error(axis='y', err_val=0.1)
         self._fit.add_parameter_constraint(name='a', value=2.0, uncertainty=1.0)
         self._fit.add_parameter_constraint(name='b', value=-1.0, uncertainty=0.5)
         self._fit.add_matrix_parameter_constraint(names=['a', 'b'], values=[2.05, -0.95],
                                                   matrix=[[1.1, 0.1], [0.1, 2.4]])
 
-        self._roundtrip_stringstream = IOStreamHandle(StringIO())
-        self._testfile_stringstream = IOStreamHandle(StringIO(TEST_FIT_XY))
-        
-        self._roundtrip_streamreader = FitYamlReader(self._roundtrip_stringstream)
-        self._roundtrip_streamwriter = FitYamlWriter(self._fit, self._roundtrip_stringstream)
-        self._testfile_streamreader = FitYamlReader(self._testfile_stringstream)
-
-        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_FIT_XY_MISSING_KEYWORD))
-        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_FIT_XY_EXTRA_KEYWORD))
-        self._testfile_stringstream_simple = IOStreamHandle(StringIO(TEST_FIT_XY_SIMPLE))
-        self._testfile_streamreader_missing_keyword = FitYamlReader(self._testfile_stringstream_missing_keyword)
-        self._testfile_streamreader_extra_keyword = FitYamlReader(self._testfile_stringstream_extra_keyword)
-        self._testfile_streamreader_simple = FitYamlReader(self._testfile_stringstream_simple)
-
-    def test_write_to_roundtrip_stringstream(self):
-        self._roundtrip_streamwriter.write()
+        self.setup_streams()
 
     def test_read_from_testfile_stream(self):
         _read_fit = self._testfile_streamreader.read()
-        self.assertTrue(isinstance(_read_fit, XYFit))
+        self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
         self.assertTrue(
             np.allclose(
                 self._test_parameters_default,
@@ -694,17 +662,9 @@ class TestXYFitYamlRepresenter(unittest.TestCase):
             )
         )
 
-    def test_read_from_testfile_stream_missing_keyword(self):
-        with self.assertRaises(YamlReaderException):
-            self._testfile_streamreader_missing_keyword.read()
-
-    def test_read_from_testfile_stream_extra_keyword(self):
-        with self.assertRaises(YamlReaderException):
-            self._testfile_streamreader_extra_keyword.read()
-
     def test_read_from_testfile_stream_simple(self):
         _read_fit = self._testfile_streamreader_simple.read()
-        self.assertTrue(isinstance(_read_fit, XYFit))
+        self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
         self.assertTrue(
             np.allclose(
                 self._test_parameters_default_simple,
@@ -737,7 +697,7 @@ class TestXYFitYamlRepresenter(unittest.TestCase):
         self._roundtrip_streamwriter.write()
         self._roundtrip_stringstream.seek(0)  # return to beginning
         _read_fit = self._roundtrip_streamreader.read()
-        self.assertTrue(isinstance(_read_fit, XYFit))
+        self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
 
         self.assertTrue(
             np.allclose(
@@ -767,305 +727,141 @@ class TestXYFitYamlRepresenter(unittest.TestCase):
             )
         )
 
-    def test_round_trip_save_results(self):
-        self._fit.do_fit()
-        self._roundtrip_streamwriter.write()
-        self._roundtrip_stringstream.seek(0)  # return to beginning
-        _read_fit = self._roundtrip_streamreader.read()
-        self.assertTrue(isinstance(_read_fit, XYFit))
 
-        self.assertTrue(self._fit.did_fit == _read_fit.did_fit)
-        self.assertTrue(
-            np.allclose(
-                self._fit.parameter_cov_mat,
-                _read_fit.parameter_cov_mat
-            )
-        )
-        self.assertTrue(
-            np.allclose(
-                self._fit.parameter_errors,
-                _read_fit.parameter_errors
-            )
-        )
-        self.assertTrue(
-            np.allclose(
-                self._fit.parameter_cor_mat,
-                _read_fit.parameter_cor_mat
-            )
-        )
-
-
-TEST_FIT_XY_MULTI="""
-type: xy_multi
+TEST_FIT_UNBINNED = """
 dataset:
-    type: xy_multi
-    x_data_0: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
-    y_data_0: [ -1.19026065,  1.51271632,  5.06403348,  9.53506975, 15.07931631,
-                21.54634241, 29.04433804, 37.50568252, 46.99345912, 57.43629710]
-    x_data_1: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
-    y_data_1: [-1.06964365,  1.05016488,  2.70494708,  5.03116094,  6.92949725,
-                8.98510957, 11.00178593, 13.00748810, 15.12334609, 16.90640188]
-    y_errors:
-      - correlation_coefficient: 0.0
-        error_value: 0.1
-        name: test_y_error
-        relative: false
-        type: simple
+  data: [1.0130614498386674, -1.1349287030839197, -0.10341784343652169, -1.390768642168136, -0.9744105188262357,
+         0.6056117355777544, -0.5504328324999447, 0.526390450221898, -1.1119561843051506, 0.8564964441075679,
+         -1.4966544904555332, 0.3533780292764612, -2.354860160605102, -1.611507787899526, -0.32604149834680735 ,
+         -1.8506525618128302, 0.5587792631003663, 0.8639576320048902, -1.3134430505718173, 2.530614938202886 ,
+         -1.1044403418787425, -0.8438885895226831, -0.25603003463019774, -0.4436650881879283, -0.7249153868101906,
+         -0.5553144725434371, 0.9361796588314751, 0.9505148635855938, -0.44558819618432904, -0.6020371626047384,
+         -0.9187934153258002, -0.7881656831171765, -0.31596343642852404, -0.6590057926479401, 0.8013842370770446,
+         -1.3802275845787508, 0.3702055619566078, 0.6100729933463217, 0.9967097423047069, 0.8694021685126967,
+         1.6080865393403492, 0.19305357203727197, -0.8846274588919996, 3.0462083207914286, 0.6329501416274081,
+         2.1668232578651456, -0.36652740938218903, 0.30092771240660027, 1.7452901977315924, -0.4388534800294709,
+         1.3918081589095852, -0.6437491809609527, -0.510287038125732, 0.9606898464368234, 0.41806431328828525,
+         0.5957760238098067, -1.2102742486664348, 0.44097254257312235, 0.3412064563213552, -1.7451310421167718,
+         0.2081663284234683, -1.1066854012184062, 0.4121145273973152, 1.948498429389019, 1.4469448685636854,
+         0.07981317629602669, 1.411704446184254, -0.4610151277847929, 0.9477286127925121, 0.08899785814182719]
+fixed_parameters:
+- - mu
+  - 0.1
 parametric_model:
-    type: xy_multi
-    x_data_0: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
-    x_data_1: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
     model_function:
-        type: xy_multi
-        python_code:
-          - |
-            def quadratic_model(x, a, b, c):
-                return a * x ** 2 + b * x + c
-          - |
-            def linear_model(x, b, c):
-                return b * x + c
-        data_indices: [0, 10, 20]
-    model_parameters: [0.25, 1.5, -0.5]
-parameter_constraints:
-      - type: simple
-        index: 2
-        value: -0.5
-        uncertainty: 1.0
-      - type: simple
-        name: b
-        value: 1.4
-        uncertainty: 0.5
-      - type: matrix
-        names: [a, b, c]
-        values: [0.3, 1.6, -0.6]
-        matrix: [[1.2, 0.1, 0.2], [0.1, 3.4, 0.3], [0.2, 0.3, 9.0]]
+        python_code: |
+            def normal_distribution_pdf(x, mu, sigma):
+                return np.exp(-0.5 * ((x - mu) / sigma) ** 2) / np.sqrt(2.0 * np.pi * sigma ** 2)
+    data: [1.0130614498386674, -1.1349287030839197, -0.10341784343652169, -1.390768642168136, -0.9744105188262357,
+           0.6056117355777544, -0.5504328324999447, 0.526390450221898, -1.1119561843051506, 0.8564964441075679,
+           -1.4966544904555332, 0.3533780292764612, -2.354860160605102, -1.611507787899526, -0.32604149834680735 ,
+           -1.8506525618128302, 0.5587792631003663, 0.8639576320048902, -1.3134430505718173, 2.530614938202886 ,
+           -1.1044403418787425, -0.8438885895226831, -0.25603003463019774, -0.4436650881879283, -0.7249153868101906,
+           -0.5553144725434371, 0.9361796588314751, 0.9505148635855938, -0.44558819618432904, -0.6020371626047384,
+           -0.9187934153258002, -0.7881656831171765, -0.31596343642852404, -0.6590057926479401, 0.8013842370770446,
+           -1.3802275845787508, 0.3702055619566078, 0.6100729933463217, 0.9967097423047069, 0.8694021685126967,
+           1.6080865393403492, 0.19305357203727197, -0.8846274588919996, 3.0462083207914286, 0.6329501416274081,
+           2.1668232578651456, -0.36652740938218903, 0.30092771240660027, 1.7452901977315924, -0.4388534800294709,
+           1.3918081589095852, -0.6437491809609527, -0.510287038125732, 0.9606898464368234, 0.41806431328828525,
+           0.5957760238098067, -1.2102742486664348, 0.44097254257312235, 0.3412064563213552, -1.7451310421167718,
+           0.2081663284234683, -1.1066854012184062, 0.4121145273973152, 1.948498429389019, 1.4469448685636854,
+           0.07981317629602669, 1.411704446184254, -0.4610151277847929, 0.9477286127925121, 0.08899785814182719]
+    model_parameters: [1.5, 1.0]
+type: unbinned
 """
 
-TEST_FIT_XY_MULTI_MISSING_KEYWORD="""
-type: xy_multi
-parametric_model:
-    type: xy_multi
-    x_data_0: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
-    x_data_1: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
-    model_function:
-        type: xy_multi
-        python_code:
-          - |
-            def quadratic_model(x, a, b, c):
-                return a * x ** 2 + b * x + c
-          - |
-            def linear_model(x, b, c):
-                return b * x + c
-        data_indices: [0, 10, 20]
-    model_parameters: [0.25, 1.5, -0.5]
-"""
-
-TEST_FIT_XY_MULTI_EXTRA_KEYWORD = TEST_FIT_XY_MULTI + """
+TEST_FIT_UNBINNED_EXTRA_KEYWORD = TEST_FIT_UNBINNED + """
 extra_keyword: 3.14
 """
 
-TEST_FIT_XY_MULTI_SIMPLE="""
-type: xy_multi
-x_data_0: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
-y_data_0: [ -1.19026065,  1.51271632,  5.06403348,  9.53506975, 15.07931631,
-            21.54634241, 29.04433804, 37.50568252, 46.99345912, 57.43629710]
-model_function_0: quadratic_model
-x_data_1: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
-y_data_1: [-1.06964365,  1.05016488,  2.70494708,  5.03116094,  6.92949725,
-            8.98510957, 11.00178593, 13.00748810, 15.12334609, 16.90640188]
-model_function_1: |
-    def linear_model(x, b, c):
-        return b * x + c
-y_errors: 0.1
-model_parameters: [0.25, 1.5, -0.5]
+TEST_FIT_UNBINNED_SIMPLE = """
+type: unbinned
+data: [1.0130614498386674, -1.1349287030839197, -0.10341784343652169, -1.390768642168136, -0.9744105188262357,
+       0.6056117355777544, -0.5504328324999447, 0.526390450221898, -1.1119561843051506, 0.8564964441075679,
+       -1.4966544904555332, 0.3533780292764612, -2.354860160605102, -1.611507787899526, -0.32604149834680735 ,
+       -1.8506525618128302, 0.5587792631003663, 0.8639576320048902, -1.3134430505718173, 2.530614938202886 ,
+       -1.1044403418787425, -0.8438885895226831, -0.25603003463019774, -0.4436650881879283, -0.7249153868101906,
+       -0.5553144725434371, 0.9361796588314751, 0.9505148635855938, -0.44558819618432904, -0.6020371626047384,
+       0.5957760238098067, -1.2102742486664348, 0.44097254257312235, 0.3412064563213552, -1.7451310421167718,
+       0.2081663284234683, -1.1066854012184062, 0.4121145273973152, 1.948498429389019, 1.4469448685636854,
+       0.4645792379289075, 0.08603433240025622, -1.2395727054852086, 0.7213492596560613, 0.3314999995659894,
+       0.510785216253824, 0.44208577350556294, -0.6908107349334328, 1.2491129589765388, 0.8363348859267793,
+       0.07981317629602669, 1.411704446184254, -0.4610151277847929, 0.9477286127925121, 0.08899785814182719]
 """
 
-class TestXYMultiFitYamlRepresenter(unittest.TestCase):
+TEST_FIT_UNBINNED_MISSING_KEYWORD = """
+fixed_parameters:
+- - mu
+  - 0.1
+parametric_model:
+    python_code: |
+        def normal_distribution_pdf(x, mu, sigma):
+            return np.exp(-0.5 * ((x - mu) / sigma) ** 2) / np.sqrt(2.0 * np.pi * sigma ** 2)
+type: unbinned
+"""
+
+
+class TestUnbinnedFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
+    FIT_CLASS = UnbinnedFit
+    TEST_FIT = TEST_FIT_UNBINNED
+    TEST_FIT_SIMPLE = TEST_FIT_UNBINNED_SIMPLE
+    TEST_FIT_EXTRA_KEYWORD = TEST_FIT_UNBINNED_EXTRA_KEYWORD
+    TEST_FIT_MISSING_KEYWORD = TEST_FIT_UNBINNED_MISSING_KEYWORD
 
     @staticmethod
-    def quadratic_model(x, a=0.25, b=1.5, c=-0.5):
-        return a * x ** 2 + b * x + c
-    
-    @staticmethod
-    def linear_model(x, b, c):
-        return b * x + c
-    
+    def normal_distribution_pdf(x, mu, sigma):
+        return np.exp(-0.5 * ((x - mu) / sigma) ** 2) / np.sqrt(2.0 * np.pi * sigma ** 2)
+
     def setUp(self):
-        self._test_x = np.arange(10)
-        self._test_parameters = np.array([0.5, 2.0, -1.0])
-        self._test_parameters_default = np.array([0.25, 1.5, -0.5])
-        self._test_parameters_do_fit = np.array([0.49977082723056837, 2.0082389879421645, -1.048644014258889])
-        self._test_parameters_do_fit_simple = np.array([0.4997519625958399, 2.008643944532134, -1.0505005938787126])
-        self._test_y_0 = [ -1.19026065,  1.51271632,  5.06403348,  9.53506975, 15.07931631,
-                           21.54634241, 29.04433804, 37.50568252, 46.99345912, 57.43629710]
-        self._test_y_default_0 = self.quadratic_model(self._test_x, *self._test_parameters_default)
-        self._test_y_1 = [-1.06964365,  1.05016488,  2.70494708,  5.03116094,  6.92949725,
-                           8.98510957, 11.00178593, 13.00748810, 15.12334609, 16.90640188]
-        self._test_y_default_1 = self.linear_model(self._test_x, *self._test_parameters_default[1:])
-        self._test_y_do_fit = [-1.04864401, 1.4593658, 4.96691727, 9.47401039, 14.98064517, 21.48682161,
-                               28.99253969, 37.49779944, 47.00260083, 57.50694388, -1.04864401, 0.95959497,
-                               2.96783396,  4.97607295,  6.98431194,  8.99255093, 11.00078991, 13.0090289,
-                               15.01726789, 17.02550688]
-        self._test_y_do_fit_simple = [-1.05050059,  1.45789531,  4.96579515,  9.4731989,  14.98010659,
-                                      21.48651819, 28.99243373, 37.49785319, 47.00277657, 57.50720388,
-                                      -1.05050059,  0.95814335,  2.9667873,   4.97543124,  6.98407518,
-                                      8.99271913, 11.00136307, 13.01000702, 15.01865096, 17.02729491]
-        self._test_y_default_combined = np.concatenate([self._test_y_default_0, self._test_y_default_1])
-        
-        self._fit = XYMultiFit(
-            xy_data=[[self._test_x, self._test_y_0], [self._test_x, self._test_y_1]],
-            model_function=[self.quadratic_model, self.linear_model]
-        )
-        self._fit.add_simple_error(axis='y', err_val=0.1)
-        self._fit.add_parameter_constraint(name='c', value=-0.5, uncertainty=1.0)
-        self._fit.add_parameter_constraint(name='b', value=1.4, uncertainty=0.5)
-        self._fit.add_matrix_parameter_constraint(names=['a', 'b', 'c'], values=[0.3, 1.6, -0.6],
-                                                  matrix=[[1.2, 0.1, 0.2], [0.1, 3.4, 0.3], [0.2, 0.3, 9.0]])
+        self._test_data = [1.0130614498386674, -1.1349287030839197, -0.10341784343652169, -1.390768642168136,
+                           -0.9744105188262357, 0.6056117355777544, -0.5504328324999447, 0.526390450221898,
+                           -1.1119561843051506, 0.8564964441075679, -1.4966544904555332, 0.3533780292764612,
+                           -2.354860160605102, -1.611507787899526, -0.32604149834680735, -1.8506525618128302,
+                           0.5587792631003663, 0.8639576320048902, -1.3134430505718173, 2.530614938202886,
+                           -1.1044403418787425, -0.8438885895226831, -0.25603003463019774, -0.4436650881879283,
+                           -0.7249153868101906, -0.5553144725434371, 0.9361796588314751, 0.9505148635855938,
+                           -0.44558819618432904, -0.6020371626047384, -0.9187934153258002, -0.7881656831171765,
+                           -0.31596343642852404, -0.6590057926479401, 0.8013842370770446, -1.3802275845787508,
+                           0.3702055619566078, 0.6100729933463217, 0.9967097423047069, 0.8694021685126967,
+                           1.6080865393403492, 0.19305357203727197, -0.8846274588919996, 3.0462083207914286,
+                           0.6329501416274081, 2.1668232578651456, -0.36652740938218903, 0.30092771240660027,
+                           1.7452901977315924, -0.4388534800294709, 1.3918081589095852, -0.6437491809609527,
+                           -0.510287038125732, 0.9606898464368234, 0.41806431328828525, 0.5957760238098067,
+                           -1.2102742486664348, 0.44097254257312235, 0.3412064563213552, -1.7451310421167718,
+                           0.2081663284234683, -1.1066854012184062, 0.4121145273973152, 1.948498429389019,
+                           1.4469448685636854, 0.07981317629602669, 1.411704446184254, -0.4610151277847929,
+                           0.9477286127925121, 0.08899785814182719]
+        self._test_parameters = np.array([0.1, -1.0])
+        self._test_parameters_default = np.array([0.1, 1.0])
+        self._test_parameters_default_simple = np.array([1.0, 1.0])
+        self._test_parameters_do_fit = np.array([0.1, 1.09727982])
+        self._test_parameters_do_fit_simple = np.array([-0.07072322, 1.02381907])
 
-        self._roundtrip_stringstream = IOStreamHandle(StringIO())
-        self._testfile_stringstream = IOStreamHandle(StringIO(TEST_FIT_XY_MULTI))
-        self._testfile_stringstream_simple = IOStreamHandle(StringIO(TEST_FIT_XY_MULTI_SIMPLE))
-        
-        self._roundtrip_streamreader = FitYamlReader(self._roundtrip_stringstream)
-        self._roundtrip_streamwriter = FitYamlWriter(self._fit, self._roundtrip_stringstream)
-        self._testfile_streamreader = FitYamlReader(self._testfile_stringstream)
-        self._testfile_streamreader_simple = FitYamlReader(self._testfile_stringstream_simple)
+        self._fit = UnbinnedFit(data=self._test_data, model_density_function='normal_distribution_pdf')
+        self._fit.fix_parameter('mu', 0.1)
 
-        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_FIT_XY_MULTI_MISSING_KEYWORD))
-        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_FIT_XY_MULTI_EXTRA_KEYWORD))
-        self._testfile_streamreader_missing_keyword = FitYamlReader(self._testfile_stringstream_missing_keyword)
-        self._testfile_streamreader_extra_keyword = FitYamlReader(self._testfile_stringstream_extra_keyword)
-
-    def test_write_to_roundtrip_stringstream(self):
-        self._roundtrip_streamwriter.write()
+        self.setup_streams()
 
     def test_read_from_testfile_stream(self):
         _read_fit = self._testfile_streamreader.read()
-        self.assertTrue(isinstance(_read_fit, XYMultiFit))
-        self.assertTrue(
-            np.allclose(
-                self._test_parameters_default,
-                _read_fit.poi_values
-            )
-        )
-        self.assertTrue(
-            np.allclose(
-                self._test_y_default_combined,
-                _read_fit.y_model
-            )
-        )
-        
+        self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
+        self.assertTrue(np.allclose(self._test_parameters_default, _read_fit.poi_values))
         _read_fit.do_fit()
-
-        self.assertTrue(
-            np.allclose(
-                self._test_parameters_do_fit,
-                _read_fit.poi_values
-            )
-        )
-        self.assertTrue(
-            np.allclose(
-                self._test_y_do_fit,
-                _read_fit.y_model
-            )
-        )
+        self.assertTrue(np.allclose(self._test_parameters_do_fit, _read_fit.poi_values))
 
     def test_read_from_testfile_stream_simple(self):
         _read_fit = self._testfile_streamreader_simple.read()
-        self.assertTrue(isinstance(_read_fit, XYMultiFit))
-        self.assertTrue(
-            np.allclose(
-                self._test_parameters_default,
-                _read_fit.poi_values
-            )
-        )
-        self.assertTrue(
-            np.allclose(
-                self._test_y_default_combined,
-                _read_fit.y_model
-            )
-        )
-        
+
+        self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
+        self.assertTrue(np.allclose(self._test_parameters_default_simple, _read_fit.poi_values))
         _read_fit.do_fit()
-        
-        self.assertTrue(
-            np.allclose(
-                self._test_parameters_do_fit_simple,
-                _read_fit.poi_values
-            )
-        )
-        self.assertTrue(
-            np.allclose(
-                self._test_y_do_fit_simple,
-                _read_fit.y_model
-            )
-        )
-
-    def test_read_from_testfile_stream_missing_keyword(self):
-        with self.assertRaises(YamlReaderException):
-            self._testfile_streamreader_missing_keyword.read()
-
-    def test_read_from_testfile_stream_extra_keyword(self):
-        with self.assertRaises(YamlReaderException):
-            self._testfile_streamreader_extra_keyword.read()
+        self.assertTrue(np.allclose(self._test_parameters_do_fit_simple, _read_fit.poi_values))
 
     def test_round_trip_with_stringstream(self):
         self._roundtrip_streamwriter.write()
         self._roundtrip_stringstream.seek(0)  # return to beginning
         _read_fit = self._roundtrip_streamreader.read()
-        self.assertTrue(isinstance(_read_fit, XYMultiFit))
-
-        self.assertTrue(
-            np.allclose(
-                self._test_parameters_default,
-                _read_fit.poi_values
-            )
-        )
-        self.assertTrue(
-            np.allclose(
-                self._test_y_default_combined,
-                _read_fit.y_model
-            )
-        )
-        
+        self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
+        self.assertTrue(np.allclose(self._test_parameters_default, _read_fit.poi_values))
         _read_fit.do_fit()
-        self.assertTrue(
-            np.allclose(
-                self._test_parameters_do_fit,
-                _read_fit.poi_values
-            )
-        )
-        self.assertTrue(
-            np.allclose(
-                self._test_y_do_fit,
-                _read_fit.y_model
-            )
-        )
-
-    def test_round_trip_save_results(self):
-        self._fit.do_fit()
-        self._roundtrip_streamwriter.write()
-        self._roundtrip_stringstream.seek(0)  # return to beginning
-        _read_fit = self._roundtrip_streamreader.read()
-        self.assertTrue(isinstance(_read_fit, XYMultiFit))
-
-        self.assertTrue(self._fit.did_fit == _read_fit.did_fit)
-        self.assertTrue(
-            np.allclose(
-                self._fit.parameter_cov_mat,
-                _read_fit.parameter_cov_mat
-            )
-        )
-        self.assertTrue(
-            np.allclose(
-                self._fit.parameter_errors,
-                _read_fit.parameter_errors
-            )
-        )
-        self.assertTrue(
-            np.allclose(
-                self._fit.parameter_cor_mat,
-                _read_fit.parameter_cor_mat
-            )
-        )
-
+        self.assertTrue(np.allclose(self._test_parameters_do_fit, _read_fit.poi_values))

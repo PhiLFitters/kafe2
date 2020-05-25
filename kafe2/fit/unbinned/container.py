@@ -1,7 +1,7 @@
 from ..indexed import IndexedContainer
 from ..indexed.container import IndexedContainerException
 
-__all__ = ["UnbinnedContainer"]
+__all__ = ['UnbinnedContainer', 'UnbinnedContainerException']
 
 
 class UnbinnedContainerException(IndexedContainerException):
@@ -24,7 +24,7 @@ class UnbinnedContainer(IndexedContainer):
         """
         super(UnbinnedContainer, self).__init__(data, dtype)
 
-    def add_simple_error(self):
+    def add_error(self):
         raise NotImplementedError("Unbinned fits don't support errors")
 
     def add_matrix_error(self):

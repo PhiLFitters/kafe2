@@ -1,5 +1,6 @@
 .idea
+.coverage
+htmlcov/*
 *.pyc
-/kafe2_example_johannes.py
 /.project
 /.pydevproject

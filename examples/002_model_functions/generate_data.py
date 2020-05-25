@@ -1,10 +1,10 @@
+"""
+Create an XYContainer holding the measurement data and uncertainties and write it to a file.
+"""
+
 import numpy as np
 from kafe2 import XYContainer
 
-"""
-Create an XYContainer holding the measurement data
-and the errors and write it to a file.
-"""
 
 START, STOP, NUM_DATAPOINTS = 0, 20, 7
 X_ERROR = 0.3  # Absolute error
@@ -28,7 +28,7 @@ y_data = y_data_0 * (1.0 + y_data_jitter)
 
 data = XYContainer(x_data=x_data, y_data=y_data)
 
-data.add_simple_error('x', X_ERROR)
-data.add_simple_error('y', Y_ERROR, relative=True)
+data.add_error('x', X_ERROR)
+data.add_error('y', Y_ERROR, relative=True)
 
 data.to_file('data.yml')

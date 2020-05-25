@@ -110,14 +110,14 @@ auxiliary_fit = XYFit(
 
 # (Optional): Assign names for models and parameters
 auxiliary_fit.assign_parameter_latex_names(x='U', p2='p_2', p1='p_1', p0='p_0')
-auxiliary_fit.assign_model_function_expression('{0}*{x}^2 + {1}*{x} + {2}')
-auxiliary_fit.assign_model_function_latex_expression(r'{0}\,{x}^2 + {1}\,{x} + {2}')
+auxiliary_fit.assign_model_function_expression('{1}*{x}^2 + {2}*{x} + {3}')
+auxiliary_fit.assign_model_function_latex_expression(r'{1}\,{x}^2 + {2}\,{x} + {3}')
 
 # declare errors on U
-auxiliary_fit.add_simple_error(axis='x', err_val=sigU)
+auxiliary_fit.add_error(axis='x', err_val=sigU)
 
 # declare errors on T
-auxiliary_fit.add_simple_error(axis='y', err_val=sigT)
+auxiliary_fit.add_error(axis='y', err_val=sigT)
 
 # perform the auxiliary fit
 auxiliary_fit.do_fit()
@@ -127,7 +127,7 @@ auxiliary_fit.report()
 
 # (Optional) plot the results
 auxiliary_plot = Plot(auxiliary_fit)
-auxiliary_plot.plot(with_fit_info=True)
+auxiliary_plot.plot(fit_info=True)
 
 # Step 2: perform the main fit
 main_fit = XYFit(
@@ -136,9 +136,9 @@ main_fit = XYFit(
 )
 
 # declare errors on U
-main_fit.add_simple_error(axis='x', err_val=sigU)
+main_fit.add_error(axis='x', err_val=sigU)
 # declare errors on I
-main_fit.add_simple_error(axis='y', err_val=sigI)
+main_fit.add_error(axis='y', err_val=sigI)
 
 # constrain the parameters
 main_fit.add_matrix_parameter_constraint(
@@ -161,6 +161,6 @@ main_fit.report()
 
 # (Optional) plot the results
 plot = Plot(main_fit)
-plot.plot(with_fit_info=True)
+plot.plot(fit_info=True)
 
 plt.show()

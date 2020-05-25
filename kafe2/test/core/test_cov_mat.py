@@ -103,4 +103,3 @@ class TestCovMatHelperFunctions(unittest.TestCase):
     def test_cov_mat_from_float_fullcor(self):
         cm = cov_mat_from_float(self.single_value, 3, correlation=1.0)
         self.assertTrue(np.allclose(cm.mat, self.ref_singleval_fullcor))
-

@@ -1,20 +1,18 @@
-from collections import OrderedDict
 from copy import deepcopy
 
 import sys
 import six
 
-from ...core import NexusFitter, Nexus
-from ...core.fitters.nexus import Parameter, Alias
-from ...config import kc
-from .._base import FitException, FitBase, DataContainerBase
+from ...core import Nexus
+from ...core.fitters.nexus import Parameter, NexusError
+from .._base import FitException, FitBase, DataContainerBase, ModelFunctionBase
 from .container import UnbinnedContainer
-from .cost import UnbinnedCostFunction_UserDefined, UnbinnedCostFunction_NegLogLikelihood
-from .model import UnbinnedModelPDF, UnbinnedParametricModel
+from .cost import UnbinnedCostFunction_NegLogLikelihood
+from .model import UnbinnedParametricModel
 from .plot import UnbinnedPlotAdapter
-from ..util import function_library, add_in_quadrature, collect, invert_matrix
+from ..util import collect
 
-__all__ = ["UnbinnedFit"]
+__all__ = ['UnbinnedFit', 'UnbinnedFitException']
 
 
 class UnbinnedFitException(FitException):
@@ -24,14 +22,14 @@ class UnbinnedFitException(FitException):
 class UnbinnedFit(FitBase):
     CONTAINER_TYPE = UnbinnedContainer
     MODEL_TYPE = UnbinnedParametricModel
-    MODEL_FUNCTION_TYPE = UnbinnedModelPDF
+    MODEL_FUNCTION_TYPE = ModelFunctionBase
     PLOT_ADAPTER_TYPE = UnbinnedPlotAdapter
     EXCEPTION_TYPE = UnbinnedFitException
     RESERVED_NODE_NAMES = {'data', 'model', 'cost', 'parameter_values', 'parameter_constraints'}
 
     def __init__(self,
                  data,
-                 model_density_function='gaussian',
+                 model_density_function='normal_distribution_pdf',
                  cost_function=UnbinnedCostFunction_NegLogLikelihood(),
                  minimizer=None,
                  minimizer_kwargs=None):
@@ -40,7 +38,7 @@ class UnbinnedFit(FitBase):
 
         :param data: the data points
         :param model_density_function: the model density
-        :type model_density_function: :py:class:`~kafe2.fit.unbinned.UnbinnedModelPDF` or unwrapped native Python function
+        :type model_density_function: :py:class:`~kafe2.fit._base.ModelFunctionBase` or unwrapped native Python function
         :param cost_function: the cost function
         :param minimizer: the minimizer to use for fitting.
         :type minimizer: None, "iminuit", "tminuit", or "scipy".
@@ -159,6 +157,7 @@ class UnbinnedFit(FitBase):
                                        % (type(new_data), self.CONTAINER_TYPE))
         else:
             self._data_container = self._new_data_container(new_data, dtype=float)
+        self._data_container._on_error_change_callback = self._on_error_change
 
         self._nexus.get('x').mark_for_update()
         # TODO: make 'Alias' nodes pass on 'mark_for_update'
@@ -170,6 +169,7 @@ class UnbinnedFit(FitBase):
             model_density_function=self._model_function,
             model_parameters=self.parameter_values
         )
+        self._param_model._on_error_change_callbacks = [self._on_error_change]
 
     @FitBase.data.getter
     def data(self):

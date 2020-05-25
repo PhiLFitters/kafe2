@@ -20,8 +20,8 @@ class TestDatastoreIndexed(unittest.TestCase):
 
         self._ref_err_corr_coeff = 0.23
 
-        self.idx_cont.add_simple_error(self._ref_err_abs_valuearray, name='MyError', correlation=self._ref_err_corr_coeff,
-                                       relative=False)
+        self.idx_cont.add_error(self._ref_err_abs_valuearray, name='MyError', correlation=self._ref_err_corr_coeff,
+                                relative=False)
 
         self._ref_cov_mat = cov_mat_from_float_list(self._ref_err_abs_valuearray,
                                                     correlation=self._ref_err_corr_coeff).mat
@@ -78,19 +78,19 @@ class TestDatastoreIndexed(unittest.TestCase):
         self.assertTrue(np.allclose(_mat, self._ref_cov_mat, atol=1e-5))
 
     def test_compare_ref_total_err_for_add_err_twice(self):
-        self.idx_cont.add_simple_error(self._ref_err_abs_valuearray,
-                                       name='MyNewError',
-                                       correlation=self._ref_err_corr_coeff,
-                                       relative=False)
+        self.idx_cont.add_error(self._ref_err_abs_valuearray,
+                                name='MyNewError',
+                                correlation=self._ref_err_corr_coeff,
+                                relative=False)
         _err = self.idx_cont.get_total_error()
         _mat = _err.cov_mat
         self.assertTrue(np.allclose(_mat, self._ref_cov_mat + self._ref_cov_mat, atol=1e-5))
 
     def test_compare_ref_total_err_for_add_disable_new_err(self):
-        self.idx_cont.add_simple_error(self._ref_err_abs_valuearray,
-                                       name='MyNewError',
-                                       correlation=self._ref_err_corr_coeff,
-                                       relative=False)
+        self.idx_cont.add_error(self._ref_err_abs_valuearray,
+                                name='MyNewError',
+                                correlation=self._ref_err_corr_coeff,
+                                relative=False)
         self.idx_cont.disable_error("MyNewError")
         _err = self.idx_cont.get_total_error()
         _mat = _err.cov_mat
@@ -98,10 +98,10 @@ class TestDatastoreIndexed(unittest.TestCase):
         self.assertTrue(np.allclose(_mat, self._ref_cov_mat, atol=1e-5))
 
     def test_compare_ref_total_err_for_add_disable_reenable_new_err(self):
-        self.idx_cont.add_simple_error(self._ref_err_abs_valuearray,
-                                       name='MyNewError',
-                                       correlation=self._ref_err_corr_coeff,
-                                       relative=False)
+        self.idx_cont.add_error(self._ref_err_abs_valuearray,
+                                name='MyNewError',
+                                correlation=self._ref_err_corr_coeff,
+                                relative=False)
         self.idx_cont.disable_error("MyNewError")
         _err = self.idx_cont.get_total_error()
         self.idx_cont.enable_error("MyNewError")
@@ -111,13 +111,13 @@ class TestDatastoreIndexed(unittest.TestCase):
         self.assertTrue(np.allclose(_mat, self._ref_cov_mat + self._ref_cov_mat, atol=1e-5))
 
     def test_raise_add_same_error_name_twice(self):
-        self.idx_cont.add_simple_error(0.1,
-                                      name="MyNewError",
-                                      correlation=0, relative=False)
+        self.idx_cont.add_error(0.1,
+                                name="MyNewError",
+                                correlation=0, relative=False)
         with self.assertRaises(DataContainerException):
-            self.idx_cont.add_simple_error(0.1,
-                                          name="MyNewError",
-                                          correlation=0, relative=False)
+            self.idx_cont.add_error(0.1,
+                                    name="MyNewError",
+                                    correlation=0, relative=False)
 
     def test_raise_get_inexistent_error(self):
         with self.assertRaises(DataContainerException):

@@ -67,16 +67,15 @@ def get_minimizer(minimizer_spec=None):
                 return _minimizer
 
         raise ValueError(
-            "Could not find any minimizer in default list: {}! Available: {}".format(_minimizer_specs, list(AVAILABLE_MINIMIZERS.keys())))
-    else:
-        _minimizer_spec = minimizer_spec.lower()
-        _minimizer_spec = _MINIMIZER_NAME_ALIASES.get(_minimizer_spec, _minimizer_spec)
-        _minimizer = AVAILABLE_MINIMIZERS.get(_minimizer_spec, None)
-        if _minimizer is not None:
-            return _minimizer
+            "Could not find any minimizer in default list: {}! Available: {}".format(_minimizer_specs,
+                                                                                     list(AVAILABLE_MINIMIZERS.keys())))
+    _minimizer_spec = minimizer_spec.lower()
+    _minimizer_spec = _MINIMIZER_NAME_ALIASES.get(_minimizer_spec, _minimizer_spec)
+    _minimizer = AVAILABLE_MINIMIZERS.get(_minimizer_spec, None)
+    if _minimizer is not None:
+        return _minimizer
 
-        raise ValueError(
-            "Unknown minimizer '{}'! Available: {}".format(minimizer_spec, list(AVAILABLE_MINIMIZERS.keys())))
+    raise ValueError("Unknown minimizer '{}'! Available: {}".format(minimizer_spec, list(AVAILABLE_MINIMIZERS.keys())))
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -86,13 +85,20 @@ class MinimizerBase(object):
     """
 
     @abc.abstractmethod
-    def minimize(self): pass
+    def minimize(self):
+        pass
 
-    @abc.abstractproperty
-    def hessian(self): pass
+    @property
+    @abc.abstractmethod
+    def hessian(self):
+        pass
 
-    @abc.abstractproperty
-    def hessian_inv(self): pass
+    @property
+    @abc.abstractmethod
+    def hessian_inv(self):
+        pass
 
-    @abc.abstractproperty
-    def function_value(self): pass
+    @property
+    @abc.abstractmethod
+    def function_value(self):
+        pass

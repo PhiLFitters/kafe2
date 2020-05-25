@@ -1,14 +1,15 @@
-import matplotlib as mpl
 import numpy as np
 import six
+import matplotlib as mpl
 
-from kafe2.config import matplotlib as mpl
-from kafe2.core.confidence import ConfidenceLevel
-from kafe2.fit._base import FitBase
+from ...config import kafe2_rc
+from ...core.confidence import ConfidenceLevel
+from .._base import FitBase
 from matplotlib import pyplot as plt, rcParams
 from matplotlib import gridspec as gs
 from matplotlib import ticker as plticker
 from matplotlib.axes import Axes
+from matplotlib import rc_context
 
 
 __all__ = ["ContoursProfiler"]
@@ -134,7 +135,7 @@ class ContoursProfiler(object):
     _DEFAULT_PLOT_FILL_CONTOUR_KWARGS = dict(alpha=0.3, linewidth=2)
 
     def __init__(self, fit_object,
-                 profile_points=100, profile_subtract_min=True, profile_bound=2,
+                 profile_points=100, profile_subtract_min=True, profile_bound=2.45,
                  contour_points=100, contour_sigma_values=(1.0, 2.0), contour_smoothing_sigma=0.0,
                  contour_method_kwargs=None):
         """
@@ -171,7 +172,7 @@ class ContoursProfiler(object):
 
         self._cost_function_formatted_name = "${}$".format(self._fit._cost_function.formatter.latex_name)
         # FIXME MultiFit does not have an internal _model_function field
-        self._parameters_formatted_names = ["${}$".format(pf.latex_name) for pf in self._fit._model_function.argument_formatters]
+        self._parameters_formatted_names = ["${}$".format(pf.latex_name) for pf in self._fit._get_model_function_parameter_formatters()]
 
         self._figures = []
 
@@ -229,13 +230,11 @@ class ContoursProfiler(object):
     def _plot_contour_xy(target_axes, contour, label, contour_color):
         _kwargs = ContoursProfiler._DEFAULT_PLOT_FILL_CONTOUR_KWARGS.copy()
         if contour.xy_points is not None:
-            return [target_axes.fill(contour.xy_points[0], contour.xy_points[1],
-                                    label=label, **_kwargs)]
-        else:
-            return [target_axes.contour(contour.grid_x, contour.grid_y, contour.grid_z.T, levels=[0,contour.sigma],
-                                       colors="gray", **_kwargs),
-                    target_axes.contourf(contour.grid_x, contour.grid_y, contour.grid_z.T, levels=[0,contour.sigma],
-                                       colors=contour_color, label=label, **_kwargs)]
+            return [target_axes.fill(contour.xy_points[0], contour.xy_points[1], label=label, **_kwargs)]
+        return [target_axes.contour(contour.grid_x, contour.grid_y, contour.grid_z.T, levels=[0, contour.sigma],
+                                    colors="gray", **_kwargs),
+                target_axes.contourf(contour.grid_x, contour.grid_y, contour.grid_z.T, levels=[0, contour.sigma],
+                                     colors=contour_color, label=label, **_kwargs)]
 
     # -- public properties
 
@@ -333,97 +332,98 @@ class ContoursProfiler(object):
         :return: figure containing the plot result
         :rtype: `matplotlib.figure.Figure`
         """
-        if target_axes is None:
-            _fig, _gs = self._make_figure_gs(1, 1)
-            _axes = plt.subplot(_gs[0, 0])
-        else:
-            _axes = target_axes
+        with rc_context(kafe2_rc):
+            if target_axes is None:
+                _fig, _gs = self._make_figure_gs(1, 1)
+                _axes = plt.subplot(_gs[0, 0])
+            else:
+                _axes = target_axes
 
-        _par_val = self._fit.parameter_name_value_dict[parameter]
-        _par_id = list(self._fit.parameter_name_value_dict.keys()).index(parameter)
-        _par_err = self._fit.parameter_errors[_par_id]
-        _cost_function_min = self._fit.cost_function_value
-        _par_formatted_name = self._parameters_formatted_names[_par_id]
+            _par_val = self._fit.parameter_name_value_dict[parameter]
+            _par_id = list(self._fit.parameter_name_value_dict.keys()).index(parameter)
+            _par_err = self._fit.parameter_errors[_par_id]
+            _cost_function_min = self._fit.cost_function_value
+            _par_formatted_name = self._parameters_formatted_names[_par_id]
 
-        _x, _y = self.get_profile(parameter)
+            _x, _y = self.get_profile(parameter)
 
-        _profile_artist = self._plot_profile_xy(_axes, _x, _y, label="profile %s" % (self._cost_function_formatted_name,))
+            _profile_artist = self._plot_profile_xy(_axes, _x, _y, label="profile %s" % (self._cost_function_formatted_name,))
 
-        _y_offset = _cost_function_min if not self._profile_kwargs['subtract_min'] else 0.0
+            _y_offset = _cost_function_min if not self._profile_kwargs['subtract_min'] else 0.0
 
-        _parabola_artist = None
-        if show_parabolic:
-            _parabola_artist = self._plot_parabolic_cost(_axes,
-                                                         _x,
-                                                         quad_coeff=1. / (_par_err**2),
-                                                         x_offset=_par_val,
-                                                         y_offset=_y_offset,
-                                                         label="parabolic approximation")
+            _parabola_artist = None
+            if show_parabolic:
+                _parabola_artist = self._plot_parabolic_cost(_axes,
+                                                             _x,
+                                                             quad_coeff=1. / (_par_err**2),
+                                                             x_offset=_par_val,
+                                                             y_offset=_y_offset,
+                                                             label="parabolic approximation")
 
-        _minimum_artist = None
-        if show_fit_minimum:
-            _minimum_artist = self._plot_minimum(_axes,
-                                                 x=_par_val,
-                                                 y=_y_offset,
-                                                 xerr=_par_err, yerr=None,
-                                                 label="fit minimum")
+            _minimum_artist = None
+            if show_fit_minimum:
+                _minimum_artist = self._plot_minimum(_axes,
+                                                     x=_par_val,
+                                                     y=_y_offset,
+                                                     xerr=_par_err, yerr=None,
+                                                     label="fit minimum")
 
-        if label_fit_minimum:
-            _axes.annotate(
-                '\n'.join([
-                    r"$\langle {}\rangle = {:g}$".format(
-                        _par_formatted_name.strip('$'),
-                        _par_val
-                    ),
-                    r"$\sigma_{{{}}} = {:g}$".format(
-                        _par_formatted_name.strip('$'),
-                        _par_err
-                    )]),
-                xy=(_par_val, 1),
-                xycoords=('data', 'axes fraction'),
-                xytext=(0, -10),
-                textcoords='offset points',
-                ha='center',
-                va='top'
-            )
+            if label_fit_minimum:
+                _axes.annotate(
+                    '\n'.join([
+                        r"$\langle {}\rangle = {:g}$".format(
+                            _par_formatted_name.strip('$'),
+                            _par_val
+                        ),
+                        r"$\sigma_{{{}}} = {:g}$".format(
+                            _par_formatted_name.strip('$'),
+                            _par_err
+                        )]),
+                    xy=(_par_val, 1),
+                    xycoords=('data', 'axes fraction'),
+                    xytext=(0, -10),
+                    textcoords='offset points',
+                    ha='center',
+                    va='top'
+                )
 
 
-        _err_span_artist = None
-        if show_error_span:
-            _xmin, _xmax = _par_val-_par_err, _par_val+_par_err
-            _err_span_artist = self._plot_error_span_on_profile(_axes, xmin=_xmin, xmax=_xmax, label="parameter error")
+            _err_span_artist = None
+            if show_error_span:
+                _xmin, _xmax = _par_val-_par_err, _par_val+_par_err
+                _err_span_artist = self._plot_error_span_on_profile(_axes, xmin=_xmin, xmax=_xmax, label="parameter error")
 
-        _axes.set_xlabel(_par_formatted_name)
-        _axes.set_ylabel(self._cost_function_formatted_name if not self._profile_kwargs['subtract_min']
-                         else '$\Delta$%s' % self._cost_function_formatted_name)
+            _axes.set_xlabel(_par_formatted_name)
+            _axes.set_ylabel(self._cost_function_formatted_name if not self._profile_kwargs['subtract_min']
+                             else '$\Delta$%s' % self._cost_function_formatted_name)
 
-        if show_legend:
-            _axes.legend(loc='center')
+            if show_legend:
+                _axes.legend(loc='center')
 
-        if show_grid:
-            _axes.grid('on')
+            if show_grid:
+                _axes.grid('on')
 
-        if show_ticks:
-            _loc_x = SigmaLocator(central_value=_par_val, sigma=_par_err)
-            _axes.xaxis.set_major_locator(_loc_x)
-            if label_ticks_in_sigma:
-                _form_x = SigmaFormatter(central_value=_par_val, sigma=_par_err)
-                _axes.xaxis.set_major_formatter(_form_x)
-            # else:
-            #     _form_x = ScalarFormatter()
-            #     _axes.xaxis.set_major_formatter(_form_x)
+            if show_ticks:
+                _loc_x = SigmaLocator(central_value=_par_val, sigma=_par_err)
+                _axes.xaxis.set_major_locator(_loc_x)
+                if label_ticks_in_sigma:
+                    _form_x = SigmaFormatter(central_value=_par_val, sigma=_par_err)
+                    _axes.xaxis.set_major_formatter(_form_x)
+                # else:
+                #     _form_x = ScalarFormatter()
+                #     _axes.xaxis.set_major_formatter(_form_x)
 
-            _loc_y = plticker.MaxNLocator(5)
-            _axes.yaxis.set_major_locator(_loc_y)
-        else:
-            _axes.set_xticks([])
-            _axes.set_yticks([])
+                _loc_y = plticker.MaxNLocator(5)
+                _axes.yaxis.set_major_locator(_loc_y)
+            else:
+                _axes.set_xticks([])
+                _axes.set_yticks([])
 
-        # if own figure created -> set tight layout
-        if target_axes is None:
-            _maybe_set_tight_layout(_fig)
+            # if own figure created -> set tight layout
+            if target_axes is None:
+                _maybe_set_tight_layout(_fig)
 
-        return _axes.get_figure()
+            return _axes.get_figure()
 
     def plot_contours(self, parameter_1, parameter_2, target_axes=None,
                       show_grid=True,
@@ -458,77 +458,78 @@ class ContoursProfiler(object):
         :return: figure containing the plot result
         :rtype: `matplotlib.figure.Figure`
         """
-        if target_axes is None:
-            _fig, _gs = self._make_figure_gs(1, 1)
-            _axes = plt.subplot(_gs[0, 0])
-        else:
-            _axes = target_axes
+        with rc_context(kafe2_rc):
+            if target_axes is None:
+                _fig, _gs = self._make_figure_gs(1, 1)
+                _axes = plt.subplot(_gs[0, 0])
+            else:
+                _axes = target_axes
 
-        _par_1_id = list(self._fit.parameter_name_value_dict.keys()).index(parameter_1)
-        _par_2_id = list(self._fit.parameter_name_value_dict.keys()).index(parameter_2)
-        _par_1_formatted_name = self._parameters_formatted_names[_par_1_id]
-        _par_2_formatted_name = self._parameters_formatted_names[_par_2_id]
+            _par_1_id = list(self._fit.parameter_name_value_dict.keys()).index(parameter_1)
+            _par_2_id = list(self._fit.parameter_name_value_dict.keys()).index(parameter_2)
+            _par_1_formatted_name = self._parameters_formatted_names[_par_1_id]
+            _par_2_formatted_name = self._parameters_formatted_names[_par_2_id]
 
-        if naming_convention.lower() == 'cl':
-            _use_cl_in_label = True
-        elif naming_convention.lower() == 'sigma':
-            _use_cl_in_label = False
-        else:
-            raise ContoursProfilerException("Unknown contour naming convention '%s'! "
-                                            "Must be one of: ('cl', 'sigma')"
-                                            % (naming_convention,))
+            if naming_convention.lower() == 'cl':
+                _use_cl_in_label = True
+            elif naming_convention.lower() == 'sigma':
+                _use_cl_in_label = False
+            else:
+                raise ContoursProfilerException("Unknown contour naming convention '%s'! "
+                                                "Must be one of: ('cl', 'sigma')"
+                                                % (naming_convention,))
 
-        _cl_contour_pairs = self.get_contours(parameter_1, parameter_2)
+            _cl_contour_pairs = self.get_contours(parameter_1, parameter_2)
 
-        _contour_artists = []
-        for _cl_contour_pair, _prop_cycler in zip(_cl_contour_pairs, rcParams["axes.prop_cycle"]):
-            _cl, _contour_xy = _cl_contour_pair
-            _artists = []
-            if _contour_xy is not None:
-                _label = "%s contour" % (_cl.cl_latex_string if _use_cl_in_label else _cl.sigma_latex_string)
-                _artists = self._plot_contour_xy(_axes, _contour_xy, label=_label,
-                                                 contour_color=_prop_cycler["color"])
-            _contour_artists += _artists
+            _contour_artists = []
+            for _cl_contour_pair, _prop_cycler in zip(_cl_contour_pairs, rcParams["axes.prop_cycle"]):
+                _cl, _contour_xy = _cl_contour_pair
+                _artists = []
+                if _contour_xy is not None:
+                    _label = "%s contour" % (_cl.cl_latex_string if _use_cl_in_label else _cl.sigma_latex_string)
+                    _artists = self._plot_contour_xy(_axes, _contour_xy, label=_label,
+                                                     contour_color=_prop_cycler["color"])
+                _contour_artists += _artists
 
-        _par_1_val = self._fit.parameter_name_value_dict[parameter_1]
-        _par_2_val = self._fit.parameter_name_value_dict[parameter_2]
-        _par_1_err = self._fit.parameter_errors[_par_1_id]
-        _par_2_err = self._fit.parameter_errors[_par_2_id]
+            _par_1_val = self._fit.parameter_name_value_dict[parameter_1]
+            _par_2_val = self._fit.parameter_name_value_dict[parameter_2]
+            _par_1_err = self._fit.parameter_errors[_par_1_id]
+            _par_2_err = self._fit.parameter_errors[_par_2_id]
 
-        _minimum_artist = None
-        if show_fit_minimum:
-            _minimum_artist = self._plot_minimum(_axes, x=_par_1_val, y=_par_2_val,
-                                                 xerr=_par_1_err, yerr=_par_2_err,
-                                                 label="fit minimum")
+            _minimum_artist = None
+            if show_fit_minimum:
+                _minimum_artist = self._plot_minimum(_axes, x=_par_1_val, y=_par_2_val,
+                                                     xerr=_par_1_err, yerr=_par_2_err,
+                                                     label="fit minimum")
 
-        _axes.set_xlabel(_par_1_formatted_name)
-        _axes.set_ylabel(_par_2_formatted_name)
+            _axes.set_xlabel(_par_1_formatted_name)
+            _axes.set_ylabel(_par_2_formatted_name)
 
-        if show_legend:
-            _axes.legend(loc='best')
+            if show_legend:
+                _axes.legend(loc='best')
 
-        if show_grid:
-            _axes.grid('on')
+            if show_grid:
+                _axes.grid('on')
 
-        if show_ticks:
-            _loc_x = SigmaLocator(central_value=_par_1_val, sigma=_par_1_err)
-            _loc_y = SigmaLocator(central_value=_par_2_val, sigma=_par_2_err)
-            _axes.xaxis.set_major_locator(_loc_x)
-            _axes.yaxis.set_major_locator(_loc_y)
-            if label_ticks_in_sigma:
-                _form_x = SigmaFormatter(central_value=_par_1_val, sigma=_par_1_err)
-                _form_y = SigmaFormatter(central_value=_par_2_val, sigma=_par_2_err)
-                _axes.xaxis.set_major_formatter(_form_x)
-                _axes.yaxis.set_major_formatter(_form_y)
-        else:
-            _axes.set_xticks([])
-            _axes.set_yticks([])
+            if show_ticks:
+                _loc_x = SigmaLocator(central_value=_par_1_val, sigma=_par_1_err)
+                _loc_y = SigmaLocator(central_value=_par_2_val, sigma=_par_2_err)
+                _axes.xaxis.set_major_locator(_loc_x)
+                _axes.yaxis.set_major_locator(_loc_y)
+                if label_ticks_in_sigma:
+                    _form_x = SigmaFormatter(central_value=_par_1_val, sigma=_par_1_err)
+                    _form_y = SigmaFormatter(central_value=_par_2_val, sigma=_par_2_err)
+                    _axes.xaxis.set_major_formatter(_form_x)
+                    _axes.yaxis.set_major_formatter(_form_y)
+            else:
+                _axes.set_xticks([])
+                _axes.set_yticks([])
 
-        # if own figure created -> set tight layout
-        if target_axes is None:
-            _maybe_set_tight_layout(_fig)
+            # if own figure created -> set tight layout
+            if target_axes is None:
+                _maybe_set_tight_layout(_fig)
 
-        return _axes.get_figure()
+            return _axes.get_figure()
 
     def plot_profiles_contours_matrix(self,
                                       parameters=None,
@@ -571,85 +572,70 @@ class ContoursProfiler(object):
         :return: figure containing the plot result
         :rtype: `matplotlib.figure.Figure`
         """
-        _par_names = parameters
-        if _par_names is None:
-            _par_names = list(self._fit.parameter_name_value_dict.keys())
-        else:
-            # check if there are any unknown parameters
-            _unknown_parameters = set(_par_names) - set(self._fit.parameter_name_value_dict.keys())
-            if _unknown_parameters:
-                raise ContoursProfilerException("Unknown parameters: {}".format(_unknown_parameters))
+        with rc_context(kafe2_rc):
+            _par_names = parameters
+            if _par_names is None:
+                _par_names = list(self._fit.parameter_name_value_dict.keys())
+            else:
+                # check if there are any unknown parameters
+                _unknown_parameters = set(_par_names) - set(self._fit.parameter_name_value_dict.keys())
+                if _unknown_parameters:
+                    raise ContoursProfilerException("Unknown parameters: {}".format(_unknown_parameters))
 
-        # # check if any parameters are fixed and exclude them from the matrix:
-        # # TODO: public interface for querying parameter status
-        # _free_pars = set(self._fit._fitter._fit_pars)
-        # _par_names = [_par for _par in _par_names if _par in _free_pars]
+            # # check if any parameters are fixed and exclude them from the matrix:
+            # # TODO: public interface for querying parameter status
+            # _free_pars = set(self._fit._fitter._fit_pars)
+            # _par_names = [_par for _par in _par_names if _par in _free_pars]
 
-        _npar = len(_par_names)
-        _fig, _gs = self._make_figure_gs(_npar, _npar)
+            _npar = len(_par_names)
+            _fig, _gs = self._make_figure_gs(_npar, _npar)
 
-        _show_spec_options = ('all', 'profiles', 'contours')
+            _show_spec_options = ('all', 'profiles', 'contours')
 
-        if show_grid_for is not None and show_grid_for not in _show_spec_options:
-            raise ContoursProfilerException("Unknown specification '%s' for 'show_grid_for'. "
-                                            "Expected: one of %r" % (show_grid_for, _show_spec_options))
-        if show_ticks_for is not None and show_ticks_for not in _show_spec_options:
-            raise ContoursProfilerException("Unknown specification '%s' for 'show_ticks_for'. "
-                                            "Expected: one of %r" % (show_ticks_for, _show_spec_options))
-        if show_fit_minimum_for is not None and show_fit_minimum_for not in _show_spec_options:
-            raise ContoursProfilerException("Unknown specification '%s' for 'show_fit_minimum_for'. "
-                                            "Expected: one of %r" % (show_fit_minimum_for, _show_spec_options))
+            if show_grid_for is not None and show_grid_for not in _show_spec_options:
+                raise ContoursProfilerException("Unknown specification '%s' for 'show_grid_for'. "
+                                                "Expected: one of %r" % (show_grid_for, _show_spec_options))
+            if show_ticks_for is not None and show_ticks_for not in _show_spec_options:
+                raise ContoursProfilerException("Unknown specification '%s' for 'show_ticks_for'. "
+                                                "Expected: one of %r" % (show_ticks_for, _show_spec_options))
+            if show_fit_minimum_for is not None and show_fit_minimum_for not in _show_spec_options:
+                raise ContoursProfilerException("Unknown specification '%s' for 'show_fit_minimum_for'. "
+                                                "Expected: one of %r" % (show_fit_minimum_for, _show_spec_options))
 
-        # determine which plot elements to show for each subplot type
-        _show_grid_profiles = show_grid_for in ('all', 'profiles')
-        _show_grid_contours = show_grid_for in ('all', 'contours')
-        _show_ticks_profiles = show_ticks_for in ('all', 'profiles')
-        _show_ticks_contours = show_ticks_for in ('all', 'contours')
-        _show_minimum_profiles = show_fit_minimum_for in ('all', 'profiles')
-        _show_minimum_contours = show_fit_minimum_for in ('all', 'contours')
+            # determine which plot elements to show for each subplot type
+            _show_grid_profiles = show_grid_for in ('all', 'profiles')
+            _show_grid_contours = show_grid_for in ('all', 'contours')
+            _show_ticks_profiles = show_ticks_for in ('all', 'profiles')
+            _show_ticks_contours = show_ticks_for in ('all', 'contours')
+            _show_minimum_profiles = show_fit_minimum_for in ('all', 'profiles')
+            _show_minimum_contours = show_fit_minimum_for in ('all', 'contours')
 
-        _all_legend_handles = tuple()
-        _all_legend_labels = tuple()
+            _all_legend_handles = tuple()
+            _all_legend_labels = tuple()
 
-        # draw profiles to subplots on the diagonal
-        _subplots = np.empty((_npar, _npar), dtype=Axes)  # store subplot system in numpy array
-        for row in six.moves.range(_npar):
-            _axes = _subplots[row, row] = _fig.add_subplot(_gs[row, row])
-            self.plot_profile(_par_names[row], target_axes=_axes,
-                              show_parabolic=show_parabolic_profiles,
-                              show_grid=_show_grid_profiles,
-                              show_legend=False,
-                              show_fit_minimum=_show_minimum_profiles,
-                              show_error_span=show_error_span_profiles,
-                              label_ticks_in_sigma=label_ticks_in_sigma,
-                              show_ticks=_show_ticks_profiles)
-
-            if show_legend:
-                _hs, _ls = _axes.get_legend_handles_labels()
-                _all_legend_handles += tuple(_hs)
-                _all_legend_labels += tuple(_ls)
-
-        # draw contours to subplots in the lower (and possibly upper) triangle
-        for row in six.moves.range(_npar):
-            for col in six.moves.range(row):
-                _axes = _subplots[row, col] = _fig.add_subplot(_gs[row, col])
-                self.plot_contours(_par_names[col], _par_names[row],
-                                   target_axes=_axes,
-                                   show_grid=_show_grid_contours,
-                                   show_legend=False,
-                                   show_fit_minimum=_show_minimum_contours,
-                                   show_ticks=_show_ticks_contours,
-                                   label_ticks_in_sigma=label_ticks_in_sigma,
-                                   naming_convention=contour_naming_convention)
+            # draw profiles to subplots on the diagonal
+            _subplots = np.empty((_npar, _npar), dtype=Axes)  # store subplot system in numpy array
+            for row in six.moves.range(_npar):
+                _axes = _subplots[row, row] = _fig.add_subplot(_gs[row, row])
+                self.plot_profile(_par_names[row], target_axes=_axes,
+                                  show_parabolic=show_parabolic_profiles,
+                                  show_grid=_show_grid_profiles,
+                                  show_legend=False,
+                                  show_fit_minimum=_show_minimum_profiles,
+                                  show_error_span=show_error_span_profiles,
+                                  label_ticks_in_sigma=label_ticks_in_sigma,
+                                  show_ticks=_show_ticks_profiles)
 
                 if show_legend:
                     _hs, _ls = _axes.get_legend_handles_labels()
                     _all_legend_handles += tuple(_hs)
                     _all_legend_labels += tuple(_ls)
 
-                if full_matrix:
-                    _axes = _subplots[col, row] = _fig.add_subplot(_gs[col, row])
-                    self.plot_contours(_par_names[row], _par_names[col],
+            # draw contours to subplots in the lower (and possibly upper) triangle
+            for row in six.moves.range(_npar):
+                for col in six.moves.range(row):
+                    _axes = _subplots[row, col] = _fig.add_subplot(_gs[row, col])
+                    self.plot_contours(_par_names[col], _par_names[row],
                                        target_axes=_axes,
                                        show_grid=_show_grid_contours,
                                        show_legend=False,
@@ -658,103 +644,119 @@ class ContoursProfiler(object):
                                        label_ticks_in_sigma=label_ticks_in_sigma,
                                        naming_convention=contour_naming_convention)
 
-        # post-processing: join column x axes and row y axes (where applicable)
-        for i in six.moves.range(_npar):
-            _pf_axes = _subplots[i, i]
+                    if show_legend:
+                        _hs, _ls = _axes.get_legend_handles_labels()
+                        _all_legend_handles += tuple(_hs)
+                        _all_legend_labels += tuple(_ls)
 
-            _ct_axes_col = np.concatenate([_subplots[:i, i], _subplots[i+1:, i]])
-            _ct_axes_col = [_ax for _ax in _ct_axes_col if _ax is not None]
+                    if full_matrix:
+                        _axes = _subplots[col, row] = _fig.add_subplot(_gs[col, row])
+                        self.plot_contours(_par_names[row], _par_names[col],
+                                           target_axes=_axes,
+                                           show_grid=_show_grid_contours,
+                                           show_legend=False,
+                                           show_fit_minimum=_show_minimum_contours,
+                                           show_ticks=_show_ticks_contours,
+                                           label_ticks_in_sigma=label_ticks_in_sigma,
+                                           naming_convention=contour_naming_convention)
 
-            _pf_axes.get_shared_x_axes().join(_pf_axes, *_ct_axes_col)
-            _pf_axes.autoscale()
+            # post-processing: join column x axes and row y axes (where applicable)
+            for i in six.moves.range(_npar):
+                _pf_axes = _subplots[i, i]
 
-            _ct_axes_row = np.concatenate([_subplots[i, :i], _subplots[i, i+1:]])
-            _ct_axes_row = [_ax for _ax in _ct_axes_row if _ax is not None]
-            if len(_ct_axes_row) > 1:
-                _ct_axes_row[0].get_shared_y_axes().join(_ct_axes_row[0], *_ct_axes_row[1:])
-                _ct_axes_row[0].autoscale()
+                _ct_axes_col = np.concatenate([_subplots[:i, i], _subplots[i+1:, i]])
+                _ct_axes_col = [_ax for _ax in _ct_axes_col if _ax is not None]
 
-        # more post-processing: adjust axis and tick labels
-        for row, _row_plots in enumerate(_subplots):
-            for col, _plot in enumerate(_row_plots):
-                # skip empty plots
-                if not _plot:
-                    continue
+                _pf_axes.get_shared_x_axes().join(_pf_axes, *_ct_axes_col)
+                _pf_axes.autoscale()
 
-                _plot.set_xlim(_linear_range_transform(_plot.get_xlim(), factor=1.01))
-                _plot.set_ylim(_linear_range_transform(_plot.get_ylim(), factor=1.01))
+                _ct_axes_row = np.concatenate([_subplots[i, :i], _subplots[i, i+1:]])
+                _ct_axes_row = [_ax for _ax in _ct_axes_row if _ax is not None]
+                if len(_ct_axes_row) > 1:
+                    _ct_axes_row[0].get_shared_y_axes().join(_ct_axes_row[0], *_ct_axes_row[1:])
+                    _ct_axes_row[0].autoscale()
 
-                # adjust y plot range to match x (in sigma)
-                if col != row:
-                    _x_lim = _plot.get_xlim()
-                    _x_min = self._fit.parameter_values[col]
-                    _y_min = self._fit.parameter_values[row]
-                    _y_over_x_err_ratio = self._fit.parameter_errors[row]/self._fit.parameter_errors[col]
-                    _plot.set_ylim((
-                        _y_min + (_x_lim[0] - _x_min)*_y_over_x_err_ratio,
-                        _y_min + (_x_lim[1] - _x_min)*_y_over_x_err_ratio
-                    ))
+            # more post-processing: adjust axis and tick labels
+            for row, _row_plots in enumerate(_subplots):
+                for col, _plot in enumerate(_row_plots):
+                    # skip empty plots
+                    if not _plot:
+                        continue
 
-                # hide tick labels except for outer plots
-                if col != 0 and col != row:
-                    # not leftmost column or profile -> hide y tick and axis labels
-                    _plot.set_ylabel(None)
-                    for _label in _plot.get_yticklabels():
-                        _label.set_visible(False)
-                if row != _npar - 1:
-                    # not bottom row -> hide x tick and axis labels
-                    _plot.set_xlabel(None)
-                    for _label in _plot.get_xticklabels():
-                        _label.set_visible(False)
+                    _plot.set_xlim(_linear_range_transform(_plot.get_xlim(), factor=1.01))
+                    _plot.set_ylim(_linear_range_transform(_plot.get_ylim(), factor=1.01))
 
-                # rotate long x tick labels to avoid overlap
-                if not label_ticks_in_sigma:
-                    for _label in _plot.get_xticklabels():
-                        _label.set_rotation(90)
+                    # adjust y plot range to match x (in sigma)
+                    if col != row:
+                        _x_lim = _plot.get_xlim()
+                        _x_min = self._fit.parameter_values[col]
+                        _y_min = self._fit.parameter_values[row]
+                        _y_over_x_err_ratio = self._fit.parameter_errors[row]/self._fit.parameter_errors[col]
+                        _plot.set_ylim((
+                            _y_min + (_x_lim[0] - _x_min)*_y_over_x_err_ratio,
+                            _y_min + (_x_lim[1] - _x_min)*_y_over_x_err_ratio
+                        ))
 
-        # align x and y axis labels
-        try:
-            _fig.align_ylabels(_subplots[:, 0])
-            _fig.align_xlabels(_subplots[_npar - 1, :])
-        except AttributeError:
-            # API call not supported by matplotlib version -> ignore
-            pass
+                    # hide tick labels except for outer plots
+                    if col != 0 and col != row:
+                        # not leftmost column or profile -> hide y tick and axis labels
+                        _plot.set_ylabel(None)
+                        for _label in _plot.get_yticklabels():
+                            _label.set_visible(False)
+                    if row != _npar - 1:
+                        # not bottom row -> hide x tick and axis labels
+                        _plot.set_xlabel(None)
+                        for _label in _plot.get_xticklabels():
+                            _label.set_visible(False)
 
-        if show_legend:
-            # suppress multiple entries for the same label
-            _hs = []
-            _ls = []
-            _seen_labels = set()
-            for _h, _l in zip(_all_legend_handles, _all_legend_labels):
-                if _l not in _seen_labels:
-                    _hs.append(_h)
-                    _ls.append(_l)
-                    _seen_labels.add(_l)
+                    # rotate long x tick labels to avoid overlap
+                    if not label_ticks_in_sigma:
+                        for _label in _plot.get_xticklabels():
+                            _label.set_rotation(90)
 
-            if not full_matrix:
-                # attach legend to invisible Axes in top right corner
-                _ax_for_legend = _fig.add_subplot(_gs[0, _npar - 1])
-                _ax_for_legend.set_visible(False)
-                _leg = _fig.legend(
-                    _hs, _ls,
-                    loc='upper right',
-                    borderpad=0,
-                    borderaxespad=0
-                )
-                # patch legend bbox to correspond to axes
-                _leg._bbox_to_anchor = _ax_for_legend.bbox
-            else:
-                # place legend outside regular Axes in top right corner
-                _ax_for_legend = _subplots[0, _npar - 1]
-                _leg = _ax_for_legend.legend(
-                    _hs, _ls,
-                    loc='upper left',
-                    bbox_to_anchor=(1.1, 0, 1, 1),
-                    borderpad=0,
-                    borderaxespad=0
-                )
+            # align x and y axis labels
+            try:
+                _fig.align_ylabels(_subplots[:, 0])
+                _fig.align_xlabels(_subplots[_npar - 1, :])
+            except AttributeError:
+                # API call not supported by matplotlib version -> ignore
+                pass
 
-        # old versions cause problems with 'tight_layout'
-        _maybe_set_tight_layout(_fig)
+            if show_legend:
+                # suppress multiple entries for the same label
+                _hs = []
+                _ls = []
+                _seen_labels = set()
+                for _h, _l in zip(_all_legend_handles, _all_legend_labels):
+                    if _l not in _seen_labels:
+                        _hs.append(_h)
+                        _ls.append(_l)
+                        _seen_labels.add(_l)
 
-        return _fig
+                if not full_matrix:
+                    # attach legend to invisible Axes in top right corner
+                    _ax_for_legend = _fig.add_subplot(_gs[0, _npar - 1])
+                    _ax_for_legend.set_visible(False)
+                    _leg = _fig.legend(
+                        _hs, _ls,
+                        loc='upper right',
+                        borderpad=0,
+                        borderaxespad=0
+                    )
+                    # patch legend bbox to correspond to axes
+                    _leg._bbox_to_anchor = _ax_for_legend.bbox
+                else:
+                    # place legend outside regular Axes in top right corner
+                    _ax_for_legend = _subplots[0, _npar - 1]
+                    _leg = _ax_for_legend.legend(
+                        _hs, _ls,
+                        loc='upper left',
+                        bbox_to_anchor=(1.1, 0, 1, 1),
+                        borderpad=0,
+                        borderaxespad=0
+                    )
+
+            # old versions cause problems with 'tight_layout'
+            _maybe_set_tight_layout(_fig)
+
+            return _fig

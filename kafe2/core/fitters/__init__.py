@@ -1,29 +1,13 @@
 import abc
 import six
-#import pyximport
-
-#pyximport.install()
-
-from ...config import kc
-
-# from .nexus_cython import Nexus as NexusCython
-#from simple_fitter import SimpleFitter
-
-
-
-
-__all__ = ['get_fitter']
-
-AVAILABLE_FITTERS = dict()
-
-
 from .nexus import Nexus
 from .nexus_fitter import NexusFitter, NexusFitterException
-__all__ += ['Nexus', 'NexusFitter', 'NexusFitterException']
+from ...config import kc
 
-AVAILABLE_FITTERS.update({
-    'nexus_fitter': NexusFitter,
-})
+__all__ = ['get_fitter', 'Nexus', 'NexusFitter', 'NexusFitterException']
+
+AVAILABLE_FITTERS = {'nexus_fitter': NexusFitter}
+
 
 # try:
 #     from .simple_fitter import SimpleFitter, SimpleFitterException
@@ -58,9 +42,10 @@ class FitterBase(object):
     Purely abstract class. Defines the minimal interface required by all specializations.
     """
 
-    @abc.abstractproperty
-    def do_fit(self): pass
-
+    @abc.abstractmethod
+    def do_fit(self):
+        pass
 
     @abc.abstractmethod
-    def _fcn_wrapper(self): pass
+    def _fcn_wrapper(self):
+        pass

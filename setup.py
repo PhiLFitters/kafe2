@@ -15,8 +15,7 @@ def read_local(filename):
     _path = os.path.join(os.path.dirname(__file__), filename)
     if os.path.exists(_path):
         return open(_path).read()
-    else:
-        return ""
+    return ""
 
 def get_version():
     '''get kafe2 version without importing the whole package'''

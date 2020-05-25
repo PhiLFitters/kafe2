@@ -1,37 +1,42 @@
 import sys
+import warnings
+from collections import OrderedDict
 from copy import copy
+
 import numpy as np
 
+from .cost import MultiCostFunction, SharedChi2CostFunction
 from .._base import FitBase
 from ...core import Nexus, NexusFitter
 from ...core.error import SimpleGaussianError, MatrixGaussianError
 from ...core.fitters.nexus import Alias, Function, Array
 from ...tools import random_alphanumeric
-from .cost import MultiCostFunction, SharedChi2CostFunction
-from collections import OrderedDict
+
+__all__ = ['MultiFit']
 
 
 class MultiFit(FitBase):
+    """A MultiFit combines several regular fits into a combined fit object.
+    Calling do_fit on the MultiFit will result in a numerical minimization of the sum of the cost functions of the
+    individual fits.
+    Parameters with the same name will be unified: their value will be the same across all individual fits.
     """
-    A MultiFit combines several regular fits into a combined fit object. Calling do_fit on the
-    MultiFit will result in a numerical minimization of the sum of the cost functions of the
-    individual fits. Parameters with the same name will be unified: their value will be the same
-    across all individual fits.
-    """
+
     def __init__(self, fit_list, minimizer=None, minimizer_kwargs=None):
         """
-        :param fit_list: the individual fits from which to create the MultiFit.
-        :type fit_list: iterable of FitBase
-        :param minimizer: the minimizer to use for fitting.
-        :type minimizer: None, "iminuit", "tminuit", or "scipy".
-        :param minimizer_kwargs: dictionary with kwargs for the minimizer.
+        :param fit_list: List or Iterable of the individual fits from which to create the MultiFit.
+        :type fit_list: collections.Iterable[FitBase]
+        :param minimizer: The minimizer to use for fitting. Either ``'iminuit'``, ``'tminuit'``, ``'scipy'`` or
+            ``None``.
+        :type minimizer: str or None
+        :param minimizer_kwargs: Dictionary with kwargs for the minimizer.
         :type minimizer_kwargs: dict
+
+        :raises TypeError: If **fit_list** is not iterable.
         """
-        self._fits = fit_list
-        try:
-            iter(self._fits)
-        except TypeError:
-            self._fits = [self._fits]
+        super(MultiFit, self).__init__()
+        # Cast Iterable to List, so that indexing works. Indexing is needed for some methods.
+        self._fits = list(fit_list)  # will raise TypeError if fit_list is not iterable
 
         self._minimizer = minimizer
         self._minimizer_kwargs = minimizer_kwargs
@@ -42,7 +47,6 @@ class MultiFit(FitBase):
         self._initialize_fitter()
 
         self._fit_param_constraints = []
-        self._loaded_result_dict = None
 
         for _fit in self._fits:
             _fit._init_nexus_callbacks.append(self._init_nexus)
@@ -58,6 +62,16 @@ class MultiFit(FitBase):
                     _combined_argument_formatters.append(_argument_formatter)
                     _included_argument_names.add(_argument_formatter.name)
         return _combined_argument_formatters
+
+    def _get_model_function_parameter_formatters(self):
+        _included_parameter_names = set()
+        _combined_parameter_formatters = []
+        for _fit in self._fits:
+            for _parameter_formatter in _fit._get_model_function_parameter_formatters():
+                if _parameter_formatter.name not in _included_parameter_names:
+                    _combined_parameter_formatters.append(_parameter_formatter)
+                    _included_parameter_names.add(_parameter_formatter.name)
+        return _combined_parameter_formatters
 
     def _invalidate_total_error_cache(self):
         pass
@@ -172,7 +186,7 @@ class MultiFit(FitBase):
                         def _get_derivatives_func(fit):
                             return lambda: fit._param_model.eval_model_function_derivative_by_x(
                                 model_parameters=fit.poi_values,
-                                dx=0.01*self._min_x_error
+                                dx=0.01 * self._min_x_error
                             )
 
                         self._nexus.add(
@@ -197,7 +211,8 @@ class MultiFit(FitBase):
                     _cost_functions.append(_fit_i._cost_function)
                     _cost_names.append('cost%s' % _i)
 
-            def _combine_1d(*single_fit_properties):
+            # Combines 1-dimensional properties by concatenating them.
+            def _combine_1d_property(*single_fit_properties):
                 _combined_property = np.zeros(shape=_data_indices[-1])
                 for _j, (_single_fit_property, _chi2_index) in enumerate(
                         zip(single_fit_properties, _chi2_indices)):
@@ -206,7 +221,10 @@ class MultiFit(FitBase):
                     _combined_property[_lower:_upper] = _single_fit_property
                 return _combined_property
 
-            def _combine_2d(axis_name, *single_fit_properties):
+            # Combines cov mats of single fits.
+            # Shared errors are not added to the main diagonal blocks because they have already been
+            # added to the individual fits.
+            def _combine_cov_mats(axis_name, *single_fit_properties):
                 _combined_property = np.zeros(shape=(_data_indices[-1], _data_indices[-1]))
                 for _j, (_single_fit_property, _chi2_index) in enumerate(
                         zip(single_fit_properties, _chi2_indices)):
@@ -219,33 +237,29 @@ class MultiFit(FitBase):
                         for _j in range(len(_error.fit_indices)):
                             _lower_1 = _data_indices[_j]
                             _upper_1 = _data_indices[_j + 1]
-                            _combined_property[
-                                    _lower_1:_upper_1, _lower_1:_upper_1] += _error.cov_mat
                             for _k in range(_j):
                                 _lower_2 = _data_indices[_k]
                                 _upper_2 = _data_indices[_k + 1]
-                                _combined_property[
-                                        _lower_1:_upper_1, _lower_2:_upper_2] += _error.cov_mat
-                                _combined_property[
-                                        _lower_2:_upper_2, _lower_1:_upper_1] += _error.cov_mat
+                                _combined_property[_lower_1:_upper_1, _lower_2:_upper_2] += _error.cov_mat
+                                _combined_property[_lower_2:_upper_2, _lower_1:_upper_1] += _error.cov_mat
                 return _combined_property
 
             if _has_shared_x_error:
                 self._nexus.add_function(
-                    func=lambda *p: _combine_2d('x', *p),
+                    func=lambda *p: _combine_cov_mats('x', *p),
                     func_name='x_cov_mat', par_names=_x_cov_mat_names, add_children=False)
                 self._nexus.add_function(
-                    func=_combine_1d, func_name='derivatives', par_names=_derivative_names,
+                    func=_combine_1d_property, func_name='derivatives', par_names=_derivative_names,
                     add_children=False)
 
             self._nexus.add_function(
-                func=_combine_1d, func_name='y_data', par_names=_y_data_names, add_children=False)
+                func=_combine_1d_property, func_name='y_data', par_names=_y_data_names, add_children=False)
             self._nexus.add_alias(name='data', alias_for='y_data')
             self._nexus.add_function(
-                func=_combine_1d, func_name='y_model', par_names=_y_model_names, add_children=False)
+                func=_combine_1d_property, func_name='y_model', par_names=_y_model_names, add_children=False)
             self._nexus.add_alias(name='model', alias_for='y_model')
             self._nexus.add_function(
-                func=lambda *p: _combine_2d('y', *p),
+                func=lambda *p: _combine_cov_mats('y', *p),
                 func_name='y_cov_mat', par_names=_y_cov_mat_names, add_children=False)
 
             if _has_shared_x_error:
@@ -296,11 +310,6 @@ class MultiFit(FitBase):
                     "axis='x' is incompatible with fit %s because it is an IndexedFit!")
             if self._fits[_fit_index].data_size != _data_size_0:
                 raise ValueError("Fit %s data_size not the same as data_size of Fit 0!")
-        if name in self._shared_error_dicts:
-            raise ValueError("Error with name=%s already exists!" % name)
-        name = random_alphanumeric(8)
-        while name in self._shared_error_dicts:
-            name = random_alphanumeric(8)
 
         if error_object.relative:
             if not reference == 'data' or reference == 'model':
@@ -344,9 +353,34 @@ class MultiFit(FitBase):
                     self._min_x_error, _min_of_new_error
                 )
 
+        if name in self._shared_error_dicts:
+            raise ValueError("Error with name=%s already exists!" % name)
+        if name is None:
+            _name_is_unique = False
+            while not _name_is_unique:
+                name = random_alphanumeric(8)
+                if name in self._shared_error_dicts:
+                    continue
+                for _fit_index in error_object.fit_indices:
+                    _fit = self._fits[_fit_index]
+                    if name in _fit.data_container._error_dicts:
+                        continue
+                    if name in _fit._param_model._error_dicts:
+                        continue
+                _name_is_unique = True
+
         _error_dict = dict(err=error_object, enabled=True, axis=axis, reference_name=reference)
         self._shared_error_dicts[name] = _error_dict
-        self._init_nexus()
+        for _fit_index in error_object.fit_indices:
+            _fit = self._fits[_fit_index]
+            if reference == "data":
+                _target = _fit.data_container
+            elif reference == "model":
+                _target = _fit._param_model
+            else:
+                raise ValueError()
+            _target._add_error_object(name=name, error_object=error_object, axis=axis)
+        self._on_error_change()
         return name
 
     def _set_new_data(self, new_data):
@@ -359,44 +393,72 @@ class MultiFit(FitBase):
 
     @property
     def data(self):
-        """list of the data of the individual fits."""
+        """List of the data of the individual fits."""
         return [_fit.data for _fit in self._fits]
+
+    @data.setter
+    def data(self, new_data):
+        raise NotImplementedError("Use data setters for individual fits instead.")
+
+    @property
+    def data_container(self):
+        """List of the data containers of the individual fits."""
+        return [_fit.data_container for _fit in self._fits]
 
     @property
     def data_size(self):
-        """combined size of the data containers of the individual fits"""
+        """Combined size of the data containers of the individual fits.
+
+        :rtype: int
+        """
         return np.sum([_fit.data_size for _fit in self._fits])
 
     @property
     def has_data_errors(self):
-        """``True`` if at least one uncertainty source is defined for the data of any of the
-        individual fits."""
+        """``True`` if at least one uncertainty source is defined for the data of any of the individual fits.
+
+        :rtype: bool
+        """
         return np.any([_fit.has_data_errors for _fit in self._fits])
 
     @property
     def has_model_errors(self):
-        """``True`` if at least one uncertainty source is defined for the model of any of the
-        individual fits"""
+        """``True`` if at least one uncertainty source is defined for the model of any of the individual fits.
+
+        :rtype: bool
+        """
         return np.any([_fit.has_model_errors for _fit in self._fits])
 
     @property
     def model(self):
-        """list of the model values of the individual fits."""
+        """List of the model values of the individual fits."""
         return [_fit.model for _fit in self._fits]
 
     @property
     def model_count(self):
-        """the number of model functions contained in the fit, 1 by default"""
+        """The number of model functions contained in the multifit. In most cases one for each singular fit.
+
+        :rtype: int
+        """
         return np.sum([_fit.model_count for _fit in self._fits])
 
     @property
+    def model_label(self):
+        """List of model labels for each singular fit."""
+        return [_fit.model_label for _fit in self._fits]
+
+    @model_label.setter
+    def model_label(self, label):
+        raise NotImplementedError("Use model_label setters for individual fits instead.")
+
+    @property
     def fits(self):
-        """the iterable of individual fits that the MultiFit is based on"""
+        """List of individual fits on which the MultiFit is based on."""
         return copy(self._fits)  # shallow copy
 
     @property
     def asymmetric_parameter_errors(self):
-        """the current asymmetric parameter uncertainties"""
+        """The current asymmetric parameter uncertainties."""
         _asymm_par_errs = super(MultiFit, self).asymmetric_parameter_errors
         self._update_singular_fits()
         return _asymm_par_errs
@@ -405,39 +467,34 @@ class MultiFit(FitBase):
 
     def add_matrix_error(self, err_matrix, matrix_type, fits, axis=None, name=None, err_val=None,
                          relative=False, reference='data', **kwargs):
-        """
-        Add a matrix uncertainty source for use in the fit.
-        Returns an error id which uniquely identifies the created error source.
+        """Add a matrix uncertainty source for use in the fit.
 
-        :param err_matrix: covariance or correlation matrix
-        :param matrix_type: one of ``'covariance'``/``'cov'`` or ``'correlation'``/``'cor'``
+        :param err_matrix: Covariance or correlation matrix.
+        :param matrix_type: One of ``'covariance'``/``'cov'`` or ``'correlation'``/``'cor'``.
         :type matrix_type: str
-        :param fits: the indices of the fits to add the error. If "all", adds the error to all fits.
-        :type fits: iterable of int or ``'all'``.
-        :param axis: axis of the individual fits to add the error to. ``y``/``1`` errors are treated
-        as regular errors for IndexedFits.
+        :param fits: The indices of the fits to add the error. If ``'all'``, the error is added to all fits.
+        :type fits: int or collections.Iterable[int] or str
+        :param axis: Axis of the individual fits to add the error to. ``y``/``1`` errors are treated as regular errors
+                     for :py:class:`~kafe2.fit.IndexedFit`.
         :type axis: int or str
-        :param name: unique name for this uncertainty source. If ``None``, the name
-                     of the error source will be set to a random alphanumeric string.
-        :type name: str or ``None``
-        :param err_val: the pointwise uncertainties (mandatory if only a correlation matrix is
-        given)
-        :type err_val: iterable of float
-        :param relative: if ``True``, the covariance matrix and/or **err_val** will be interpreted
-        as a *relative* uncertainty
+        :param name: Unique name for this uncertainty source. If ``None``, the name of the error source will be set to a
+                     random alphanumeric string.
+        :type name: str or None
+        :param err_val: The pointwise uncertainties (mandatory if only a correlation matrix is given).
+        :type err_val: collections.Iterable[float]
+        :param relative: If ``True``, the covariance matrix and/or **err_val** will be interpreted as a *relative*
+                         uncertainty.
         :type relative: bool
-        :param reference: which reference values to use when calculating absolute errors from
-        relative errors
-        :type reference: 'data' or 'model'
-        :return: error id
+        :param reference: Either ``'data'`` or ``'model'``. Specifies which reference values to use when calculating
+                          absolute errors from relative errors.
+        :type reference: str
+        :return: An error id which uniquely identifies the created error source.
         :rtype: str
         """
         # TODO relative errors
         if isinstance(fits, int):
-            self._fits[fits].add_matrix_error(
-                err_matrix=err_matrix, matrix_type=matrix_type, name=name, err_val=err_val,
-                axis=axis, reference=reference, relative=relative, **kwargs
-            )
+            self._fits[fits].add_matrix_error(err_matrix=err_matrix, matrix_type=matrix_type, axis=axis, name=name,
+                                              err_val=err_val, relative=relative, reference=reference, **kwargs)
         else:
             if fits == 'all':
                 fits = list(range(len(self._fits)))
@@ -448,34 +505,31 @@ class MultiFit(FitBase):
             return self._add_error_object(error_object=_matrix_error, reference=reference,
                                           name=name, axis=axis)
 
-    def add_simple_error(
-            self, err_val, fits, axis=None, name=None, correlation=0, relative=False,
-            reference='data', **kwargs):
-        """
-        Add a simple uncertainty source to the fit.
-        Returns an error id which uniquely identifies the created error source.
+    def add_error(self, err_val, fits, axis=None, name=None, correlation=0, relative=False, reference='data', **kwargs):
+        """Add an uncertainty source to the fit.
 
-        :param err_val: pointwise uncertainty/uncertainties for all data points
-        :type err_val: float or iterable of float
-        :param fits: the indices of the fits to add the error. If "all", adds the error to all fits.
-        :type fits: iterable of int or ``'all'``.
-        :param axis: axis of the individual fits to add the error to. ``y``/``1`` errors are treated
-        as regular errors for IndexedFits.
+        :param err_val: Pointwise uncertainty/uncertainties for all data points.
+        :type err_val: float or collections.Iterable[float]
+        :param fits: The indices of the fits to add the error. If ``'all'``, the error is added to all fits.
+        :type fits: int or collections.Iterable[int] or str
+        :param axis: Axis of the individual fits to add the error to. ``y``/``1`` errors are treated as regular errors
+                     for :py:class:`~kafe2.fit.IndexedFit`.
         :type axis: int or str
-        :param name: unique name for this uncertainty source. If ``None``, the name
-                     of the error source will be set to a random alphanumeric string.
-        :type name: str or ``None``
-        :param correlation: correlation coefficient between any two distinct data points
+        :param name: Unique name for this uncertainty source. If ``None``, the name of the error source will be set to a
+                     random alphanumeric string.
+        :type name: str or None
+        :param correlation: Correlation coefficient between any two distinct data points.
         :type correlation: float
-        :param relative: if ``True``, **err_val** will be interpreted as a *relative* uncertainty
+        :param relative: If ``True``, **err_val** will be interpreted as a *relative* uncertainty.
         :type relative: bool
-        :param reference: which reference values to use when calculating absolute errors from relative errors
-        :type reference: 'data' or 'model'
-        :return: error id
+        :param reference: Either ``'data'`` or ``'model'``. Specifies which reference values to use when calculating
+                          absolute errors from relative errors.
+        :type reference: str
+        :return: An error id which uniquely identifies the created error source.
         :rtype: str
         """
         if isinstance(fits, int):
-            self._fits[fits].add_simple_error(
+            self._fits[fits].add_error(
                 err_val=err_val, name=name, correlation=correlation, relative=relative,
                 axis=axis, reference=reference, **kwargs
             )
@@ -497,8 +551,13 @@ class MultiFit(FitBase):
                                           name=name, axis=axis)
 
     def assign_model_function_expression(self, expression_format_string, fit_index=None):
-        """Assign a plain-text-formatted expression string to the model function of one of the
-        individual fits."""
+        """Assign a plain-text-formatted expression string to the model function of one of the individual fits.
+
+        :param expression_format_string: The model function expression.
+        :type expression_format_string: str
+        :param fit_index: The index specifying the singular fit. If ``None``, all model functions will be changed.
+        :type fit_index: int or None
+        """
         if fit_index is None:
             for _fit in self._fits:
                 _fit.assign_model_function_expression(
@@ -508,8 +567,13 @@ class MultiFit(FitBase):
                 expression_format_string=expression_format_string)
 
     def assign_model_function_latex_name(self, latex_name, fit_index=None):
-        """Assign a LaTeX-formatted string to be the model function name of one of the
-        individual fits."""
+        """Assign a LaTeX-formatted string to be the model function name of one of the individual fits.
+
+        :param latex_name: The LaTeX model function name.
+        :type latex_name: str
+        :param fit_index: The index specifying the singular fit. If ``None``, all model functions will be changed.
+        :type fit_index: int or None
+        """
         if fit_index is None:
             for _fit in self._fits:
                 _fit.assign_model_function_latex_name(latex_name=latex_name)
@@ -517,8 +581,15 @@ class MultiFit(FitBase):
             self._fits[fit_index].assign_model_function_latex_name(latex_name=latex_name)
 
     def assign_model_function_latex_expression(self, latex_expression_format_string, fit_index=None):
-        """Assign a LaTeX-formatted expression string to the model function of one of the individual
-        fits."""
+        """Assign a LaTeX-formatted expression string to the model function of one of the individual fits.
+        Elements like ``'{par_name}'`` will be replaced automatically with the corresponding LaTeX names for the
+        given parameter. These can be set with :py:meth:`~assign_parameter_latex_names`.
+
+        :param latex_expression_format_string: The LaTeX model function expression.
+        :type latex_expression_format_string: str
+        :param fit_index: The index specifying the singular fit. If ``None``, all model functions will be changed.
+        :type fit_index: int or None
+        """
         if fit_index is None:
             for _fit in self._fits:
                 _fit.assign_model_function_latex_expression(
@@ -528,32 +599,82 @@ class MultiFit(FitBase):
                 latex_expression_format_string=latex_expression_format_string)
 
     def assign_parameter_latex_names(self, **par_latex_names_dict):
-        for _fit in self._fits:
-            _fit.assign_parameter_latex_names(**par_latex_names_dict)
+        _keys = list(par_latex_names_dict.keys())
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message="Could not assign all latex names.*")
+            for _fit in self._fits:
+                _fit.assign_parameter_latex_names(**par_latex_names_dict)
+                for _arg_formatter in _fit._get_model_function_argument_formatters():
+                    try:
+                        _keys.remove(_arg_formatter.name)
+                    except ValueError:
+                        pass
+        if _keys:
+            warnings.warn(
+                "Could not assign all parameter latex names to single fits. Leftover: {}".format(
+                    _keys))
 
     def disable_error(self, err_id):
-        """
-        Temporarily disable an uncertainty source so that it doesn't count towards calculating the
-        total uncertainty.
-
-        :param err_id: error id
-        :type err_id: str
-        """
         for _fit in self._fits:
             _fit.disable_error(err_id=err_id)
 
-    def do_fit(self):
-        """
-        Perform the minimization of the cost function.
-        """
+    def fix_parameter(self, name, value=None):
+        self._fitter.fix_parameter(name=name, value=value)
+        # get fixed value before setting it in the individual fits
+        _val = self._fitter.fixed_parameters[name]
+        for fit in self._fits:
+            if name not in fit.parameter_names:
+                continue  # skip if sub fit is not dependent on the given par
+            fit.fix_parameter(name, _val)  # default values might not have been overwritten, use _val
+
+    def release_parameter(self, name):
+        self._fitter.release_parameter(name)
+        for fit in self._fits:  # update formatters of individual fits
+            if name not in fit.parameter_names:
+                continue  # skip if sub fit is not dependent on the given par
+            fit.release_parameter(name)
+
+    def do_fit(self, asymmetric_parameter_errors=False):
         for _i, _fit_i in enumerate(self._fits):
-            if _fit_i._cost_function.needs_errors and not _fit_i._data_container.has_errors:
+            if _fit_i._cost_function.needs_errors and not _fit_i.data_container.has_errors:
                 raise self.EXCEPTION_TYPE('No data errors defined for fit %s' % _i)
         self._fitter.do_fit()
         self._update_singular_fits()
         self._loaded_result_dict = None
+        return self.get_result_dict(asymmetric_parameter_errors=asymmetric_parameter_errors)
 
     def get_matching_errors(self, fit_index=None, matching_criteria=None, matching_type='equal'):
+        """Return a list of uncertainty objects fulfilling the specified matching criteria.
+
+        Valid keys for **matching_criteria**:
+            * ``name`` (the unique error name)
+            * ``type`` (either ``'simple'`` or ``'matrix'``)
+            * ``correlated`` (bool, only matches simple errors!)
+            * ``reference`` (either ``'model'`` or ``'data'``)
+
+        .. note::
+            The error objects contained in the dictionary are not copies, but the original error objects.
+            Modifying them is possible, but not recommended.
+            If you do modify any of them, the changes will not be reflected in the total error calculation until the
+            error cache is cleared. This can be done by calling the private dataset method
+            :py:meth:`~kafe2.fit._base.DataContainerBase._clear_total_error_cache`.
+
+        :param fit_index: Index for which fit the method should be executed. If ``None`` the function will return the
+                          matched errors for all singular fits.
+        :type fit_index: int or None
+        :param matching_criteria: Key-value pairs specifying matching criteria. The resulting error array will only
+                                  contain error objects matching *all* provided criteria.
+                                  If ``None``, all error objects are returned.
+        :type matching_criteria: dict or None
+        :param matching_type: How to perform the matching.
+                              If ``'equal'``, the value in ``matching_criteria`` is checked for equality against the
+                              stored value.
+                              If ``'regex'``, the value in ``matching_criteria`` is interpreted as a regular expression
+                              and is matched against the stored value.
+        :type matching_type: str
+        :return: Dict mapping error name to :py:obj:`~kafe2.core.error.GaussianErrorBase`-derived error objects.
+        :rtype: dict[str, kafe2.core.error.GaussianErrorBase]
+        """
         if fit_index is None:
             _combined_matching_errors = dict()
             for _fit in self._fits:
@@ -564,24 +685,22 @@ class MultiFit(FitBase):
                     assert _key not in _combined_matching_errors
                     _combined_matching_errors[_key] = _matching_errors[_key]
             return _combined_matching_errors
-        else:
-            return self._fits[fit_index].get_matching_errors(
-                matching_criteria=matching_criteria, matching_type=matching_type)
+        return self._fits[fit_index].get_matching_errors(matching_criteria=matching_criteria,
+                                                         matching_type=matching_type)
 
     def report(self, output_stream=sys.stdout, show_data=True, show_model=True, show_fit_results=True,
                asymmetric_parameter_errors=False):
-        """
-        Print a summary of the fit state and/or results.
+        """Print a summary for each fit state and/or the multifit results.
 
-        :param output_stream: the output stream to which the report should be printed
-        :type output_stream: TextIOBase
-        :param show_data: if ``True``, print out information about the data
+        :param output_stream: The output stream to which the report should be printed.
+        :type output_stream: io.TextIOBase
+        :param show_data: If ``True``, print out information about the data for each fit.
         :type show_data: bool
-        :param show_model: if ``True``, print out information about the parametric model
+        :param show_model: If ``True``, print out information about the parametric model for each fit.
         :type show_model: bool
-        :param show_fit_results: if ``True``, print out information about the fit results
+        :param show_fit_results: If ``True``, print out information about the combined fit results.
         :type show_fit_results: bool
-        :param asymmetric_parameter_errors: if ``True``, use two different parameter errors for up/down directions
+        :param asymmetric_parameter_errors: If ``True``, use two different parameter errors for up/down directions.
         :type asymmetric_parameter_errors: bool
         """
         _indent = ' ' * 4

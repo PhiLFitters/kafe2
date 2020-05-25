@@ -4,13 +4,14 @@ from .._base import DReprError
 from .._yaml_base import YamlWriterMixin, YamlReaderMixin, YamlReaderException
 from ._base import FitDReprBase
 from .. import _AVAILABLE_REPRESENTATIONS
-from ....fit import IndexedFit, HistFit, XYFit, XYMultiFit
+from ....fit import IndexedFit, HistFit, UnbinnedFit, XYFit
 from ..container.yaml_drepr import DataContainerYamlReader, DataContainerYamlWriter
 from ..model.yaml_drepr import ParametricModelYamlReader, ParametricModelYamlWriter
 from ..constraint.yaml_drepr import ConstraintYamlReader, ConstraintYamlWriter
 from ....tools import get_compact_representation
 
 __all__ = ['FitYamlWriter', 'FitYamlReader']
+
 
 class FitYamlWriter(YamlWriterMixin, FitDReprBase):
 
@@ -44,7 +45,7 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
 
         if _did_fit:
             _cost = self._kafe_object.cost_function_value
-            _ndf = self._kafe_object._cost_function.ndf
+            _ndf = self._kafe_object.ndf
             _round_cost_sig = max(2, int(-np.floor(np.log(_cost)/np.log(10))) + 1)
             _rounded_cost = round(_cost, _round_cost_sig)
             _preface_comment += "# Cost: %s\n" % _rounded_cost
@@ -77,7 +78,7 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
             raise DReprError("Fit type unknown or not supported: %s" % fit.__class__)
         _yaml_doc['type'] = _type
 
-        _yaml_doc['dataset'] = DataContainerYamlWriter._make_representation(fit._data_container)
+        _yaml_doc['dataset'] = DataContainerYamlWriter._make_representation(fit.data_container)
         _yaml_doc['parametric_model'] = ParametricModelYamlWriter._make_representation(fit._param_model)
 
         #TODO cost function
@@ -87,17 +88,23 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
 
         _yaml_doc['parameter_constraints'] = [ConstraintYamlWriter._make_representation(_parameter_constraint)
                                               for _parameter_constraint in fit.parameter_constraints]
-        _fit_results = fit.get_result_dict_for_robots()
-        _fit_results['parameter_values'] = list(_fit_results['parameter_values'])
+        _yaml_doc['fixed_parameters'] = [[_par, _val] for _par, _val in fit._fitter.fixed_parameters.items()]
+        _yaml_doc['limited_parameters'] = [[_par, list(_limits)] for _par, _limits in
+                                           fit._fitter.limited_parameters.items()]
+
+        _fit_results = fit.get_result_dict()
+        _fit_results['parameter_values'] = list(fit.parameter_values)
         if _fit_results['did_fit']:
             _fit_results['parameter_cov_mat'] = _fit_results['parameter_cov_mat'].tolist()
-            _fit_results['parameter_errors'] = _fit_results['parameter_errors'].tolist()
+            _fit_results['parameter_errors'] = [
+                _fit_results['parameter_errors'][_pn] for _pn in fit.parameter_names]
             _fit_results['parameter_cor_mat'] = _fit_results['parameter_cor_mat'].tolist()
         if _fit_results['asymmetric_parameter_errors'] is not None:
             _fit_results['asymmetric_parameter_errors'] = _fit_results['asymmetric_parameter_errors'].tolist()
         _yaml_doc['fit_results'] = _fit_results
         return _yaml_doc
-    
+
+
 class FitYamlReader(YamlReaderMixin, FitDReprBase):
     
     def __init__(self, input_io_handle):
@@ -109,33 +116,17 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
     def _get_required_keywords(cls, yaml_doc, fit_class):
         if fit_class in (HistFit, XYFit):
             return ['dataset']
-        else:
-            return ['dataset', 'parametric_model']
+        return ['dataset', 'parametric_model']
     
     @classmethod
     def _modify_yaml_doc(cls, yaml_doc, kafe_object_class):
-        if kafe_object_class is XYMultiFit:
-            if 'x_data' in yaml_doc.keys():
-                _x_data = yaml_doc.pop('x_data')
-                _i = 0
-                while 'model_function_%s' % _i in yaml_doc.keys():
-                    if 'x_data_%s' not in yaml_doc:
-                        yaml_doc['x_data_%s' % _i] = _x_data
-                    _i += 1
-            if 'y_data' in yaml_doc.keys():
-                _y_data = yaml_doc.pop('y_data')
-                _i = 0
-                while 'model_function_%s' % _i in yaml_doc.keys():
-                    if 'y_data_%s' not in yaml_doc:
-                        yaml_doc['y_data_%s' % _i] = _y_data
-                    _i += 1
         return yaml_doc
     
     @classmethod
     def _get_subspace_override_dict(cls, fit_class):
-        _override_dict = {'model_parameters':'parametric_model',
-                          'arg_formatters':'parametric_model',
-                          'model_function_formatter':'parametric_model'}
+        _override_dict = {'model_parameters': 'parametric_model',
+                          'arg_formatters': 'parametric_model',
+                          'model_function_formatter': 'parametric_model'}
 
         if fit_class is HistFit:
             _override_dict['n_bins'] = ['dataset', 'parametric_model']
@@ -146,8 +137,6 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
             _override_dict['model_density_function'] = 'parametric_model'
             _override_dict['model_density_function_name'] = 'parametric_model'
             _override_dict['latex_model_density_function_name'] = 'parametric_model'
-            _override_dict['x_name'] = 'parametric_model'
-            _override_dict['latex_x_name'] = 'parametric_model'
             _override_dict['expression_string'] = 'parametric_model'
             _override_dict['latex_expression_string'] = 'parametric_model'
         elif fit_class is IndexedFit:
@@ -160,6 +149,13 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
             _override_dict['latex_index_name'] = 'parametric_model'
             _override_dict['expression_string'] = 'parametric_model'
             _override_dict['latex_expression_string'] = 'parametric_model'
+        elif fit_class is UnbinnedFit:
+            _override_dict['data'] = ['dataset', 'parametric_model']
+            _override_dict['model_function'] = 'parametric_model'
+            _override_dict['model_function_name'] = 'parametric_model'
+            _override_dict['latex_model_function_name'] = 'parametric_model'
+            _override_dict['expression_string'] = 'parametric_model'
+            _override_dict['latex_expression_string'] = 'parametric_model'
         elif fit_class is XYFit:
             _override_dict['x_data'] = ['dataset', 'parametric_model']
             _override_dict['y_data'] = 'dataset'
@@ -168,29 +164,15 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
             _override_dict['model_function'] = 'parametric_model'
             _override_dict['model_function_name'] = 'parametric_model'
             _override_dict['latex_model_function_name'] = 'parametric_model'
-            _override_dict['x_name'] = 'parametric_model'
-            _override_dict['latex_x_name'] = 'parametric_model'
             _override_dict['expression_string'] = 'parametric_model'
             _override_dict['latex_expression_string'] = 'parametric_model'
-        elif fit_class is XYMultiFit:
-            _override_dict['x_data'] = ['dataset', 'parametric_model']
-            _override_dict['y_data'] = 'dataset'
-            _override_dict['x_errors'] = 'dataset'
-            _override_dict['y_errors'] = 'dataset'
-            for _i in range(20): #TODO config
-                _override_dict['x_data_%s' % _i] = ['dataset', 'parametric_model']
-                _override_dict['y_data_%s' % _i] = 'dataset'
-                _override_dict['model_function_%s' % _i] = 'parametric_model'
-                _override_dict['model_function_name_%s' % _i] = 'parametric_model'
-                _override_dict['latex_model_function_name_%s' % _i] = 'parametric_model'
-                _override_dict['x_name_%s' % _i] = 'parametric_model'
-                _override_dict['latex_x_name_%s' % _i] = 'parametric_model'
-                _override_dict['expression_string_%s' % _i] = 'parametric_model'
-                _override_dict['latex_expression_string_%s' % _i] = 'parametric_model'
-            _override_dict['x_name'] = 'parametric_model'
-            _override_dict['latex_x_name'] = 'parametric_model'
         else:
             raise YamlReaderException("Unknown fit type")
+        # override labels for every fit type
+        _override_dict['label'] = 'dataset'
+        _override_dict['model_label'] = 'parametric_model'
+        _override_dict['x_label'] = 'dataset'
+        _override_dict['y_label'] = 'dataset'
         return _override_dict
     
     @classmethod
@@ -225,6 +207,13 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
                 minimizer=_minimizer,
                 minimizer_kwargs=_minimizer_kwargs
             )
+        elif _class is UnbinnedFit:
+            _fit_object = UnbinnedFit(
+                data=_data,
+                model_density_function=_read_model_function,
+                minimizer=_minimizer,
+                minimizer_kwargs=_minimizer_kwargs
+            )
         elif _class is XYFit:
             _fit_object = XYFit(
                 xy_data=_data,
@@ -232,31 +221,28 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
                 minimizer=_minimizer,
                 minimizer_kwargs=_minimizer_kwargs
             )
-            _fit_object.x_label = yaml_doc.pop('x_label', None)
-            _fit_object.y_label = yaml_doc.pop('y_label', None)
-        elif _class is XYMultiFit:
-            _fit_object = XYMultiFit(
-                xy_data=_data,
-                model_function=_read_model_function,
-                minimizer=_minimizer,
-                minimizer_kwargs=_minimizer_kwargs
-            )
-            _xy_label = []
-            _x_label = yaml_doc.pop('x_label', None)
-            _y_label = yaml_doc.pop('y_label', None)
-            for _i in range(len(_fit_object.data)):
-                _x_label_i = yaml_doc.pop('x_label_%s' % _i, _x_label)
-                _y_label_i = yaml_doc.pop('y_label_%s' % _i, _y_label)
-                _xy_label.append([_x_label_i, _y_label_i])
-            _fit_object.axis_labels = _xy_label
+
         if _read_parametric_model is not None:
             _fit_object._param_model = _read_parametric_model
+
         _constraint_yaml_list = yaml_doc.pop('parameter_constraints', None)
         if _constraint_yaml_list is not None:
             _fit_object._fit_param_constraints = [
                 ConstraintYamlReader._make_object(_constraint_yaml, parameter_names=_fit_object.poi_names)
                 for _constraint_yaml in _constraint_yaml_list
             ]
+
+        _fixed_par_list = yaml_doc.pop('fixed_parameters', None)
+        if _fixed_par_list is not None:
+            for _par, _val in _fixed_par_list:
+                _fit_object.fix_parameter(_par, _val)
+
+        _limited_par_list = yaml_doc.pop('limited_parameters', None)
+        if _limited_par_list is not None:
+            for _par, _limits in _limited_par_list:
+                _low, _high = _limits
+                _fit_object.limit_parameter(_par, _low, _high)
+
         _fit_results = yaml_doc.pop('fit_results', None)
         if _fit_results is not None:
             if _fit_results['did_fit']:
@@ -267,7 +253,8 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
                 _fit_results['asymmetric_parameter_errors'] = np.array(_fit_results['asymmetric_parameter_errors'])
         _fit_object._loaded_result_dict = _fit_results
         return _fit_object, yaml_doc
-    
+
+
 # register the above classes in the module-level dictionary
 FitYamlReader._register_class(_AVAILABLE_REPRESENTATIONS)
 FitYamlWriter._register_class(_AVAILABLE_REPRESENTATIONS)

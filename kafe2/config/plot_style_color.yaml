@@ -85,7 +85,7 @@ histogram:
     plot_kwargs:
       linestyle: '-'
       marker: ''
-      label: 'density %(subplot_id)s'
+      label: '%(model_label)s density'
       linewidth: 2
       #zorder: -10
     property_cycler:
@@ -203,7 +203,7 @@ xy:
     plot_kwargs:
       alpha: 0.5
       linestyle: '-'
-      label: 'model %(subplot_id)s error'
+      label: 'model %(subplot_id)s $\pm 1\sigma$'
       edgecolor: 'none'
       linewidth: 2
       zorder: -100

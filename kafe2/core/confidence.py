@@ -108,32 +108,38 @@ if __name__ == "__main__":
     _cl_obj = ConfidenceLevel.from_cl(1, .86)
     print(_cl_obj)
 
-
     try:
         print(ConfidenceLevel.from_sigma(2.1, .86))
-    except ConfidenceLevelError as e: print(e)
+    except ConfidenceLevelError as e:
+        print(e)
 
     try:
         print(ConfidenceLevel.from_sigma(2, 400))
-    except ConfidenceLevelError as e: print(e)
+    except ConfidenceLevelError as e:
+        print(e)
 
     try:
         print(ConfidenceLevel.from_sigma(2, -1))
-    except ConfidenceLevelError as e: print(e)
+    except ConfidenceLevelError as e:
+        print(e)
 
     try:
         _co = ConfidenceLevel.from_sigma(-2, 400)
         print(_co)
-    except ConfidenceLevelError as e: print(e)
+    except ConfidenceLevelError as e:
+        print(e)
 
     try:
         print(ConfidenceLevel.from_sigma(-2, -1))
-    except ConfidenceLevelError as e: print(e)
+    except ConfidenceLevelError as e:
+        print(e)
 
     try:
         print(ConfidenceLevel.from_sigma(-2.3, 400))
-    except ConfidenceLevelError as e: print(e)
+    except ConfidenceLevelError as e:
+        print(e)
 
     try:
         print(ConfidenceLevel.from_sigma(-2.3, -1))
-    except ConfidenceLevelError as e: print(e)
+    except ConfidenceLevelError as e:
+        print(e)

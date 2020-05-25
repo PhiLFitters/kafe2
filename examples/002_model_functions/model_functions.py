@@ -50,7 +50,7 @@ exponential_fit.report()
 
 # Optional: Create a plot of the fit results using Plot.
 p = Plot(fit_objects=[linear_fit, exponential_fit], separate_figures=False)
-p.plot(with_fit_info=True)
+p.plot(fit_info=True)
 
 # Optional: Create a contour plot for the exponential fit to show the parameter correlations.
 cpf = ContoursProfiler(exponential_fit)

@@ -1,5 +1,8 @@
+import logging
+
 from .minimizer_base import MinimizerBase
-from kafe2.core.contour import ContourFactory
+from ..contour import ContourFactory
+
 try:
     import iminuit
 except ImportError:
@@ -8,13 +11,15 @@ except ImportError:
 
 import numpy as np
 
+
 class MinimizerIMinuitException(Exception):
     pass
+
 
 class MinimizerIMinuit(MinimizerBase):
     def __init__(self,
                  parameter_names, parameter_values, parameter_errors,
-                 function_to_minimize, strategy = 1):
+                 function_to_minimize, strategy=1):
         self._par_names = parameter_names
         self._strategy = strategy
 
@@ -27,16 +32,12 @@ class MinimizerIMinuit(MinimizerBase):
             self._minimizer_param_dict["fix_" + _pn] = False
             self._minimizer_param_dict["limit_" + _pn] = None
 
-        self._reset()  # sets self.__iminuit and caches to None
+        self.reset()  # sets self.__iminuit and caches to None
         self.errordef = 1.0
         self.tolerance = 1e-6
         super(MinimizerIMinuit, self).__init__(function_to_minimize=function_to_minimize)
 
     # -- private methods
-
-    def _reset(self):
-        self.__iminuit = None
-        self._invalidate_cache()
 
     def _invalidate_cache(self):
         self._par_val = None
@@ -47,12 +48,40 @@ class MinimizerIMinuit(MinimizerBase):
         super(MinimizerIMinuit, self)._invalidate_cache()
 
     def _save_state(self):
+        if self._par_val is None:
+            self._save_state_dict["par_val"] = self._par_val
+        else:
+            self._save_state_dict["par_val"] = np.array(self._par_val)
+        if self._par_err is None:
+            self._save_state_dict["par_err"] = self._par_err
+        else:
+            self._save_state_dict["par_err"] = np.array(self._par_err)
+        if self._fmin_struct is None:
+            self._save_state_dict["fmin_struct"] = self._fmin_struct
+        else:
+            self._save_state_dict["fmin_struct"] = np.array(self._fmin_struct)
+        if self._pars_contour is None:
+            self._save_state_dict["pars_contour"] = self._pars_contour
+        else:
+            self._save_state_dict["pars_contour"] = np.array(self._pars_contour)
         self._save_state_dict['minimizer_param_dict'] = self._minimizer_param_dict
         self._save_state_dict['iminuit'] = self.__iminuit
         super(MinimizerIMinuit, self)._save_state()
 
     def _load_state(self):
-        self._reset()
+        self.reset()
+        self._par_val = self._save_state_dict["par_val"]
+        if self._par_val is not None:
+            self._par_val = np.array(self._par_val)
+        self._par_err = self._save_state_dict["par_err"]
+        if self._par_err is not None:
+            self._par_err = np.array(self._par_err)
+        self._fmin_struct = self._save_state_dict["fmin_struct"]
+        if self._fmin_struct is not None:
+            self._fmin_struct = np.array(self._fmin_struct)
+        self._pars_contour = self._save_state_dict["pars_contour"]
+        if self._pars_contour is not None:
+            self._pars_contour = np.array(self._pars_contour)
         self._minimizer_param_dict = self._save_state_dict['minimizer_param_dict']
         self.__iminuit = self._save_state_dict['iminuit']
         self._func_handle(*self.parameter_values)  # call the function to propagate the changes to the nexus
@@ -67,11 +96,19 @@ class MinimizerIMinuit(MinimizerBase):
     def _get_iminuit(self):
         if self.__iminuit is None:
             self.__iminuit = iminuit.Minuit(self._func_wrapper,
-                                        forced_parameters=self.parameter_names,
-                                        errordef=self.errordef,
-                                        **self._minimizer_param_dict)
-            self.__iminuit.set_print_level(-1)
-            self.__iminuit.set_strategy(self._strategy)
+                                            forced_parameters=self.parameter_names,
+                                            errordef=self.errordef,
+                                            **self._minimizer_param_dict)
+            # set logging level in iminuit arcording to the root logger
+            if logging.root.level < logging.DEBUG:
+                self.__iminuit.print_level = 3
+            elif logging.root.level == logging.DEBUG:
+                self.__iminuit.print_level = 2
+            elif logging.root.level <= logging.INFO:
+                self.__iminuit.print_level = 1
+            else:  # default is logging.WARN, show nothing
+                self.__iminuit.print_level = 0
+            self.__iminuit.strategy = self._strategy
             self.__iminuit.tol = self.tolerance
         return self.__iminuit
 
@@ -87,6 +124,7 @@ class MinimizerIMinuit(MinimizerBase):
             else:
                 _asymm_par_errs[_index, 0] = np.nan
                 _asymm_par_errs[_index, 1] = np.nan
+        self.minimize()
         return _asymm_par_errs
 
     def _fill_in_zeroes_for_fixed(self, submatrix):
@@ -104,7 +142,6 @@ class MinimizerIMinuit(MinimizerBase):
 
         return _mat
 
-
     # -- public properties
 
     @property
@@ -115,7 +152,7 @@ class MinimizerIMinuit(MinimizerBase):
     def errordef(self, err_def):
         assert err_def > 0
         self._err_def = err_def
-        self._reset()
+        self.reset()
 
     @property
     def tolerance(self):
@@ -125,7 +162,7 @@ class MinimizerIMinuit(MinimizerBase):
     def tolerance(self, tolerance):
         assert tolerance > 0
         self._tol = tolerance
-        self._reset()
+        self.reset()
 
     @property
     def hessian(self):
@@ -135,6 +172,7 @@ class MinimizerIMinuit(MinimizerBase):
     @property
     def cov_mat(self):
         if self._par_cov_mat is None:
+            self._save_state()
             try:
                 self._get_iminuit().hesse()
                 # FIX_UPSTREAM we need skip_fixed=False, but this is unsupported
@@ -144,30 +182,33 @@ class MinimizerIMinuit(MinimizerBase):
                 _mat = self._get_iminuit().matrix(correlation=False, skip_fixed=True)
                 _mat = np.asarray(_mat)  # reshape into numpy matrix
                 _mat = self._fill_in_zeroes_for_fixed(_mat)  # fill in fixed par 'gaps'
-                self._par_cov_mat = _mat
                 # TODO without the call below parameter values are changed by calling this method. Why?
                 self._func_wrapper_unpack_args(self.parameter_values)
             except RuntimeError:
-                pass
+                _mat = None
+            self._load_state()
+            self._par_cov_mat = _mat
         return self._par_cov_mat
 
     @property
     def cor_mat(self):
         if self._par_cor_mat is None:
+            self._save_state()
             try:
                 self._get_iminuit().hesse()
                 # FIX_UPSTREAM we need skip_fixed=False, but this is unsupported
-                #_mat = self._get_iminuit().matrix(correlation, skip_fixed=False)
+                # _mat = self._get_iminuit().matrix(correlation, skip_fixed=False)
 
                 # ... so use skip_fixed=True instead and fill in the gaps
                 _mat = self._get_iminuit().matrix(correlation=True, skip_fixed=True)
                 _mat = np.asarray(_mat)  # reshape into numpy matrix
                 _mat = self._fill_in_zeroes_for_fixed(_mat)  # fill in fixed par 'gaps'
-                self._par_cor_mat = _mat
                 # TODO without the call below parameter values are changed by calling this method. Why?
                 self._func_wrapper_unpack_args(self.parameter_values)
             except RuntimeError:
-                pass
+                _mat = None
+            self._load_state()
+            self._par_cor_mat = _mat
         return self._par_cor_mat
 
     @property
@@ -237,16 +278,20 @@ class MinimizerIMinuit(MinimizerBase):
         _fmin = self._get_fmin_struct()
         return _fmin.has_accurate_covar
 
-
     # -- public methods
+
+    def reset(self):
+        self.__iminuit = None
+        self._invalidate_cache()
 
     def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, **minimizer_contour_kwargs):
         if self.__iminuit is None:
             raise MinimizerIMinuitException("Need to perform a fit before calling contour()!")
         _numpoints = minimizer_contour_kwargs.pop("numpoints", 100)
         if minimizer_contour_kwargs:
-            raise MinimizerIMinuitException("Unknown keyword arguments for contour(): {}".format(minimizer_contour_kwargs.keys()))
-        _x_errs, _y_errs, _contour_line = self.__iminuit.mncontour(parameter_name_1, parameter_name_2, 
+            raise MinimizerIMinuitException(
+                "Unknown keyword arguments for contour(): {}".format(minimizer_contour_kwargs.keys()))
+        _x_errs, _y_errs, _contour_line = self.__iminuit.mncontour(parameter_name_1, parameter_name_2,
                                                                    numpoints=_numpoints, sigma=sigma)
         self.minimize()  # return to minimum
         if len(_contour_line) == 0:
@@ -256,7 +301,8 @@ class MinimizerIMinuit(MinimizerBase):
     def profile(self, parameter_name, bins=20, bound=2, args=None, subtract_min=False):
         if self.__iminuit is None:
             raise MinimizerIMinuitException("Need to perform a fit before calling profile()!")
-        _bins, _vals, _statuses = self.__iminuit.mnprofile(parameter_name, bins=bins, bound=bound, subtract_min=subtract_min)
+        _bins, _vals, _statuses = self.__iminuit.mnprofile(parameter_name, bins=bins, bound=bound,
+                                                           subtract_min=subtract_min)
         # TODO: check statuses (?)
         self.minimize()  # return to minimum
         return np.array([_bins, _vals])
@@ -265,15 +311,15 @@ class MinimizerIMinuit(MinimizerBase):
         if parameter_name not in self._minimizer_param_dict:
             raise MinimizerIMinuitException("No parameter named '%s'!" % (parameter_name,))
         self._minimizer_param_dict[parameter_name] = parameter_value
-        self._reset()
+        self.reset()
 
     def set_several(self, parameter_names, parameter_values):
-        for _pn, _pv in zip(parameter_names,parameter_values):
+        for _pn, _pv in zip(parameter_names, parameter_values):
             self.set(_pn, _pv)
 
     def fix(self, parameter_name):
         self._minimizer_param_dict["fix_" + parameter_name] = True
-        self._reset()
+        self._get_iminuit().fixed[parameter_name] = True
 
     def is_fixed(self, parameter_name):
         return self._minimizer_param_dict["fix_%s" % parameter_name]
@@ -284,7 +330,7 @@ class MinimizerIMinuit(MinimizerBase):
 
     def release(self, parameter_name):
         self._minimizer_param_dict["fix_" + parameter_name] = False
-        self._reset()
+        self._get_iminuit().fixed[parameter_name] = False
 
     def release_several(self, parameter_names):
         for _pn in parameter_names:
@@ -293,14 +339,19 @@ class MinimizerIMinuit(MinimizerBase):
     def limit(self, parameter_name, parameter_bounds):
         assert len(parameter_bounds) == 2
         self._minimizer_param_dict["limit_" + parameter_name] = (parameter_bounds[0], parameter_bounds[1])
-        self._reset()
+        self.reset()
 
     def unlimit(self, parameter_name):
         self._minimizer_param_dict["limit_" + parameter_name] = None
-        self._reset()
+        self.reset()
 
     def minimize(self, max_calls=6000):
         self._get_iminuit().migrad(ncall=max_calls)
+
+        for (_pn, _pv, _pe) in zip(
+                self.parameter_names, self.parameter_values, self.parameter_errors):
+            self._minimizer_param_dict[_pn] = _pv
+            self._minimizer_param_dict["error_" + _pn] = _pe
 
         # invalidate cache
         self._invalidate_cache()

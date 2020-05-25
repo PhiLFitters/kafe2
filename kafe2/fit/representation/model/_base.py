@@ -1,11 +1,13 @@
 import abc
 import six
 
-from kafe2.fit.histogram import HistModelFunction, HistParametricModel
-from kafe2.fit.indexed import IndexedModelFunction, IndexedParametricModel
-from kafe2.fit.xy import XYModelFunction, XYParametricModel
-from kafe2.fit.xy_multi import XYMultiModelFunction, XYMultiParametricModel
-from kafe2.fit.representation._base import GenericDReprBase
+from .._base import GenericDReprBase
+# import ModelFunction classes
+from ..._base import ModelFunctionBase
+from ...histogram import HistModelFunction, HistParametricModel
+from ...indexed import IndexedModelFunction, IndexedParametricModel
+from ...unbinned import UnbinnedParametricModel
+from ...xy import XYParametricModel
 
 __all__ = ["ModelFunctionDReprBase", "ParametricModelDReprBase"]
 
@@ -17,14 +19,14 @@ class ModelFunctionDReprBase(GenericDReprBase):
     _CLASS_TO_OBJECT_TYPE_NAME = {
         HistModelFunction: 'histogram',
         IndexedModelFunction: 'indexed',
-        XYModelFunction: 'xy',
-        XYMultiModelFunction: 'xy_multi'
+        ModelFunctionBase: 'base'
     }
     _OBJECT_TYPE_NAME_TO_CLASS = {
         'histogram': HistModelFunction,
         'indexed': IndexedModelFunction,
-        'xy': XYModelFunction,
-        'xy_multi': XYMultiModelFunction
+        'unbinned': ModelFunctionBase,
+        'xy': ModelFunctionBase,  # type from fit is passed to model function, needs to be resolved
+        'base': ModelFunctionBase
     }
 
     def __init__(self, model_function=None):
@@ -39,17 +41,16 @@ class ParametricModelDReprBase(GenericDReprBase):
     _CLASS_TO_OBJECT_TYPE_NAME = {
         HistParametricModel: 'histogram',
         IndexedParametricModel: 'indexed',
-        XYParametricModel: 'xy',
-        XYMultiParametricModel: 'xy_multi'
+        UnbinnedParametricModel: 'unbinned',
+        XYParametricModel: 'xy'
     }
     _OBJECT_TYPE_NAME_TO_CLASS = {
         'histogram': HistParametricModel,
         'indexed': IndexedParametricModel,
-        'xy': XYParametricModel,
-        'xy_multi': XYMultiParametricModel
+        'unbinned': UnbinnedParametricModel,
+        'xy': XYParametricModel
     }
 
     def __init__(self, parametric_model=None):
         self._kafe_object = parametric_model
         super(ParametricModelDReprBase, self).__init__()
-

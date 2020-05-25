@@ -8,9 +8,10 @@ from kafe2.core.fitters import NexusFitterException
 
 from kafe2.config import kc
 
+from kafe2.fit._base import ModelFunctionException
 from kafe2.fit import XYFit
 from kafe2.fit.xy.fit import XYFitException
-from kafe2.fit.xy.model import XYModelFunctionException, XYParametricModelException
+from kafe2.fit.xy.model import XYParametricModelException
 from kafe2.fit.xy.cost import XYCostFunction_Chi2
 
 from kafe2.test.fit.test_fit import AbstractTestFit
@@ -91,24 +92,6 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
             y_data=self._ref_y_data,
             y_model=self._nominal_fit_result_y_model,
         )
-        self._nominal_fit_result_y_error_band = np.array([
-            0.78624539, 0.75683061, 0.72851823, 0.70133553, 0.67531087, 0.65047349,
-            0.62685308, 0.6044793 , 0.58338118, 0.56358629, 0.54511986, 0.52800367,
-            0.51225489, 0.49788481, 0.48489754, 0.47328885, 0.46304509, 0.45414241,
-            0.44654631, 0.44021158, 0.43508272, 0.43109475, 0.42817442, 0.42624171,
-            0.42521152, 0.42499547, 0.4255036 , 0.426646  , 0.42833427, 0.43048265,
-            0.43300903, 0.43583559, 0.43888936, 0.44210242, 0.44541208, 0.44876086,
-            0.4520964 , 0.45537126, 0.45854275, 0.46157262, 0.46442689, 0.46707555,
-            0.46949231, 0.47165442, 0.47354242, 0.47513997, 0.4764337 , 0.47741308,
-            0.47807029, 0.47840018, 0.47840018, 0.47807029, 0.47741308, 0.4764337 ,
-            0.47513997, 0.47354242, 0.47165442, 0.46949231, 0.46707555, 0.46442689,
-            0.46157262, 0.45854275, 0.45537126, 0.4520964 , 0.44876086, 0.44541208,
-            0.44210242, 0.43888936, 0.43583559, 0.43300903, 0.43048265, 0.42833427,
-            0.426646  , 0.4255036 , 0.42499547, 0.42521152, 0.42624171, 0.42817442,
-            0.43109475, 0.43508272, 0.44021158, 0.44654631, 0.45414241, 0.46304509,
-            0.47328885, 0.48489754, 0.49788481, 0.51225489, 0.52800367, 0.54511986,
-            0.56358629, 0.58338118, 0.6044793 , 0.62685308, 0.65047349, 0.67531087,
-            0.70133553, 0.72851823, 0.75683061, 0.78624539])
 
         # helper dict with all reference property values
         self._ref_prop_dict = dict(
@@ -125,8 +108,6 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
             did_fit=False,
             model_count=1,
             cost_function_value=self._ref_initial_cost,
-            x_label=None,
-            y_label=None,
 
             x_data_cov_mat=self._ref_matrix_eye * 0,
             y_data_cov_mat=self._ref_matrix_eye,
@@ -187,7 +168,7 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
             cost_function=cost_function,
             minimizer=self.MINIMIZER
         )
-        _fit.add_simple_error(axis='y', err_val=error)
+        _fit.add_error(axis='y', err_val=error)
 
         return _fit
 
@@ -215,8 +196,6 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
                 model=self._nominal_fit_result_xy_model,
                 did_fit=True,
                 cost_function_value=self._nominal_fit_result_cost,
-                # FIXME: remove hard coding
-                y_error_band=self._nominal_fit_result_y_error_band,
             ),
             call_before_fit=lambda f: f.do_fit(),
             rtol=1e-2
@@ -278,10 +257,6 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
             self._get_fit().set_poi_values(param_values=(1,))
         with self.assertRaises(XYFitException):
             self._get_fit().set_poi_values(param_values=(1,2,3,4,5))
-
-    def test_y_error_band_before_fit_raise(self):
-        with self.assertRaises(XYFitException):
-            self._get_fit().y_error_band
 
     def test_parameter_defaults(self):
         def dummy_model(x, a, b, c):
@@ -362,7 +337,7 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         _fit = self._get_fit()
 
         _fit.data = np.array([self._ref_x, self._ref_y_data * 2])
-        _fit.add_simple_error('y', err_val=1.0)
+        _fit.add_error('y', err_val=1.0)
 
         self._assert_fit_properties(
             _fit,
@@ -392,7 +367,7 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         _fit = self._get_fit()
 
         _fit.data = np.array([self._ref_x[:-1], self._ref_y_data[:-1] * 2])
-        _fit.add_simple_error('y', err_val=1.0)
+        _fit.add_error('y', err_val=1.0)
 
         self._assert_fit_properties(
             _fit,
@@ -439,26 +414,26 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model():
             pass
 
-        with self.assertRaises(XYModelFunctionException) as _exc:
+        with self.assertRaises(ModelFunctionException) as _exc:
             XYFit(xy_data=self._ref_xy_data,
                   model_function=dummy_model,
                   minimizer=self.MINIMIZER)
 
         self.assertIn(
-            'must have independent variable',
+            'needs at least one parameter',
             _exc.exception.args[0])
 
     def test_model_no_pars_beside_x_raise(self):
         def dummy_model(x):
             pass
 
-        with self.assertRaises(XYModelFunctionException) as _exc:
+        with self.assertRaises(ModelFunctionException) as _exc:
             XYFit(xy_data=self._ref_xy_data,
                   model_function=dummy_model,
                   minimizer=self.MINIMIZER)
 
         self.assertIn(
-            'needs at least one parameter beside independent variable',
+            'needs at least one parameter besides',
             _exc.exception.args[0])
 
     def test_model_varargs_raise(self):
@@ -466,7 +441,7 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model(x, par, *varargs):
             pass
 
-        with self.assertRaises(XYModelFunctionException) as _exc:
+        with self.assertRaises(ModelFunctionException) as _exc:
             XYFit(xy_data=self._ref_xy_data,
                   model_function=dummy_model,
                   minimizer=self.MINIMIZER)
@@ -479,7 +454,7 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model(x, par, **varkwargs):
             pass
 
-        with self.assertRaises(XYModelFunctionException) as _exc:
+        with self.assertRaises(ModelFunctionException) as _exc:
             XYFit(xy_data=self._ref_xy_data,
                   model_function=dummy_model,
                   minimizer=self.MINIMIZER)
@@ -492,7 +467,7 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model(x, par, *varargs, **varkwargs):
             pass
 
-        with self.assertRaises(XYModelFunctionException) as _exc:
+        with self.assertRaises(ModelFunctionException) as _exc:
             XYFit(xy_data=self._ref_xy_data,
                   model_function=dummy_model,
                   minimizer=self.MINIMIZER)
@@ -539,7 +514,7 @@ class TestXYFitWithSimpleYErrors(AbstractTestFit, unittest.TestCase):
         )
 
         for _err in errors:
-            _fit.add_simple_error(**_err)
+            _fit.add_error(**_err)
 
         return _fit
 
@@ -577,8 +552,6 @@ class TestXYFitWithSimpleYErrors(AbstractTestFit, unittest.TestCase):
                 model=self._nominal_fit_result_xy_model,
                 did_fit=True,
                 cost_function_value=self._nominal_fit_result_cost,
-                # FIXME: remove hard coding
-                y_error_band=self._nominal_fit_result_y_error_band,
             ),
             fit_names=['default', 'two_errors'],
             call_before_fit=lambda f: f.do_fit(),
@@ -590,20 +563,20 @@ class TestXYFitWithSimpleYErrors(AbstractTestFit, unittest.TestCase):
         for _mc in (None, dict()):
             _errs = _fit.get_matching_errors(matching_criteria=_mc)
             self.assertEqual(len(_errs), 2)
-            self.assertIs(_fit._data_container._error_dicts['MyYDataError']['err'], _errs['MyYDataError'])
+            self.assertIs(_fit.data_container._error_dicts['MyYDataError']['err'], _errs['MyYDataError'])
             self.assertIs(_fit._param_model._error_dicts['MyYModelError']['err'], _errs['MyYModelError'])
 
     def test_get_matching_error_name(self):
         _fit = self._get_test_fits()['named_errors']
         _errs = _fit.get_matching_errors(matching_criteria=dict(name='MyYDataError'))
         self.assertEqual(len(_errs), 1)
-        self.assertIs(_fit._data_container._error_dicts['MyYDataError']['err'], _errs['MyYDataError'])
+        self.assertIs(_fit.data_container._error_dicts['MyYDataError']['err'], _errs['MyYDataError'])
 
     def test_get_matching_error_type_simple(self):
         _fit = self._get_test_fits()['named_errors']
         _errs = _fit.get_matching_errors(matching_criteria=dict(type='simple'))
         self.assertEqual(len(_errs), 2)
-        self.assertIs(_fit._data_container._error_dicts['MyYDataError']['err'], _errs['MyYDataError'])
+        self.assertIs(_fit.data_container._error_dicts['MyYDataError']['err'], _errs['MyYDataError'])
         self.assertIs(_fit._param_model._error_dicts['MyYModelError']['err'], _errs['MyYModelError'])
 
     def test_get_matching_error_type_matrix(self):
@@ -620,14 +593,14 @@ class TestXYFitWithSimpleYErrors(AbstractTestFit, unittest.TestCase):
         _fit = self._get_test_fits()['named_errors']
         _errs = _fit.get_matching_errors(matching_criteria=dict(correlated=False))
         self.assertEqual(len(_errs), 2)
-        self.assertIs(_fit._data_container._error_dicts['MyYDataError']['err'], _errs['MyYDataError'])
+        self.assertIs(_fit.data_container._error_dicts['MyYDataError']['err'], _errs['MyYDataError'])
         self.assertIs(_fit._param_model._error_dicts['MyYModelError']['err'], _errs['MyYModelError'])
 
     def test_get_matching_error_reference_data(self):
         _fit = self._get_test_fits()['named_errors']
         _errs = _fit.get_matching_errors(matching_criteria=dict(reference='data'))
         self.assertEqual(len(_errs), 1)
-        self.assertIs(_fit._data_container._error_dicts['MyYDataError']['err'], _errs['MyYDataError'])
+        self.assertIs(_fit.data_container._error_dicts['MyYDataError']['err'], _errs['MyYDataError'])
 
     def test_get_matching_error_reference_model(self):
         _fit = self._get_test_fits()['named_errors']
@@ -661,7 +634,7 @@ class TestXYFitWithMatrixErrors(AbstractTestFit, unittest.TestCase):
                 if 'err_matrix' in _err:
                     _fit.add_matrix_error(**_err)
                 else:
-                    _fit.add_simple_error(**_err)
+                    _fit.add_error(**_err)
 
         return _fit
 
@@ -721,8 +694,6 @@ class TestXYFitWithMatrixErrors(AbstractTestFit, unittest.TestCase):
                 model=self._nominal_fit_result_xy_model,
                 did_fit=True,
                 cost_function_value=self._nominal_fit_result_cost,
-                # FIXME: remove hard coding
-                y_error_band=self._nominal_fit_result_y_error_band,
             ),
             fit_names=['default', 'cor_matrix_and_error_vector',
                        'one_matrix_one_simple_error', 'two_matrix_errors'],
@@ -735,29 +706,29 @@ class TestXYFitWithMatrixErrors(AbstractTestFit, unittest.TestCase):
         for _mc in (None, dict()):
             _errs = _fit.get_matching_errors(matching_criteria=_mc)
             self.assertEqual(len(_errs), 4)
-            self.assertIs(_fit._data_container._error_dicts['MySimpleDataError']['err'], _errs['MySimpleDataError'])
+            self.assertIs(_fit.data_container._error_dicts['MySimpleDataError']['err'], _errs['MySimpleDataError'])
             self.assertIs(_fit._param_model._error_dicts['MySimpleModelError']['err'], _errs['MySimpleModelError'])
-            self.assertIs(_fit._data_container._error_dicts['MyMatrixDataError']['err'], _errs['MyMatrixDataError'])
+            self.assertIs(_fit.data_container._error_dicts['MyMatrixDataError']['err'], _errs['MyMatrixDataError'])
             self.assertIs(_fit._param_model._error_dicts['MyMatrixModelError']['err'], _errs['MyMatrixModelError'])
 
     def test_get_matching_error_name(self):
         _fit = self._get_test_fits()['named_errors']
         _errs = _fit.get_matching_errors(matching_criteria=dict(name='MySimpleDataError'))
         self.assertEqual(len(_errs), 1)
-        self.assertIs(_fit._data_container._error_dicts['MySimpleDataError']['err'], _errs['MySimpleDataError'])
+        self.assertIs(_fit.data_container._error_dicts['MySimpleDataError']['err'], _errs['MySimpleDataError'])
 
     def test_get_matching_error_type_simple(self):
         _fit = self._get_test_fits()['named_errors']
         _errs = _fit.get_matching_errors(matching_criteria=dict(type='simple'))
         self.assertEqual(len(_errs), 2)
-        self.assertIs(_fit._data_container._error_dicts['MySimpleDataError']['err'], _errs['MySimpleDataError'])
+        self.assertIs(_fit.data_container._error_dicts['MySimpleDataError']['err'], _errs['MySimpleDataError'])
         self.assertIs(_fit._param_model._error_dicts['MySimpleModelError']['err'], _errs['MySimpleModelError'])
 
     def test_get_matching_error_type_matrix(self):
         _fit = self._get_test_fits()['named_errors']
         _errs = _fit.get_matching_errors(matching_criteria=dict(type='matrix'))
         self.assertEqual(len(_errs), 2)
-        self.assertIs(_fit._data_container._error_dicts['MyMatrixDataError']['err'], _errs['MyMatrixDataError'])
+        self.assertIs(_fit.data_container._error_dicts['MyMatrixDataError']['err'], _errs['MyMatrixDataError'])
         self.assertIs(_fit._param_model._error_dicts['MyMatrixModelError']['err'], _errs['MyMatrixModelError'])
 
     def test_get_matching_error_uncorrelated(self):
@@ -770,15 +741,15 @@ class TestXYFitWithMatrixErrors(AbstractTestFit, unittest.TestCase):
         _errs = _fit.get_matching_errors(matching_criteria=dict(correlated=False))
         # NOTE: passing 'correlated' only matches 'matrix' errors, irrespective of 'True'/'False' value passed
         self.assertEqual(len(_errs), 2)
-        self.assertIs(_fit._data_container._error_dicts['MySimpleDataError']['err'], _errs['MySimpleDataError'])
+        self.assertIs(_fit.data_container._error_dicts['MySimpleDataError']['err'], _errs['MySimpleDataError'])
         self.assertIs(_fit._param_model._error_dicts['MySimpleModelError']['err'], _errs['MySimpleModelError'])
 
     def test_get_matching_error_reference_data(self):
         _fit = self._get_test_fits()['named_errors']
         _errs = _fit.get_matching_errors(matching_criteria=dict(reference='data'))
         self.assertEqual(len(_errs), 2)
-        self.assertIs(_fit._data_container._error_dicts['MySimpleDataError']['err'], _errs['MySimpleDataError'])
-        self.assertIs(_fit._data_container._error_dicts['MyMatrixDataError']['err'], _errs['MyMatrixDataError'])
+        self.assertIs(_fit.data_container._error_dicts['MySimpleDataError']['err'], _errs['MySimpleDataError'])
+        self.assertIs(_fit.data_container._error_dicts['MyMatrixDataError']['err'], _errs['MyMatrixDataError'])
 
     def test_get_matching_error_reference_model(self):
         _fit = self._get_test_fits()['named_errors']
@@ -902,7 +873,7 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
         )
 
         for _err in errors:
-            _fit.add_simple_error(**_err)
+            _fit.add_error(**_err)
 
         _fit.set_all_parameter_values(self._ref_initial_pars)
 
@@ -941,3 +912,18 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
             rtol=1e-3,
             atol=1e-2,
         )
+
+    def test_limit_parameter_raise(self):
+        with self.assertRaises(ValueError):
+            self._get_fit().limit_parameter("a")
+
+    def test_limit_parameter_raise_if_not_numeric(self):
+        with self.assertRaises(TypeError):
+            # old tuple syntax no longer supported
+            self._get_fit().limit_parameter("a", (0, 1))
+        with self.assertRaises(TypeError):
+            # non-numeric types invalid (except None)
+            self._get_fit().limit_parameter("a", "invalid", "limits")
+        with self.assertRaises(TypeError):
+            # string representations of numerics should also fail
+            self._get_fit().limit_parameter("a", "0.3", "14")

@@ -2,7 +2,8 @@ import matplotlib as mpl
 import numpy as np
 import six
 
-from .._base import PlotAdapterBase, PlotAdapterException, Plot
+from .._base import PlotAdapterBase, PlotAdapterException
+from .._base.plot import kc_plot_style
 
 from ..xy.plot import XYPlotAdapter
 
@@ -25,7 +26,7 @@ class HistPlotAdapter(PlotAdapterBase):
         ),
     )
 
-    def __init__(self, hist_fit_object, n_plot_points_model_density=100):
+    def __init__(self, hist_fit_object):
         """
         Construct an :py:obj:`HistPlotContainer` for a :py:obj:`~kafe2.fit.histogram.HistFit` object:
 
@@ -33,14 +34,27 @@ class HistPlotAdapter(PlotAdapterBase):
         :param n_plot_points_model_density: number of plot points to use for plotting the model density
         """
         super(HistPlotAdapter, self).__init__(fit_object=hist_fit_object)
-        self._n_plot_points_model_density = n_plot_points_model_density
+        self.n_plot_points = 100 if len(self.data_x) < 100 else len(self.data_x)
+        self.x_range = self._fit.data_container.bin_range
 
     # -- private methods
+
+    def _set_plot_labels(self):
+        super(HistPlotAdapter, self)._set_plot_labels()
+        # set model density label according to model label
+        _model_label = self._fit.model_label
+        if _model_label is None:
+            _model_label = dict(kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'model', 'plot_kwargs'))['label']
+        _density_label = dict(kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'model_density', 'plot_kwargs'))['label']
+        _density_label = _density_label % dict(model_label=_model_label)
+        self.update_plot_kwargs('model_density', dict(label=_density_label))
+
+    # -- public methods
 
     @property
     def data_x(self):
         """data x values"""
-        return self._fit._data_container.bin_centers
+        return self._fit.data_container.bin_centers
 
     @property
     def data_y(self):
@@ -50,7 +64,7 @@ class HistPlotAdapter(PlotAdapterBase):
     @property
     def data_xerr(self):
         """x error bars for data (actually used to represent the bins)"""
-        return self._fit._data_container.bin_widths * 0.5
+        return self._fit.data_container.bin_widths * 0.5
 
     @property
     def data_yerr(self):
@@ -81,25 +95,15 @@ class HistPlotAdapter(PlotAdapterBase):
     def model_density_x(self):
         """x support points for model density plot"""
         _xmin, _xmax = self.x_range
-        return np.linspace(_xmin, _xmax, self._n_plot_points_model_density)
+        return np.linspace(_xmin, _xmax, self.n_plot_points)
 
     @property
     def model_density_y(self):
         """value of model density at the support points"""
-        _hist_cont = self._fit._data_container
+        _hist_cont = self._fit.data_container
         _mean_bin_size = float(_hist_cont.high - _hist_cont.low)/_hist_cont.size
         _factor = _hist_cont.n_entries * _mean_bin_size
         return _factor * self._fit.eval_model_function_density(x=self.model_density_x)
-
-    @property
-    def x_range(self):
-        """x plot range (the histogram bin range)"""
-        return self._fit._data_container.bin_range
-
-    @property
-    def y_range(self):
-        """y plot range: ``None`` for :py:obj:`IndexedPlotContainer`"""
-        return None  # no fixed range
 
     # public methods
 
@@ -174,4 +178,3 @@ class HistPlotAdapter(PlotAdapterBase):
             error_contributions=error_contributions,
             **kwargs
         )
-

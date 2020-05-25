@@ -1,51 +1,61 @@
+import copy
 import re
-import string
 
 import numpy as np
-from kafe2.fit.io.file import FileIOMixin
 
+from ..io.file import FileIOMixin
 
-__all__ = ["ModelParameterFormatter", "ModelFunctionFormatter", "CostFunctionFormatter", "FormatterException"]
+__all__ = ["FormatterException", "ParameterFormatter", "FunctionFormatter", "ModelFunctionFormatter",
+           "CostFunctionFormatter", "latexify_ascii"]
 
 
 # -- formatters for model parameters and model functions
+def latexify_ascii(ascii_string):
+    """Create a true type latex string of an standard ascii string.
+
+    :param ascii_string: The string to be converted
+    :type ascii_string: str
+    :rtype: str
+    """
+    _lpn = ascii_string.replace('_', r"\_")
+    return r"{\tt %s}" % _lpn
+
+
+# Naming convention: Arguments describe all arguments of a function, parameters only the fitted parameters excluding
+# the independent variable(s)
+
 
 class FormatterException(Exception):
     pass
 
 
-class ModelParameterFormatter(FileIOMixin, object):
+class ParameterFormatter(FileIOMixin, object):
+    """Formatter class for model parameter objects.
+
+    These objects store the relevant information for constructing plain-text and/or LaTeX string representations of
+    model function parameters.
+
+    For this, the parameter name, formatted as a plain-text/LaTeX string, its value and its uncertainty is stored.
+
+    The formatted string is obtained by calling the :py:meth:`~get_formatted` method.
     """
-    :py:obj:`Formatter` class for model parameter objects.
 
-    These objects store the relevant information for constructing
-    plain-text and/or LaTeX string representations of model function parameters.
-
-    For this, :py:obj:`ModelParameterFormatter` objects store the parameter name, formatted as a plain-text/LaTeX
-    string, its value (a ``float``) and its error (a ``float`` for symmetric, a tuple of ``floats`` for
-    asymmetric errors).
-
-    The formatted string is obtained by calling the :py:meth:`~ModelParameterFormatter.get_formatted` method.
-    """
     def __init__(self, name, value=None, error=None, asymmetric_error=None, latex_name=None):
         """
+        Construct a Parameter Formatter.
 
-        Construct a :py:obj:`Formatter` for a model function:
-
-        :param name:
-        :param latex_name: a LaTeX-formatted string indicating the function name
-        :param arg_formatters: list of :py:obj:`ModelParameterFormatter`-derived objects,
-                               formatters for function arguments
-        :param expression_string:  a plain-text-formatted string indicating the function expression
-        :param latex_expression_string:  a LaTeX-formatted string indicating the function expression
-
-        :param name: a plain-text-formatted string indicating the parameter name
-        :param value: the parameter value (``float``)
-        :param error: the parameter error: ``float`` (tuple of 2 ``floats``) for symmetric (asymmetric) error
-        :param latex_name: a LaTeX-formatted string indicating the parameter name
+        :param str name: A plain-text-formatted string indicating the parameter name.
+        :param value: The parameter value.
+        :type value: float or None
+        :param error: The symmetric parameter error.
+        :type error: float or None
+        :param asymmetric_error: The asymmetric parameter errors.
+        :type asymmetric_error: tuple[float, float] or None
+        :param latex_name: A LaTeX-formatted string indicating the parameter name.
+        :type latex_name: str or None
+        :rtype: ParameterFormatter
         """
         self.value = value
-
         self.error = error
         self.asymmetric_error = asymmetric_error
 
@@ -53,42 +63,37 @@ class ModelParameterFormatter(FileIOMixin, object):
         self.latex_name = latex_name  # latex_name setter requires self._name to be set beforehand
 
         self._fixed = False
-        super(ModelParameterFormatter, self).__init__()
+        super(ParameterFormatter, self).__init__()
 
     @classmethod
     def _get_base_class(cls):
-        return ModelParameterFormatter
+        return ParameterFormatter
 
     @classmethod
     def _get_object_type_name(cls):
-        return 'model_parameter_formatter'
-
-
-    @staticmethod
-    def _latexify_ascii(ascii_string):
-        _lpn = ascii_string.replace('_', r"\_")
-        return r"{\tt %s}" % (_lpn,)
+        return 'parameter_formatter'
 
     @property
     def name(self):
-        """a plain-text-formatted string indicating the parameter name"""
+        """The plain-text-formatted string indicating the parameter name.
+
+        :rtype: str
+        """
         return self._name
 
     @property
     def latex_name(self):
-        """a LaTeX-formatted string indicating the parameter name"""
+        """The LaTeX-formatted string indicating the parameter name.
+
+        :rtype: str
+        """
         return self._latex_name
 
     @latex_name.setter
     def latex_name(self, new_latex_name):
-        """Set the LaTeX-formatted string indicating the parameter name
-
-        :param new_latex_name: LaTeX-formatted string
-        :type new_latex_name: str
-        """
         # TODO: validate
         if new_latex_name is None:
-            self._latex_name = self._latexify_ascii(self.name)
+            self._latex_name = latexify_ascii(self.name)
         elif new_latex_name.startswith('{') and new_latex_name.endswith('}'):
             self._latex_name = new_latex_name
         else:
@@ -96,7 +101,9 @@ class ModelParameterFormatter(FileIOMixin, object):
 
     @property
     def value(self):
-        """the parameter value"""
+        """The parameter value.
+
+        :rtype: float or None"""
         return self._value
 
     @value.setter
@@ -105,7 +112,9 @@ class ModelParameterFormatter(FileIOMixin, object):
 
     @property
     def error(self):
-        """the parameter error (``float``/tuple of 2 ``floats``)"""
+        """The symmetric parameter error.
+
+        :rtype: float or None"""
         return self._error
 
     @error.setter
@@ -114,14 +123,18 @@ class ModelParameterFormatter(FileIOMixin, object):
 
     @property
     def error_rel(self):
-        """the relative parameter error (``float``/tuple of 2 ``floats``)"""
+        """The relative parameter error.
+
+        :rtype: float or None"""
         if self._error is None:
             return None
-        else:
-            return self._error/self._value
+        return self._error / self._value
 
     @property
     def asymmetric_error(self):
+        """Tuple containing the asymmetric parameter errors.
+
+        :rtype: tuple[float, float] or None"""
         return self._asymmetric_error
 
     @asymmetric_error.setter
@@ -130,21 +143,30 @@ class ModelParameterFormatter(FileIOMixin, object):
 
     @property
     def error_up(self):
-        """the "up" error (only for asymmetric errors)"""
+        """The upper uncertainty (only for asymmetric errors).
+
+        :rtype: float or None
+        """
         if self.asymmetric_error is None:
             return None
         return self.asymmetric_error[1]
 
     @property
     def error_down(self):
-        """the "down" error (only for asymmetric errors)"""
+        """The lower uncertainty (only for asymmetric errors).
+
+        :rtype: float or None
+        """
         if self.asymmetric_error is None:
             return None
         return self.asymmetric_error[0]
 
     @property
     def fixed(self):
-        """if the parameter has been fixed by the user."""
+        """If the parameter has been fixed by the user. :py:obj:`True` when it's fixed, :py:obj:`False` when not.
+
+        :rtype: bool
+        """
         return self._fixed
 
     @fixed.setter
@@ -153,24 +175,17 @@ class ModelParameterFormatter(FileIOMixin, object):
 
     def get_formatted(self, with_name=False, with_value=True, with_errors=True, n_significant_digits=2,
                       round_value_to_error=True, asymmetric_error=False, format_as_latex=False):
-        """
-        Get a formatted string representing this model parameter.
+        """Get a formatted string representing this model parameter.
 
-        :param with_name:  if ``True``, output will include the parameter name
-        :type with_name: bool
-        :param with_value: if ``True``, output will include the parameter value
-        :type with_value: bool
-        :param with_errors: if ``True``, output will include the parameter error/errors
-        :type with_errors: bool
-        :param n_significant_digits: number of significant digits for rounding
-        :type n_significant_digits: int
-        :param round_value_to_error: if ``True``, the parameter value will be rounded to the same precision as the error
-        :type round_value_to_error: bool
-        :param asymmetric_error: if ``True``, use two different errors for up/down directions
-        :type asymmetric_error: bool
-        :param format_as_latex: if ``True``, the returned string will be formatted using LaTeX syntax
-        :type format_as_latex: bool
-        :return: the string representation of the parameter
+        :param bool with_name: If :py:obj:`True`, the output will include the parameter name.
+        :param bool with_value: If :py:obj:`True`, the output will include the parameter value.
+        :param bool with_errors: If :py:obj:`True`, the output will include the parameter error/errors.
+        :param int n_significant_digits: Number of significant digits for rounding.
+        :param bool round_value_to_error: If :py:obj:`True`, the parameter value will be rounded to the same precision
+                                          as the uncertainty.
+        :param bool asymmetric_error: If :py:obj:`True`, the asymmetric parameter uncertainties are used.
+        :param bool format_as_latex: If :py:obj:`True`, the returned string will be formatted using LaTeX syntax.
+        :return: The string representation of the parameter.
         :rtype: str
         """
         _display_string = ""
@@ -187,16 +202,15 @@ class ModelParameterFormatter(FileIOMixin, object):
             # fallback to rounding to 10^(-1) if value is zero
             _log_abs_value = -1
             if self._value:
-                _log_abs_value = np.log(np.abs(self._value))
+                _log_abs_value = np.log10(np.abs(self._value))
 
-            if not with_errors or (not asymmetric_error and self.error is None) or \
-                    (asymmetric_error and self.asymmetric_error is None):
-                _sig = int(-np.floor(_log_abs_value / np.log(10))) + n_significant_digits - 1
-                _display_val = round(self._value, _sig)
+            if not with_errors or (not asymmetric_error and self.error in (None, 0)) or \
+                    (asymmetric_error and (
+                            self.asymmetric_error is None or np.all(self.asymmetric_error == 0))):
                 if format_as_latex:
-                    _display_string += "$%g$" % (_display_val,)
+                    _display_string += "$%g$" % self.value
                 else:
-                    _display_string += "%g" % (_display_val,)
+                    _display_string += "%g" % self.value
             elif self.fixed:
                 if format_as_latex:
                     _display_string += r"$%g$ (fixed)" % self._value
@@ -211,9 +225,9 @@ class ModelParameterFormatter(FileIOMixin, object):
                 if not _min_err or np.isnan(_min_err):
                     _min_err = 1e-1
                 if round_value_to_error:
-                    _sig = int(-np.floor(np.log(_min_err)/np.log(10))) + n_significant_digits - 1
+                    _sig = int(-np.floor(np.log10(_min_err))) + n_significant_digits - 1
                 else:
-                    _sig = int(-np.floor(_log_abs_value / np.log(10))) + n_significant_digits - 1
+                    _sig = int(-np.floor(_log_abs_value)) + n_significant_digits - 1
 
                 _display_val = round(self._value, _sig)
                 if asymmetric_error:
@@ -238,86 +252,100 @@ class ModelParameterFormatter(FileIOMixin, object):
         return _display_string
 
 
-class ModelFunctionFormatter(FileIOMixin, object):
-    """
-    Base class for model function :py:obj:`Formatter` objects. Requires further specialization for
-    each type of model function.
+class FunctionFormatter(FileIOMixin, object):
+    """Base class for function formatter objects. Requires further specialization for each type of model function.
 
-    Objects derived from :py:class:`ModelFunctionFormatter` store information relevant for constructing
-    plain-text and/or LaTeX string representations of model functions.
+    Objects derived from this class store information relevant for constructing plain-text and/or LaTeX string
+    representations of functions.
 
-    For this, :py:obj:`ModelFunctionFormatter` objects store the function name, formatted as a plain-text/LaTeX
-    string, as well as a list of references to :py:obj:`ModelParameterFormatter` objects which contain information
-    on how to format the model function arguments.
+    For this, the function name, formatted as a plain-text/LaTeX string, as well as a list of references to
+    :py:obj:`ParameterFormatter` objects which contain information on how to format the model function arguments is
+    stored.
 
     Optionally, plain-text/LaTeX expression strings can be provided. These are strings representing the model
     function expression (i.e. mathematical formula).
 
-    The formatted string is obtained by calling the :py:meth:`~ModelFunctionFormatter.get_formatted` method.
+    The formatted string is obtained by calling the :py:meth:`~get_formatted` method.
     """
-    DEFAULT_EXPRESSION_STRING = "<not_specified>"
-    DEFAULT_LATEX_EXPRESSION_STRING = r"\langle{\it not\,\,specified}\rangle"
+    DEFAULT_EXPRESSION_STRING = None
+    DEFAULT_LATEX_EXPRESSION_STRING = None
 
-    def __init__(self, name, latex_name=None, arg_formatters=None, expression_string=None, latex_expression_string=None):
-        """
-        Construct a :py:obj:`Formatter` for a model function:
+    def __init__(self, name, latex_name=None, arg_formatters=None, expression_string=None,
+                 latex_expression_string=None):
+        """Construct a formatter for a model function:
 
-        :param name: a plain-text-formatted string indicating the function name
-        :param latex_name: a LaTeX-formatted string indicating the function name
-        :param arg_formatters: list of :py:obj:`ModelParameterFormatter`-derived objects,
-                               formatters for function arguments
-        :param expression_string:  a plain-text-formatted string indicating the function expression
-        :param latex_expression_string:  a LaTeX-formatted string indicating the function expression
+        :param name: A plain-text-formatted string indicating the function name.
+        :type name: str
+        :param latex_name: A LaTeX-formatted string indicating the function name.
+        :type latex_name: str
+        :param arg_formatters: List of :py:obj:`ParameterFormatter`-derived objects, formatters for function arguments.
+        :type arg_formatters: list[kafe2.fit._base.ParameterFormatter]
+        :param expression_string: A plain-text-formatted string indicating the function expression.
+        :type expression_string: str
+        :param latex_expression_string: A LaTeX-formatted string indicating the function expression.
+        :type latex_expression_string: str
         """
-        #TODO should name be allowed to be None?
+        # TODO should name be allowed to be None?
         self._name = name
         self._arg_formatters = arg_formatters
         self.expression_format_string = expression_string
         self.latex_expression_format_string = latex_expression_string
 
-        self._latex_name = latex_name
-        if self._latex_name is None:
-            self._latex_name = self._latexify_ascii(self._name)
+        self.latex_name = latex_name
 
         self._description = None
-        super(ModelFunctionFormatter, self).__init__()
+        super(FunctionFormatter, self).__init__()
 
     @classmethod
     def _get_base_class(cls):
-        return ModelFunctionFormatter
+        return FunctionFormatter
 
     @classmethod
     def _get_object_type_name(cls):
-        return 'model_function_formatter'
-
-    @staticmethod
-    def _latexify_ascii(ascii_string):
-        _lpn = ascii_string.replace('_', r"\_")
-        return r"{\tt %s}" % (_lpn,)
+        return 'function_formatter'
 
     def _get_format_kwargs(self, format_as_latex=False):
+        """Create a dictionary containing argument name and format pairs.
+
+        :param format_as_latex: If the format string is a latex formatted string.
+        :return: Dictionary containing argument name and format pairs.
+        :rtype: dict[str, str]
+        """
         if format_as_latex:
-            _par_name_string_dict = {_af.name: _af.latex_name for _af in self._arg_formatters}
+            _par_name_string_dict = {_af.name: _af.latex_name for _af in self.arg_formatters}
         else:
-            _par_name_string_dict = {_af.name: _af.name for _af in self._arg_formatters}
+            _par_name_string_dict = {_af.name: _af.name for _af in self.arg_formatters}
         return _par_name_string_dict
 
     def _get_formatted_name(self, format_as_latex=False):
+        """Get the formatted function name.
+
+        :param bool format_as_latex: If the format string is a latex formatted string.
+        :return: The formatted function name.
+        :rtype: str
+        """
         if format_as_latex:
             return self._latex_name
-        else:
-            return self._name
+        return self._name
 
-    def _get_formatted_args(self, with_par_values=True, n_significant_digits=2, format_as_latex=False):
+    def _get_formatted_pars(self, with_par_values=True, n_significant_digits=2, format_as_latex=False):
+        """Get a list of the formatted parameters including their values. This can be turned off.
+
+        :param bool with_par_values: If the strings should contain the parameter values.
+        :param int n_significant_digits: The number of significant digits when using the parameter values.
+        :param bool format_as_latex: If the string should be formatted as a latex string.
+        :return: List of formatted parameter strings.
+        :rtype: list[str]
+        """
         if format_as_latex:
-            _par_name_strings = [_af.latex_name for _af in self._arg_formatters]
+            _par_name_strings = [_pf.latex_name for _pf in self.par_formatters]
         else:
-            _par_name_strings = [_af.name for _af in self._arg_formatters]
+            _par_name_strings = [_pf.name for _pf in self.par_formatters]
 
         if with_par_values:
             _par_val_strings = []
-            for _af in self._arg_formatters:
-                _par_val_strings.append(_af.get_formatted(with_name=False,
+            for _pf in self.par_formatters:
+                _par_val_strings.append(_pf.get_formatted(with_name=False,
                                                           with_value=True,
                                                           with_errors=False,
                                                           n_significant_digits=n_significant_digits,
@@ -327,14 +355,18 @@ class ModelFunctionFormatter(FileIOMixin, object):
         return ["%s" % (_pn,) for _pn in _par_name_strings]
 
     def _get_formatted_expression(self, format_as_latex=False):
-        # TODO: nicer way then always use two curly braces for latex expression?
-        # Currently when creating a latex expression to curly braces are needed. E.g. \\frac{{1}}{{x}} for 1/x
-        # If only one curly brace is used kafe will lookup the associated param
+        """Get the formatted function expression.
+
+        :param format_as_latex: If the string should be formatted as a latex string.
+        :rtype: str
+        """
         _kwargs = self._get_format_kwargs(format_as_latex=format_as_latex)
         if format_as_latex and self._latex_expr_string is not None:
-            _par_expr_string = self._latex_expr_string.format(*[_af.latex_name for _af in self._arg_formatters], **_kwargs)
+            # use all arguments to format the expression string
+            _par_expr_string = self._latex_expr_string.format(*[_af.latex_name for _af in self.arg_formatters],
+                                                              **_kwargs)
         elif not format_as_latex and self._expr_string is not None:
-            _par_expr_string = self._expr_string.format(*[_af.name for _af in self._arg_formatters], **_kwargs)
+            _par_expr_string = self._expr_string.format(*[_af.name for _af in self.arg_formatters], **_kwargs)
         elif format_as_latex and self._latex_expr_string is None:
             _par_expr_string = self.DEFAULT_LATEX_EXPRESSION_STRING
         else:
@@ -343,7 +375,13 @@ class ModelFunctionFormatter(FileIOMixin, object):
 
     @property
     def expression_format_string(self):
-        """a plain-text-formatted expression for the function"""
+        """A plain-text-formatted expression for the function.
+        This function will replace all function parameters with their corresponding strings.
+        For example the string "{a}*{x}+{b}" will turn into "A*x + B" when the name of the parameter a was set
+        to "A", and the name of b is set to "B".
+
+        :rtype: str
+        """
         return self._expr_string
 
     @expression_format_string.setter
@@ -351,14 +389,26 @@ class ModelFunctionFormatter(FileIOMixin, object):
         self._expr_string = expression_format_string
         try:
             self._get_formatted_expression(format_as_latex=False)
-        except:
-            _af_names = [_af.name for _af in self._arg_formatters] if self._arg_formatters else None
+        except LookupError:  # fetch key and index errors. Other Errors have other causes.
+            _af_names = [_af.name for _af in self.arg_formatters] if self.arg_formatters else None
             raise FormatterException("Expression string %s does not match argument structure %s"
                                      % (expression_format_string, _af_names))
 
     @property
     def latex_expression_format_string(self):
-        """a LaTeX-formatted expression for the function"""
+        r"""A LaTeX-formatted expression for the function.
+        This function will replace all function parameters with their corresponding latex string.
+        For example the string ``"{a}{x}+{b}"`` will turn into ``"A_0 x + B"`` when the latex name of the parameter
+        ``a`` was set to ``"A_0"``, and the latex name of ``b`` is set to ``"B"``.
+
+        .. note:
+            Due to the way python handles string formatting, please always use two curly braces in standard LaTeX
+            expressions. E.g. ``"\\frac{{{a}*{b}}}{{{x}-{c}}}"``.
+            When not using a raw string, please double all backslashes as well! When using a raw string the above
+            translates to ``r"\frac{{{a}*{b}}}{{{x}-{c}}}"``.
+
+        :rtype: str
+        """
         return self._latex_expr_string
 
     @latex_expression_format_string.setter
@@ -366,66 +416,84 @@ class ModelFunctionFormatter(FileIOMixin, object):
         self._latex_expr_string = latex_expression_format_string
         try:
             self._get_formatted_expression(format_as_latex=True)
-        except:
-            _af_latex_names = [_af.latex_name for _af in self._arg_formatters] if self._arg_formatters else None
+        except LookupError:  # fetch key and index errors. Other Errors have other causes.
+            _af_latex_names = [_af.latex_name for _af in self.arg_formatters] if self.arg_formatters else None
             raise FormatterException("LaTeX expression string %s does not match argument structure %s"
                                      % (latex_expression_format_string, _af_latex_names))
 
     @property
     def name(self):
-        """a plain-text-formatted string indicating the parameter name"""
+        """A plain-text-formatted string indicating the function name.
+
+        :rtype: str
+        """
         return self._name
 
     @name.setter
-    def name(self, new_name):
+    def name(self, name):
         # TODO: validate
-        self._name = new_name
+        self._name = name
 
     @property
     def latex_name(self):
-        """a LaTeX-formatted string indicating the function name"""
+        """A LaTeX-formatted string indicating the function name.
+
+        :rtype: str
+        """
         return self._latex_name
 
     @latex_name.setter
-    def latex_name(self, new_latex_name):
+    def latex_name(self, latex_name):
+        if latex_name is None:
+            self._latex_name = latexify_ascii(self.name)
         # TODO: validate
-        self._latex_name = new_latex_name
+        else:
+            self._latex_name = latex_name
 
     @property
     def description(self):
-        """a short plain-text description of the function"""
+        """A short plain-text description of the function.
+
+        :rtype: str
+        """
         return self._description or "<no description provided>"
 
     @description.setter
-    def description(self, new_description):
+    def description(self, description):
         # TODO: validate
-        self._description = new_description
+        self._description = description
 
     @property
     def arg_formatters(self):
-        """
-        the list of :py:obj:`ModelParameterFormatter`-derived objects used for formatting
-        model function arguments
+        """The list of :py:obj:`ParameterFormatter`-derived objects used for formatting all model function arguments.
+
+        :rtype: list[ParameterFormatter]
         """
         return self._arg_formatters
 
-    @arg_formatters.setter
-    def arg_formatters(self, arg_formatters):
-        self._arg_formatters = arg_formatters
+    # Don't use setter. The ParameterFormatter objects can be customized set individually. Setter requires validation
 
-    def get_formatted(self, with_par_values=True, n_significant_digits=2, format_as_latex=False, with_expression=False):
-        """
-        Get a formatted string representing this model function.
+    @property
+    def par_formatters(self):
+        """List of :py:obj:`ParameterFormatter`-derived objects used for formatting the fit parameters,
+        excluding the independent parameter(s).
 
-        :param with_par_values: if ``True``, output will include the value of each function parameter
-                                (e.g. ``f(a=1, b=2, ...)``)
-        :param n_significant_digits: number of significant digits for rounding
-        :param format_as_latex: if ``True``, the returned string will be formatted using LaTeX syntax
-        :param with_expression: if ``True``, the returned string will include the expression assigned to the function
-        :return: string
+        :rtype: list[ParameterFormatter]
         """
-        # FIXME: default should actually *not* show the parameter values
-        _par_strings = self._get_formatted_args(with_par_values=with_par_values,
+        return self._arg_formatters  # same as all arguments for base, overwrite when necessary
+
+    def get_formatted(self, with_par_values=False, n_significant_digits=2, format_as_latex=False,
+                      with_expression=False):
+        """Get a formatted string representing this model function.
+
+        :param bool with_par_values: If :py:obj:`True`, output will include the value of each function parameter
+                                     (e.g. ``f(a=1, b=2, ...)``).
+        :param int n_significant_digits: Number of significant digits for rounding.
+        :param bool format_as_latex: If :py:obj:`True`, the returned string will be formatted using LaTeX syntax.
+        :param bool with_expression: If :py:obj:`True`, the returned string will include the expression assigned to the
+                                     function.
+        """
+        _par_strings = self._get_formatted_pars(with_par_values=with_par_values,
                                                 n_significant_digits=n_significant_digits,
                                                 format_as_latex=format_as_latex)
         _par_expr_string = ""
@@ -444,43 +512,100 @@ class ModelFunctionFormatter(FileIOMixin, object):
         return _out_string
 
 
-class CostFunctionFormatter(ModelFunctionFormatter):
+class CostFunctionFormatter(FunctionFormatter):
+    """A Formatter class for Cost Functions.
+    """
 
-    def get_formatted(self, value=None, n_degrees_of_freedom=None,
-                      with_name=True,
-                      with_value_per_ndf=True, format_as_latex=False):
+    def get_formatted(self, value=None, n_degrees_of_freedom=None, with_name=True, with_value_per_ndf=True,
+                      format_as_latex=False):
+        """Get a formatted string representing this cost function.
+
+        :param value: Value of the cost function (if not :py:obj:`None`, the returned string will include this).
+        :type value: float or None
+        :param n_degrees_of_freedom: Number of degrees of freedom (if not :py:obj:`None`, the returned string will
+                                     include this).
+        :type n_degrees_of_freedom: int or None
+        :param bool with_name: If :py:obj:`True`, the returned string will include the cost function name
+        :param bool with_value_per_ndf: If :py:obj:`True`, the returned string will include the value-ndf ratio as a
+                                        decimal value
+        :param bool format_as_latex: If :py:obj:`True`, the returned string will be formatted using LaTeX syntax
         """
-        Get a formatted string representing this cost function.
 
-        :param value: value of the cost function (if not ``None``, the returned string will include this)
-        :type value: float
-        :param n_degrees_of_freedom: number of degrees of freedom (if not ``None``, the returned string will include this)
-        :type n_degrees_of_freedom: int
-        :param with_name: if ``True``, the returned string will include the cost function name
-        :param with_value_per_ndf: if ``True``, the returned string will include the value-ndf ratio as a decimal value
-        :param format_as_latex: if ``True``, the returned string will be formatted using LaTeX syntax
-        :return: string
-        """
-
-        _name_string = "%s" % (self._latex_name)
+        _name_string = "%s" % self._latex_name
         _value_string = ""
         if value is not None:
-            _value_string = "%.4g" % (value,)
+            _value_string = "%.4g" % value
             if n_degrees_of_freedom is not None:
                 if format_as_latex:
-                    _name_string = r"%s / {\rm ndf}" % (self._latex_name)
+                    _name_string = r"%s / {\rm ndf}" % self._latex_name
                 else:
-                    _name_string = "%s / ndf" % (self._latex_name)
+                    _name_string = "%s / ndf" % self._latex_name
                 _value_string = "%s / %d" % (_value_string, n_degrees_of_freedom)
                 if with_value_per_ndf:
-                    _value_string = "%s = %.4g" % (_value_string, float(value)/n_degrees_of_freedom)
+                    _value_string = "%s = %.4g" % (_value_string, float(value) / n_degrees_of_freedom)
 
         if with_name:
             _out_string = "%s = %s" % (_name_string, _value_string)
         else:
-            _out_string = "%s" % (_value_string,)
+            _out_string = "%s" % _value_string
 
         if format_as_latex:
-            _out_string = "$%s$" % (_out_string ,)
+            _out_string = "$%s$" % _out_string
 
+        return _out_string
+
+
+class ModelFunctionFormatter(FunctionFormatter):
+    """A formatter class for model functions.
+
+    This object stores the function name, formatted as a plain-text/LaTeX string, as well as a list of references to
+    :py:obj:`ParameterFormatter` objects which contain information on how to format the model function arguments.
+    Additionally formatting information about the independent variable is stored.
+
+    Optionally, plain-text/LaTeX expression strings can be provided. These are strings representing the model
+    function expression (i.e. mathematical formula).
+
+    The formatted string is obtained by calling the :py:meth:`~get_formatted` method.
+    """
+
+    @classmethod
+    def _get_object_type_name(cls):
+        return 'model_function_formatter'
+
+    @property
+    def par_formatters(self):
+        formatters = copy.copy(self.arg_formatters)  # copy so we don't modify the original formatters
+        formatters.pop(0)  # first formatter is independent var, delete it
+        return formatters
+
+    def get_formatted(self, with_par_values=False, n_significant_digits=2, format_as_latex=False,
+                      with_expression=False):
+        """Create a formatted string representing this model function.
+
+        :param bool with_par_values: If :py:obj:`True`, output will include the value of each function parameter
+                                     (e.g. ``f(a=1, b=2, ...)``).
+        :param int n_significant_digits: number of significant digits for rounding
+        :param bool format_as_latex: If :py:obj:`True`, the returned string will be formatted using LaTeX syntax.
+        :param bool with_expression: If :py:obj:`True`, the returned string will include the expression assigned to the
+                                     function.
+        :returns: The formatted string representing this model function.
+        :rtype: str
+        """
+        _par_strings = self._get_formatted_pars(with_par_values=with_par_values,
+                                                n_significant_digits=n_significant_digits,
+                                                format_as_latex=format_as_latex)
+        _par_expr_string = ""
+        if with_expression:
+            _par_expr_string = self._get_formatted_expression(format_as_latex=format_as_latex)
+
+        x_formatter = self.arg_formatters[0]
+        if format_as_latex:
+            _out_string = r"%s\left(%s;%s\right)" % (self._latex_name, x_formatter.latex_name, ", ".join(_par_strings))
+            if _par_expr_string:
+                _out_string += " = " + _par_expr_string
+            _out_string = "$%s$" % (_out_string,)
+        else:
+            _out_string = "%s(%s; %s)" % (self._name, x_formatter.name, ", ".join(_par_strings))
+            if _par_expr_string:
+                _out_string += " = " + _par_expr_string
         return _out_string

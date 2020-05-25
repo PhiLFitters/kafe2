@@ -42,15 +42,15 @@ yerr = [1.060258e-01, 5.890727e-02, 3.230893e-02, 7.400725e-02, 2.130520e-02, 7.
 
 # create a fit object from the data arrays
 fit = XYFit(xy_data=[x, y], model_function=exponential)
-fit.add_simple_error(axis='x', err_val=xerr)  # add the x-error to the fit
-fit.add_simple_error(axis='y', err_val=yerr)  # add the y-errors to the fit
+fit.add_error(axis='x', err_val=xerr)  # add the x-error to the fit
+fit.add_error(axis='y', err_val=yerr)  # add the y-errors to the fit
 
 fit.do_fit()  # perform the fit
 fit.report(asymmetric_parameter_errors=True)  # print a report with asymmetric uncertainties
 
 # Optional: create a plot
 plot = Plot(fit)
-plot.plot(with_ratio=True, with_asymmetric_parameter_errors=True)  # add the ratio data/function and asymmetric errors
+plot.plot(asymmetric_parameter_errors=True, ratio=True)  # add the ratio data/function and asymmetric errors
 
 # Optional: create the contours profiler
 cpf = ContoursProfiler(fit)

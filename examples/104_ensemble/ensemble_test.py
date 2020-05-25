@@ -46,7 +46,7 @@ RELATIVE_TO_WHAT = 'data'
 
 # -- add a single, uncorrelated, relative *y* error of 30%
 
-fit_ensemble.add_simple_error(
+fit_ensemble.add_error(
     axis='y',
     err_val=0.3,
     correlation=0.0,

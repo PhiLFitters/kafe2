@@ -3,11 +3,11 @@ import re
 import yaml
 
 from ....core.error import SimpleGaussianError, MatrixGaussianError
-from ....fit import HistContainer, IndexedContainer, XYContainer, XYMultiContainer
+from ....fit import HistContainer, IndexedContainer, XYContainer, UnbinnedContainer
 from .. import _AVAILABLE_REPRESENTATIONS
 from ._base import DataContainerDReprBase
 from .._base import DReprError
-from .._yaml_base import YamlWriterMixin, YamlReaderMixin, YamlReaderException
+from .._yaml_base import YamlWriterMixin, YamlReaderMixin, YamlReaderException, YamlWriterException
 
 __all__ = ["DataContainerYamlReader", "DataContainerYamlWriter"]
 
@@ -41,8 +41,10 @@ class _DataContainerYamlLoader(yaml.Loader):
 
         return _np_mat
 
+
 _DataContainerYamlLoader.add_constructor('!matrix', _DataContainerYamlLoader.matrix)
 _DataContainerYamlLoader.add_constructor('!symmetric_matrix', _DataContainerYamlLoader.symmetric_matrix)
+
 
 class _DataContainerYamlDumper(yaml.Dumper):
 
@@ -74,7 +76,6 @@ class _DataContainerYamlDumper(yaml.Dumper):
 
         # write full matrix using the '|'-style
         return self.represent_scalar('!matrix', _string_repr, style='|')
-
 
 
 # representers for covariance matrices errors
@@ -150,6 +151,11 @@ class DataContainerYamlWriter(YamlWriterMixin, DataContainerDReprBase):
     
     @classmethod
     def _make_representation(cls, container):
+        """Create a dictionary representing a data container.
+
+        :param container: The data container which will be converted.
+        :type container: kafe2.fit._base.DataContainerBase
+        """
         _yaml_doc = dict()
         _class = container.__class__
 
@@ -161,17 +167,16 @@ class DataContainerYamlWriter(YamlWriterMixin, DataContainerDReprBase):
 
         # -- write representation for container types
         if _class is HistContainer:
+            # TODO: Add manual bin height support
+            if container._manual_heights:
+                raise YamlWriterException("Manual set bins are not yet supported with kafe2go.")
             _yaml_doc['bin_edges'] = container.bin_edges.tolist()
             _yaml_doc['raw_data'] = list(map(float, container.raw_data))  # float64 -> float
-        elif _class is IndexedContainer:
+        elif _class is IndexedContainer or _class is UnbinnedContainer:
             _yaml_doc['data'] = container.data.tolist()
         elif _class is XYContainer:
             _yaml_doc['x_data'] = container.x.tolist()
             _yaml_doc['y_data'] = container.y.tolist()
-        elif _class is XYMultiContainer:
-            for _i in range(container.num_datasets):
-                _yaml_doc['x_data_%s' % _i] = container.get_splice(container.x, _i).tolist()
-                _yaml_doc['y_data_%s' % _i] = container.get_splice(container.y, _i).tolist()
         else:
             raise DReprError("Container type unknown or not supported: {}".format(_type))
 
@@ -179,7 +184,17 @@ class DataContainerYamlWriter(YamlWriterMixin, DataContainerDReprBase):
         if container.has_errors:
             cls._write_errors_to_yaml(container, _yaml_doc)
 
+        # write labels for all container types
+        if container.label is not None:
+            _yaml_doc['label'] = container.label
+        _x_axis_label, _y_axis_label = container.axis_labels
+        if _x_axis_label is not None:
+            _yaml_doc['x_label'] = _x_axis_label
+        if _y_axis_label is not None:
+            _yaml_doc['y_label'] = _y_axis_label
+
         return _yaml_doc
+
 
 class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
     LOADER = _DataContainerYamlLoader
@@ -192,7 +207,7 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
     def _add_error_to_container(err_type, container_obj, **kwargs):
         # TODO: check kwargs explicitly
         if err_type == 'simple':
-            container_obj.add_simple_error(**kwargs)
+            container_obj.add_error(**kwargs)
         elif err_type == 'matrix':
             container_obj.add_matrix_error(**kwargs)
         else:
@@ -203,14 +218,11 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
     def _get_required_keywords(cls, yaml_doc, container_class):
         if container_class is HistContainer:
             return ['raw_data']
-        elif container_class is IndexedContainer:
+        if container_class is IndexedContainer or container_class is UnbinnedContainer:
             return ['data']
-        elif container_class is (XYContainer):
+        if container_class is XYContainer:
             return ['x_data', 'y_data']
-        elif container_class is (XYMultiContainer):
-            return ['x_data_0', 'y_data_0']
-        else:
-            raise YamlReaderException("Unknown container type")
+        raise YamlReaderException("Unknown container type")
 
     @classmethod
     def _convert_yaml_doc_to_object(cls, yaml_doc):
@@ -237,35 +249,24 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
         elif _class is IndexedContainer:
             _data = yaml_doc.pop('data')
             _container_obj = IndexedContainer(_data)
+        elif _class is UnbinnedContainer:
+            _data = yaml_doc.pop('data')
+            _container_obj = UnbinnedContainer(_data)
         elif _class is XYContainer:
             _x_data = yaml_doc.pop('x_data')
             _y_data = yaml_doc.pop('y_data')
             _container_obj = XYContainer(_x_data, _y_data)
-        elif _class is XYMultiContainer:
-            _xy_data = []
-            _i = 0 #xy dataset index
-            _x_data_i = yaml_doc.pop('x_data_%s' % _i, None)
-            _y_data_i = yaml_doc.pop('y_data_%s' % _i, None)
-            #TODO same procedure for errors?
-            while _x_data_i  and _y_data_i :
-                _xy_data.append([_x_data_i, _y_data_i])
-                _i += 1
-                _x_data_i = yaml_doc.pop('x_data_%s' % _i, None)
-                _y_data_i = yaml_doc.pop('y_data_%s' % _i, None)
-            # if only one out of _x_data_i and _y_data_i isn't None there's probably
-            # a missing/misspelled keyword
-            if _x_data_i:
-                raise YamlReaderException("Missing corresponding y_data_%s for x_data_%s!" % (_i, _i))
-            if _y_data_i:
-                raise YamlReaderException("Missing corresponding x_data_%s for y_data_%s!" % (_i, _i))
-            _container_obj = XYMultiContainer(_xy_data)
         else:
             raise DReprError("Container type unknown or not supported: {}".format(_container_type))
+
+        # get labels for all container types
+        _container_obj.label = yaml_doc.pop('label', None)
+        _container_obj.axis_labels = (yaml_doc.pop('x_label', None), yaml_doc.pop('y_label', None))
 
         # -- process error sources
         # errors can be specified as a single float, a list of floats, or a kafe2 error object
         # lists of the above are also valid, if the error object is not a list
-        if _class in  (XYContainer, XYMultiContainer):
+        if _class is XYContainer:
             _xerrs = yaml_doc.pop('x_errors', [])
             if not isinstance(_xerrs, list) or (len(_xerrs) > 0 and isinstance(_xerrs[0], float)):
                 _xerrs = [_xerrs]
@@ -284,7 +285,7 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
         for _err, _axis in zip(_errs, _axes):
             # if error is a float/int or a list thereof add it as a simple error and don't
             # try to interpret it as a kafe2 error object
-            if isinstance(_err, float) or isinstance(_err, int) or isinstance(_err, list):
+            if isinstance(_err, (float, int, list)):
                 if _axis is not None:
                     cls._add_error_to_container('simple', _container_obj, err_val=_err, axis=_axis)
                 else:
@@ -310,8 +311,6 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
                                      "Valid: {}".format(_err_type, ('simple', 'matrix')))
 
                 _add_kwargs['relative'] = _err.get('relative', False)
-                if _class is XYMultiContainer:
-                    _add_kwargs['model_index'] = _err.get('model_index', None)
 
                 # if needed, specify the axis (only for 'xy' containers)
                 if _axis is not None:
@@ -324,6 +323,7 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
             cls._add_error_to_container(_err_type, _container_obj, **_add_kwargs)
 
         return _container_obj, yaml_doc
+
 
 # register the above classes in the module-level dictionary
 DataContainerYamlReader._register_class(_AVAILABLE_REPRESENTATIONS)

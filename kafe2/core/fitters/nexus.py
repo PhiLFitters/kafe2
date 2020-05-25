@@ -16,14 +16,7 @@ if six.PY2:
 else:
     from inspect import signature, Parameter as SigParameter
 
-
-__all__ = [
-    "Parameter",
-    "Function",
-    "Fallback",
-    "Tuple",
-    "Nexus",
-]
+__all__ = ['Nexus', 'NexusError', 'Alias', 'Array', 'Fallback', 'Function', 'Parameter', 'Tuple']
 
 # -- helpers
 
@@ -688,8 +681,8 @@ class Tuple(ValueNode):
         self.nodes = nodes
         self._value = None
 
-        if name is None and len(self.nodes):
-            self.name =  '__'.join([_n.name for _n in self.nodes])
+        if name is None and self.nodes:
+            self.name = '__'.join([_n.name for _n in self.nodes])
 
     def __iter__(self):
         for _n in self.nodes:
@@ -737,8 +730,8 @@ class Array(Tuple):
         self._dtype = dtype
         self.nodes = nodes
 
-        if name is None and len(self.nodes):
-            self.name =  'array_' + '__'.join([_n.name for _n in self.nodes])
+        if name is None and self.nodes:
+            self.name = 'array_' + '__'.join([_n.name for _n in self.nodes])
 
     @Tuple.nodes.setter
     def nodes(self, nodes):
@@ -1017,7 +1010,7 @@ class Nexus(object):
                         node.name
                     )
                 )
-            elif existing_behavior == 'replace':
+            if existing_behavior == 'replace':
                 if add_children:
                     # add all dependent children to the nexus first
                     for _child in node.iter_children():
@@ -1200,16 +1193,6 @@ class Nexus(object):
                                     ),
                                     UserWarning
                                 )
-                            except:
-                                # something else may have gone wrong
-                                warnings.warn(
-                                    "Ignoring default value {!r} for function parameter '{}': "
-                                    "non-empty nexus node already exists.".format(
-                                        _arg_default,
-                                        _node_name
-                                    ),
-                                    UserWarning
-                                )
 
                     # register existing node as parameter
                     _pars.append(_existing_node)
@@ -1294,10 +1277,8 @@ class Nexus(object):
                 "not exist!".format(name)
             )
 
-        if not (isinstance(depends_on, tuple) or
-                isinstance(depends_on, list)):
+        if not isinstance(depends_on, (tuple, list)):
             depends_on = (depends_on,)
-
 
         _not_found = [_dep for _dep in depends_on if self.get(_dep) is None]
 
@@ -1373,8 +1354,8 @@ class Nexus(object):
                 _val = _node.value
             except Exception as e:
                 if error_behavior == 'fail':
-                    raise
-                elif error_behavior == 'none':
+                    raise e
+                if error_behavior == 'none':
                     _val = None
                 elif error_behavior == 'exception_as_value':
                     _val = e
@@ -1384,7 +1365,7 @@ class Nexus(object):
                     _result_dict.setdefault('__error__', []).append(_name)
                     continue
                 else:
-                    assert False  # should not get here
+                    assert False, "Something went terribly wrong. Unknown error behaviour {}".format(error_behavior)
             else:
                 _result_dict[_name] = _val
 

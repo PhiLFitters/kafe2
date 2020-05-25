@@ -1,11 +1,10 @@
 import abc
 import six
 
-from kafe2.fit.indexed import IndexedModelFunctionFormatter
-from kafe2.fit.histogram import HistModelDensityFunctionFormatter
-from kafe2.fit.xy import XYModelFunctionFormatter
-from kafe2.fit.xy_multi import XYMultiModelFunctionFormatter
-from kafe2.fit.representation._base import GenericDReprBase
+from .._base import GenericDReprBase
+# import formatter classes
+from ..._base.format import ModelFunctionFormatter
+from ...indexed import IndexedModelFunctionFormatter
 
 __all__ = ["ModelFunctionFormatterDReprBase", "ModelParameterFormatterDReprBase"]
 
@@ -14,18 +13,15 @@ __all__ = ["ModelFunctionFormatterDReprBase", "ModelParameterFormatterDReprBase"
 class ModelFunctionFormatterDReprBase(GenericDReprBase):
     BASE_OBJECT_TYPE_NAME = 'model_function_formatter'
 
-    #TODO type aliases
+    # This dict is currently not used. Because there are only two different formatters adn most fits use the base format
+    # Case separation is currently only handled in the yaml_drepr.py
     _CLASS_TO_OBJECT_TYPE_NAME = {
-        HistModelDensityFunctionFormatter: 'histogram',
-        IndexedModelFunctionFormatter: 'indexed',
-        XYModelFunctionFormatter: 'xy',
-        XYMultiModelFunctionFormatter: 'xy_multi'
+        ModelFunctionFormatter: 'base',
+        IndexedModelFunctionFormatter: 'indexed'
     }
     _OBJECT_TYPE_NAME_TO_CLASS = {
-        'histogram': HistModelDensityFunctionFormatter,
-        'indexed': IndexedModelFunctionFormatter,
-        'xy': XYModelFunctionFormatter,
-        'xy_multi': XYMultiModelFunctionFormatter
+        'base': ModelFunctionFormatter,
+        'indexed': IndexedModelFunctionFormatter
     }
 
     def __init__(self, model_function_formatter=None):
@@ -40,4 +36,3 @@ class ModelParameterFormatterDReprBase(GenericDReprBase):
     def __init__(self, model_parameter_formatter=None):
         self._kafe_object = model_parameter_formatter
         super(ModelParameterFormatterDReprBase, self).__init__()
-

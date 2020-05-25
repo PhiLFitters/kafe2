@@ -1,6 +1,8 @@
 #!/usr/bin/env python
-import argparse, sys
+import sys
+import argparse
 import matplotlib.pyplot as plt
+# do not use relative imports here as the working directory of kafe2go can be anywhere on the system
 from kafe2 import Plot
 from kafe2.fit._base.fit import FitBase
 from kafe2.fit.tools.contours_profiler import ContoursProfiler
@@ -79,7 +81,7 @@ def kafe2go():
     _fits = []
 
     for _fname in _filenames:
-        _fit = FitBase.from_file(_fname, format=_input_format)
+        _fit = FitBase.from_file(_fname, file_format=_input_format)
         _fit.do_fit()
         if _report:
             _fit.report(asymmetric_parameter_errors=_asymmetric)
@@ -89,7 +91,7 @@ def kafe2go():
         XYPlotAdapter.PLOT_SUBPLOT_TYPES.pop('model_error_band')
 
     _plot = Plot(fit_objects=_fits, separate_figures=_separate)
-    _plot.plot(with_fit_info=_infobox, with_asymmetric_parameter_errors=_asymmetric, with_ratio=_ratio)
+    _plot.plot(fit_info=_infobox, asymmetric_parameter_errors=_asymmetric, ratio=_ratio)
 
     _basenames = [name.rsplit('.', 1)[0] for name in _filenames]
 

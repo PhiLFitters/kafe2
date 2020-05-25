@@ -6,8 +6,7 @@ __all__ = [
     "IndexedCostFunction_UserDefined",
     "IndexedCostFunction_Chi2",
     "IndexedCostFunction_NegLogLikelihood",
-    "IndexedCostFunction_NegLogLikelihoodRatio",
-    "STRING_TO_COST_FUNCTION"
+    "IndexedCostFunction_NegLogLikelihoodRatio"
 ]
 
 

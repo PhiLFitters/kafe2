@@ -1,14 +1,17 @@
-"""
-Handle global kafe2 configuration
+"""Handle global kafe2 configuration.
 """
 
 import os
 import yaml
-
+import matplotlib as mpl
 from copy import deepcopy
+from tempfile import NamedTemporaryFile
+
+__all__ = ['ConfigLoader', 'ConfigError', 'ConfigTypeError', 'ConfigLookupError', 'kafe2_rc', 'kc']
 
 
-class ConfigError(Exception): pass
+class ConfigError(Exception):
+    pass
 
 
 class ConfigLookupError(ConfigError):
@@ -62,6 +65,21 @@ def kc(*keys):
 
     return _dict
 
-# -- import matplotlib and source matplotlibrc file
-import matplotlib
-matplotlib.rc_file(os.path.join(__path__[0], 'kafe2.matplotlibrc.conf'))
+
+try:
+    if mpl.__version__.startswith('2'):
+        kafe2_rc = mpl.rc_params_from_file(os.path.join(__path__[0], 'kafe2.matplotlibrc.conf'))
+        mpl.rcParams.update(**kafe2_rc)
+    elif mpl.__version__.startswith('3'):
+        _temp_file = NamedTemporaryFile(delete=False)
+        with open(os.path.join(__path__[0], 'kafe2.matplotlibrc.conf')) as _file:
+            for _line in _file.readlines():
+                if _line.startswith("text.latex.unicode"):
+                    continue
+                _temp_file.write(_line.encode())
+                _temp_file.write('\n'.encode())
+        kafe2_rc = mpl.rc_params_from_file(_temp_file.name)
+        _temp_file.close()
+        os.remove(_temp_file.name)
+except AttributeError:
+    kafe2_rc = None  # if mpl is only a mock module

@@ -42,7 +42,7 @@ y += np.random.randn(num_datapoints) * err_val_y
 
 data = XYContainer(x_data=x, y_data=y)
 
-data.add_simple_error(axis='x', err_val=err_val_x)
-data.add_simple_error(axis='y', err_val=err_val_y)
+data.add_error(axis='x', err_val=err_val_x)
+data.add_error(axis='y', err_val=err_val_y)
 
 data.to_file(filename='data.yml')

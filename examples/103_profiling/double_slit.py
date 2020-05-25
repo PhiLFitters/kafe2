@@ -67,9 +67,9 @@ def _generate_dataset(output_filename='double_slit.yml'):
     d = XYContainer(x_data=xy_data[0],
                     y_data=xy_data[1])
 
-    d.add_simple_error('x', 0.002, relative=False)
-    d.add_simple_error('y', [0.02, 0.02, 0.02, 0.02, 0.04, 0.02, 0.05, 0.03, 0.05,
-                             0.08, 0.05, 0.03, 0.05, 0.01, 0.04, 0.03, 0.03, 0.02, 0.01], relative=False)
+    d.add_error('x', 0.002, relative=False)
+    d.add_error('y', [0.02, 0.02, 0.02, 0.02, 0.04, 0.02, 0.05, 0.03, 0.05,
+                      0.08, 0.05, 0.03, 0.05, 0.01, 0.04, 0.03, 0.03, 0.02, 0.01], relative=False)
 
     d.to_file(output_filename)
 
@@ -119,7 +119,7 @@ cpf.plot_profiles_contours_matrix(parameters=['I0', 'b', 'g'],
 
 # to see the fit results, plot using Plot
 p = Plot(fit_objects=f)
-p.plot(with_fit_info=True)
+p.plot(fit_info=True)
 
 # show the fit result
 plt.show()

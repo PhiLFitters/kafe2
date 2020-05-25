@@ -24,8 +24,8 @@ from kafe2.fit.tools import ContoursProfiler
 nonlinear_fit = XYFit(xy_data=XYContainer.from_file('x_errors.yml'))
 
 # The x errors are much bigger than the y errors. This will cause a distortion of the likelihood function.
-nonlinear_fit.add_simple_error('x', 1.0)
-nonlinear_fit.add_simple_error('y', 0.1)
+nonlinear_fit.add_error('x', 1.0)
+nonlinear_fit.add_error('y', 0.1)
 
 # Perform the fit.
 nonlinear_fit.do_fit()
@@ -37,7 +37,7 @@ nonlinear_fit.report(asymmetric_parameter_errors=True)
 # Optional: Create a plot of the fit results using Plot.
 # Note the asymmetric_parameter_errors flag
 plot = Plot(nonlinear_fit)
-plot.plot(with_fit_info=True, with_asymmetric_parameter_errors=True)
+plot.plot(fit_info=True, asymmetric_parameter_errors=True)
 
 # Optional: Calculate a detailed representation of the profile likelihood
 # Note how the actual chi2 profile differs from the parabolic approximation that you would expect with a linear fit.

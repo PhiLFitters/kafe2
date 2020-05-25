@@ -43,7 +43,7 @@ f = IndexedFit(data=W_mass_measurements,
                model_function=W_mass_model)
 
 # add two error sources
-f.add_simple_error(W_mass_stat_err, correlation=0)    # statistical errors
+f.add_error(W_mass_stat_err, correlation=0)    # statistical errors
 f.add_matrix_error(W_mass_cov_mat, matrix_type='cov') # systematic errors (using a covariance matrix)
 
 # assign LaTeX strings to various quantities (for nice display)
@@ -60,7 +60,7 @@ f.report()
 
 # to see the fit results, plot using Plot
 p = Plot(f)
-p.plot(with_fit_info=True)
+p.plot(fit_info=True)
 
 # show the fit result
 plt.show()

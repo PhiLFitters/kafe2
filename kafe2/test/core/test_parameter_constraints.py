@@ -237,4 +237,3 @@ class TestSimpleParameterConstraintDirect(unittest.TestCase):
                     )
                     self.assertTrue(np.allclose(
                         _constraint.cost(self._fit_par_values), self._expected_cost_rel[_i, _j, _k]))
-

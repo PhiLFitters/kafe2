@@ -18,7 +18,7 @@ from .plot import IndexedPlotAdapter
 from ..util import function_library, add_in_quadrature, collect, invert_matrix
 
 
-__all__ = ["IndexedFit"]
+__all__ = ['IndexedFit', 'IndexedFitException']
 
 
 class IndexedFitException(FitException):
@@ -35,6 +35,7 @@ class IndexedFit(FitBase):
                           'data_error', 'model_error', 'total_error',
                           'data_cov_mat', 'model_cov_mat', 'total_cov_mat',
                           'data_cor_mat', 'model_cor_mat', 'total_cor_mat'}
+    _BASIC_ERROR_NAMES = {'data_error', 'model_error', 'data_cov_mat', 'model_cov_mat'}
 
     def __init__(self,
                  data,
@@ -230,24 +231,9 @@ class IndexedFit(FitBase):
         output_stream.write('\n')
 
     def _report_model(self, output_stream, indent, indentation_level):
-        output_stream.write(indent * indentation_level + '#########\n')
-        output_stream.write(indent * indentation_level + '# Model #\n')
-        output_stream.write(indent * indentation_level + '#########\n\n')
-
-        # output_stream.write(_indent)
-        output_stream.write(indent * (indentation_level + 1) + "Model Function\n")
-        output_stream.write(indent * (indentation_level + 1) + "==============\n\n")
-        output_stream.write(indent * (indentation_level + 2))
-        output_stream.write(
-            self._model_function.formatter.get_formatted(
-                with_par_values=False,
-                n_significant_digits=2,
-                format_as_latex=False,
-                with_expression=True
-            )
-        )
-        output_stream.write('\n\n\n')
-
+        # call base method to show header and model function
+        super(IndexedFit, self)._report_model(output_stream, indent, indentation_level)
+        # print model values at POIs
         _data_table_dict = OrderedDict()
         _data_table_dict['Index'] = range(self.data_size)
         _data_table_dict['Model'] = self.model
@@ -275,6 +261,7 @@ class IndexedFit(FitBase):
                                       % (type(new_data), self.CONTAINER_TYPE))
         else:
             self._data_container = self._new_data_container(new_data, dtype=float)
+        self._data_container._on_error_change_callback = self._on_error_change
 
         self._nexus.get('data').mark_for_update()
 
@@ -284,6 +271,7 @@ class IndexedFit(FitBase):
             self.parameter_values,
             shape_like=self.data
         )
+        self._param_model._on_error_change_callbacks = [self._on_error_change]
 
     # -- public properties
 
