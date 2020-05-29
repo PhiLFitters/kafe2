@@ -43,24 +43,6 @@ def _maybe_set_tight_layout(figure):
         figure.set_tight_layout(True)
 
 
-class ConfidenceLevelFormatted(ConfidenceLevel):
-    @property
-    def sigma_string(self):
-        return "%.3g-sigma" % (self.sigma,)
-
-    @property
-    def sigma_latex_string(self):
-        return r"%g$\sigma$" % (self.sigma,)
-
-    @property
-    def cl_string(self):
-        return "%.4g%% CL" % (self.cl*100,)
-
-    @property
-    def cl_latex_string(self):
-        return r"$%.4g\%%$ CL" % (self.cl*100,)
-
-
 class SigmaLocator(plticker.Locator):
     """
     Create ticks at evenly spaced offsets from a central value.
@@ -161,7 +143,8 @@ class ContoursProfiler(object):
         if not isinstance(fit_object, FitBase):
             raise ContoursProfilerException("Object %r is not a fit object!" % (fit_object,))
 
-        _contour_confidence_levels = [ConfidenceLevelFormatted.from_sigma(2, _sigma) for _sigma in contour_sigma_values]
+        _contour_confidence_levels = [ConfidenceLevel(n_dimensions=2, sigma=_sigma)
+                                      for _sigma in contour_sigma_values]
 
         self._fit = fit_object
         self._profile_kwargs = dict(points=profile_points, subtract_min=profile_subtract_min, bound=profile_bound)
