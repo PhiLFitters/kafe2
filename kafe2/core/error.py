@@ -1,10 +1,8 @@
 """
 Classes for handling of uncertainties in kafe2 fits.
 """
-# TODO: make all setters copy and own data members
 
 import abc
-import copy
 import numpy as np
 import six
 
@@ -37,15 +35,6 @@ def cov_mat_from_float_list(value_list, correlation=0.0):
 # Data structure for Covariance Matrices
 class CovMat(object):
     def __init__(self, matrix):
-        # -- member definitions
-        self._mat = None
-        self._size = None
-        self._inverse = None
-        self._chol = None
-        self._cor_mat = None
-        self._cond = None
-
-        # -- initialization
         self.mat = matrix
 
     # -- 'magic' methods
@@ -59,6 +48,10 @@ class CovMat(object):
         _new += other
         return _new
 
+    def __eq__(self, other):
+        return (type(other) is CovMat and np.all(self._mat == other.mat)) \
+               or np.all(self._mat == other)
+
     def __len__(self):
         return self._size
 
@@ -68,31 +61,18 @@ class CovMat(object):
         self._chol = None
         self._inverse = None
         self._cor_mat = None
+        self._cond = None
+        self._inverse = None
 
     # -- public interface
 
-    def rescale_variant(self, old_reference_values, new_reference_values):
-        """
-        Rescale the covariance matrix (variant implementation, pure Python).
-        """
-        for i in six.moves.range(self._size):
-            for j in six.moves.range(self._size):
-                _v = self._mat[i, j]
-                _v /= old_reference_values[i]
-                _v /= old_reference_values[j]
-                _v *= new_reference_values[i]
-                _v *= new_reference_values[j]
-                self._mat[i, j] = _v
-
-        self._invalidate_cache()
-
     def rescale(self, old_reference_values, new_reference_values):
         """
-        Rescale the covariance matrix.
+        Rescale the covariance matrix to new reference values.
         """
         _old_outer = np.asarray(np.outer(old_reference_values, old_reference_values))
         _new_outer = np.asarray(np.outer(new_reference_values, new_reference_values))
-        self._mat /= _old_outer / _new_outer
+        self._mat *= _new_outer / _old_outer
         self._invalidate_cache()
 
     @property
@@ -100,7 +80,7 @@ class CovMat(object):
         """
         Get the covariance matrix.
         """
-        return self._mat
+        return np.array(self._mat)
 
     @mat.setter
     def mat(self, matrix):
@@ -108,12 +88,12 @@ class CovMat(object):
         Set the covariance matrix.
         """
         if isinstance(matrix, CovMat):
-            # "copy constructor"
-            matrix = copy.deepcopy(matrix.mat)
+            matrix = matrix.mat
 
-        self._mat = np.asarray(matrix)
-        if not (self._mat.shape[1] == self._mat.shape[0]):
-            raise ValueError("Covariance matrix must be square matrix, shape %r given," % (self._mat.shape,))
+        self._mat = np.array(matrix)
+        if self._mat.ndim != 2 or self._mat.shape[0] != self._mat.shape[1]:
+            raise ValueError(
+                "Covariance matrix must be square matrix, shape %r given." % (self._mat.shape,))
         if not np.allclose(self._mat - self._mat.T, 0):
             raise ValueError("Covariance matrix must be symmetric!")
         self._size = self._mat.shape[0]
@@ -127,8 +107,8 @@ class CovMat(object):
         Correlation matrix corresponding to the covariance matrix.
         """
         if self._cor_mat is None:
-            _sqrt_vars = np.sqrt(np.diag(self.mat))
-            self._cor_mat = self.mat / np.outer(_sqrt_vars, _sqrt_vars)
+            _sqrt_vars = np.sqrt(np.diag(self._mat))
+            self._cor_mat = self._mat / np.outer(_sqrt_vars, _sqrt_vars)
         return self._cor_mat
 
     @property
@@ -146,12 +126,12 @@ class CovMat(object):
     @property
     def chol(self):
         """
-        Lower diagonal matrix resulting from the Cholesky decomposition of the covariance matrix. Returns ``None``
-        if matrix is not positive definite.
+        Lower diagonal matrix resulting from the Cholesky decomposition of the covariance matrix.
+        Returns ``None`` if matrix is not positive definite.
         """
         if self._chol is None:
             try:
-                self._chol = np.linalg.cholesky(self.mat)
+                self._chol = np.linalg.cholesky(self._mat)
             except np.linalg.LinAlgError:
                 pass  # fail silently if matrix is not positive definite
         return self._chol
@@ -162,9 +142,10 @@ class CovMat(object):
         Condition number of the matrix.
         """
         if self._cond is None:
-            self._cond = np.linalg.cond(self.mat)
+            self._cond = np.linalg.cond(self._mat)
         return self._cond
 
+    @property
     def split_svd(self):
         if self.chol is None:
             return None
@@ -174,15 +155,16 @@ class CovMat(object):
             _l.append(np.outer(_sc, _sc) * _sv**2)
         return _l
 
+    @property
     def split_diag_svd(self):
-        _m0 = np.diag(np.diag(self.mat))
-        _m = CovMat(self.mat - _m0)
-        if _m  is None:
+        _m0 = np.diag(np.diag(self._mat))
+        _m = CovMat(self._mat - _m0)
+        if _m is None:
             return None
         _l = [_m0]
         _u, _v, _w = np.linalg.svd(self.chol)
         for _sv, _sc in zip(_v, _u.T):
-            _l.append(np.outer(_sc, _sc) * _sv**2)
+            _l.append(np.outer(_sc, _sc) * _sv ** 2)
         return _l
 
 
@@ -196,37 +178,31 @@ class GaussianErrorBase(object):
     @abc.abstractmethod
     def error(self):
         """Pointwise error array."""
-        pass
 
     @property
     @abc.abstractmethod
     def error_rel(self):
         """Pointwise error array (relative errors)."""
-        pass
 
     @property
     @abc.abstractmethod
     def reference(self):
         """Array of reference values for the error."""
-        pass
 
     @property
     @abc.abstractmethod
     def cov_mat(self):
         """Full absolute covariance matrix for error."""
-        pass
 
     @property
     @abc.abstractmethod
     def cov_mat_rel(self):
         """Full relative covariance matrix for error."""
-        pass
 
     @property
     @abc.abstractmethod
     def cor_mat(self):
         """Correlation matrix for error."""
-        pass
 
     # TODO: remove _uncor/_cor from base interface?
 
@@ -234,49 +210,41 @@ class GaussianErrorBase(object):
     @abc.abstractmethod
     def error_uncor(self):
         """Pointwise array of 'uncorrelated' parts of absolute errors."""
-        pass
 
     @property
     @abc.abstractmethod
     def error_cor(self):
         """Pointwise array of 'correlated' parts of absolute errors."""
-        pass
 
     @property
     @abc.abstractmethod
     def error_rel_uncor(self):
         """Pointwise array of 'uncorrelated' parts of relative errors."""
-        pass
 
     @property
     @abc.abstractmethod
     def error_rel_cor(self):
         """Pointwise array of 'correlated' parts of relative errors."""
-        pass
 
     @property
     @abc.abstractmethod
     def cov_mat_uncor(self):
         """'Uncorrelated' part of absolute covariance matrix for error."""
-        pass
 
     @property
     @abc.abstractmethod
     def cov_mat_cor(self):
         """'Fully correlated' part of absolute covariance matrix for error."""
-        pass
 
     @property
     @abc.abstractmethod
     def cov_mat_rel_uncor(self):
         """'Uncorrelated' part of relative covariance matrix for error."""
-        pass
 
     @property
     @abc.abstractmethod
     def cov_mat_rel_cor(self):
         """'Fully correlated' part of relative covariance matrix for error."""
-        pass
 
     @property
     @abc.abstractmethod
@@ -284,7 +252,9 @@ class GaussianErrorBase(object):
         """Indices of fits that have this error when used inside a MultiFit."""
 
     def get_cov_mat_object(self):
-        """Returns the internal-use `CovMat` object used to represent measurement errors. (advanced)"""
+        """
+        Returns the internally used `CovMat` object used to represent measurement errors. (advanced)
+        """
         return self._cov_mat
 
 
@@ -348,14 +318,9 @@ class SimpleGaussianError(GaussianErrorBase):
 
     def _calculate_cov_mat_rel(self):
         """Calculate relative covariance matrix for error object."""
-        if self.relative:
-            _rel_err = self.error_rel
-        else:
-            if self.reference is None:
-                raise AttributeError("Requested 'relative' errors for error object declared 'absolute', but 'reference' not set!")
-            _rel_err = self.error / self.reference
-
-        self._cov_mat_rel, self._cov_mat_rel_uncor_part, self._cov_mat_rel_cor_part = self._calculate_cov_mat_generic(_rel_err, self._corr_coeff)
+        _rel_err = self.error_rel
+        self._cov_mat_rel, self._cov_mat_rel_uncor_part, self._cov_mat_rel_cor_part \
+            = self._calculate_cov_mat_generic(_rel_err, self._corr_coeff)
 
     # -- public methods
 
@@ -376,19 +341,21 @@ class SimpleGaussianError(GaussianErrorBase):
             if self.reference is None:
                 raise AttributeError(
                     "Requested 'absolute' errors for error object declared 'relative', but 'reference' not set!")
-            self._err = self._err_rel * self.reference
+            self._err = self._err_rel * np.abs(self.reference)
         return self._err
 
     @error.setter
     def error(self, err_val):
-        err_val = np.asarray(err_val, dtype=float)
+        err_val = np.array(err_val, dtype=float)
+        if np.any(err_val <= 0):
+            raise ValueError("Error values must be > 0. Received: %s" % err_val)
         if self.relative:
             if self.reference is None:
                 raise AttributeError(
                     "Setting 'absolute' errors for error object declared 'relative', but 'reference' not set!")
 
             self._err = err_val
-            self._err_rel = err_val / self.reference
+            self._err_rel = err_val / np.abs(self.reference)
         else:
             self._err = err_val
             self._err_rel = None
@@ -424,12 +391,14 @@ class SimpleGaussianError(GaussianErrorBase):
             if self.reference is None:
                 raise AttributeError(
                     "Requested 'relative' errors for error object declared 'absolute', but 'reference' not set!")
-            self._err_rel = self._err / self.reference
+            self._err_rel = self._err / np.abs(self.reference)
         return self._err_rel
 
     @error_rel.setter
     def error_rel(self, err_val):
-        err_val = np.asarray(err_val, dtype=float)
+        err_val = np.array(err_val, dtype=float)
+        if np.any(err_val <= 0):
+            raise ValueError("Error values must be > 0. Received: %s" % err_val)
         if self.relative:
             self._err = None
             self._err_rel = err_val
@@ -505,7 +474,7 @@ class SimpleGaussianError(GaussianErrorBase):
     @property
     def cov_mat_rel_inverse(self):
         if self._cov_mat is None:
-            self._calculate_cov_mat()
+            self._calculate_cov_mat_rel()
         return self._cov_mat_rel.I
 
     @property
@@ -523,8 +492,11 @@ class SimpleGaussianError(GaussianErrorBase):
     @property
     def cor_mat(self):
         if self.relative:
-            return self.cov_mat_rel.cor_mat
-        return self.cov_mat.cor_mat
+            _ = self.cov_mat_rel  # call to calculate CovMat
+            return self._cov_mat_rel.cor_mat
+        else:
+            _ = self.cov_mat  # call to calculate CovMat
+            return self._cov_mat.cor_mat
 
     @property
     def corr_coeff(self):
@@ -549,7 +521,8 @@ class MatrixGaussianError(GaussianErrorBase):
     used to convert 'absolute' ('relative') error arrays or covariance matrices to 'relative' ('absolute') ones.
 
     """
-    def __init__(self, err_matrix, matrix_type, err_val=None, relative=False, reference=None, fit_indices=None):
+    def __init__(self, err_matrix, matrix_type, err_val=None, relative=False,
+                 reference=None, fit_indices=None):
         self._is_relative = relative
         self.reference = reference
         self._fit_indices = fit_indices
@@ -564,24 +537,19 @@ class MatrixGaussianError(GaussianErrorBase):
 
         # set the main matrix
         if matrix_type.lower() in ('covariance', 'cov'):
+            if err_val is not None:
+                raise ValueError("Cannot provide err_val when constructing a covariance matrix!")
             self._matrix_type_at_construction = 'covariance'
             if self.relative:
                 self.cov_mat_rel = err_matrix
-                # check err_val against cov_mat diagonal
-                if err_val is not None:
-                    if not np.allclose(np.diag(self._cov_mat_rel.mat), err_val ** 2):
-                        raise ValueError("Covariance matrix diagonal does not match array of error values!")
             else:
                 self.cov_mat = err_matrix
-                # check err_val against cov_mat diagonal
-                if err_val is not None:
-                    if not np.allclose(np.diag(self._cov_mat.mat), err_val ** 2):
-                        raise ValueError("Covariance matrix diagonal does not match array of error values!")
-
         elif matrix_type.lower() in ('correlation', 'correlations', 'cor', 'corr'):
             self._matrix_type_at_construction = 'correlation'
             if err_val is None:
-                raise ValueError("Cannot construct matrix-type error from correlation matrix without an array of error values!")
+                raise ValueError(
+                    "Cannot construct matrix-type error from correlation matrix "
+                    "without an array of error values!")
             _cm = self._calculate_cov_mat_from_cor_mat_and_error_array(err_val, err_matrix)
             if self.relative:
                 self.cov_mat_rel = _cm
@@ -629,7 +597,8 @@ class MatrixGaussianError(GaussianErrorBase):
         if self.relative:
             if self.reference is None:
                 raise AttributeError(
-                    "Requested 'absolute' covariance matrix for error object declared 'relative', but 'reference' not set!")
+                    "Requested 'absolute' covariance matrix for error object declared 'relative', "
+                    "but 'reference' not set!")
             self._cov_mat = self._calculate_cov_mat_from_cov_rel(self.cov_mat_rel, self.reference)
         return self._cov_mat.mat
 
@@ -657,11 +626,7 @@ class MatrixGaussianError(GaussianErrorBase):
 
     @property
     def cov_mat_inverse(self):
-        if self.relative:
-            if self.reference is None:
-                raise AttributeError(
-                    "Requested 'absolute' inverse covariance matrix for error object declared 'relative', but 'reference' not set!")
-            self._cov_mat = self._calculate_cov_mat_from_cov_rel(self.cov_mat_rel, self.reference)
+        _ = self.cov_mat  # call to initialize
         return self._cov_mat.I
 
     @property
@@ -747,15 +712,9 @@ class MatrixGaussianError(GaussianErrorBase):
 
     @property
     def cor_mat(self):
-        # TODO: check if these are equal
-        if self.relative:
-            return self._cov_mat_rel.cor_mat
+        _ = self.cov_mat  # call to initialize
         return self._cov_mat.cor_mat
 
     @property
     def fit_indices(self):
         return self._fit_indices
-
-
-if __name__ == '__main__':
-    pass
