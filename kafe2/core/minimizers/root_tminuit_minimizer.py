@@ -1,5 +1,6 @@
 from __future__ import print_function
 import six
+import ctypes
 from .minimizer_base import MinimizerBase
 from ..contour import ContourFactory
 try:
@@ -74,14 +75,14 @@ class MinimizerROOTTMinuit(MinimizerBase):
     #     self._pars_contour = None
 
     def _recreate_gMinuit(self):
-        self.__gMinuit = TMinuit(self.n_pars)
+        self.__gMinuit = TMinuit(self.num_pars)
         self.__gMinuit.SetPrintLevel(-1)
-        self.__gMinuit.mncomd("SET STRATEGY {}".format(self._strategy), Long(0))
+        self.__gMinuit.mncomd("SET STRATEGY {}".format(self._strategy), ctypes.c_int(0))
         self.__gMinuit.SetFCN(self._minuit_fcn)
         self.__gMinuit.SetErrorDef(self._err_def)
 
         # set gMinuit parameters
-        error_code = Long(0)
+        error_code = ctypes.c_int(0)
         for _pid, (_pn, _pv, _pe) in enumerate(zip(self._par_names, self._par_val, self._par_err)):
             self.__gMinuit.mnparm(_pid,
                                   _pn,
@@ -89,7 +90,7 @@ class MinimizerROOTTMinuit(MinimizerBase):
                                   0.1 * _pe,
                                   0, 0, error_code)
 
-        err_code = Long(0)
+        err_code = ctypes.c_int(0)
         # set fixed parameters
         for _par_id, _pf in enumerate(self._par_fixed_mask):
             if _pf:
@@ -110,7 +111,7 @@ class MinimizerROOTTMinuit(MinimizerBase):
     def _migrad(self, max_calls=6000):
         # need to set the FCN explicitly before every call
         self._get_gMinuit().SetFCN(self._minuit_fcn)
-        error_code = Long(0)
+        error_code = ctypes.c_int(0)
         self._get_gMinuit().mnexcm("MIGRAD",
                                     arr('d', [max_calls, self.tolerance]),
                                     2, error_code)
@@ -158,7 +159,7 @@ class MinimizerROOTTMinuit(MinimizerBase):
         # for many calls, but can't be improved (yet?)
         parameter_list = np.frombuffer(parameters,
                                        dtype=float,
-                                       count=self.n_pars)
+                                       count=self.num_pars)
 
         # call the Python implementation of FCN.
         f[0] = self._func_wrapper(*parameter_list)
@@ -225,9 +226,8 @@ class MinimizerROOTTMinuit(MinimizerBase):
             except:
                 return status_code
 
-
     @property
-    def n_pars(self):
+    def num_pars(self):
         return len(self.parameter_names)
 
     @property
@@ -266,7 +266,7 @@ class MinimizerROOTTMinuit(MinimizerBase):
         if self._min_result_stale:
             raise MinimizerROOTTMinuitException("Cannot get cov_mat: Minimizer result is outdated.")
         if self._par_cov_mat is None:
-            _n_pars_total = self.n_pars
+            _n_pars_total = self.num_pars
             _n_pars_free = self.n_pars_free
             _tmp_mat_array = arr('d', [0.0]*(_n_pars_total**2))
             # get parameter covariance matrix from TMinuit
@@ -310,7 +310,6 @@ class MinimizerROOTTMinuit(MinimizerBase):
         return self._par_names
 
     # -- private "properties"
-
 
     # -- public methods
 
@@ -372,7 +371,7 @@ class MinimizerROOTTMinuit(MinimizerBase):
         self._par_limits[_par_id] = None
         if self.__gMinuit is not None:
             # also update Minuit instance
-            error_code = Long(0)
+            error_code = ctypes.c_int(0)
             self.__gMinuit.mnexcm("SET LIM",
                      arr('d', [_par_id+1]), 1, error_code)
             self._min_result_stale = True
@@ -384,7 +383,7 @@ class MinimizerROOTTMinuit(MinimizerBase):
         self._par_val = []
         self._par_err = []
         _pv, _pe = Double(0), Double(0)
-        for _par_id in six.moves.range(0, self.n_pars):
+        for _par_id in six.moves.range(0, self.num_pars):
             self.__gMinuit.GetParameter(_par_id, _pv, _pe)  # retrieve fitresult
             self._par_val.append(float(_pv))
             self._par_err.append(float(_pe))

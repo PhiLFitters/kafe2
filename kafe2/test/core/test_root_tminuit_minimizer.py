@@ -13,11 +13,13 @@ except ImportError:
 def fcn_3(x, y, z):
     return (x - 1.23)**2 + 0.5*(y - 4.32)**2 + 3*(z - 9.81)**2 - 5.23
 
+
 def fcn_1(x):
     return 42.*(x - 42.)**2 + 42.
 
+
 @unittest.skipIf(_cannot_import_ROOT, "Cannot import ROOT")
-class TestMinimizerIMinuit(unittest.TestCase):
+class TestMinimizerRootTMinuit(unittest.TestCase):
 
     def setUp(self):
         #self.fun = lambda x, y: opt.rosen(np.array([x, y]))
@@ -99,7 +101,6 @@ class TestMinimizerIMinuit(unittest.TestCase):
         self.assertAlmostEqual(_v[0], 1.23, places=4)
         self.assertAlmostEqual(_v[1], 4.32, places=4)
         self.assertAlmostEqual(_v[2], 9.81, places=4)
-
 
     def test_compare_par_values_minimize_fcn3_limit_unlimit_x(self):
         self.m3.limit('x', (-1., 0.7))
