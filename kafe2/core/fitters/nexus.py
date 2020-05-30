@@ -99,6 +99,7 @@ class NodeException(Exception):
 class FallbackError(NodeException):
     pass
 
+
 @six.add_metaclass(abc.ABCMeta)
 class NodeBase(object):
     """
@@ -126,8 +127,11 @@ class NodeBase(object):
             self.name, hex(id(self))
         )
 
+    def __repr__(self):
+        return self.__str__()
+
     def _pprint(self):
-        '''return pretty-printed version of node'''
+        """return pretty-printed version of node"""
         return "{}('{}')".format(
             self.__class__.__name__,
             self.name
@@ -293,20 +297,6 @@ class NodeBase(object):
 
         return self
 
-    def set_parents(self, parents):
-        _new_parents = set()
-        for _parent in parents:
-            if not isinstance(_parent, NodeBase):
-                raise TypeError(
-                    "Cannot set parent: expected "
-                    "node type, got {}".format(type(_parent))
-                )
-            _new_parents.add(weakref.ref(_parent))
-
-        self._parents = _new_parents
-
-        return self
-
     def notify_parents(self):
         # frozen nodes do not notify their parents
         if self.frozen:
@@ -354,6 +344,9 @@ class NodeBase(object):
             _parent.replace_child(current_child=self, new_child=other)
 
     def replace_child(self, current_child, new_child):
+        if not isinstance(new_child, NodeBase):
+            # wrap non-node values inside `Parameter`
+            new_child = Parameter(new_child)
         if current_child not in self._children:
             raise NodeException("Cannot replace child %s because it is not a child of %s."
                                 % (current_child.name, self.name))
@@ -413,13 +406,17 @@ class ValueNode(NodeBase):
         self._stale = False
 
     def __str__(self):
+        try:
+            _val = str(self.value)
+        except Exception as e:
+            _val = repr(e)
         return "{}('{}') = {}  [{}]".format(
             self.__class__.__name__,
-            self.name, self.value, hex(id(self))
+            self.name, _val, hex(id(self))
         )
 
     def _pprint(self):
-        '''return pretty-printed version of node'''
+        """return pretty-printed version of node"""
         try:
             _val = str(self.value)
         except Exception as e:
@@ -503,7 +500,7 @@ class Empty(ValueNode):
         )
 
     def _pprint(self):
-        '''return pretty-printed version of node'''
+        """return pretty-printed version of node"""
         return NodeBase._pprint(self)
 
     @property
@@ -528,9 +525,8 @@ class Parameter(ValueNode):
         ValueNode.__init__(self, value=value, name=name)
         self._stale = False
 
-    def update(self):
-        # simple parameters are always up-to-date
-        return
+    def mark_for_update(self):
+        pass  # Simple parameters are always up-to-date.
 
 
 class Alias(ValueNode):
@@ -546,7 +542,7 @@ class Alias(ValueNode):
         self._stale = True
 
     def _pprint(self):
-        '''return pretty-printed version of node'''
+        """return pretty-printed version of node"""
         return '{} -> {}'.format(
             NodeBase._pprint(self),
             NodeBase._pprint(self.ref)
@@ -554,7 +550,7 @@ class Alias(ValueNode):
 
     @ValueNode.value.setter
     def value(self, value):
-        raise ValueError(
+        raise NodeException(
             "Cannot set value of alias node '{}'.".format(
                 self.name
             )
@@ -578,8 +574,9 @@ class Function(ValueNode):
     """All keyword arguments of the function must be parameters registered in the parameter space."""
 
     def __init__(self, func, name=None, parameters=None):
-        _fname = name or func.__name__
-        super(Function, self).__init__(value=None, name=_fname)
+        if name is None and func.__name__ != "<lambda>":
+            name = func.__name__
+        super(Function, self).__init__(value=None, name=name)
 
         self.func = func
         parameters = parameters or []
@@ -692,10 +689,12 @@ class Tuple(ValueNode):
         return len(self._children)
 
     def __getitem__(self, index):
-        return self.nodes[index]
+        return self._children[index]
 
-    def __setitem__(self, index):
-        raise NotImplementedError
+    def __setitem__(self, index, item):
+        if not isinstance(item, NodeBase):
+            item = Parameter(item)
+        self._children[index] = item
 
     @property
     def nodes(self):
@@ -1115,7 +1114,8 @@ class Nexus(object):
         # and supplied node names
         try:
             _ba = _sig.bind(*par_names)
-        except TypeError:
+            assert len(par_names) >= len(_sig.parameters)  # Assert function isn't under-supplied.
+        except (AssertionError, TypeError):
             raise ValueError(
                 "Error adding function: supplied "
                 "parameter nodes ({}) are not compatible with "
@@ -1347,6 +1347,8 @@ class Nexus(object):
         for _name, _node in self._nodes.items():
             # skip root node (has no value anyway)
             if _name == '__root__':
+                continue
+            if node_names is not None and _name not in node_names:
                 continue
 
             # attempt evaluation and behave accordingly on error

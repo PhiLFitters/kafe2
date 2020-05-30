@@ -5,7 +5,7 @@ from kafe2.core.fitters.nexus import (
     NodeBase,
     Parameter, Alias,
     Function, Empty,
-    Fallback, Tuple, RootNode,
+    Fallback, Tuple, Array, RootNode,
     NodeException, FallbackError,
 
     NodeChildrenPrinter, NodeCycleChecker,
@@ -41,6 +41,11 @@ class TestNodes(unittest.TestCase):
 
         self.empty_par = Empty()
 
+        self.counter = 0
+        self.sum = 0
+
+        self.array_content = [0.1, 2.3, 4.5, 6.7, 8.9]
+
     # -- NodeBase
 
     def test_nodes_default_constructor(self):
@@ -71,14 +76,6 @@ class TestNodes(unittest.TestCase):
         p_2 = Parameter(None)
         self.assertEqual(p_1, p_1)
         self.assertNotEqual(p_1, p_2)
-
-
-    def test_nodes_parametric_constructor(self):
-        Parameter(None)
-        Alias(Parameter(None))
-        f = Function(lambda x: x, name='_lambda')
-        Fallback((f,))
-        Tuple([])
 
     def test_node_get_children_get_parents(self):
         par_1 = Parameter(3, name='par_1')
@@ -128,9 +125,15 @@ class TestNodes(unittest.TestCase):
         par = Parameter(3, name='par')
         par_2 = Parameter(2, name='par_2')
 
+        with self.assertRaises(TypeError):
+            par.add_parent("notanode")
+
         # Manually adding parents is not allowed:
         with self.assertRaises(NodeException):
             par.add_parent(par_2)
+
+        par_2.add_child(par)
+        self.assertEqual(par.get_parents(), [par_2])
 
     def test_node_set_children(self):
         par = Parameter(3, name='par')
@@ -142,18 +145,6 @@ class TestNodes(unittest.TestCase):
         self.assertEqual(
             par.get_children(),
             [child_1, child_2]
-        )
-
-    def test_node_set_parents(self):
-        par = Parameter(3, name='par')
-        parent_1 = Parameter(1, name='parent_1')
-        parent_2 = Parameter(2, name='parent_2')
-
-        par.set_parents([parent_1, parent_2])
-
-        self.assertEqual(
-            par.get_parents(),
-            [parent_1, parent_2]
         )
 
     def test_node_remove_child(self):
@@ -169,18 +160,30 @@ class TestNodes(unittest.TestCase):
             [child_2]
         )
 
+        with self.assertRaises(TypeError):
+            par.remove_child("notanode")
+
     def test_node_remove_parent(self):
         par = Parameter(3, name='par')
         parent_1 = Parameter(1, name='parent_1')
         parent_2 = Parameter(2, name='parent_2')
 
-        par.set_parents([parent_1, parent_2])
-        par.remove_parent(parent_1)
-
+        parent_1.add_child(par)
+        parent_2.add_child(par)
+        with self.assertRaises(NodeException):
+            par.remove_parent(parent_1)
+        self.assertEqual(
+            par.get_parents(),
+            [parent_1, parent_2]
+        )
+        parent_1.remove_child(par)
         self.assertEqual(
             par.get_parents(),
             [parent_2]
         )
+
+        with self.assertRaises(TypeError):
+            par.remove_parent("notanode")
 
     def test_parameter_replace(self):
         par = Parameter(3, name='par')
@@ -265,6 +268,41 @@ class TestNodes(unittest.TestCase):
 
         self.assertEqual(selector_new.value, 'blup')
 
+    def test_callback(self):
+
+        def increment_counter():
+            self.counter += 1
+
+        def update_sum(summand):
+            self.sum += summand
+
+        self.par_a.register_callback(lambda: 42)
+        self.par_a.register_callback(increment_counter)
+        self.func_sum_a_b.register_callback(update_sum, args=[10])
+        self.par_a.value = 5
+        self.assertEqual(self.counter, 1)
+        self.assertEqual(self.sum, 10)
+        self.par_a.value = 6
+        self.assertEqual(self.counter, 2)
+        self.assertEqual(self.sum, 20)
+
+    def test_replace_child(self):
+        par_a = Parameter(4)
+        par_b = Parameter(5)
+        par_c = Parameter(6)
+        par_a.add_child(par_b)
+        self.assertEqual(par_a.get_children(), [par_b])
+        with self.assertRaises(NodeException):
+            par_a.replace_child(current_child=par_c, new_child=par_b)
+        par_a.replace_child(current_child=par_b, new_child=par_c)
+        with self.assertRaises(NodeException):
+            par_a.replace_child(current_child=par_b, new_child=par_c)
+        self.assertEqual(par_a.get_children(), [par_c])
+        par_a.replace_child(current_child=par_c, new_child=7)
+        self.assertNotEqual(par_a.get_children(), [par_b])
+        self.assertNotEqual(par_a.get_children(), [par_c])
+        self.assertIs(type(par_a.get_children()[0]), Parameter)
+
     # -- RootNode
 
     def test_root_node_replace(self):
@@ -284,7 +322,7 @@ class TestNodes(unittest.TestCase):
     def test_empty_value(self):
         e = Empty()
         with self.assertRaises(ValueError):
-            e.value
+            _ = e.value
         with self.assertRaises(ValueError):
             e.value = 33
 
@@ -358,6 +396,8 @@ class TestNodes(unittest.TestCase):
         par = Parameter(3)
         alias = Alias(par, name='alias')
         self.assertEqual(alias.value, par.value)
+        with self.assertRaises(NodeException):
+            alias.value = 5
 
     def test_multiple_alias_value(self):
         par = Parameter(3)
@@ -392,6 +432,9 @@ class TestNodes(unittest.TestCase):
             func_a_b.value,
             func(par_a.value, par_b.value),
         )
+
+        with self.assertRaises(NodeException):
+            func_a_b.value = 5
 
     def test_function_value_update_frozen(self):
         par_a = Parameter(3)
@@ -470,6 +513,25 @@ class TestNodes(unittest.TestCase):
             func_a_b.parameters,
             [par_a, par_b],
         )
+        self.assertEqual(func_a_b.value, 37)
+
+    def test_function_auto_parameters_add_one_at_a_time(self):
+        def func(a, b):
+            return a*10 + b
+
+        func_a_b = Function(func)
+
+        par_a = Parameter(3)
+        par_b = Parameter(7)
+
+        func_a_b.add_parameter(par_a)
+        func_a_b.add_parameter(par_b)
+
+        self.assertEqual(
+            func_a_b.parameters,
+            [par_a, par_b],
+        )
+        self.assertEqual(func_a_b.value, 37)
 
     # -- Fallback
 
@@ -520,6 +582,7 @@ class TestNodes(unittest.TestCase):
 
     def test_tuple_value(self):
         tuple_a = Tuple((14, 2))
+        self.assertIs(type(tuple_a.value), tuple)
         self.assertEqual(tuple_a.value, (14, 2))
 
     def test_tuple_len(self):
@@ -528,8 +591,17 @@ class TestNodes(unittest.TestCase):
 
     def test_tuple_getitem(self):
         tuple_a = Tuple((14, 2))
+        self.assertEqual(tuple_a.value, (14, 2))
         self.assertEqual(tuple_a[0].value, 14)
         self.assertEqual(tuple_a[1].value, 2)
+
+    def test_tuple_setitem(self):
+        tuple_a = Tuple((14, 2))
+        tuple_a[0] = Parameter(15)
+        tuple_a[1] = 1
+        self.assertEqual(tuple_a.value, (15, 1))
+        self.assertEqual(tuple_a[0].value, 15)
+        self.assertEqual(tuple_a[1].value, 1)
 
     def test_tuple_nodes(self):
         tuple_a = Tuple((14, 2))
@@ -550,22 +622,61 @@ class TestNodes(unittest.TestCase):
             tuple([value for value in tuple_a.iter_values()])
         )
 
+    # -- Array
+
+    def test_array_value(self):
+        array_a = Array(self.array_content)
+        self.assertIs(type(array_a.value), np.ndarray)
+        self.assertTrue(np.all(array_a.value == self.array_content))
+
+    def test_array_getitem(self):
+        array_a = Array(self.array_content)
+        for i, expected_value_i in enumerate(self.array_content):
+            self.assertEqual(array_a[i].value, expected_value_i)
+
+    def test_array_setitem(self):
+        array_a = Array(self.array_content)
+        array_a[3] = 0
+        self.assertIs(type(array_a[3]), Parameter)
+        self.assertTrue(np.all(array_a.value == [0.1, 2.3, 4.5, 0.0, 8.9]))
+
+    def test_array_iter_values(self):
+        array_a = Array(self.array_content)
+        self.assertTrue(np.all(
+            array_a.value == np.array([value for value in array_a.iter_values()])
+        ))
+
 
 class TestNodeVisitors(unittest.TestCase):
+
+    def setUp(self):
+        self.root = RootNode()
+        self.empty = Empty(name="empty")
+        self.par_a = Parameter(2, name="par_a")
+        self.par_b = Parameter(3, name="par_b")
+        self.par_c = Parameter(4, name="par_c")
+        self.func_1 = self.par_a + self.par_b
+        self.func_2 = self.par_a * self.par_c
+        self.func_3 = Function(lambda a, b: a + b)
+        self.alias = Alias(self.par_a, name="alias")
+        self.par_a.set_children([self.par_b])
+        self.root.set_children([self.empty, self.func_1, self.func_2, self.func_3, self.alias])
+
+    # -- NodeChildrenPrinter
+
+    def test_node_children_printer(self):
+        self.root.print_descendants()
 
     # -- NodeCycleChecker
 
     def test_node_cycle_checker(self):
-        par_a = Parameter(1)
-        par_b = Parameter(2)
-        par_a.set_children([par_b])
 
-        NodeCycleChecker(par_a).run()
+        NodeCycleChecker(self.par_a).run()
 
-        par_b.set_children([par_a])
+        self.par_b.set_children([self.par_a])
 
         with self.assertRaises(ValueError):
-            NodeCycleChecker(par_a).run()
+            NodeCycleChecker(self.par_a).run()
 
 
 class TestNexus(unittest.TestCase):
@@ -614,6 +725,46 @@ class TestNexus(unittest.TestCase):
         self.assertIs(
             self._nexus.get('par'),
             par_new,
+        )
+
+    def test_add_existing_replace_alias(self):
+        par_orig = Parameter('my_original_value', name='par')
+        self._nexus.add(par_orig)
+        alias_orig = Alias(par_orig, name='alias')
+        self._nexus.add(alias_orig)
+
+        par_new = Parameter('my_new_value', name='par')
+        with self.assertRaises(NexusError):
+            self._nexus.add(par_new, existing_behavior='replace_if_alias')
+        self.assertIs(
+            self._nexus.get('par'),
+            par_orig,
+        )
+        alias_new = Parameter('my_new_value', name='alias')
+        self._nexus.add(alias_new, existing_behavior='replace_if_alias')
+        self.assertIs(
+            self._nexus.get('alias'),
+            alias_new,
+        )
+
+    def test_add_existing_replace_empty(self):
+        par_orig = Parameter('my_original_value', name='par')
+        self._nexus.add(par_orig)
+        empty_orig = Empty('empty')
+        self._nexus.add(empty_orig)
+
+        par_new = Parameter('my_new_value', name='par')
+        with self.assertRaises(NexusError):
+            self._nexus.add(par_new, existing_behavior='replace_if_empty')
+        self.assertIs(
+            self._nexus.get('par'),
+            par_orig,
+        )
+        empty_new = Parameter('my_new_value', name='empty')
+        self._nexus.add(empty_new, existing_behavior='replace_if_empty')
+        self.assertIs(
+            self._nexus.get('empty'),
+            empty_new,
         )
 
     def test_add_existing_ignore(self):
@@ -748,7 +899,7 @@ class TestNexus(unittest.TestCase):
 
         func_node = self._nexus.add_function(
             func=my_func,
-            par_names=('x', 'y')
+            par_names=['x', 'y']
         )
 
         # check function value
@@ -763,11 +914,61 @@ class TestNexus(unittest.TestCase):
 
         func_node = self._nexus.add_function(
             func=my_func,
-            par_names=('x', 'y')
+            par_names=['x', 'y']
         )
 
         # check function value
         self.assertEqual(func_node.value, my_func(x.value, y.value))
+
+    def test_add_function_signature_mismatch(self):
+        def my_func(a, b=2):
+            return 2 * a + b
+
+        with self.assertRaises(ValueError):
+            self._nexus.add_function(func=my_func, par_names=["a"])
+        with self.assertRaises(ValueError):
+            self._nexus.add_function(func=my_func, par_names=["a", "b", "c"])
+
+    def test_add_function_var_kwargs(self):
+        def my_func(a, b, c, **kwargs):
+            return a + b + c + np.sum(kwargs.values())
+
+        with self.assertRaises(ValueError):
+            self._nexus.add_function(func=my_func)
+        with self.assertRaises(ValueError):
+            self._nexus.add_function(func=my_func, par_names=["a", "b", "c"])
+
+    def test_add_function_combine_defaults(self):
+        def my_func_1(a, b=2):
+            return a + b
+
+        def my_func_2(b, a=3):
+            return a * b
+
+        func_node_1 = self._nexus.add_function(my_func_1)
+        with self.assertRaises(ValueError):
+            _ = func_node_1.value
+        func_node_2 = self._nexus.add_function(my_func_2)
+        # Parameters of second function are reversed:
+        self.assertEqual(func_node_1.get_children(), func_node_2.get_children()[::-1])
+        self.assertEqual(func_node_1.parameters, func_node_2.parameters[::-1])
+        self.assertEqual(func_node_1.value, 5)
+        self.assertEqual(func_node_2.value, 6)
+
+    def test_add_alias(self):
+        with self.assertRaises(ValueError):
+            self._nexus.add_alias(name="alias_1", alias_for="par")
+        par = Parameter(6, name="par")
+        self._nexus.add(par)
+        self._nexus.add_alias(name="alias_1", alias_for="par")
+        self.assertIs(type(self._nexus.get("alias_1")), Alias)
+        self.assertEqual(self._nexus.get("alias_1").value, 6)
+        alias_2 = Alias(ref=par, name="alias_2")
+        self._nexus.add(alias_2)
+        self.assertIs(type(self._nexus.get("alias_2")), Alias)
+        self.assertEqual(self._nexus.get("alias_2").value, 6)
+        with self.assertRaises(ValueError):
+            self._nexus.add_alias(name="alias_3", alias_for="DEADBEEF")
 
     def test_add_detect_cycles(self):
         # define pair of infinitely recursive functions
@@ -788,7 +989,7 @@ class TestNexus(unittest.TestCase):
                 func=my_rec_func_2,
                 existing_behavior='replace',
             )
-            func_node.value
+            _ = func_node.value
 
     def test_add_dependency(self):
         def test_func(x=3):
@@ -796,7 +997,7 @@ class TestNexus(unittest.TestCase):
 
         func_node = self._nexus.add_function(
             func=test_func,
-            par_names=('x',)
+            par_names=['x']
         )
 
         y = self._nexus.add(
@@ -816,3 +1017,34 @@ class TestNexus(unittest.TestCase):
         y.value = 23
         self.assertEqual(func_node.stale, True)
         self.assertEqual(func_node.value, 6)
+
+        with self.assertRaises(ValueError):
+            self._nexus.add_dependency('DEADBEEF', depends_on='y')
+        with self.assertRaises(ValueError):
+            self._nexus.add_dependency('y', depends_on=['a', 'b'])
+
+    def test_get_value_dict(self):
+        self._nexus.add(Parameter(1, name="a"))
+        self._nexus.add(Parameter(2, name="b"))
+        self._nexus.add(Parameter(3, name="c"))
+        self._nexus.add_function(lambda a, b, c: a + b * c, func_name="func")
+        value_dict = self._nexus.get_value_dict()
+        self.assertEqual(len(value_dict), 4)
+        self.assertEqual(value_dict["a"], 1)
+        self.assertEqual(value_dict["b"], 2)
+        self.assertEqual(value_dict["c"], 3)
+        self.assertEqual(value_dict["func"], 7)
+        value_dict = self._nexus.get_value_dict(node_names=["b", "a", "func"])
+        self.assertEqual(len(value_dict), 3)
+        self.assertEqual(value_dict["a"], 1)
+        self.assertEqual(value_dict["b"], 2)
+        self.assertEqual(value_dict["func"], 7)
+        with self.assertRaises(ValueError):
+            _ = self._nexus.get_value_dict(error_behavior="bogus")
+
+    def test_print_state(self):
+        self._nexus.add(Parameter(1, name="a"))
+        self._nexus.add(Parameter(2, name="b"))
+        self._nexus.add(Parameter(3, name="c"))
+        self._nexus.add_function(lambda a, b, c: a + b * c, func_name="func")
+        self._nexus.print_state()
