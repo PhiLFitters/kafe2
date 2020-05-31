@@ -1,4 +1,5 @@
 from collections import OrderedDict
+import numpy as np
 
 from ...config import kc
 from ..minimizers import get_minimizer
@@ -10,7 +11,8 @@ class NexusFitterException(Exception):
 
 class NexusFitter(object):
 
-    def __init__(self, nexus, parameters_to_fit, parameter_to_minimize, minimizer=None, minimizer_kwargs=None):
+    def __init__(self, nexus, parameters_to_fit, parameter_to_minimize, minimizer=None,
+                 minimizer_kwargs=None):
         self._nx = nexus
 
         self.parameters_to_fit = parameters_to_fit
@@ -30,7 +32,7 @@ class NexusFitter(object):
         self._minimizer = _minimizer_class(
             parameters_to_fit,
             _par_values,
-            [0.1 if _v==0 else 0.1*_v for _v in _par_values],
+            [0.1 if _v==0 else 0.1*_v for _v in np.abs(_par_values)],
             self._fcn_wrapper,
             **minimizer_kwargs
         )

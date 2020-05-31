@@ -2,9 +2,8 @@ from __future__ import print_function
 
 import logging
 
-from .minimizer_base import MinimizerBase
+from .minimizer_base import MinimizerBase, MinimizerException
 from ..contour import ContourFactory
-from ..error import CovMat
 
 try:
     import scipy.optimize as opt
@@ -15,47 +14,30 @@ except ImportError:
 import numpy as np
 import numdifftools as nd
 
-from scipy.optimize import brentq
 
-
-class MinimizerScipyOptimizeException(Exception):
+class MinimizerScipyOptimizeException(MinimizerException):
     pass
 
 
 class MinimizerScipyOptimize(MinimizerBase):
     def __init__(self,
                  parameter_names, parameter_values, parameter_errors,
-                 function_to_minimize, method=None):
-        self._par_names = parameter_names
-        self.parameter_values = parameter_values
-        self._par_err = parameter_errors
+                 function_to_minimize, tolerance=1e-6, errordef=MinimizerBase.ERRORDEF_CHI2,
+                 method=None):
         self._method = method
         self._par_bounds = None
-        # self._par_bounds = [(None, None) for _pn in self._par_names]
         self._par_fixed = np.array([False] * len(parameter_names))
         self._par_constraints = []
-        """
-        # for fixing:
-        dict(type='eq', fun=lambda: _const, jac=lambda: 0.)
-        """
-
-        self._err_def = 1.0
-        self._tol = 1e-6
-
-        # cache for calculations
-        self._par_cov_mat = None
-        self._par_cor_mat = None
-        self._pars_contour = None
 
         self._opt_result = None
         self._x0 = None  # Stores initial value for x0 when profiling a parameter
-        super(MinimizerScipyOptimize, self).__init__(function_to_minimize=function_to_minimize)
+        super(MinimizerScipyOptimize, self).__init__(
+            parameter_names=parameter_names, parameter_values=parameter_values,
+            parameter_errors=parameter_errors, function_to_minimize=function_to_minimize,
+            tolerance=tolerance, errordef=errordef
+        )
 
     # -- private methods
-
-    def _invalidate_cache(self):
-        self._par_err = None
-        super(MinimizerScipyOptimize, self)._invalidate_cache()
 
     def _save_state(self):
         if self._par_val is None:
@@ -66,8 +48,13 @@ class MinimizerScipyOptimize(MinimizerBase):
             self._save_state_dict['parameter_errors'] = self._par_err
         else:
             self._save_state_dict['parameter_errors'] = np.array(self._par_err)
+        if self._par_bounds is None:
+            self._save_state_dict['parameter_bounds'] = self._par_bounds
+        else:
+            self._save_state_dict['parameter_bounds'] = np.array(self._par_bounds)
         self._save_state_dict['function_value'] = self._fval
         self._save_state_dict['par_fixed'] = np.array(self._par_fixed)
+        self._save_state_dict['opt_result'] = self._opt_result
         super(MinimizerScipyOptimize, self)._save_state()
 
     def _load_state(self):
@@ -77,82 +64,15 @@ class MinimizerScipyOptimize(MinimizerBase):
         self._par_err = self._save_state_dict['parameter_errors']
         if self._par_err is not None:
             self._par_err = np.array(self._par_err)
+        self._par_bounds = self._save_state_dict['parameter_bounds']
+        if self._par_bounds is not None:
+            self._par_bounds = np.array(self._par_bounds)
         self._fval = self._save_state_dict['function_value']
         self._par_fixed = np.array(self._save_state_dict['par_fixed'])
+        self._opt_result = self._save_state_dict['opt_result']
         super(MinimizerScipyOptimize, self)._load_state()
 
-    def _get_opt_result(self):
-        if self._opt_result is None:
-            raise MinimizerScipyOptimizeException("Cannot get requested information: No fitters performed!")
-        return self._opt_result
-
-    def _find_chi_2_cut(self, parameter_name, low, high, target_chi_2, min_parameters):
-        _par_would_be_fixed = np.array(self._par_fixed)
-        _par_index = self.parameter_names.index(parameter_name)
-        _par_would_be_fixed[_par_index] = True
-        if not np.all(_par_would_be_fixed):
-            return MinimizerBase._find_chi_2_cut(
-                self, parameter_name, low, high, target_chi_2, min_parameters)
-
-        def _profile(parameter_value):
-            self.set_several(self.parameter_names, min_parameters)
-            self.set(parameter_name, parameter_value)
-            self._fval = None  # Clear fval cache
-            return self.function_value - target_chi_2
-
-        return brentq(f=_profile, a=low, b=high, xtol=self.tolerance)
-
-    def _remove_zeroes_for_fixed(self, matrix):
-        """
-        Takes a full error matrix and removes the rows and
-        columns that correspong to fixed parameters.
-        """
-        # TODO: move implementation to base
-        assert (matrix.shape[0] == len(self._par_fixed))
-        assert (matrix.shape[1] == len(self._par_fixed))
-
-        _fixed_par_indices = [_idx for _idx, _fixed in enumerate(self._par_fixed) if _fixed]
-        _submat = np.delete(np.delete(matrix, _fixed_par_indices, axis=0), _fixed_par_indices, axis=1)
-
-        return _submat
-
-    def _fill_in_zeroes_for_fixed(self, submatrix):
-        """
-        Takes the partial error matrix (submatrix) and adds
-        rows and columns with 0.0 where the fixed
-        parameters should go.
-        """
-        # TODO: move implementation to base
-        _mat = submatrix
-
-        _fixed_par_indices = [_idx for _idx, _fixed in enumerate(self._par_fixed) if _fixed]
-        for _id in _fixed_par_indices:
-            _mat = np.insert(np.insert(_mat, _id, 0., axis=0), _id, 0., axis=1)
-
-        assert (_mat.shape[0] == len(self._par_fixed))
-        assert (_mat.shape[1] == len(self._par_fixed))
-
-        return _mat
-
     # -- public properties
-
-    @property
-    def errordef(self):
-        return self._err_def
-
-    @errordef.setter
-    def errordef(self, err_def):
-        assert err_def > 0
-        self._err_def = err_def
-
-    @property
-    def tolerance(self):
-        return self._tol
-
-    @tolerance.setter
-    def tolerance(self, tolerance):
-        assert tolerance > 0
-        self._tol = tolerance
 
     @property
     def parameter_values(self):
@@ -161,16 +81,19 @@ class MinimizerScipyOptimize(MinimizerBase):
     @parameter_values.setter
     def parameter_values(self, new_values):
         self._par_val = np.array(new_values)
+        self.reset()
 
     @property
     def parameter_errors(self):
-        if self._par_err is None:
-            self._par_err = np.sqrt(np.diag(self.cov_mat))
-        return self._par_err
+        return self._par_err.copy()
 
-    @property
-    def parameter_names(self):
-        return self._par_names
+    @parameter_errors.setter
+    def parameter_errors(self, new_errors):
+        _err_array = np.array(new_errors)
+        if not np.all(_err_array > 0):
+            raise ValueError("All parameter errors must be > 0! Received: %s" % new_errors)
+        self._par_err = _err_array
+        self.reset()
 
     # -- private "properties"
 
@@ -178,37 +101,32 @@ class MinimizerScipyOptimize(MinimizerBase):
 
     def set(self, parameter_name, parameter_value):
         if parameter_name not in self._par_names:
-            raise MinimizerScipyOptimizeException("No parameter named '%s'!" % (parameter_name,))
+            raise ValueError("No parameter named '%s'!" % (parameter_name,))
         _par_id = self._par_names.index(parameter_name)
         self._par_val[_par_id] = parameter_value
-
-    def set_several(self, parameter_names, parameter_values):
-        for _pn, _pv in zip(parameter_names, parameter_values):
-            self.set(_pn, _pv)
+        self.reset()
 
     def fix(self, parameter_name):
         _par_id = self._par_names.index(parameter_name)
         self._par_fixed[_par_id] = True
+        self._invalidate_cache()
 
     def is_fixed(self, parameter_name):
         _par_id = self._par_names.index(parameter_name)
         return self._par_fixed[_par_id]
 
-    def fix_several(self, parameter_names):
-        for _pn in parameter_names:
-            self.fix(_pn)
-
     def release(self, parameter_name):
         _par_id = self._par_names.index(parameter_name)
         self._par_fixed[_par_id] = False
-
-    def release_several(self, parameter_names):
-        for _pn in parameter_names:
-            self.release(_pn)
+        self._invalidate_cache()
 
     def limit(self, parameter_name, parameter_bounds):
         assert len(parameter_bounds) == 2
         _par_id = self._par_names.index(parameter_name)
+        if parameter_bounds[0] is not None and self._par_val[_par_id] < parameter_bounds[0]:
+            self.set(parameter_name, parameter_bounds[0])
+        elif parameter_bounds[1] is not None and self._par_val[_par_id] > parameter_bounds[1]:
+            self.set(parameter_name, parameter_bounds[1])
         if self._par_bounds is None:
             self._par_bounds = [(None, None) for _pn in self._par_names]
         self._par_bounds[_par_id] = parameter_bounds
@@ -225,6 +143,9 @@ class MinimizerScipyOptimize(MinimizerBase):
             self._par_bounds = None
 
     def minimize(self, max_calls=6000):
+        if np.all(self._par_fixed):
+            raise MinimizerScipyOptimizeException(
+                "Cannot perform a fit if all parameters are fixed!")
         if np.any(self._par_fixed):
             # if pars are fixed arg list becomes shorter -> pick and insert fixed pars from self.parameter_values
             _par_fixed_indices = np.array(self._par_fixed, dtype=int)  # 1 if fixed, 0 otherwise
@@ -275,19 +196,27 @@ class MinimizerScipyOptimize(MinimizerBase):
                                         tol=self.tolerance,
                                         callback=None,
                                         options=dict(maxiter=max_calls, disp=disp))
+        self._did_fit = True
         self._invalidate_cache()
 
         if np.any(self._par_fixed):
             _dyn_and_fixed_args[0, 0:-_n_fixed_parameters] = self._opt_result.x
-            self.parameter_values = _dyn_and_fixed_args[_par_fixed_indices, _position_indices]
+            self._par_val = _dyn_and_fixed_args[_par_fixed_indices, _position_indices]
         else:
-            self.parameter_values = self._opt_result.x
+            self._par_val = self._opt_result.x
 
         self._fval = self._opt_result.fun
+
         # Write back parameter values to nexus parameter nodes:
         self._func_wrapper_unpack_args(self.parameter_values)
 
+        # Update parameter errors.
+        # This is not done lazily because parameter errors need to be persistent.
+        self._par_err = np.sqrt(np.diag(self.cov_mat))
+
     def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, **minimizer_contour_kwargs):
+        if not self.did_fit:
+            raise MinimizerScipyOptimizeException("Need to perform a fit before calling contour()!")
         _algorithm = minimizer_contour_kwargs.pop("algorithm", "heuristic_grid")
 
         if _algorithm == "beacon":
@@ -309,87 +238,6 @@ class MinimizerScipyOptimize(MinimizerBase):
             return self._contour_heuristic_grid(parameter_name_1, parameter_name_2, sigma=sigma,
                                                 initial_points=_initial_points, iterations=_iterations,
                                                 area_scale_factor=_area_scale_factor)
-
-    def _contour_old(self, parameter_name_1, parameter_name_2, sigma=1.0, numpoints=20, strategy=1):
-        if strategy == 0:
-            _fraction = 0.08
-            _bias = 0.1
-        elif strategy == 1:
-            _fraction = 0.04
-            _bias = 1
-        elif strategy == 2:
-            _fraction = 0.01
-            _bias = 1
-
-        _contour_fun = self.function_value + sigma ** 2
-        _ids = (self._par_names.index(parameter_name_1), self._par_names.index(parameter_name_2))
-        _minimum = np.asarray([self._par_val[_ids[0]], self._par_val[_ids[1]]])
-        _coords = (0, 0)
-        _x_err, _y_err = self._par_err[_ids[0]], self._par_err[_ids[1]]
-        step_1, step_2 = _x_err * _fraction, _y_err * _fraction
-        _x_vector = np.asarray([step_1, 0])
-        _y_vector = np.asarray([0, step_2])
-        _steps = np.asarray([[0, step_2], [step_1, 0], [0, -step_2], [-step_1, 0]])
-        _fun_distance = sigma ** 2
-        _adjacent_funs = np.zeros(4)
-        _last_direction = -1
-
-        _contour_coords = []
-        _explored_coords = set()
-        _explored_coords.add((0, 0))
-        _log_points = False
-        _termination_coords = None
-        _first_lap = True
-
-        _loops = 0
-
-        while True:
-            if _coords == _termination_coords:
-                if not _first_lap:
-                    break
-                else:
-                    _first_lap = False
-            _adjacent_coords = self._get_adjacent_coords(_coords)
-            for i in range(4):
-                if _adjacent_coords[i] in _explored_coords or i == _last_direction:
-                    _adjacent_funs[i] = 0
-                elif _adjacent_coords[i] == _termination_coords:
-                    _adjacent_funs[i] = _contour_fun
-                else:
-                    _point = _minimum + _adjacent_coords[i][0] * _x_vector + _adjacent_coords[i][1] * _y_vector
-                    _local_constraints = [{'type': 'eq', 'fun': lambda x: x[_ids[0]] - _point[0]},
-                                          {'type': 'eq', 'fun': lambda x: x[_ids[1]] - _point[1]}]
-                    _adjacent_funs[i] = self._calc_fun_with_constraints(_local_constraints)
-            _distances = _contour_fun - _adjacent_funs
-            for i in range(4):
-                if _distances[i] < 0:
-                    _distances[i] *= -_bias
-            _adjacent_funs_best_distance = np.min(_distances)
-            _min_index = np.argmin(_distances)
-            _new_coords = _adjacent_coords[_min_index]
-
-            for i in range(4):
-                if i != _last_direction:
-                    _explored_coords.add(_adjacent_coords[i])
-            if _fun_distance < _adjacent_funs_best_distance and not _log_points:
-                _log_points = True
-                _termination_coords = _new_coords
-                _explored_coords.clear()
-            _coords = _new_coords
-            _fun_distance = _adjacent_funs_best_distance
-            _last_direction = (np.argmin(_distances) + 2) % 4
-            if _log_points:
-                _contour_coords.append(_coords)
-            if _loops < 10000:
-                _loops += 1
-            else:
-                break
-        _contour_array = np.asarray(_contour_coords, dtype=float).T
-        _contour_array[0] = _contour_array[0] * step_1 + _minimum[0]
-        _contour_array[1] = _contour_array[1] * step_2 + _minimum[1]
-        # function call needed to reset the nexus cache to minimal values
-        self._func_wrapper_unpack_args(self._par_val)
-        return _contour_array
 
     def _contour_heuristic_grid(self, parameter_name_1, parameter_name_2, sigma=1.0, initial_points=1,
                                 iterations=5, area_scale_factor=1.5):
@@ -575,12 +423,6 @@ class MinimizerScipyOptimize(MinimizerBase):
                 _grid_points.append(grid[_x][_y])
         return np.asarray(_grid_points)
 
-    def _get_adjacent_coords(self, central_coords):
-        return [(central_coords[0], central_coords[1] + 1),
-                (central_coords[0] + 1, central_coords[1]),
-                (central_coords[0], central_coords[1] - 1),
-                (central_coords[0] - 1, central_coords[1])]
-
     def _contour_beacon(self, parameter_name_1, parameter_name_2, sigma=1.0, beacon_size=0.02):
 
         _contour_fun = self.function_value + sigma ** 2
@@ -705,11 +547,17 @@ class MinimizerScipyOptimize(MinimizerBase):
         self._x0 = _result.x
         return _result.fun
 
-    def profile(self, parameter_name, bins=21, bound=2, args=None, subtract_min=False):
+    def profile(self, parameter_name, bins=21, bound=2, subtract_min=False):
+        if not self.did_fit:
+            raise MinimizerScipyOptimizeException("Need to perform a fit before calling profile()!")
         _par_id = self._par_names.index(parameter_name)
         _par_err = self.parameter_errors[_par_id]
         _par_min = self._par_val[_par_id]
-        _par = np.linspace(start=_par_min - bound * _par_err, stop=_par_min + bound * _par_err, num=bins, endpoint=True)
+        _par = np.linspace(
+            start=_par_min - bound * _par_err,
+            stop=_par_min + bound * _par_err,
+            num=bins, endpoint=True
+        )
         _y_offset = self.function_value if subtract_min else 0
 
         _y = np.empty(bins)
@@ -736,33 +584,3 @@ class MinimizerScipyOptimize(MinimizerBase):
         if np.isnan(_res):
             return np.finfo(float).max
         return _res
-
-    @property
-    def hessian(self):
-        if self._hessian is None:
-            self._hessian = nd.Hessian(self._func_wrapper_unpack_args)(self.parameter_values)
-            assert (np.all(self._hessian == self._hessian.T))
-        # final call to ensure no side effects from Hessian calls
-        # (needed by e.g. NexusFitter to update the nexus parameter nodes)
-        self._func_wrapper_unpack_args(self.parameter_values)
-        return self._hessian
-
-    @property
-    def hessian_inv(self):
-        if self._hessian_inv is None:
-            _hessian = self.hessian  # including zeroes for fixed parameter
-            _subhessian = self._remove_zeroes_for_fixed(_hessian)
-            _subhessian_inv = np.linalg.inv(_subhessian)
-            self._hessian_inv = self._fill_in_zeroes_for_fixed(_subhessian_inv)
-            # ensure symmetric
-            self._hessian_inv = 0.5 * (self._hessian_inv + self._hessian_inv.T)
-        assert (np.all(self._hessian_inv == self._hessian_inv.T))
-        return self._hessian_inv
-
-    @property
-    def cor_mat(self):
-        if self._par_cor_mat is None:
-            _subcov_mat = self._remove_zeroes_for_fixed(self.cov_mat)
-            _subcor_mat = CovMat(_subcov_mat).cor_mat
-            self._par_cor_mat = self._fill_in_zeroes_for_fixed(_subcor_mat)
-        return self._par_cor_mat

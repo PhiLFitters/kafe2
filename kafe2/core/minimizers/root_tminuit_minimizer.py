@@ -1,7 +1,7 @@
 from __future__ import print_function
 import six
 import ctypes
-from .minimizer_base import MinimizerBase
+from .minimizer_base import MinimizerBase, MinimizerException
 from ..contour import ContourFactory
 try:
     from ROOT import TMinuit, Double, Long
@@ -15,64 +15,55 @@ from array import array as arr  # array needed for TMinuit arguments
 import numpy as np
 
 
-class MinimizerROOTTMinuitException(Exception):
+class MinimizerROOTTMinuitException(MinimizerException):
     pass
 
 
 class MinimizerROOTTMinuit(MinimizerBase):
     def __init__(self,
                  parameter_names, parameter_values, parameter_errors,
-                 function_to_minimize, strategy = 1):
-        self._par_names = parameter_names
+                 function_to_minimize, tolerance=1e-9, errordef=MinimizerBase.ERRORDEF_CHI2,
+                 strategy=1):
         self._strategy = strategy
 
-        self._func_handle = function_to_minimize
-        self._err_def = 1.0
-        self._tol = 0.001
+        self._par_bounds = np.array([None] * len(parameter_names))
+        self._par_fixed = np.array([False] * len(parameter_names))
 
-        # initialize the minimizer parameter specification
-        self._minimizer_param_dict = {}
-        assert len(parameter_names) == len(parameter_values) == len(parameter_errors)
-        self._par_val = []
-        self._par_err = []
-        self._par_fixed_mask = []
-        self._par_limits = []
-        for _pn, _pv, _pe in zip(parameter_names, parameter_values, parameter_errors):
-            self._par_val.append(_pv)
-            self._par_err.append(_pe)
-            self._par_fixed_mask.append(False)
-            self._par_limits.append(None)
-            # TODO: limits/fixed parameters
-
-        self.__gMinuit = None
-
-        # cache for calculations
-        self._hessian = None
-        self._hessian_inv = None
-        self._fval = None
-        self._par_cov_mat = None
-        self._par_cor_mat = None
-        self._par_asymm_err = None
-        self._fmin_struct = None
-        self._pars_contour = None
-
-        self._min_result_stale = True
-        self._printed_inf_cost_warning = False
+        self.reset()  # sets self.__gMinuit and caches to None
+        super(MinimizerROOTTMinuit, self).__init__(
+            parameter_names=parameter_names, parameter_values=parameter_values,
+            parameter_errors=parameter_errors, function_to_minimize=function_to_minimize,
+            tolerance=tolerance, errordef=errordef
+        )
 
     # -- private methods
 
-    # def _invalidate_cache(self):
-    #     self._par_val = None
-    #     self._par_err = None
-    #     self._hessian = None
-    #     self._hessian_inv = None
-    #     self._fval = None
-    #     self._par_cov_mat = None
-    #     self._par_cor_mat = None
-    #     self._par_asymm_err_dn = None
-    #     self._par_asymm_err_up = None
-    #     self._fmin_struct = None
-    #     self._pars_contour = None
+    def _save_state(self):
+        if self._par_val is None:
+            self._save_state_dict["par_val"] = self._par_val
+        else:
+            self._save_state_dict["par_val"] = np.array(self._par_val)
+        if self._par_err is None:
+            self._save_state_dict["par_err"] = self._par_err
+        else:
+            self._save_state_dict["par_err"] = np.array(self._par_err)
+        self._save_state_dict['par_fixed'] = np.array(self._par_fixed)
+        self._save_state_dict['gMinuit'] = self.__gMinuit
+        super(MinimizerROOTTMinuit, self)._save_state()
+
+    def _load_state(self):
+        self.reset()
+        self._par_val = self._save_state_dict["par_val"]
+        if self._par_val is not None:
+            self._par_val = np.array(self._par_val)
+        self._par_err = self._save_state_dict["par_err"]
+        if self._par_err is not None:
+            self._par_err = np.array(self._par_err)
+        self._par_fixed = np.array(self._save_state_dict['par_fixed'])
+        self.__gMinuit = self._save_state_dict['gMinuit']
+        # call the function to propagate the changes to the nexus:
+        self._func_handle(*self.parameter_values)
+        super(MinimizerROOTTMinuit, self)._load_state()
 
     def _recreate_gMinuit(self):
         self.__gMinuit = TMinuit(self.num_pars)
@@ -92,14 +83,14 @@ class MinimizerROOTTMinuit(MinimizerBase):
 
         err_code = ctypes.c_int(0)
         # set fixed parameters
-        for _par_id, _pf in enumerate(self._par_fixed_mask):
+        for _par_id, _pf in enumerate(self._par_fixed):
             if _pf:
                 self.__gMinuit.mnfixp(_par_id, err_code)
 
         # set parameter limits
-        for _par_id, _pl in enumerate(self._par_limits):
-            if _pl is not None:
-                _lo_lim, _up_lim = _pl
+        for _par_id, _pb in enumerate(self._par_bounds):
+            if _pb is not None:
+                _lo_lim, _up_lim = _pb
                 self.__gMinuit.mnexcm("SET LIM",
                                       arr('d', [_par_id + 1, _lo_lim, _up_lim]), 3, error_code)
 
@@ -115,12 +106,6 @@ class MinimizerROOTTMinuit(MinimizerBase):
         self._get_gMinuit().mnexcm("MIGRAD",
                                     arr('d', [max_calls, self.tolerance]),
                                     2, error_code)
-
-    def _hesse(self, max_calls=6000):
-        # need to set the FCN explicitly before every call
-        self._get_gMinuit().SetFCN(self._minuit_fcn)
-        error_code = Long(0)
-        self._get_gMinuit().mnexcm("HESSE", arr('d', [max_calls]), 1, error_code)
 
     def _minuit_fcn(self,
                     number_of_parameters, derivatives, f, parameters, internal_flag):
@@ -164,27 +149,22 @@ class MinimizerROOTTMinuit(MinimizerBase):
         # call the Python implementation of FCN.
         f[0] = self._func_wrapper(*parameter_list)
 
-    def _insert_zeros_for_fixed(self, submatrix):
-        """
-        Takes the partial error matrix (submatrix) and adds
-        rows and columns with 0.0 where the fixed
-        parameters should go.
-        """
-        _mat = submatrix
+    def _calculate_asymmetric_parameter_errors(self):
+        self._get_gMinuit().mnmnos()
+        _asymm_par_errs = np.zeros(shape=(self.num_pars, 2))
+        for _n in range(self.num_pars):
+            _number = Long(_n)
+            _eplus = ctypes.c_double(0)
+            _eminus = ctypes.c_double(0)
+            _eparab = ctypes.c_double(0)
+            _gcc = ctypes.c_double(0)
+            self._get_gMinuit().mnerrs(_number, _eplus, _eminus, _eparab, _gcc)
+            _asymm_par_errs[_n, 0] = _eminus.value
+            _asymm_par_errs[_n, 1] = _eplus.value
+        self.minimize()
+        return _asymm_par_errs
 
-        # reduce the matrix before inserting zeros
-        _n_pars_free = self.n_pars_free
-        _mat = _mat[0:_n_pars_free,0:_n_pars_free]
-
-        _fparam_ids = [_par_id for _par_id, _p in enumerate(self._par_fixed_mask) if _p]
-        for _id in _fparam_ids:
-            _mat = np.insert(np.insert(_mat, _id, 0., axis=0), _id, 0., axis=1)
-
-        return _mat
-
-    # -- public properties
-
-    def get_fit_info(self, info):
+    def _get_fit_info(self, info):
         '''Retrieves other info from `Minuit`.
         **info** : string
             Information about the fit to retrieve.
@@ -196,202 +176,191 @@ class MinimizerROOTTMinuit(MinimizerBase):
         '''
 
         # declare vars in which to retrieve other info
-        fcn_at_min = Double(0)
-        edm = Double(0)
-        err_def = Double(0)
-        n_var_param = Long(0)
-        n_tot_param = Long(0)
-        status_code = Long(0)
+        fcn_at_min = ctypes.c_double(0)
+        edm = ctypes.c_double(0)
+        err_def = ctypes.c_double(0)
+        n_var_param = ctypes.c_int(0)
+        n_tot_param = ctypes.c_int(0)
+        status_code = ctypes.c_int(0)
 
         # Tell TMinuit to update the variables declared above
-        self.__gMinuit.mnstat(fcn_at_min,
-                              edm,
-                              err_def,
-                              n_var_param,
-                              n_tot_param,
-                              status_code)
+        self.__gMinuit.mnstat(fcn_at_min, edm, err_def, n_var_param, n_tot_param, status_code)
 
         if info == 'fcn':
-            return fcn_at_min
-
+            return fcn_at_min.value
         elif info == 'edm':
-            return edm
-
+            return edm.value
         elif info == 'err_def':
-            return err_def
-
+            return err_def.value
         elif info == 'status_code':
-            try:
-                return D_MATRIX_ERROR[status_code]
-            except:
-                return status_code
+            return status_code.value
+        else:
+            raise ValueError("Unknown fit info: %s" % info)
 
-    @property
-    def num_pars(self):
-        return len(self.parameter_names)
-
-    @property
-    def n_pars_free(self):
-        return len([_p for _p in self._par_fixed_mask if not _p])
-
-    @property
-    def errordef(self):
-        return self._err_def
-
-    @errordef.setter
-    def errordef(self, err_def):
-        assert err_def > 0
-        self._err_def = err_def
-        if self.__gMinuit is not None:
-            self.__gMinuit.set_errordef(err_def)
-            self._min_result_stale = True
-
-    @property
-    def tolerance(self):
-        return self._tol
-
-    @tolerance.setter
-    def tolerance(self, tolerance):
-        assert tolerance > 0
-        self._tol = tolerance
-        self._min_result_stale = True
+    # -- public properties
 
     @property
     def hessian(self):
-        # TODO: cache this
-        return 2.0 * self.errordef * np.linalg.inv(self.cov_mat)
+        if not self.did_fit:
+            return None
+        if self._hessian is None:
+            _submat = self._remove_zeroes_for_fixed(self.cov_mat)
+            _submat_inv = 2.0 * self.errordef * np.linalg.inv(_submat)
+            self._hessian = self._fill_in_zeroes_for_fixed(_submat_inv)
+        return self._hessian.copy()
 
     @property
     def cov_mat(self):
-        if self._min_result_stale:
-            raise MinimizerROOTTMinuitException("Cannot get cov_mat: Minimizer result is outdated.")
+        if not self.did_fit:
+            return None
         if self._par_cov_mat is None:
             _n_pars_total = self.num_pars
-            _n_pars_free = self.n_pars_free
             _tmp_mat_array = arr('d', [0.0]*(_n_pars_total**2))
             # get parameter covariance matrix from TMinuit
-            self.__gMinuit.mnemat(_tmp_mat_array, _n_pars_total)
+            self._get_gMinuit().mnemat(_tmp_mat_array, _n_pars_total)
             # reshape into 2D array
             _sub_cov_mat = np.asarray(
                 np.reshape(
                     _tmp_mat_array,
                     (_n_pars_total, _n_pars_total)
-                )
+                ),
+                dtype=np.float
             )
-            self._par_cov_mat = self._insert_zeros_for_fixed(_sub_cov_mat)
-        return self._par_cov_mat
-
-    @property
-    def cor_mat(self):
-        if self._min_result_stale:
-            raise MinimizerROOTTMinuitException("Cannot get cor_mat: Minimizer result is outdated.")
-        if self._par_cor_mat is None:
-            _cov_mat = self.cov_mat
-            # TODO: use CovMat object!
-            # Note: for zeros on cov_mat diagonals (which occur for fixed parameters) -> overwrite with 1.0
-            _sqrt_diag = np.array([_err if _err>0 else 1.0 for _err in np.sqrt(np.diag(_cov_mat))])
-            self._par_cor_mat = np.asarray(_cov_mat) / np.outer(_sqrt_diag, _sqrt_diag)
-        return self._par_cor_mat
+            _num_pars_free = np.sum(np.invert(self._par_fixed))
+            _sub_cov_mat = _sub_cov_mat[:_num_pars_free, :_num_pars_free]
+            self._par_cov_mat = self._fill_in_zeroes_for_fixed(_sub_cov_mat)
+        return self._par_cov_mat.copy()
 
     @property
     def hessian_inv(self):
-        return self.cov_mat / 2.0 / self.errordef
+        if not self.did_fit:
+            return None
+        if self._hessian_inv is None:
+            self._hessian_inv = self.cov_mat / (2.0 * self.errordef)
+        return self._hessian_inv.copy()
 
     @property
     def parameter_values(self):
-        return self._par_val
+        return self._par_val.copy()
+
+    @parameter_values.setter
+    def parameter_values(self, new_values):
+        self._par_val = np.array(new_values)
+        self.reset()
 
     @property
     def parameter_errors(self):
-        return self._par_err
+        return self._par_err.copy()
 
-    @property
-    def parameter_names(self):
-        return self._par_names
+    @parameter_errors.setter
+    def parameter_errors(self, new_errors):
+        _err_array = np.array(new_errors)
+        if not np.all(_err_array > 0):
+            raise ValueError("All parameter errors must be > 0! Received: %s" % new_errors)
+        self._par_err = _err_array
+        self.reset()
 
     # -- private "properties"
 
     # -- public methods
 
+    def reset(self):
+        super(MinimizerROOTTMinuit, self).reset()
+        self.__gMinuit = None
+
+    def set(self, parameter_name, parameter_value):
+        if parameter_name not in self._par_names:
+            raise ValueError("No parameter named '%s'!" % (parameter_name,))
+        _par_id = self.parameter_names.index(parameter_name)
+        self._par_val[_par_id] = parameter_value
+        self.reset()
+
     def fix(self, parameter_name):
         # set local flag
         _par_id = self.parameter_names.index(parameter_name)
-        if self._par_fixed_mask[_par_id]:
+        if self._par_fixed[_par_id]:
             return  # par is already fixed
-        self._par_fixed_mask[_par_id] = True
+        self._par_fixed[_par_id] = True
         if self.__gMinuit is not None:
             # also update Minuit instance
-            err_code = Long(0)
+            err_code = ctypes.c_int(0)
             self.__gMinuit.mnfixp(_par_id, err_code)
             # self.__gMinuit.mnexcm("FIX",
             #                   arr('d', [_par_id+1]), 1, error_code)
-            self._min_result_stale = True
+        self._invalidate_cache()
 
-    def fix_several(self, parameter_names):
-        for _pn in parameter_names:
-            self.fix(_pn)
+    def is_fixed(self, parameter_name):
+        _par_id = self.parameter_names.index(parameter_name)
+        return self._par_fixed[_par_id]
 
     def release(self, parameter_name):
         # set local flag
         _par_id = self.parameter_names.index(parameter_name)
-        if not self._par_fixed_mask[_par_id]:
+        if not self._par_fixed[_par_id]:
             return  # par is already released
-        self._par_fixed_mask[_par_id] = False
+        self._par_fixed[_par_id] = False
         if self.__gMinuit is not None:
             # also update Minuit instance
             self.__gMinuit.mnfree(-_par_id-1)
             # self.__gMinuit.mnexcm("RELEASE",
             #                   arr('d', [_par_id+1]), 1, error_code)
-            self._min_result_stale = True
-
-    def release_several(self, parameter_names):
-        for _pn in parameter_names:
-            self.release(_pn)
+        self._invalidate_cache()
 
     def limit(self, parameter_name, parameter_bounds):
         assert len(parameter_bounds) == 2
+        if parameter_bounds[0] is None or parameter_bounds[1] is None:
+            raise MinimizerROOTTMinuitException(
+                "Cannot define one-sided parameter limits when using the ROOT TMinuit Minimizer.")
         # set local flag
         _par_id = self.parameter_names.index(parameter_name)
-        if self._par_limits[_par_id] == parameter_bounds:
+        if self._par_bounds[_par_id] == parameter_bounds:
             return  # same limits already set
-        self._par_limits[_par_id] = parameter_bounds
+        if self._par_val[_par_id] < parameter_bounds[0]:
+            self.set(parameter_name, parameter_bounds[0])
+        elif self._par_val[_par_id] > parameter_bounds[1]:
+            self.set(parameter_name, parameter_bounds[1])
+        self._par_bounds[_par_id] = parameter_bounds
         if self.__gMinuit is not None:
-            _lo_lim, _up_lim = self._par_limits[_par_id]
+            _lo_lim, _up_lim = self._par_bounds[_par_id]
             # also update Minuit instance
-            error_code = Long(0)
+            error_code = ctypes.c_int(0)
             self.__gMinuit.mnexcm("SET LIM",
                      arr('d', [_par_id+1, _lo_lim, _up_lim]), 3, error_code)
-            self._min_result_stale = True
+            self._did_fit = False
+        self._invalidate_cache()
 
     def unlimit(self, parameter_name):
         # set local flag
         _par_id = self.parameter_names.index(parameter_name)
-        if self._par_limits[_par_id] is None:
+        if self._par_bounds[_par_id] is None:
             return  # parameter is already unlimited
-        self._par_limits[_par_id] = None
+        self._par_bounds[_par_id] = None
         if self.__gMinuit is not None:
             # also update Minuit instance
             error_code = ctypes.c_int(0)
             self.__gMinuit.mnexcm("SET LIM",
                      arr('d', [_par_id+1]), 1, error_code)
-            self._min_result_stale = True
+            self._did_fit = False
+        self._invalidate_cache()
 
     def minimize(self, max_calls=6000):
+        if np.all(self._par_fixed):
+            raise MinimizerROOTTMinuitException("Cannot perform a fit if all parameters are fixed!")
         self._migrad(max_calls=max_calls)
 
         # retrieve fitters parameters
-        self._par_val = []
-        self._par_err = []
-        _pv, _pe = Double(0), Double(0)
+        self._par_val = np.zeros(self.num_pars)
+        self._par_err = np.zeros(self.num_pars)
+        _pv, _pe = ctypes.c_double(0), ctypes.c_double(0)
         for _par_id in six.moves.range(0, self.num_pars):
-            self.__gMinuit.GetParameter(_par_id, _pv, _pe)  # retrieve fitresult
-            self._par_val.append(float(_pv))
-            self._par_err.append(float(_pe))
+            self.__gMinuit.GetParameter(_par_id, _pv, _pe)  # retrieve fit result
+            self._par_val[_par_id] = _pv.value
+            self._par_err[_par_id] = _pe.value
 
-        self._min_result_stale = False
+        self._did_fit = True
         
     def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, **minimizer_contour_kwargs):
-        if self.__gMinuit is None:
+        if not self.did_fit:
             raise MinimizerROOTTMinuitException("Need to perform a fit before calling contour()!")
         _numpoints = minimizer_contour_kwargs.pop("numpoints", 100)
         if minimizer_contour_kwargs:
@@ -411,20 +380,19 @@ class MinimizerROOTTMinuit(MinimizerBase):
         return ContourFactory.create_xy_contour((_x, _y), sigma)
     
     def profile(self, parameter_name, bins=21, bound=2, args=None, subtract_min=False):
-        if self.__gMinuit is None:
+        if not self.did_fit:
             raise MinimizerROOTTMinuitException("Need to perform a fit before calling profile()!")
         
         MAX_ITERATIONS = 6000
         
-        _error_code = Long(0)
+        _error_code = ctypes.c_int(0)
         _minuit_id = Long(self.parameter_names.index(parameter_name) + 1)
 
-
-
-        _par_min = Double(0)
-        _par_err = Double(0)
-        
+        _par_min = ctypes.c_double(0)
+        _par_err = ctypes.c_double(0)
         self.__gMinuit.GetParameter(_minuit_id - 1, _par_min, _par_err)
+        _par_min = _par_min.value
+        _par_err = _par_err.value
 
         _x = np.linspace(start=_par_min - bound * _par_err, stop=_par_min + bound * _par_err, num=bins, endpoint=True)
 
@@ -434,11 +402,13 @@ class MinimizerROOTTMinuit(MinimizerBase):
         for i in range(bins):
             self.__gMinuit.mnexcm("SET PAR", arr('d', [_minuit_id, Double(_x[i])]), 2, _error_code)
             self.__gMinuit.mnexcm("MIGRAD", arr('d', [MAX_ITERATIONS, self.tolerance]), 2, _error_code)
-            _y[i] = self.get_fit_info("fcn")
+            _y[i] = self._get_fit_info("fcn")
 
         self.__gMinuit.mnexcm("RELEASE", arr('d', [_minuit_id]), 1, _error_code)
         self._migrad()
         self.__gMinuit.mnexcm("SET PAR", arr('d', [_minuit_id, Double(_par_min)]), 2, _error_code)
 
-        
+        if subtract_min:
+            _y -= self.function_value
+
         return np.asarray((_x, _y))
