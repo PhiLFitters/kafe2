@@ -321,9 +321,9 @@ class TestNodes(unittest.TestCase):
 
     def test_empty_value(self):
         e = Empty()
-        with self.assertRaises(ValueError):
+        with self.assertRaises(NodeException):
             _ = e.value
-        with self.assertRaises(ValueError):
+        with self.assertRaises(NodeException):
             e.value = 33
 
     # -- Parameter
@@ -946,7 +946,7 @@ class TestNexus(unittest.TestCase):
             return a * b
 
         func_node_1 = self._nexus.add_function(my_func_1)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(NodeException):
             _ = func_node_1.value
         func_node_2 = self._nexus.add_function(my_func_2)
         # Parameters of second function are reversed:

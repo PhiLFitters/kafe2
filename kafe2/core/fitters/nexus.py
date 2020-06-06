@@ -1,5 +1,4 @@
 import abc
-import inspect
 import numpy as np
 import operator
 import six
@@ -9,7 +8,6 @@ import warnings
 import weakref
 
 from ast import parse
-from collections import OrderedDict
 
 if six.PY2:
     from funcsigs import signature, Parameter as SigParameter
@@ -105,11 +103,18 @@ class NodeBase(object):
     """
     Abstract class for a computation graph node.
     Defines the minimal interface required by all specializations.
+    Dependencies between nodes are expressed via parent nodes and child nodes.
+    The status of a parent node depends on the status of its children; When the status of a child
+    node changes the status of any of its parents will need to be changed as well.
     """
 
     RESERVED_PARAMETER_NAMES = ('__all__', '__real__', '__root__', '__error__')
 
     def __init__(self, name=None):
+        """
+        :param name: the name of the node
+        :type name: str
+        """
         self.name = name or 'Node_' + uuid.uuid4().hex[:10]
 
         self._stale = True
@@ -148,6 +153,11 @@ class NodeBase(object):
 
     @staticmethod
     def _check_name_raise(name):
+        """
+        Check if node name is valid.
+        :param name: the node name
+        :type name: str
+        """
         if name in Parameter.RESERVED_PARAMETER_NAMES:
             raise NodeException("Invalid node name: '%s' is a reserved keyword!"
                                 % (name,))
@@ -158,7 +168,9 @@ class NodeBase(object):
                                 % (name,))
 
     def _execute_callbacks(self):
-        # execute any callback functions
+        """
+        Execute callbacks upon notifying parents.
+        """
         for _cb in self._callbacks:
             _cb['func'](
                 *(_cb['args'] or []),
@@ -169,14 +181,28 @@ class NodeBase(object):
 
     @property
     def stale(self):
+        """
+        :return: if the node needs to be updated before use.
+        :rtype: bool
+        """
         return self._stale
 
     @property
     def frozen(self):
+        """
+        If a node is frozen it will be unaffected by updates to its children. It will also not
+        notify its parents of any updates.
+        :return: if the node is frozen.
+        :rtype: bool
+        """
         return self._frozen
 
     @property
     def name(self):
+        """
+        :return: the name of the node.
+        :rtype: str
+        """
         return self._name
 
     @name.setter
@@ -187,6 +213,12 @@ class NodeBase(object):
     # -- public API
 
     def add_child(self, node):
+        """
+        Add a child node to this node. This node will automatically add itself as a parent of the
+        child node.
+        :param node: the child node to be added.
+        :type node: NodeBase
+        """
         if not isinstance(node, NodeBase):
             # wrap non-node values inside `Parameter`
             node = Parameter(node)
@@ -195,9 +227,13 @@ class NodeBase(object):
         node.add_parent(self)
         self.mark_for_update()
 
-        return self
-
     def add_parent(self, node):
+        """
+        Add a parent node to this node. Not to be called manually but as an automatic response to
+        NodeBase.add_child!
+        :param node: the parent node to be added.
+        :type node: NodeBase
+        """
         if not isinstance(node, NodeBase):
             raise TypeError(
                 "Cannot add parent: expected "
@@ -207,15 +243,27 @@ class NodeBase(object):
             raise NodeException("Child must be added to parent, not the other way around!")
         self._parents.add(weakref.ref(node))
 
-        return self
-
     def get_children(self):
+        """
+        :return: a list containing the children of this node.
+        :rtype: list of NodeBase
+        """
         return list(self.iter_children())
 
     def get_parents(self):
+        """
+        :return: a list containing the parents of this node.
+        :rtype: list of NodeBase
+        """
         return list(self.iter_parents())
 
     def remove_child(self, node):
+        """
+        Remove a child node from this node. Automatically removes this node from parents of child
+        node.
+        :param node: the child node to be removed.
+        :type node: NodeBase
+        """
         if not isinstance(node, NodeBase):
             raise TypeError(
                 "Cannot remove child: expected "
@@ -232,9 +280,13 @@ class NodeBase(object):
         node.remove_parent(self)
         self.mark_for_update()
 
-        return self
-
     def remove_parent(self, node):
+        """
+        Remove a parent node from this node. Not to be called manually but as an automatic response
+        to NodeBase.remove_child!
+        :param node: the parent node to be removed.
+        :type node: NodeBase
+        """
         if not isinstance(node, NodeBase):
             raise TypeError(
                 "Cannot remove parent: expected "
@@ -249,13 +301,17 @@ class NodeBase(object):
 
         # do *not* remove self node from node children
 
-        return self
-
     def iter_children(self):
+        """
+        Generator for child nodes.
+        """
         for _child in self._children:
             yield _child
 
     def iter_parents(self):
+        """
+        Generator for parent nodes.
+        """
         _out_of_scope_refs = []
         for _p_ref in self._parents:
             _p = _p_ref()  # dereference weakref
@@ -280,6 +336,12 @@ class NodeBase(object):
             self._parents.remove(_ref)
 
     def set_children(self, children):
+        """
+        Setter method for children. New children that are not of type NodeBase will be wrapped in
+        a Parameter node.
+        :param children: the new children of this node.
+        :type children: iterable
+        """
         _new_children = []
         for _child in children:
             # wrap literal values inside 'Parameter'
@@ -295,9 +357,10 @@ class NodeBase(object):
 
         self.mark_for_update()
 
-        return self
-
     def notify_parents(self):
+        """
+        Notify parents that they will need to be updated because this node has changed.
+        """
         # frozen nodes do not notify their parents
         if self.frozen:
             return
@@ -310,24 +373,37 @@ class NodeBase(object):
             _p.notify_parents()
 
     def freeze(self):
+        """
+        Sets this node's frozen property to True.
+        """
         self._frozen = True
 
     def unfreeze(self):
+        """
+        Sets this node's frozen property to False.
+        """
         self._frozen = False
 
     def mark_for_update(self):
-        # invalidate node value
+        """
+        Sets this node's stale property to True.
+        """
         self._stale = True
 
     def update(self):
+        """
+        Sets this node's stale property to False and performs any necessary updates to this node.
+        """
         self._stale = False
 
     def replace(self, other, other_children=True):
-        """replace all instances of this node with `other`.
+        """
+        Replace all instances of this node with `other`. The order of children will be preserved.
         :arg other: the node that this node should be replaced with.
         :type other: any
         :arg other_children: if True, `other` will keep its own children after the replacement.
-        If False, only `other` will be replaced: after the replacement other will have the same children as this node.
+        If False, only `other` will be replaced: after the replacement other will have the same
+        children as this node.
         :type other_children: bool
         """
         # Do nothing if a node is supposed to be replaced with itself
@@ -344,6 +420,14 @@ class NodeBase(object):
             _parent.replace_child(current_child=self, new_child=other)
 
     def replace_child(self, current_child, new_child):
+        """
+        Replace a child node of this node with another node. If new_child is not of type NodeBase
+        it will be wrapped inside a Parameter node. The order of children will be preserved.
+        :param current_child: the child node to be replaced.
+        :type current_child: NodeBase
+        :param new_child: the new child to replace current_child with.
+        :type new_child: any
+        """
         if not isinstance(new_child, NodeBase):
             # wrap non-node values inside `Parameter`
             new_child = Parameter(new_child)
@@ -355,15 +439,28 @@ class NodeBase(object):
         current_child.remove_parent(self)
 
     def register_callback(self, func, args=None, kwargs=None):
+        """
+        Add a function to be called when this node notifies its parents.
+        :param func: the function to be called.
+        :type func: Callable
+        :param args: the args to call the function with.
+        :type args: list
+        :param kwargs: the kwargs to call the function with.
+        :type kwargs: dict
+        """
         self._callbacks.append(dict(func=func, args=args, kwargs=kwargs))
 
     def print_descendants(self):
+        """
+        Recursively print this node and its children.
+        """
         NodeChildrenPrinter(self).run()
 
 
 class RootNode(NodeBase):
     """
-    A Node that acts as the root node of a graph. Cannot have any parent nodes.
+    A Node that acts as the root node of a graph. Cannot have any parent nodes. All other nodes are
+    direct or indirect children of this node. This node therefore depends on all other nodes.
     """
 
     def __init__(self):
@@ -380,7 +477,6 @@ class RootNode(NodeBase):
         self._children = sorted(self._children, key=lambda x: x.name)
 
     def replace(self, other):
-        '''replace all instances of this node with `other`'''
         raise TypeError("Root node cannot be replaced!")
 
     def add_parent(self, parent):
@@ -401,6 +497,12 @@ class ValueNode(NodeBase):
     """
 
     def __init__(self, value=None, name=None):
+        """
+        :param value: the value of this node.
+        :type value: any
+        :param name: the name of this node.
+        :type name: str
+        """
         NodeBase.__init__(self, name=name)
         self._value = value
         self._stale = False
@@ -416,7 +518,6 @@ class ValueNode(NodeBase):
         )
 
     def _pprint(self):
-        """return pretty-printed version of node"""
         try:
             _val = str(self.value)
         except Exception as e:
@@ -429,6 +530,9 @@ class ValueNode(NodeBase):
 
     @classmethod
     def _make_binop_method(cls, op):
+        """
+        Define binary operators for this class.
+        """
         def _op_method(self, other):
             if not isinstance(other, NodeBase):
                 other = Parameter(other)
@@ -444,6 +548,9 @@ class ValueNode(NodeBase):
 
     @classmethod
     def _make_rbinop_method(cls, op):
+        """
+        Define reverse binary operators for this class.
+        """
         def _op_method(self, other):
             if not isinstance(other, NodeBase):
                 other = Parameter(other)
@@ -459,6 +566,9 @@ class ValueNode(NodeBase):
 
     @classmethod
     def _make_unaryop_method(cls, op):
+        """
+        Define unary operators for this class.
+        """
         def _op_method(self):
             _auto_name = "{}__{}".format(op.__name__, self.name)
 
@@ -472,7 +582,10 @@ class ValueNode(NodeBase):
 
     @property
     def value(self):
-        '''Retrieve node value.'''
+        """
+        :return: the value of this node.
+        :rtype: any
+        """
         if self.stale and not self.frozen:
             self.update()
 
@@ -480,16 +593,17 @@ class ValueNode(NodeBase):
 
     @value.setter
     def value(self, value):
-        '''Set node value.'''
         self._value = value
         # notify parents that a child value has changed
         self.notify_parents()
 
 
 class Empty(ValueNode):
-    """A graph node that acts as a placeholder for a ValueNode.
+    """
+    A graph node that acts as a placeholder for a ValueNode.
     Should be replaced by a ValueNode in the finished graph.
-    Raises an error if an attempt is made to set or retrieve the value."""
+    Raises an Exception if an attempt is made to set or retrieve the value.
+    """
     def __init__(self, name=None):
         NodeBase.__init__(self, name=name)
 
@@ -500,12 +614,11 @@ class Empty(ValueNode):
         )
 
     def _pprint(self):
-        """return pretty-printed version of node"""
         return NodeBase._pprint(self)
 
     @property
     def value(self):
-        raise ValueError(
+        raise NodeException(
             "Empty node '{}' does not have a value.".format(
                 self.name
             )
@@ -513,7 +626,7 @@ class Empty(ValueNode):
 
     @value.setter
     def value(self, value):
-        raise ValueError(
+        raise NodeException(
             "Cannot set value of empty node '{}'.".format(
                 self.name
             )
@@ -521,6 +634,9 @@ class Empty(ValueNode):
 
 
 class Parameter(ValueNode):
+    """
+    Simple subclass of ValueNode that represents a constant value.
+    """
     def __init__(self, value, name=None):
         ValueNode.__init__(self, value=value, name=name)
         self._stale = False
@@ -531,8 +647,8 @@ class Parameter(ValueNode):
 
 class Alias(ValueNode):
     """
-    A Node that only passes on the value
-    of another node when evaluated.
+    A Node that only passes on the value of another node when evaluated.
+    Used to add multiple functionally equivalent nodes with differing names to a graph.
     """
     def __init__(self, ref, name=None):
         ValueNode.__init__(self, value=None, name=name)
@@ -542,7 +658,6 @@ class Alias(ValueNode):
         self._stale = True
 
     def _pprint(self):
-        """return pretty-printed version of node"""
         return '{} -> {}'.format(
             NodeBase._pprint(self),
             NodeBase._pprint(self.ref)
@@ -558,7 +673,9 @@ class Alias(ValueNode):
 
     @property
     def ref(self):
-        """The node for which this is an alias."""
+        """
+        :return: The node for which this is an alias.
+        """
         return self._children[0]
 
     @ref.setter
@@ -571,9 +688,21 @@ class Alias(ValueNode):
 
 
 class Function(ValueNode):
-    """All keyword arguments of the function must be parameters registered in the parameter space."""
+    """
+    Subclass of ValueNode that computes its value from the values of its children.
+    """
 
     def __init__(self, func, name=None, parameters=None):
+        """
+        Creates a new function node. If any of the parameters are not of type NodeBase they will be
+        wrapped in Parameter nodes.
+        :param func: the function used to compute this node's value.
+        :type func: Callable
+        :param name: the name of this node.
+        :type name: str
+        :param parameters: the parameters of the function.
+        :type parameters: iterable
+        """
         if name is None and func.__name__ != "<lambda>":
             name = func.__name__
         super(Function, self).__init__(value=None, name=name)
@@ -590,7 +719,10 @@ class Function(ValueNode):
 
     @property
     def parameters(self):
-        """The nodes representing the function parameters."""
+        """
+        A subset of this node's children. Passed to the function handle when this node is updated.
+        :return: The nodes representing the function parameters.
+        """
         return self._parameters
 
     @parameters.setter
@@ -599,7 +731,9 @@ class Function(ValueNode):
 
     @property
     def func(self):
-        """The function handle to be called."""
+        """
+        :return: The function handle to be called when updating this node.
+        """
         return self._func
 
     @func.setter
@@ -609,10 +743,15 @@ class Function(ValueNode):
 
     @ValueNode.value.setter
     def value(self, value):
-        '''Set node value.'''
         raise NodeException("Function node value cannot be set!")
 
     def add_parameter(self, parameter):
+        """
+        Add a parameter for this function. Automatically adds the parameter to this node's children
+        as well.
+        :param parameter: the parameter to be added.
+        :type parameter: any
+        """
         self._parameters.append(parameter)
         self.add_child(parameter)
 
@@ -635,8 +774,22 @@ class Function(ValueNode):
 
 
 class Fallback(ValueNode):
+    """
+    Node that tries to retrieve the value of several other nodes until it finds a node that doesn't
+    raise an exception.
+    """
 
     def __init__(self, try_nodes, exception_type=Exception, name=None):
+        """
+        Create a new Fallback node. Any objects in try_nodes that are not of type NodeBase will be
+        wrapped inside a Parameter node.
+        :param try_nodes: the value literals / nodes to try to retrieve the value from.
+        :type try_nodes: iterable
+        :param exception_type: the type of Exception upon which to continue to the next node.
+        :type exception_type: type
+        :param name: the name of the node.
+        :type name: str
+        """
         super(Fallback, self).__init__(value=None, name=name)
         self.try_nodes = try_nodes
         self._exception_type = exception_type
@@ -659,7 +812,10 @@ class Fallback(ValueNode):
 
     @property
     def try_nodes(self):
-        """The nodes representing alternative values."""
+        """
+        :return: The nodes to try in order to retrieve the value from. Equivalent to get_children.
+        :rtype: list of NodeBase
+        """
         return self._children
 
     @try_nodes.setter
@@ -672,8 +828,18 @@ class Fallback(ValueNode):
 
 
 class Tuple(ValueNode):
-
+    """
+    Node that combines several other nodes into a tuple for its own value.
+    """
     def __init__(self, nodes, name=None):
+        """
+        Create a new Tuple node. Objects in nodes that are not of type NodeBase will be wrapped
+        inside a Parameter node.
+        :param nodes: the literals / nodes to combine into a tuple.
+        :type nodes: iterable
+        :param name: the name of the node.
+        :type name: str
+        """
         super(Tuple, self).__init__(value=None, name=name)
         self.nodes = nodes
         self._value = None
@@ -698,7 +864,10 @@ class Tuple(ValueNode):
 
     @property
     def nodes(self):
-        """The nodes representing the tuple content."""
+        """
+        :return: The nodes representing the tuple content.
+        :rtype: list of NodeBase
+        """
         return self._children
 
     @nodes.setter
@@ -718,13 +887,28 @@ class Tuple(ValueNode):
         return self._value
 
     def iter_values(self):
+        """
+        Generator for Tuple.value.
+        """
         for _val in self.value:
             yield _val
 
 
 class Array(Tuple):
-
+    """
+    Node that combines several other nodes into a numpy array for its own value.
+    """
     def __init__(self, nodes, name=None, dtype=None):
+        """
+        Create a new Array node. Objects in nodes that are not of type NodeBase will be wrapped
+        inside a Parameter node.
+        :param nodes: the literals / nodes to combine into a numpy array.
+        :type nodes: iterable
+        :param name: the name of the node.
+        :type name: str
+        :param dtype: the data type of teh numpy array.
+        :type dtype: type
+        """
         super(Tuple, self).__init__(value=None, name=name)
         self._dtype = dtype
         self.nodes = nodes
@@ -750,6 +934,9 @@ class Array(Tuple):
 # -- Node visitors
 
 class NodeChildrenPrinter(object):
+    """
+    Visitor class that recursively prints a node and its children.
+    """
     def __init__(self, root_node):
         self._root = root_node
 
@@ -771,6 +958,10 @@ class NodeChildrenPrinter(object):
 
 
 class NodeSubgraphGraphvizSourceProducer(object):
+    """
+    Visitor class for debugging that creates a graphviz representation of a node graph
+    (i.e. a Nexus). This class has **not** been unit tested.
+    """
     _NODE_STYLE = {
         Function: dict(
             shape='"box"'),
@@ -781,6 +972,7 @@ class NodeSubgraphGraphvizSourceProducer(object):
         Empty: dict(
             shape='"Mcircle"'),
     }
+
     def __init__(self, root_node, exclude=None):
         self._root = root_node
         self._exclude = exclude or set()
@@ -900,6 +1092,10 @@ class NodeSubgraphGraphvizViewer(NodeSubgraphGraphvizSourceProducer):
 
 
 class NodeCycleChecker(object):
+    """
+    Visitor class that ensures that a node graph is acyclic, i.e. that there are no cyclic
+    dependencies.
+    """
     def __init__(self, root_node):
         self._root = root_node
 
@@ -932,11 +1128,15 @@ class NexusError(Exception):
 
 
 class Nexus(object):
-    """Object representing an entire computation graph."""
+    """
+    Object representing an entire computation graph. Used in the kafe2 NexusFitter object to manage
+    the caching of intermediate results for the calculation of the cost function value.
+    """
 
     _VALID_GET_DICT_ERROR_BEHAVIORS = (
         'fail', 'none', 'exception_as_value', 'ignore', 'list')
-    _VALID_ADD_EXISTING_BEHAVIORS = ('fail', 'ignore', 'replace', 'replace_if_alias', 'replace_if_empty')
+    _VALID_ADD_EXISTING_BEHAVIORS = (
+        'fail', 'ignore', 'replace', 'replace_if_alias', 'replace_if_empty')
 
     def __init__(self):
         self._nodes = {
@@ -966,7 +1166,8 @@ class Nexus(object):
 
         :param node: node to add
         :type node: :py:class:`~kafe.core.fitters.nexus_v2.NodeBase` or other
-        :param add_children: if True, recursively add node children to self if self does not have them.
+        :param add_children: if True, recursively add node children to self if self does not have
+        them.
         :type add_children: bool
         :param existing_behavior: how to behave if a node with the same name
             has already been added to the nexus. One of: ``fail`` (default),
@@ -1046,7 +1247,8 @@ class Nexus(object):
 
         return node
 
-    def add_function(self, func, func_name=None, par_names=None, add_children=True, existing_behavior='fail'):
+    def add_function(self, func, func_name=None, par_names=None, add_children=True,
+                     existing_behavior='fail'):
         """Construct a `Function` node from a Python function and
         add it to the nexus.
 
@@ -1091,7 +1293,8 @@ class Nexus(object):
         :type func_name: str
         :param par_names: node name to use as function parameters
         :type par_names: list of str
-        :param add_children: if True, recursively add node children to self if self does not have them.
+        :param add_children: if True, recursively add node children to self if self does not have
+        them.
         :type add_children: bool
         :param existing_behavior: how to behave if a node with the same
             name has already been added to the nexus. One of: ``fail``
@@ -1297,8 +1500,6 @@ class Nexus(object):
         # check for cycles
         NodeCycleChecker(self._root_ref()).run()
 
-        return self
-
     def get(self, node_name):
         """Retrieve a node by its name or ``None`` if no such node exists.
 
@@ -1367,7 +1568,8 @@ class Nexus(object):
                     _result_dict.setdefault('__error__', []).append(_name)
                     continue
                 else:
-                    assert False, "Something went terribly wrong. Unknown error behaviour {}".format(error_behavior)
+                    assert False, "Something went terribly wrong. " \
+                                  "Unknown error behaviour {}".format(error_behavior)
             else:
                 _result_dict[_name] = _val
 
