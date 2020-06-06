@@ -184,11 +184,11 @@ class ParametricModelYamlWriter(YamlWriterMixin, ParametricModelDReprBase):
         
         # -- write representation for model types
         if _class is HistParametricModel:
-            _yaml_doc['n_bins'] = parametric_model.n_bins
-            _yaml_doc['bin_range'] = parametric_model.bin_range
+            _yaml_doc['n_bins'] = int(parametric_model.n_bins)
+            _yaml_doc['bin_range'] = list(map(float, parametric_model.bin_range))
             _yaml_doc['model_density_function'] = ModelFunctionYamlWriter._make_representation(
                 parametric_model._model_function_object)
-            _yaml_doc['bin_edges'] = parametric_model.bin_edges.tolist()
+            _yaml_doc['bin_edges'] = list(map(float, parametric_model.bin_edges))
             _yaml_doc['model_density_func_antiderivative'] = None #TODO implement
         elif _class is IndexedParametricModel:
             _yaml_doc['shape_like'] = parametric_model.data.tolist()

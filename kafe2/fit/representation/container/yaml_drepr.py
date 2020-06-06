@@ -167,11 +167,13 @@ class DataContainerYamlWriter(YamlWriterMixin, DataContainerDReprBase):
 
         # -- write representation for container types
         if _class is HistContainer:
-            # TODO: Add manual bin height support
+            _yaml_doc['bin_edges'] = list(map(float, container.bin_edges))
             if container._manual_heights:
-                raise YamlWriterException("Manual set bins are not yet supported with kafe2go.")
-            _yaml_doc['bin_edges'] = container.bin_edges.tolist()
-            _yaml_doc['raw_data'] = list(map(float, container.raw_data))  # float64 -> float
+                _yaml_doc['bin_heights'] = list(map(float, container.data))  # float64 -> float
+                _yaml_doc['underflow'] = float(container.underflow)
+                _yaml_doc['overflow'] = float(container.underflow)
+            else:
+                _yaml_doc['raw_data'] = list(map(float, container.raw_data))  # float64 -> float
         elif _class is IndexedContainer or _class is UnbinnedContainer:
             _yaml_doc['data'] = container.data.tolist()
         elif _class is XYContainer:
@@ -217,7 +219,7 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
     @classmethod
     def _get_required_keywords(cls, yaml_doc, container_class):
         if container_class is HistContainer:
-            return ['raw_data']
+            return []
         if container_class is IndexedContainer or container_class is UnbinnedContainer:
             return ['data']
         if container_class is XYContainer:
@@ -241,11 +243,20 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
             if _bin_edges:
                 _n_bins = len(_bin_edges) - 1
                 _bin_range = (_bin_edges[0], _bin_edges[-1])
-            _raw_data = yaml_doc.pop('raw_data')
+            _raw_data = yaml_doc.pop('raw_data', None)
+            _bin_heights = yaml_doc.pop('bin_heights', None)
+            if _raw_data and _bin_heights:
+                raise YamlReaderException("When reading in a histogram dataset only one out of "
+                                          "raw_data and bin_heights can be specified!")
             _container_obj = HistContainer(n_bins=_n_bins,
                                            bin_range=_bin_range,
                                            bin_edges=_bin_edges,
                                            fill_data=_raw_data)
+            if _bin_heights:
+                _underflow = yaml_doc.pop('underflow', 0)
+                _overflow = yaml_doc.pop('overflow', 0)
+                _container_obj.set_bins(
+                    bin_heights=_bin_heights, underflow=_underflow, overflow=_overflow)
         elif _class is IndexedContainer:
             _data = yaml_doc.pop('data')
             _container_obj = IndexedContainer(_data)

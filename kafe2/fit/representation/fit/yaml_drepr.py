@@ -93,11 +93,11 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
                                            fit._fitter.limited_parameters.items()]
 
         _fit_results = fit.get_result_dict()
-        _fit_results['parameter_values'] = list(fit.parameter_values)
+        _fit_results['parameter_values'] = list(map(float, fit.parameter_values))
         if _fit_results['did_fit']:
             _fit_results['parameter_cov_mat'] = _fit_results['parameter_cov_mat'].tolist()
             _fit_results['parameter_errors'] = [
-                _fit_results['parameter_errors'][_pn] for _pn in fit.parameter_names]
+                float(_fit_results['parameter_errors'][_pn]) for _pn in fit.parameter_names]
             _fit_results['parameter_cor_mat'] = _fit_results['parameter_cor_mat'].tolist()
         if _fit_results['asymmetric_parameter_errors'] is not None:
             _fit_results['asymmetric_parameter_errors'] = _fit_results['asymmetric_parameter_errors'].tolist()

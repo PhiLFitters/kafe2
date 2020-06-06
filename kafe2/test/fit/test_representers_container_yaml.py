@@ -486,11 +486,20 @@ errors:
 type: histogram
 """
 
-TEST_DATASET_HIST_MSSING_KEYWORD = """
+TEST_DATASET_HIST_EXTRA_KEYWORD = TEST_DATASET_HIST + """
+extra_keyword: 3.14
+"""
+
+TEST_DATASET_HIST_MANUAL_HEIGHTS = """
 bin_edges:
 - 1.0
 - 2.0
 - 3.0
+bin_heights:
+- 1
+- 1
+underflow: 0
+overflow: 4
 errors:
 - matrix:
   - - 0.1
@@ -525,9 +534,6 @@ errors:
 type: histogram
 """
 
-TEST_DATASET_HIST_EXTRA_KEYWORD = TEST_DATASET_HIST + """
-extra_keyword: 3.14
-"""
 
 class TestHistContainerYamlRepresentation(unittest.TestCase):
 
@@ -550,23 +556,26 @@ class TestHistContainerYamlRepresentation(unittest.TestCase):
         self._roundtrip_streamwriter = DataContainerYamlWriter(self._container, self._roundtrip_stringstream)
         self._testfile_streamreader = DataContainerYamlReader(self._testfile_stringstream)
 
-        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_DATASET_HIST_MSSING_KEYWORD))
         self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_DATASET_HIST_EXTRA_KEYWORD))
-        self._testfile_streamreader_missing_keyword = DataContainerYamlReader(self._testfile_stringstream_missing_keyword)
         self._testfile_streamreader_extra_keyword = DataContainerYamlReader(self._testfile_stringstream_extra_keyword)
+
+        self._testfile_stringstream_manual_heights = IOStreamHandle(
+            StringIO(TEST_DATASET_HIST_MANUAL_HEIGHTS))
+        self._testfile_streamreader_manual_heights = DataContainerYamlReader(
+            self._testfile_stringstream_manual_heights)
 
         self._ref_testfile_n_bins = 2
         self._ref_testfile_bin_range = [1.0, 3.0]
         self._ref_testfile_bin_edges = [1.0, 2.0, 3.0]
         self._ref_testfile_data = [1, 1]
+        self._ref_testfile_underflow = 0
+        self._ref_testfile_overflow = 4
         self._ref_testfile_err = [0.89442719,  1]
         self._ref_testfile_cov_mat = np.array([[0.8, 0.3], [0.3, 1.0]])
         self._ref_testfile_error_names = {'ErrorOne', 'ErrorTwo', 'ErrorThree', 'ErrorFour'}
 
-
     def test_write_to_roundtrip_stringstream(self):
         self._roundtrip_streamwriter.write()
-
 
     def test_read_from_testfile_stream(self):
         _read_container = self._testfile_streamreader.read()
@@ -592,6 +601,8 @@ class TestHistContainerYamlRepresentation(unittest.TestCase):
                 self._ref_testfile_data
             )
         )
+        self.assertEqual(_read_container.underflow, self._ref_testfile_underflow)
+        self.assertEqual(_read_container.overflow, self._ref_testfile_overflow)
         self.assertTrue(
             np.allclose(
                 _read_container.err,
@@ -611,15 +622,108 @@ class TestHistContainerYamlRepresentation(unittest.TestCase):
             self._ref_testfile_error_names
         )
 
-    def test_read_from_testfile_stream_missing_keyword(self):
-        with self.assertRaises(YamlReaderException):
-            self._testfile_streamreader_missing_keyword.read()
+    def test_read_from_testfile_stream_manual_heights(self):
+        _read_container = self._testfile_streamreader.read()
+        self.assertTrue(isinstance(_read_container, HistContainer))
+
+        self.assertTrue(_read_container.n_bins == self._ref_testfile_n_bins)
+        self.assertTrue(
+            np.allclose(
+                _read_container.bin_range,
+                self._ref_testfile_bin_range
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                _read_container.bin_edges,
+                self._ref_testfile_bin_edges
+            )
+        )
+
+        self.assertTrue(
+            np.allclose(
+                _read_container.data,
+                self._ref_testfile_data
+            )
+        )
+        self.assertEqual(_read_container.underflow, self._ref_testfile_underflow)
+        self.assertEqual(_read_container.overflow, self._ref_testfile_overflow)
+        self.assertTrue(
+            np.allclose(
+                _read_container.err,
+                self._ref_testfile_err
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                _read_container.cov_mat,
+                self._ref_testfile_cov_mat,
+            )
+        )
+
+        # check that the error names are the same
+        self.assertEqual(
+            set(_read_container._error_dicts.keys()),
+            self._ref_testfile_error_names
+        )
 
     def test_read_from_testfile_stream_extra_keyword(self):
         with self.assertRaises(YamlReaderException):
             self._testfile_streamreader_extra_keyword.read()
 
     def test_round_trip_with_stringstream(self):
+        self._roundtrip_streamwriter.write()
+        self._roundtrip_stringstream.seek(0)  # return to beginning
+        _read_container = self._roundtrip_streamreader.read()
+        self.assertTrue(isinstance(_read_container, HistContainer))
+
+        self.assertTrue(self._container.n_bins == _read_container.n_bins)
+        self.assertTrue(
+            np.allclose(
+                self._container.bin_range,
+                _read_container.bin_range
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                self._container.bin_edges,
+                _read_container.bin_edges
+            )
+        )
+
+        # compare data members
+        self.assertTrue(
+            np.allclose(
+                self._container.data,
+                _read_container.data
+            )
+        )
+
+        # compare (total) errors and cov mats
+        # TODO: compare individual error components -> nontrivial because error ids change...
+        self.assertTrue(
+            np.allclose(
+                self._container.err,
+                _read_container.err
+            )
+        )
+
+        self.assertTrue(
+            np.allclose(
+                self._container.cov_mat,
+                _read_container.cov_mat
+            )
+        )
+
+        # check that the error names are the same
+        self.assertEqual(
+            set(self._container._error_dicts.keys()),
+            set(_read_container._error_dicts.keys())
+        )
+
+    def test_round_trip_with_stringstream_manual_heights(self):
+        self._container.set_bins(
+            self._container.data, self._container.underflow, self._container.overflow)
         self._roundtrip_streamwriter.write()
         self._roundtrip_stringstream.seek(0)  # return to beginning
         _read_container = self._roundtrip_streamreader.read()
