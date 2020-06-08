@@ -803,11 +803,11 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
 
         # pre-fit cost value
         self._ref_initial_cost = self._default_cost_function(
-            y_data=self._ref_y_data,
-            y_model=self._ref_initial_y_model,
-            projected_xy_total_cov_mat_inverse=np.linalg.inv(self._ref_projected_xy_matrix),
-            poi_values=self._ref_initial_pars,
-            parameter_constraints=[],
+            self._ref_y_data,
+            self._ref_initial_y_model,
+            np.linalg.inv(self._ref_projected_xy_matrix),
+            self._ref_initial_pars,
+            [],
         )
 
         # reference fit result values
@@ -820,11 +820,11 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
         self._nominal_fit_result_projected_xy_errors = np.diag(np.sqrt(self._nominal_fit_result_projected_xy_matrix))
 
         self._nominal_fit_result_cost = self._default_cost_function(
-            y_data=self._ref_y_data,
-            y_model=self._nominal_fit_result_y_model,
-            projected_xy_total_cov_mat_inverse=np.linalg.inv(self._nominal_fit_result_projected_xy_matrix),
-            poi_values=self._nominal_fit_result_pars,
-            parameter_constraints=[],
+            self._ref_y_data,
+            self._nominal_fit_result_y_model,
+            np.linalg.inv(self._nominal_fit_result_projected_xy_matrix),
+            self._nominal_fit_result_pars,
+            [],
         )
 
         # helper dict with all reference property values
