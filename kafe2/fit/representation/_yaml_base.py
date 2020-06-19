@@ -57,6 +57,9 @@ class YamlReaderMixin(DReprReaderMixin):
             yaml_doc = cls._process_string(yaml_doc, default_type)
         _overriden_yaml_doc = cls._check_required_keywords_and_override_subspaces(yaml_doc, default_type, modify_kwargs)
         _object, _leftover_yaml_doc = cls._convert_yaml_doc_to_object(_overriden_yaml_doc.copy())
+        for _keyword in cls._get_ignored_if_none_keywords():
+            if _keyword in _leftover_yaml_doc and _leftover_yaml_doc[_keyword] is None:
+                _leftover_yaml_doc.pop(_keyword, None)
         if _leftover_yaml_doc:
             raise YamlReaderException("Received unknown or unsupported keywords for constructing a %s object: %s"
                                       % (cls.BASE_OBJECT_TYPE_NAME, list(_leftover_yaml_doc.keys())))
@@ -118,7 +121,11 @@ class YamlReaderMixin(DReprReaderMixin):
     @classmethod
     def _get_required_keywords(cls, yaml_doc, kafe_object_class):
         return []
-    
+
+    @classmethod
+    def _get_ignored_if_none_keywords(cls):
+        return []
+
     @classmethod
     def _convert_yaml_doc_to_object(cls, yaml_doc):
         return None, None #format: return <kafe2 object>, <leftover yaml doc>

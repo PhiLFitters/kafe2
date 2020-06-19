@@ -1,4 +1,3 @@
-import inspect
 import numpy as np
 import six
 import textwrap
@@ -21,6 +20,56 @@ KNOWN_MODEL_FUNCTIONS = (ModelFunctionBase, HistModelFunction, IndexedModelFunct
 KNOWN_PARAMETRIC_MODELS = (XYParametricModel, HistParametricModel, IndexedParametricModel, UnbinnedParametricModel)
 
 
+def _parse_function(input_string):
+    """converts a string of python code into a python function object"""
+    _tokens = tokenize.generate_tokens(six.StringIO(input_string).readline)
+    for _toknum, _tokval, _spos, _epos, _line_string in _tokens:
+        if _tokval in ModelFunctionYamlReader.FORBIDDEN_TOKENS:
+            raise DReprError("Encountered forbidden token '%s' in user-entered code on line '%s'."
+                             % (_tokval, _line_string))
+
+    if "__" in input_string:
+        raise DReprError("Model function input must not contain '__'!")
+
+    _imports = ""
+    _imports += "import numpy as np\n"  # import numpy
+    # import scipy if installed
+    try:
+        import scipy
+        _imports += "import scipy\n"
+    except ImportError:
+        pass
+
+    __locals_pointer = [None, None]  # TODO better solution?
+    # save locals before function definition
+    _exec_string = _imports + "__locals_pointer[0] = __locals().copy()\n" + input_string
+    # save locals after function definition
+    _exec_string = _exec_string + "\n__locals_pointer[1] = __locals().copy()"
+    _restricted_builtins = __builtins__.copy()
+    for _forbidden_token in ModelFunctionYamlReader.FORBIDDEN_TOKENS:
+        _restricted_builtins.pop(_forbidden_token, None)
+    _restricted_builtins['__import__'] = __import__
+    exec(_exec_string, {"__builtins__": _restricted_builtins, "__locals": locals,
+                        "__locals_pointer": __locals_pointer})
+    _locals_pre, _locals_post = __locals_pointer[0].values(), __locals_pointer[1].values()
+    _new_references = []
+    for _post_reference in _locals_post:
+        if _post_reference not in _locals_pre:
+            _new_references.append(_post_reference)
+    if len(_new_references) != 1:
+        raise YamlReaderException(
+            "Expected to receive exactly one new reference as a model function but instead received %s in the following string:\n%s"
+            % (len(_new_references), input_string))
+    return _new_references[0]
+
+
+def _process_function_code_for_dump(source_code):
+    source_code = textwrap.dedent(source_code)  # remove indentation
+    source_code = source_code.replace("@staticmethod\n", "")  # remove @staticmethod decorator
+    # TODO what about other decorators?
+    return source_code
+
+
 class ModelFunctionYamlWriter(YamlWriterMixin, ModelFunctionDReprBase):
 
     def __init__(self, model_function, output_io_handle):
@@ -41,11 +90,7 @@ class ModelFunctionYamlWriter(YamlWriterMixin, ModelFunctionDReprBase):
             _yaml_doc['type'] = _type  # store all other custom types
         _yaml_doc['model_function_formatter'] = ModelFunctionFormatterYamlWriter._make_representation(model_function.formatter)
 
-        _python_code = model_function.source_code
-        _python_code = textwrap.dedent(_python_code)  # remove indentation
-        _python_code = _python_code.replace("@staticmethod\n", "")  # remove @staticmethod decorator
-        #TODO what about other decorators?
-        _yaml_doc['python_code'] = _python_code
+        _yaml_doc['python_code'] = _process_function_code_for_dump(model_function.source_code)
         
         return _yaml_doc
 
@@ -59,50 +104,6 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
         super(ModelFunctionYamlReader, self).__init__(
             input_io_handle=input_io_handle,
             model_function=None)
-
-    @staticmethod
-    def _parse_model_function(input_string):
-        """converts a string of python code into a python function object"""
-        _tokens = tokenize.generate_tokens(six.StringIO(input_string).readline)
-        for _toknum, _tokval, _spos, _epos, _line_string  in _tokens:
-            if _tokval in ModelFunctionYamlReader.FORBIDDEN_TOKENS:
-                raise DReprError("Encountered forbidden token '%s' in user-entered code on line '%s'."
-                                    % (_tokval, _line_string))
-
-        if "__" in input_string:
-            raise DReprError("Model function input must not contain '__'!")
-
-        _imports = ""
-        _imports += "import numpy as np\n" #import numpy
-        #import scipy if installed
-        try:
-            import scipy
-            _imports += "import scipy\n"
-        except ImportError:
-            pass
-
-
-        __locals_pointer = [None, None] #TODO better solution?
-        #save locals before function definition
-        _exec_string = _imports + "__locals_pointer[0] = __locals().copy()\n" + input_string
-        #save locals after function definition
-        _exec_string = _exec_string + "\n__locals_pointer[1] = __locals().copy()"
-        _restricted_builtins = __builtins__.copy()
-        for _forbidden_token in ModelFunctionYamlReader.FORBIDDEN_TOKENS:
-            _restricted_builtins.pop(_forbidden_token, None)
-        _restricted_builtins['__import__'] = __import__
-        exec(_exec_string, {"__builtins__":_restricted_builtins, "__locals":locals, 
-                            "__locals_pointer":__locals_pointer})
-        _locals_pre, _locals_post = __locals_pointer[0].values(), __locals_pointer[1].values()
-        _new_references = []
-        for _post_reference in _locals_post:
-            if _post_reference not in _locals_pre:
-                _new_references.append(_post_reference)
-        if len(_new_references) != 1:
-            raise YamlReaderException(
-                "Expected to receive exactly one new reference as a model function but instead received %s in the following string:\n%s"
-                % (len(_new_references), input_string))
-        return _new_references[0]
 
     @classmethod
     def _get_subspace_override_dict(cls, model_function_class):
@@ -142,9 +143,8 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
         _function_library_entry = function_library.STRING_TO_FUNCTION.get(_raw_string, None)
         if _function_library_entry:
             _model_function_object = _class(_function_library_entry)
-        # TODO: parse antiderivative for histograms
         else:
-            _parsed_function = ModelFunctionYamlReader._parse_model_function(_raw_string)
+            _parsed_function = _parse_function(_raw_string)
             _model_function_object = _class(_parsed_function)
             _model_function_object._source_code = _raw_string
         
@@ -189,7 +189,11 @@ class ParametricModelYamlWriter(YamlWriterMixin, ParametricModelDReprBase):
             _yaml_doc['model_density_function'] = ModelFunctionYamlWriter._make_representation(
                 parametric_model._model_function_object)
             _yaml_doc['bin_edges'] = list(map(float, parametric_model.bin_edges))
-            _yaml_doc['model_density_func_antiderivative'] = None #TODO implement
+            if isinstance(parametric_model.bin_evaluation, str):
+                _yaml_doc['bin_evaluation'] = parametric_model.bin_evaluation_string
+            else:
+                _yaml_doc['bin_evaluation'] = _process_function_code_for_dump(
+                    parametric_model.bin_evaluation_string)
         elif _class is IndexedParametricModel:
             _yaml_doc['shape_like'] = parametric_model.data.tolist()
             _yaml_doc['model_function'] = ModelFunctionYamlWriter._make_representation(
@@ -262,7 +266,11 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
             return ['model_function']
         if parametric_model_class is XYParametricModel:
             return ['x_data']
-    
+
+    @classmethod
+    def _get_ignored_if_none_keywords(cls):
+        return ["model_density_func_antiderivative"]
+
     @classmethod
     def _convert_yaml_doc_to_object(cls, yaml_doc):
         # -- determine model function class from type
@@ -272,6 +280,7 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
         #_kwarg_list = kwargs that directly correspond to unchanging scalar yaml entries
         _kwarg_list = []         
         _constructor_kwargs = {}
+        _hist_model_bin_evaluation_source = None  # Set if an antiderivative function is read in.
         if _class is HistParametricModel:
             if 'bin_edges' in yaml_doc:
                 _bin_edges = yaml_doc.pop('bin_edges')
@@ -288,8 +297,13 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
             else:
                 raise YamlReaderException("When reading in a histogram parametric model either "
                                           "bin_edges or n_bins and bin_range have to be specified!")
-            #TODO implement parsing
-            _kwarg_list.append('model_density_func_antiderivative')
+            if 'bin_evaluation' in yaml_doc:
+                _bin_evaluation = yaml_doc.pop('bin_evaluation')
+                if 'def' in _bin_evaluation:
+                    _constructor_kwargs['bin_evaluation'] = _parse_function(_bin_evaluation)
+                    _hist_model_bin_evaluation_source = _bin_evaluation
+                else:
+                    _constructor_kwargs['bin_evaluation'] = _bin_evaluation
         elif _class is IndexedParametricModel:
             _kwarg_list.append('shape_like')
         elif _class is UnbinnedParametricModel:
@@ -331,6 +345,8 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
 
         _constructor_kwargs.update({key: yaml_doc.pop(key, None) for key in _kwarg_list})
         _parametric_model_object = _class(**_constructor_kwargs)
+        if _hist_model_bin_evaluation_source is not None:
+            _parametric_model_object._bin_evaluation_string = _hist_model_bin_evaluation_source
 
         # add the label for all types
         _parametric_model_object.label = yaml_doc.pop('model_label', None)

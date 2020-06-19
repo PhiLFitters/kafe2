@@ -38,18 +38,27 @@ class HistFit(FitBase):
                  model_density_function=function_library.normal_distribution_pdf,
                  cost_function=CostFunction_NegLogLikelihood(
                     data_point_distribution='poisson'),
-                 model_density_antiderivative=None,
+                 bin_evaluation="simpson",
                  minimizer=None,
                  minimizer_kwargs=None):
         """
-        Construct a fit of a model to a histogram.
+        Construct a fit of a model to a histogram. If bin_evaluation is a Python function or
+        of a numpy.vectorize object it is interpreted as the antiderivative of
+        model_density_function. If bin_evaluation is equal to "rectangle", "midpoint", "trapezoid",
+        or "simpson" the bin heights are evaluated according to the corresponding quadrature
+        formula. If bin_evaluation is equal to "numerical" the bin heights are evaluated by
+        numerically integrating model_density_function.
 
         :param data: a :py:class:`~kafe2.fit.hist.HistContainer` representing histogrammed data
         :type data: :py:class:`~kafe2.fit.hist.HistContainer`
         :param model_density_function: the model density function
-        :type model_density_function: :py:class:`~kafe2.fit.hist.HistModelFunction` or unwrapped native Python function
+        :type model_density_function: :py:class:`~kafe2.fit.hist.HistModelFunction` or unwrapped
+        native Python function
         :param cost_function: the cost function
-        :type cost_function: :py:class:`~kafe2.fit._base.CostFunctionBase`-derived or unwrapped native Python function
+        :type cost_function: :py:class:`~kafe2.fit._base.CostFunctionBase`-derived or unwrapped
+        native Python function
+        :param bin_evaluation: how the model evaluates bin heights.
+        :type bin_evaluation: str, callable, or numpy.vectorize
         :param minimizer: the minimizer to use for fitting.
         :type minimizer: None, "iminuit", "tminuit", or "scipy".
         :param minimizer_kwargs: dictionary with kwargs for the minimizer.
@@ -57,14 +66,10 @@ class HistFit(FitBase):
         """
         # set/construct the model function object
         if isinstance(model_density_function, self.__class__.MODEL_FUNCTION_TYPE):
-            # TODO shouldn't this Exception only be raised if the kafe2 model function already has an antiderivative?
-            if model_density_antiderivative is not None:
-                raise HistFitException("Antiderivative (%r) provided in constructor for %r, "
-                                       "but histogram model function object (%r) already constructed!"
-                                       % (model_density_antiderivative, self.__class__, model_density_function))
             self._model_function = model_density_function
         else:
-            self._model_function = self.__class__.MODEL_FUNCTION_TYPE(model_density_function, model_density_antiderivative=model_density_antiderivative)
+            self._model_function = self.__class__.MODEL_FUNCTION_TYPE(model_density_function)
+        self._bin_evaluation = bin_evaluation
 
         # validate the model function for this fit
         self._validate_model_function_for_fit_raise()
@@ -236,13 +241,10 @@ class HistFit(FitBase):
 
     def _set_new_parametric_model(self):
         # create the child ParametricModel object
-        self._param_model = self._new_parametric_model(self._data_container.size,
-                                                       self._data_container.bin_range,
-                                                       self._model_function,
-                                                       self.parameter_values,
-                                                       self._data_container.bin_edges,
-                                                       model_density_func_antiderivative=
-                                                       self._model_function.antiderivative)
+        self._param_model = self._new_parametric_model(
+            self._data_container.size, self._data_container.bin_range, self._model_function,
+            self.parameter_values, self._data_container.bin_edges,
+            bin_evaluation=self._bin_evaluation)
         self._param_model._on_error_change_callbacks = [self._on_error_change]
 
     # -- public properties
