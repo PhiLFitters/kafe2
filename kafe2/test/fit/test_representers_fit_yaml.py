@@ -151,7 +151,6 @@ TEST_FIT_HIST_EXTRA_KEYWORD = TEST_FIT_HIST + """
 extra_keyword: 3.14
 """
 
-#FIXME something goes wrong when constructing the parametric model
 TEST_FIT_HIST_SIMPLE="""
 type: histogram
 n_bins: 8
@@ -214,19 +213,25 @@ class TestHistFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
         self._test_parameters_default_simple = np.array([1.0, 1.0])
         self._test_parameters = np.array([0.2, 0.5])
         self._test_bin_range = (-2.0, 2.0)
-        self._test_parameters_do_fit = np.array([2.0117809129092095, -1.090410559090481])
+        self._test_parameters_do_fit = np.array([0.2028599998043365, 0.5011616918536066])
+        self._test_parameters_do_fit_simple = np.array([0.20031512887278155, 0.4967236106961646])
         self._test_x = np.array([-2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0])
         self._test_density_default = self.hist_model_density(self._test_x, *self._test_parameters_default)
         self._test_density_default_simple = self.hist_model_density(self._test_x, *self._test_parameters_default_simple)
-        self._test_density_do_fit = self.hist_model_density(self._test_x, *self._test_parameters)
-        
+        self._test_density_do_fit = self.hist_model_density(self._test_x, *self._test_parameters_do_fit)
+        self._test_density_do_fit_simple = self.hist_model_density(self._test_x, *self._test_parameters_do_fit_simple)
+
         _data = HistContainer(n_bins=self._test_n_bins, bin_range=self._test_bin_range, fill_data=self._test_raw_data)
         self._fit = HistFit(
             data=_data,
             model_density_function=TestHistFitYamlRepresenter.hist_model_density
         )
         self._fit.add_error(err_val=0.1)
-        
+        self._fit.add_parameter_constraint("mu", 0.1, 1.0)
+        self._fit.add_parameter_constraint("sigma", 1.0, 0.5)
+        self._fit.add_matrix_parameter_constraint(
+            ["sigma", "mu"], [1.3, 2.5], [[1.1, 0.1], [0.1, 2.4]])
+
         self.setup_streams()
 
     def test_read_from_testfile_stream(self):
@@ -246,21 +251,19 @@ class TestHistFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
         )
         
         _read_fit.do_fit()
-        
-        #FIXME fit results are wrong
-        #self.assertTrue(
-        #    np.allclose(
-        #        self._test_parameters_do_fit,
-        #        _read_fit.parameter_values
-        #    )
-        #)
-        #self.assertTrue(
-        #    True or
-        #    np.allclose(
-        #        self._test_density_do_fit,
-        #        _read_fit.eval_model_function_density(self._test_x)
-        #    )
-        #)
+        self.assertTrue(
+            np.allclose(
+                self._test_parameters_do_fit,
+                _read_fit.parameter_values
+            )
+        )
+        self.assertTrue(
+            True or
+            np.allclose(
+                self._test_density_do_fit,
+                _read_fit.eval_model_function_density(self._test_x)
+            )
+        )
 
     def test_read_from_testfile_stream_simple(self):
         _read_fit = self._testfile_streamreader_simple.read()
@@ -279,21 +282,19 @@ class TestHistFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
         )
         
         _read_fit.do_fit()
-        
-        #FIXME fit results are wrong
-        #self.assertTrue(
-        #    np.allclose(
-        #        self._test_parameters_do_fit,
-        #        _read_fit.parameter_values
-        #    )
-        #)
-        #self.assertTrue(
-        #    True or
-        #    np.allclose(
-        #        self._test_density_do_fit,
-        #        _read_fit.eval_model_function_density(self._test_x)
-        #    )
-        #)
+
+        self.assertTrue(
+            np.allclose(
+                self._test_parameters_do_fit_simple,
+                _read_fit.parameter_values
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                self._test_density_do_fit_simple,
+                _read_fit.eval_model_function_density(self._test_x)
+            )
+        )
 
     def test_round_trip_with_stringstream(self):
         self._roundtrip_streamwriter.write()
@@ -315,20 +316,19 @@ class TestHistFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
         )
         
         _read_fit.do_fit()
-        
-        #FIXME fit results are wrong
-        #self.assertTrue(
-        #    np.allclose(
-        #        self._test_parameters_do_fit,
-        #        _read_fit.parameter_values
-        #    )
-        #)
-        #self.assertTrue(
-        #    np.allclose(
-        #        self._test_density_do_fit,
-        #        _read_fit.eval_model_function_density(self._test_x)
-        #    )
-        #)
+
+        self.assertTrue(
+            np.allclose(
+                self._test_parameters_do_fit,
+                _read_fit.parameter_values
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                self._test_density_do_fit,
+                _read_fit.eval_model_function_density(self._test_x)
+            )
+        )
 
 
 TEST_FIT_INDEXED="""

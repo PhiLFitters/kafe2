@@ -67,7 +67,7 @@ class TestParameterConstraintInHistFit(unittest.TestCase):
         self._test_par_res = np.transpose(self._test_par_res, axes=(0, 2, 1))
 
         self._fit_no_constraints = HistFit(self._data_container, model_density_function=self._model_function,
-                                           model_density_antiderivative=self._model_function_antiderivative)
+                                           bin_evaluation=self._model_function_antiderivative)
         self._fit_no_constraints.do_fit()
         _cost_function = self._fit_no_constraints._fitter._fcn_wrapper
         self._profile_no_constraints = np.zeros((4, 9))
@@ -79,7 +79,7 @@ class TestParameterConstraintInHistFit(unittest.TestCase):
 
     def test_bad_input_exception(self):
         _fit_with_constraint = HistFit(self._data_container, model_density_function=self._model_function,
-                                       model_density_antiderivative=self._model_function_antiderivative)
+                                       bin_evaluation=self._model_function_antiderivative)
         with self.assertRaises(HistFitException):
             _fit_with_constraint.add_parameter_constraint('c', 1.0, 1.0)
         with self.assertRaises(HistFitException):
@@ -89,30 +89,30 @@ class TestParameterConstraintInHistFit(unittest.TestCase):
 
     def test_fit_profile_cov_mat_uncorrelated(self):
         _fit_with_constraint = HistFit(self._data_container, model_density_function=self._model_function,
-                                       model_density_antiderivative=self._model_function_antiderivative)
+                                       bin_evaluation=self._model_function_antiderivative)
         _fit_with_constraint.add_matrix_parameter_constraint(['a', 'b'], self._means, self._cov_mat_uncor)
         self._test_consistency(_fit_with_constraint, self._cov_mat_uncor_inv)
         _fit_with_constraint_alt = HistFit(self._data_container, model_density_function=self._model_function,
-                                           model_density_antiderivative=self._model_function_antiderivative)
+                                           bin_evaluation=self._model_function_antiderivative)
         _fit_with_constraint_alt.add_parameter_constraint('a', self._means[0], np.sqrt(self._vars[0]))
         _fit_with_constraint_alt.add_parameter_constraint('b', self._means[1], np.sqrt(self._vars[1]))
         self._test_consistency(_fit_with_constraint_alt, self._cov_mat_uncor_inv)
 
     def test_fit_profile_cov_mat_correlated(self):
         _fit_with_constraint = HistFit(self._data_container, model_density_function=self._model_function,
-                                       model_density_antiderivative=self._model_function_antiderivative)
+                                       bin_evaluation=self._model_function_antiderivative)
         _fit_with_constraint.add_matrix_parameter_constraint(['a', 'b'], self._means, self._cov_mat_cor)
         self._test_consistency(_fit_with_constraint, self._cov_mat_cor_inv)
 
     def test_fit_profile_simple_a(self):
         _fit_with_constraint = HistFit(self._data_container, model_density_function=self._model_function,
-                                       model_density_antiderivative=self._model_function_antiderivative)
+                                       bin_evaluation=self._model_function_antiderivative)
         _fit_with_constraint.add_parameter_constraint('a', self._means[0], np.sqrt(self._vars[0]))
         self._test_consistency(_fit_with_constraint, self._cov_mat_simple_a_inv)
 
     def test_fit_profile_simple_b(self):
         _fit_with_constraint = HistFit(self._data_container, model_density_function=self._model_function,
-                                       model_density_antiderivative=self._model_function_antiderivative)
+                                       bin_evaluation=self._model_function_antiderivative)
         _fit_with_constraint.add_parameter_constraint('b', self._means[1], np.sqrt(self._vars[1]))
         self._test_consistency(_fit_with_constraint, self._cov_mat_simple_b_inv)
 

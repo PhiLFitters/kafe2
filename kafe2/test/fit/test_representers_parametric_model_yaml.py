@@ -44,29 +44,109 @@ errors:
     type: simple
 """
 
+TEST_PARAMETRIC_MODEL_HIST_LEGACY = TEST_PARAMETRIC_MODEL_HIST + """
+model_density_func_antiderivative: null
+"""
+
+TEST_PARAMETRIC_MODEL_HIST_ANTIDERIVATIVE = TEST_PARAMETRIC_MODEL_HIST + """
+bin_evaluation: |
+    def linear_model_antiderivative(x, a, b):
+        return 0.5 * a * x ** 2 + b * x
+"""
+
+TEST_PARAMETRIC_MODEL_HIST_NUMPY_VECTORIZE = TEST_PARAMETRIC_MODEL_HIST + """
+bin_evaluation: |
+    @np.vectorize
+    def linear_model_antiderivative(x, a, b):
+        return 0.5 * a * x ** 2 + b * x
+"""
+
+
 class TestHistParametricModelYamlRepresenter(unittest.TestCase):
+
+    def _assert_read_model_correct(self, read_model, ref_model, errors=False):
+        self.assertTrue(isinstance(read_model, HistParametricModel))
+
+        self.assertTrue(np.all(
+            read_model.data == ref_model.data
+        ))
+        if isinstance(ref_model.bin_evaluation, str):
+            self.assertEqual(read_model.bin_evaluation, ref_model.bin_evaluation)
+            self.assertEqual(read_model.bin_evaluation_string, ref_model.bin_evaluation_string)
+        self.assertTrue(np.all(
+            read_model.parameters == self._test_model_parameters
+        ))
+        self.assertTrue(read_model.n_bins == self._test_n_bins)
+        self.assertTrue(np.all(
+            read_model.bin_range == self._test_bin_range
+        ))
+        self.assertTrue(np.all(
+            read_model.bin_edges == self._test_bin_edges
+        ))
+        self.assertTrue(np.allclose(
+                read_model.eval_model_function_density(self._test_x),
+                ref_model.eval_model_function_density(self._test_x)
+        ))
+
+        if errors:
+            _given_error = self._test_parametric_model_with_errors.get_error('test_error')
+            _read_error = read_model.get_error('test_error')
+            self.assertTrue(_given_error['enabled'] == _read_error['enabled'])
+            self.assertTrue(
+                np.allclose(
+                    _given_error['err'].error,
+                    _read_error['err'].error
+                )
+            )
+            self.assertTrue(_given_error['err'].corr_coeff == _read_error['err'].corr_coeff)
+
+    @staticmethod
+    def _get_model_from_string(input_string):
+        _testfile_stringstream = IOStreamHandle(StringIO(input_string))
+        return ParametricModelYamlReader(_testfile_stringstream).read()
+
+    @staticmethod
+    def _get_model_from_roundtrip(model):
+        _roundtrip_stringstream = IOStreamHandle(StringIO())
+        _roundtrip_streamreader = ParametricModelYamlReader(_roundtrip_stringstream)
+        _roundtrip_streamwriter = ParametricModelYamlWriter(model, _roundtrip_stringstream)
+        _roundtrip_streamwriter.write()
+        _roundtrip_stringstream.seek(0)  # return to beginning
+        return _roundtrip_streamreader.read()
+
 
     @staticmethod
     def linear_model(x, a, b):
         return a * x + b
-   
+
+    @staticmethod
+    def linear_model_antiderivative(x, a, b):
+        return 0.5 * a * x ** 2 + b * x
+
+    @staticmethod
+    @np.vectorize
+    def linear_model_numpy_vectorize(x, a, b):
+        return 0.5 * a * x ** 2 + b * x
+
     def setUp(self):
         self._test_n_bins = 5
-        self._test_bin_range = (0,5)
+        self._test_bin_range = (0, 5)
         self._test_bin_edges = np.arange(6)
         self._test_model_parameters = np.array([0.0, 0.08])
         self._test_x = np.linspace(start=0.0, stop=5.0, num=11, endpoint=True)
         self._test_parametric_model = HistParametricModel(
             n_bins=self._test_n_bins, 
             bin_range=self._test_bin_range,
-            model_density_func=HistModelFunction(TestHistParametricModelYamlRepresenter.linear_model),
+            model_density_func=HistModelFunction(
+                TestHistParametricModelYamlRepresenter.linear_model),
             model_parameters=self._test_model_parameters
         )
 
         self._test_parametric_model_with_errors = HistParametricModel(
             n_bins=self._test_n_bins, 
             bin_range=self._test_bin_range,
-            model_density_func=HistModelFunction(TestHistParametricModelYamlRepresenter.linear_model),
+            model_density_func=HistModelFunction(
+                TestHistParametricModelYamlRepresenter.linear_model),
             model_parameters=self._test_model_parameters
         )
         self._test_parametric_model_with_errors.add_error(
@@ -76,188 +156,84 @@ class TestHistParametricModelYamlRepresenter(unittest.TestCase):
             relative=False
         )
         
-        self._roundtrip_stringstream = IOStreamHandle(StringIO())
-        self._roundtrip_stringstream_with_errors = IOStreamHandle(StringIO())
-        self._testfile_stringstream = IOStreamHandle(StringIO(TEST_PARAMETRIC_MODEL_HIST))
-        self._testfile_stringstream_with_errors = IOStreamHandle(StringIO(TEST_PARAMETRIC_MODEL_HIST_WITH_ERRORS))
-        
-        self._roundtrip_streamreader = ParametricModelYamlReader(self._roundtrip_stringstream)
-        self._roundtrip_streamreader_with_errors = ParametricModelYamlReader(self._roundtrip_stringstream_with_errors)
-        self._roundtrip_streamwriter = ParametricModelYamlWriter(
-            self._test_parametric_model, 
-            self._roundtrip_stringstream
+        self._test_parametric_model_antiderivative = HistParametricModel(
+            n_bins=self._test_n_bins,
+            bin_range=self._test_bin_range,
+            model_density_func=HistModelFunction(
+                TestHistParametricModelYamlRepresenter.linear_model),
+            model_parameters=self._test_model_parameters,
+            bin_evaluation=TestHistParametricModelYamlRepresenter.linear_model_antiderivative
         )
-        self._roundtrip_streamwriter_with_errors = ParametricModelYamlWriter(
-            self._test_parametric_model_with_errors, 
-            self._roundtrip_stringstream_with_errors
+
+        self._test_parametric_model_numpy_vectorize = HistParametricModel(
+            n_bins=self._test_n_bins,
+            bin_range=self._test_bin_range,
+            model_density_func=HistModelFunction(
+                TestHistParametricModelYamlRepresenter.linear_model),
+            model_parameters=self._test_model_parameters,
+            bin_evaluation=TestHistParametricModelYamlRepresenter.linear_model_numpy_vectorize
         )
-        self._testfile_streamreader = ParametricModelYamlReader(self._testfile_stringstream)
-        self._testfile_streamreader_with_errors = ParametricModelYamlReader(self._testfile_stringstream_with_errors)
-
-        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_PARAMETRIC_MODEL_HIST_MISSING_KEYWORD))
-        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_PARAMETRIC_MODEL_HIST_EXTRA_KEYWORD))
-        self._testfile_streamreader_missing_keyword = ParametricModelYamlReader(self._testfile_stringstream_missing_keyword)
-        self._testfile_streamreader_extra_keyword = ParametricModelYamlReader(self._testfile_stringstream_extra_keyword)
-
-    def test_write_to_roundtrip_stringstream(self):
-        self._roundtrip_streamwriter.write()
-
-    def test_write_to_roundtrip_stringstream_with_errors(self):
-        self._roundtrip_streamwriter_with_errors.write()
 
     def test_read_from_testfile_stream(self):
-        _read_parametric_model = self._testfile_streamreader.read()
-        self.assertTrue(isinstance(_read_parametric_model, HistParametricModel))
-        
-        self.assertTrue(
-            np.allclose(
-                _read_parametric_model.parameters,
-                self._test_model_parameters
-            )
-        )
-        self.assertTrue(_read_parametric_model.n_bins == self._test_n_bins)
-        self.assertTrue(
-            np.allclose(
-                _read_parametric_model.bin_range,
-                self._test_bin_range
-            )
-        )
-        self.assertTrue(
-            np.allclose(
-                _read_parametric_model.bin_edges,
-                self._test_bin_edges
-            )
-        )
-        self.assertTrue(
-            np.allclose(
-                _read_parametric_model.eval_model_function_density(self._test_x),
-                self._test_parametric_model.eval_model_function_density(self._test_x)
-            )
-        )
-        
+        _read_parametric_model = TestHistParametricModelYamlRepresenter._get_model_from_string(
+            TEST_PARAMETRIC_MODEL_HIST)
+        self._assert_read_model_correct(_read_parametric_model, self._test_parametric_model)
+
+    def test_read_from_testfile_stream_antiderivative(self):
+        _read_parametric_model = TestHistParametricModelYamlRepresenter._get_model_from_string(
+            TEST_PARAMETRIC_MODEL_HIST_ANTIDERIVATIVE)
+        self._assert_read_model_correct(
+            _read_parametric_model, self._test_parametric_model_antiderivative)
+
+    def test_read_from_testfile_stream_numpy_vectorize(self):
+        _read_parametric_model = TestHistParametricModelYamlRepresenter._get_model_from_string(
+            TEST_PARAMETRIC_MODEL_HIST_NUMPY_VECTORIZE)
+        self._assert_read_model_correct(
+            _read_parametric_model, self._test_parametric_model_numpy_vectorize)
+
     def test_read_from_testfile_stream_missing_keyword(self):
         with self.assertRaises(YamlReaderException):
-            self._testfile_streamreader_missing_keyword.read()
+            _read_parametric_model = TestHistParametricModelYamlRepresenter._get_model_from_string(
+                TEST_PARAMETRIC_MODEL_HIST_MISSING_KEYWORD)
 
     def test_read_from_testfile_stream_extra_keyword(self):
         with self.assertRaises(YamlReaderException):
-            self._testfile_streamreader_extra_keyword.read()
+            _read_parametric_model = TestHistParametricModelYamlRepresenter._get_model_from_string(
+                TEST_PARAMETRIC_MODEL_HIST_EXTRA_KEYWORD)
 
     def test_read_from_testfile_stream_with_errors(self):
-        _read_parametric_model = self._testfile_streamreader_with_errors.read()
-        self.assertTrue(isinstance(_read_parametric_model, HistParametricModel))
-        
-        self.assertTrue(
-            np.allclose(
-                _read_parametric_model.parameters,
-                self._test_model_parameters
-            )
-        )
-        self.assertTrue(_read_parametric_model.n_bins == self._test_n_bins)
-        self.assertTrue(
-            np.allclose(
-                _read_parametric_model.bin_range,
-                self._test_bin_range
-            )
-        )
-        self.assertTrue(
-            np.allclose(
-                _read_parametric_model.bin_edges,
-                self._test_bin_edges
-            )
-        )
-        self.assertTrue(
-            np.allclose(
-                _read_parametric_model.eval_model_function_density(self._test_x),
-                self._test_parametric_model_with_errors.eval_model_function_density(self._test_x)
-            )
-        )
-        
-        _given_error = self._test_parametric_model_with_errors.get_error('test_error')
-        _read_error = _read_parametric_model.get_error('test_error')
-        self.assertTrue(_given_error['enabled'] == _read_error['enabled'])
-        self.assertTrue(
-            np.allclose(
-                _given_error['err'].error,
-                _read_error['err'].error
-            )
-        )
-        self.assertTrue(_given_error['err'].corr_coeff == _read_error['err'].corr_coeff)
-        
+        _read_parametric_model = TestHistParametricModelYamlRepresenter._get_model_from_string(
+            TEST_PARAMETRIC_MODEL_HIST_WITH_ERRORS)
+        self._assert_read_model_correct(
+            _read_parametric_model, self._test_parametric_model_with_errors, errors=True)
+
+    def test_read_from_testfile_stream_legacy(self):
+        _read_parametric_model = TestHistParametricModelYamlRepresenter._get_model_from_string(
+            TEST_PARAMETRIC_MODEL_HIST_LEGACY)
+        self._assert_read_model_correct(_read_parametric_model, self._test_parametric_model)
+
     def test_round_trip_with_stringstream(self):
-        self._roundtrip_streamwriter.write()
-        self._roundtrip_stringstream.seek(0)  # return to beginning
-        _read_parametric_model = self._roundtrip_streamreader.read()
-        self.assertTrue(isinstance(_read_parametric_model, HistParametricModel))
-        
-        self.assertTrue(
-            np.allclose(
-                _read_parametric_model.parameters,
-                self._test_model_parameters
-            )
-        )
-        self.assertTrue(_read_parametric_model.n_bins == self._test_n_bins)
-        self.assertTrue(
-            np.allclose(
-                _read_parametric_model.bin_range,
-                self._test_bin_range
-            )
-        )
-        self.assertTrue(
-            np.allclose(
-                _read_parametric_model.bin_edges,
-                self._test_bin_edges
-            )
-        )
-        self.assertTrue(
-            np.allclose(
-                _read_parametric_model.eval_model_function_density(self._test_x),
-                self._test_parametric_model.eval_model_function_density(self._test_x)
-            )
-        )
-        
+        _read_parametric_model = self._get_model_from_roundtrip(self._test_parametric_model)
+        self._assert_read_model_correct(_read_parametric_model, self._test_parametric_model)
+
+    def test_round_trip_with_stringstream_antiderivative(self):
+        _read_parametric_model = self._get_model_from_roundtrip(
+            self._test_parametric_model_antiderivative)
+        self._assert_read_model_correct(
+            _read_parametric_model, self._test_parametric_model_antiderivative)
+
+    def test_round_trip_with_stringstream_numpy_vectorize(self):
+        _read_parametric_model = self._get_model_from_roundtrip(
+            self._test_parametric_model_numpy_vectorize)
+        self._assert_read_model_correct(
+            _read_parametric_model, self._test_parametric_model_numpy_vectorize)
+
     def test_round_trip_with_stringstream_with_errors(self):
-        self._roundtrip_streamwriter_with_errors.write()
-        self._roundtrip_stringstream_with_errors.seek(0)  # return to beginning
-        _read_parametric_model = self._roundtrip_streamreader_with_errors.read()
-        self.assertTrue(isinstance(_read_parametric_model, HistParametricModel))
-        
-        self.assertTrue(
-            np.allclose(
-                _read_parametric_model.parameters,
-                self._test_model_parameters
-            )
-        )
-        self.assertTrue(_read_parametric_model.n_bins == self._test_n_bins)
-        self.assertTrue(
-            np.allclose(
-                _read_parametric_model.bin_range,
-                self._test_bin_range
-            )
-        )
-        self.assertTrue(
-            np.allclose(
-                _read_parametric_model.bin_edges,
-                self._test_bin_edges
-            )
-        )
-        self.assertTrue(
-            np.allclose(
-                _read_parametric_model.eval_model_function_density(self._test_x),
-                self._test_parametric_model_with_errors.eval_model_function_density(self._test_x)
-            )
-        )
-        
-        _given_error = self._test_parametric_model_with_errors.get_error('test_error')
-        _read_error = _read_parametric_model.get_error('test_error')
-        self.assertTrue(_given_error['enabled'] == _read_error['enabled'])
-        self.assertTrue(
-            np.allclose(
-                _given_error['err'].error,
-                _read_error['err'].error
-            )
-        )
-        self.assertTrue(_given_error['err'].corr_coeff == _read_error['err'].corr_coeff)
+        _read_parametric_model = self._get_model_from_roundtrip(
+            self._test_parametric_model_with_errors)
+        self._assert_read_model_correct(
+            _read_parametric_model, self._test_parametric_model_with_errors, errors=True)
+
 
 TEST_PARAMETRIC_MODEL_INDEXED="""
 type: indexed

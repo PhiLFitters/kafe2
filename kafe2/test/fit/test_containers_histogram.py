@@ -7,6 +7,7 @@ from kafe2.fit._base import DataContainerException
 from kafe2.fit.histogram.container import HistContainerException
 from kafe2.fit.histogram.model import HistParametricModelException,\
     HistModelFunction
+from kafe2.fit.util.function_library import linear_model, quadratic_model
 
 
 class TestDatastoreHistogram(unittest.TestCase):
@@ -164,48 +165,142 @@ class TestDatastoreHistParametricModel(unittest.TestCase):
         self._ref_data = (self._ref_model_func_antider(self._ref_bin_edges[1:], *self._ref_params) -
                           self._ref_model_func_antider(self._ref_bin_edges[:-1], *self._ref_params))
 
-        self.hist_param_model_no_antider = HistParametricModel(
+        self.hist_param_model_numerical = HistParametricModel(
             n_bins=self._ref_n_bins,
             bin_range=self._ref_n_bin_range,
             model_density_func=HistModelFunction(self._ref_model_func), 
             model_parameters=self._ref_params,
             bin_edges=None, 
-            model_density_func_antiderivative=None)
+            bin_evaluation="numerical")
 
         self.hist_param_model_with_antider = HistParametricModel(
             n_bins=self._ref_n_bins,
             bin_range=self._ref_n_bin_range,
-            model_density_func=self._ref_model_func, model_parameters=self._ref_params,
-            bin_edges=None, model_density_func_antiderivative=self._ref_model_func_antider)
+            model_density_func=HistModelFunction(self._ref_model_func),
+            model_parameters=self._ref_params,
+            bin_edges=None, bin_evaluation=self._ref_model_func_antider)
 
-        self.hist_param_model_only_antider = HistParametricModel(
-            n_bins=self._ref_n_bins,
-            bin_range=self._ref_n_bin_range,
-            model_density_func=None, model_parameters=self._ref_params,
-            bin_edges=None, model_density_func_antiderivative=self._ref_model_func_antider)
+        self.hist_param_model_np_vectorize = HistParametricModel(
+            n_bins=self._ref_n_bins, bin_range=self._ref_n_bin_range,
+            model_density_func=self._ref_model_func,
+            model_parameters=self._ref_params, bin_edges=None,
+            bin_evaluation=np.vectorize(self._ref_model_func_antider)
+        )
 
         self._test_params = (20., 5.)
         self._ref_test_data = (self._ref_model_func_antider(self._ref_bin_edges[1:], *self._test_params) -
                           self._ref_model_func_antider(self._ref_bin_edges[:-1], *self._test_params))
 
     def test_compare_hist_model_no_antider_ref_data(self):
-        self.assertTrue(np.allclose(self.hist_param_model_no_antider.data, self._ref_data))
+        self.assertTrue(np.allclose(self.hist_param_model_numerical.data, self._ref_data))
 
     def test_compare_hist_model_with_antider_ref_data(self):
         self.assertTrue(np.allclose(self.hist_param_model_with_antider.data, self._ref_data))
 
-    def test_compare_hist_model_only_antider_ref_data(self):
-        self.assertTrue(np.allclose(self.hist_param_model_only_antider.data, self._ref_data))
-
+    def test_compare_hist_model_np_vectorize_ref_data(self):
+        self.assertTrue(np.allclose(self.hist_param_model_np_vectorize.data, self._ref_data))
 
     def test_change_parameters_test_data(self):
-        self.hist_param_model_no_antider.parameters = self._test_params
-        self.assertTrue(np.allclose(self.hist_param_model_no_antider.data, self._ref_test_data))
+        self.hist_param_model_numerical.parameters = self._test_params
+        self.assertTrue(np.allclose(self.hist_param_model_numerical.data, self._ref_test_data))
 
     def test_raise_set_data(self):
         with self.assertRaises(HistParametricModelException):
-            self.hist_param_model_no_antider.data = self._ref_test_data
+            self.hist_param_model_numerical.data = self._ref_test_data
 
     def test_raise_fill(self):
         with self.assertRaises(HistParametricModelException):
-            self.hist_param_model_no_antider.fill([-1, 2, 700])
+            self.hist_param_model_numerical.fill([-1, 2, 700])
+
+    def test_raise_unknown_bin_evaluation_raise(self):
+        with self.assertRaises(ValueError):
+            HistParametricModel(n_bins=10, bin_range=(-5, 5), bin_evaluation="magical")
+        with self.assertRaises(ValueError):
+            HistParametricModel(n_bins=10, bin_range=(-5, 5), bin_evaluation=5)
+
+
+class TestQuadrature(unittest.TestCase):
+
+    @staticmethod
+    def _get_models(bin_evaluation):
+
+        def _sinus_model(x, a):
+            return np.sin(x) + a
+
+        return (
+            HistParametricModel(
+                n_bins=10, bin_range=(0, 10), model_density_func=linear_model,
+                model_parameters=[1.0, 1.0], bin_evaluation=bin_evaluation
+            ), HistParametricModel(
+                n_bins=10, bin_range=(0, 10), model_density_func=quadratic_model,
+                model_parameters=[-0.1, 1.0, 1.0], bin_evaluation=bin_evaluation
+            ), HistParametricModel(
+                n_bins=1000, bin_range=(0, 10), model_density_func=quadratic_model,
+                model_parameters=[-0.1, 1.0, 1.0], bin_evaluation=bin_evaluation
+            ), HistParametricModel(
+                n_bins=1000, bin_range=(0, 2 * np.pi), model_density_func=_sinus_model,
+                model_parameters=[2.0], bin_evaluation=bin_evaluation
+            )
+        )
+
+    def setUp(self):
+        (
+            self._linear_model_numerical,
+            self._quadratic_model_numerical,
+            self._quadratic_model_limit_numerical,
+            self._sinus_model_limit_numerical
+        ) = TestQuadrature._get_models("numerical")
+
+    def test_rectangle(self):
+        (
+            _linear_model_rectangle,
+            _quadratic_model_rectangle,
+            _quadratic_model_limit_rectangle,
+            _sinus_model_limit_rectangle
+        ) = TestQuadrature._get_models("rectangle")
+        self.assertTrue(np.allclose(
+            self._linear_model_numerical.data, _linear_model_rectangle.data
+        ))
+        self.assertTrue(np.allclose(
+            self._quadratic_model_limit_numerical.data, _quadratic_model_limit_rectangle.data
+        ))
+        self.assertTrue(np.allclose(
+            self._sinus_model_limit_numerical.data, _sinus_model_limit_rectangle.data
+        ))
+
+    def test_trapezoid(self):
+        (
+            _linear_model_trapezoid,
+            _quadratic_model_trapezoid,
+            _quadratic_model_limit_trapezoid,
+            _sinus_model_limit_rectangle
+        ) = TestQuadrature._get_models("trapezoid")
+        self.assertTrue(np.allclose(
+            self._linear_model_numerical.data, _linear_model_trapezoid.data
+        ))
+        self.assertTrue(np.allclose(
+            self._quadratic_model_limit_numerical.data, _quadratic_model_limit_trapezoid.data
+        ))
+        self.assertTrue(np.allclose(
+            self._sinus_model_limit_numerical.data, _sinus_model_limit_rectangle.data
+        ))
+
+    def test_simpson(self):
+        (
+            _linear_model_simpson,
+            _quadratic_model_simpson,
+            _quadratic_model_limit_simpson,
+            _sinus_model_limit_simpson
+        ) = TestQuadrature._get_models("simpson")
+        self.assertTrue(np.allclose(
+            self._linear_model_numerical.data, _linear_model_simpson.data
+        ))
+        self.assertTrue(np.allclose(
+            self._quadratic_model_numerical.data, _quadratic_model_simpson.data
+        ))
+        self.assertTrue(np.allclose(
+            self._quadratic_model_limit_numerical.data, _quadratic_model_limit_simpson.data
+        ))
+        self.assertTrue(np.allclose(
+            self._sinus_model_limit_numerical.data, _sinus_model_limit_simpson.data
+        ))

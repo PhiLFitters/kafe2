@@ -92,7 +92,7 @@ class TestMultiFit(unittest.TestCase):
                 bin_range=(1.5, 3.5),
                 fill_data=fill_data
             ),
-            model_density_antiderivative=TestMultiFit._norm_cdf,
+            bin_evaluation=TestMultiFit._norm_cdf,
             minimizer=minimizer
         )
 

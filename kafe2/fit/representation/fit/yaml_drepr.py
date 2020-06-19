@@ -196,7 +196,6 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
             _fit_object = HistFit(
                 data=_data,
                 model_density_function=_read_model_function,
-                model_density_antiderivative=None,
                 minimizer=_minimizer,
                 minimizer_kwargs=_minimizer_kwargs
             )

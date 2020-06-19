@@ -114,7 +114,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         )
 
-    def _get_fit(self, model_density_function=None, model_density_antiderivative=None, cost_function=None):
+    def _get_fit(self, model_density_function=None, bin_evaluation="numerical", cost_function=None):
         '''convenience'''
 
         model_density_function = model_density_function or hist_model_density
@@ -126,7 +126,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         _fit = HistFit(
             data=self._ref_hist_cont,
             model_density_function=model_density_function,
-            model_density_antiderivative=model_density_antiderivative,
+            bin_evaluation=bin_evaluation,
             cost_function=cost_function,
             minimizer=self.MINIMIZER
         )
@@ -140,9 +140,9 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
             #'default': \
             #    self._get_fit(),
             'explicit_chi2': \
-                self._get_fit(cost_function=simple_chi2, model_density_antiderivative=hist_model_density_antideriv),
+                self._get_fit(cost_function=simple_chi2, bin_evaluation=hist_model_density_antideriv),
             'model_with_antiderivative': \
-                self._get_fit(model_density_antiderivative=hist_model_density_antideriv),
+                self._get_fit(bin_evaluation=hist_model_density_antideriv),
         }
 
     def test_initial_state(self):
@@ -190,7 +190,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         )
 
     def test_update_data(self):
-        _fit = self._get_fit(model_density_antiderivative=hist_model_density_antideriv)
+        _fit = self._get_fit(bin_evaluation=hist_model_density_antideriv)
 
         _new_entries = np.array([
             19.424357258680693, 19.759361803397155, 18.364336396273362, 18.36464562195573,
@@ -269,7 +269,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         with self.assertRaises(HistModelFunctionException) as _exc:
             HistFit(data=self._ref_hist_cont,
                     model_density_function=dummy_model,
-                    model_density_antiderivative=dummy_model,
+                    bin_evaluation=dummy_model,
                     minimizer=self.MINIMIZER)
 
         self.assertIn(
@@ -283,7 +283,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         with self.assertRaises(HistModelFunctionException) as _exc:
             HistFit(data=self._ref_hist_cont,
                     model_density_function=dummy_model,
-                    model_density_antiderivative=dummy_model,
+                    bin_evaluation=dummy_model,
                     minimizer=self.MINIMIZER)
 
         self.assertIn(
@@ -298,7 +298,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         with self.assertRaises(HistModelFunctionException) as _exc:
             HistFit(data=self._ref_hist_cont,
                     model_density_function=dummy_model,
-                    model_density_antiderivative=dummy_model,
+                    bin_evaluation=dummy_model,
                     minimizer=self.MINIMIZER)
 
         self.assertIn('variable', _exc.exception.args[0])
@@ -312,7 +312,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         with self.assertRaises(HistModelFunctionException) as _exc:
             HistFit(data=self._ref_hist_cont,
                     model_density_function=dummy_model,
-                    model_density_antiderivative=dummy_model,
+                    bin_evaluation=dummy_model,
                     minimizer=self.MINIMIZER)
 
         self.assertIn('variable', _exc.exception.args[0])
@@ -326,7 +326,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         with self.assertRaises(HistModelFunctionException) as _exc:
             HistFit(data=self._ref_hist_cont,
                     model_density_function=dummy_model,
-                    model_density_antiderivative=dummy_model,
+                    bin_evaluation=dummy_model,
                     minimizer=self.MINIMIZER)
 
         self.assertIn('variable', _exc.exception.args[0])
@@ -335,20 +335,17 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         #self.assertIn('varkwargs', _exc.exception.args[0])
 
     def test_model_and_antiderivative_different_signatures_raise(self):
-        def dummy_model(x, data):
+        def dummy_model(x, mu, sigma):
             pass
 
-        def dummy_model_antiderivative(x, bogus):
+        def dummy_model_antiderivative(x, mu, bogus):
             pass
 
-        with self.assertRaises(HistModelFunctionException) as _exc:
+        with self.assertRaises(ValueError) as _exc:
             HistFit(data=self._ref_hist_cont,
                     model_density_function=dummy_model,
-                    model_density_antiderivative=dummy_model_antiderivative,
+                    bin_evaluation=dummy_model_antiderivative,
                     minimizer=self.MINIMIZER)
-
-        self.assertIn('require the same argument structures', _exc.exception.args[0])
-        self.assertIn('data', _exc.exception.args[0])
 
     def test_model_and_antiderivative_no_defaults(self):
         def legendre_grade_2(x, a=1, b=2, c=3):
@@ -360,20 +357,20 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         # should not raise an error
         HistFit(data=self._ref_hist_cont,
                 model_density_function=legendre_grade_2,
-                model_density_antiderivative=legendre_grade_2_integrated,
+                bin_evaluation=legendre_grade_2_integrated,
                 minimizer=self.MINIMIZER)
 
     def test_report_before_fit(self):
         # TODO: check report content
         _buffer = six.StringIO()
-        _fit = self._get_fit(model_density_antiderivative=hist_model_density_antideriv)
+        _fit = self._get_fit(bin_evaluation=hist_model_density_antideriv)
         _fit.report(output_stream=_buffer)
         self.assertNotEqual(_buffer.getvalue(), "")
 
     def test_report_after_fit(self):
         # TODO: check report content
         _buffer = six.StringIO()
-        _fit = self._get_fit(model_density_antiderivative=hist_model_density_antideriv)
+        _fit = self._get_fit(bin_evaluation=hist_model_density_antideriv)
         _fit.do_fit()
         _fit.report(output_stream=_buffer)
         self.assertNotEqual(_buffer.getvalue(), "")
