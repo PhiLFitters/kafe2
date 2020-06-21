@@ -9,7 +9,7 @@ from kafe2.fit.util.function_library import quadratic_model, quadratic_model_der
 _cannot_import_IMinuit = False
 try:
     from kafe2.core.minimizers.iminuit_minimizer import MinimizerIMinuit
-except ImportError:
+except (ImportError, SyntaxError):
     _cannot_import_IMinuit = True
 
 

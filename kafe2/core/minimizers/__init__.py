@@ -33,6 +33,8 @@ try:
     })
 except _catch_error_class:
     pass
+except SyntaxError:  # Newer versions of iminuit do not support Python 2.
+    pass
 
 try:
     from .root_tminuit_minimizer import MinimizerROOTTMinuit

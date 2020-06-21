@@ -6,7 +6,7 @@ from ..contour import ContourFactory
 
 try:
     import iminuit
-except ImportError:
+except (ImportError, SyntaxError):
     # TODO: handle importing nonexistent minimizer
     raise
 

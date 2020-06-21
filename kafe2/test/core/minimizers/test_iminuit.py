@@ -4,7 +4,7 @@ from kafe2.test.core.minimizers._base import TestMinimizerMixin
 _cannot_import_IMinuit = False
 try:
     from kafe2.core.minimizers.iminuit_minimizer import MinimizerIMinuit
-except ImportError:
+except (ImportError, SyntaxError):
     _cannot_import_IMinuit = True
 
 
