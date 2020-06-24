@@ -119,10 +119,14 @@ class MinimizerIMinuit(MinimizerBase):
         if not self.did_fit:
             return None
         if self._hessian is None:
-            _submat = self._remove_zeroes_for_fixed(self.cov_mat)
-            _submat_inv = 2.0 * self.errordef * np.linalg.inv(_submat)
-            self._hessian = self._fill_in_zeroes_for_fixed(_submat_inv)
-        return self._hessian.copy()
+            _cov_mat = self.cov_mat
+            if _cov_mat is None:
+                self._hessian = None
+            else:
+                _submat = self._remove_zeroes_for_fixed(_cov_mat)
+                _submat_inv = 2.0 * self.errordef * np.linalg.inv(_submat)
+                self._hessian = self._fill_in_zeroes_for_fixed(_submat_inv)
+        return None if self._hessian is None else self._hessian.copy()
 
     @property
     def cov_mat(self):
@@ -130,18 +134,21 @@ class MinimizerIMinuit(MinimizerBase):
             return None
         if self._par_cov_mat is None:
             self._save_state()
-            self._get_iminuit().hesse()
-            # FIX_UPSTREAM we need skip_fixed=False, but this is unsupported
-            # _mat = self._get_iminuit().matrix(correlation, skip_fixed=False)
+            try:
+                self._get_iminuit().hesse()
+                # FIX_UPSTREAM we need skip_fixed=False, but this is unsupported
+                # _mat = self._get_iminuit().matrix(correlation, skip_fixed=False)
 
-            # ... so use skip_fixed=True instead and fill in the gaps
-            _mat = self._get_iminuit().matrix(correlation=False, skip_fixed=True)
-            _mat = np.asarray(_mat)  # reshape into numpy matrix
-            _mat = self._fill_in_zeroes_for_fixed(_mat)  # fill in fixed par 'gaps'
-            self._func_wrapper_unpack_args(self.parameter_values)
+                # ... so use skip_fixed=True instead and fill in the gaps
+                _mat = self._get_iminuit().matrix(correlation=False, skip_fixed=True)
+                _mat = np.asarray(_mat)  # reshape into numpy matrix
+                _mat = self._fill_in_zeroes_for_fixed(_mat)  # fill in fixed par 'gaps'
+                self._func_wrapper_unpack_args(self.parameter_values)
+            except RuntimeError:
+                _mat = None
             self._load_state()
             self._par_cov_mat = _mat
-        return self._par_cov_mat.copy()
+        return None if self._par_cov_mat is None else self._par_cov_mat.copy()
 
     @property
     def cor_mat(self):
@@ -163,7 +170,7 @@ class MinimizerIMinuit(MinimizerBase):
                 _mat = None
             self._load_state()
             self._par_cor_mat = _mat
-        return self._par_cor_mat.copy()
+        return None if self._par_cor_mat is None else self._par_cor_mat.copy()
 
     @property
     def hessian_inv(self):
@@ -171,7 +178,7 @@ class MinimizerIMinuit(MinimizerBase):
             return None
         if self._hessian_inv is None:
             self._hessian_inv = self.cov_mat / (2.0 * self.errordef)
-        return self._hessian_inv.copy()
+        return None if self._hessian_inv is None else self._hessian_inv.copy()
 
     @property
     def parameter_values(self):
