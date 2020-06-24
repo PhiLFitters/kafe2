@@ -5,8 +5,8 @@ from copy import copy
 
 import numpy as np
 
-from .cost import MultiCostFunction, SharedChi2CostFunction
-from .._base import FitBase
+from .cost import MultiCostFunction
+from .._base import FitBase, CostFunction_Chi2
 from ...core import Nexus, NexusFitter
 from ...core.error import SimpleGaussianError, MatrixGaussianError
 from ...core.fitters.nexus import Alias, Function, Array
@@ -270,7 +270,7 @@ class MultiFit(FitBase):
                 def total_cov_mat_inverse(y_cov_mat):
                     return np.linalg.inv(y_cov_mat)
             self._nexus.add_function(total_cov_mat_inverse)
-            _shared_chi2_cost_function = SharedChi2CostFunction()
+            _shared_chi2_cost_function = CostFunction_Chi2()
             self._nexus.add_function(func=_shared_chi2_cost_function.func, func_name='cost_shared')
             _cost_functions.append(_shared_chi2_cost_function)
             _cost_names.append('cost_shared')
@@ -278,7 +278,10 @@ class MultiFit(FitBase):
         self._cost_function = MultiCostFunction(singular_cost_functions=_cost_functions)
         self._cost_function.ndf = self.data_size - len(self._combined_parameter_node_dict.keys())
         _cost_function_node = self._nexus.add_function(
-            func=self._cost_function.func, par_names=_cost_names)
+            func=self._cost_function,
+            func_name=self._cost_function.name,
+            par_names=self._cost_function.arg_names
+        )
         self._nexus.add_alias(name='cost', alias_for=_cost_function_node.name)
         self._initialize_fitter()
         for _callback in self._init_nexus_callbacks:

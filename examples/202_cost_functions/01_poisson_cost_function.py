@@ -34,7 +34,7 @@ i.e. the times of death of the ancient kings.
 
 import numpy as np
 import matplotlib.pyplot as plt
-from kafe2 import XYFit, XYCostFunction_NegLogLikelihood, Plot
+from kafe2 import XYFit, Plot
 
 # Years of death are our x-data, measured c14 activity is our y-data.
 # Note that our data does NOT include any x or y errors.
@@ -64,7 +64,7 @@ def expected_activity_per_day(x, Delta_t=5000, T_12_C14=5730):
 xy_fit = XYFit(
     xy_data=[years_of_death, measured_c14_activity],
     model_function=expected_activity_per_day,
-    cost_function=XYCostFunction_NegLogLikelihood(data_point_distribution='poisson')
+    cost_function="nll-poisson"
 )
 
 # The half life of carbon-14 is only known with a precision of +-40 years

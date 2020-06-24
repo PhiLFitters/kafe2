@@ -10,9 +10,9 @@ from ...tools import print_dict_as_table
 from ...core import NexusFitter, Nexus
 from ...core.fitters.nexus import Parameter, Alias, NexusError
 from ...config import kc
-from .._base import FitException, FitBase, DataContainerBase, CostFunctionBase, ModelFunctionBase
+from .._base import FitException, FitBase, DataContainerBase, CostFunction, ModelFunctionBase
 from .container import XYContainer
-from .cost import XYCostFunction_Chi2, XYCostFunction_UserDefined, STRING_TO_COST_FUNCTION
+from .cost import XYCostFunction_Chi2, STRING_TO_COST_FUNCTION
 from .model import XYParametricModel
 from .plot import XYPlotAdapter
 from ..util import function_library, add_in_quadrature, collect, invert_matrix
@@ -81,15 +81,16 @@ class XYFit(FitBase):
         self._validate_model_function_for_fit_raise()
 
         # set and validate the cost function
-        if isinstance(cost_function, CostFunctionBase):
+        if isinstance(cost_function, CostFunction):
             self._cost_function = cost_function
         elif isinstance(cost_function, str):
-            _cost_function_class = STRING_TO_COST_FUNCTION.get(cost_function, None)
-            if _cost_function_class is None:
+            try:
+                _cost_function_class, _kwargs = STRING_TO_COST_FUNCTION[cost_function]
+            except KeyError:
                 raise XYFitException('Unknown cost function: %s' % cost_function)
-            self._cost_function = _cost_function_class()
+            self._cost_function = _cost_function_class(**_kwargs)
         else:
-            self._cost_function = XYCostFunction_UserDefined(cost_function)
+            self._cost_function = CostFunction(cost_function)
             # self._validate_cost_function_raise()
             # TODO: validate user-defined cost function? how?
 
@@ -285,7 +286,8 @@ class XYFit(FitBase):
 
         # the cost function (the function to be minimized)
         _cost_node = self._nexus.add_function(
-            self._cost_function.func,
+            self._cost_function,
+            par_names=self._cost_function.arg_names,
             func_name=self._cost_function.name,
         )
 
@@ -448,8 +450,8 @@ class XYFit(FitBase):
     @property
     def x_model(self):
         # if cost function uses x-nuisance parameters, consider these
-        if self._cost_function.get_flag("need_x_nuisance") and self._data_container.has_uncor_x_errors:
-            return self.x_data + (self.x_uncor_nuisance_values * self.x_data_error)
+        #if self._cost_function.get_flag("need_x_nuisance") and self._data_container.has_uncor_x_errors:
+        #    return self.x_data + (self.x_uncor_nuisance_values * self.x_data_error)
         return self.x_data
 
     @property

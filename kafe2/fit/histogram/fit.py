@@ -7,9 +7,9 @@ import numpy as np
 from ...config import kc
 from ...core import NexusFitter, Nexus
 from ...core.fitters.nexus import Parameter, Alias, NexusError
-from .._base import FitException, FitBase, DataContainerBase, CostFunctionBase
+from .._base import FitException, FitBase, DataContainerBase
 from .container import HistContainer
-from .cost import HistCostFunction_NegLogLikelihood, HistCostFunction_UserDefined, STRING_TO_COST_FUNCTION
+from .._base.cost import CostFunction_NegLogLikelihood, CostFunction, STRING_TO_COST_FUNCTION
 from .model import HistParametricModel, HistModelFunction
 from .plot import HistPlotAdapter
 from ..util import function_library, add_in_quadrature, collect, invert_matrix
@@ -36,7 +36,7 @@ class HistFit(FitBase):
     def __init__(self,
                  data,
                  model_density_function=function_library.normal_distribution_pdf,
-                 cost_function=HistCostFunction_NegLogLikelihood(
+                 cost_function=CostFunction_NegLogLikelihood(
                     data_point_distribution='poisson'),
                  model_density_antiderivative=None,
                  minimizer=None,
@@ -70,15 +70,16 @@ class HistFit(FitBase):
         self._validate_model_function_for_fit_raise()
 
         # set and validate the cost function
-        if isinstance(cost_function, CostFunctionBase):
+        if isinstance(cost_function, CostFunction):
             self._cost_function = cost_function
         elif isinstance(cost_function, str):
-            _cost_function_class = STRING_TO_COST_FUNCTION.get(cost_function, None)
-            if _cost_function_class is None:
+            try:
+                _cost_function_class, _kwargs = STRING_TO_COST_FUNCTION[cost_function]
+            except KeyError:
                 raise HistFitException('Unknown cost function: %s' % cost_function)
-            self._cost_function = _cost_function_class()
+            self._cost_function = _cost_function_class(**_kwargs)
         else:
-            self._cost_function = HistCostFunction_UserDefined(cost_function)
+            self._cost_function = CostFunction(cost_function)
             # self._validate_cost_function_raise()
             # TODO: validate user-defined cost function? how?
 
@@ -190,8 +191,9 @@ class HistFit(FitBase):
 
         # the cost function (the function to be minimized)
         _cost_node = self._nexus.add_function(
-            self._cost_function.func,
+            self._cost_function,
             func_name=self._cost_function.name,
+            par_names=self._cost_function.arg_names
         )
 
         _cost_alias = self._nexus.add_alias('cost', alias_for=self._cost_function.name)

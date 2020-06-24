@@ -13,7 +13,7 @@ from kafe2.config import kc
 from kafe2.fit import HistFit, HistContainer
 from kafe2.fit.histogram.fit import HistFitException
 from kafe2.fit.histogram.model import HistModelFunctionException, HistParametricModelException
-from kafe2.fit.histogram.cost import HistCostFunction_Chi2, HistCostFunction_NegLogLikelihood
+from kafe2.fit.histogram.cost import HistCostFunction_NegLogLikelihood
 
 from kafe2.test.fit.test_fit import AbstractTestFit
 
