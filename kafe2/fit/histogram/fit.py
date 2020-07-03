@@ -84,7 +84,6 @@ class HistFit(FitBase):
             # TODO: validate user-defined cost function? how?
 
         # initialize the Nexus
-        self._init_nexus_callbacks = []
         self._init_nexus()
 
         # save minimizer, minimizer_kwargs for serialization
@@ -222,8 +221,6 @@ class HistFit(FitBase):
         #        '{}_uncor_cov_mat'.format(_side),
         #        depends_on='{}_cov_mat'.format(_side)
         #    )
-        for _callback in self._init_nexus_callbacks:
-            _callback()
 
     def _set_new_data(self, new_data):
         if isinstance(new_data, self.CONTAINER_TYPE):

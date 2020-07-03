@@ -5,7 +5,7 @@ from copy import copy
 
 import numpy as np
 
-from .cost import MultiCostFunction
+from .cost import SharedCostFunction, MultiCostFunction
 from .._base import FitBase, CostFunction_Chi2
 from ...core import Nexus, NexusFitter
 from ...core.error import SimpleGaussianError, MatrixGaussianError
@@ -42,14 +42,10 @@ class MultiFit(FitBase):
         self._minimizer_kwargs = minimizer_kwargs
         self._shared_error_dicts = dict()
         self._min_x_error = None
-        self._init_nexus_callbacks = []
         self._init_nexus()
         self._initialize_fitter()
 
         self._fit_param_constraints = []
-
-        for _fit in self._fits:
-            _fit._init_nexus_callbacks.append(self._init_nexus)
 
     # -- private methods
 
@@ -113,13 +109,11 @@ class MultiFit(FitBase):
         self._nexus.add_function(
             lambda: self.parameter_constraints, func_name='parameter_constraints')
         self._combined_parameter_node_dict = OrderedDict()
-        _cost_names = []
         for _i, _fit_i in enumerate(self._fits):
             _original_cost_i = _fit_i._nexus.get('cost')
             _cost_alias_name_i = 'cost%s' % _i
             _cost_alias_i = Alias(ref=_original_cost_i, name=_cost_alias_name_i)
             self._nexus.add(_cost_alias_i, add_children=False)
-            _cost_names.append(_cost_alias_name_i)
             for _par_node in _fit_i.poi_names:
                 self._combined_parameter_node_dict[_par_node] = _fit_i._nexus.get(_par_node)
         for _par_node in self._combined_parameter_node_dict.values():
@@ -130,8 +124,7 @@ class MultiFit(FitBase):
         self._nexus.add(
             Array(nodes=self._combined_parameter_node_dict.values(), name='parameter_values'))
 
-        _x_data_names = []
-        _y_data_names = []
+        self._y_data_names = []
         for _i, _fit_i in enumerate(self._fits):
             _fit_i._initialize_fitter()
 
@@ -141,7 +134,6 @@ class MultiFit(FitBase):
                 self._nexus.add(
                     Alias(ref=_x_data_node, name=_x_data_name),
                     add_children=False)
-                _x_data_names.append(_x_data_name)
 
             _y_data_node = _fit_i._nexus.get('y_data')
             if _y_data_node is not None:
@@ -149,10 +141,21 @@ class MultiFit(FitBase):
                 self._nexus.add(
                     Alias(ref=_y_data_node, name=_y_data_name),
                     add_children=False)
-                _y_data_names.append(_y_data_name)
+                self._y_data_names.append(_y_data_name)
 
+        self._init_nexus_cost()
+
+        self._initialize_fitter()
+
+    def _init_nexus_cost(self):
+        """
+        initializes nexus nodes needed for cost calculation as well as the cost function object
+        """
         if not self._shared_error_dicts:
             _cost_functions = [_fit._cost_function for _fit in self._fits]
+            _cost_names = ['cost%s' % _i for _i in range(len(self._fits))]
+            self._cost_function = MultiCostFunction(
+                singular_cost_functions=_cost_functions, cost_function_names=_cost_names)
         else:
             _chi2_indices = []  # Indices of fits with chi2 cost function
             _data_indices = [0]  # Indices of edges of covariance block in combined matrix
@@ -253,10 +256,12 @@ class MultiFit(FitBase):
                     add_children=False)
 
             self._nexus.add_function(
-                func=_combine_1d_property, func_name='y_data', par_names=_y_data_names, add_children=False)
+                func=_combine_1d_property, func_name='y_data',
+                par_names=self._y_data_names, add_children=False)
             self._nexus.add_alias(name='data', alias_for='y_data')
             self._nexus.add_function(
-                func=_combine_1d_property, func_name='y_model', par_names=_y_model_names, add_children=False)
+                func=_combine_1d_property, func_name='y_model',
+                par_names=_y_model_names, add_children=False)
             self._nexus.add_alias(name='model', alias_for='y_model')
             self._nexus.add_function(
                 func=lambda *p: _combine_cov_mats('y', *p),
@@ -270,22 +275,18 @@ class MultiFit(FitBase):
                 def total_cov_mat_inverse(y_cov_mat):
                     return np.linalg.inv(y_cov_mat)
             self._nexus.add_function(total_cov_mat_inverse)
-            _shared_chi2_cost_function = CostFunction_Chi2()
-            self._nexus.add_function(func=_shared_chi2_cost_function.func, func_name='cost_shared')
-            _cost_functions.append(_shared_chi2_cost_function)
-            _cost_names.append('cost_shared')
+            self._cost_function = SharedCostFunction()
 
-        self._cost_function = MultiCostFunction(singular_cost_functions=_cost_functions)
-        self._cost_function.ndf = self.data_size - len(self._combined_parameter_node_dict.keys())
         _cost_function_node = self._nexus.add_function(
             func=self._cost_function,
             func_name=self._cost_function.name,
-            par_names=self._cost_function.arg_names
+            par_names=self._cost_function.arg_names,
+            existing_behavior="replace"
         )
-        self._nexus.add_alias(name='cost', alias_for=_cost_function_node.name)
-        self._initialize_fitter()
-        for _callback in self._init_nexus_callbacks:
-            _callback()
+        self._cost_function.ndf = self.data_size - len(
+            self._combined_parameter_node_dict.keys())
+        self._nexus.add_alias(
+            name='cost', alias_for=_cost_function_node.name, existing_behavior='replace')
 
     def _initialize_fitter(self):
         self._fitter = NexusFitter(
@@ -385,6 +386,11 @@ class MultiFit(FitBase):
             _target._add_error_object(name=name, error_object=error_object, axis=axis)
         self._on_error_change()
         return name
+
+    def _on_error_change(self):
+        self._init_nexus_cost()
+        # Make the nexus fetch the new cost function node:
+        self._fitter.parameter_to_minimize = self._cost_function.name
 
     def _set_new_data(self, new_data):
         raise NotImplementedError()

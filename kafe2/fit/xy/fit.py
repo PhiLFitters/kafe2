@@ -102,7 +102,6 @@ class XYFit(FitBase):
         self._x_error_algorithm = x_error_algorithm
 
         # initialize the Nexus
-        self._init_nexus_callbacks = []
         self._init_nexus()
 
         # save minimizer, minimizer_kwargs for serialization
@@ -344,8 +343,6 @@ class XYFit(FitBase):
             not self.has_x_errors):
 
             self._with_projected_nodes(('update', 'freeze'))
-        for _callback in self._init_nexus_callbacks:
-            _callback()
 
     def _with_projected_nodes(self, actions):
         '''perform actions on projected error nodes: freeze, update, unfreeze...'''

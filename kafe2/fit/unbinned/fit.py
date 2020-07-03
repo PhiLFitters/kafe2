@@ -59,7 +59,6 @@ class UnbinnedFit(FitBase):
         # TODO: convert cost_function to a kafe2 cost function object if it is a string
 
         # initialize the Nexus
-        self._init_nexus_callbacks = []
         self._init_nexus()
 
         # save minimizer, minimizer_kwargs for serialization
@@ -144,8 +143,6 @@ class UnbinnedFit(FitBase):
                 'poi_values'
             )
         )
-        for _callback in self._init_nexus_callbacks:
-            _callback()
 
     # -- private methods
 

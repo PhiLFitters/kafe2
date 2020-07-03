@@ -38,7 +38,6 @@ class FitBase(FileIOMixin, object):
     def __init__(self):
         self._data_container = None
         self._param_model = None
-        self._init_nexus_callbacks = []
         self._nexus = None
         self._fitter = None
         self._fit_param_names = None
