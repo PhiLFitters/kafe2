@@ -5,6 +5,7 @@ r"""This submodule provides utility functions for other modules.
 .. moduleauthor:: Johannes Gaessler <johannes.gaessler@student.kit.edu>
 """
 
+import warnings
 import numpy as np
 
 from . import function_library
@@ -26,12 +27,16 @@ def add_in_quadrature(*args):
     '''return the square root of the sum of squares of all arguments'''
     return np.sqrt(np.sum([_a**2 for _a in args], axis=0))
 
+
 def invert_matrix(mat):
     '''perform matrix inversion'''
-    #try:
-    return np.linalg.inv(mat)
-    #except np.linalg.LinAlgError:
-    #    return None
+    try:
+        return np.linalg.inv(mat)
+    except np.linalg.LinAlgError:
+        warnings.warn(
+            "Singular covariance matrix. Are the errors for some data points equal to zero?")
+        return None
+
 
 def collect(*args):
     '''collect arguments into array'''

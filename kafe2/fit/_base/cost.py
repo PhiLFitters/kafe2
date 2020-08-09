@@ -222,7 +222,7 @@ class CostFunction(FileIOMixin, object):
 
     def on_no_errors(self):
         if not self._no_errors_warning_printed:
-            print('WARNING: No data errors were specified. The fit results may be wrong.')
+            warnings.warn('No data errors specified.')
             self._no_errors_warning_printed = True
 
 
@@ -270,7 +270,7 @@ class CostFunction_Chi2(CostFunction):
         self._formatter.latex_name = "\\chi^2"
         self._formatter.name = "chi2"
         self._formatter.description = _cost_function_description
-        self._needs_errors = _chi2_func is not self.chi2_no_errors
+        self._needs_errors = errors_to_use is not None
         self._is_chi2 = True
 
     def _chi2(self, data, model, cov_mat_inverse=None, err=None):
@@ -303,16 +303,14 @@ class CostFunction_Chi2(CostFunction):
             else:
                 _res = _res / err
 
+        if self.needs_errors:
+            # There are other warnings that notify the user about singular cov mat, etc.
+            warnings.warn("Setting all data errors to 1 as a fallback.")
         # return sum of squared residuals
         _cost = np.sum(_res ** 2)
         if np.isnan(_cost):
             _cost = np.inf
         return _cost
-
-    def on_no_errors(self):
-        if not self._no_errors_warning_printed:
-            warnings.warn("No data errors were specified. Setting data errors to 1.")
-            self._no_errors_warning_printed = True
 
     def chi2_no_errors(self, data, model):
         r"""A least-squares cost function calculated from `y` data and model values,

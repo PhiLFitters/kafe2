@@ -5,6 +5,7 @@ Classes for handling of uncertainties in kafe2 fits.
 import abc
 import numpy as np
 import six
+import warnings
 
 import logging
 
@@ -108,7 +109,9 @@ class CovMat(object):
         """
         if self._cor_mat is None:
             _sqrt_vars = np.sqrt(np.diag(self._mat))
-            self._cor_mat = self._mat / np.outer(_sqrt_vars, _sqrt_vars)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                self._cor_mat = self._mat / np.outer(_sqrt_vars, _sqrt_vars)
         return self._cor_mat
 
     @property
@@ -347,8 +350,8 @@ class SimpleGaussianError(GaussianErrorBase):
     @error.setter
     def error(self, err_val):
         err_val = np.array(err_val, dtype=float)
-        if np.any(err_val <= 0):
-            raise ValueError("Error values must be > 0. Received: %s" % err_val)
+        if np.any(err_val < 0):
+            raise ValueError("Error values must be >= 0. Received: %s" % err_val)
         if self.relative:
             if self.reference is None:
                 raise AttributeError(
@@ -397,8 +400,8 @@ class SimpleGaussianError(GaussianErrorBase):
     @error_rel.setter
     def error_rel(self, err_val):
         err_val = np.array(err_val, dtype=float)
-        if np.any(err_val <= 0):
-            raise ValueError("Error values must be > 0. Received: %s" % err_val)
+        if np.any(err_val < 0):
+            raise ValueError("Error values must be >= 0. Received: %s" % err_val)
         if self.relative:
             self._err = None
             self._err_rel = err_val
@@ -425,12 +428,11 @@ class SimpleGaussianError(GaussianErrorBase):
         else:
             _ref = np.asarray(reference, dtype=float)
             # check for zero-valued references if error is marked 'relative'
-            if self.relative and np.any(np.isclose(_ref, 0.0, atol=1e-5)):
-                # TODO: avoid hard-coded value
-                print("WARNING: Error reference contains zero values! Replacing them "
-                      "with default minimum '%g'" % (1e-2,))
-                _default = np.ones_like(_ref) * 1e-2
-                _ref = np.where(np.isclose(_ref, 0.0, atol=1e-5), _default, _ref)
+            if self.relative and np.any(_ref == 0):
+                warnings.warn(
+                    "Relative error has a reference that contains values equal to zero: %s"
+                    % _ref
+                )
             self._reference = _ref
 
         # invalidate error_structures opposite declared relativity type
@@ -662,12 +664,11 @@ class MatrixGaussianError(GaussianErrorBase):
         else:
             _ref = np.asarray(reference, dtype=float)
             # check for zero-valued references if error is marked 'relative'
-            if self.relative and np.any(np.isclose(_ref, 0.0, atol=1e-5)):
-                # TODO: avoid hard-coded value
-                print("WARNING: Error reference contains zero values! Replacing them "
-                      "with default minimum '%g'" % (1e-2,))
-                _default = np.ones_like(_ref) * 1e-2
-                _ref = np.where(np.isclose(_ref, 0.0, atol=1e-5), _default, _ref)
+            if self.relative and np.any(_ref == 0):
+                warnings.warn(
+                    "Relative error has a reference that contains values equal to zero: %s"
+                    % _ref
+                )
             self._reference = _ref
 
         # invalidate error_structures opposite declared relativity type
