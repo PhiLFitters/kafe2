@@ -35,17 +35,29 @@ class FitBase(FileIOMixin, object):
     RESERVED_NODE_NAMES = None
     _BASIC_ERROR_NAMES = {}
 
-    def __init__(self):
+    def __init__(self, minimizer=None, minimizer_kwargs=None):
+        """This is a purely abstract class implementing the minimal interface required by all
+        types of fits.
+
+        :param minimizer: Name of the minimizer to use.
+        :type minimizer: str or None
+        :param minimizer_kwargs: Dictionary wit keywords for initializing the minimizer.
+        :type minimizer_kwargs: dict or None
+        """
+        super(FitBase, self).__init__()
         self._data_container = None
         self._param_model = None
         self._nexus = None
         self._fitter = None
         self._fit_param_names = None
-        self._fit_param_constraints = None
+        self._fit_param_constraints = []
         self._model_function = None
         self._cost_function = None
         self._loaded_result_dict = None  # contains potential fit results from a file or multifit
-        super(FitBase, self).__init__()
+
+        # save minimizer, minimizer_kwargs for serialization
+        self._minimizer = minimizer
+        self._minimizer_kwargs = minimizer_kwargs
 
     # -- private methods
 

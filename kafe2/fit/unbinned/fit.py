@@ -45,6 +45,7 @@ class UnbinnedFit(FitBase):
         :param minimizer_kwargs: dictionary with kwargs for the minimizer.
         :type minimizer_kwargs: dict
         """
+        super(UnbinnedFit, self).__init__(minimizer=minimizer, minimizer_kwargs=minimizer_kwargs)
         # set/construct the model function object
         if isinstance(model_density_function, self.__class__.MODEL_FUNCTION_TYPE):
             self._model_function = model_density_function
@@ -61,15 +62,8 @@ class UnbinnedFit(FitBase):
         # initialize the Nexus
         self._init_nexus()
 
-        # save minimizer, minimizer_kwargs for serialization
-        self._minimizer = minimizer
-        self._minimizer_kwargs = minimizer_kwargs
-
         # initialize the Fitter
         self._initialize_fitter()
-
-        self._fit_param_constraints = []
-        self._loaded_result_dict = None
 
         self.data = data
 

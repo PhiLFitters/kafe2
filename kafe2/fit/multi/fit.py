@@ -34,18 +34,14 @@ class MultiFit(FitBase):
 
         :raises TypeError: If **fit_list** is not iterable.
         """
-        super(MultiFit, self).__init__()
+        super(MultiFit, self).__init__(minimizer=minimizer, minimizer_kwargs=minimizer_kwargs)
         # Cast Iterable to List, so that indexing works. Indexing is needed for some methods.
         self._fits = list(fit_list)  # will raise TypeError if fit_list is not iterable
 
-        self._minimizer = minimizer
-        self._minimizer_kwargs = minimizer_kwargs
         self._shared_error_dicts = dict()
         self._min_x_error = None
         self._init_nexus()
         self._initialize_fitter()
-
-        self._fit_param_constraints = []
 
     # -- private methods
 

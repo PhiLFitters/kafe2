@@ -59,6 +59,7 @@ class IndexedFit(FitBase):
         :param minimizer_kwargs: dictionary with kwargs for the minimizer.
         :type minimizer_kwargs: dict
         """
+        super(IndexedFit, self).__init__(minimizer=minimizer, minimizer_kwargs=minimizer_kwargs)
         # set/construct the model function object
         if isinstance(model_function, self.__class__.MODEL_FUNCTION_TYPE):
             self._model_function = model_function
@@ -85,15 +86,8 @@ class IndexedFit(FitBase):
         # initialize the Nexus
         self._init_nexus()
 
-        # save minimizer, minimizer_kwargs for serialization
-        self._minimizer = minimizer
-        self._minimizer_kwargs = minimizer_kwargs
-
         # initialize the Fitter
         self._initialize_fitter()
-
-        self._fit_param_constraints = []
-        self._loaded_result_dict = None
 
         # set the data after the cost_function has been set and nexus has been initialized
         self.data = data
