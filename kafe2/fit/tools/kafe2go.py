@@ -1,7 +1,9 @@
 #!/usr/bin/env python
-import sys
 import argparse
+import sys
+
 import matplotlib.pyplot as plt
+
 # do not use relative imports here as the working directory of kafe2go can be anywhere on the system
 from kafe2 import Plot
 from kafe2.fit._base.fit import FitBase
@@ -12,12 +14,14 @@ from kafe2.fit.xy.plot import XYPlotAdapter
 class Kafe2GoException(Exception):
     pass
 
-#TODO documentation
 
+# TODO documentation
 def kafe2go():
-    _parser = argparse.ArgumentParser(description='Perform a fit with the kafe2 package driven by an input file.\n'
-                                                  'Example files are located inside the kafe2 installation directory.')
-    
+    _parser = argparse.ArgumentParser(description="Perform a fit with the kafe2 package driven by "
+                                                  "an input file.\n"
+                                                  "Example files are located inside the kafe2 "
+                                                  "installation directory.")
+
     _parser.add_argument('filename', type=str, nargs='+',
                          help="Name(s) of fit input file(s).")
     _parser.add_argument('-if', '--inputformat',
@@ -25,10 +29,12 @@ def kafe2go():
                          help="File input format. The default format is yaml.")
     _parser.add_argument('-s', '--saveplot',
                          action='store_true',
-                         help="Save plot(s) to file(s). The plot(s) will be saved in the current working directory.")
+                         help="Save plot(s) to file(s). The plot(s) will be saved in the current "
+                              "working directory.")
     _parser.add_argument('-pf', '--plotformat',
                          type=str, default='pdf',
-                         help="Graphics output file format. E.g. pdf, png, svg, ... The default format is pdf.")
+                         help="Graphics output file format. E.g. pdf, png, svg, ... "
+                              "The default format is pdf.")
     _parser.add_argument('-n', '--noplot',
                          action='store_true',
                          help="Don't show plots on screen.")
@@ -37,17 +43,18 @@ def kafe2go():
                          help="Show data/model ratio below the main plot.")
     _parser.add_argument('-a', '--asymmetric',
                          action='store_true',
-                         help='Show asymmetric parameter uncertainties when displaying the fit information. This'
-                              'affects the fit report to the terminal as well as the information box of the plot.')
-    _parser.add_argument('-c', '--contours', 
+                         help="Show asymmetric parameter uncertainties when displaying the fit "
+                              "information. This affects the fit report to the terminal as well as "
+                              "the information box of the plot.")
+    _parser.add_argument('-c', '--contours',
                          action='store_true',
                          help="Plot contours and profiles.")
     _parser.add_argument('--grid', type=str, nargs=1, default=[None],
-                         help="Add a grid to the contour profiles. Available options are either all, "
-                              "contours or profiles.")
+                         help="Add a grid to the contour profiles. Available options are either "
+                              "all, contours or profiles.")
     _parser.add_argument('--noband',
                          action='store_true',
-                         help="Don't draw the 1-sigma band around the fitted function."
+                         help="Don't draw the 1-sigma band around the fitted function. "
                               "This will only affect plots of XY-fits.")
     _parser.add_argument('--noinfobox',
                          action='store_true',
@@ -86,7 +93,7 @@ def kafe2go():
         if _report:
             _fit.report(asymmetric_parameter_errors=_asymmetric)
         _fits.append(_fit)
-    
+
     if not _band:
         XYPlotAdapter.PLOT_SUBPLOT_TYPES.pop('model_error_band')
 
@@ -102,15 +109,16 @@ def kafe2go():
             names = _basenames
         for fig, name in zip(_plot.figures, names):
             fig.savefig(fname='{}.{}'.format(name, _plot_format), format=_plot_format)
-    
+
     if _contours:
         for _fit, name in zip(_fits, _basenames):
             _profiler = ContoursProfiler(_fit)
             _profiler.plot_profiles_contours_matrix(show_grid_for=_grid)
             if _save_plot:
                 for i, fig in enumerate(_profiler.figures):
-                    fig.savefig(fname='{}_contours_{}.{}'.format(name, i, _plot_format), format=_plot_format)
-    
+                    fig.savefig(fname='{}_contours_{}.{}'.format(name, i, _plot_format),
+                                format=_plot_format)
+
     if _show_plot:
         plt.show()
 
