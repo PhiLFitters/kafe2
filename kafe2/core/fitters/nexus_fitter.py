@@ -3,6 +3,7 @@ import numpy as np
 
 from ...config import kc
 from ..minimizers import get_minimizer
+from.nexus import Nexus
 
 
 class NexusFitterException(Exception):
@@ -13,16 +14,25 @@ class NexusFitter(object):
 
     def __init__(self, nexus, parameters_to_fit, parameter_to_minimize, minimizer=None,
                  minimizer_kwargs=None):
+        """Handles the minimizer and interfacing of the data to it.
+
+        :param Nexus nexus: A kafe2 nexus object used to manage the caching of intermediate
+               results for the calculation of the cost function value.
+        :param parameters_to_fit:
+        :param str parameter_to_minimize: Name of the parameter to minimize. In most cases this
+                                          is the cost function value.
+        :param minimizer: Name of the minimizer to use.
+        :type minimizer: str or None
+        :param minimizer_kwargs: Dictionary containing keyword arguments for the minimizer
+                                 initialization.
+        :type minimizer_kwargs: dict or None
+        """
         self._nx = nexus
 
         self.parameters_to_fit = parameters_to_fit
         self.parameter_to_minimize = parameter_to_minimize
 
-        if minimizer is not None:
-            _minimizer_class = get_minimizer(minimizer)
-        else:
-            _minimizer_class = get_minimizer()  # get the default minimizer
-
+        _minimizer_class = get_minimizer(minimizer)
         if minimizer_kwargs is None:
             minimizer_kwargs = dict()
 
@@ -32,7 +42,7 @@ class NexusFitter(object):
         self._minimizer = _minimizer_class(
             parameters_to_fit,
             _par_values,
-            [0.1 if _v==0 else 0.1*_v for _v in np.abs(_par_values)],
+            [0.1 if _v == 0 else 0.1*_v for _v in np.abs(_par_values)],
             self._fcn_wrapper,
             **minimizer_kwargs
         )
@@ -44,11 +54,10 @@ class NexusFitter(object):
         self.__minimizing = False  # minimization ongoing?
         self.__state_is_from_minimizer = False
 
-
     # -- private methods
 
     def _get_pars_from_nexus(self, par_names):
-        '''return list of nexus nodes for `par_names`'''
+        """return list of nexus nodes for `par_names`"""
         _not_found = []
         _pars = []
         for _pn in par_names:
@@ -57,7 +66,6 @@ class NexusFitter(object):
                 _not_found.append(_pn)
             else:
                 _pars.append(_par)
-
 
         if _not_found:
             raise NexusFitterException(
@@ -68,7 +76,7 @@ class NexusFitter(object):
         return _pars
 
     def _minimize(self, max_calls=None):
-        '''run minimizer'''
+        """run minimizer"""
 
         if max_calls is None:
             max_calls = kc('core', 'fitters', 'nexus_fitter', 'max_calls')
@@ -92,7 +100,6 @@ class NexusFitter(object):
 
         # evaluate function and return value
         return self._min_par.value
-
 
     # -- public properties
 
