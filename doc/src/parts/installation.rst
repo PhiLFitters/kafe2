@@ -262,3 +262,18 @@ if everything has been set up correctly.
 
 For more information please refer to ROOT's official
 `PyROOT Guide <https://root.cern.ch/pyroot>`_.
+
+Installing *kafe2-nightly*
+==========================
+
+The regular *kafe2* version that can be installed through *pip* follows a conservative release
+cycle:
+new features and large changes to how *kafe2* works internally are only released every six months at
+the beginning of April/October to align with the beginning of KIT's summer/winter semester.
+New features are only added if they are considered stable in terms of interface and behavior.
+Minor releases that fix bugs may be released at any time.
+
+If users desire to install a more up-to-date version of *kafe2* they can do so by installing the
+*kafe2-nightly* package via *pip*.
+Please be aware that the features found in the nightly version as well as their interfaces may be
+subject to change before they make it into a regular release.
