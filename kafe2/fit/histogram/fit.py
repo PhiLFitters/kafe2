@@ -1,18 +1,11 @@
-from collections import OrderedDict
 from copy import deepcopy
 
-import six
-import numpy as np
-
-from ...config import kc
-from ...core import NexusFitter, Nexus
-from ...core.fitters.nexus import Parameter, Alias, NexusError
 from .._base import FitException, FitBase, DataContainerBase
 from .container import HistContainer
-from .._base.cost import CostFunction_NegLogLikelihood, CostFunction, STRING_TO_COST_FUNCTION
+from .._base.cost import CostFunction_NegLogLikelihood
 from .model import HistParametricModel, HistModelFunction
 from .plot import HistPlotAdapter
-from ..util import function_library, add_in_quadrature, collect, invert_matrix
+from ..util import function_library, collect
 
 __all__ = ['HistFit', 'HistFitException']
 
@@ -64,119 +57,15 @@ class HistFit(FitBase):
         :param minimizer_kwargs: dictionary with kwargs for the minimizer.
         :type minimizer_kwargs: dict
         """
-        super(HistFit, self).__init__(minimizer=minimizer, minimizer_kwargs=minimizer_kwargs)
-        # set/construct the model function object
-        if isinstance(model_density_function, self.__class__.MODEL_FUNCTION_TYPE):
-            self._model_function = model_density_function
-        else:
-            self._model_function = self.__class__.MODEL_FUNCTION_TYPE(model_density_function)
         self._bin_evaluation = bin_evaluation
-
-        # validate the model function for this fit
-        self._validate_model_function_for_fit_raise()
-
-        # set and validate the cost function
-        if isinstance(cost_function, CostFunction):
-            self._cost_function = cost_function
-        elif isinstance(cost_function, str):
-            try:
-                _cost_function_class, _kwargs = STRING_TO_COST_FUNCTION[cost_function]
-            except KeyError:
-                raise HistFitException('Unknown cost function: %s' % cost_function)
-            self._cost_function = _cost_function_class(**_kwargs)
-        else:
-            self._cost_function = CostFunction(cost_function)
-            # self._validate_cost_function_raise()
-            # TODO: validate user-defined cost function? how?
-
-        # initialize the Nexus
-        self._init_nexus()
-
-        # initialize the Fitter
-        self._initialize_fitter()
-
-        # set the data after the cost_function has been set and nexus has been initialized
-        self.data = data
+        super(HistFit, self).__init__(
+            data=data, model_function=model_density_function, cost_function=cost_function,
+            minimizer=minimizer, minimizer_kwargs=minimizer_kwargs)
 
     # -- private methods
 
     def _init_nexus(self):
-
-        self._nexus = Nexus()
-
-        for _type in ('data', 'model'):
-
-            # add data and model for axis
-            self._add_property_to_nexus(_type)
-            # add errors for axis
-            self._add_property_to_nexus('_'.join((_type, 'error')))
-
-            # add cov mats for axis
-            for _prop in ('cov_mat',):  # TODO: 'uncor_cov_mat'
-                _node = self._add_property_to_nexus('_'.join((_type, _prop)))
-                # add inverse
-                self._nexus.add_function(
-                    invert_matrix,
-                    func_name='_'.join((_node.name, 'inverse')),
-                    par_names=(_node.name,)
-                )
-
-        # 'total_error', i.e. data + model error in quadrature
-        self._nexus.add_function(
-            add_in_quadrature,
-            func_name='total_error',
-            par_names=(
-                'data_error',
-                'model_error'
-            )
-        )
-
-        # 'total_cov_mat', i.e. data + model cov mats
-        for _mat in ('cov_mat',):  # TODO: 'uncor_cov_mat'
-            _node = (
-                self._nexus.get('_'.join(('data', _mat))) +
-                self._nexus.get('_'.join(('model', _mat)))
-            )
-            _node.name = '_'.join(('total', _mat))
-            self._nexus.add(_node)
-
-            # add inverse
-            self._nexus.add_function(
-                invert_matrix,
-                func_name='_'.join((_node.name, 'inverse')),
-                par_names=(_node.name,),
-            )
-
-        # get names and default values of all parameters
-        _nexus_new_dict = self._get_default_values(
-            model_function=self._model_function,
-            x_name=self._model_function.x_name
-        )
-
-        # -- fit parameters
-
-        self._fit_param_names = []  # names of all fit parameters (including nuisance parameters)
-        self._poi_names = []  # names of the parameters of interest (i.e. the model parameters)
-        for _par_name, _par_value in six.iteritems(_nexus_new_dict):
-            # create nexus node for function parameter
-            self._nexus.add(Parameter(_par_value, name=_par_name))
-
-            # keep track of fit parameter names
-            self._fit_param_names.append(_par_name)
-            self._poi_names.append(_par_name)
-
-        # -- nuisance parameters
-        self._nuisance_names = []  # names of all nuisance parameters accounting for correlated errors
-
-        self._nexus.add_function(lambda: self.poi_values, func_name='poi_values')
-        self._nexus.add_function(lambda: self.parameter_values, func_name='parameter_values')
-        self._nexus.add_function(lambda: self.parameter_constraints, func_name='parameter_constraints')
-
-        # add the original function name as an alias to 'model'
-        try:
-            self._nexus.add_alias(self._model_function.name, alias_for='model')
-        except NexusError:
-            pass  # allow 'model' as function name for model
+        super(HistFit, self)._init_nexus()
 
         self._nexus.add_function(
             collect,
@@ -186,18 +75,6 @@ class HistFit(FitBase):
         # -- initialize nuisance parameters
 
         # TODO: implement nuisance parameters for histograms
-
-        # the cost function (the function to be minimized)
-        _cost_node = self._nexus.add_function(
-            self._cost_function,
-            func_name=self._cost_function.name,
-            par_names=self._cost_function.arg_names
-        )
-
-        _cost_alias = self._nexus.add_alias('cost', alias_for=self._cost_function.name)
-
-        self._nexus.add_dependency('poi_values', depends_on=self._poi_names)
-        self._nexus.add_dependency('parameter_values', depends_on=self._fit_param_names)
 
         self._nexus.add_dependency(
             'model',
@@ -235,33 +112,12 @@ class HistFit(FitBase):
 
     def _set_new_parametric_model(self):
         # create the child ParametricModel object
-        self._param_model = self._new_parametric_model(
+        self._param_model = HistParametricModel(
             self._data_container.size, self._data_container.bin_range, self._model_function,
             self.parameter_values, self._data_container.bin_edges,
             bin_evaluation=self._bin_evaluation)
-        self._param_model._on_error_change_callbacks = [self._on_error_change]
 
     # -- public properties
-
-    @FitBase.data.getter
-    def data(self):
-        """array of measurement values"""
-        return self._data_container.data
-
-    @property
-    def data_error(self):
-        """array of pointwise data uncertainties"""
-        return self._data_container.err
-
-    @property
-    def data_cov_mat(self):
-        """the data covariance matrix"""
-        return self._data_container.cov_mat
-
-    @property
-    def data_cov_mat_inverse(self):
-        """inverse of the data covariance matrix (or ``None`` if singular)"""
-        return self._data_container.cov_mat_inverse
 
     @property
     def model(self):
@@ -269,38 +125,7 @@ class HistFit(FitBase):
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         return self._param_model.data * self._data_container.n_entries  # NOTE: model is just a density->scale up
 
-    @property
-    def model_error(self):
-        """array of pointwise model uncertainties"""
-        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
-        return self._param_model.err  # FIXME: how to handle scaling
-
-    @property
-    def model_cov_mat(self):
-        """the model covariance matrix"""
-        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
-        return self._param_model.cov_mat
-
-    @property
-    def model_cov_mat_inverse(self):
-        """inverse of the model covariance matrix (or ``None`` if singular)"""
-        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
-        return self._param_model.cov_mat_inverse
-
-    @property
-    def total_error(self):
-        """array of pointwise total uncertainties"""
-        return add_in_quadrature(self.data_error, self.model_error)
-
-    @property
-    def total_cov_mat(self):
-        """the total covariance matrix"""
-        return self.data_cov_mat + self.model_cov_mat
-
-    @property
-    def total_cov_mat_inverse(self):
-        """inverse of the total covariance matrix (or ``None`` if singular)"""
-        return invert_matrix(self.total_cov_mat)
+    # FIXME: how to handle scaling of model_error
 
     # -- public methods
 

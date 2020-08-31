@@ -10,9 +10,12 @@ import six
 from .container import DataContainerBase, DataContainerException
 from ..io.file import FileIOMixin
 from ...config import kc
-from ...core import NexusFitter
+from ...core.fitters.nexus import Nexus, NexusError, Parameter
+from ...core.fitters.nexus_fitter import NexusFitter
 from ...core.constraint import GaussianMatrixParameterConstraint, GaussianSimpleParameterConstraint
 from ...tools import print_dict_as_table
+from .._base.cost import CostFunction, STRING_TO_COST_FUNCTION
+from ..util import invert_matrix, add_in_quadrature
 
 __all__ = ["FitBase", "FitException"]
 
@@ -30,12 +33,16 @@ class FitBase(FileIOMixin, object):
 
     CONTAINER_TYPE = DataContainerBase
     MODEL_TYPE = None
+    MODEL_FUNCTION_TYPE = None
     PLOT_ADAPTER_TYPE = None
     EXCEPTION_TYPE = FitException
     RESERVED_NODE_NAMES = None
     _BASIC_ERROR_NAMES = {}
+    _STRING_TO_COST_FUNCTION = STRING_TO_COST_FUNCTION
+    _AXES = (None,)  # axes for which to for example create data nexus nodes
+    _MODEL_NAME = "model"
 
-    def __init__(self, minimizer=None, minimizer_kwargs=None):
+    def __init__(self, data, model_function, cost_function, minimizer=None, minimizer_kwargs=None):
         """This is a purely abstract class implementing the minimal interface required by all
         types of fits.
 
@@ -49,15 +56,62 @@ class FitBase(FileIOMixin, object):
         self._param_model = None
         self._nexus = None
         self._fitter = None
-        self._fit_param_names = None
+        self._fit_param_names = []  # names of all fit parameters (incl. nuisance parameters)
+        self._poi_names = []  # names of the parameters of interest (i.e. the model parameters)
         self._fit_param_constraints = []
-        self._model_function = None
-        self._cost_function = None
         self._loaded_result_dict = None  # contains potential fit results from a file or multifit
+        self._nuisance_names = dict()
 
         # save minimizer, minimizer_kwargs for serialization
         self._minimizer = minimizer
         self._minimizer_kwargs = minimizer_kwargs
+
+        # set/construct the model function object
+        if self.MODEL_FUNCTION_TYPE is None:
+            if model_function is not None:
+                raise ValueError(
+                    "Model function must be None if subclass does not define MODEL_FUNCTION_TYPE.")
+            self._model_function = model_function
+        else:
+            if isinstance(model_function, self.MODEL_FUNCTION_TYPE):
+                self._model_function = model_function
+            else:
+                self._model_function = self.MODEL_FUNCTION_TYPE(model_function)
+
+            # Disallow using reserved keywords as model function arguments:
+            if not self.RESERVED_NODE_NAMES.isdisjoint(
+                    set(self._model_function.signature.parameters)):
+                _invalid_args = self.RESERVED_NODE_NAMES.intersection(
+                    set(self._model_function.signature.parameters))
+                raise self.__class__.EXCEPTION_TYPE(
+                    "The following names are reserved and cannot be used as model function arguments: %r"
+                    % (_invalid_args,))
+
+        # set and validate the cost function
+        if isinstance(cost_function, CostFunction):
+            self._cost_function = cost_function
+        elif isinstance(cost_function, str):
+            try:
+                _cost_function_class, _kwargs = self._STRING_TO_COST_FUNCTION[cost_function]
+            except KeyError:
+                raise ValueError('Unknown cost function: %s' % cost_function)
+            self._cost_function = _cost_function_class(**_kwargs)
+        elif cost_function is not None:
+            self._cost_function = CostFunction(cost_function)
+            # self._validate_cost_function_raise()
+            # TODO: validate user-defined cost function? how?
+        else:
+            self._cost_function = None
+
+        # initialize the Nexus
+        self._init_nexus()
+
+        # initialize the Fitter
+        self._initialize_fitter()
+
+        # set the data after the cost_function has been set and nexus has been initialized
+        if data is not None:
+            self.data = data
 
     # -- private methods
 
@@ -77,34 +131,107 @@ class FitBase(FileIOMixin, object):
     def _get_object_type_name(cls):
         return 'fit'
 
-    def _new_data_container(self, *args, **kwargs):
-        """create a DataContainer of the right type for this fit"""
-        return self.__class__.CONTAINER_TYPE(*args, **kwargs)
-
-    def _new_parametric_model(self, *args, **kwargs):
-        """create a ParametricModel of the right type for this fit"""
-        return self.__class__.MODEL_TYPE(*args, **kwargs)
-
-    def _new_plot_adapter(self, *args, **kwargs):
-        """create a PlotAdapter of the right type for this fit"""
-        if self.__class__.PLOT_ADAPTER_TYPE is None:
-            raise NotImplementedError(
-                "No `PlotAdapter` configured for fit type '{}'!".format(
-                    self.__class__.__name__
-                ))
-        return self.__class__.PLOT_ADAPTER_TYPE(self, *args, **kwargs)
-
-    def _validate_model_function_for_fit_raise(self):
-        """make sure the supplied model function is compatible with the fit type"""
-        # disallow using reserved keywords as model function arguments
-        if not self.RESERVED_NODE_NAMES.isdisjoint(set(self._model_function.signature.parameters)):
-            _invalid_args = self.RESERVED_NODE_NAMES.intersection(set(self._model_function.signature.parameters))
-            raise self.__class__.EXCEPTION_TYPE(
-                "The following names are reserved and cannot be used as model function arguments: %r"
-                % (_invalid_args,))
-
     def _init_nexus(self):
-        pass
+        self._nexus = Nexus()
+
+        # -- fit parameters
+
+        # get names and default values of all parameters if the fit has a model function
+        if self._model_function is not None:
+            for _par_name, _par_value in six.iteritems(self._model_function.defaults_dict):
+                # create nexus node for function parameter
+                self._nexus.add(Parameter(_par_value, name=_par_name))
+
+                self._fit_param_names.append(_par_name)
+                self._poi_names.append(_par_name)
+
+            self._poi_names = tuple(self._poi_names)
+
+        self._nexus.add_function(lambda: self.poi_values, func_name='poi_values')
+        self._nexus.add_function(lambda: self.parameter_values, func_name='parameter_values')
+        self._nexus.add_function(lambda: self.parameter_constraints,
+                                 func_name='parameter_constraints')
+        self._nexus.add_dependency('poi_values', depends_on=self._poi_names)
+        self._nexus.add_dependency('parameter_values', depends_on=self._fit_param_names)
+
+        # -- errors
+
+        for _axis in self._AXES:
+            for _type in ("model", "data"):
+                # add data and model for axis
+                _name = '_'.join((_axis, _type)) if _axis is not None else _type
+                self._add_property_to_nexus(_name)
+                # add errors for axis
+                _error_name = '_'.join((_axis, _type, 'error')) if _axis is not None \
+                    else '_'.join((_type, 'error'))
+                self._add_property_to_nexus(_error_name)
+
+                # add cov mats for axis
+                for _prop in ('cov_mat', 'uncor_cov_mat'):
+                    _total_mat_name = '_'.join((_axis, _type, _prop)) if _axis is not None \
+                        else '_'.join((_type, _prop))
+                    self._add_property_to_nexus(_total_mat_name)
+                    # add inverse
+                    self._nexus.add_function(
+                        invert_matrix,
+                        func_name='_'.join((_total_mat_name, 'inverse')),
+                        par_names=(_total_mat_name,)
+                    )
+
+            # 'total_error', i.e. data + model error in quadrature
+            _total_err_name = '_'.join((_axis, 'total_error')) if _axis is not None \
+                else "total_error"
+            _data_err_name = '_'.join((_axis, 'data_error')) if _axis is not None \
+                else "data_error"
+            _model_err_name = '_'.join((_axis, 'model_error')) if _axis is not None \
+                else "model_error"
+            self._nexus.add_function(
+                add_in_quadrature,
+                func_name=_total_err_name,
+                par_names=(_data_err_name, _model_err_name)
+            )
+
+            # 'total_cov_mat', i.e. data + model cov mats
+            for _mat in ('cov_mat', 'uncor_cov_mat'):
+                _data_mat_name = '_'.join((_axis, 'data', _mat)) if _axis is not None \
+                    else '_'.join(('data', _mat))
+                _model_mat_name = '_'.join((_axis, 'model', _mat)) if _axis is not None \
+                    else '_'.join(('model', _mat))
+                _node = (
+                    self._nexus.get(_data_mat_name) + self._nexus.get(_model_mat_name)
+                )
+                _total_mat_name = '_'.join((_axis, 'total', _mat)) if _axis is not None \
+                    else '_'.join(('total', _mat))
+                _node.name = _total_mat_name
+                self._nexus.add(_node)
+
+                # add inverse
+                self._nexus.add_function(
+                    invert_matrix,
+                    func_name='_'.join((_node.name, 'inverse')),
+                    par_names=(_node.name,),
+                )
+
+            # -- nuisance parameters
+
+            self._nuisance_names[_axis] = []
+
+        if self._model_function is not None:
+            # add the original function name as an alias to 'model'
+            try:
+                self._nexus.add_alias(self._model_function.name, alias_for=self._MODEL_NAME)
+            except NexusError:
+                pass  # allow 'model' as function name for model
+
+        if self._cost_function is not None:
+            # the cost function (the function to be minimized)
+            _cost_node = self._nexus.add_function(
+                self._cost_function,
+                par_names=self._cost_function.arg_names,
+                func_name=self._cost_function.name,
+            )
+
+            _cost_alias = self._nexus.add_alias('cost', alias_for=self._cost_function.name)
 
     def _initialize_fitter(self):
         self._fitter = NexusFitter(nexus=self._nexus,
@@ -112,27 +239,6 @@ class FitBase(FileIOMixin, object):
                                    parameter_to_minimize=self._cost_function.name,
                                    minimizer=self._minimizer,
                                    minimizer_kwargs=self._minimizer_kwargs)
-
-    @staticmethod
-    def _get_default_values(model_function=None, x_name=None):
-        """Gets the default values for all independent parameter names. If no default is present in the function
-            definition, the default from the kafe2 config is loaded.
-        :param model_function: model function handle
-        :param str x_name: name of the independent parameter
-        :return: Ordered dict with default values for fit parameters.
-        :rtype: OrderedDict[str, float]
-        """
-        _nexus_new_dict = OrderedDict()
-        for _par in model_function.signature.parameters.values():
-            # skip independent variable parameter
-            if _par.name == x_name:
-                continue
-            if _par.default == _par.empty:
-                _nexus_new_dict[_par.name] = kc('core', 'default_initial_parameter_value')
-            else:
-                _nexus_new_dict[_par.name] = _par.default
-
-        return _nexus_new_dict
 
     @abc.abstractmethod
     def _set_new_data(self, new_data):
@@ -263,13 +369,9 @@ class FitBase(FileIOMixin, object):
     # -- public properties
 
     @property
-    @abc.abstractmethod
     def data(self):
-        """The data used in this fit.
-
-        :rtype: numpy.ndarray
-        """
-        pass
+        """array of measurement values"""
+        return self._data_container.data
 
     @data.setter
     def data(self, new_data):
@@ -279,9 +381,41 @@ class FitBase(FileIOMixin, object):
         if not _data_and_cost_compatible:
             raise self.EXCEPTION_TYPE('Fit data and cost function are not compatible: %s' % _reason)
         self._set_new_parametric_model()
+        self._param_model._on_error_change_callbacks = [self._on_error_change]
         # TODO: check where to update this (set/release/etc.)
         # FIXME: nicer way than len()?
         self._cost_function.ndf = self._data_container.size - len(self._param_model.parameters)
+
+    @property
+    def data_error(self):
+        """array of pointwise data uncertainties"""
+        return self._data_container.err
+
+    @property
+    def data_cov_mat(self):
+        """the data covariance matrix"""
+        return self._data_container.cov_mat
+
+    @property
+    def data_cov_mat_inverse(self):
+        """inverse of the data covariance matrix (or ``None`` if singular)"""
+        return self._data_container.cov_mat_inverse
+
+    @property
+    def data_cor_mat(self):
+        """the data correlation matrix"""
+        return self._data_container.cor_mat
+
+    @property
+    def data_uncor_cov_mat(self):
+        """uncorrelated part of the data *y* covariance matrix (or ``None`` if singular)"""
+        return self._data_container.uncor_cov_mat
+
+    @property
+    def data_uncor_cov_mat_inverse(self):
+        """inverse of the uncorrelated part of the data *y* covariance matrix (or ``None`` if
+        singular)"""
+        return self._data_container.uncor_cov_mat_inverse
 
     @property
     def data_container(self):
@@ -296,32 +430,57 @@ class FitBase(FileIOMixin, object):
     def model(self):
         pass
 
-    # @abc.abstractproperty
-    # def data_error(self): pass
+    @property
+    def model_error(self):
+        """array of pointwise model uncertainties"""
+        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
+        return self._param_model.err
 
-    # @abc.abstractproperty
-    # def data_cov_mat(self): pass
-    #
-    # @abc.abstractproperty
-    # def data_cov_mat_inverse(self): pass
-    #
-    # @abc.abstractproperty
-    # def model_error(self): pass
-    #
-    # @abc.abstractproperty
-    # def model_cov_mat(self): pass
-    #
-    # @abc.abstractproperty
-    # def model_cov_mat_inverse(self): pass
-    #
-    # @abc.abstractproperty
-    # def total_error(self): pass
-    #
-    # @abc.abstractproperty
-    # def total_cov_mat(self): pass
-    #
-    # @abc.abstractproperty
-    # def total_cov_mat_inverse(self): pass
+    @property
+    def model_cov_mat(self):
+        """the model covariance matrix"""
+        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
+        return self._param_model.cov_mat
+
+    @property
+    def model_cov_mat_inverse(self):
+        """inverse of the model covariance matrix (or ``None`` if singular)"""
+        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
+        return self._param_model.cov_mat_inverse
+
+    @property
+    def model_cor_mat(self):
+        """the model correlation matrix"""
+        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
+        return self._param_model.cor_mat
+
+    @property
+    def model_uncor_cov_mat(self):
+        """the model *x* uncorrelated covariance matrix"""
+        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
+        return self._param_model.uncor_cov_mat
+
+    @property
+    def model_uncor_cov_mat_inverse(self):
+        """inverse of the uncorrelated part the model *y* covariance matrix (or ``None``
+        if singular)"""
+        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
+        return self._param_model.uncor_cov_mat_inverse
+
+    @property
+    def total_error(self):
+        """array of pointwise total uncertainties"""
+        return add_in_quadrature(self.data_error, self.model_error)
+
+    @property
+    def total_cov_mat(self):
+        """the total covariance matrix"""
+        return self.data_cov_mat + self.model_cov_mat
+
+    @property
+    def total_cov_mat_inverse(self):
+        """inverse of the total covariance matrix (or ``None`` if singular)"""
+        return invert_matrix(self.total_cov_mat)
 
     @property
     def model_function(self):

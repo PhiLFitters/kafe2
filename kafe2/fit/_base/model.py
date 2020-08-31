@@ -2,11 +2,12 @@ import abc
 import inspect
 import numpy as np
 import six
+from collections import OrderedDict
 
 from .format import ParameterFormatter, ModelFunctionFormatter
 from ..io.file import FileIOMixin
-from inspect import ArgSpec
 from ..util import function_library
+from ...config import kc
 
 
 if six.PY2:
@@ -228,13 +229,8 @@ class ModelFunctionBase(FileIOMixin, object):
 
     @property
     def defaults(self):
-        """The default values for model function parameters"""
-
-        # fill up unspecified defaults with 1.0
-        return tuple([
-            _par.default if _par.default != _par.empty else 1.0
-            for _par in list(self.signature.parameters.values())[self.argcount-self.parcount:]
-        ])
+        """The default values for model function parameters as a list"""
+        return list(self.defaults_dict.values())
 
     @defaults.setter
     def defaults(self, new_defaults):
@@ -256,6 +252,22 @@ class ModelFunctionBase(FileIOMixin, object):
                 for _par, _par_default in zip(self.signature.parameters.values(), new_defaults)
             ]
         )
+
+    @property
+    def defaults_dict(self):
+        """The default values for model function parameters as a dict"""
+        _defaults_dict = OrderedDict()
+        _x_name = self.x_name  # Actually a list of strings that are used as independent variables
+        for _par in self.signature.parameters.values():
+            # skip independent variable parameter
+            if _x_name is not None and _par.name in _x_name:
+                continue
+            if _par.default == _par.empty:
+                _defaults_dict[_par.name] = kc('core', 'default_initial_parameter_value')
+            else:
+                _defaults_dict[_par.name] = _par.default
+
+        return _defaults_dict
 
     @property
     def source_code(self):

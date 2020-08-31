@@ -6,8 +6,8 @@ from copy import copy
 import numpy as np
 
 from .cost import SharedCostFunction, MultiCostFunction
-from .._base import FitBase, CostFunction_Chi2
-from ...core import Nexus, NexusFitter
+from .._base import FitBase
+from ...core import NexusFitter
 from ...core.error import SimpleGaussianError, MatrixGaussianError
 from ...core.fitters.nexus import Alias, Function, Array
 from ...tools import random_alphanumeric
@@ -22,6 +22,8 @@ class MultiFit(FitBase):
     Parameters with the same name will be unified: their value will be the same across all individual fits.
     """
 
+    _AXES = ()
+
     def __init__(self, fit_list, minimizer=None, minimizer_kwargs=None):
         """
         :param fit_list: List or Iterable of the individual fits from which to create the MultiFit.
@@ -34,14 +36,13 @@ class MultiFit(FitBase):
 
         :raises TypeError: If **fit_list** is not iterable.
         """
-        super(MultiFit, self).__init__(minimizer=minimizer, minimizer_kwargs=minimizer_kwargs)
         # Cast Iterable to List, so that indexing works. Indexing is needed for some methods.
         self._fits = list(fit_list)  # will raise TypeError if fit_list is not iterable
-
         self._shared_error_dicts = dict()
         self._min_x_error = None
-        self._init_nexus()
-        self._initialize_fitter()
+        super(MultiFit, self).__init__(
+            data=None, model_function=None, cost_function=None, minimizer=minimizer,
+            minimizer_kwargs=minimizer_kwargs)
 
     # -- private methods
 
@@ -101,9 +102,8 @@ class MultiFit(FitBase):
         self._update_parameter_formatters()
 
     def _init_nexus(self):
-        self._nexus = Nexus()
-        self._nexus.add_function(
-            lambda: self.parameter_constraints, func_name='parameter_constraints')
+        super(MultiFit, self)._init_nexus()
+
         self._combined_parameter_node_dict = OrderedDict()
         for _i, _fit_i in enumerate(self._fits):
             _original_cost_i = _fit_i._nexus.get('cost')
@@ -118,7 +118,9 @@ class MultiFit(FitBase):
                 if _par_node.name in _fit.poi_names:
                     _fit._nexus.add(node=_par_node, existing_behavior='replace')
         self._nexus.add(
-            Array(nodes=self._combined_parameter_node_dict.values(), name='parameter_values'))
+            Array(nodes=self._combined_parameter_node_dict.values(), name='parameter_values'),
+            existing_behavior="replace"
+        )
 
         self._y_data_names = []
         for _i, _fit_i in enumerate(self._fits):

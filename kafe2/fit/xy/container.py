@@ -78,22 +78,6 @@ class XYContainer(IndexedContainer):
         """recalculate total errors next time they are needed"""
         self._total_error = None
 
-    def _calculate_uncor_error_cov_mat(self, axis):
-        #calculate y uncorrelated covariance matrix
-        _sz = self.size
-        _tmp_uncor_cov_mat = np.zeros((_sz, _sz))
-        for _err_dict in self._error_dicts.values():
-            if not _err_dict['enabled']:
-                continue
-            if not _err_dict['axis'] == axis:
-                continue
-            _err = _err_dict["err"]
-            if isinstance(_err, MatrixGaussianError):
-                _tmp_uncor_cov_mat+=_err.cov_mat
-            else:
-                _tmp_uncor_cov_mat+=_err.cov_mat_uncor
-        return np.array(_tmp_uncor_cov_mat)
-
     def _calculate_y_nuisance_cor_design_matrix(self):
         """calculate the design matrix containing the correlated parts of all y uncertainties"""
 
@@ -253,7 +237,7 @@ class XYContainer(IndexedContainer):
     @property
     def y_uncor_cov_mat(self):
         # y uncorrelated covariance matrix
-        _y_uncor_cov_mat = self._calculate_uncor_error_cov_mat(axis=1)
+        _y_uncor_cov_mat = self._calculate_uncor_error_cov_mat(filters={"axis": 1})
         return _y_uncor_cov_mat
 
     @property
@@ -270,7 +254,7 @@ class XYContainer(IndexedContainer):
     @property
     def x_uncor_cov_mat(self):
         # x uncorrelated covariance matrix
-        _x_uncor_cov_mat = self._calculate_uncor_error_cov_mat(axis=0)
+        _x_uncor_cov_mat = self._calculate_uncor_error_cov_mat(filters={"axis": 0})
         return _x_uncor_cov_mat
 
     @property

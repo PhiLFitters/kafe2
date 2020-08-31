@@ -638,7 +638,7 @@ class Plot(object):
             self._plot_adapters = []
             for _fit in self._fits:
                 self._plot_adapters.append(
-                    _fit._new_plot_adapter()
+                    _fit.PLOT_ADAPTER_TYPE(_fit)
                 )
 
         return [self._plot_adapters[_idx] for _idx in plot_indices]
