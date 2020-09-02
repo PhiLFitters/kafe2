@@ -745,8 +745,7 @@ dataset:
          0.2081663284234683, -1.1066854012184062, 0.4121145273973152, 1.948498429389019, 1.4469448685636854,
          0.07981317629602669, 1.411704446184254, -0.4610151277847929, 0.9477286127925121, 0.08899785814182719]
 fixed_parameters:
-- - mu
-  - 0.1
+    mu: 0.1
 parametric_model:
     model_function:
         python_code: |
@@ -791,8 +790,7 @@ data: [1.0130614498386674, -1.1349287030839197, -0.10341784343652169, -1.3907686
 
 TEST_FIT_UNBINNED_MISSING_KEYWORD = """
 fixed_parameters:
-- - mu
-  - 0.1
+    mu: 0.1
 parametric_model:
     python_code: |
         def normal_distribution_pdf(x, mu, sigma):

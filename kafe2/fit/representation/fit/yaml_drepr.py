@@ -88,9 +88,8 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
 
         _yaml_doc['parameter_constraints'] = [ConstraintYamlWriter._make_representation(_parameter_constraint)
                                               for _parameter_constraint in fit.parameter_constraints]
-        _yaml_doc['fixed_parameters'] = [[_par, _val] for _par, _val in fit._fitter.fixed_parameters.items()]
-        _yaml_doc['limited_parameters'] = [[_par, list(_limits)] for _par, _limits in
-                                           fit._fitter.limited_parameters.items()]
+        _yaml_doc['fixed_parameters'] = fit._fitter.fixed_parameters
+        _yaml_doc['limited_parameters'] = fit._fitter.limited_parameters
 
         _fit_results = fit.get_result_dict()
         _fit_results['parameter_values'] = list(map(float, fit.parameter_values))
@@ -233,12 +232,12 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
 
         _fixed_par_list = yaml_doc.pop('fixed_parameters', None)
         if _fixed_par_list is not None:
-            for _par, _val in _fixed_par_list:
+            for _par, _val in _fixed_par_list.items():
                 _fit_object.fix_parameter(_par, _val)
 
         _limited_par_list = yaml_doc.pop('limited_parameters', None)
         if _limited_par_list is not None:
-            for _par, _limits in _limited_par_list:
+            for _par, _limits in _limited_par_list.items():
                 _low, _high = _limits
                 _fit_object.limit_parameter(_par, _low, _high)
 
