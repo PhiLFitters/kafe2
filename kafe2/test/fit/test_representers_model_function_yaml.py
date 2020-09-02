@@ -29,12 +29,9 @@ model_function_formatter:
     name: linear_model
     latex_name: linear model
     arg_formatters:
-      - name: x
-        latex_name: r
-      - name: alpha
-        latex_name: \alpha
-      - name: beta
-        latex_name: \beta
+      x: r
+      alpha: \alpha
+      beta: \beta
     expression_string: '{0} * {x} + {1}'
     latex_expression_string: '{0}{x} + {1}' 
 """
@@ -52,7 +49,7 @@ class TestHistModelFunctionYamlRepresenter(unittest.TestCase):
         self._test_y = self.linear_model(self._test_x, self._test_a, self._test_b)
         
         self._model_function = HistModelFunction(self.linear_model)
-        
+
         self._roundtrip_stringstream = IOStreamHandle(StringIO())
         self._testfile_stringstream = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_HIST))
         self._testfile_stringstream_with_formatter = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_HIST_WITH_FORMATTER))
@@ -166,10 +163,8 @@ model_function_formatter:
     index_name: r
     latex_index_name: r
     arg_formatters:
-      - name: alpha
-        latex_name: \alpha
-      - name: beta
-        latex_name: \beta
+      alpha: \alpha
+      beta: \beta
     expression_string: '{0} * {r} + {1}'
     latex_expression_string: '{0}{r} + {1}' 
 """
@@ -302,12 +297,9 @@ model_function_formatter:
     name: linear_model
     latex_name: linear model
     arg_formatters:
-      - name: x
-        latex_name: r
-      - name: alpha
-        latex_name: \alpha
-      - name: beta
-        latex_name: \beta
+      x: r
+      alpha: \alpha
+      beta: \beta
     expression_string: '{0} * {x} + {1}'
     latex_expression_string: '{0}{x} + {1}' 
 """

@@ -107,9 +107,9 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
 
     @classmethod
     def _get_subspace_override_dict(cls, model_function_class):
-        _override_dict = {'arg_formatters': 'model_function_formatter',
-                          'model_function_name': 'model_function_formatter',
-                          'latex_model_function_name': 'model_function_formatter',
+        _override_dict = {'name': 'model_function_formatter',
+                          'latex_name': 'model_function_formatter',
+                          'arg_formatters': 'model_function_formatter',
                           'expression_string': 'model_function_formatter',
                           'latex_expression_string': 'model_function_formatter'}
         if model_function_class is IndexedModelFunction:

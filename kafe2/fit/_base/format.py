@@ -29,7 +29,7 @@ class FormatterException(Exception):
     pass
 
 
-class ParameterFormatter(FileIOMixin, object):
+class ParameterFormatter(object):
     """Formatter class for model parameter objects.
 
     These objects store the relevant information for constructing plain-text and/or LaTeX string representations of
