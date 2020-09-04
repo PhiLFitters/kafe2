@@ -1,22 +1,22 @@
-from .._base import DReprError
-from .._yaml_base import YamlWriterMixin, YamlReaderMixin
 from ._base import ModelFunctionFormatterDReprBase, ParameterFormatterDReprBase
 from .. import _AVAILABLE_REPRESENTATIONS
+from .._base import DReprError
+from .._yaml_base import YamlReaderException, YamlWriterException
+from .._yaml_base import YamlWriterMixin, YamlReaderMixin
 from ..._base import ParameterFormatter, ModelFunctionFormatter
 from ...indexed import IndexedModelFunctionFormatter
-from .._yaml_base import YamlReaderException, YamlWriterException
 
 __all__ = ["ModelFunctionFormatterYamlWriter", "ModelFunctionFormatterYamlReader",
            "ParameterFormatterYamlWriter", "ParameterFormatterYamlReader"]
 
 
 class ModelFunctionFormatterYamlWriter(YamlWriterMixin, ModelFunctionFormatterDReprBase):
-    
+
     def __init__(self, model_function_formatter, output_io_handle):
         super(ModelFunctionFormatterYamlWriter, self).__init__(
             output_io_handle=output_io_handle,
             model_function_formatter=model_function_formatter)
-    
+
     @classmethod
     def _make_representation(cls, model_function_formatter):
         """Create a representation of a :py:obj:`ModelFunctionFormatter` object as a dictionary.
@@ -28,7 +28,7 @@ class ModelFunctionFormatterYamlWriter(YamlWriterMixin, ModelFunctionFormatterDR
         """
         _yaml_doc = dict()
         _class = model_function_formatter.__class__
-        
+
         _type = cls._CLASS_TO_OBJECT_TYPE_NAME.get(_class, None)
         if _type is None:
             raise DReprError("Model function formatter unknown or not supported: %s" % _class)
@@ -48,9 +48,8 @@ class ModelFunctionFormatterYamlWriter(YamlWriterMixin, ModelFunctionFormatterDR
         _yaml_doc['latex_expression_string'] = \
             model_function_formatter.latex_expression_format_string
 
-        # TODO should there be a property for _arg_formatters?
         _arg_formatters_dict = dict()
-        for _arg_formatter in model_function_formatter._arg_formatters:
+        for _arg_formatter in model_function_formatter.arg_formatters:
             _arg_formatters_dict[_arg_formatter.name] = _arg_formatter.latex_name
         _yaml_doc['arg_formatters'] = _arg_formatters_dict
 
@@ -58,12 +57,12 @@ class ModelFunctionFormatterYamlWriter(YamlWriterMixin, ModelFunctionFormatterDR
         # know the correct order of the arguments. This is because writing and then reading a yaml
         # file in Py2 will change the order of a dict or OrderedDict. This is not necessary for Py3!
         _yaml_doc['signature'] = [_arg_formatter.name for _arg_formatter in
-                                  model_function_formatter._arg_formatters]
+                                  model_function_formatter.arg_formatters]
         return _yaml_doc
 
 
 class ModelFunctionFormatterYamlReader(YamlReaderMixin, ModelFunctionFormatterDReprBase):
-    
+
     def __init__(self, input_io_handle):
         super(ModelFunctionFormatterYamlReader, self).__init__(
             input_io_handle=input_io_handle,
@@ -106,7 +105,7 @@ class ModelFunctionFormatterYamlReader(YamlReaderMixin, ModelFunctionFormatterDR
         _constructor_kwargs['arg_formatters'] = _arg_formatters
 
         _model_function_formatter_object = _class(**_constructor_kwargs)
-        
+
         return _model_function_formatter_object, yaml_doc
 
 
