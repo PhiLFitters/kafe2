@@ -111,7 +111,8 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
                           'latex_name': 'model_function_formatter',
                           'arg_formatters': 'model_function_formatter',
                           'expression_string': 'model_function_formatter',
-                          'latex_expression_string': 'model_function_formatter'}
+                          'latex_expression_string': 'model_function_formatter',
+                          'signature': 'model_function_formatter'}
         if model_function_class is IndexedModelFunction:
             _override_dict['index_name'] = 'model_function_formatter'
             _override_dict['latex_index_name'] = 'model_function_formatter'
@@ -152,6 +153,9 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
         # TODO: only overwrite given arguments, use defaults if one arg is not specified
         _model_function_formatter_yaml = yaml_doc.pop('model_function_formatter', None)
         if _model_function_formatter_yaml:
+            _model_function_formatter_yaml.update(
+                {'signature': _model_function_object.signature.parameters}
+            )
             _model_function_object._formatter = ModelFunctionFormatterYamlReader._make_object(
                 _model_function_formatter_yaml)
         

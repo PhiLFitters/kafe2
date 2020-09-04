@@ -121,8 +121,8 @@ class CostFunction(FileIOMixin, object):
         self._arg_count = len(self._arg_names)
         self._formatter = CostFunctionFormatter(
             name=self.name,
-            arg_formatters=[ParameterFormatter(name=_pn, value=0, error=None)
-                            for _pn in self._arg_names])
+            arg_formatters=[ParameterFormatter(_arg_name, value=0, error=None)
+                            for _arg_name in self._arg_names])
 
         self._add_constraint_cost = add_constraint_cost
         if self._add_constraint_cost:

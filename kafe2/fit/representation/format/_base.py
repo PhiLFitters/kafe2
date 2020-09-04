@@ -6,7 +6,7 @@ from .._base import GenericDReprBase
 from ..._base.format import ModelFunctionFormatter
 from ...indexed import IndexedModelFunctionFormatter
 
-__all__ = ["ModelFunctionFormatterDReprBase"]
+__all__ = ["ModelFunctionFormatterDReprBase", "ParameterFormatterDReprBase"]
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -27,3 +27,12 @@ class ModelFunctionFormatterDReprBase(GenericDReprBase):
     def __init__(self, model_function_formatter=None):
         self._kafe_object = model_function_formatter
         super(ModelFunctionFormatterDReprBase, self).__init__()
+
+
+@six.add_metaclass(abc.ABCMeta)
+class ParameterFormatterDReprBase(GenericDReprBase):
+    BASE_OBJECT_TYPE_NAME = 'parameter_formatter'
+
+    def __init__(self, model_parameter_formatter=None):
+        self._kafe_object = model_parameter_formatter
+        super(ParameterFormatterDReprBase, self).__init__()

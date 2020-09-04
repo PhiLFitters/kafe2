@@ -30,8 +30,12 @@ model_function_formatter:
     latex_name: linear model
     arg_formatters:
       x: r
-      alpha: \alpha
-      beta: \beta
+      a:
+        name: alpha
+        latex_name: \alpha
+      b:
+        name: beta
+        latex_name: \beta
     expression_string: '{0} * {x} + {1}'
     latex_expression_string: '{0}{x} + {1}' 
 """
@@ -163,8 +167,12 @@ model_function_formatter:
     index_name: r
     latex_index_name: r
     arg_formatters:
-      alpha: \alpha
-      beta: \beta
+      a:
+        name: alpha
+        latex_name: \alpha
+      b:
+        name: beta
+        latex_name: \beta
     expression_string: '{0} * {r} + {1}'
     latex_expression_string: '{0}{r} + {1}' 
 """
@@ -298,8 +306,12 @@ model_function_formatter:
     latex_name: linear model
     arg_formatters:
       x: r
-      alpha: \alpha
-      beta: \beta
+      a:
+        name: alpha
+        latex_name: \alpha
+      b:
+        name: beta
+        latex_name: \beta
     expression_string: '{0} * {x} + {1}'
     latex_expression_string: '{0}{x} + {1}' 
 """

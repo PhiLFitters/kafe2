@@ -176,7 +176,7 @@ class ModelFunctionBase(FileIOMixin, object):
                                                  self._model_function_handle, self._independent_argcount))
 
     def _get_argument_formatters(self):
-        return [ParameterFormatter(name=_pn) for _pn in self.signature.parameters.keys()]
+        return [ParameterFormatter(_arg_name) for _arg_name in self.signature.parameters.keys()]
 
     def _assign_function_formatter(self):
         self._formatter = self.__class__.FORMATTER_TYPE(self.name, arg_formatters=self._get_argument_formatters())
