@@ -17,11 +17,11 @@ code {
 }
 
 code.descclassname {
-    padding-right: 0px !important;
+    padding-right: 0 !important;
 }
 
 code.descname {
-    padding-left: 0px !important;
+    padding-left: 0 !important;
 }
 
 pre {
