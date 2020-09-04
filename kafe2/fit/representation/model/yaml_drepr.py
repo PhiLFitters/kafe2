@@ -149,8 +149,7 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
             _model_function_object = _class(_parsed_function)
             _model_function_object._source_code = _raw_string
         
-        #construct model function formatter if specified
-        # TODO: only overwrite given arguments, use defaults if one arg is not specified
+        # construct model function formatter if specified
         _model_function_formatter_yaml = yaml_doc.pop('model_function_formatter', None)
         if _model_function_formatter_yaml:
             _model_function_formatter_yaml.update(

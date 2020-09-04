@@ -22,8 +22,9 @@ class ModelFunctionFormatterYamlWriter(YamlWriterMixin, ModelFunctionFormatterDR
         """Create a representation of a :py:obj:`ModelFunctionFormatter` object as a dictionary.
 
         :param model_function_formatter: The :py:obj:`ModelFunctionFormatter` object to represent.
-        :type model_function_formatter: ModelFunctionFormatter
-        :return: Dictionary containing all information about the :py:obj:`ModelFunctionFormatter` object.
+        :type model_function_formatter: ModelFunctionFormatter | IndexedModelFunctionFormatter
+        :return: Dictionary containing all information about the :py:obj:`ModelFunctionFormatter`
+            object.
         """
         _yaml_doc = dict()
         _class = model_function_formatter.__class__
@@ -32,7 +33,6 @@ class ModelFunctionFormatterYamlWriter(YamlWriterMixin, ModelFunctionFormatterDR
         if _type is None:
             raise DReprError("Model function formatter unknown or not supported: %s" % _class)
 
-        # TODO should there be properties for these calls?
         if _class is IndexedModelFunctionFormatter:
             _yaml_doc['index_name'] = model_function_formatter.index_name
             _yaml_doc['latex_index_name'] = model_function_formatter.latex_index_name
@@ -45,9 +45,10 @@ class ModelFunctionFormatterYamlWriter(YamlWriterMixin, ModelFunctionFormatterDR
         _yaml_doc['latex_name'] = model_function_formatter.latex_name
 
         _yaml_doc['expression_string'] = model_function_formatter.expression_format_string
-        _yaml_doc['latex_expression_string'] = model_function_formatter.latex_expression_format_string
+        _yaml_doc['latex_expression_string'] = \
+            model_function_formatter.latex_expression_format_string
 
-        #TODO should there be a property for _arg_formatters?
+        # TODO should there be a property for _arg_formatters?
         _arg_formatters_dict = dict()
         for _arg_formatter in model_function_formatter._arg_formatters:
             _arg_formatters_dict[_arg_formatter.name] = _arg_formatter.latex_name
@@ -74,7 +75,6 @@ class ModelFunctionFormatterYamlReader(YamlReaderMixin, ModelFunctionFormatterDR
 
     @classmethod
     def _get_required_keywords(cls, yaml_doc, formatter_class):
-        # 'signature' can be dropped when dropping support for Py2!
         return ['name', 'signature']
 
     @classmethod
