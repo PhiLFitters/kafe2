@@ -27,11 +27,16 @@ model are provided by matplotlib.
 
 While *kafe2* supports both Python 2 and Python 3, the use of Python 3 is recommended.
 
-**Note**
-
-*kafe2* is currently in a beta state. Most features are working as intended. However, bugs
-may occur during use. If you encounter any bugs or have an improvement proposal, please let us
+If you encounter any bugs or have an improvement proposal, please let us
 know by opening an issue `here <https://github.com/dsavoiu/kafe2/issues>`_.
 
 Documentation on how to get started, including installation instructions, can be found under
 `kafe2.readthedocs.io <https://kafe2.readthedocs.io/>`_.
+
+If you have the package installer for Python just run
+
+.. code-block:: bash
+
+    pip install kafe2
+
+to install the latest stable version and you're ready to go.

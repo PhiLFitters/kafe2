@@ -40,7 +40,7 @@ This document will gradually introduce the above steps via example code.
 Using kafe2go
 -------------
 Using *kafe2go* is the simplest way of performing a fit. Here all the necessary information and
-properties like data and uncertainties is specified in a *YAML* file (`.yml` file extension).
+properties like data and uncertainties are specified in a *YAML* file (`.yml` file extension).
 To perform the fit, simply run:
 
 .. code-block:: bash
