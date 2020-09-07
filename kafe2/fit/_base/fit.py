@@ -9,7 +9,6 @@ import six
 
 from .container import DataContainerBase, DataContainerException
 from ..io.file import FileIOMixin
-from ...config import kc
 from ...core.fitters.nexus import Nexus, NexusError, Parameter
 from ...core.fitters.nexus_fitter import NexusFitter
 from ...core.constraint import GaussianMatrixParameterConstraint, GaussianSimpleParameterConstraint
@@ -382,9 +381,6 @@ class FitBase(FileIOMixin, object):
             raise self.EXCEPTION_TYPE('Fit data and cost function are not compatible: %s' % _reason)
         self._set_new_parametric_model()
         self._param_model._on_error_change_callbacks = [self._on_error_change]
-        # TODO: check where to update this (set/release/etc.)
-        # FIXME: nicer way than len()?
-        self._cost_function.ndf = self._data_container.size - len(self._param_model.parameters)
 
     @property
     def data_error(self):
@@ -658,7 +654,7 @@ class FitBase(FileIOMixin, object):
 
         :rtype: int
         """
-        return self._cost_function.ndf + len(self._fitter.fixed_parameters)
+        return self._param_model.ndf + len(self._fitter.fixed_parameters)
 
     # -- public methods
 

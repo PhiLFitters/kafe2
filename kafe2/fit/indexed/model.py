@@ -1,17 +1,10 @@
 import numpy as np
-import six
 
 from scipy.misc import derivative
 
 from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException
 from .container import IndexedContainer, IndexedContainerException
 from .format import IndexedModelFunctionFormatter
-
-
-if six.PY2:
-    from funcsigs import signature, Signature, Parameter
-else:
-    from inspect import signature, Signature, Parameter
 
 
 __all__ = ["IndexedParametricModel", "IndexedModelFunction"]
@@ -40,6 +33,8 @@ class IndexedParametricModelException(IndexedContainerException):
 
 
 class IndexedParametricModel(ParametricModelBaseMixin, IndexedContainer):
+    MODEL_FUNCTION_TYPE = IndexedModelFunction
+
     def __init__(self, model_func, model_parameters, shape_like=None):
         """
         Construct an :py:obj:`IndexedParametricModel` object:

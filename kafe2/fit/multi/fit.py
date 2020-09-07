@@ -281,8 +281,6 @@ class MultiFit(FitBase):
             par_names=self._cost_function.arg_names,
             existing_behavior="replace"
         )
-        self._cost_function.ndf = self.data_size - len(
-            self._combined_parameter_node_dict.keys())
         self._nexus.add_alias(
             name='cost', alias_for=_cost_function_node.name, existing_behavior='replace')
 
@@ -469,6 +467,10 @@ class MultiFit(FitBase):
         _asymm_par_errs = super(MultiFit, self).asymmetric_parameter_errors
         self._update_singular_fits()
         return _asymm_par_errs
+
+    @property
+    def ndf(self):
+        return len(self._combined_parameter_node_dict.keys()) + len(self._fitter.fixed_parameters)
 
     # -- public methods
 

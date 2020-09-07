@@ -19,57 +19,6 @@ else:
 __all__ = ["ParametricModelBaseMixin", "ModelFunctionBase", "ModelFunctionException"]
 
 
-class ParametricModelBaseMixin(object):
-    """
-    A "mixin" class for representing a parametric model.
-    Inheriting from this class in addition to a data container class
-    additionally stores a Python function handle referring to the
-    model function. The argument structure of this function must
-    be compatible with the data container type and it must return
-    a numpy array of the same shape as the
-    :py:meth:`~kafe2.fit._base.DataContainerBase.data` property of
-    the data container.
-
-    This mixin class introduces an additional :py:func:`parameters` property for
-    the object, which can be used to obtain and set the values of the parameter
-
-    Derived classes should inherit from :py:class:`ParametricModelBaseMixin` and the
-    relevant data container (in that order).
-    """
-    def __init__(self, model_func, model_parameters, *args, **kwargs):
-        """
-        Mixin constructor: sets and initialized the model function.
-
-        :param model_func: handle of Python function (the model function)
-        :param model_parameters: iterable of parameter values with which the model function should be initialized
-        """
-        self._model_function_object = model_func
-        self.parameters = model_parameters
-        super(ParametricModelBaseMixin, self).__init__(*args, **kwargs)
-
-    @classmethod
-    def _get_base_class(cls):
-        return ParametricModelBaseMixin
-
-    @classmethod
-    def _get_object_type_name(cls):
-        return 'parametric_model'
-
-    @property
-    def parameters(self):
-        """Model parameter values"""
-        return self._model_parameters
-
-    @parameters.setter
-    def parameters(self, parameters):
-        """Setter for parameter values"""
-        self._model_parameters = parameters
-
-        # flag: recalculate the model values next time they are requested
-        self._pm_calculation_stale = True
-        self._clear_total_error_cache()  # declared in the container class
-
-
 class ModelFunctionException(Exception):
     pass
 
@@ -274,3 +223,64 @@ class ModelFunctionBase(FileIOMixin, object):
         if self._source_code is None:
             return inspect.getsource(self.func)
         return self._source_code
+
+
+class ParametricModelBaseMixin(object):
+    """
+    A "mixin" class for representing a parametric model.
+    Inheriting from this class in addition to a data container class
+    additionally stores a Python function handle referring to the
+    model function. The argument structure of this function must
+    be compatible with the data container type and it must return
+    a numpy array of the same shape as the
+    :py:meth:`~kafe2.fit._base.DataContainerBase.data` property of
+    the data container.
+
+    This mixin class introduces an additional :py:func:`parameters` property for
+    the object, which can be used to obtain and set the values of the parameter
+
+    Derived classes should inherit from :py:class:`ParametricModelBaseMixin` and the
+    relevant data container (in that order).
+    """
+    MODEL_FUNCTION_TYPE = ModelFunctionBase
+
+    def __init__(self, model_func, model_parameters, *args, **kwargs):
+        """
+        Mixin constructor: sets and initialized the model function.
+
+        :param model_func: handle of Python function (the model function)
+        :param model_parameters: iterable of parameter values with which the model function should be initialized
+        """
+        if isinstance(model_func, self.MODEL_FUNCTION_TYPE):
+            self._model_function_object = model_func
+        else:
+            self._model_function_object = self.MODEL_FUNCTION_TYPE(model_func)
+        self.parameters = model_parameters
+        super(ParametricModelBaseMixin, self).__init__(*args, **kwargs)
+
+    @classmethod
+    def _get_base_class(cls):
+        return ParametricModelBaseMixin
+
+    @classmethod
+    def _get_object_type_name(cls):
+        return 'parametric_model'
+
+    @property
+    def ndf(self):
+        return self.size - self._model_function_object.parcount
+
+    @property
+    def parameters(self):
+        """Model parameter values"""
+        return self._model_parameters
+
+    @parameters.setter
+    def parameters(self, parameters):
+        """Setter for parameter values"""
+        self._model_parameters = parameters
+
+        # flag: recalculate the model values next time they are requested
+        self._pm_calculation_stale = True
+        self._clear_total_error_cache()  # declared in the container class
+

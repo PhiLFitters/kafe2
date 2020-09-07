@@ -9,9 +9,9 @@ from ..util import function_library
 
 
 if six.PY2:
-    from funcsigs import signature, Signature, Parameter
+    from funcsigs import signature
 else:
-    from inspect import signature, Signature, Parameter
+    from inspect import signature
 
 
 __all__ = ["HistParametricModel", "HistModelFunction"]
@@ -40,6 +40,8 @@ class HistParametricModelException(HistContainerException):
 
 
 class HistParametricModel(ParametricModelBaseMixin, HistContainer):
+    MODEL_FUNCTION_TYPE = HistModelFunction
+
     #TODO n_bins, bin_range, bin_edges contain redundant information, should the arguments for HistParametricModel be refactored?
     def __init__(self, n_bins, bin_range,
                  model_density_func=function_library.normal_distribution_pdf,

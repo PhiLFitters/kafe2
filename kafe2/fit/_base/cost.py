@@ -129,7 +129,6 @@ class CostFunction(FileIOMixin, object):
             self._arg_names += ["parameter_values", "parameter_constraints"]
             self._arg_count += 2
 
-        self._ndf = None
         self._needs_errors = True
         self._is_chi2 = False
         self._no_errors_warning_printed = False
@@ -178,18 +177,6 @@ class CostFunction(FileIOMixin, object):
     def argument_formatters(self):
         """The :py:obj:`Formatter` objects for the function arguments"""
         return self._formatter.arg_formatters
-
-    @property
-    def ndf(self):
-        """The number of degrees of freedom of this cost function"""
-        return self._ndf
-
-    @ndf.setter
-    def ndf(self, new_ndf):
-        """The number of degrees of freedom of this cost function"""
-        assert new_ndf > 0  # ndf must be positive
-        assert new_ndf == int(new_ndf)  # ndf must be integer
-        self._ndf = int(new_ndf)
 
     @property
     def needs_errors(self):
