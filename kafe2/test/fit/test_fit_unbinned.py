@@ -61,16 +61,16 @@ class TestUnbinnedFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         # helper dict with all reference property values
         self._ref_prop_dict = dict(
-            parameter_values=self._ref_initial_pars,
-            poi_values=self._ref_initial_pars,
-
-            data=self._ref_data,
-            model=self._ref_initial_model,
-            cost_function_value=self._ref_initial_cost,
-            poi_names=('tau', 'fbg'),
             did_fit=False,
             model_count=1,
 
+            parameter_values=self._ref_initial_pars,
+            poi_values=self._ref_initial_pars,
+            poi_names=('tau', 'fbg'),
+            cost_function_value=self._ref_initial_cost,
+
+            data=self._ref_data,
+            model=self._ref_initial_model,
         )
 
     def _get_fit(self, model_density_function=None, cost_function=None):

@@ -103,15 +103,15 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         # helper dict with all reference property values
         self._ref_prop_dict = dict(
-            parameter_values=self._ref_initial_pars,
-            poi_values=self._ref_initial_pars,
-
-            data=self._ref_data,
-            model=self._ref_initial_model,
-            poi_names=('mu', 'sigma'),
             did_fit=False,
             model_count=1,
 
+            parameter_values=self._ref_initial_pars,
+            poi_values=self._ref_initial_pars,
+            poi_names=('mu', 'sigma'),
+
+            data=self._ref_data,
+            model=self._ref_initial_model,
         )
 
     def _get_fit(self, model_density_function=None, bin_evaluation="numerical", cost_function=None):

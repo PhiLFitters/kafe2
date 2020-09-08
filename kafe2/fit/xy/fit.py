@@ -2,7 +2,9 @@ from collections import OrderedDict
 from copy import deepcopy
 
 import numpy as np
+from deprecated.sphinx import deprecated
 
+from ...core.error import CovMat
 from ...tools import print_dict_as_table
 from ...config import kc
 from .._base import FitException, FitBase, DataContainerBase, ModelFunctionBase
@@ -41,7 +43,7 @@ class XYFit(FitBase):
     }
     X_ERROR_ALGORITHMS = ('iterative linear', 'nonlinear')
     _STRING_TO_COST_FUNCTION = STRING_TO_COST_FUNCTION
-    _AXES = ("x", "y")
+    _AXES = (None, "x", "y")
     _MODEL_NAME = "y_model"
 
     def __init__(self,
@@ -98,15 +100,6 @@ class XYFit(FitBase):
         self._nexus.add_alias(
             '_y_total_nuisance_cor_design_mat',
             alias_for='_y_data_nuisance_cor_design_mat'
-        )
-
-        _node = self._add_property_to_nexus('projected_xy_total_error')
-        _node = self._add_property_to_nexus('projected_xy_total_cov_mat')
-        self._nexus.add_function(
-            invert_matrix,
-            func_name='_'.join((_node.name, 'inverse')),
-            par_names=(_node.name,),
-            existing_behavior="replace_if_empty"
         )
 
         self._nexus.add_function(
@@ -166,7 +159,7 @@ class XYFit(FitBase):
         ###     # self._nexus.set_function_parameter_names("x_cor_nuisance_vector", self._x_cor_nuisance_names)
 
         self._nexus.add_dependency(
-            'projected_xy_total_cov_mat',
+            'total_cov_mat',
             depends_on=(
                 'poi_values',
                 'x_model',
@@ -175,7 +168,7 @@ class XYFit(FitBase):
             )
         )
         self._nexus.add_dependency(
-            'projected_xy_total_error',
+            'total_error',
             depends_on=(
                 'poi_values',
                 'x_model',
@@ -199,13 +192,6 @@ class XYFit(FitBase):
             )
         )
 
-        for _axis in ('x', 'y'):
-            for _side in ('data', 'model', 'total'):
-                self._nexus.add_dependency(
-                    '{}_{}_uncor_cov_mat'.format(_axis, _side),
-                    depends_on='{}_{}_cov_mat'.format(_axis, _side)
-                )
-
         # in case 'x' errors are defined and the corresponding
         # algorithm is 'iterative linear', matrices should be projected
         # once and the corresponding node made frozen
@@ -218,7 +204,7 @@ class XYFit(FitBase):
         '''perform actions on projected error nodes: freeze, update, unfreeze...'''
         if isinstance(actions, str):
             actions = (actions,)
-        for _node_name in ('projected_xy_total_error', 'projected_xy_total_cov_mat'):
+        for _node_name in ('total_error', 'total_cov_mat'):
             for action in actions:
                 _node = self._nexus.get(_node_name)
                 getattr(_node, action)()
@@ -342,13 +328,17 @@ class XYFit(FitBase):
         return self.x_data
 
     @property
+    @deprecated(version="2.2.0",
+                reason="Use x_data_error instead.")
     def x_error(self):
-        """array of pointwise *x* uncertainties"""
+        """array of pointwise *x* data uncertainties"""
         return self._data_container.x_err
 
     @property
+    @deprecated(version="2.2.0",
+                reason="Use x_data_cov_mat instead.")
     def x_cov_mat(self):
-        """the *x* covariance matrix"""
+        """the *x* data covariance matrix"""
         return self._data_container.x_cov_mat
 
     @property
@@ -372,6 +362,11 @@ class XYFit(FitBase):
         return self._data_container.y_err
 
     @property
+    def data_error(self):
+        """array of pointwise *xy* uncertainties (projected onto the *y* axis)"""
+        return self._project_x_onto_y(x=self.x_data_error, y=self.y_data_error, sqrt=True)
+
+    @property
     def x_data_cov_mat(self):
         """the data *x* covariance matrix"""
         return self._data_container.x_cov_mat
@@ -382,6 +377,11 @@ class XYFit(FitBase):
         return self._data_container.y_cov_mat
 
     @property
+    def data_cov_mat(self):
+        """the data *xy* covariance matrix (projected onto the *y* axis)"""
+        return self._project_x_onto_y(x=self.x_data_cov_mat, y=self.y_data_cov_mat, sqrt=False)
+
+    @property
     def x_data_cov_mat_inverse(self):
         """inverse of the data *x* covariance matrix (or ``None`` if singular)"""
         return self._data_container.x_cov_mat_inverse
@@ -390,6 +390,14 @@ class XYFit(FitBase):
     def y_data_cov_mat_inverse(self):
         """inverse of the data *y* covariance matrix (or ``None`` if singular)"""
         return self._data_container.y_cov_mat_inverse
+
+    @property
+    def data_cov_mat_inverse(self):
+        """
+        inverse of the data *xy* covariance matrix (projected onto the *y* axis, ``None`` if
+        singular)
+        """
+        return invert_matrix(self.data_cov_mat)
 
     @property
     def x_data_cor_mat(self):
@@ -433,6 +441,15 @@ class XYFit(FitBase):
         return self._data_container.y_cor_mat
 
     @property
+    def data_cor_mat(self):
+        """the data *xy* correlation matrix (projected onto the *y* axis)"""
+        return CovMat(self.data_cov_mat).cor_mat
+
+    @property
+    def data_uncor_cov_mat(self):
+        raise NotImplementedError()
+
+    @property
     def y_model(self):
         """array of *y* model predictions for the data points"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
@@ -454,6 +471,11 @@ class XYFit(FitBase):
         return self._param_model.y_err
 
     @property
+    def model_error(self):
+        """array of pointwise model *xy* uncertainties (projected onto the *y* axis)"""
+        return self._project_x_onto_y(x=self.x_model_error, y=self.y_model_error, sqrt=True)
+
+    @property
     def x_model_cov_mat(self):
         """the model *x* covariance matrix"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
@@ -468,6 +490,11 @@ class XYFit(FitBase):
         return self._param_model.y_cov_mat
 
     @property
+    def model_cov_mat(self):
+        """the model *xy* covariance matrix (projected onto the *y* axis)"""
+        return self._project_x_onto_y(x=self.x_model_cov_mat, y=self.y_model_cov_mat, sqrt=False)
+
+    @property
     def x_model_cov_mat_inverse(self):
         """inverse of the model *x* covariance matrix (or ``None`` if singular)"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
@@ -480,6 +507,14 @@ class XYFit(FitBase):
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.y_cov_mat_inverse
+
+    @property
+    def model_cov_mat_inverse(self):
+        """
+        inverse of the model *xy* covariance matrix (projected onto the *y* axis, ``None`` if
+        singular)
+        """
+        return invert_matrix(self.model_cov_mat)
 
     @property
     def y_model_uncor_cov_mat(self):
@@ -521,7 +556,7 @@ class XYFit(FitBase):
         """the model *x* correlation matrix"""
         self._param_model.parameters = self.poi_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
-        return self._param_model.y_cor_mat
+        return self._param_model.x_cor_mat
 
     # @property TODO: correlated x-errors
     # def _x_model_nuisance_cor_design_mat(self):
@@ -538,96 +573,92 @@ class XYFit(FitBase):
         return self._param_model.y_cor_mat
 
     @property
+    def model_cor_mat(self):
+        """the model *xy* correlation matrix (projected onto the *y* axis)"""
+        return CovMat(self.model_cov_mat).cor_mat
+
+    @property
     def x_total_error(self):
         """array of pointwise total *x* uncertainties"""
-        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
-        self._param_model.x = self.x_model
         return add_in_quadrature(self.x_model_error, self.x_data_error)
 
     @property
     def y_total_error(self):
         """array of pointwise total *y* uncertainties"""
-        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
-        self._param_model.x = self.x_model
         return add_in_quadrature(self.y_model_error, self.y_data_error)
 
     @property
-    def projected_xy_total_error(self):
-        """array of pointwise total *y* with the x uncertainties projected on top of them"""
+    def total_error(self):
+        """array of pointwise total *xy* uncertainties (projected onto the *y* axis)"""
         return self._project_x_onto_y(x=self.x_total_error, y=self.y_total_error, sqrt=True)
+
+    @property
+    @deprecated(version="2.2.0", reason="Use total_error instead.")
+    def projected_xy_total_error(self):
+        return self.total_error
 
     @property
     def x_total_cov_mat(self):
         """the total *x* covariance matrix"""
-        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
-        self._param_model.x = self.x_model
-
         return self.x_data_cov_mat + self.x_model_cov_mat
 
     @property
     def y_total_cov_mat(self):
         """the total *y* covariance matrix"""
-        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
-        self._param_model.x = self.x_model
-
         return self.y_data_cov_mat + self.y_model_cov_mat
 
+    @property
+    def total_cov_mat(self):
+        """the total *xy* covariance matrix (projected onto the *y* axis)"""
+        return self._project_x_onto_y(x=self.x_total_cov_mat, y=self.y_total_cov_mat, sqrt=False)
 
     @property
+    @deprecated(version="2.2.0", reason="Use total_cov_mat instead.")
     def projected_xy_total_cov_mat(self):
-        return self._project_x_onto_y(x=self.x_total_cov_mat, y=self.y_total_cov_mat, sqrt=False)
+        return self.total_cov_mat
 
     @property
     def x_total_cov_mat_inverse(self):
         """inverse of the total *x* covariance matrix (or ``None`` if singular)"""
-        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
-        self._param_model.x = self.x_model
-
-        try:
-            return invert_matrix(self.x_total_cov_mat)
-        except np.linalg.LinAlgError:
-            return None
+        return invert_matrix(self.x_total_cov_mat)
 
     @property
     def y_total_cov_mat_inverse(self):
         """inverse of the total *y* covariance matrix (or ``None`` if singular)"""
-        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
-        self._param_model.x = self.x_model
-
-        try:
-            return invert_matrix(self.y_total_cov_mat)
-        except np.linalg.LinAlgError:
-            return None
+        return invert_matrix(self.y_total_cov_mat)
 
     @property
-    def projected_xy_total_cov_mat_inverse(self):
-        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
-        self._param_model.x = self.x_model
+    def total_cov_mat_inverse(self):
+        """
+        inverse of the total *xy* covariance matrix (projected onto the *y* axis, ``None`` if
+        singular)
+        """
+        return invert_matrix(self.total_cov_mat)
 
-        try:
-            return invert_matrix(self.projected_xy_total_cov_mat)
-        except np.linalg.LinAlgError:
-            return None
+    @property
+    @deprecated(version="2.2.0", reason="Use total_cov_mat_inverse instead.")
+    def projected_xy_total_cov_mat_inverse(self):
+        return self.total_cov_mat_inverse
+
+    @property
+    def x_total_cor_mat(self):
+        """the total *x* correlation matrix"""
+        return CovMat(self.x_total_cov_mat).cor_mat
+
+    @property
+    def y_total_cor_mat(self):
+        """the total *y* correlation matrix"""
+        return CovMat(self.y_total_cov_mat).cor_mat
 
     @property
     def y_total_uncor_cov_mat(self):
         """the total *y* uncorrelated covariance matrix"""
-        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
-        self._param_model.x = self.x_model
-
         return self.y_data_uncor_cov_mat + self.y_model_uncor_cov_mat
-
 
     @property
     def y_total_uncor_cov_mat_inverse(self):
         """inverse of the uncorrelated part of the total *y* covariance matrix (or ``None`` if singular)"""
-        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
-        self._param_model.x = self.x_model
-
-        try:
-            return invert_matrix(self.y_total_uncor_cov_mat)
-        except np.linalg.LinAlgError:
-            return None
+        return invert_matrix(self.y_total_uncor_cov_mat)
 
     @property
     def _y_total_nuisance_cor_design_mat(self):
@@ -640,21 +671,12 @@ class XYFit(FitBase):
     @property
     def x_total_uncor_cov_mat(self):
         """the total *x* uncorrelated covariance matrix"""
-        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
-        self._param_model.x = self.x_model
-
         return self.x_data_uncor_cov_mat + self.x_model_uncor_cov_mat
 
     @property
     def x_total_uncor_cov_mat_inverse(self):
         """inverse of the total *x* uncorrelated covariance matrix (or ``None`` if singular)"""
-        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
-        self._param_model.x = self.x_model
-
-        try:
-            return invert_matrix(self.x_total_uncor_cov_mat)
-        except np.linalg.LinAlgError:
-            return None
+        return invert_matrix(self.x_total_uncor_cov_mat)
 
     @property
     def x_range(self):

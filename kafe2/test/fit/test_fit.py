@@ -24,6 +24,10 @@ class AbstractTestFit(object):
                 # check value (almost) equal to ref
                 try:
                     self.assertTrue(
+                        (np.all(np.isnan(_attr_val))
+                         and np.all(np.isnan(_ref_val))
+                         and np.array(_attr_val).shape == np.array(_ref_val).shape)
+                        or
                         np.allclose(
                             np.asarray(_attr_val),
                             np.asarray(_ref_val),

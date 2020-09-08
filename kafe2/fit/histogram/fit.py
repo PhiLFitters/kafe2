@@ -83,14 +83,6 @@ class HistFit(FitBase):
             )
         )
 
-        self._nexus.add_dependency(
-            'total_error',
-            depends_on=(
-                'data_error',
-                'model_error',
-            )
-        )
-
         # TODO: add 'uncor_cov_mat'
         #for _side in ('data', 'model', 'total'):
         #    self._nexus.add_dependency(

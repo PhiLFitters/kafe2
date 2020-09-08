@@ -135,8 +135,8 @@ class XYCostFunction_Chi2(CostFunction_Chi2):
             self._COV_MAT_INVERSE_NAME = "y_total_cov_mat_inverse"
             self._ERROR_NAME = "y_total_error"
         elif axes_to_use.lower() == 'xy':
-            self._COV_MAT_INVERSE_NAME = "projected_xy_total_cov_mat_inverse"
-            self._ERROR_NAME = "projected_xy_total_error"
+            self._COV_MAT_INVERSE_NAME = "total_cov_mat_inverse"
+            self._ERROR_NAME = "total_error"
         else:
             raise CostFunctionException(
                 "Unknown value '%s' for 'axes_to_use': must be one of ('xy', 'y')")
@@ -156,7 +156,7 @@ class XYCostFunction_NegLogLikelihood(CostFunction_NegLogLikelihood):
         if axes_to_use.lower() == 'y':
             self._ERROR_NAME = "y_total_error"
         elif axes_to_use.lower() == 'xy':
-            self._ERROR_NAME = "projected_xy_total_error"
+            self._ERROR_NAME = "total_error"
         else:
             raise CostFunctionException(
                 "Unknown value '%s' for 'axes_to_use': must be one of ('xy', 'y')")

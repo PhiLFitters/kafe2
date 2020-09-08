@@ -76,14 +76,6 @@ class IndexedFit(FitBase):
             )
         )
 
-        self._nexus.add_dependency(
-            'total_error',
-            depends_on=(
-                'data_error',
-                'model_error',
-            )
-        )
-
     def _report_data(self, output_stream, indent, indentation_level):
         output_stream.write(indent * indentation_level + '########\n')
         output_stream.write(indent * indentation_level + '# Data #\n')

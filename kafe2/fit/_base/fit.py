@@ -12,6 +12,7 @@ from ..io.file import FileIOMixin
 from ...core.fitters.nexus import Nexus, NexusError, Parameter
 from ...core.fitters.nexus_fitter import NexusFitter
 from ...core.constraint import GaussianMatrixParameterConstraint, GaussianSimpleParameterConstraint
+from ...core.error import CovMat
 from ...tools import print_dict_as_table
 from .._base.cost import CostFunction, STRING_TO_COST_FUNCTION
 from ..util import invert_matrix, add_in_quadrature
@@ -114,13 +115,16 @@ class FitBase(FileIOMixin, object):
 
     # -- private methods
 
-    def _add_property_to_nexus(self, prop, obj=None, name=None):
+    def _add_property_to_nexus(self, prop, obj=None, name=None, depends_on=None):
         """register a property of this object in the nexus as a function node"""
         obj = obj if obj is not None else self
-        return self._nexus.add_function(
+        _node = self._nexus.add_function(
             partial(getattr(obj.__class__, prop).fget, obj),
             func_name=name or prop
         )
+        if depends_on is not None:
+            self._nexus.add_dependency(name=_node.name, depends_on=depends_on)
+        return _node
 
     @classmethod
     def _get_base_class(cls):
@@ -156,60 +160,24 @@ class FitBase(FileIOMixin, object):
         # -- errors
 
         for _axis in self._AXES:
-            for _type in ("model", "data"):
-                # add data and model for axis
+            _error_names = []
+            _mat_names = []
+            for _type in ("model", "data", "total"):
                 _name = '_'.join((_axis, _type)) if _axis is not None else _type
-                self._add_property_to_nexus(_name)
-                # add errors for axis
                 _error_name = '_'.join((_axis, _type, 'error')) if _axis is not None \
                     else '_'.join((_type, 'error'))
-                self._add_property_to_nexus(_error_name)
-
-                # add cov mats for axis
-                for _prop in ('cov_mat', 'uncor_cov_mat'):
-                    _total_mat_name = '_'.join((_axis, _type, _prop)) if _axis is not None \
-                        else '_'.join((_type, _prop))
-                    self._add_property_to_nexus(_total_mat_name)
-                    # add inverse
-                    self._nexus.add_function(
-                        invert_matrix,
-                        func_name='_'.join((_total_mat_name, 'inverse')),
-                        par_names=(_total_mat_name,)
-                    )
-
-            # 'total_error', i.e. data + model error in quadrature
-            _total_err_name = '_'.join((_axis, 'total_error')) if _axis is not None \
-                else "total_error"
-            _data_err_name = '_'.join((_axis, 'data_error')) if _axis is not None \
-                else "data_error"
-            _model_err_name = '_'.join((_axis, 'model_error')) if _axis is not None \
-                else "model_error"
-            self._nexus.add_function(
-                add_in_quadrature,
-                func_name=_total_err_name,
-                par_names=(_data_err_name, _model_err_name)
-            )
-
-            # 'total_cov_mat', i.e. data + model cov mats
-            for _mat in ('cov_mat', 'uncor_cov_mat'):
-                _data_mat_name = '_'.join((_axis, 'data', _mat)) if _axis is not None \
-                    else '_'.join(('data', _mat))
-                _model_mat_name = '_'.join((_axis, 'model', _mat)) if _axis is not None \
-                    else '_'.join(('model', _mat))
-                _node = (
-                    self._nexus.get(_data_mat_name) + self._nexus.get(_model_mat_name)
-                )
-                _total_mat_name = '_'.join((_axis, 'total', _mat)) if _axis is not None \
-                    else '_'.join(('total', _mat))
-                _node.name = _total_mat_name
-                self._nexus.add(_node)
-
-                # add inverse
-                self._nexus.add_function(
-                    invert_matrix,
-                    func_name='_'.join((_node.name, 'inverse')),
-                    par_names=(_node.name,),
-                )
+                _mat_name = '_'.join((_axis, _type, "cov_mat")) if _axis is not None \
+                    else '_'.join((_type, "cov_mat"))
+                if _type == "total":
+                    self._add_property_to_nexus(_error_name, depends_on=_error_names)
+                    self._add_property_to_nexus(_mat_name, depends_on=_mat_names)
+                else:
+                    self._add_property_to_nexus(_name)
+                    self._add_property_to_nexus(_error_name)
+                    _error_names.append(_error_name)
+                    self._add_property_to_nexus(_mat_name)
+                    _mat_names.append(_mat_name)
+                self._add_property_to_nexus(_mat_name + "_inverse", depends_on=_mat_name)
 
             # -- nuisance parameters
 
@@ -248,12 +216,12 @@ class FitBase(FileIOMixin, object):
     def _set_new_parametric_model(self):
         pass
 
-    # Overwritten by MultiFit
+    # Overridden by MultiFit
     def _get_model_function_argument_formatters(self):
         """All arguments of the model function including independent variables."""
         return self._model_function.formatter.arg_formatters
 
-    # Overwritten by MultiFit
+    # Overridden by MultiFit
     def _get_model_function_parameter_formatters(self):
         """Only the parameters which are fitted. Excludes independent variables."""
         return self.model_function.formatter.par_formatters
@@ -477,6 +445,11 @@ class FitBase(FileIOMixin, object):
     def total_cov_mat_inverse(self):
         """inverse of the total covariance matrix (or ``None`` if singular)"""
         return invert_matrix(self.total_cov_mat)
+
+    @property
+    def total_cor_mat(self):
+        """the total correlation matrix"""
+        return CovMat(self.total_cov_mat).cor_mat
 
     @property
     def model_function(self):

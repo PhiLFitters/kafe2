@@ -95,61 +95,77 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         # helper dict with all reference property values
         self._ref_prop_dict = dict(
-            parameter_values=self._ref_initial_pars,
-            poi_values=self._ref_initial_pars,
-
-            x_data=self._ref_x,
-            x_model=self._ref_x,
-            y_data=self._ref_y_data,
-            y_model=self._ref_initial_y_model,
-            data=self._ref_xy_data,
-            model=self._ref_initial_xy_model,
-            poi_names=('a', 'b', 'c'),
             did_fit=False,
             model_count=1,
+
+            parameter_values=self._ref_initial_pars,
+            poi_values=self._ref_initial_pars,
+            poi_names=('a', 'b', 'c'),
             cost_function_value=self._ref_initial_cost,
 
+            x_data=self._ref_x,
+            y_data=self._ref_y_data,
+            data=self._ref_xy_data,
+            x_data_error=self._ref_error * 0,
+            x_error=self._ref_error * 0,
+            y_data_error=self._ref_error,
+            data_error=self._ref_error,
             x_data_cov_mat=self._ref_matrix_eye * 0,
+            x_cov_mat=self._ref_matrix_eye * 0,
             y_data_cov_mat=self._ref_matrix_eye,
-            x_data_uncor_cov_mat=self._ref_matrix_eye * 0,
-            y_data_uncor_cov_mat=self._ref_matrix_eye,
+            data_cov_mat=self._ref_matrix_eye,
             x_data_cov_mat_inverse=None,
             y_data_cov_mat_inverse=self._ref_matrix_eye,
-            #x_data_uncor_cov_mat_inverse=None,  # TODO: fix
-            y_data_uncor_cov_mat_inverse=self._ref_matrix_eye,
-            #x_data_cor_mat=self._ref_matrix_eye,  # TODO: fix
+            data_cov_mat_inverse=self._ref_matrix_eye,
+            x_data_cor_mat=self._ref_matrix_eye * np.nan,
             y_data_cor_mat=self._ref_matrix_eye,
-            x_data_error=self._ref_error * 0,
-            y_data_error=self._ref_error,
+            data_cor_mat=self._ref_matrix_eye,
 
-            x_model_cov_mat=self._ref_matrix_eye * 0,
-            y_model_cov_mat=self._ref_matrix_eye * 0,
-            x_model_uncor_cov_mat=self._ref_matrix_eye * 0,
-            y_model_uncor_cov_mat=self._ref_matrix_eye * 0,
-            x_model_cov_mat_inverse=None,
-            y_model_cov_mat_inverse=None,
-            #x_model_uncor_cov_mat_inverse=None,  # TODO: fix
-            #y_model_uncor_cov_mat_inverse=None,  # TODO: fix
-            #x_model_cor_mat=self._ref_matrix_eye,  # TODO: fix
-            #y_model_cor_mat=self._ref_matrix_eye,  # TODO: fix
+            x_model=self._ref_x,
+            y_model=self._ref_initial_y_model,
+            model=self._ref_initial_xy_model,
             x_model_error=self._ref_error * 0,
             y_model_error=self._ref_error * 0,
+            model_error=self._ref_error * 0,
+            x_model_cov_mat=self._ref_matrix_eye * 0,
+            y_model_cov_mat=self._ref_matrix_eye * 0,
+            model_cov_mat=self._ref_matrix_eye * 0,
+            x_model_cov_mat_inverse=None,
+            y_model_cov_mat_inverse=None,
+            model_cov_mat_inverse=None,
+            x_model_cor_mat=self._ref_matrix_eye * np.nan,
+            y_model_cor_mat=self._ref_matrix_eye * np.nan,
+            model_cor_mat=self._ref_matrix_eye * np.nan,
 
-            x_total_cov_mat=self._ref_matrix_eye * 0,
-            y_total_cov_mat=self._ref_matrix_eye,
-            x_total_uncor_cov_mat=self._ref_matrix_eye * 0,
-            y_total_uncor_cov_mat=self._ref_matrix_eye,
-            x_total_cov_mat_inverse=None,
-            y_total_cov_mat_inverse=self._ref_matrix_eye,
-            #x_total_uncor_cov_mat_inverse=None,  # TODO: fix
-            y_total_uncor_cov_mat_inverse=self._ref_matrix_eye,
-            #x_total_cor_mat=self._ref_matrix_eye,  # TODO: add
-            #y_total_cor_mat=self._ref_matrix_eye,  # TODO: add
             x_total_error=self._ref_error * 0,
             y_total_error=self._ref_error,
-
+            total_error=self._ref_error,
             projected_xy_total_error=self._ref_error,
+            x_total_cov_mat=self._ref_matrix_eye * 0,
+            y_total_cov_mat=self._ref_matrix_eye,
+            total_cov_mat=self._ref_matrix_eye,
             projected_xy_total_cov_mat=self._ref_matrix_eye,
+            x_total_cov_mat_inverse=None,
+            y_total_cov_mat_inverse=self._ref_matrix_eye,
+            total_cov_mat_inverse=self._ref_matrix_eye,
+            projected_xy_total_cov_mat_inverse=self._ref_matrix_eye,
+            x_total_cor_mat=self._ref_matrix_eye * np.nan,
+            y_total_cor_mat=self._ref_matrix_eye,
+            total_cor_mat=self._ref_matrix_eye,
+
+            x_data_uncor_cov_mat=self._ref_matrix_eye * 0,
+            y_data_uncor_cov_mat=self._ref_matrix_eye,
+            #x_data_uncor_cov_mat_inverse=None,  # TODO: fix
+            y_data_uncor_cov_mat_inverse=self._ref_matrix_eye,
+            x_model_uncor_cov_mat=self._ref_matrix_eye * 0,
+            y_model_uncor_cov_mat=self._ref_matrix_eye * 0,
+            #x_model_uncor_cov_mat_inverse=None,  # TODO: fix
+            #y_model_uncor_cov_mat_inverse=None,  # TODO: fix
+
+            x_total_uncor_cov_mat=self._ref_matrix_eye * 0,
+            y_total_uncor_cov_mat=self._ref_matrix_eye,
+            #x_total_uncor_cov_mat_inverse=None,  # TODO: fix
+            y_total_uncor_cov_mat_inverse=self._ref_matrix_eye,
 
             _y_data_nuisance_cor_design_mat=np.zeros((0, self._n_points)),
         )
@@ -491,6 +507,19 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         _fit.do_fit()
         _fit.report(output_stream=_buffer)
         self.assertNotEqual(_buffer.getvalue(), "")
+
+    def test_unknown_cost_function(self):
+        with self.assertRaises(ValueError):
+            self._get_fit(cost_function="ABC123")
+
+    def test_model_as_model_func_name(self):
+        def model(x, a, b):
+            return a * x + b
+        self._get_fit(model_function=model)
+
+    def test_data_and_cost_incompatible(self):
+        with self.assertRaises(XYFitException):
+            self._get_fit(cost_function="nll")
 
 
 class TestXYFitWithSimpleYErrors(AbstractTestFit, unittest.TestCase):

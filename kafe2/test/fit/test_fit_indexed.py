@@ -92,36 +92,39 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         # helper dict with all reference property values
         self._ref_prop_dict = dict(
-            parameter_values=self._ref_initial_pars,
-            poi_values=self._ref_initial_pars,
-
-            data=self._ref_data,
-            model=self._ref_initial_model,
-            poi_names=('a', 'b', 'c'),
             did_fit=False,
             model_count=1,
+
+            parameter_values=self._ref_initial_pars,
+            poi_values=self._ref_initial_pars,
+            poi_names=('a', 'b', 'c'),
             cost_function_value=self._ref_initial_cost,
 
-            data_cov_mat=self._ref_matrix_eye,
-            #data_uncor_cov_mat=self._ref_matrix_eye,
-            data_cov_mat_inverse=self._ref_matrix_eye,
-            #data_uncor_cov_mat_inverse=self._ref_matrix_eye,
-            data_cor_mat=self._ref_matrix_eye,
+            data=self._ref_data,
             data_error=self._ref_error,
+            data_cov_mat=self._ref_matrix_eye,
+            data_cov_mat_inverse=self._ref_matrix_eye,
+            data_cor_mat=self._ref_matrix_eye,
 
-            model_cov_mat=self._ref_matrix_eye * 0,
-            #model_uncor_cov_mat=self._ref_matrix_eye * 0,  # TODO: fix
-            model_cov_mat_inverse=None,
-            #model_uncor_cov_mat_inverse=None,  # TODO: fix
-            #model_cor_mat=self._ref_matrix_eye,
+            model=self._ref_initial_model,
             model_error=self._ref_error * 0,
+            model_cov_mat=self._ref_matrix_eye * 0,
+            model_cov_mat_inverse=None,
+            model_cor_mat=self._ref_matrix_eye * np.nan,
 
-            total_cov_mat=self._ref_matrix_eye,
-            #total_uncor_cov_mat=self._ref_matrix_eye,
-            total_cov_mat_inverse=self._ref_matrix_eye,
-            #total_uncor_cov_mat_inverse=self._ref_matrix_eye,
-            #total_cor_mat=self._ref_matrix_eye,  # TODO: add
             total_error=self._ref_error,
+            total_cov_mat=self._ref_matrix_eye,
+            total_cov_mat_inverse=self._ref_matrix_eye,
+            total_cor_mat=self._ref_matrix_eye,
+
+            #data_uncor_cov_mat=self._ref_matrix_eye,
+            #data_uncor_cov_mat_inverse=self._ref_matrix_eye,
+
+            #model_uncor_cov_mat=self._ref_matrix_eye * 0,  # TODO: fix
+            #model_uncor_cov_mat_inverse=None,  # TODO: fix
+
+            #total_uncor_cov_mat=self._ref_matrix_eye,
+            #total_uncor_cov_mat_inverse=self._ref_matrix_eye,
         )
 
     def _get_fit(self, model_function=None, cost_function=None, error=None):

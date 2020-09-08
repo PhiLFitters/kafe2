@@ -11,3 +11,4 @@ unittest2
 coverage
 sphinx
 mock
+deprecated

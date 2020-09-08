@@ -68,7 +68,7 @@ class XYPlotAdapter(PlotAdapterBase):
     @property
     def data_xerr(self):
         """x error bars for data: ``None`` for :py:obj:`IndexedPlotContainer`"""
-        return self._fit.x_error
+        return self._fit.x_data_error
 
     @property
     def data_yerr(self):
@@ -88,7 +88,7 @@ class XYPlotAdapter(PlotAdapterBase):
     @property
     def model_xerr(self):
         """x error bars for model: ``None`` for :py:obj:`IndexedPlotContainer`"""
-        return self._fit.x_error
+        return self._fit.x_model_error
 
     @property
     def model_yerr(self):
