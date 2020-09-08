@@ -296,6 +296,27 @@ class XYFit(FitBase):
         print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=indentation_level + 1)
         output_stream.write('\n')
 
+    def _project_x_onto_y(self, x, y, sqrt=False):
+        if x.ndim not in (1, 2):
+            raise ValueError
+        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
+        self._param_model.x = self.x_model
+
+        if np.all(x == 0):
+            return y
+
+        _diag = x if x.ndim == 1 else np.diag(x)
+        _precision = 0.01 * np.min(_diag) if sqrt else 0.01 * np.min(np.sqrt(_diag))
+        _derivatives = self._param_model.eval_model_function_derivative_by_x(
+            dx=_precision,
+            model_parameters=self.parameter_values
+        )
+        _x_scale = _derivatives ** 2 if x.ndim == 1 else np.outer(_derivatives, _derivatives)
+        if sqrt:
+            return np.sqrt(y ** 2 + x ** 2 * _x_scale)
+        else:
+            return y + x * _x_scale
+
     # -- public properties
 
     @property
@@ -533,20 +554,7 @@ class XYFit(FitBase):
     @property
     def projected_xy_total_error(self):
         """array of pointwise total *y* with the x uncertainties projected on top of them"""
-        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
-        self._param_model.x = self.x_model
-
-        if np.count_nonzero(self._data_container.x_err) == 0:
-            return self.y_total_error
-
-        _x_errors = self.x_total_error
-        _precision = 0.01 * np.min(_x_errors)
-        _derivatives = self._param_model.eval_model_function_derivative_by_x(
-            dx=_precision,
-            model_parameters=self.parameter_values
-        )
-
-        return np.sqrt(self.y_total_error**2 + self.x_total_error**2 * _derivatives**2)
+        return self._project_x_onto_y(x=self.x_total_error, y=self.y_total_error, sqrt=True)
 
     @property
     def x_total_cov_mat(self):
@@ -567,22 +575,7 @@ class XYFit(FitBase):
 
     @property
     def projected_xy_total_cov_mat(self):
-        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
-        self._param_model.x = self.x_model
-
-        if np.count_nonzero(self._data_container.x_err) == 0:
-            return self.y_total_cov_mat
-
-        _x_errors = self.x_total_error
-        _precision = 0.01 * np.min(_x_errors)
-        _derivatives = self._param_model.eval_model_function_derivative_by_x(
-            dx=_precision,
-            model_parameters=self.parameter_values
-        )
-        _outer_product = np.outer(_derivatives, _derivatives)
-
-        return self.y_total_cov_mat + self.x_total_cov_mat * _outer_product
-
+        return self._project_x_onto_y(x=self.x_total_cov_mat, y=self.y_total_cov_mat, sqrt=False)
 
     @property
     def x_total_cov_mat_inverse(self):
