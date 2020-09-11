@@ -41,6 +41,7 @@ class FitBase(FileIOMixin, object):
     _STRING_TO_COST_FUNCTION = STRING_TO_COST_FUNCTION
     _AXES = (None,)  # axes for which to for example create data nexus nodes
     _MODEL_NAME = "model"
+    _MODEL_ERROR_NAMES = ["model_error", "model_cov_mat"]
 
     def __init__(self, data, model_function, cost_function, minimizer=None, minimizer_kwargs=None):
         """This is a purely abstract class implementing the minimal interface required by all
@@ -177,6 +178,9 @@ class FitBase(FileIOMixin, object):
                     _error_names.append(_error_name)
                     self._add_property_to_nexus(_mat_name)
                     _mat_names.append(_mat_name)
+                if _type == "model":
+                    self._nexus.add_dependency(_error_name, depends_on="poi_values")
+                    self._nexus.add_dependency(_mat_name, depends_on="poi_values")
                 self._add_property_to_nexus(_mat_name + "_inverse", depends_on=_mat_name)
 
             # -- nuisance parameters
@@ -332,6 +336,14 @@ class FitBase(FileIOMixin, object):
         self._fitter.reset_minimizer()
         for _error_name in self._BASIC_ERROR_NAMES:
             self._nexus.get(_error_name).mark_for_update()
+
+    def _transfer_rel_err_ref(self):
+        _errs_and_old_refs = []
+        for _err in self._param_model.get_matching_errors({"relative": True}).values():
+            _old_ref = _err.reference
+            _err.reference = self._data_container.data
+            _errs_and_old_refs.append((_err, _old_ref))
+        return _errs_and_old_refs
 
     # -- public properties
 
@@ -826,8 +838,6 @@ class FitBase(FileIOMixin, object):
         elif reference == 'model':
             # delegate to model container
             _reference_object = self._param_model
-            if relative:
-                raise NotImplementedError("Errors relative to model not implemented!")
         else:
             raise FitException("Cannot add error: unknown reference "
                                "specification '{}', expected one of: 'data', 'model'...".format(reference))
@@ -908,9 +918,29 @@ class FitBase(FileIOMixin, object):
         :return: A dictionary containing the fit results.
         :rtype: dict
         """
-        if self._cost_function.needs_errors and not self._data_container.has_errors:
+        if self._cost_function.needs_errors and not (self.has_data_errors or self.has_model_errors):
             self._cost_function.on_no_errors()
+
+        # Give relative model errors data as reference for initial fit:
+        _errs_and_model_refs = self._transfer_rel_err_ref()
+        for _model_err_name in self._MODEL_ERROR_NAMES:
+            _node = self._nexus.get(_model_err_name)
+            _node.update()
+            _node.freeze()
+
+        # Initial fit:
         self._fitter.do_fit()  # TODO specify other node to minimize
+
+        # Restore original error references and perform a second fit if appropriate:
+        for _err, _model_ref in _errs_and_model_refs:
+            _err.reference = _model_ref
+        for _model_err_name in self._MODEL_ERROR_NAMES:
+            _node = self._nexus.get(_model_err_name)
+            _node.unfreeze()
+            _node.update()
+        if len(_errs_and_model_refs) > 0:
+            self._fitter.do_fit()
+
         self._loaded_result_dict = None
         self._update_parameter_formatters()
         return self.get_result_dict(asymmetric_parameter_errors=asymmetric_parameter_errors)

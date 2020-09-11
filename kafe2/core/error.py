@@ -188,9 +188,37 @@ class GaussianErrorBase(object):
         """Pointwise error array (relative errors)."""
 
     @property
-    @abc.abstractmethod
     def reference(self):
         """Array of reference values for the error."""
+        if callable(self._reference):
+            return self._reference()
+        else:
+            return self._reference
+
+    @reference.setter
+    def reference(self, reference):
+        if reference is None:
+            ##self._reference = np.ones_like(self._err_val)
+            self._reference = None
+        elif callable(reference):
+            self._reference = reference
+        else:
+            _ref = np.asarray(reference, dtype=float)
+            # check for zero-valued references if error is marked 'relative'
+            if self.relative and np.any(_ref == 0):
+                warnings.warn(
+                    "Relative error has a reference that contains values equal to zero: %s"
+                    % _ref
+                )
+            self._reference = _ref
+
+        # invalidate error_structures opposite declared relativity type
+        if self.relative:
+            self._cov_mat = None
+            self._err = None
+        else:
+            self._cov_mat_rel = None
+            self._err_rel = None
 
     @property
     @abc.abstractmethod
@@ -417,33 +445,6 @@ class SimpleGaussianError(GaussianErrorBase):
         self._cov_mat_rel = None
 
     @property
-    def reference(self):
-        return self._reference
-
-    @reference.setter
-    def reference(self, reference):
-        if reference is None:
-            ##self._reference = np.ones_like(self._err_val)
-            self._reference = None
-        else:
-            _ref = np.asarray(reference, dtype=float)
-            # check for zero-valued references if error is marked 'relative'
-            if self.relative and np.any(_ref == 0):
-                warnings.warn(
-                    "Relative error has a reference that contains values equal to zero: %s"
-                    % _ref
-                )
-            self._reference = _ref
-
-        # invalidate error_structures opposite declared relativity type
-        if self.relative:
-            self._cov_mat = None
-            self._err = None
-        else:
-            self._cov_mat_rel = None
-            self._err_rel = None
-
-    @property
     def cov_mat(self):
         if self._cov_mat is None:
             self._calculate_cov_mat()
@@ -652,32 +653,6 @@ class MatrixGaussianError(GaussianErrorBase):
                         "Requested 'relative' error array for error object declared 'absolute', but 'reference' not set!")
             self._err_rel = np.sqrt(np.diag(self.cov_mat_rel))
         return self._err_rel
-
-    @property
-    def reference(self):
-        return self._reference
-
-    @reference.setter
-    def reference(self, reference):
-        if reference is None:
-            self._reference = None
-        else:
-            _ref = np.asarray(reference, dtype=float)
-            # check for zero-valued references if error is marked 'relative'
-            if self.relative and np.any(_ref == 0):
-                warnings.warn(
-                    "Relative error has a reference that contains values equal to zero: %s"
-                    % _ref
-                )
-            self._reference = _ref
-
-        # invalidate error_structures opposite declared relativity type
-        if self.relative:
-            self._cov_mat = None
-            self._err = None
-        else:
-            self._cov_mat_rel = None
-            self._err_rel = None
 
     @property
     def error_uncor(self):

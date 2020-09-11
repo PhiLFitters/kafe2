@@ -209,7 +209,7 @@ class CostFunction(FileIOMixin, object):
 
     def on_no_errors(self):
         if not self._no_errors_warning_printed:
-            warnings.warn('No data errors specified.')
+            warnings.warn('No errors specified.')
             self._no_errors_warning_printed = True
 
 

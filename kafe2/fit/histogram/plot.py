@@ -68,8 +68,8 @@ class HistPlotAdapter(PlotAdapterBase):
 
     @property
     def data_yerr(self):
-        """y error bars for data: total data uncertainty"""
-        return self._fit.data_error
+        """y error bars for data: total uncertainty"""
+        return self._fit.total_error
 
     @property
     def model_x(self):

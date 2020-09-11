@@ -86,7 +86,7 @@ class IndexedFit(FitBase):
         _data_table_dict['Data'] = self.data
         if self.has_data_errors:
             _data_table_dict['Data Error'] = self.data_error
-            _data_table_dict['Data Total Correlation Matrix'] = self.data_cor_mat
+            _data_table_dict['Data Correlation Matrix'] = self.data_cor_mat
 
         print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=indentation_level + 1)
         output_stream.write('\n')
@@ -95,15 +95,22 @@ class IndexedFit(FitBase):
         # call base method to show header and model function
         super(IndexedFit, self)._report_model(output_stream, indent, indentation_level)
         # print model values at POIs
-        _data_table_dict = OrderedDict()
-        _data_table_dict['Index'] = range(self.data_size)
-        _data_table_dict['Model'] = self.model
+        _model_table_dict = OrderedDict()
+        _model_table_dict['Index'] = range(self.data_size)
+        _model_table_dict['Model'] = self.model
         if self.has_model_errors:
-            _data_table_dict['Model Error'] = self.model_error
-            _data_table_dict['Model Total Correlation Matrix'] = self.model_cor_mat
+            _model_table_dict['Model Error'] = self.model_error
+            _model_table_dict['Model Correlation Matrix'] = self.model_cor_mat
 
-        print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=indentation_level + 1)
+        print_dict_as_table(_model_table_dict, output_stream=output_stream, indent_level=indentation_level + 1)
         output_stream.write('\n')
+
+        if self._param_model.get_matching_errors({"relative": True}):
+            output_stream.write(indent * (indentation_level + 1))
+            output_stream.write(
+                "Model covariance matrix was calculated dynamically relative to y model values.\n"
+            )
+            output_stream.write("\n")
 
     # -- public properties
 

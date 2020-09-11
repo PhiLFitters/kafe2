@@ -124,7 +124,7 @@ class IndexedContainer(DataContainerBase):
             name=name,
             correlation=correlation,
             relative=relative,
-            reference=self._data  # set the reference appropriately
+            reference=lambda: self._data  # set the reference appropriately
         )
 
     def add_matrix_error(self, err_matrix, matrix_type,
@@ -153,5 +153,5 @@ class IndexedContainer(DataContainerBase):
             name=name,
             err_val=err_val,
             relative=relative,
-            reference=self._data  # set the reference appropriately
+            reference=lambda: self._data  # set the reference appropriately
         )

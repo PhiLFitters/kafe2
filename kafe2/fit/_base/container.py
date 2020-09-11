@@ -308,6 +308,7 @@ class DataContainerBase(FileIOMixin, object):
             * ``name`` (the unique error name)
             * ``type`` (either ``simple`` or ``matrix``)
             * ``correlated`` (bool, only matches simple errors!)
+            * ``relative`` (bool)
 
         .. note::
             The error objects contained in the dictionary are not copies, but the original error objects.
@@ -358,6 +359,10 @@ class DataContainerBase(FileIOMixin, object):
                             continue
                     except AttributeError:
                         pass  # error is a MatrixGaussianError and will not be matched
+                elif _crit_key == 'relative':
+                    _err_obj = _error_dict['err']
+                    if _err_obj.relative == _crit_value:
+                        continue
                 else:
                     # check the error dict keys for a match
                     _cmp_val = _error_dict.get(_crit_key, None)

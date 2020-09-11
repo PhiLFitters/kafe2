@@ -145,7 +145,7 @@ class XYCostFunction_Chi2(CostFunction_Chi2):
 
     def on_no_errors(self):
         if not self._no_errors_warning_printed:
-            warnings.warn('No y data errors specified')
+            warnings.warn('No y errors specified.')
             self._no_errors_warning_printed = True
 
 
@@ -165,8 +165,8 @@ class XYCostFunction_NegLogLikelihood(CostFunction_NegLogLikelihood):
 
     def on_no_errors(self):
         if not self._no_errors_warning_printed:
-            warnings.warn('No y data errors were specified. Will set y data errors to 1 '
-                  'if total error becomes 0.')
+            warnings.warn('No y errors specified. Will set y data errors to 1 if total error '
+                          'becomes 0.')
             self._no_errors_warning_printed = True
 
 

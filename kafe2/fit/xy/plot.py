@@ -67,13 +67,13 @@ class XYPlotAdapter(PlotAdapterBase):
 
     @property
     def data_xerr(self):
-        """x error bars for data: ``None`` for :py:obj:`IndexedPlotContainer`"""
-        return self._fit.x_data_error
+        """x error bars for data: total x uncertainty"""
+        return self._fit.x_total_error
 
     @property
     def data_yerr(self):
-        """y error bars for data: total data uncertainty"""
-        return self._fit.y_data_error
+        """y error bars for data: total y uncertainty"""
+        return self._fit.y_total_error
 
     @property
     def model_x(self):

@@ -299,7 +299,7 @@ class XYContainer(IndexedContainer):
             err_val = np.ones(self.size) * err_val
 
         _err = SimpleGaussianError(err_val=err_val, corr_coeff=correlation,
-                                   relative=relative, reference=self._get_data_for_axis(_axis))
+                                   relative=relative, reference=lambda: self._get_data_for_axis(_axis))
         _name = self._add_error_object(name=name, error_object=_err, axis=_axis)
         return _name
 
@@ -326,7 +326,7 @@ class XYContainer(IndexedContainer):
         _axis = self._find_axis_raise(axis)
         _err = MatrixGaussianError(
             err_matrix=err_matrix, matrix_type=matrix_type, err_val=err_val,
-            relative=relative, reference=self._get_data_for_axis(_axis)
+            relative=relative, reference=lambda: self._get_data_for_axis(_axis)
         )
         _name = self._add_error_object(name=name, error_object=_err, axis=_axis)
         return _name

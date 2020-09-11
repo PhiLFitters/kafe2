@@ -44,6 +44,7 @@ class XYFit(FitBase):
     _STRING_TO_COST_FUNCTION = STRING_TO_COST_FUNCTION
     _AXES = (None, "x", "y")
     _MODEL_NAME = "y_model"
+    _MODEL_ERROR_NAMES = ["y_model_error", "y_model_cov_mat"]
 
     def __init__(self,
                  xy_data,
@@ -245,16 +246,16 @@ class XYFit(FitBase):
         _data_table_dict['X Data'] = self.x_data
         if self._data_container.has_x_errors:
             _data_table_dict['X Data Error'] = self.x_data_error
-            _data_table_dict['X Data Total Correlation Matrix'] = self.x_data_cor_mat
+            _data_table_dict['X Data Correlation Matrix'] = self.x_data_cor_mat
 
         print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=indentation_level + 1)
         output_stream.write('\n')
 
         _data_table_dict = OrderedDict()
         _data_table_dict['Y Data'] = self.y_data
-        if self.has_data_errors:
+        if self._data_container.has_y_errors:
             _data_table_dict['Y Data Error'] = self.y_data_error
-            _data_table_dict['Y Data Total Correlation Matrix'] = self.y_data_cor_mat
+            _data_table_dict['Y Data Correlation Matrix'] = self.y_data_cor_mat
 
         print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=indentation_level + 1)
         output_stream.write('\n')
@@ -263,23 +264,29 @@ class XYFit(FitBase):
         # call base method to show header and model function
         super(XYFit, self)._report_model(output_stream, indent, indentation_level)
         # print model values at POIs
-        _data_table_dict = OrderedDict()
-        _data_table_dict['X Model'] = self.x_model
-        if self.has_model_errors:
-            _data_table_dict['X Model Error'] = self.x_model_error
-            _data_table_dict['X Model Total Correlation Matrix'] = self.x_model_cor_mat
+        _model_table_dict = OrderedDict()
+        _model_table_dict['X Model'] = self.x_model
+        if self._param_model.has_x_errors:
+            _model_table_dict['X Model Error'] = self.x_model_error
+            _model_table_dict['X Model Correlation Matrix'] = self.x_model_cor_mat
 
-        print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=indentation_level + 1)
+        print_dict_as_table(_model_table_dict, output_stream=output_stream, indent_level=indentation_level + 1)
         output_stream.write('\n')
 
-        _data_table_dict = OrderedDict()
-        _data_table_dict['Y Model'] = self.y_model
-        if self.has_model_errors:
-            _data_table_dict['Y Model Error'] = self.y_model_error
-            _data_table_dict['Y Model Total Correlation Matrix'] = self.y_model_cor_mat
+        _model_table_dict = OrderedDict()
+        _model_table_dict['Y Model'] = self.y_model
+        if self._param_model.has_y_errors:
+            _model_table_dict['Y Model Error'] = self.y_model_error
+            _model_table_dict['Y Model Correlation Matrix'] = self.y_model_cor_mat
 
-        print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=indentation_level + 1)
+        print_dict_as_table(_model_table_dict, output_stream=output_stream, indent_level=indentation_level + 1)
         output_stream.write('\n')
+        if self._param_model.get_matching_errors({"relative": True, "axis": 1}):
+            output_stream.write(indent * (indentation_level + 1))
+            output_stream.write(
+                "y model covariance matrix was calculated dynamically relative to y model values.\n"
+            )
+            output_stream.write("\n")
 
     def _project_x_onto_y(self, x, y, sqrt=False):
         if x.ndim not in (1, 2):
@@ -301,6 +308,32 @@ class XYFit(FitBase):
             return np.sqrt(y ** 2 + x ** 2 * _x_scale)
         else:
             return y + x * _x_scale
+
+    def _transfer_rel_err_ref(self):
+        _errs_and_old_refs = []
+        for _err in self._param_model.get_matching_errors({"relative": True, "axis": 1}).values():
+            _old_ref = _err.reference
+            _err.reference = self._data_container.y
+            _errs_and_old_refs.append((_err, _old_ref))
+        return _errs_and_old_refs
+
+    def _do_iterative_fit(self):
+        # iterate until cost function value converges
+        _convergence_limit = float(kc('fit', 'x_error_fit_convergence_limit'))
+        _previous_cost_function_value = self.cost_function_value
+        for i in range(kc('fit', 'max_x_error_fit_iterations')):
+
+            # explicitly update (frozen) projected matrix before each iteration
+            self._with_projected_nodes('update')
+
+            self._fitter.do_fit()
+
+            # check convergence
+            if np.abs(
+                    self.cost_function_value - _previous_cost_function_value) < _convergence_limit:
+                break  # fit converged
+
+            _previous_cost_function_value = self.cost_function_value
 
     # -- public properties
 
@@ -747,7 +780,8 @@ class XYFit(FitBase):
         self.set_parameter_values(**_par_val_dict)
 
     def do_fit(self, asymmetric_parameter_errors=False):
-        if self._cost_function.needs_errors and not self._data_container.has_y_errors:
+        if self._cost_function.needs_errors and not (
+                self._data_container.has_y_errors or self._param_model.has_y_errors):
             self._cost_function.on_no_errors()
 
         # explicitly update (frozen) projected covariance matrix before fit
@@ -766,30 +800,33 @@ class XYFit(FitBase):
                 # and kept constant during minimization
                 self._with_projected_nodes(('update', 'freeze'))
 
-                # perform a preliminary fit
+                # Give relative model errors data as reference for initial fit:
+                _errs_and_model_refs = self._transfer_rel_err_ref()
+                for _model_err_name in self._MODEL_ERROR_NAMES:
+                    _node = self._nexus.get(_model_err_name)
+                    _node.update()
+                    _node.freeze()
                 self._fitter.do_fit()
 
-                # iterate until cost function value converges
-                _convergence_limit = float(kc('fit', 'x_error_fit_convergence_limit'))
-                _previous_cost_function_value = self.cost_function_value
-                for i in range(kc('fit', 'max_x_error_fit_iterations')):
+                # Do first iterative fit
+                self._do_iterative_fit()
 
-                    # explicitly update (frozen) projected matrix before each iteration
-                    self._with_projected_nodes('update')
-
-                    self._fitter.do_fit()
-
-                    # check convergence
-                    if np.abs(self.cost_function_value - _previous_cost_function_value) < _convergence_limit:
-                        break  # fit converged
-
-                    _previous_cost_function_value = self.cost_function_value
+                # Restore error references and perform a second iterative fit if appropriate:
+                for _err, _model_ref in _errs_and_model_refs:
+                    _err.reference = _model_ref
+                for _model_err_name in self._MODEL_ERROR_NAMES:
+                    _node = self._nexus.get(_model_err_name)
+                    _node.unfreeze()
+                    _node.update()
+                if len(_errs_and_model_refs) > 0:
+                    self._do_iterative_fit()
 
         else:
             # no 'x' errors: fit as usual
 
-            # freeze error projection nodes (faster)
-            self._with_projected_nodes(('update', 'freeze'))
+            if not self._param_model.get_matching_errors({"relative": True, "axis": 1}):
+                # freeze error projection nodes (faster)
+                self._with_projected_nodes(('update', 'freeze'))
 
             super(XYFit, self).do_fit()
 
