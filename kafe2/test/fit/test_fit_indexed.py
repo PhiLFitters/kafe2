@@ -127,32 +127,37 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
             #total_uncor_cov_mat_inverse=self._ref_matrix_eye,
         )
 
-    def _get_fit(self, model_function=None, cost_function=None, error=None):
+    def _get_fit(
+            self, model_function=None, cost_function=None, errors=None,
+            dynamic_error_algorithm=None):
         '''convenience'''
         model_function = model_function or simple_indexed_model
         # TODO: fix default
         cost_function = cost_function or IndexedCostFunction_Chi2(
             errors_to_use='covariance')
-        error = error or 1.0
+        errors = errors or [dict(err_val=1.0)]
+        dynamic_error_algorithm = dynamic_error_algorithm or "nonlinear"
 
         _fit = IndexedFit(
             data=self._ref_data,
             model_function=model_function,
             cost_function=cost_function,
-            minimizer=self.MINIMIZER
+            minimizer=self.MINIMIZER,
+            dynamic_error_algorithm=dynamic_error_algorithm
         )
-        _fit.add_error(err_val=error)
+        for _err in errors:
+            _fit.add_error(**_err)
 
         return _fit
 
     def _get_test_fits(self):
         return {
-            'default': \
-                self._get_fit(),
-            'explicit': \
-                self._get_fit(cost_function=simple_chi2),
-            'explicit_model': \
-                self._get_fit(cost_function=simple_chi2_explicit_model_name),
+            'default': self._get_fit(),
+            'explicit': self._get_fit(cost_function=simple_chi2),
+            'explicit_model': self._get_fit(cost_function=simple_chi2_explicit_model_name),
+            'relative_errors_data': self._get_fit(
+                errors=[dict(err_val=1.0 / self._ref_data, relative=True, reference='data')]
+            ),
         }
 
     def test_initial_state(self):
@@ -339,6 +344,32 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
         _fit.do_fit()
         _fit.report(output_stream=_buffer)
         self.assertNotEqual(_buffer.getvalue(), "")
+
+    def test_relative_model_error_nonlinear(self):
+        _fit_data_err = self._get_fit(errors=[
+            dict(err_val=1.0, relative=False, reference="data"),
+            dict(err_val=0.1, relative=True, reference="data")
+        ])
+        _fit_model_err = self._get_fit(errors=[
+            dict(err_val=1.0, relative=False, reference="data"),
+            dict(err_val=0.1, relative=True, reference="model")
+        ], dynamic_error_algorithm="nonlinear")
+        _fit_data_err.do_fit()
+        _fit_model_err.do_fit()
+        self._assert_fit_results_equal(_fit_data_err, _fit_model_err, rtol=3e-2)
+
+    def test_relative_model_error_iterative(self):
+        _fit_data_err = self._get_fit(errors=[
+            dict(err_val=1.0, relative=False, reference="data"),
+            dict(err_val=0.1, relative=True, reference="data")
+        ])
+        _fit_model_err = self._get_fit(errors=[
+            dict(err_val=1.0, relative=False, reference="data"),
+            dict(err_val=0.1, relative=True, reference="model")
+        ], dynamic_error_algorithm="iterative")
+        _fit_data_err.do_fit()
+        _fit_model_err.do_fit()
+        self._assert_fit_results_equal(_fit_data_err, _fit_model_err, rtol=1e-2)
 
 
 class TestIndexedFitWithSimpleErrors(AbstractTestFit, unittest.TestCase):

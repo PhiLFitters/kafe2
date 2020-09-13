@@ -21,8 +21,9 @@ core:
 
 fit:
   log_filename: "fit.log"
-  max_x_error_fit_iterations: 10
-  x_error_fit_convergence_limit: 1e-5
+  iterative_do_fit:
+    max_iterations: 10
+    convergence_limit: 1e-5
   plot:
     axis_labels:
       x: '$x$'

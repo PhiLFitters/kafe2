@@ -36,7 +36,8 @@ class IndexedFit(FitBase):
                     errors_to_use='covariance',
                     fallback_on_singular=True),
                  minimizer=None,
-                 minimizer_kwargs=None):
+                 minimizer_kwargs=None,
+                 dynamic_error_algorithm="nonlinear"):
         """
         Construct a fit of a model to a series of indexed measurements.
 
@@ -53,7 +54,9 @@ class IndexedFit(FitBase):
         """
         super(IndexedFit, self).__init__(
             data=data, model_function=model_function, cost_function=cost_function,
-            minimizer=minimizer, minimizer_kwargs=minimizer_kwargs)
+            minimizer=minimizer, minimizer_kwargs=minimizer_kwargs,
+            dynamic_error_algorithm=dynamic_error_algorithm
+        )
 
     # -- private methods
 

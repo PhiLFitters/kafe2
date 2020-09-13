@@ -131,7 +131,6 @@ class CostFunction(FileIOMixin, object):
 
         self._needs_errors = True
         self._is_chi2 = False
-        self._no_errors_warning_printed = False
         super(CostFunction, self).__init__()
 
     @classmethod
@@ -206,11 +205,6 @@ class CostFunction(FileIOMixin, object):
         :rtype: (boo, str)
         """
         return True, None
-
-    def on_no_errors(self):
-        if not self._no_errors_warning_printed:
-            warnings.warn('No errors specified.')
-            self._no_errors_warning_printed = True
 
 
 class CostFunction_Chi2(CostFunction):

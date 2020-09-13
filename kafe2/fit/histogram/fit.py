@@ -33,7 +33,8 @@ class HistFit(FitBase):
                     data_point_distribution='poisson'),
                  bin_evaluation="simpson",
                  minimizer=None,
-                 minimizer_kwargs=None):
+                 minimizer_kwargs=None,
+                 dynamic_error_algorithm="nonlinear"):
         """
         Construct a fit of a model to a histogram. If bin_evaluation is a Python function or
         of a numpy.vectorize object it is interpreted as the antiderivative of
@@ -60,7 +61,8 @@ class HistFit(FitBase):
         self._bin_evaluation = bin_evaluation
         super(HistFit, self).__init__(
             data=data, model_function=model_density_function, cost_function=cost_function,
-            minimizer=minimizer, minimizer_kwargs=minimizer_kwargs)
+            minimizer=minimizer, minimizer_kwargs=minimizer_kwargs,
+            dynamic_error_algorithm=dynamic_error_algorithm)
 
     # -- private methods
 

@@ -44,15 +44,16 @@ class XYFit(FitBase):
     _STRING_TO_COST_FUNCTION = STRING_TO_COST_FUNCTION
     _AXES = (None, "x", "y")
     _MODEL_NAME = "y_model"
-    _MODEL_ERROR_NAMES = ["y_model_error", "y_model_cov_mat"]
+    _MODEL_ERROR_NODE_NAMES = ["y_model_error", "y_model_cov_mat"]
+    _PROJECTED_NODE_NAMES = ["total_error", "total_cov_mat"]
 
     def __init__(self,
                  xy_data,
                  model_function=function_library.linear_model,
                  cost_function=XYCostFunction_Chi2(
                     axes_to_use='xy', errors_to_use='covariance'),
-                 x_error_algorithm='nonlinear',
-                 minimizer=None, minimizer_kwargs=None):
+                 minimizer=None, minimizer_kwargs=None,
+                 dynamic_error_algorithm="nonlinear"):
         """
         Construct a fit of a model to *xy* data.
 
@@ -62,23 +63,15 @@ class XYFit(FitBase):
         :type model_function: :py:class:`~kafe2.fit.xy.XYModelFunction` or unwrapped native Python function
         :param cost_function: the cost function
         :type cost_function: :py:class:`~kafe2.fit._base.CostFunctionBase`-derived or unwrapped native Python function
-        :param x_error_algorithm: algorithm for handling x errors. Can be one of: ``'iterative linear'``, ``'nonlinear'``
-        :type x_error_algorithm: str
         :param minimizer: the minimizer to use for fitting.
         :type minimizer: None, "iminuit", "tminuit", or "scipy".
         :param minimizer_kwargs: dictionary with kwargs for the minimizer.
         :type minimizer_kwargs: dict
         """
-        # validate x error algorithm
-        if x_error_algorithm not in XYFit.X_ERROR_ALGORITHMS:
-            raise ValueError("Unknown value for 'x_error_algorithm': "
-                             "{}. Expected one of:".format(x_error_algorithm,
-                                                           ', '.join(['iterative linear', 'nonlinear'])))
-        self._x_error_algorithm = x_error_algorithm
-
         super(XYFit, self).__init__(
             data=xy_data, model_function=model_function, cost_function=cost_function,
-            minimizer=minimizer, minimizer_kwargs=minimizer_kwargs)
+            minimizer=minimizer, minimizer_kwargs=minimizer_kwargs,
+            dynamic_error_algorithm=dynamic_error_algorithm)
 
     # -- private methods
 
@@ -192,23 +185,6 @@ class XYFit(FitBase):
             )
         )
 
-        # in case 'x' errors are defined and the corresponding
-        # algorithm is 'iterative linear', matrices should be projected
-        # once and the corresponding node made frozen
-        if (self._x_error_algorithm == 'iterative linear' and
-            not self.has_x_errors):
-
-            self._with_projected_nodes(('update', 'freeze'))
-
-    def _with_projected_nodes(self, actions):
-        '''perform actions on projected error nodes: freeze, update, unfreeze...'''
-        if isinstance(actions, str):
-            actions = (actions,)
-        for _node_name in ('total_error', 'total_cov_mat'):
-            for action in actions:
-                _node = self._nexus.get(_node_name)
-                getattr(_node, action)()
-
     def _get_poi_index_by_name(self, name):
         try:
             return self._poi_names.index(name)
@@ -309,7 +285,7 @@ class XYFit(FitBase):
         else:
             return y + x * _x_scale
 
-    def _transfer_rel_err_ref(self):
+    def _set_data_as_model_ref(self):
         _errs_and_old_refs = []
         for _err in self._param_model.get_matching_errors({"relative": True, "axis": 1}).values():
             _old_ref = _err.reference
@@ -317,23 +293,21 @@ class XYFit(FitBase):
             _errs_and_old_refs.append((_err, _old_ref))
         return _errs_and_old_refs
 
-    def _do_iterative_fit(self):
-        # iterate until cost function value converges
-        _convergence_limit = float(kc('fit', 'x_error_fit_convergence_limit'))
-        _previous_cost_function_value = self.cost_function_value
-        for i in range(kc('fit', 'max_x_error_fit_iterations')):
+    def _iterative_fits_needed(self):
+        return (bool(self._param_model.get_matching_errors({"relative": True, "axis": 1}))
+                or self.has_x_errors) \
+               and self._dynamic_error_algorithm == "iterative"
 
-            # explicitly update (frozen) projected matrix before each iteration
-            self._with_projected_nodes('update')
+    def _second_fit_needed(self):
+        return bool(self._param_model.get_matching_errors({"relative": True, "axis": 1})) \
+               and self._dynamic_error_algorithm == "iterative"
 
-            self._fitter.do_fit()
-
-            # check convergence
-            if np.abs(
-                    self.cost_function_value - _previous_cost_function_value) < _convergence_limit:
-                break  # fit converged
-
-            _previous_cost_function_value = self.cost_function_value
+    def _get_node_names_to_freeze(self, first_fit):
+        if not self.has_x_errors or self._dynamic_error_algorithm == "iterative":
+            return self._PROJECTED_NODE_NAMES + super(
+                XYFit, self)._get_node_names_to_freeze(first_fit)
+        else:
+            return super(XYFit, self)._get_node_names_to_freeze(first_fit)
 
     # -- public properties
 
@@ -778,69 +752,6 @@ class XYFit(FitBase):
         # set values in nexus
         _par_val_dict = {_pn: _pv for _pn, _pv in zip(_param_names, param_values)}
         self.set_parameter_values(**_par_val_dict)
-
-    def do_fit(self, asymmetric_parameter_errors=False):
-        if self._cost_function.needs_errors and not (
-                self._data_container.has_y_errors or self._param_model.has_y_errors):
-            self._cost_function.on_no_errors()
-
-        # explicitly update (frozen) projected covariance matrix before fit
-        self._with_projected_nodes('update')
-
-        if self.has_x_errors:
-            if self._x_error_algorithm == 'nonlinear':
-                # 'nonlinear' x error fitting: one iteration;
-                # projected covariance matrix is updated during minimization
-                self._with_projected_nodes(('update', 'unfreeze'))
-                super(XYFit, self).do_fit()
-
-            elif self._x_error_algorithm == 'iterative linear':
-                # 'iterative linear' x error fitting: multiple iterations;
-                # projected covariance matrix is only updated in-between
-                # and kept constant during minimization
-                self._with_projected_nodes(('update', 'freeze'))
-
-                # Give relative model errors data as reference for initial fit:
-                _errs_and_model_refs = self._transfer_rel_err_ref()
-                for _model_err_name in self._MODEL_ERROR_NAMES:
-                    _node = self._nexus.get(_model_err_name)
-                    _node.update()
-                    _node.freeze()
-                self._fitter.do_fit()
-
-                # Do first iterative fit
-                self._do_iterative_fit()
-
-                # Restore error references and perform a second iterative fit if appropriate:
-                for _err, _model_ref in _errs_and_model_refs:
-                    _err.reference = _model_ref
-                for _model_err_name in self._MODEL_ERROR_NAMES:
-                    _node = self._nexus.get(_model_err_name)
-                    _node.unfreeze()
-                    _node.update()
-                if len(_errs_and_model_refs) > 0:
-                    self._do_iterative_fit()
-
-        else:
-            # no 'x' errors: fit as usual
-
-            if not self._param_model.get_matching_errors({"relative": True, "axis": 1}):
-                # freeze error projection nodes (faster)
-                self._with_projected_nodes(('update', 'freeze'))
-
-            super(XYFit, self).do_fit()
-
-        # explicitly update error projection nodes
-        self._with_projected_nodes('update')
-
-        # unfreeze error projection nodes only if fit has x errors
-        if self.has_x_errors:
-            self._with_projected_nodes('unfreeze')
-
-        # clear loaded results and update parameter formatters
-        self._loaded_result_dict = None
-        self._update_parameter_formatters()
-        return self.get_result_dict(asymmetric_parameter_errors=asymmetric_parameter_errors)
 
     def eval_model_function(self, x=None, model_parameters=None):
         """

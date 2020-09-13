@@ -23,8 +23,11 @@ class MultiFit(FitBase):
     """
 
     _AXES = ()
+    _MODEL_ERROR_NODE_NAMES = []
 
-    def __init__(self, fit_list, minimizer=None, minimizer_kwargs=None):
+    def __init__(
+            self, fit_list, minimizer=None, minimizer_kwargs=None,
+            dynamic_error_algorithm="nonlinear"):
         """
         :param fit_list: List or Iterable of the individual fits from which to create the MultiFit.
         :type fit_list: collections.Iterable[FitBase]
@@ -42,7 +45,7 @@ class MultiFit(FitBase):
         self._min_x_error = None
         super(MultiFit, self).__init__(
             data=None, model_function=None, cost_function=None, minimizer=minimizer,
-            minimizer_kwargs=minimizer_kwargs)
+            minimizer_kwargs=minimizer_kwargs, dynamic_error_algorithm=dynamic_error_algorithm)
 
     # -- private methods
 
@@ -321,10 +324,10 @@ class MultiFit(FitBase):
                 _node_name = 'y_data%s'
             elif axis == 'x' and reference == 'model':
                 _node_name = 'x_model%s'
-                raise NotImplementedError("Errors relative to model not implemented")
+                raise ValueError("Shared errors relative to model are not supported.")
             elif axis == 'y' and reference == 'model':
                 _node_name = 'y_model%s'
-                raise NotImplementedError("Errors relative to model not implemented")
+                raise ValueError("Shared errors relative to model are not supported.")
             else:
                 raise AssertionError()
             _reference_value = None
@@ -393,6 +396,30 @@ class MultiFit(FitBase):
 
     def _set_new_parametric_model(self):
         raise NotImplementedError()
+
+    def _set_data_as_model_ref(self):
+        for _fit in self._fits:
+            _fit._set_data_as_model_ref()
+
+    def _iterative_fits_needed(self):
+        for _fit in self._fits:
+            if _fit._iterative_fits_needed():
+                return True
+        return False
+
+    def _second_fit_needed(self):
+        for _fit in self._fits:
+            if _fit._second_fit_needed():
+                return True
+        return False
+
+    def _pre_fit_iteration(self, first_fit=False):
+        for _fit in self._fits:
+            _fit._pre_fit_iteration(first_fit)
+
+    def _post_fit_iteration(self, first_fit=False):
+        for _fit in self._fits:
+            _fit._post_fit_iteration(first_fit)
 
     # -- public properties
 
@@ -645,12 +672,10 @@ class MultiFit(FitBase):
 
     def do_fit(self, asymmetric_parameter_errors=False):
         for _i, _fit_i in enumerate(self._fits):
-            if _fit_i._cost_function.needs_errors and not _fit_i.data_container.has_errors:
-                raise self.EXCEPTION_TYPE('No data errors defined for fit %s' % _i)
-        self._fitter.do_fit()
-        self._update_singular_fits()
-        self._loaded_result_dict = None
-        return self.get_result_dict(asymmetric_parameter_errors=asymmetric_parameter_errors)
+            if _fit_i._cost_function.needs_errors and not _fit_i.has_errors:
+                warnings.warn("Cost function of fit %s expects errors but no errors were specified "
+                              "for that fit." % _i)
+        return super(MultiFit, self).do_fit(asymmetric_parameter_errors=asymmetric_parameter_errors)
 
     def get_matching_errors(self, fit_index=None, matching_criteria=None, matching_type='equal'):
         """Return a list of uncertainty objects fulfilling the specified matching criteria.

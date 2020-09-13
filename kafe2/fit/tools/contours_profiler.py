@@ -241,6 +241,7 @@ class ContoursProfiler(object):
         """
         _kwargs = dict(bins=self._profile_kwargs['points'], bound=self._profile_kwargs['bound'],
                        args=None, subtract_min=self._profile_kwargs['subtract_min'])
+        self._fit._check_dynamic_error_compatibility()
         return self._fit._fitter.profile(parameter, **_kwargs)  # TODO fix for single fit inside multifit
 
     def get_contours(self, parameter_1, parameter_2, smoothing_sigma=None):
@@ -274,6 +275,7 @@ class ContoursProfiler(object):
                 _cont[1] = gaussian_filter(_cont[1], smoothing_sigma, mode='wrap')
 
             _contours.append((_cl_obj, _cont))
+        self._fit._check_dynamic_error_compatibility()
         return _contours
 
     # - plot profiles/contours

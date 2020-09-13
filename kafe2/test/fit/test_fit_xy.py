@@ -165,32 +165,37 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
             _y_data_nuisance_cor_design_mat=np.zeros((0, self._n_points)),
         )
 
-    def _get_fit(self, model_function=None, cost_function=None, error=None):
+    def _get_fit(
+            self, model_function=None, cost_function=None, errors=None,
+            dynamic_error_algorithm=None):
         '''convenience'''
         model_function = model_function or simple_xy_model
         # TODO: fix default
         cost_function = cost_function or XYCostFunction_Chi2(
             axes_to_use='xy', errors_to_use='covariance')
-        error = error or 1.0
+        errors = errors or [dict(axis='y', err_val=1.0)]
+        dynamic_error_algorithm = dynamic_error_algorithm or "nonlinear"
 
         _fit = XYFit(
             xy_data=self._ref_xy_data,
             model_function=model_function,
             cost_function=cost_function,
-            minimizer=self.MINIMIZER
+            minimizer=self.MINIMIZER,
+            dynamic_error_algorithm=dynamic_error_algorithm
         )
-        _fit.add_error(axis='y', err_val=error)
+        for _err in errors:
+            _fit.add_error(**_err)
 
         return _fit
 
     def _get_test_fits(self):
         return {
-            'default': \
-                self._get_fit(),
-            'explicit': \
-                self._get_fit(cost_function=simple_chi2),
-            'explicit_model': \
-                self._get_fit(cost_function=simple_chi2_explicit_model_name),
+            'default': self._get_fit(),
+            'explicit': self._get_fit(cost_function=simple_chi2),
+            'explicit_model': self._get_fit(cost_function=simple_chi2_explicit_model_name),
+            'relative_errors_data': self._get_fit(errors=[
+                dict(axis="y", err_val=1.0/self._ref_y_data, relative=True, reference="data")
+            ])
         }
 
     def test_initial_state(self):
@@ -515,6 +520,32 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
     def test_data_and_cost_incompatible(self):
         with self.assertRaises(XYFitException):
             self._get_fit(cost_function="nll")
+
+    def test_relative_model_error_nonlinear(self):
+        _fit_data_err = self._get_fit(errors=[
+            dict(axis="y", err_val=1.0, relative=False, reference="data"),
+            dict(axis="y", err_val=0.1, relative=True, reference="data")
+        ])
+        _fit_model_err = self._get_fit(errors=[
+            dict(axis="y", err_val=1.0, relative=False, reference="data"),
+            dict(axis="y", err_val=0.1, relative=True, reference="model")
+        ], dynamic_error_algorithm="nonlinear")
+        _fit_data_err.do_fit()
+        _fit_model_err.do_fit()
+        self._assert_fit_results_equal(_fit_data_err, _fit_model_err, rtol=6e-2)
+
+    def test_relative_model_error_iterative(self):
+        _fit_data_err = self._get_fit(errors=[
+            dict(axis="y", err_val=1.0, relative=False, reference="data"),
+            dict(axis="y", err_val=0.1, relative=True, reference="data")
+        ])
+        _fit_model_err = self._get_fit(errors=[
+            dict(axis="y", err_val=1.0, relative=False, reference="data"),
+            dict(axis="y", err_val=0.1, relative=True, reference="model")
+        ], dynamic_error_algorithm="iterative")
+        _fit_data_err.do_fit()
+        _fit_model_err.do_fit()
+        self._assert_fit_results_equal(_fit_data_err, _fit_model_err, rtol=1e-2)
 
 
 class TestXYFitWithSimpleYErrors(AbstractTestFit, unittest.TestCase):
@@ -883,21 +914,25 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
             total_error=self._ref_projected_xy_errors,
         )
 
-    def _get_fit(self, errors=None):
+    def _get_fit(self, errors=None, constraints=None, dynamic_error_algorithm=None):
         '''convenience'''
 
         errors = errors or [dict(axis='y', err_val=1.0)]
+        constraints = constraints or []
+        dynamic_error_algorithm = dynamic_error_algorithm or "nonlinear"
 
         _fit = XYFit(
             xy_data=self._ref_xy_data,
             model_function=line_xy_model,
             cost_function=self._default_cost_function,
             minimizer=self.MINIMIZER,
-            #x_error_algorithm='nonlinear',  # TODO: test other algorithms
+            dynamic_error_algorithm=dynamic_error_algorithm
         )
 
         for _err in errors:
             _fit.add_error(**_err)
+        for _constraint in constraints:
+            _fit.add_parameter_constraint(**_constraint)
 
         _fit.set_all_parameter_values(self._ref_initial_pars)
 
@@ -951,3 +986,55 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
         with self.assertRaises(TypeError):
             # string representations of numerics should also fail
             self._get_fit().limit_parameter("a", "0.3", "14")
+
+    def test_iterative_linear_and_relative_model_error(self):
+        _constraints = [
+            dict(name="a", value=1.0, uncertainty=0.1),
+            dict(name="b", value=0.3, uncertainty=0.1)
+        ]
+        _errors_rel_data = [
+            dict(axis="x", err_val=0.1, relative=False, reference="data"),
+            dict(axis="y", err_val=1.0, relative=False, reference="data"),
+            dict(axis="y", err_val=0.1, relative=True, reference="data")
+        ]
+        _errors_rel_model = [
+            dict(axis="x", err_val=0.1, relative=False, reference="data"),
+            dict(axis="y", err_val=1.0, relative=False, reference="data"),
+            dict(axis="y", err_val=0.1, relative=True, reference="model")
+        ]
+        _fit_rel_data_nonlinear = self._get_fit(
+            errors=_errors_rel_data, constraints=_constraints,
+            dynamic_error_algorithm="nonlinear")
+        _fit_rel_data_iterative = self._get_fit(
+            errors=_errors_rel_data, constraints=_constraints,
+            dynamic_error_algorithm="iterative")
+        _fit_rel_model_nonlinear = self._get_fit(
+            errors=_errors_rel_model, constraints=_constraints,
+            dynamic_error_algorithm="nonlinear")
+        _fit_rel_model_iterative = self._get_fit(
+            errors=_errors_rel_model, constraints=_constraints,
+            dynamic_error_algorithm="iterative")
+        _fit_rel_data_nonlinear.do_fit()
+        _fit_rel_data_iterative.do_fit()
+        _fit_rel_model_nonlinear.do_fit()
+        _fit_rel_model_iterative.do_fit()
+
+        print("============ rel data nonlinear vs rel data iterative ==========\n")
+        self._assert_fit_results_equal(
+            _fit_rel_data_nonlinear, _fit_rel_data_iterative, rtol=1e-2)
+        print("============ rel data nonlinear vs rel model nonlinear ==========\n")
+        self._assert_fit_results_equal(
+            _fit_rel_data_nonlinear, _fit_rel_model_nonlinear, rtol=1e-2)
+        print("============ rel data nonlinear vs rel model iterative ==========\n")
+        self._assert_fit_results_equal(
+            _fit_rel_data_nonlinear, _fit_rel_model_iterative, rtol=1e-2)
+        print("============ rel model nonlinear vs rel model iterative ==========\n")
+        self._assert_fit_results_equal(
+            _fit_rel_model_nonlinear, _fit_rel_model_iterative, rtol=1e-2)
+        print("============ rel data iterative vs rel model iterative ==========\n")
+        self._assert_fit_results_equal(
+            _fit_rel_data_iterative, _fit_rel_model_iterative, rtol=1e-2)
+        print("============ rel data iterative vs rel model nonlinear ==========\n")
+        self._assert_fit_results_equal(
+            _fit_rel_data_iterative, _fit_rel_model_nonlinear, rtol=1e-2)
+

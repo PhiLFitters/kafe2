@@ -9,6 +9,7 @@ import six
 
 from .container import DataContainerBase, DataContainerException
 from ..io.file import FileIOMixin
+from ...config import kc
 from ...core.fitters.nexus import Nexus, NexusError, Parameter
 from ...core.fitters.nexus_fitter import NexusFitter
 from ...core.constraint import GaussianMatrixParameterConstraint, GaussianSimpleParameterConstraint
@@ -41,9 +42,11 @@ class FitBase(FileIOMixin, object):
     _STRING_TO_COST_FUNCTION = STRING_TO_COST_FUNCTION
     _AXES = (None,)  # axes for which to for example create data nexus nodes
     _MODEL_NAME = "model"
-    _MODEL_ERROR_NAMES = ["model_error", "model_cov_mat"]
+    _MODEL_ERROR_NODE_NAMES = ["model_error", "model_cov_mat"]
 
-    def __init__(self, data, model_function, cost_function, minimizer=None, minimizer_kwargs=None):
+    def __init__(
+            self, data, model_function, cost_function, minimizer=None, minimizer_kwargs=None,
+            dynamic_error_algorithm="nonlinear"):
         """This is a purely abstract class implementing the minimal interface required by all
         types of fits.
 
@@ -51,6 +54,8 @@ class FitBase(FileIOMixin, object):
         :type minimizer: str or None
         :param minimizer_kwargs: Dictionary wit keywords for initializing the minimizer.
         :type minimizer_kwargs: dict or None
+        :param dynamic_error_algorithm: how to handle errors that depend on the model parameters.
+        :type dynamic_error_algorithm: "nonlinear" or "iterative".
         """
         super(FitBase, self).__init__()
         self._data_container = None
@@ -66,6 +71,9 @@ class FitBase(FileIOMixin, object):
         # save minimizer, minimizer_kwargs for serialization
         self._minimizer = minimizer
         self._minimizer_kwargs = minimizer_kwargs
+
+        self.dynamic_error_algorithm = dynamic_error_algorithm
+        self._dynamic_error_warning_printed = False
 
         # set/construct the model function object
         if self.MODEL_FUNCTION_TYPE is None:
@@ -328,6 +336,7 @@ class FitBase(FileIOMixin, object):
             _fpf.value = _pv
             _fpf.error = _pe
         if update_asymmetric_errors:
+            self._check_dynamic_error_compatibility()
             for _fpf, _ape in zip(self._get_model_function_parameter_formatters(), self.asymmetric_parameter_errors):
                 _fpf.asymmetric_error = _ape
 
@@ -337,13 +346,45 @@ class FitBase(FileIOMixin, object):
         for _error_name in self._BASIC_ERROR_NAMES:
             self._nexus.get(_error_name).mark_for_update()
 
-    def _transfer_rel_err_ref(self):
-        _errs_and_old_refs = []
+    def _set_data_as_model_ref(self):
         for _err in self._param_model.get_matching_errors({"relative": True}).values():
             _old_ref = _err.reference
             _err.reference = self._data_container.data
-            _errs_and_old_refs.append((_err, _old_ref))
-        return _errs_and_old_refs
+
+    def _iterative_fits_needed(self):
+        return bool(self._param_model.get_matching_errors({"relative": True})) \
+               and self._dynamic_error_algorithm == "iterative"
+
+    def _second_fit_needed(self):
+        return bool(self._param_model.get_matching_errors({"relative": True})) \
+               and self._dynamic_error_algorithm == "nonlinear"
+
+    def _get_node_names_to_freeze(self, first_fit):
+        if first_fit or not self._param_model.get_matching_errors({"relative": True}) \
+                or self._dynamic_error_algorithm == "iterative":
+            return self._MODEL_ERROR_NODE_NAMES
+        else:
+            return []
+
+    def _pre_fit_iteration(self, first_fit=False):
+        for _model_err_name in self._get_node_names_to_freeze(first_fit):
+            _node = self._nexus.get(_model_err_name)
+            _node.update()
+            _node.freeze()
+
+    def _post_fit_iteration(self, first_fit=False):
+        for _model_err_name in self._get_node_names_to_freeze(first_fit):
+            _node = self._nexus.get(_model_err_name)
+            _node.unfreeze()
+            _node.update()
+            _node.notify_parents()
+
+    def _check_dynamic_error_compatibility(self):
+        if not self._dynamic_error_warning_printed and self._iterative_fits_needed():
+            warnings.warn(
+                "Asymmetric parameter errors, parameter profiles, and contours cannot be "
+                "calculated with iterative dynamic errors. Used nonlinear errors instead.")
+            self._dynamic_error_warning_printed = True
 
     # -- public properties
 
@@ -539,6 +580,7 @@ class FitBase(FileIOMixin, object):
         """
         if self._loaded_result_dict is not None and self._loaded_result_dict['asymmetric_parameter_errors'] is not None:
             return self._loaded_result_dict['asymmetric_parameter_errors']
+        self._check_dynamic_error_compatibility()
         return self._fitter.asymmetric_fit_parameter_errors
 
     @property
@@ -640,6 +682,22 @@ class FitBase(FileIOMixin, object):
         :rtype: int
         """
         return self._param_model.ndf + len(self._fitter.fixed_parameters)
+
+    @property
+    def dynamic_error_algorithm(self):
+        """The algorithm to use for handling errors that depend on the model parameters.
+        :rtype: str
+        """
+        return self._dynamic_error_algorithm
+
+    @dynamic_error_algorithm.setter
+    def dynamic_error_algorithm(self, new_dea):
+        _valid_deas = ["nonlinear", "iterative"]
+        if new_dea not in _valid_deas:
+            raise ValueError(
+                "Unknown dynamic error algorithm: %s. Valid algorithms: %s" % (
+                    new_dea, _valid_deas))
+        self._dynamic_error_algorithm = new_dea
 
     # -- public methods
 
@@ -918,28 +976,33 @@ class FitBase(FileIOMixin, object):
         :return: A dictionary containing the fit results.
         :rtype: dict
         """
-        if self._cost_function.needs_errors and not (self.has_data_errors or self.has_model_errors):
-            self._cost_function.on_no_errors()
+        if self._cost_function.needs_errors and not self.has_errors:
+            warnings.warn("Cost function expects errors but no errors were specified.")
 
         # Give relative model errors data as reference for initial fit:
-        _errs_and_model_refs = self._transfer_rel_err_ref()
-        for _model_err_name in self._MODEL_ERROR_NAMES:
-            _node = self._nexus.get(_model_err_name)
-            _node.update()
-            _node.freeze()
+        self._set_data_as_model_ref()
 
         # Initial fit:
+        self._pre_fit_iteration(first_fit=True)
         self._fitter.do_fit()  # TODO specify other node to minimize
+        self._post_fit_iteration(first_fit=True)
 
-        # Restore original error references and perform a second fit if appropriate:
-        for _err, _model_ref in _errs_and_model_refs:
-            _err.reference = _model_ref
-        for _model_err_name in self._MODEL_ERROR_NAMES:
-            _node = self._nexus.get(_model_err_name)
-            _node.unfreeze()
-            _node.update()
-        if len(_errs_and_model_refs) > 0:
+        if self._iterative_fits_needed():
+            _convergence_limit = float(kc("fit", "iterative_do_fit", "convergence_limit"))
+            _previous_cost = self.cost_function_value
+            for i in range(kc("fit", "iterative_do_fit", "max_iterations")):
+                self._pre_fit_iteration()
+                self._fitter.reset_minimizer()  # flush iminuit cache
+                self._fitter.do_fit()
+                self._post_fit_iteration()
+                if abs(self.cost_function_value - _previous_cost) < _convergence_limit:
+                    break
+                _previous_cost = self.cost_function_value
+        elif self._second_fit_needed():
+            self._pre_fit_iteration()
+            self._fitter.reset_minimizer()  # flush iminuit cache
             self._fitter.do_fit()
+            self._post_fit_iteration()
 
         self._loaded_result_dict = None
         self._update_parameter_formatters()
@@ -1011,6 +1074,7 @@ class FitBase(FileIOMixin, object):
         if self._loaded_result_dict is not None and self._loaded_result_dict['asymmetric_parameter_errors'] is not None:
             _asymm_errs = self._loaded_result_dict['asymmetric_parameter_errors']
         elif asymmetric_parameter_errors:
+            self._check_dynamic_error_compatibility()
             _asymm_errs = self.asymmetric_parameter_errors
         else:
             _asymm_errs = self._fitter.asymmetric_fit_parameter_errors_if_calculated

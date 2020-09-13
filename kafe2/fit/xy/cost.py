@@ -143,11 +143,6 @@ class XYCostFunction_Chi2(CostFunction_Chi2):
         super(XYCostFunction_Chi2, self).__init__(
             errors_to_use=errors_to_use, fallback_on_singular=fallback_on_singular)
 
-    def on_no_errors(self):
-        if not self._no_errors_warning_printed:
-            warnings.warn('No y errors specified.')
-            self._no_errors_warning_printed = True
-
 
 class XYCostFunction_NegLogLikelihood(CostFunction_NegLogLikelihood):
     def __init__(self, data_point_distribution="poisson", ratio=False, axes_to_use="xy"):
@@ -162,12 +157,6 @@ class XYCostFunction_NegLogLikelihood(CostFunction_NegLogLikelihood):
                 "Unknown value '%s' for 'axes_to_use': must be one of ('xy', 'y')")
         super(XYCostFunction_NegLogLikelihood, self).__init__(
             data_point_distribution=data_point_distribution, ratio=ratio)
-
-    def on_no_errors(self):
-        if not self._no_errors_warning_printed:
-            warnings.warn('No y errors specified. Will set y data errors to 1 if total error '
-                          'becomes 0.')
-            self._no_errors_warning_printed = True
 
 
 class XYCostFunction_Chi2_Nuisance(CostFunctionBase_Chi2_Nuisance):
