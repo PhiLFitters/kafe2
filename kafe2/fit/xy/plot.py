@@ -117,14 +117,14 @@ class XYPlotAdapter(PlotAdapterBase):
 
         _f_deriv_by_params = self._fit.eval_model_function_derivative_by_parameters(
             x=_band_x,
-            model_parameters=self._fit.poi_values)
+            model_parameters=self._fit.parameter_values)
         # here: df/dp[par_idx]|x=x[x_idx] = _f_deriv_by_params[par_idx][x_idx]
 
         _f_deriv_by_params = _f_deriv_by_params.T
         # here: df/dp[par_idx]|x=x[x_idx] = _f_deriv_by_params[x_idx][par_idx]
 
         _band_y = np.zeros_like(_band_x)
-        _n_poi = len(self._fit.poi_values)
+        _n_poi = len(self._fit.parameter_values)
         for _x_idx, _x_val in enumerate(_band_x):
             _p_res = _f_deriv_by_params[_x_idx]
             _band_y[_x_idx] = _p_res.dot(self._fit.parameter_cov_mat[:_n_poi, :_n_poi]).dot(_p_res)

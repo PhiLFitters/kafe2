@@ -78,44 +78,6 @@ class XYContainer(IndexedContainer):
         """recalculate total errors next time they are needed"""
         self._total_error = None
 
-    def _calculate_y_nuisance_cor_design_matrix(self):
-        """calculate the design matrix containing the correlated parts of all y uncertainties"""
-
-        _y_cor_errors = self.get_matching_errors(
-            matching_criteria=dict(
-                axis=1,
-                enabled=True,
-                correlated=True
-            )
-        )
-
-        _data_size = self.size
-        _err_size = len(_y_cor_errors)
-        _nuisance_ycor_design_matrix = np.zeros((_err_size, _data_size))
-        for _col, (_err_name, _err) in enumerate(six.iteritems(_y_cor_errors)):
-            _nuisance_ycor_design_matrix[_col, :] = _err.error_cor
-
-        return np.array(_nuisance_ycor_design_matrix)
-
-    # def _calculate_x_nuisance_cor_design_matrix(self):
-    #     """calculate the design matrix containing the correlated parts of all x uncertainties"""
-    #
-    #     _x_cor_errors = self.get_matching_errors(
-    #         matching_criteria=dict(
-    #             axis=0,
-    #             enabled=True,
-    #             correlated=True
-    #         )
-    #     )
-    #
-    #     _data_size = self.size
-    #     _err_size = len(_x_cor_errors)
-    #     _nuisance_xcor_design_matrix = np.zeros((_err_size, _data_size))
-    #     for _col, (_err_name, _err) in enumerate(six.iteritems(_x_cor_errors)):
-    #         _nuisance_xcor_design_matrix[_col, :] = _err.error_cor
-    #
-    #     return np.array(_nuisance_xcor_design_matrix)
-
     # -- public properties
 
     @property
@@ -233,40 +195,6 @@ class XYContainer(IndexedContainer):
         """y data range"""
         _y = self.y
         return np.min(_y), np.max(_y)
-
-    @property
-    def y_uncor_cov_mat(self):
-        # y uncorrelated covariance matrix
-        _y_uncor_cov_mat = self._calculate_uncor_error_cov_mat(filters={"axis": 1})
-        return _y_uncor_cov_mat
-
-    @property
-    def y_uncor_cov_mat_inverse(self):
-        # y uncorrelated inverse covariance matrix
-        return np.linalg.inv(self.y_uncor_cov_mat)
-
-    @property
-    def _y_nuisance_cor_design_mat(self):
-         """design matrix containing the correlated parts of all y uncertainties"""
-         _nuisance_y_cor_cov_mat = self._calculate_y_nuisance_cor_design_matrix()
-         return _nuisance_y_cor_cov_mat
-
-    @property
-    def x_uncor_cov_mat(self):
-        # x uncorrelated covariance matrix
-        _x_uncor_cov_mat = self._calculate_uncor_error_cov_mat(filters={"axis": 0})
-        return _x_uncor_cov_mat
-
-    @property
-    def x_uncor_cov_mat_inverse(self):
-        # x uncorrelated inverse covariance matrix
-        return np.linalg.inv(self.x_uncor_cov_mat)
-
-    # @property TODO: correlated x-errors
-    # def nuisance_x_cor_cov_mat(self):
-    #      """design matrix containing the correlated parts of all x uncertainties"""
-    #     _nuisance_x_cor_cov_mat = self._calculate_nuisance_x_cor_error_cov_mat()
-    #     return _nuisance_x_cor_cov_mat
 
     # -- public methods
 

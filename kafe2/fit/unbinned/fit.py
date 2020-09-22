@@ -54,19 +54,10 @@ class UnbinnedFit(FitBase):
         # add 'x' as an alias of 'data'
         self._nexus.add_alias('x', alias_for='data')
 
-        self._nexus.add_function(
-            collect,
-            func_name="nuisance_vector"
-        )
-
-        # -- initialize nuisance parameters
-
-        # TODO: implement nuisance parameters for unbinned data (?)
-
         self._nexus.add_dependency(
             'model',
             depends_on=(
-                'poi_values'
+                'parameter_values'
             )
         )
 
@@ -115,7 +106,7 @@ class UnbinnedFit(FitBase):
         :return: model function values
         :rtype: :py:class:`numpy.ndarray`
         """
-        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
+        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.support = self.data
         return self._param_model.eval_model_function(support=x, model_parameters=model_parameters)
 

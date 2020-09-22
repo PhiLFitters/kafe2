@@ -107,8 +107,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
             model_count=1,
 
             parameter_values=self._ref_initial_pars,
-            poi_values=self._ref_initial_pars,
-            poi_names=('mu', 'sigma'),
+            parameter_names=('mu', 'sigma'),
 
             data=self._ref_data,
             model=self._ref_initial_model,
@@ -166,7 +165,6 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
             dict(
                 self._ref_prop_dict,
                 parameter_values=self._nominal_fit_result_pars_nll,
-                poi_values=self._nominal_fit_result_pars_nll,
                 model=self._nominal_fit_result_model_nll,
                 did_fit=True,
                 cost_function_value=np.float64(self._nominal_fit_result_cost_nll),
@@ -179,7 +177,6 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
             dict(
                 self._ref_prop_dict,
                 parameter_values=self._nominal_fit_result_pars_chi2,
-                poi_values=self._nominal_fit_result_pars_chi2,
                 model=self._nominal_fit_result_model_chi2,
                 did_fit=True,
                 cost_function_value=np.float64(self._nominal_fit_result_cost_chi2),
@@ -245,7 +242,6 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
             dict(
                 data=_ref_data,
                 parameter_values=np.array([19.83815938,  1.1729322]),
-                poi_values=np.array([19.83815938,  1.1729322]),
             ),
             rtol=1e-2
         )

@@ -69,28 +69,12 @@ class HistFit(FitBase):
     def _init_nexus(self):
         super(HistFit, self)._init_nexus()
 
-        self._nexus.add_function(
-            collect,
-            func_name="nuisance_vector"
-        )
-
-        # -- initialize nuisance parameters
-
-        # TODO: implement nuisance parameters for histograms
-
         self._nexus.add_dependency(
             'model',
             depends_on=(
-                'poi_values'
+                'parameter_values'
             )
         )
-
-        # TODO: add 'uncor_cov_mat'
-        #for _side in ('data', 'model', 'total'):
-        #    self._nexus.add_dependency(
-        #        '{}_uncor_cov_mat'.format(_side),
-        #        depends_on='{}_cov_mat'.format(_side)
-        #    )
 
     def _set_new_data(self, new_data):
         if isinstance(new_data, self.CONTAINER_TYPE):

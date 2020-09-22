@@ -65,8 +65,7 @@ class TestUnbinnedFitBasicInterface(AbstractTestFit, unittest.TestCase):
             model_count=1,
 
             parameter_values=self._ref_initial_pars,
-            poi_values=self._ref_initial_pars,
-            poi_names=('tau', 'fbg'),
+            parameter_names=('tau', 'fbg'),
             cost_function_value=self._ref_initial_cost,
 
             data=self._ref_data,
@@ -106,7 +105,6 @@ class TestUnbinnedFitBasicInterface(AbstractTestFit, unittest.TestCase):
             dict(
                 self._ref_prop_dict,
                 parameter_values=self._nominal_fit_result_pars,
-                poi_values=self._nominal_fit_result_pars,
                 model=self._nominal_fit_result_model,
                 did_fit=True,
                 cost_function_value=np.float64(self._nominal_fit_result_cost),
@@ -155,7 +153,6 @@ class TestUnbinnedFitBasicInterface(AbstractTestFit, unittest.TestCase):
             dict(
                 data=_new_data,
                 parameter_values=np.array([1.64489992, 0.1225065]),
-                poi_values=np.array([1.64489992, 0.1225065]),
             ),
             rtol=1e-2
         )

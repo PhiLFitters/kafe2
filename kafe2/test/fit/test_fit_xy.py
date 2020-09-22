@@ -99,8 +99,7 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
             model_count=1,
 
             parameter_values=self._ref_initial_pars,
-            poi_values=self._ref_initial_pars,
-            poi_names=('a', 'b', 'c'),
+            parameter_names=('a', 'b', 'c'),
             cost_function_value=self._ref_initial_cost,
 
             x_data=self._ref_x,
@@ -147,22 +146,6 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
             x_total_cor_mat=self._ref_matrix_eye * np.nan,
             y_total_cor_mat=self._ref_matrix_eye,
             total_cor_mat=self._ref_matrix_eye,
-
-            x_data_uncor_cov_mat=self._ref_matrix_eye * 0,
-            y_data_uncor_cov_mat=self._ref_matrix_eye,
-            #x_data_uncor_cov_mat_inverse=None,  # TODO: fix
-            y_data_uncor_cov_mat_inverse=self._ref_matrix_eye,
-            x_model_uncor_cov_mat=self._ref_matrix_eye * 0,
-            y_model_uncor_cov_mat=self._ref_matrix_eye * 0,
-            #x_model_uncor_cov_mat_inverse=None,  # TODO: fix
-            #y_model_uncor_cov_mat_inverse=None,  # TODO: fix
-
-            x_total_uncor_cov_mat=self._ref_matrix_eye * 0,
-            y_total_uncor_cov_mat=self._ref_matrix_eye,
-            #x_total_uncor_cov_mat_inverse=None,  # TODO: fix
-            y_total_uncor_cov_mat_inverse=self._ref_matrix_eye,
-
-            _y_data_nuisance_cor_design_mat=np.zeros((0, self._n_points)),
         )
 
     def _get_fit(
@@ -207,7 +190,6 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         self.run_test_for_all_fits(
             dict(self._ref_prop_dict,
                 parameter_values=self._nominal_fit_result_pars,
-                poi_values=self._nominal_fit_result_pars,
                 y_model=self._nominal_fit_result_y_model,
                 model=self._nominal_fit_result_xy_model,
                 did_fit=True,
@@ -221,14 +203,13 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         self.run_test_for_all_fits(
             dict(self._ref_prop_dict,
                 parameter_values=self._nominal_fit_result_pars,
-                poi_values=self._nominal_fit_result_pars,
                 x_data=self._ref_x,
                 x_model=self._ref_x,
                 y_data=self._ref_y_data,
                 y_model=self._nominal_fit_result_y_model,
                 data=self._ref_xy_data,
                 model=self._nominal_fit_result_xy_model,
-                poi_names=('a', 'b', 'c'),
+                parameter_names=('a', 'b', 'c'),
                 did_fit=False,
                 model_count=1,
                 cost_function_value=self._nominal_fit_result_cost
@@ -247,33 +228,6 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         with self.assertRaises(NexusFitterException):
             self._get_fit().set_all_parameter_values((1,2,3,4,5))
 
-    def test_set_poi_values(self):
-        self.run_test_for_all_fits(
-            dict(self._ref_prop_dict,
-                parameter_values=self._nominal_fit_result_pars,
-                poi_values=self._nominal_fit_result_pars,
-                x_data=self._ref_x,
-                x_model=self._ref_x,
-                y_data=self._ref_y_data,
-                y_model=self._nominal_fit_result_y_model,
-                data=self._ref_xy_data,
-                model=self._nominal_fit_result_xy_model,
-                poi_names=('a', 'b', 'c'),
-                did_fit=False,
-                model_count=1,
-                cost_function_value=self._nominal_fit_result_cost
-            ),
-            # set parameters to their final values by hand
-            call_before_fit=lambda f: f.set_poi_values(
-                self._nominal_fit_result_pars),
-        )
-
-    def test_set_poi_values_wrong_number_raise(self):
-        with self.assertRaises(XYFitException):
-            self._get_fit().set_poi_values(param_values=(1,))
-        with self.assertRaises(XYFitException):
-            self._get_fit().set_poi_values(param_values=(1,2,3,4,5))
-
     def test_parameter_defaults(self):
         def dummy_model(x, a, b, c):
             return x
@@ -284,7 +238,6 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
             _fit,
             dict(
                 parameter_values=np.array([1, 1, 1]),
-                poi_values=np.array([1, 1, 1]),
             )
         )
 
@@ -298,7 +251,6 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
             _fit,
             dict(
                 parameter_values=np.array([1, 1, 3.3]),
-                poi_values=np.array([1, 1, 3.3]),
             )
         )
 
@@ -342,13 +294,6 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
             self._ref_initial_y_model
         ))
 
-    def test_calculate_nuisance_parameters(self):
-        _fit = self._get_fit()
-        self.assertTrue(np.allclose(
-            _fit.calculate_nuisance_parameters(),
-            []
-        ))
-
     def test_update_data(self):
         _fit = self._get_fit()
 
@@ -374,7 +319,6 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
                 x_data=self._ref_x,
                 y_data=self._ref_y_data * 2,
                 parameter_values=_new_estimates,
-                poi_values=_new_estimates,
             ),
             rtol=1e-2
         )
@@ -409,7 +353,6 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
                 x_data=self._ref_x[:-1],
                 y_data=self._ref_y_data[:-1] * 2,
                 parameter_values=_new_estimates,
-                poi_values=_new_estimates,
             ),
             rtol=1e-2
         )
@@ -602,7 +545,6 @@ class TestXYFitWithSimpleYErrors(AbstractTestFit, unittest.TestCase):
         self.run_test_for_all_fits(
             dict(self._ref_prop_dict,
                 parameter_values=self._nominal_fit_result_pars,
-                poi_values=self._nominal_fit_result_pars,
                 y_model=self._nominal_fit_result_y_model,
                 model=self._nominal_fit_result_xy_model,
                 did_fit=True,
@@ -744,7 +686,6 @@ class TestXYFitWithMatrixErrors(AbstractTestFit, unittest.TestCase):
         self.run_test_for_all_fits(
             dict(self._ref_prop_dict,
                 parameter_values=self._nominal_fit_result_pars,
-                poi_values=self._nominal_fit_result_pars,
                 y_model=self._nominal_fit_result_y_model,
                 model=self._nominal_fit_result_xy_model,
                 did_fit=True,
@@ -885,7 +826,6 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
         # helper dict with all reference property values
         self._ref_prop_dict = dict(
             parameter_values=self._ref_initial_pars,
-            poi_values=self._ref_initial_pars,
 
             x_data=self._ref_x,
             x_model=self._ref_x,
@@ -897,12 +837,8 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
 
             x_data_cov_mat=self._ref_x_error_matrix,
             y_data_cov_mat=self._ref_y_error_matrix,
-            x_data_uncor_cov_mat=self._ref_x_error_matrix,
-            y_data_uncor_cov_mat=self._ref_y_error_matrix,
             x_data_cov_mat_inverse=np.linalg.inv(self._ref_x_error_matrix),
             y_data_cov_mat_inverse=np.linalg.inv(self._ref_y_error_matrix),
-            x_data_uncor_cov_mat_inverse=np.linalg.inv(self._ref_x_error_matrix),
-            y_data_uncor_cov_mat_inverse=np.linalg.inv(self._ref_y_error_matrix),
             x_data_cor_mat=np.eye(self._n_points),
             y_data_cor_mat=np.eye(self._n_points),
             x_data_error=self._ref_x_error_vector,
@@ -957,7 +893,6 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
         self.run_test_for_all_fits(
             dict(self._ref_prop_dict,
                 parameter_values=self._nominal_fit_result_pars,
-                poi_values=self._nominal_fit_result_pars,
                 y_model=self._nominal_fit_result_y_model,
                 model=self._nominal_fit_result_xy_model,
                 did_fit=True,

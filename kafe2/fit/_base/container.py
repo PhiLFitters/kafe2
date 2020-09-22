@@ -75,27 +75,6 @@ class DataContainerBase(FileIOMixin, object):
         self._on_error_change()
         return _name
 
-    def _calculate_uncor_error_cov_mat(self, filters=None):
-        # calculate uncorrelated covariance matrix
-        _uncor_cov_mat = np.zeros(shape=(self.size, self.size))
-        for _err_dict in self._error_dicts.values():
-            if not _err_dict['enabled']:
-                continue
-            if filters is not None:
-                filtered = False
-                for _key in filters.keys():
-                    if _err_dict[_key] != filters[_key]:
-                        filtered = True
-                        break
-                if filtered:
-                    continue
-            _err = _err_dict["err"]
-            if isinstance(_err, MatrixGaussianError):
-                _uncor_cov_mat += _err.cov_mat
-            else:
-                _uncor_cov_mat += _err.cov_mat_uncor
-        return np.array(_uncor_cov_mat)
-
     def _get_error_by_name_raise(self, error_name):
         """return a dictionary containing the error object for error 'name' and additional information"""
         _err_dict = self._error_dicts.get(error_name, None)
@@ -201,16 +180,6 @@ class DataContainerBase(FileIOMixin, object):
         :rtype: numpy.ndarray[numpy.ndarray[float]] or None
         """
         return np.array(np.empty(tuple()))
-
-    @property
-    def uncor_cov_mat(self):
-        # TODO document
-        return self._calculate_uncor_error_cov_mat()
-
-    @property
-    def uncor_cov_mat_inverse(self):
-        # TODO document
-        return np.linalg.inv(self._calculate_uncor_error_cov_mat())
 
     @property
     def has_errors(self):

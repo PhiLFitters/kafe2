@@ -113,12 +113,12 @@ class MultiFit(FitBase):
             _cost_alias_name_i = 'cost%s' % _i
             _cost_alias_i = Alias(ref=_original_cost_i, name=_cost_alias_name_i)
             self._nexus.add(_cost_alias_i, add_children=False)
-            for _par_node in _fit_i.poi_names:
+            for _par_node in _fit_i.parameter_names:
                 self._combined_parameter_node_dict[_par_node] = _fit_i._nexus.get(_par_node)
         for _par_node in self._combined_parameter_node_dict.values():
             self._nexus.add(_par_node)
             for _fit in self._fits:
-                if _par_node.name in _fit.poi_names:
+                if _par_node.name in _fit.parameter_names:
                     _fit._nexus.add(node=_par_node, existing_behavior='replace')
         self._nexus.add(
             Array(nodes=self._combined_parameter_node_dict.values(), name='parameter_values'),
@@ -189,7 +189,7 @@ class MultiFit(FitBase):
                         # use the same fit.
                         def _get_derivatives_func(fit):
                             return lambda: fit._param_model.eval_model_function_derivative_by_x(
-                                model_parameters=fit.poi_values,
+                                model_parameters=fit.parameter_values,
                                 dx=0.01 * self._min_x_error
                             )
 

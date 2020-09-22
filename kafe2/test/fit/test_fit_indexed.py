@@ -96,8 +96,7 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
             model_count=1,
 
             parameter_values=self._ref_initial_pars,
-            poi_values=self._ref_initial_pars,
-            poi_names=('a', 'b', 'c'),
+            parameter_names=('a', 'b', 'c'),
             cost_function_value=self._ref_initial_cost,
 
             data=self._ref_data,
@@ -116,15 +115,6 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
             total_cov_mat=self._ref_matrix_eye,
             total_cov_mat_inverse=self._ref_matrix_eye,
             total_cor_mat=self._ref_matrix_eye,
-
-            #data_uncor_cov_mat=self._ref_matrix_eye,
-            #data_uncor_cov_mat_inverse=self._ref_matrix_eye,
-
-            #model_uncor_cov_mat=self._ref_matrix_eye * 0,  # TODO: fix
-            #model_uncor_cov_mat_inverse=None,  # TODO: fix
-
-            #total_uncor_cov_mat=self._ref_matrix_eye,
-            #total_uncor_cov_mat_inverse=self._ref_matrix_eye,
         )
 
     def _get_fit(
@@ -169,7 +159,6 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
         self.run_test_for_all_fits(
             dict(self._ref_prop_dict,
                 parameter_values=self._nominal_fit_result_pars,
-                poi_values=self._nominal_fit_result_pars,
                 model=self._nominal_fit_result_model,
                 did_fit=True,
                 cost_function_value=self._nominal_fit_result_cost,
@@ -182,10 +171,9 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
         self.run_test_for_all_fits(
             dict(self._ref_prop_dict,
                 parameter_values=self._nominal_fit_result_pars,
-                poi_values=self._nominal_fit_result_pars,
                 data=self._ref_data,
                 model=self._nominal_fit_result_model,
-                poi_names=('a', 'b', 'c'),
+                parameter_names=('a', 'b', 'c'),
                 did_fit=False,
                 model_count=1,
                 cost_function_value=self._nominal_fit_result_cost
@@ -214,7 +202,6 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
             _fit,
             dict(
                 parameter_values=np.array([1, 1, 1]),
-                poi_values=np.array([1, 1, 1]),
             )
         )
 
@@ -228,7 +215,6 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
             _fit,
             dict(
                 parameter_values=np.array([1, 1, 3.3]),
-                poi_values=np.array([1, 1, 3.3]),
             )
         )
 
@@ -253,7 +239,6 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
             dict(
                 data=self._ref_data * 2,
                 parameter_values=_new_estimates,
-                poi_values=_new_estimates,
             ),
             rtol=1e-2
         )
@@ -425,7 +410,6 @@ class TestIndexedFitWithSimpleErrors(AbstractTestFit, unittest.TestCase):
         self.run_test_for_all_fits(
             dict(self._ref_prop_dict,
                 parameter_values=self._nominal_fit_result_pars,
-                poi_values=self._nominal_fit_result_pars,
                 model=self._nominal_fit_result_model,
                 did_fit=True,
                 cost_function_value=self._nominal_fit_result_cost,
@@ -565,7 +549,6 @@ class TestIndexedFitWithMatrixErrors(AbstractTestFit, unittest.TestCase):
         self.run_test_for_all_fits(
             dict(self._ref_prop_dict,
                 parameter_values=self._nominal_fit_result_pars,
-                poi_values=self._nominal_fit_result_pars,
                 model=self._nominal_fit_result_model,
                 did_fit=True,
                 cost_function_value=self._nominal_fit_result_cost,

@@ -63,19 +63,10 @@ class IndexedFit(FitBase):
     def _init_nexus(self):
         super(IndexedFit, self)._init_nexus()
 
-        self._nexus.add_function(
-            collect,
-            func_name="nuisance_vector"
-        )
-
-        # -- initialize nuisance parameters
-
-        # TODO: implement nuisance parameters for indexed data
-
         self._nexus.add_dependency(
             'model',
             depends_on=(
-                'poi_values'
+                'parameter_values'
             )
         )
 
@@ -97,7 +88,6 @@ class IndexedFit(FitBase):
     def _report_model(self, output_stream, indent, indentation_level):
         # call base method to show header and model function
         super(IndexedFit, self)._report_model(output_stream, indent, indentation_level)
-        # print model values at POIs
         _model_table_dict = OrderedDict()
         _model_table_dict['Index'] = range(self.data_size)
         _model_table_dict['Model'] = self.model
@@ -116,13 +106,6 @@ class IndexedFit(FitBase):
             output_stream.write("\n")
 
     # -- public properties
-
-        # TODO: add 'uncor_cov_mat'
-        #for _side in ('data', 'model', 'total'):
-        #    self._nexus.add_dependency(
-        #        '{}_uncor_cov_mat'.format(_side),
-        #        depends_on='{}_cov_mat'.format(_side)
-        #    )
 
     def _set_new_data(self, new_data):
         if isinstance(new_data, self.CONTAINER_TYPE):

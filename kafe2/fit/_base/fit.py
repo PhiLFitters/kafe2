@@ -62,11 +62,9 @@ class FitBase(FileIOMixin, object):
         self._param_model = None
         self._nexus = None
         self._fitter = None
-        self._fit_param_names = []  # names of all fit parameters (incl. nuisance parameters)
-        self._poi_names = []  # names of the parameters of interest (i.e. the model parameters)
+        self._fit_param_names = []  # names of all fit parameters
         self._fit_param_constraints = []
         self._loaded_result_dict = None  # contains potential fit results from a file or multifit
-        self._nuisance_names = dict()
 
         # save minimizer, minimizer_kwargs for serialization
         self._minimizer = minimizer
@@ -155,15 +153,10 @@ class FitBase(FileIOMixin, object):
                 self._nexus.add(Parameter(_par_value, name=_par_name))
 
                 self._fit_param_names.append(_par_name)
-                self._poi_names.append(_par_name)
 
-            self._poi_names = tuple(self._poi_names)
-
-        self._nexus.add_function(lambda: self.poi_values, func_name='poi_values')
         self._nexus.add_function(lambda: self.parameter_values, func_name='parameter_values')
         self._nexus.add_function(lambda: self.parameter_constraints,
                                  func_name='parameter_constraints')
-        self._nexus.add_dependency('poi_values', depends_on=self._poi_names)
         self._nexus.add_dependency('parameter_values', depends_on=self._fit_param_names)
 
         # -- errors
@@ -187,13 +180,9 @@ class FitBase(FileIOMixin, object):
                     self._add_property_to_nexus(_mat_name)
                     _mat_names.append(_mat_name)
                 if _type == "model":
-                    self._nexus.add_dependency(_error_name, depends_on="poi_values")
-                    self._nexus.add_dependency(_mat_name, depends_on="poi_values")
+                    self._nexus.add_dependency(_error_name, depends_on="parameter_values")
+                    self._nexus.add_dependency(_mat_name, depends_on="parameter_values")
                 self._add_property_to_nexus(_mat_name + "_inverse", depends_on=_mat_name)
-
-            # -- nuisance parameters
-
-            self._nuisance_names[_axis] = []
 
         if self._model_function is not None:
             # add the original function name as an alias to 'model'
@@ -302,9 +291,9 @@ class FitBase(FileIOMixin, object):
         _cor_mat_content = self.parameter_cor_mat
         if _cor_mat_content is not None:
             _cor_mat_as_dict = OrderedDict()
-            _cor_mat_as_dict['_invisible_first_column'] = self.poi_names
-            for _poi_name, _row in zip(self.poi_names, self.parameter_cor_mat.T):
-                _cor_mat_as_dict[_poi_name] = np.atleast_1d(np.squeeze(np.asarray(_row)))
+            _cor_mat_as_dict['_invisible_first_column'] = self.parameter_names
+            for _par_name, _row in zip(self.parameter_names, self.parameter_cor_mat.T):
+                _cor_mat_as_dict[_par_name] = np.atleast_1d(np.squeeze(np.asarray(_row)))
 
             print_dict_as_table(_cor_mat_as_dict, output_stream=output_stream, indent_level=2)
         else:
@@ -424,17 +413,6 @@ class FitBase(FileIOMixin, object):
         return self._data_container.cor_mat
 
     @property
-    def data_uncor_cov_mat(self):
-        """uncorrelated part of the data *y* covariance matrix (or ``None`` if singular)"""
-        return self._data_container.uncor_cov_mat
-
-    @property
-    def data_uncor_cov_mat_inverse(self):
-        """inverse of the uncorrelated part of the data *y* covariance matrix (or ``None`` if
-        singular)"""
-        return self._data_container.uncor_cov_mat_inverse
-
-    @property
     def data_container(self):
         """The data container used in this fit.
 
@@ -450,39 +428,26 @@ class FitBase(FileIOMixin, object):
     @property
     def model_error(self):
         """array of pointwise model uncertainties"""
-        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
+        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         return self._param_model.err
 
     @property
     def model_cov_mat(self):
         """the model covariance matrix"""
-        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
+        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         return self._param_model.cov_mat
 
     @property
     def model_cov_mat_inverse(self):
         """inverse of the model covariance matrix (or ``None`` if singular)"""
-        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
+        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         return self._param_model.cov_mat_inverse
 
     @property
     def model_cor_mat(self):
         """the model correlation matrix"""
-        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
+        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         return self._param_model.cor_mat
-
-    @property
-    def model_uncor_cov_mat(self):
-        """the model *x* uncorrelated covariance matrix"""
-        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
-        return self._param_model.uncor_cov_mat
-
-    @property
-    def model_uncor_cov_mat_inverse(self):
-        """inverse of the uncorrelated part the model *y* covariance matrix (or ``None``
-        if singular)"""
-        self._param_model.parameters = self.poi_values  # this is lazy, so just do it
-        return self._param_model.uncor_cov_mat_inverse
 
     @property
     def total_error(self):
@@ -649,23 +614,6 @@ class FitBase(FileIOMixin, object):
         return 1
 
     @property
-    def poi_values(self):
-        """The values of the parameters of interest, equal to :py:attr:`~parameter_values` minus nuisance parameters.
-
-        :rtype: numpy.ndarray[float]
-        """
-        return self.parameter_values
-
-    @property
-    def poi_names(self):
-        """The names of the parameters of interest, equal to :py:attr:`~parameter_names` minus nuisance parameter
-        names
-
-        :rtype: tuple[str]
-        """
-        return self.parameter_names
-
-    @property
     def did_fit(self):
         """Whether a fit was performed for the given data and model.
 
@@ -797,7 +745,7 @@ class FitBase(FileIOMixin, object):
         _par_indices = []
         for _name in names:
             try:
-                _par_indices.append(self.poi_names.index(_name))
+                _par_indices.append(self.parameter_names.index(_name))
             except ValueError:
                 raise self.EXCEPTION_TYPE('Unknown parameter name: %s' % _name)
         self._fit_param_constraints.append(GaussianMatrixParameterConstraint(
@@ -814,7 +762,7 @@ class FitBase(FileIOMixin, object):
         :param bool relative: Whether the given uncertainty is relative to the given value.
         """
         try:
-            _index = self.poi_names.index(name)
+            _index = self.parameter_names.index(name)
         except ValueError:
             raise self.EXCEPTION_TYPE('Unknown parameter name: %s' % name)
         self._fit_param_constraints.append(GaussianSimpleParameterConstraint(

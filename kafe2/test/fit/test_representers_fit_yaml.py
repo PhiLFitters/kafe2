@@ -637,7 +637,7 @@ class TestXYFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
         self.assertTrue(
             np.allclose(
                 self._test_parameters_default,
-                _read_fit.poi_values
+                _read_fit.parameter_values
             )
         )
         self.assertTrue(
@@ -652,7 +652,7 @@ class TestXYFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
         self.assertTrue(
             np.allclose(
                 self._test_parameters_do_fit,
-                _read_fit.poi_values
+                _read_fit.parameter_values
             )
         )
         self.assertTrue(
@@ -668,7 +668,7 @@ class TestXYFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
         self.assertTrue(
             np.allclose(
                 self._test_parameters_default_simple,
-                _read_fit.poi_values
+                _read_fit.parameter_values
             )
         )
         self.assertTrue(
@@ -683,7 +683,7 @@ class TestXYFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
         self.assertTrue(
             np.allclose(
                 self._test_parameters_do_fit_simple,
-                _read_fit.poi_values
+                _read_fit.parameter_values
             )
         )
         self.assertTrue(
@@ -702,7 +702,7 @@ class TestXYFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
         self.assertTrue(
             np.allclose(
                 self._test_parameters_default,
-                _read_fit.poi_values
+                _read_fit.parameter_values
             )
         )
         self.assertTrue(
@@ -717,7 +717,7 @@ class TestXYFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
         self.assertTrue(
             np.allclose(
                 self._test_parameters_do_fit,
-                _read_fit.poi_values
+                _read_fit.parameter_values
             )
         )
         self.assertTrue(
@@ -843,23 +843,25 @@ class TestUnbinnedFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresent
     def test_read_from_testfile_stream(self):
         _read_fit = self._testfile_streamreader.read()
         self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
-        self.assertTrue(np.allclose(self._test_parameters_default, _read_fit.poi_values))
+        self.assertTrue(np.allclose(self._test_parameters_default, _read_fit.parameter_values))
         _read_fit.do_fit()
-        self.assertTrue(np.allclose(self._test_parameters_do_fit, _read_fit.poi_values))
+        self.assertTrue(np.allclose(self._test_parameters_do_fit, _read_fit.parameter_values))
 
     def test_read_from_testfile_stream_simple(self):
         _read_fit = self._testfile_streamreader_simple.read()
 
         self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
-        self.assertTrue(np.allclose(self._test_parameters_default_simple, _read_fit.poi_values))
+        self.assertTrue(np.allclose(
+            self._test_parameters_default_simple, _read_fit.parameter_values))
         _read_fit.do_fit()
-        self.assertTrue(np.allclose(self._test_parameters_do_fit_simple, _read_fit.poi_values))
+        self.assertTrue(np.allclose(
+            self._test_parameters_do_fit_simple, _read_fit.parameter_values))
 
     def test_round_trip_with_stringstream(self):
         self._roundtrip_streamwriter.write()
         self._roundtrip_stringstream.seek(0)  # return to beginning
         _read_fit = self._roundtrip_streamreader.read()
         self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
-        self.assertTrue(np.allclose(self._test_parameters_default, _read_fit.poi_values))
+        self.assertTrue(np.allclose(self._test_parameters_default, _read_fit.parameter_values))
         _read_fit.do_fit()
-        self.assertTrue(np.allclose(self._test_parameters_do_fit, _read_fit.poi_values))
+        self.assertTrue(np.allclose(self._test_parameters_do_fit, _read_fit.parameter_values))
