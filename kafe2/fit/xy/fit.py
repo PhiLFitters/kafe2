@@ -2,7 +2,6 @@ from collections import OrderedDict
 from copy import deepcopy
 
 import numpy as np
-from deprecated.sphinx import deprecated
 
 from ...core.error import CovMat
 from ...tools import print_dict_as_table
@@ -328,20 +327,6 @@ class XYFit(FitBase):
         return self.x_data
 
     @property
-    @deprecated(version="2.2.0",
-                reason="Use x_data_error instead.")
-    def x_error(self):
-        """array of pointwise *x* data uncertainties"""
-        return self._data_container.x_err
-
-    @property
-    @deprecated(version="2.2.0",
-                reason="Use x_data_cov_mat instead.")
-    def x_cov_mat(self):
-        """the *x* data covariance matrix"""
-        return self._data_container.x_cov_mat
-
-    @property
     def y_data(self):
         """array of measurement data *y* values"""
         return self._data_container.y
@@ -593,11 +578,6 @@ class XYFit(FitBase):
         return self._project_x_onto_y(x=self.x_total_error, y=self.y_total_error, sqrt=True)
 
     @property
-    @deprecated(version="2.2.0", reason="Use total_error instead.")
-    def projected_xy_total_error(self):
-        return self.total_error
-
-    @property
     def x_total_cov_mat(self):
         """the total *x* covariance matrix"""
         return self.x_data_cov_mat + self.x_model_cov_mat
@@ -611,11 +591,6 @@ class XYFit(FitBase):
     def total_cov_mat(self):
         """the total *xy* covariance matrix (projected onto the *y* axis)"""
         return self._project_x_onto_y(x=self.x_total_cov_mat, y=self.y_total_cov_mat, sqrt=False)
-
-    @property
-    @deprecated(version="2.2.0", reason="Use total_cov_mat instead.")
-    def projected_xy_total_cov_mat(self):
-        return self.total_cov_mat
 
     @property
     def x_total_cov_mat_inverse(self):
@@ -634,11 +609,6 @@ class XYFit(FitBase):
         singular)
         """
         return invert_matrix(self.total_cov_mat)
-
-    @property
-    @deprecated(version="2.2.0", reason="Use total_cov_mat_inverse instead.")
-    def projected_xy_total_cov_mat_inverse(self):
-        return self.total_cov_mat_inverse
 
     @property
     def x_total_cor_mat(self):

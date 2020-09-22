@@ -107,11 +107,9 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
             y_data=self._ref_y_data,
             data=self._ref_xy_data,
             x_data_error=self._ref_error * 0,
-            x_error=self._ref_error * 0,
             y_data_error=self._ref_error,
             data_error=self._ref_error,
             x_data_cov_mat=self._ref_matrix_eye * 0,
-            x_cov_mat=self._ref_matrix_eye * 0,
             y_data_cov_mat=self._ref_matrix_eye,
             data_cov_mat=self._ref_matrix_eye,
             x_data_cov_mat_inverse=None,
@@ -140,15 +138,12 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
             x_total_error=self._ref_error * 0,
             y_total_error=self._ref_error,
             total_error=self._ref_error,
-            projected_xy_total_error=self._ref_error,
             x_total_cov_mat=self._ref_matrix_eye * 0,
             y_total_cov_mat=self._ref_matrix_eye,
             total_cov_mat=self._ref_matrix_eye,
-            projected_xy_total_cov_mat=self._ref_matrix_eye,
             x_total_cov_mat_inverse=None,
             y_total_cov_mat_inverse=self._ref_matrix_eye,
             total_cov_mat_inverse=self._ref_matrix_eye,
-            projected_xy_total_cov_mat_inverse=self._ref_matrix_eye,
             x_total_cor_mat=self._ref_matrix_eye * np.nan,
             y_total_cor_mat=self._ref_matrix_eye,
             total_cor_mat=self._ref_matrix_eye,
@@ -884,8 +879,8 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
 
             cost_function_value=self._ref_initial_cost,
 
-            projected_xy_total_cov_mat=self._ref_projected_xy_matrix,
-            projected_xy_total_error=self._ref_projected_xy_errors,
+            total_cov_mat=self._ref_projected_xy_matrix,
+            total_error=self._ref_projected_xy_errors,
         )
 
     def _get_fit(self, errors=None):
@@ -933,8 +928,8 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
                 did_fit=True,
                 cost_function_value=self._nominal_fit_result_cost,
 
-                projected_xy_total_cov_mat=self._nominal_fit_result_projected_xy_matrix,
-                projected_xy_total_error=self._nominal_fit_result_projected_xy_errors,
+                total_cov_mat=self._nominal_fit_result_projected_xy_matrix,
+                total_error=self._nominal_fit_result_projected_xy_errors,
 
             ),
             call_before_fit=lambda f: f.do_fit(),

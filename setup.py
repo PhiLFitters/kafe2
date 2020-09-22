@@ -50,7 +50,6 @@ setup(
         'PyYaml',
         'six',
         'funcsigs',
-        'deprecated'
     ],
     classifiers=[
         'Development Status :: 4 - Beta',
