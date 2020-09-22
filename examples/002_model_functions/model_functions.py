@@ -50,6 +50,12 @@ exponential_fit.report()
 
 # Optional: Create a plot of the fit results using Plot.
 p = Plot(fit_objects=[linear_fit, exponential_fit], separate_figures=False)
+
+# Optional: Customize the plot appearance: only show the data points once.
+p.customize('data', 'color', values=['k', 'none'])  # hide points for second fit
+p.customize('data', 'label', values=['data points', None])  # no second legend entry
+
+# Do the plotting.
 p.plot(fit_info=True)
 
 # Optional: Create a contour plot for the exponential fit to show the parameter correlations.
