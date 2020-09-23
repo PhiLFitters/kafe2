@@ -505,7 +505,8 @@ class MultiFit(FitBase):
 
     @property
     def ndf(self):
-        return len(self._combined_parameter_node_dict.keys()) + len(self._fitter.fixed_parameters)
+        return self.data_size - len(self._combined_parameter_node_dict.keys()) \
+               + len(self._fitter.fixed_parameters)
 
     # -- public methods
 
