@@ -446,6 +446,14 @@ class MultiFit(FitBase):
         return np.sum([_fit.data_size for _fit in self._fits])
 
     @property
+    def has_errors(self):
+        """``True`` if at least one uncertainty source is defined for any of the individual fits.
+
+        :rtype: bool
+        """
+        return np.any([_fit.has_errors for _fit in self._fits])
+
+    @property
     def has_data_errors(self):
         """``True`` if at least one uncertainty source is defined for the data of any of the individual fits.
 
@@ -671,11 +679,10 @@ class MultiFit(FitBase):
             fit.release_parameter(name)
 
     def do_fit(self, asymmetric_parameter_errors=False):
-        for _i, _fit_i in enumerate(self._fits):
-            if _fit_i._cost_function.needs_errors and not _fit_i.has_errors:
-                warnings.warn("Cost function of fit %s expects errors but no errors were specified "
-                              "for that fit." % _i)
-        return super(MultiFit, self).do_fit(asymmetric_parameter_errors=asymmetric_parameter_errors)
+        _fit_result = super(MultiFit, self).do_fit(
+            asymmetric_parameter_errors=asymmetric_parameter_errors)
+        self._update_singular_fits()
+        return _fit_result
 
     def get_matching_errors(self, fit_index=None, matching_criteria=None, matching_type='equal'):
         """Return a list of uncertainty objects fulfilling the specified matching criteria.
