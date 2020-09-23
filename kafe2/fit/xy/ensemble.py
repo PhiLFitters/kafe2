@@ -276,10 +276,10 @@ class XYFitEnsemble(FitEnsembleBase):
                                                              model_parameters=self._model_parameters)
         self._ref_x_cov_mat = self._toy_fit.x_total_cov_mat
         self._ref_y_cov_mat = self._toy_fit.y_total_cov_mat
-        self._ref_projected_xy_cov_mat = self._toy_fit.projected_xy_total_cov_mat
+        self._ref_projected_xy_cov_mat = self._toy_fit.total_cov_mat
         self._ref_x_err = self._toy_fit.x_total_error
         self._ref_y_err = self._toy_fit.y_total_error
-        self._ref_projected_xy_err = self._toy_fit.projected_xy_total_error
+        self._ref_projected_xy_err = self._toy_fit.total_error
 
     # -- private properties
 
