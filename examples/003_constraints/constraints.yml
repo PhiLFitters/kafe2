@@ -47,21 +47,14 @@ model_function: |
         omega_d = np.sqrt(omega_0 ** 2 - c ** 2)  # phase speed of a damped pendulum
         return y_0 * np.exp(-c * x) * (np.cos(omega_d *x) + c / omega_d * np.sin(omega_d * x))
 
-parameter_constraints:  # add parameter constraints
-- index: 0              # index 0 corresponds to the first free variable of the fit function, here y_0
-  relative: true        # Make constraint uncertainty relative to value.
-  type: simple
-  uncertainty: 0.006
-  value: 0.6            # y_0 = 0.6+-0.6%
-
-- index: 1              # index 1 corresponds to the second free variable of the fit function, here l
-  relative: false       # Uncertainty is absolute.
-  type: simple
-  uncertainty: 0.001
-  value: 10.0           # l = 10.0+-0.001
-
-- index: 2              # index 2 corresponds to r
-  relative: false
-  type: simple
-  uncertainty: 0.001    # r = 0.052+-0.001
-  value: 0.052
+parameter_constraints:    # add parameter constraints
+  l:
+    value: 10.0
+    uncertainty: 0.001    # l = 10.0+-0.001
+  r:
+    value: 0.052
+    uncertainty: 0.001    # r = 0.052+-0.00
+  y_0:
+    value: 0.6
+    uncertainty: 0.006
+    relative: true        # Make constraint uncertainty relative to value, y_0 = 0.6+-0.6%

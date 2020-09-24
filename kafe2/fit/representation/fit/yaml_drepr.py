@@ -224,9 +224,13 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
             _fit_object._param_model = _read_parametric_model
 
         _constraint_yaml_list = yaml_doc.pop('parameter_constraints', None)
-        if _constraint_yaml_list is not None:
+        if type(_constraint_yaml_list) is dict:
+            _constraint_yaml_list = [dict(name=param, **_constraint_yaml)
+                                     for param, _constraint_yaml in _constraint_yaml_list.items()]
+        if type(_constraint_yaml_list) is list:
             _fit_object._fit_param_constraints = [
-                ConstraintYamlReader._make_object(_constraint_yaml, parameter_names=_fit_object.poi_names)
+                ConstraintYamlReader._make_object(_constraint_yaml, default_type='simple',
+                                                  parameter_names=_fit_object.poi_names)
                 for _constraint_yaml in _constraint_yaml_list
             ]
 

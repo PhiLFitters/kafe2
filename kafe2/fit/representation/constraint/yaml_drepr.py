@@ -83,7 +83,7 @@ class ConstraintYamlReader(YamlReaderMixin, ConstraintDReprBase):
     @classmethod
     def _convert_yaml_doc_to_object(cls, yaml_doc):
         # -- determine constraint class from type
-        _constraint_type = yaml_doc.pop('type')
+        _constraint_type = yaml_doc.pop('type', 'simple')
         _class = cls._OBJECT_TYPE_NAME_TO_CLASS.get(_constraint_type, None)
 
         if _class is GaussianSimpleParameterConstraint:
@@ -103,7 +103,7 @@ class ConstraintYamlReader(YamlReaderMixin, ConstraintDReprBase):
                 relative=yaml_doc.pop('relative', False)
             )
         else:
-            raise DReprError('unkown constraint class: %s' % _class)
+            raise DReprError('Unknown constraint class: %s' % _class)
         return _constraint_object, yaml_doc
 
 
