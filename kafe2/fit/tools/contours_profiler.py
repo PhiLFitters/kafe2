@@ -75,15 +75,39 @@ class SigmaFormatter(plticker.Formatter):
         self._sigma = sigma
 
     def __call__(self, x, pos=None):
-        'Return the format for tick val *x* at position *pos*'
+        """Return the format for tick val *x* at position *pos*"""
         # _vmin, _vmax = self.axis.get_data_interval()
         _numeric_label = (x - self._cval)/self._sigma
         _str_label = r"%.2g$\sigma$" % (_numeric_label,)
         return _str_label
 
     def format_data_short(self, value):
-        '''Short version of format string for tick'''
+        """Short version of format string for tick"""
         return '{:g}'.format(value)
+
+
+class ScalarFormatter(plticker.Formatter):
+    """Format the tick labels to a specified precision.
+    """
+    def __init__(self, sigma, n_significant_digits=2):
+        """Format the tick label to a specified precision, according to the uncertainty.
+
+        :param float sigma: The uncertainty of the parameter.
+        :param int n_significant_digits: Number of significant digits.
+        """
+        self._sigma = sigma
+        self._n_significant_digits = n_significant_digits
+
+    def __call__(self, x, pos=None):
+        """Return the format for tick val *x* at position *pos*"""
+        _sig = int(-np.floor(np.log10(self._sigma))) + self._n_significant_digits - 1
+        _numeric_label = np.round(x, _sig)
+        _str_label = str(_numeric_label)
+        return str(_numeric_label)
+
+    def format_data_short(self, value):
+        """Short version of format string for tick"""
+        return self.__call__(value)
 
 
 class ContoursProfilerException(Exception):
@@ -155,7 +179,8 @@ class ContoursProfiler(object):
 
         self._cost_function_formatted_name = "${}$".format(self._fit._cost_function.formatter.latex_name)
         # FIXME MultiFit does not have an internal _model_function field
-        self._parameters_formatted_names = ["${}$".format(pf.latex_name) for pf in self._fit._get_model_function_parameter_formatters()]
+        self._parameters_formatted_names = ["${}$".format(pf.latex_name)
+                                            for pf in self._fit._get_model_function_parameter_formatters()]
 
         self._figures = []
 
@@ -199,7 +224,7 @@ class ContoursProfiler(object):
 
         # make error bar caps have the same line width as the error bars
         _cap_artists = _min_pt_artists[1]
-        for _cap in _cap_artists :
+        for _cap in _cap_artists:
             _cap.set_markeredgewidth(_kwargs.get('elinewidth', 1.5))
 
         _kwargs = ContoursProfiler._DEFAULT_PLOT_MINIMUM_HVLINES_KWARGS.copy()
@@ -332,7 +357,8 @@ class ContoursProfiler(object):
 
             _x, _y = self.get_profile(parameter)
 
-            _profile_artist = self._plot_profile_xy(_axes, _x, _y, label="profile %s" % (self._cost_function_formatted_name,))
+            _profile_artist = self._plot_profile_xy(_axes, _x, _y,
+                                                    label="profile %s" % (self._cost_function_formatted_name,))
 
             _y_offset = _cost_function_min if not self._profile_kwargs['subtract_min'] else 0.0
 
@@ -372,15 +398,15 @@ class ContoursProfiler(object):
                     va='top'
                 )
 
-
             _err_span_artist = None
             if show_error_span:
                 _xmin, _xmax = _par_val-_par_err, _par_val+_par_err
-                _err_span_artist = self._plot_error_span_on_profile(_axes, xmin=_xmin, xmax=_xmax, label="parameter error")
+                _err_span_artist = self._plot_error_span_on_profile(_axes, xmin=_xmin, xmax=_xmax,
+                                                                    label="parameter error")
 
             _axes.set_xlabel(_par_formatted_name)
             _axes.set_ylabel(self._cost_function_formatted_name if not self._profile_kwargs['subtract_min']
-                             else '$\Delta$%s' % self._cost_function_formatted_name)
+                             else '$\\Delta$%s' % self._cost_function_formatted_name)
 
             if show_legend:
                 _axes.legend(loc='center')
@@ -394,9 +420,9 @@ class ContoursProfiler(object):
                 if label_ticks_in_sigma:
                     _form_x = SigmaFormatter(central_value=_par_val, sigma=_par_err)
                     _axes.xaxis.set_major_formatter(_form_x)
-                # else:
-                #     _form_x = ScalarFormatter()
-                #     _axes.xaxis.set_major_formatter(_form_x)
+                else:
+                    _form_x = ScalarFormatter(sigma=_par_err, n_significant_digits=2)
+                    _axes.xaxis.set_major_formatter(_form_x)
 
                 _loc_y = plticker.MaxNLocator(5)
                 _axes.yaxis.set_major_locator(_loc_y)
@@ -504,6 +530,11 @@ class ContoursProfiler(object):
                 if label_ticks_in_sigma:
                     _form_x = SigmaFormatter(central_value=_par_1_val, sigma=_par_1_err)
                     _form_y = SigmaFormatter(central_value=_par_2_val, sigma=_par_2_err)
+                    _axes.xaxis.set_major_formatter(_form_x)
+                    _axes.yaxis.set_major_formatter(_form_y)
+                else:
+                    _form_x = ScalarFormatter(sigma=_par_1_err, n_significant_digits=2)
+                    _form_y = ScalarFormatter(sigma=_par_2_err, n_significant_digits=2)
                     _axes.xaxis.set_major_formatter(_form_x)
                     _axes.yaxis.set_major_formatter(_form_y)
             else:
