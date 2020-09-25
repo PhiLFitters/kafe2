@@ -278,6 +278,26 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
         return ["model_density_func_antiderivative"]
 
     @classmethod
+    def _modify_yaml_doc(cls, yaml_doc, kafe_object_class, dataset=None, **kwargs):
+        if dataset:
+            if kafe_object_class is HistParametricModel:
+                if 'bin_edges' not in yaml_doc and ('n_bins' not in yaml_doc or 'bin_range' not
+                                                    in yaml_doc):
+                    yaml_doc['bin_edges'] = dataset.bin_edges
+            elif kafe_object_class is IndexedParametricModel:
+                if 'shape_like' not in yaml_doc:
+                    yaml_doc['shape_like'] = dataset.data
+            elif kafe_object_class is UnbinnedParametricModel:
+                if 'data' not in yaml_doc:
+                    yaml_doc['data'] = dataset.data
+            elif kafe_object_class is XYParametricModel:
+                if 'x_data' not in yaml_doc:
+                    yaml_doc['x_data'] = dataset.x
+        super(ParametricModelYamlReader, cls)._modify_yaml_doc(yaml_doc, kafe_object_class,
+                                                               **kwargs)
+        return yaml_doc
+
+    @classmethod
     def _convert_yaml_doc_to_object(cls, yaml_doc):
         # -- determine model function class from type
         _parametric_model_type = yaml_doc.pop('type')
