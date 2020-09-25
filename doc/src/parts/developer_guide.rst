@@ -86,3 +86,6 @@ To build the documentation run::
 
     cd doc
     make
+
+For creating only the html or pdf documentation run ``make html`` or ``make latex``.
+Cleaning the output directories can be done with ``make clean``.
