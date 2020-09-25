@@ -40,7 +40,6 @@ class CostFunction(FileIOMixin, object):
     This class provides the basic functionality used by all :py:class:`CostFunction` objects.
     These use introspection (:py:mod:`inspect`) for determining the parameter structure of the
     cost function and to ensure the function can be used as a cost function (validation).
-
     """
 
     EXCEPTION_TYPE = CostFunctionException
@@ -56,9 +55,10 @@ class CostFunction(FileIOMixin, object):
         :param cost_function: function handle
         :type cost_function: typing.Callable
         :param arg_names: the names to use for the cost function arguments. If None, detect from
-        function signature.
+            function signature.
         :type arg_names: typing.Iterable[str]
-        :param add_constraint_cost: If :py:obj:`True`, automatically add the cost for kafe2 constraints.
+        :param add_constraint_cost: If :py:obj:`True`, automatically add the cost for kafe2
+            constraints.
         :type add_constraint_cost: bool
         """
         self._cost_function_handle = cost_function
@@ -153,17 +153,17 @@ class CostFunction(FileIOMixin, object):
         return self._is_chi2
 
     def get_uncertainty_gaussian_approximation(self, data):
-        """
-        Get the gaussian approximation of the uncertainty inherent to the cost function, returns 0
-        by default.
+        """Get the gaussian approximation of the uncertainty inherent to the cost function, returns
+        0 by default.
+
         :param data: the fit data
         :return: the approximated gaussian uncertainty given the fit data
         """
         return 0
 
     def is_data_compatible(self, data):
-        """
-        Tests if model data is compatible with cost function
+        """Tests if model data is compatible with cost function
+
         :param data: the fit data
         :type data: numpy.ndarray
         :return: if the data is compatible, and if not a reason for the incompatibility
@@ -174,14 +174,13 @@ class CostFunction(FileIOMixin, object):
 
 class CostFunction_Chi2(CostFunction):
     def __init__(self, errors_to_use='covariance', fallback_on_singular=True):
-        """
-        Base class for built-in least-squares cost function.
+        """Base class for built-in least-squares cost function.
 
-        :param errors_to_use: Which errors to use when calculating :math:`\chi^2`.
-                              Either ``'covariance'``, ``'pointwise'`` or ``None``.
+        :param errors_to_use: Which errors to use when calculating :math:`\\chi^2`.
+            Either ``'covariance'``, ``'pointwise'`` or ``None``.
         :type errors_to_use: str or None
         :param fallback_on_singular: If :py:obj:`True` and the covariance matrix is singular (or the
-        errors are zero), calculate :math:`\chi^2` as with ``errors_to_use=None``
+            errors are zero), calculate :math:`\\chi^2` as with ``errors_to_use=None``
         :type fallback_on_singular: bool
         """
 
@@ -389,12 +388,13 @@ class CostFunction_NegLogLikelihood(CostFunction):
         The cost function is given by:
 
         .. math::
-            C = -2 \ln \mathcal{L}({\bf d}, {\bf m}, {\bf \sigma}) = -2 \ln \prod_j \mathcal{L}_{\rm Gaussian} (x=d_j, \mu=m_j, \sigma=\sigma_j)
-                +
-                C({\bf p})
+            C = -2 \ln \mathcal{L}({\bf d}, {\bf m}, {\bf \sigma})
+              = -2 \ln \prod_j \mathcal{L}_{\rm Gaussian} (x=d_j, \mu=m_j, \sigma=\sigma_j)
+                + C({\bf p})
 
         .. math::
-            \rightarrow C = -2 \ln \prod_j \frac{1}{\sqrt{2{\sigma_j}^2\pi}} \exp{\left(-\frac{ (d_j-m_j)^2 }{ {\sigma_j}^2}\right)}
+            \rightarrow C = -2 \ln \prod_j \frac{1}{\sqrt{2{\sigma_j}^2\pi}}
+                            \exp{\left(-\frac{ (d_j-m_j)^2 }{ {\sigma_j}^2}\right)}
                             +
                             C({\bf p})
 
@@ -423,7 +423,8 @@ class CostFunction_NegLogLikelihood(CostFunction):
         The cost function is given by:
 
         .. math::
-            C = -2 \ln \mathcal{L}({\bf d}, {\bf m}) = -2 \ln \prod_j \mathcal{L}_{\rm Poisson} (k=d_j, \lambda=m_j)
+            C = -2 \ln \mathcal{L}({\bf d}, {\bf m})
+              = -2 \ln \prod_j \mathcal{L}_{\rm Poisson} (k=d_j, \lambda=m_j)
                 +
                 C({\bf p})
 

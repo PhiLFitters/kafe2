@@ -47,10 +47,10 @@ class HistFit(FitBase):
         :type data: :py:class:`~kafe2.fit.hist.HistContainer`
         :param model_density_function: the model density function
         :type model_density_function: :py:class:`~kafe2.fit.hist.HistModelFunction` or unwrapped
-        native Python function
+            native Python function
         :param cost_function: the cost function
         :type cost_function: :py:class:`~kafe2.fit._base.CostFunctionBase`-derived or unwrapped
-        native Python function
+            native Python function
         :param bin_evaluation: how the model evaluates bin heights.
         :type bin_evaluation: str, callable, or numpy.vectorize
         :param minimizer: the minimizer to use for fitting.
