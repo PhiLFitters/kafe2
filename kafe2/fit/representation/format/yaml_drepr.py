@@ -1,9 +1,8 @@
 from ._base import ModelFunctionFormatterDReprBase, ParameterFormatterDReprBase
 from .. import _AVAILABLE_REPRESENTATIONS
 from .._base import DReprError
-from .._yaml_base import YamlReaderException, YamlWriterException
-from .._yaml_base import YamlWriterMixin, YamlReaderMixin
-from ..._base import ParameterFormatter, ModelFunctionFormatter
+from .._yaml_base import YamlReaderException, YamlReaderMixin, YamlWriterException, YamlWriterMixin
+from ..._base import ModelFunctionFormatter, ParameterFormatter
 from ...indexed import IndexedModelFunctionFormatter
 
 __all__ = ["ModelFunctionFormatterYamlWriter", "ModelFunctionFormatterYamlReader",
@@ -32,6 +31,7 @@ class ModelFunctionFormatterYamlWriter(YamlWriterMixin, ModelFunctionFormatterDR
         _type = cls._CLASS_TO_OBJECT_TYPE_NAME.get(_class, None)
         if _type is None:
             raise DReprError("Model function formatter unknown or not supported: %s" % _class)
+        _yaml_doc['type'] = _type
 
         if _class is IndexedModelFunctionFormatter:
             _yaml_doc['index_name'] = model_function_formatter.index_name
@@ -69,8 +69,14 @@ class ModelFunctionFormatterYamlReader(YamlReaderMixin, ModelFunctionFormatterDR
             model_function_formatter=None)
 
     @classmethod
-    def _type_required(cls):
-        return False
+    def _modify_yaml_doc(cls, yaml_doc, kafe_object_class, name=None, signature=None):
+        # only update keys in yaml doc if they don't exist
+        # needed for setting name and signature when creating from a parametric model
+        if 'name' not in yaml_doc and name is not None:
+            yaml_doc['name'] = name
+        if 'signature' not in yaml_doc and signature is not None:
+            yaml_doc['signature'] = signature
+        return yaml_doc
 
     @classmethod
     def _get_required_keywords(cls, yaml_doc, formatter_class):
@@ -79,7 +85,7 @@ class ModelFunctionFormatterYamlReader(YamlReaderMixin, ModelFunctionFormatterDR
     @classmethod
     def _convert_yaml_doc_to_object(cls, yaml_doc):
         # -- determine model function formatter class (only indexed and base)
-        _type = 'indexed' if 'index_name' in yaml_doc else 'base'
+        _type = yaml_doc.pop('type')
         _class = cls._OBJECT_TYPE_NAME_TO_CLASS.get(_type)
 
         _kwarg_list = ['name', 'latex_name', 'expression_string', 'latex_expression_string']

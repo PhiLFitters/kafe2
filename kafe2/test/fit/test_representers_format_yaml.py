@@ -101,6 +101,7 @@ class TestModelFunctionFormatterYamlRepresenter(unittest.TestCase):
 
 
 TEST_MODEL_FUNCTION_FORMATTER_INDEXED = """
+type: indexed
 name: quadratic_model
 latex_name: quadratic model
 index_name: x
@@ -115,6 +116,7 @@ latex_expression_string: '{0}{x}^2 + {1}{x} + {2}'
 """
 
 TEST_MODEL_FUNCTION_FORMATTER_INDEXED_MISSING_KEYWORD = """
+type: indexed
 latex_name: quadratic model
 index_name: x
 latex_index_name: X
