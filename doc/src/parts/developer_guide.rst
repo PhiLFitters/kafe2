@@ -44,6 +44,7 @@ Additionally, the following Python packages should be installed:
 * `unittest2 <https://pypi.org/project/unittest2/>`_
 * `coverage <https://pypi.org/project/coverage/>`_
 * `Sphinx <https://pypi.org/project/Sphinx/>`_
+* `Sphinx Bootstrap Theme <https://pypi.org/project/sphinx-bootstrap-theme/>`_
 * `mock <https://pypi.org/project/mock/>`_
 
 To install all of these packages automatically run::

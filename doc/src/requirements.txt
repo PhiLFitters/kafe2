@@ -1,4 +1,0 @@
-funcsigs
-mock
-PyYaml
-sphinx_bootstrap_theme
