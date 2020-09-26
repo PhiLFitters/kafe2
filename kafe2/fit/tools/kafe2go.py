@@ -17,10 +17,13 @@ class Kafe2GoException(Exception):
 
 # TODO documentation
 def kafe2go():
-    _parser = argparse.ArgumentParser(description="Perform a fit with the kafe2 package driven by "
-                                                  "an input file.\n"
-                                                  "Example files are located inside the kafe2 "
-                                                  "installation directory.")
+    _parser = argparse.ArgumentParser(
+        description="Perform a fit with the kafe2 package driven by an input file.\n"
+                    "Example files can be found at "
+                    "https://github.com/dsavoiu/kafe2/tree/master/examples.\n"
+                    "Further information on how to create input files is given at "
+                    "https://kafe2.readthedocs.io/en/latest/parts/user_guide.html#kafe2go."
+        )
 
     _parser.add_argument('filename', type=str, nargs='+',
                          help="Name(s) of fit input file(s).")
