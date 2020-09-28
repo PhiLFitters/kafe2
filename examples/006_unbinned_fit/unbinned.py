@@ -16,7 +16,7 @@ A visual representation of the data can be found here:
 https://github.com/GuenterQuast/picoCosmo/blob/master/doc/dpFigs_Kanne.pdf
 """
 
-from kafe2.fit import UnbinnedContainer, UnbinnedFit, Plot
+from kafe2.fit import UnbinnedContainer, Fit, Plot
 from kafe2.fit.tools import ContoursProfiler
 
 import numpy as np
@@ -49,7 +49,7 @@ data.label = 'lifetime measurements'
 data.axis_labels = ['life time $\\tau$ (µs)', 'Density']
 
 # create the fit object and set the pdf for the fit
-fit = UnbinnedFit(data=data, model_density_function=pdf)
+fit = Fit(data=data, model_function=pdf)
 
 # Fix the parameters a and b.
 # Those are responsible for the normalization of the pdf for the range (a, b).

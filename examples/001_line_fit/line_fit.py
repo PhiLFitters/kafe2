@@ -11,7 +11,7 @@ This example demonstrates how to perform such a line fit in kafe2 and
 how to extract the results.
 """
 
-from kafe2 import XYContainer, XYFit, Plot
+from kafe2 import XYContainer, Fit, Plot
 import matplotlib.pyplot as plt
 
 # Create an XYContainer object to hold the xy data for the fit.
@@ -26,7 +26,7 @@ xy_data.add_error(axis='y', err_val=0.4)
 
 # Create an XYFit object from the xy data container.
 # By default, a linear function f=a*x+b will be used as the model function.
-line_fit = XYFit(xy_data=xy_data)
+line_fit = Fit(data=xy_data)
 
 # Perform the fit: Find values for a and b that minimize the
 #     difference between the model function and the data.

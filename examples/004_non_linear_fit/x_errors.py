@@ -17,11 +17,11 @@ The effects of this deformation are explained in the non_linear_fit.py example.
 """
 
 import matplotlib.pyplot as plt
-from kafe2 import XYContainer, XYFit, Plot
+from kafe2 import XYContainer, Fit, Plot
 from kafe2.fit.tools import ContoursProfiler
 
 # Construct a fit with data loaded from a yaml file. The model function is the default of f(x) = a * x + b
-nonlinear_fit = XYFit(xy_data=XYContainer.from_file('x_errors.yml'))
+nonlinear_fit = Fit(data=XYContainer.from_file('x_errors.yml'))
 
 # The x errors are much bigger than the y errors. This will cause a distortion of the likelihood function.
 nonlinear_fit.add_error('x', 1.0)

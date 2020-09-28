@@ -10,7 +10,7 @@ This example demonstrates how to specify arbitrary model functions for
 a kafe2 fit.
 """
 
-from kafe2 import XYContainer, XYFit, Plot, ContoursProfiler
+from kafe2 import XYContainer, Fit, Plot, ContoursProfiler
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -30,9 +30,9 @@ def exponential_model(x, A0=1., x0=5.):
 # For more information on reading/writing kafe2 objects from/to files see TODO
 xy_data = XYContainer.from_file("data.yml")
 
-# Create 2 XYFit objects with the same data but with different model functions
-linear_fit = XYFit(xy_data=xy_data, model_function=linear_model)
-exponential_fit = XYFit(xy_data=xy_data, model_function=exponential_model)
+# Create 2 Fit objects with the same data but with different model functions
+linear_fit = Fit(data=xy_data, model_function=linear_model)
+exponential_fit = Fit(data=xy_data, model_function=exponential_model)
 
 # Optional: Assign LaTeX strings to parameters and model functions.
 linear_fit.assign_parameter_latex_names(a='a', b='b')

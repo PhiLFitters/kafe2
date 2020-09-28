@@ -26,7 +26,7 @@ For reference, at Germany's latitude g lies at approximately 9.81 m/s^2.
 import numpy as np
 import matplotlib.pyplot as plt
 
-from kafe2 import XYContainer, XYFit, Plot
+from kafe2 import XYContainer, Fit, Plot
 
 # Relevant physical magnitudes and their uncertainties
 l, delta_l = 10.0, 0.001  # length of the string, l = 10.0+-0.001 m
@@ -49,7 +49,7 @@ def damped_harmonic_oscillator(x, y_0, l, r, g, c):
 data = XYContainer.from_file(filename='data.yml')
 
 # Create fit object from data and model function
-fit = XYFit(xy_data=data, model_function=damped_harmonic_oscillator)
+fit = Fit(data=data, model_function=damped_harmonic_oscillator)
 
 # Constrain model parameters to measurements
 fit.add_parameter_constraint(name='l',   value=l,   uncertainty=delta_l)

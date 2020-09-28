@@ -26,7 +26,7 @@ par_value+par_err_up-par_err_down.
 
 import numpy as np
 import matplotlib.pyplot as plt
-from kafe2 import XYFit, Plot, ContoursProfiler
+from kafe2 import Fit, Plot, ContoursProfiler
 
 def exponential(x, A0=1, tau=1):
     return A0 * np.exp(-x/tau)
@@ -41,7 +41,7 @@ yerr = [1.060258e-01, 5.890727e-02, 3.230893e-02, 7.400725e-02, 2.130520e-02, 7.
         3.877845e-03, 9.649427e-04]
 
 # create a fit object from the data arrays
-fit = XYFit(xy_data=[x, y], model_function=exponential)
+fit = Fit(data=[x, y], model_function=exponential)
 fit.add_error(axis='x', err_val=xerr)  # add the x-error to the fit
 fit.add_error(axis='y', err_val=yerr)  # add the y-errors to the fit
 

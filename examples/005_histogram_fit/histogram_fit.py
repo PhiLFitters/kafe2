@@ -13,7 +13,7 @@ histogram.
 
 import numpy as np
 import matplotlib.pyplot as plt
-from kafe2 import HistContainer, HistFit, Plot
+from kafe2 import HistContainer, Fit, Plot
 
 
 def normal_distribution_pdf(x, mu, sigma):
@@ -28,7 +28,7 @@ data = np.random.normal(loc=0, scale=1, size=100)
 histogram = HistContainer(n_bins=10, bin_range=(-5, 5), fill_data=data)
 
 # create the Fit object by specifying a density function
-fit = HistFit(data=histogram, model_density_function=normal_distribution_pdf)
+fit = Fit(data=histogram, model_function=normal_distribution_pdf)
 
 fit.do_fit()  # do the fit
 fit.report()  # Optional: print a report to the terminal
