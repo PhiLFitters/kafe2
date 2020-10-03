@@ -1,4 +1,4 @@
-# Example 01: Liner regression
+# Example 01: Line fit
 # In this example a line f(x) = a * x + b is being fitted
 # to some data points with pointwise uncertainties.
 
@@ -12,6 +12,9 @@ x_data: [1.0, 2.0, 3.0, 4.0]
 # For errors lists describe pointwise uncertainties.
 # By default the errors will be uncorrelated.
 x_errors: [0.05, 0.10, 0.15, 0.20]
+
+# Because x_errors is equal to 5% of x_data we could have also defined it like this:
+# x_errors: 5%
 
 # In total the following x data will be used for the fit:
 # x_0: 1.0 +- 0.05

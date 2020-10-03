@@ -302,7 +302,23 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
                 else:
                     cls._add_error_to_container('simple', _container_obj, err_val=_err)
                 continue
-            
+            elif isinstance(_err, str):
+                if _err.endswith("%"):
+                    try:
+                        _rel_err_percent = float(_err[:-1])
+                    except ValueError:
+                        raise DReprError("Cannot convert string to relative error: %s" % _err)
+                    if _axis is not None:
+                        cls._add_error_to_container(
+                            'simple', _container_obj, err_val=0.01*_rel_err_percent, relative=True,
+                            axis=_axis)
+                    else:
+                        cls._add_error_to_container(
+                            'simple', _container_obj, err_val=0.01*_rel_err_percent, relative=True)
+                    continue
+                else:
+                    raise DReprError("Cannot convert string to error: %s" % _err)
+
             _add_kwargs = dict()
             # translate and check that all required keys are present
             try:
