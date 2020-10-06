@@ -102,7 +102,6 @@ class ScalarFormatter(plticker.Formatter):
         """Return the format for tick val *x* at position *pos*"""
         _sig = int(-np.floor(np.log10(self._sigma))) + self._n_significant_digits - 1
         _numeric_label = np.round(x, _sig)
-        _str_label = str(_numeric_label)
         return str(_numeric_label)
 
     def format_data_short(self, value):
@@ -382,11 +381,11 @@ class ContoursProfiler(object):
             if label_fit_minimum:
                 _axes.annotate(
                     '\n'.join([
-                        r"$\langle {}\rangle = {:g}$".format(
+                        r"$\langle {}\rangle = {}$".format(
                             _par_formatted_name.strip('$'),
-                            _par_val
+                            ScalarFormatter(_par_err, n_significant_digits=2)(_par_val)
                         ),
-                        r"$\sigma_{{{}}} = {:g}$".format(
+                        r"$\sigma_{{{}}} = {:.2g}$".format(
                             _par_formatted_name.strip('$'),
                             _par_err
                         )]),
