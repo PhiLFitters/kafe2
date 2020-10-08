@@ -558,7 +558,13 @@ class Plot(object):
     """
     # TODO update documentation
 
-    FIT_INFO_STRING_FORMAT = textwrap.dedent("""\
+    FIT_INFO_STRING_FORMAT_CHI2 = textwrap.dedent("""\
+        {model_function}
+        {parameters}
+            $\\hookrightarrow${fit_quality}
+            $\\hookrightarrow \\chi^2 \\, \\mathrm{{probability =}}${chi2_probability:#.3g}
+    """)
+    FIT_INFO_STRING_FORMAT_SATURATED = textwrap.dedent("""\
         {model_function}
         {parameters}
             $\\hookrightarrow${fit_quality}
@@ -763,8 +769,11 @@ class Plot(object):
                 with_value_per_ndf=True,
                 format_as_latex=format_as_latex
             )
-            if plot_adapter._fit._cost_function.saturated:
-                _info_format_string = self.FIT_INFO_STRING_FORMAT
+            if plot_adapter._fit._cost_function.is_chi2:
+                _info_format_string = self.FIT_INFO_STRING_FORMAT_CHI2
+                _info_format_dict["chi2_probability"] = plot_adapter._fit.chi2_probability
+            elif plot_adapter._fit._cost_function.saturated:
+                _info_format_string = self.FIT_INFO_STRING_FORMAT_SATURATED
             else:
                 _info_format_string = self.FIT_INFO_STRING_FORMAT_NOT_SATURATED
                 _info_format_dict["cost"] = _cost_func.formatter.get_formatted(
@@ -773,7 +782,7 @@ class Plot(object):
                     format_as_latex=format_as_latex
                 )
         else:
-            _info_format_string = self.FIT_INFO_STRING_FORMAT
+            _info_format_string = self.FIT_INFO_STRING_FORMAT_SATURATED
             _info_format_dict["fit_quality"] = _cost_func.formatter.get_formatted(
                 value=_cost_function_value,
                 with_name=True,
@@ -791,6 +800,9 @@ class Plot(object):
             if _multi_cost_function.is_chi2:
                 _multi_gof = _multi_cost_function_value
                 _template = "    $\\hookrightarrow$ global {fit_quality}\n"
+                _multi_info_dict["chi2_probability"] = self._multifit.chi2_probability
+                _template += "    $\\hookrightarrow$ global $\\chi^2 \\, \\mathrm{{probability}} " \
+                             "= {chi2_probability:#.3g}$"
             elif _multi_cost_function.saturated:
                 _multi_gof = _multi_cost_function_value
                 _template = "    $\\hookrightarrow$ global cost / ndf = {fit_quality}\n"

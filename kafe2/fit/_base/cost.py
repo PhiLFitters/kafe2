@@ -2,7 +2,7 @@ import numpy as np
 import six
 import warnings
 
-from scipy.stats import poisson, norm
+from scipy.stats import poisson, norm, chi2
 from ..io.file import FileIOMixin
 from .format import ParameterFormatter, CostFunctionFormatter
 
@@ -173,6 +173,17 @@ class CostFunction(FileIOMixin, object):
         _saturated_cost = self._cost_function_handle(*args)
         return _cost - _saturated_cost
 
+    def chi2_probability(self, cost_function_value, ndf):
+        """The chi2 probability associated with this cost function, None for non-chi2 cost
+        functions.
+
+        :param float cost_function_value: the associated cost function value.
+        :param int ndf: the associated number of degrees of freedom.
+        :returns: the associated chi2 probability.
+        :rtype: float or None
+        """
+        return None
+
     def get_uncertainty_gaussian_approximation(self, data):
         """Get the gaussian approximation of the uncertainty inherent to the cost function, returns
         0 by default.
@@ -239,6 +250,9 @@ class CostFunction_Chi2(CostFunction):
         self._needs_errors = errors_to_use is not None
         self._is_chi2 = True
         self._saturated = True
+
+    def chi2_probability(self, cost_function_value, ndf):
+        return 1.0 - chi2.cdf(cost_function_value, ndf)
 
     def _chi2(self, data, model, cov_mat_inverse=None, err=None):
         data = np.asarray(data)

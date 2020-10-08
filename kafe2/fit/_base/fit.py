@@ -329,6 +329,10 @@ class FitBase(FileIOMixin, object):
                 format_as_latex=False
             ))
             output_stream.write('\n\n')
+        _chi2_prob = self.chi2_probability
+        if _chi2_prob is not None:
+            output_stream.write("%schi2 probability = %#.3g\n\n" % (
+                indent * (indentation_level + 2), _chi2_prob))
 
     def _update_parameter_formatters(self, update_asymmetric_errors=False):
         """Update all parameter formatters with the current values and uncertainties.
@@ -666,6 +670,11 @@ class FitBase(FileIOMixin, object):
                 "Unknown dynamic error algorithm: %s. Valid algorithms: %s" % (
                     new_dea, _valid_deas))
         self._dynamic_error_algorithm = new_dea
+
+    @property
+    def chi2_probability(self):
+        """The chi2 probability for the current model values."""
+        return self._cost_function.chi2_probability(self.cost_function_value, self.ndf)
 
     # -- public methods
 
@@ -1027,6 +1036,7 @@ class FitBase(FileIOMixin, object):
         _result_dict['ndf'] = _ndf
         _result_dict['goodness_of_fit'] = self.goodness_of_fit
         _result_dict['cost/ndf'] = _cost / _ndf
+        _result_dict['chi2_probability'] = self.chi2_probability
         _result_dict['parameter_values'] = self.parameter_name_value_dict
         if _result_dict['did_fit']:
             _result_dict['parameter_cov_mat'] = self.parameter_cov_mat
