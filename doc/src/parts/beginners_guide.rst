@@ -58,7 +58,7 @@ For using *kafe2* inside a *Python* script, import the required *kafe2* modules:
     from kafe2 import XYFit, Plot
 
 If a code example contains a line similar to :python:`data = XYContainer.from_file("data.yml")`
-the corresponding YAML file can be found in the same directory that contains the example Python
+the corresponding *YAML* file can be found in the same directory that contains the example Python
 script.
 The example files can be found on
 `GitHub <https://github.com/dsavoiu/kafe2/tree/master/examples>`_.
@@ -81,6 +81,7 @@ To run this example, open a text editor and save the following file contents
 as a *YAML* file named :file:`line_fit.yml`.
 
 .. literalinclude:: ../../../examples/001_line_fit/line_fit.yml
+    :language: yaml
 
 Then open a terminal, navigate to the directory where the file is
 located and run
@@ -165,6 +166,7 @@ For more advanced fit functions, consider using *kafe2* inside a *Python* script
     :control_text: exponential_fit.yml
 
     .. literalinclude:: ../../../examples/002_model_functions/exponential_fit.yml
+        :language: yaml
         :emphasize-lines: 38-42
 
 .. bootstrap_collapsible::
@@ -172,6 +174,7 @@ For more advanced fit functions, consider using *kafe2* inside a *Python* script
     :control_text: line_fit.yml
 
     .. literalinclude:: ../../../examples/002_model_functions/line_fit.yml
+        :language: yaml
         :emphasize-lines: 38-41
 
 To use multiple input files with kafe2go, simply run
@@ -186,6 +189,12 @@ To plot the fits in two separate figures append the ``--separate`` flag to the k
 
     kafe2go path/to/fit1.yml path/to/fit2.yml --separate
 
+For creating a contour plot, simply add ``-c`` to the command line. This will create contour plots
+for all given fits.
+
+.. code-block:: bash
+
+    kafe2go path/to/fit1.yml path/to/fit2.yml --separate -c
 
 Python
 ------
@@ -218,7 +227,7 @@ highlighted in the following example.
 
     .. literalinclude:: ../../../examples/002_model_functions/model_functions.py
         :lines: 13-
-        :emphasize-lines: 43-45
+        :emphasize-lines: 49-51
 
 
 Example 3: Parameter Constraints
@@ -253,33 +262,32 @@ approximately :math:`9.81\,\mathrm{m}/\mathrm{s}^2`.
 
 kafe2go
 -------
-
 Parameter constraints are straightforward to use with *kafe2go*. After defining the model function
-parameter constraints can be set. The constraints require an index to be set. This index
-corresponds to the parameter order of the fit function. So the first free parameter uses index 0,
-the second index 1.
-The according lines are highlighted in the example file below.
+parameter constraints can be set. Simple gaussian constraints can be defined with the parameter name
+followed by the required information as highlighted in the example.
+For more information on parameter constraints via a covariance matrix, please refer to
+:ref:`kafe2go_constraints`.
 
 .. bootstrap_collapsible::
     :control_type: link
     :control_text: constraints.yml
 
     .. literalinclude:: ../../../examples/003_constraints/constraints.yml
-        :emphasize-lines: 50-
+        :language: yaml
+        :emphasize-lines: 58-
 
 Python
 ------
-
 Using *kafe2* inside a *Python* script, parameter constraints can be set with
 ``fit.add_parameter_constraint()``. The according section is highlighted in the code example below.
 
 .. bootstrap_collapsible::
     :control_type: link
-    :control_text: constraints.yml
+    :control_text: constraints.py
 
     .. literalinclude:: ../../../examples/003_constraints/constraints.py
-        :lines: 26-
-        :emphasize-lines: 28-32
+        :lines: 29-
+        :emphasize-lines: 30-33
 
 
 .. _non-linear-fits:
@@ -350,7 +358,6 @@ one-dimensional profile scans.
 
 kafe2go
 -------
-
 To display asymmetric parameter uncertainties use the flag ``-a``. In addition the profiles and
 contours can be shown by using the ``-c`` flag. In the *Python* example a ratio between the data
 and model function is shown below the plot. This can be done by appending the ``-r`` flag to
@@ -361,6 +368,7 @@ and model function is shown below the plot. This can be done by appending the ``
     :control_text: non_linear_fit.yml
 
     .. literalinclude:: ../../../examples/004_non_linear_fit/non_linear_fit.yml
+        :language: yaml
 
 The dataset used to show that big uncertainties on the x axis can cause the fit to be non-linear
 follows here.
@@ -374,10 +382,11 @@ So to plot with asymmetric errors, the profiles and contour as well as a grid ru
     :control_text: x_errors.yml
 
     .. literalinclude:: ../../../examples/004_non_linear_fit/x_errors.yml
+        :language: yaml
+
 
 Python
 ------
-
 The relevant lines to display asymmetric uncertainties and to create the contour plot are
 highlighted in the code example below.
 
@@ -419,13 +428,20 @@ of entries N of the histogram.
 
 kafe2go
 -------
+In order to tell *kafe2go* that a fit is a histogram fit ``type: histogram`` has to specified
+inside the *YAML* file.
 
-*kafe2go* currently requires extra formatting to perform a histogram fit. This will be changed in a
-future update. At the moment it's simpler to create a *Python* script.
+.. bootstrap_collapsible::
+    :control_type: link
+    :control_text: histogram.yml
+
+    .. literalinclude:: ../../../examples/005_histogram_fit/histogram.yml
+        :language: yaml
+        :emphasize-lines: 1
+
 
 Python
 ------
-
 To use a histogram fit in a *Python* script, just import it with
 :python:`from kafe2 import HistContainer, HistFit`.
 
@@ -438,7 +454,7 @@ Alternatively the bin edges for each bin can be set manually.
     :control_text: histogram_fit.py
 
     .. literalinclude:: ../../../examples/005_histogram_fit/histogram_fit.py
-        :lines: 14-
+        :lines: 16-
 
 
 Example 6: Unbinned Fit
@@ -453,28 +469,37 @@ data points, as the likelihood of each data point is fitted.
 .. figure:: ../_static/img/006_unbinned_fit.png
     :alt: An unbinned likelihood fit performed with kafe2.
 
-kafe2go
--------
-
-Unbinned fits are currently not supported by *kafe2go*.
-This feature will be added in a future update.
-
-Python
-------
-
-The fitting procedure is similar to the one of a histogram fit.
-
-Inside a *kafe2* fit, single parameters can be fixed as highlighted in the example.
+Inside a *kafe2* fit, single parameters can be fixed as seen in the plot.
 When fixing a parameter, there must be a good reason to do so. In this case it's the normalization
 of the probability distribution function.
 This, of course, could have been done inside the function itself.
 But if the user wants to change to normalization without touching the distribution function, this
 is a better way.
 
+kafe2go
+-------
+Similar to histogram fits, unbinned fits are defined by ``type: unbinned`` inside the *YAML* file.
+How to fix single parameters is highlighted in the example below, as well as limiting the
+background ``fbg`` to physically correct values.
+
 .. bootstrap_collapsible::
     :control_type: link
-    :control_text: unbinned_fit.py
+    :control_text: unbinned.yml
+
+    .. literalinclude:: ../../../examples/006_unbinned_fit/unbinned.yml
+        :language: yaml
+        :emphasize-lines: 43-47
+
+
+Python
+------
+The fitting procedure is similar to the one of a histogram fit.
+How to fix single parameters is highlighted in the example below.
+
+.. bootstrap_collapsible::
+    :control_type: link
+    :control_text: unbinned.py
 
     .. literalinclude:: ../../../examples/006_unbinned_fit/unbinned.py
-        :lines: 17-
-        :emphasize-lines: 32-34
+        :lines: 19-
+        :emphasize-lines: 36-41
