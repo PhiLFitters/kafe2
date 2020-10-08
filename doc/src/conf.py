@@ -103,7 +103,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'kafe2'
-copyright = u'2019, J. Gäßler, C. Verstege, D. Savoiu and G. Quast'
+copyright = u'2019-2020, J. Gäßler, C. Verstege, D. Savoiu and G. Quast'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -306,7 +306,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class], toctree_only).
 latex_documents = [
   ('index', 'kafe2.tex', u'kafe2 Documentation',
-   u'D. Savoiu, G. Quast', 'manual', False),
+   u'J. Gäßler, C. Verstege, D. Savoiu, G. Quast', 'manual', False),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -350,7 +350,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('kafe2', 'kafe2', u'kafe2 Documentation',
-   u'D. Savoiu, G. Quast', 'kafe2', 'One line description of project.',
+   u'J. Gäßler, C. Verstege, D. Savoiu, G. Quast', 'kafe2', 'One line description of project.',
    'Miscellaneous'),
 ]
 
