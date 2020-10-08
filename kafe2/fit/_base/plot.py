@@ -563,6 +563,12 @@ class Plot(object):
         {parameters}
             $\\hookrightarrow${fit_quality}
     """)
+    FIT_INFO_STRING_FORMAT_NOT_SATURATED = textwrap.dedent("""\
+        {model_function}
+        {parameters}
+            $\\hookrightarrow${cost}
+            $\\hookrightarrow${fit_quality}
+    """)
 
     def __init__(self, fit_objects, separate_figures=False):
 
@@ -725,7 +731,11 @@ class Plot(object):
 
         _ndf = plot_adapter._fit.ndf
         _cost_function_value = plot_adapter._fit.cost_function_value
-        _info_text = self.FIT_INFO_STRING_FORMAT.format(
+        if plot_adapter._fit._cost_function.saturated:
+            _gof_value = _cost_function_value
+        else:
+            _gof_value = plot_adapter._fit.goodness_of_fit
+        _info_format_dict = dict(
             model_function=plot_adapter.get_formatted_model_function(
                 with_par_values=False,
                 n_significant_digits=2,
@@ -741,24 +751,70 @@ class Plot(object):
                     format_as_latex=format_as_latex
                 )
                 for _pf in plot_adapter.model_function_parameter_formatters
-            ]),
-            fit_quality=_cost_func._formatter.get_formatted(
-                value=_cost_function_value,
+            ])
+        )
+        # _gof_value is None for UnbinnedFit and some user-defined cost functions.
+        if _gof_value is not None:
+            _info_format_dict["fit_quality"] = _cost_func.formatter.get_formatted(
+                value=_gof_value,
+                with_name=True,
+                saturated=True,
                 n_degrees_of_freedom=_ndf,
                 with_value_per_ndf=True,
                 format_as_latex=format_as_latex
-            ),
-        )
+            )
+            if plot_adapter._fit._cost_function.saturated:
+                _info_format_string = self.FIT_INFO_STRING_FORMAT
+            else:
+                _info_format_string = self.FIT_INFO_STRING_FORMAT_NOT_SATURATED
+                _info_format_dict["cost"] = _cost_func.formatter.get_formatted(
+                    value=_cost_function_value,
+                    with_name=True,
+                    format_as_latex=format_as_latex
+                )
+        else:
+            _info_format_string = self.FIT_INFO_STRING_FORMAT
+            _info_format_dict["fit_quality"] = _cost_func.formatter.get_formatted(
+                value=_cost_function_value,
+                with_name=True,
+                format_as_latex=format_as_latex
+            )
+
+        _info_text = _info_format_string.format(**_info_format_dict)
+
         if self._multifit is not None:
             _multi_ndf = self._multifit.ndf
+            _multi_cost_function = self._multifit._cost_function
             _multi_cost_function_value = self._multifit.cost_function_value
-            _info_text += "    $\\hookrightarrow$ global {}".format(
-                _cost_func._formatter.get_formatted(
+
+            _multi_info_dict = dict()
+            if _multi_cost_function.is_chi2:
+                _multi_gof = _multi_cost_function_value
+                _template = "    $\\hookrightarrow$ global {fit_quality}\n"
+            elif _multi_cost_function.saturated:
+                _multi_gof = _multi_cost_function_value
+                _template = "    $\\hookrightarrow$ global cost / ndf = {fit_quality}\n"
+            else:
+                _template = "    $\\hookrightarrow$ global cost = {cost}\n"
+                _multi_info_dict["cost"] = _multi_cost_function.formatter.get_formatted(
                     value=_multi_cost_function_value,
+                    with_name=False,
+                    format_as_latex=format_as_latex
+                )
+                _multi_gof = self._multifit.goodness_of_fit
+                if _multi_gof is not None:
+                    _template += "    $\\hookrightarrow$ global GoF / ndf = {fit_quality}\n"
+
+            if _multi_gof is not None:
+                _multi_info_dict["fit_quality"] = _multi_cost_function.formatter.get_formatted(
+                    value=_multi_gof,
+                    with_name=_multi_cost_function.is_chi2,
                     n_degrees_of_freedom=_multi_ndf,
                     with_value_per_ndf=True,
                     format_as_latex=format_as_latex
-                ))
+                )
+
+            _info_text += _template.format(**_multi_info_dict)
         return _info_text
 
     def _render_legend(self, plot_results, axes_keys, fit_info=True, asymmetric_parameter_errors=False, **kwargs):

@@ -550,9 +550,44 @@ class CostFunctionFormatter(FunctionFormatter):
     """A Formatter class for Cost Functions.
     """
 
-    def get_formatted(self, value=None, n_degrees_of_freedom=None, with_name=True,
-                      with_value_per_ndf=True,
-                      format_as_latex=False):
+    def __init__(
+            self, name, name_saturated=None, latex_name=None, latex_name_saturated=None,
+            arg_formatters=None, expression_string=None, latex_expression_string=None):
+        super(CostFunctionFormatter, self).__init__(
+            name=name, latex_name=latex_name, arg_formatters=arg_formatters,
+            expression_string=expression_string, latex_expression_string=latex_expression_string)
+        self.name_saturated = name_saturated
+        self.latex_name_saturated = latex_name_saturated
+
+    @property
+    def name_saturated(self):
+        """A plain-text-formatted string indicating the saturated function name.
+
+        :rtype: str
+        """
+        return self._name_saturated if self._name_saturated is not None else self._name
+
+    @name_saturated.setter
+    def name_saturated(self, name_saturated):
+        # TODO: validate
+        self._name_saturated = name_saturated
+
+    @property
+    def latex_name_saturated(self):
+        """A LaTeX-formatted string indicating the saturated function name.
+
+        :rtype: str
+        """
+        return self._latex_name_saturated if self._latex_name_saturated is not None \
+            else self.latex_name
+
+    @latex_name_saturated.setter
+    def latex_name_saturated(self, latex_name_saturated):
+        self._latex_name_saturated = latex_name_saturated  # TODO validate
+
+    def get_formatted(
+            self, value=None, n_degrees_of_freedom=None, with_name=True, saturated=False,
+            with_value_per_ndf=True, format_as_latex=False):
         """Get a formatted string representing this cost function.
 
         :param value: Value of the cost function (if not :py:obj:`None`, the returned string will
@@ -563,6 +598,8 @@ class CostFunctionFormatter(FunctionFormatter):
         :type n_degrees_of_freedom: int or None
         :param bool with_name: If :py:obj:`True`, the returned string will include the cost function
             name
+        :param bool saturated: If :py:obj:`True`, the cost function name for the saturated
+            Likelihood will be used (no effect for chi2).
         :param bool with_value_per_ndf: If :py:obj:`True`, the returned string will include the
             value-ndf ratio as a decimal value
         :param bool format_as_latex: If :py:obj:`True`, the returned string will be formatted using
@@ -570,15 +607,19 @@ class CostFunctionFormatter(FunctionFormatter):
         :rtype: str
         """
 
-        _name_string = "%s" % self._latex_name
+        if format_as_latex:
+            _name = self.latex_name_saturated if saturated else self.latex_name
+        else:
+            _name = self.name_saturated if saturated else self.name
+        _name_string = "%s" % _name
         _value_string = ""
         if value is not None:
             _value_string = "%.4g" % value
             if n_degrees_of_freedom is not None:
                 if format_as_latex:
-                    _name_string = r"%s / {\rm ndf}" % self._latex_name
+                    _name_string = r"%s / {\rm ndf}" % _name
                 else:
-                    _name_string = "%s / ndf" % self._latex_name
+                    _name_string = "%s / ndf" % _name
                 _value_string = "%s / %d" % (_value_string, n_degrees_of_freedom)
                 if with_value_per_ndf:
                     _value_string = "%s = %.4g" % (_value_string,

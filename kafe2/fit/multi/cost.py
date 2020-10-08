@@ -23,11 +23,9 @@ class MultiCostFunction(CostFunction):
             arg_names=cost_function_names,
             add_constraint_cost=True
         )
-        self._needs_errors = False
-        for _singular_cost_function in singular_cost_functions:
-            if _singular_cost_function.needs_errors:
-                self._needs_errors = True
-                break
+        self._needs_errors = np.any([_scf.needs_errors for _scf in singular_cost_functions])
+        self._saturated = np.all([_scf.saturated for _scf in singular_cost_functions])
+        self._is_chi2 = np.all([_scf.is_chi2 for _scf in singular_cost_functions])
 
     @staticmethod
     def cost_sum(*single_costs):

@@ -508,6 +508,19 @@ class MultiFit(FitBase):
         return self.data_size - len(self._combined_parameter_node_dict.keys()) \
                + len(self._fitter.fixed_parameters)
 
+    @property
+    def goodness_of_fit(self):
+        if isinstance(self._cost_function, MultiCostFunction):
+            _sum = 0.0
+            for _fit in self._fits:
+                _gof = _fit.goodness_of_fit
+                if _gof is None:
+                    return None
+                _sum += _gof
+            return _sum
+        else:
+            return super(MultiFit, self).goodness_of_fit
+
     # -- public methods
 
     def add_matrix_error(self, err_matrix, matrix_type, fits, axis=None, name=None, err_val=None,

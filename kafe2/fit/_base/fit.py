@@ -304,16 +304,31 @@ class FitBase(FileIOMixin, object):
         output_stream.write(indent * (indentation_level + 1) + "=============\n\n")
 
         _pf = self._cost_function.formatter
-        output_stream.write(indent * (indentation_level + 2) + "cost function: {}\n\n".format(_pf.description))
-        output_stream.write(indent * (indentation_level + 2) + "cost / ndf = ")
         output_stream.write(
-            _pf.get_formatted(value=self.cost_function_value,
-                              n_degrees_of_freedom=self.ndf,
-                              with_name=False,
-                              with_value_per_ndf=True,
-                              format_as_latex=False)
-        )
-        output_stream.write('\n')
+            indent * (indentation_level + 2) + "cost function: {}\n\n".format(_pf.description))
+        if self._cost_function.saturated:
+            _gof_string = "cost / ndf = "
+            _gof_value = self.cost_function_value
+        else:
+            output_stream.write(indent * (indentation_level + 2) + "cost = ")
+            output_stream.write(_pf.get_formatted(
+                value=self.cost_function_value,
+                with_name=False,
+                format_as_latex=False,
+            ))
+            output_stream.write('\n\n')
+            _gof_string = "GoF / ndf = "
+            _gof_value = self.goodness_of_fit
+        if _gof_value is not None:
+            output_stream.write(indent * (indentation_level + 2) + _gof_string)
+            output_stream.write(_pf.get_formatted(
+                value=_gof_value,
+                n_degrees_of_freedom=self.ndf,
+                with_name=False,
+                with_value_per_ndf=True,
+                format_as_latex=False
+            ))
+            output_stream.write('\n\n')
 
     def _update_parameter_formatters(self, update_asymmetric_errors=False):
         """Update all parameter formatters with the current values and uncertainties.
@@ -630,6 +645,11 @@ class FitBase(FileIOMixin, object):
         :rtype: int
         """
         return self._param_model.ndf + len(self._fitter.fixed_parameters)
+
+    @property
+    def goodness_of_fit(self):
+        return self._cost_function.goodness_of_fit(
+            *[self._nexus.get(_node_name).value for _node_name in self._cost_function.arg_names])
 
     @property
     def dynamic_error_algorithm(self):
@@ -1005,6 +1025,7 @@ class FitBase(FileIOMixin, object):
         _ndf = self.ndf
         _result_dict['cost'] = _cost
         _result_dict['ndf'] = _ndf
+        _result_dict['goodness_of_fit'] = self.goodness_of_fit
         _result_dict['cost/ndf'] = _cost / _ndf
         _result_dict['parameter_values'] = self.parameter_name_value_dict
         if _result_dict['did_fit']:

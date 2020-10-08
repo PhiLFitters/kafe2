@@ -95,6 +95,10 @@ class UnbinnedFit(FitBase):
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         return self._param_model.data
 
+    @property
+    def goodness_of_fit(self):
+        return None
+
     def eval_model_function(self, x=None, model_parameters=None):
         """
         Evaluate the model function.

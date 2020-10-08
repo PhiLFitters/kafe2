@@ -72,7 +72,7 @@ class CostFunction(FileIOMixin, object):
                         "(*{}) needs explicit argument names.".format(
                             self._cost_function_handle.__name__, _par.name))
         else:
-            self._arg_names = arg_names
+            self._arg_names = list(arg_names)
         if "cost" in self._arg_names:
             raise self.__class__.EXCEPTION_TYPE(
                 "The alias 'cost' for the cost function value cannot be used as a name for one of"
@@ -96,6 +96,7 @@ class CostFunction(FileIOMixin, object):
 
         self._needs_errors = True
         self._is_chi2 = False
+        self._saturated = False
         super(CostFunction, self).__init__()
 
     @classmethod
@@ -151,6 +152,26 @@ class CostFunction(FileIOMixin, object):
     def is_chi2(self):
         """Whether the cost function is a chi2 cost function."""
         return self._is_chi2
+
+    @property
+    def saturated(self):
+        """Whether the cost function value is calculated from a saturated likelihood."""
+        return self._saturated
+
+    def goodness_of_fit(self, *args):
+        """How well the model agrees with the data."""
+        try:
+            _index_data = self._arg_names.index(self._DATA_NAME)
+            _index_model = self._arg_names.index(self._MODEL_NAME)
+        except ValueError:
+            return None
+        _cost = self(*args)
+        args = list(args)
+        if self._add_constraint_cost:
+            args = args[:-2]
+        args[_index_model] = args[_index_data]
+        _saturated_cost = self._cost_function_handle(*args)
+        return _cost - _saturated_cost
 
     def get_uncertainty_gaussian_approximation(self, data):
         """Get the gaussian approximation of the uncertainty inherent to the cost function, returns
@@ -217,6 +238,7 @@ class CostFunction_Chi2(CostFunction):
         self._formatter.description = _cost_function_description
         self._needs_errors = errors_to_use is not None
         self._is_chi2 = True
+        self._saturated = True
 
     def _chi2(self, data, model, cov_mat_inverse=None, err=None):
         data = np.asarray(data)
@@ -374,12 +396,15 @@ class CostFunction_NegLogLikelihood(CostFunction):
 
         if ratio:
             self._formatter.latex_name = r"-2\ln\mathcal{L}_{\rm R}"
-            self.formatter.name = "nllr"
+            self._formatter.name = "nllr"
         else:
-            self._formatter.latex_name = "-2\\ln\\mathcal{L}"
+            self._formatter.latex_name = r"-2\ln\mathcal{L}"
+            self._formatter.latex_name_saturated = r"-2\ln\mathcal{L}_{\rm R}"
             self._formatter.name = "nll"
+            self._formatter.name_saturated = "nllr"
         self._formatter.description = _cost_function_description
         self._needs_errors = _nll_func in [self.nll_gaussian, self.nllr_gaussian]
+        self._saturated = ratio
 
     @staticmethod
     def nll_gaussian(data, model, total_error):
