@@ -4,11 +4,13 @@
 kafe2 example: Histogram Fit
 ============================
 
-kafe2 is not only capable of performing XY-Fits. One way to handle one-dimensional data with kafe2 is by fitting a
-histogram. The distribution of a random stochastic variable follows a probability density function. The fit will
-determine the parameters of that density function, which the dataset is most likely to follow.
-To get to the height of a bin, please multiply the results of the fitted function with the amount of entries N of the
-histogram.
+kafe2 is not only capable of performing XY-Fits.
+One way to handle one-dimensional data with kafe2 is by fitting a histogram.
+The distribution of a random stochastic variable follows a probability density function.
+The fit will determine the parameters of that density function, which the dataset is most likely
+to follow.
+To get to the height of a bin, please multiply the results of the fitted function with the amount
+of entries N of the histogram.
 """
 
 import numpy as np
@@ -20,7 +22,7 @@ def normal_distribution_pdf(x, mu, sigma):
     return np.exp(-0.5 * ((x - mu) / sigma) ** 2) / np.sqrt(2.0 * np.pi * sigma ** 2)
 
 
-# create a random dataset of 100 random values, following a normal distribution with mu=0 and sigma=1
+# random dataset of 100 random values, following a normal distribution with mu=0 and sigma=1
 data = np.random.normal(loc=0, scale=1, size=100)
 
 # Create a histogram from the dataset by specifying the bin range and the amount of bins.

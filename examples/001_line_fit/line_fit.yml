@@ -2,7 +2,7 @@
 # In this example a line f(x) = a * x + b is being fitted
 # to some data points with pointwise uncertainties.
 
-# The minimal keywords needed to perform a fit are x_data, 
+# The minimal keywords needed to perform a fit are x_data,
 # y_data, and y_errors.
 # You might also want to define x_errors.
 
