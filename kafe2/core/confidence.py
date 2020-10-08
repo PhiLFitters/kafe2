@@ -60,7 +60,7 @@ class ConfidenceLevel(object):
 
     @ndim.setter
     def ndim(self, new_ndim):
-        if type(new_ndim) is not int:
+        if not isinstance(new_ndim, int):
             raise ValueError(
                 "Number of dimensions must be of type int! Received type: %s" % type(new_ndim))
         if new_ndim <= 0:

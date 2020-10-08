@@ -104,7 +104,7 @@ class ModelFunctionFormatterYamlReader(YamlReaderMixin, ModelFunctionFormatterDR
         _arg_formatters = []
         for arg_name in _signature:
             _representation = _arg_formatters_yaml.pop(arg_name, {})
-            if type(_representation) is str:
+            if isinstance(_representation, str):
                 _representation = {'latex_name': _representation}
             _representation.update({'id': arg_name})
             _arg_formatters.append(ParameterFormatterYamlReader._make_object(_representation))

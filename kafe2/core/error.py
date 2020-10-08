@@ -50,7 +50,7 @@ class CovMat(object):
         return _new
 
     def __eq__(self, other):
-        return (type(other) is CovMat and np.all(self._mat == other.mat)) \
+        return (isinstance(other, CovMat) and np.all(self._mat == other.mat)) \
                or np.all(self._mat == other)
 
     def __len__(self):
