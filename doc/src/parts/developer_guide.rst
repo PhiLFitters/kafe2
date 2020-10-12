@@ -90,3 +90,28 @@ To build the documentation run::
 
 For creating only the html or pdf documentation run ``make html`` or ``make latex``.
 Cleaning the output directories can be done with ``make clean``.
+
+Coding Style
+============
+
+In general the code of *kafe2* tries to follow the guidelines of
+`PEP-8 <https://www.python.org/dev/peps/pep-0008/>`_.
+We've decided to use a maximum line length of 100 characters for all files.
+
+But please, do not try to enforce this only for the sake of updating the style.
+Only update the coding style if you're already performing other changes on a particular section.
+There might be some sections in the source code which do not follow the general style guidelines,
+this is okay, as long as the code is working and understandable.
+
+Docstrings
+----------
+
+Documenting every method is a very good idea in general, so that a user or developer can quickly
+and easily understand what a specific code block does and what it is used for.
+Sphinx is used for creating the documentation, hence we use the
+`Sphinx docstring format <https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html>`_.
+
+Since we also support Python 2, we can't use Python's own `type hints <https://www.python
+.org/dev/peps/pep-0484/>`_ introduced with Python 3.5.
+Modern IDEs can also perform type checking with the help of docstrings.
+That's why, in general, we try to include the types inside the docstrings.
