@@ -8,15 +8,12 @@ Theoretical Foundation
 **********************
 
 
-This section briefly covers the underlying theoretical concepts 
-upon which parameter estimation -and by extension *kafe2*- is based.
-
-Basic notions
-=============
+This section briefly covers the underlying theoretical concepts
+upon which parameter estimation – and by extension *kafe2* – is based.
 
 
 Measurements and theoretical models
------------------------------------
+===================================
 
 When measuring observable quantities, the results typically
 consist of a series of numeric measurement values: the **data**.
@@ -24,37 +21,32 @@ Since no measurement is perfect, the data will be subject to
 **measurement uncertainties**. These uncertainties, also known
 as errors, are unavoidable and can be divided into two subtypes:
 
-**Statistical uncertainties**, also called random uncertainties,
-are caused because of independent random fluctuations in the
-measurement values, either because of technical limitations of
-the experimental setup (electronic noise, mechanical vibrations)
-or because of the intrinsic statistical nature of the measured
-observable (as is typical in quantum mechanics, e. g. radioactive
-decays).
+**Independent uncertainties**, as the name implies, affect each measurement independently:
+there is no relationship between the uncertainties of any two individual data points.
+Independent uncertainties are frequently caused by random fluctuations in the measurement values,
+either because of technical limitations of the experimental setup (electronic noise, mechanical
+vibrations) or because of the intrinsic statistical nature of the measured observable (as is typical
+in quantum mechanics, e. g. radioactive decays).
 
-When a measurement is performed more than once, the statistical
-uncertainty of the average of the single measurements will
-be smaller than those of each individial measurement.
+**Correlated uncertainties** arise due to effects that distort multiple measurements in the same
+way.
+Such uncertainties can for example be caused by a random imperfection of the measurement device
+which affects all measurements in the same way.
+The uncertainties of the measurements taken with such a device are no longer uncorrelated, but
+instead have one common uncertainty.
 
-**Systematic uncertainties** arise due to effects that
-distort all measurements in the same way. Such uncertainties can
-for example be caused by a random imperfection of the measurement
-device, which affect all measurements in the same way, and hence
-the uncertainties of all measurements taken with the same device
-are no longer uncorrelated, but have one common uncertainty.
-As a consequence, repeating a measurement will **not**
-reduce the uncertainty of the end result. 
-
-In most cases, measurements are affected by independent and by
-correlated errors. In order to make meaningful quantitative
-statements based on measurement data it is essential to quantify
-both components of all uncertainties, expressed in terms of
-their covariance matrix, or by the uncertainties and
-their correlation matrix. 
+Historically uncertainties have been divided into *statistical* and *systematic* uncertainties.
+While this is appropriate when propagating the uncertainties of the input variables by hand it is
+not a suitable distinction for a numerical fit.
+In *kafe2* multiple uncertainties are combined to construct a so-called **covariance matrix**.
+This is a matrix with the pointwise data *variances* on its diagonal and the *covariances* between
+two data points outside the diagonal.
+By using this covariance matrix for our fit we can estimate the uncertainty of our model parameters
+numerically with no need for propagating uncertainties by hand.
 
 
 Parameter estimation
---------------------
+====================
 
 In **parameter estimation**, the main goal is to obtain
 best estimates for the parameters of a theoretical model
@@ -71,34 +63,34 @@ which is a special case of a likelihood for gaussian uncertainties.
 
 The value of a cost function depends on the measurement data,
 the model function (often derived as a prediction from an
-underlying hypothesis of theory), and the uncertainties of
+underlying hypothesis or theory), and the uncertainties of
 the measurements and, possibly, the model. Cost functions are
 designed in such a way that the agreement between the measurements
 :math:`d_i` and the corresponding predictions :math:`m_i` provided
 by the model is **best** when the cost function reaches its
 **global minimum**.
 
-For a given experiment the data :math:`\textbf{d}` and the parametric
-form of the model :math:`\textbf{m}` describing the data are constant.
+For a given experiment the data :math:`\bm{d}` and the parametric
+form of the model :math:`\bm{m}` describing the data are constant.
 This means that the cost function :math:`C` then only depends on the
-model parameters, denoted here as a vector :math:`\textbf{p}` in
+model parameters, denoted here as a vector :math:`\bm{p}` in
 parameter space.
 
 .. math::
 
-    C = C\left(\textbf{d}, \textbf{m}(\textbf{p})\right) =  C(\textbf{p})
+    C = C\left(\bm{d}, \bm{m}(\bm{p})\right) =  C(\bm{p})
 
 Therefore parameter estimation essentially boils down to finding the
-vector of model parameters :math:`\hat{\textbf{p}}` for which the cost
-function :math:`C(\textbf{p})` is at its global minimum.
+vector of model parameters :math:`\hat{\bm{p}}` for which the cost
+function :math:`C(\bm{p})` is at its global minimum.
 In general this is a multidimensional optimization problem which is
 typically solved numerically. There are several algorithms and tools
 that can be used for this task:
-In *kafe2* the Python package *SciPy* can be used to minimize cost
-functions via its ``scipy.optimize`` module.
-Alternatively,  *kafe2* can use the *MINUIT* implementations *TMinuit*
-or *iminuit* when they are installed.
-More information on how to use the Minimizers can be found in the :ref:`User Guide <minimizers>`.
+In *kafe2* the Python package :py:mod:`scipy` can be used to minimize cost
+functions via its :py:mod:`scipy.optimize` module.
+Alternatively, *kafe2* can use the *MINUIT* implementations *TMinuit*
+or :py:mod:`iminuit` when they are installed.
+More information on how to use the minimizers can be found in the :ref:`User Guide <minimizers>`.
 
 
 Choosing a cost function
@@ -115,7 +107,7 @@ have been implemented in *kafe2*.
 .. _least-squares:
 
 Least-squares ("chi-squared")
------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The method of **least squares** is the standard approach in parameter estimation.
 To calculate the value of this cost function the differences between model and
@@ -126,12 +118,13 @@ function is expressed as follows:
 
 .. math::
 
-    \chi^2(\textbf{p}) = (\textbf{d} - \textbf{m}(\textbf{p}))^T \ V^{-1} \ (\textbf{d} - \textbf{m}(\textbf{p})).
+    \chi^2(\bm{p}) = (\bm{d} - \bm{m}(\bm{p}))^T \ V^{-1}
+        \ (\bm{d} - \bm{m}(\bm{p})).
 
 Since the value of the cost function at the minimum follows a :math:`\chi^2`
 distribution, and therefore the method of least squares is also known as
 **chi-squared** method.
-If the uncertainties of the data vector :math:`\textbf{d}` are uncorrelated,
+If the uncertainties of the data vector :math:`\bm{d}` are uncorrelated,
 all elements of :math:`V` except for its diagonal elements :math:`\sigma_i^2`
 (the squares of the :math:`i`-th point-wise measurement uncertainties) vanish.
 
@@ -139,7 +132,7 @@ The above formula then simply becomes
 
 .. math::
 
-    \chi^2 = \sum_i \left( \frac{d_i - m_i(\textbf{p})}{\sigma_i} \right)^2.
+    \chi^2 = \sum_i \left( \frac{d_i - m_i(\bm{p})}{\sigma_i} \right)^2.
 
 All that is needed in this simple case is to divide the difference between
 data :math:`d_i` and model :math:`m_i` by the corresponding uncertainty :math:`\sigma_i`.
@@ -153,23 +146,23 @@ by the point-wise uncertainties.
 .. _negative-log-likelihood:
 
 Negative log-likelihood
------------------------
+^^^^^^^^^^^^^^^^^^^^^^^
 
 The method of **maximum likelihood** attempts to find the best estimation for
-the model parameters :math:`\textbf{p}` by maximizing the probability with
+the model parameters :math:`\bm{p}` by maximizing the probability with
 which such model parameters (under the given uncertainties) would result in the
-observed data :math:`\textbf{d}`.
+observed data :math:`\bm{d}`.
 More formally, the method of maximum likelihood searches for those values of
-:math:`\textbf{p}` for which the so-called **likelihood function** of the
+:math:`\bm{p}` for which the so-called **likelihood function** of the
 parameters (**likelihood** for short) reaches its global maximum.
 
 Using the probability of making a certain measurement given some values of
-model parameters :math:`P(\textbf{p})` the likelihood function can be defined
+model parameters :math:`P(\bm{p})` the likelihood function can be defined
 as follows:
 
 .. math::
 
-    L(\textbf{p}) = \prod_i P_i(\textbf{p}).
+    L(\bm{p}) = \prod_i P_i(\bm{p}).
 
 However, usually parameter estimation is not performed by using the
 likelihood, but by using its negative logarithm, the so-called
@@ -177,13 +170,14 @@ likelihood, but by using its negative logarithm, the so-called
 
 .. math::
 
-    \log nlL(\textbf{p}) = -\log \left( \prod_i P_i(\textbf{p}) \right) = \sum_i \log P_i(\textbf{p}).
+    - \log L(\bm{p}) &= -\log \left( \prod_i P_i(\bm{p}) \right) \\
+    &= \sum_i \log P_i(\bm{p}).
 
 This transformation is allowed because logarithms are
 **strictly monotonically increasing functions**, and therefore
 the negative logarithm of any function will have
 its global minimum at the same place where the likelihood is maximal.
-The parameter values :math:`\textbf{p}` that minimize the negative log-likelihood will
+The parameter values :math:`\bm{p}` that minimize the negative log-likelihood will
 therefore also maximize the likelihood.
 
 While the above transformation may seem nonsensical at first, there are
@@ -201,59 +195,91 @@ the likelihood:
     **faster** because it reduces the number of necessary operations.
 
 -   Taking the negative logarithm allows for always using the same numerical
-    optimizers to **minimize** the cost funtions.
+    optimizers to **minimize** different cost functions.
 
 As an example, let us look at the negative log-likelihood of data with
 uncertainties that assume a normal distribution:
 
 .. math::
 
-    -\log P(\textbf{p})
-    = - \log \prod_i \frac{1}{\sqrt[]{2 \pi} \: \sigma_i} \exp\left(
-    \frac{1}{2} \left( \frac{d_i - m_i(\textbf{p})}{\sigma_i} \right)^2\right)
-    = - \sum_i \log \frac{1}{\sqrt[]{2 \pi} \: \sigma_i} + \sum_i \frac{1}{2}
-    \left( \frac{d_i - m_i(\textbf{p})}{\sigma_i} \right)^2
-    = - \log L_\mathrm{max} + \frac{1}{2} \chi^2
+    -\log \prod_i P_i(\bm{p})
+    & = - \log \prod_i \frac{1}{\sqrt[]{2 \pi} \: \sigma_i} \exp\left(
+    \frac{1}{2} \left( \frac{d_i - m_i(\bm{p})}{\sigma_i} \right)^2\right) \\
+    & = - \sum_i \log \frac{1}{\sqrt[]{2 \pi} \: \sigma_i} + \sum_i \frac{1}{2}
+    \left( \frac{d_i - m_i(\bm{p})}{\sigma_i} \right)^2 \\
+    & = - \log L_\mathrm{max} + \frac{1}{2} \chi^2
 
 As we can see the logarithm cancels out the exponential function of the normal
 distribution and we are left with two parts:
 
 The first is a constant part that is represented by :math:`-\log L_\mathrm{max}`.
 This is the minimum value the neg log-likelihood could possibly take on if the
-model :math:`\textbf{m}` were to exactly fit the data :math:`\textbf{d}`.
+model :math:`\bm{m}` were to exactly fit the data :math:`\bm{d}`.
 
 The second part can be summed up as :math:`\frac{1}{2} \chi^2`.
 As it turns the method of least squares is a special case of the method
 of maximum likelihood where all data points have normally distributed uncertainties.
 
 
-Types of datasets
-=================
-
-
 Handling uncertainties
-======================
-
-Gaussian uncertainties
 ----------------------
 
-Correlations
-------------
+Standard cost functions treat fit data as a series of measurements in the *y* direction and can
+directly make use of the corresponding uncertainties in the *y* direction.
+Unfortunately uncertainties in the *x* direction cannot be used directly.
+However, *x* uncertainties can be turned into *y* uncertainties by multiplying them with the
+derivative of the model function to project them onto the *y* axis; this is what *kafe2* does.
+The *xy* covariance matrix is then calculated as follows:
+
+.. math::
+
+    \bm{V}_{ij} = \bm{V}_{y,ij} + f'\left(x_i\right)f'\left(x_j\right)\bm{V}_{x,ij}.
+
+.. warning::
+    This procedure is only accurate if the model function is approximately linear on the scale of
+    the *x* uncertainties.
+
 
 Other types of uncertainties
-----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+As the statistical uncertainty for histograms is a Poisson distribution for the number of entries in
+each bin, a negative log-likelihood cost function with a Poisson probability can be used, where
+:math:`{\bf d}` are the measurements or data points and :math:`{\bf m}` are the model predictions:
 
+.. math::
 
-Cost functions
-==============
+    C = -2 \ln \prod_j \frac{{m_j}^{d_j}}{d_j!}\exp(-m_j).
 
-Least-squares ("chi-squared") estimator
----------------------------------------
+As the variance of a Poisson distribution is equal to the mean value, no uncertainties have to
+be given when using Poisson uncertainties.
 
-:math:`\chi^2`
+Parameter constraints
+---------------------
+When performing a fit, some values of the model function might have already been determined in
+previous experiments.
+Those results and uncertainties can then be used to constrain the given parameters in a new fit.
+This eliminates the need to manually propagate the uncertainties on the final fit results, as
+it's now done numerically.
 
-Negative log-likelihood estimator
----------------------------------
+Parameter constraints are taken into account during the parameter estimation by adding an extra
+penalty to the cost function.
+The value of the penalty is determined by how well the parameter lies within its constraints.
+With the cost functions used above :math:`C \equiv C_0`, the new cost function then reads as
 
+.. math::
 
+    C_\mathrm{total} = C_0 + C_\mathrm{constraint}
 
+In general the penalty is given by the current parameter values :math:`\bm{p}`, the expected
+parameter values :math:`\bm{\mu}` and the covariance matrix :math:`V` describing the
+values and correlations between the constraints on the parameters:
+
+.. math::
+
+  C_\mathrm{constraint} = (\bm{p} - \bm{\mu})^T V^{-1} (\bm{p} - \bm{\mu})
+
+For a single parameter this simplifies to:
+
+.. math::
+
+  C_\mathrm{constraint} = \left ( \frac{p-\mu}{\sigma} \right )^2
