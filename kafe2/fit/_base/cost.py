@@ -182,7 +182,7 @@ class CostFunction(FileIOMixin, object):
         :returns: the associated chi2 probability.
         :rtype: float or None
         """
-        return None
+        return 1.0 - chi2.cdf(cost_function_value, ndf) if self.is_chi2 else None
 
     def get_uncertainty_gaussian_approximation(self, data):
         """Get the gaussian approximation of the uncertainty inherent to the cost function, returns
@@ -250,9 +250,6 @@ class CostFunction_Chi2(CostFunction):
         self._needs_errors = errors_to_use is not None
         self._is_chi2 = True
         self._saturated = True
-
-    def chi2_probability(self, cost_function_value, ndf):
-        return 1.0 - chi2.cdf(cost_function_value, ndf)
 
     def _chi2(self, data, model, cov_mat_inverse=None, err=None):
         data = np.asarray(data)

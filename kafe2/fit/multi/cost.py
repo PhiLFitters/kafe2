@@ -26,6 +26,12 @@ class MultiCostFunction(CostFunction):
         self._needs_errors = np.any([_scf.needs_errors for _scf in singular_cost_functions])
         self._saturated = np.all([_scf.saturated for _scf in singular_cost_functions])
         self._is_chi2 = np.all([_scf.is_chi2 for _scf in singular_cost_functions])
+        if self.is_chi2:
+            self.formatter.name = "chi2"
+            self.formatter.latex_name = "\\chi^2"
+        else:
+            self.formatter.name = "cost"
+            self.formatter.latex_name = None
 
     @staticmethod
     def cost_sum(*single_costs):

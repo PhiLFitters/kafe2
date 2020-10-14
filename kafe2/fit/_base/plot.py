@@ -5,6 +5,7 @@ import textwrap
 import warnings
 import itertools
 import matplotlib as mpl
+import sys
 
 from ..multi.fit import MultiFit
 from ...config import kc, ConfigError, kafe2_rc
@@ -17,6 +18,9 @@ from matplotlib import rc_context
 
 __all__ = ["PlotAdapterBase", "Plot", "PlotAdapterException", "PlotFigureException",
            "kc_plot_style"]
+
+_python_version = sys.version_info[0]
+_float_template = ".3g" if _python_version == 2 else "#.3g"
 
 
 def kc_plot_style(data_type, subplot_key, property_key):
@@ -562,8 +566,8 @@ class Plot(object):
         {model_function}
         {parameters}
             $\\hookrightarrow${fit_quality}
-            $\\hookrightarrow \\chi^2 \\, \\mathrm{{probability =}}${chi2_probability:#.3g}
-    """)
+            $\\hookrightarrow \\chi^2 \\, \\mathrm{{probability =}}${chi2_probability:%s}
+    """ % _float_template)
     FIT_INFO_STRING_FORMAT_SATURATED = textwrap.dedent("""\
         {model_function}
         {parameters}
@@ -802,7 +806,7 @@ class Plot(object):
                 _template = "    $\\hookrightarrow$ global {fit_quality}\n"
                 _multi_info_dict["chi2_probability"] = self._multifit.chi2_probability
                 _template += "    $\\hookrightarrow$ global $\\chi^2 \\, \\mathrm{{probability}} " \
-                             "= {chi2_probability:#.3g}$"
+                             "= {chi2_probability:%s}$" % _float_template
             elif _multi_cost_function.saturated:
                 _multi_gof = _multi_cost_function_value
                 _template = "    $\\hookrightarrow$ global cost / ndf = {fit_quality}\n"
