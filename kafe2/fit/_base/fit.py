@@ -290,9 +290,11 @@ class FitBase(FileIOMixin, object):
 
         _cor_mat_content = self.parameter_cor_mat
         if _cor_mat_content is not None:
+            par_display_names = [_pf.name for _pf in
+                                 self._get_model_function_parameter_formatters()]
             _cor_mat_as_dict = OrderedDict()
-            _cor_mat_as_dict['_invisible_first_column'] = self.parameter_names
-            for _par_name, _row in zip(self.parameter_names, self.parameter_cor_mat.T):
+            _cor_mat_as_dict['_invisible_first_column'] = par_display_names
+            for _par_name, _row in zip(par_display_names, self.parameter_cor_mat.T):
                 _cor_mat_as_dict[_par_name] = np.atleast_1d(np.squeeze(np.asarray(_row)))
 
             print_dict_as_table(_cor_mat_as_dict, output_stream=output_stream, indent_level=2)
@@ -985,12 +987,32 @@ class FitBase(FileIOMixin, object):
         self._update_parameter_formatters()
         return self.get_result_dict(asymmetric_parameter_errors=asymmetric_parameter_errors)
 
+    def assign_model_function_name(self, name):
+        """Assign a string to be the model function name.
+
+        :param str name: The new name.
+        """
+        self._model_function.formatter.name = name
+
     def assign_model_function_expression(self, expression_format_string):
         """Assign a plain-text-formatted expression string to the model function.
 
         :param str expression_format_string: The plain text string.
         """
         self._model_function.formatter.expression_format_string = expression_format_string
+
+    def assign_parameter_names(self, **par_names_dict):
+        """Assign display strings to all model function arguments.
+
+        :param par_names_dict: Dictionary mapping the parameter names to their display names.
+        """
+        for _af in self._get_model_function_argument_formatters():
+            _an = par_names_dict.pop(_af.arg_name, None)
+            if _an is not None:
+                _af.name = _an
+        if par_names_dict:
+            warnings.warn("Could not assign all names to a parameter."
+                          "Leftover: {}".format(par_names_dict))
 
     def assign_model_function_latex_name(self, latex_name):
         """Assign a LaTeX-formatted string to be the model function name.
@@ -1002,11 +1024,12 @@ class FitBase(FileIOMixin, object):
     def assign_model_function_latex_expression(self, latex_expression_format_string):
         """Assign a LaTeX-formatted expression string to the model function.
 
-        :param str latex_expression_format_string: The LaTeX string. Elements like ``'{par_name}'`` will be replaced
-            automatically with the corresponding LaTeX names for the given parameter. These can be set with
-            :py:meth:`~assign_parameter_latex_names`.
+        :param str latex_expression_format_string: The LaTeX string. Elements like ``'{par_name}'``
+            will be replaced automatically with the corresponding LaTeX names for the given
+            parameter. These can be set with :py:meth:`~assign_parameter_latex_names`.
         """
-        self._model_function.formatter.latex_expression_format_string = latex_expression_format_string
+        self._model_function.formatter.latex_expression_format_string = \
+            latex_expression_format_string
 
     def assign_parameter_latex_names(self, **par_latex_names_dict):
         """Assign LaTeX-formatted strings to all model function arguments.
@@ -1014,11 +1037,12 @@ class FitBase(FileIOMixin, object):
         :param par_latex_names_dict: Dictionary mapping the parameter names to their latex names.
         """
         for _af in self._get_model_function_argument_formatters():
-            _aln = par_latex_names_dict.pop(_af.name, None)
+            _aln = par_latex_names_dict.pop(_af.arg_name, None)
             if _aln is not None:
                 _af.latex_name = _aln
         if par_latex_names_dict:
-            warnings.warn("Could not assign all latex names to a parameter. Leftover: {}".format(par_latex_names_dict))
+            warnings.warn("Could not assign all latex names to a parameter."
+                          "Leftover: {}".format(par_latex_names_dict))
 
     def get_result_dict(self, asymmetric_parameter_errors=False):
         """Return a dictionary of the fit results.
