@@ -34,6 +34,7 @@ analysis framework `ROOT` or in the Python package `iminuit`.
    parts/installation
    parts/beginners_guide
    parts/user_guide
+   parts/user_guide_kafe2go
    parts/mathematical_foundations
    parts/developer_guide
    parts/api_documentation/index
