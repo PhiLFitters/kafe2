@@ -292,6 +292,7 @@ latex_elements = {
   'preamble': r'''
 \usepackage{enumitem}\setlistdepth{48}
 \usepackage[titles]{tocloft}
+\usepackage{bm}
 \cftsetpnumwidth {1.25cm}\cftsetrmarg{1.5cm}
 \setlength{\cftchapnumwidth}{0.75cm}
 \setlength{\cftsecindent}{\cftchapnumwidth}
