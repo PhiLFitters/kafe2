@@ -275,12 +275,13 @@ htmlhelp_basename = 'kafedoc'
 latex_engine = 'xelatex'
 latex_use_xindy = False
 
+# For some reason building PDF document won't work without explicitly defining fonts.
 latex_elements = {
-#    'fontpkg': r'''
-#\setmainfont{Nimbus Sans L}
-#\setsansfont{Nimbus Sans L}
-#\setmonofont{Inconsolata}
-#''',
+    'fontpkg': r'''
+\setmainfont{FreeSerif}
+\setsansfont{FreeSerif}
+\setmonofont{FreeMono}
+''',
 
   # The paper size ('letterpaper' or 'a4paper').
   'papersize': 'a4paper',
