@@ -317,10 +317,14 @@ Please use the parameter names as they are defined inside the model function
     limited_parameters:
       c: [0.0, 1.0]
       d: [-5, 5]
+      e: [0.0, null]
 
-Note that a limited parameter needs a lower and an upper limit. The first value of the list is the
-lower limit and the second value is the upper limit.
-If a parameter shall be limited to non-negative values, choose 0 as lower and a high value as
-upper limit.
+Note that a limited parameter needs two arguments: a lower and an upper limit.
+The first value of the list is the lower limit and the second value is the upper limit.
+For a one-sided limit simply set the argument for the side that you don't want to limit to ``null``.
+For technical reasons parameter limits are *inclusive*, meaning that the specified bounds are
+included in the range of allowed parameter values.
+For example, in the above configuration the parameter *e* is limited to non-negative numbers and
+*can* become 0 during the fit.
 If the final fit result is close to or at the parameter limits, the limits should be reassessed,
 as the final minimum of the cost function might be a local minimum for the given limits.
