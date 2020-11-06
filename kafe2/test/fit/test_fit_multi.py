@@ -16,6 +16,132 @@ except (ImportError, SyntaxError):
     _cannot_import_IMinuit = True
 
 
+class TestSharedErrorLogic(AbstractTestFit, unittest.TestCase):
+
+    def _get_multifit(
+            self, hist_fit=True, xy_fit_1=True, indexed_fit=True, xy_fit_2=True, reverse=False):
+        _fits = []
+        if hist_fit:
+            _hist_container = HistContainer(
+                n_bins=10, bin_range=(-5, 5), fill_data=self._hist_data)
+            _hist_fit = HistFit(_hist_container)
+            _fits.append(_hist_fit)
+        if xy_fit_1:
+            _xy_fit_1 = XYFit(xy_data=[self._x_data, self._y_data_1])
+            _xy_fit_1.add_error("y", 1.0)
+            _fits.append(_xy_fit_1)
+        if indexed_fit:
+            _indexed_fit = IndexedFit(
+                self._indexed_data, TestSharedErrorLogic.indexed_model_function)
+            _indexed_fit.add_error(1.0)
+            _fits.append(_indexed_fit)
+        if xy_fit_2:
+            _xy_fit_2 = XYFit(xy_data=[self._x_data, self._y_data_2])
+            _xy_fit_2.add_error("y", 1.0)
+            _fits.append(_xy_fit_2)
+        if reverse:
+            _fits = reversed(_fits)
+        return MultiFit(_fits)
+
+    @staticmethod
+    def indexed_model_function(a, b):
+        return np.arange(10) * a + b
+
+    def setUp(self):
+        np.random.seed(0)
+        self._hist_data = np.random.normal(size=100)*2+1
+        self._x_data = np.arange(10) + 0.1 * np.random.normal()
+        self._y_data = 2.3 * self._x_data + 4.5 + np.random.normal(size=10)
+        self._y_data_1 = self._y_data + np.random.normal(size=10)
+        self._y_data_2 = self._y_data + np.random.normal(size=10)
+        self._indexed_data = self._y_data + np.random.normal(size=10)
+
+    def test_with_vs_without_hist_fit(self):
+        _multifit_hist = self._get_multifit(hist_fit=True)
+        _multifit_hist.add_error(err_val=1.0, fits=[1, 2, 3], axis="y")
+        _multifit_hist.add_error(err_val=0.1, fits=[1, 3], axis="x")
+        _multifit_hist.do_fit()
+
+        _multifit_no_hist = self._get_multifit(hist_fit=False)
+        _multifit_no_hist.add_error(err_val=1.0, fits=[0, 1, 2], axis="y")
+        _multifit_no_hist.add_error(err_val=0.1, fits=[0, 2], axis="x")
+        _multifit_no_hist.do_fit()
+
+        self._assert_values_equal(
+            "parameter_values", _multifit_hist.parameter_values[2:],
+            _multifit_no_hist.parameter_values)
+        self._assert_values_equal(
+            "parameter_errors", _multifit_hist.parameter_errors[2:],
+            _multifit_no_hist.parameter_errors)
+        self._assert_values_equal(
+            "parameter_cov_mat", _multifit_hist.parameter_cov_mat[2:, 2:],
+            _multifit_no_hist.parameter_cov_mat)
+        self.assertTrue(
+            _multifit_hist.cost_function_value - _multifit_no_hist.cost_function_value > 10.0)
+
+    def test_reversed_same_result(self):
+        _multifit = self._get_multifit(reverse=False)
+        _multifit.add_error(err_val=1.0, fits=[1, 2, 3], axis="y")
+        _multifit.add_error(err_val=0.1, fits=[1, 3], axis="x")
+        _multifit.do_fit()
+
+        _multifit_reversed = self._get_multifit(reverse=True)
+        _multifit_reversed.add_error(err_val=1.0, fits=[0, 1, 2], axis="y")
+        _multifit_reversed.add_error(err_val=0.1, fits=[0, 2], axis="x")
+        _multifit_reversed.do_fit()
+
+        self._assert_fit_results_equal(
+            _multifit, _multifit_reversed, fit_2_permutation=[2, 3, 0, 1])
+
+    def test_different_error_order_same_result(self):
+        _multifit = self._get_multifit()
+        _multifit.add_error(err_val=1.0, fits=[1, 2, 3], axis="y")
+        _multifit.add_error(err_val=0.1, fits=[1, 3], axis="x")
+        _multifit.do_fit()
+
+        _multifit_reordered = self._get_multifit()
+        _multifit_reordered.add_error(err_val=0.1, fits=[1, 3], axis="x")
+        _multifit_reordered.add_error(err_val=1.0, fits=[1, 2, 3], axis="y")
+        _multifit_reordered.do_fit()
+
+
+        self._assert_fit_results_equal(_multifit, _multifit_reordered)
+
+    def test_permuted_error_indices_same_result(self):
+        _multifit = self._get_multifit()
+        _multifit.add_error(err_val=1.0, fits=[1, 2, 3], axis="y")
+        _multifit.add_error(err_val=0.1, fits=[1, 3], axis="x")
+        _multifit.do_fit()
+
+        _multifit_permuted = self._get_multifit()
+        _multifit_permuted.add_error(err_val=1.0, fits=[1, 3, 2], axis="y")
+        _multifit_permuted.add_error(err_val=0.1, fits=[3, 1], axis="x")
+        _multifit_permuted.do_fit()
+
+        self._assert_fit_results_equal(_multifit, _multifit_permuted)
+
+    def test_add_shared_error_raise(self):
+        _multifit = self._get_multifit()
+        with self.assertRaises(ValueError):
+            _multifit.add_error(err_val=1.0, fits="all", axis="z")
+        with self.assertRaises(ValueError):
+            _multifit.add_error(err_val=1.0, fits=[0, 1])
+        with self.assertRaises(ValueError):
+            _multifit.add_error(err_val=1.0, fits=[1, 3], axis=None)
+        with self.assertRaises(ValueError):
+            _multifit.add_error(
+                err_val=1.0, fits=[1, 3], axis="y", relative=True, reference="modata")
+        with self.assertRaises(ValueError):
+            _multifit.add_error(
+                err_val=1.0, fits=[1, 3], axis="x", relative=True, reference="model")
+        with self.assertRaises(ValueError):
+            _multifit.add_error(
+                err_val=1.0, fits=[1, 3], axis="y", relative=True, reference="model")
+        with self.assertRaises(ValueError):
+            _multifit.add_error(
+                err_val=1.0, fits=[1, 3], axis="y", relative=True, reference="data")
+
+
 @six.add_metaclass(ABCMeta)
 class TestMultiFit(AbstractTestFit, unittest.TestCase):
 
@@ -408,9 +534,3 @@ class TestMultiFitIntegrityXY(TestMultiFit):
         self._x_error = "iterative"
         self._set_xy_fits()
         self._assert_fits_valid_and_equal(self._fit_xy_all, self._fit_xy_split_multi)
-
-    def test_shared_error(self):
-        self._set_xy_fits()
-        self._fit_xy_all.add_error(axis="y", err_val=1.0)
-        self._fit_xy_all_double.add_error(err_val=1.0, fits="all", axis="y")
-        self._assert_fits_valid_and_equal(self._fit_xy_all, self._fit_xy_all_double)

@@ -63,6 +63,10 @@ class IndexedFit(FitBase):
     def _init_nexus(self):
         super(IndexedFit, self)._init_nexus()
 
+        self._nexus.add_alias("y_data", alias_for="data")
+        self._nexus.add_alias("y_model", alias_for="model")
+        self._nexus.add_alias("y_total_cov_mat", alias_for="total_cov_mat")
+
         self._nexus.add_dependency(
             'model',
             depends_on=(

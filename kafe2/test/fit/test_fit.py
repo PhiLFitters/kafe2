@@ -21,7 +21,7 @@ class AbstractTestFit(object):
 
     def _assert_fit_results_equal(
             self, fit_1, fit_2, rtol=1e-3, atol=1e-6, check_cost_function_value=True,
-            fit_2_is_double_fit=False):
+            fit_2_is_double_fit=False, fit_2_permutation=None):
         for _attr in self._fit_result_attributes:
             if not check_cost_function_value and _attr == "cost_function_value":
                 continue
@@ -33,6 +33,18 @@ class AbstractTestFit(object):
                         _attr_2 *= 0.5
                     if _attr in ["parameter_errors"] and fit_2.did_fit:
                         _attr_2 *= np.sqrt(2)
+                if fit_2_permutation is not None:
+                    _attr_2_arr = np.array(_attr_2)
+                    if _attr_2_arr.ndim == 1:
+                        _attr_2_arr = _attr_2_arr[fit_2_permutation]
+                    elif _attr_2_arr.ndim == 2:
+                        _attr_2_arr = _attr_2_arr[fit_2_permutation, :][:, fit_2_permutation]
+                    if isinstance(_attr_2, np.ndarray):
+                        _attr_2 = _attr_2_arr
+                    elif isinstance(_attr_2, list):
+                        _attr_2 = _attr_2_arr.tolist()
+                    elif isinstance(_attr_2, tuple):
+                        _attr_2 = tuple(_attr_2_arr)
                 self._assert_values_equal(
                     name=_attr, received_value=_attr_2, expected_value=_attr_1,
                     rtol=rtol, atol=atol)

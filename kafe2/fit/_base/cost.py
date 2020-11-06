@@ -52,14 +52,11 @@ class CostFunction(FileIOMixin, object):
         """
         Construct :py:class:`CostFunction` object (a wrapper for a native Python function):
 
-        :param cost_function: function handle
-        :type cost_function: typing.Callable
-        :param arg_names: the names to use for the cost function arguments. If None, detect from
-            function signature.
-        :type arg_names: typing.Iterable[str]
-        :param add_constraint_cost: If :py:obj:`True`, automatically add the cost for kafe2
+        :param typing.Callable cost_function: function handle
+        :param typing.Iterable[str] arg_names: the names to use for the cost function arguments.
+            If None, detect from function signature.
+        :param bool add_constraint_cost: If :py:obj:`True`, automatically add the cost for kafe2
             constraints.
-        :type add_constraint_cost: bool
         """
         self._cost_function_handle = cost_function
         _signature = signature(self._cost_function_handle)
@@ -205,15 +202,17 @@ class CostFunction(FileIOMixin, object):
 
 
 class CostFunction_Chi2(CostFunction):
-    def __init__(self, errors_to_use='covariance', fallback_on_singular=True):
+    def __init__(
+            self, errors_to_use='covariance', fallback_on_singular=True, add_constraint_cost=True):
         """Base class for built-in least-squares cost function.
 
         :param errors_to_use: Which errors to use when calculating :math:`\\chi^2`.
             Either ``'covariance'``, ``'pointwise'`` or ``None``.
         :type errors_to_use: str or None
-        :param fallback_on_singular: If :py:obj:`True` and the covariance matrix is singular (or the
-            errors are zero), calculate :math:`\\chi^2` as with ``errors_to_use=None``
-        :type fallback_on_singular: bool
+        :param bool fallback_on_singular: If :py:obj:`True` and the covariance matrix is singular
+            (or the errors are zero), calculate :math:`\\chi^2` as with ``errors_to_use=None``
+        :param bool add_constraint_cost: If :py:obj:`True`, automatically add the cost for kafe2
+            constraints.
         """
 
         _cost_function_description = "chi-square"
@@ -242,7 +241,9 @@ class CostFunction_Chi2(CostFunction):
 
         super(CostFunction_Chi2, self).__init__(
             cost_function=_chi2_func,
-            arg_names=_arg_names)
+            arg_names=_arg_names,
+            add_constraint_cost=add_constraint_cost
+        )
 
         self._formatter.latex_name = "\\chi^2"
         self._formatter.name = "chi2"

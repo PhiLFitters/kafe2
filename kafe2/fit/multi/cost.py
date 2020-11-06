@@ -12,7 +12,8 @@ class SharedCostFunction(CostFunction_Chi2):
         self._MODEL_NAME = "y_model"
         self._COV_MAT_INVERSE_NAME = "total_cov_mat_inverse"
         super(SharedCostFunction, self).__init__(
-            errors_to_use="covariance", fallback_on_singular=fallback_on_singular)
+            errors_to_use="covariance", fallback_on_singular=fallback_on_singular,
+            add_constraint_cost=False)
 
 
 class MultiCostFunction(CostFunction):

@@ -4,6 +4,7 @@ import operator
 import six
 import sys
 import uuid
+import logging
 import warnings
 import weakref
 
@@ -325,12 +326,11 @@ class NodeBase(object):
 
         # cleanup
         if _out_of_scope_refs:
-            warnings.warn(
+            logging.debug(
                 "{} parent refs went out of scope since last "
                 "call to 'iter_parents' and will be removed.".format(
                     len(_out_of_scope_refs)
-                ),
-                UserWarning
+                )
             )
         for _ref in _out_of_scope_refs:
             self._parents.remove(_ref)
@@ -370,7 +370,6 @@ class NodeBase(object):
 
         for _p in self.iter_parents():
             _p.mark_for_update()
-            _p.notify_parents()
 
     def freeze(self):
         """
@@ -389,6 +388,7 @@ class NodeBase(object):
         Sets this node's stale property to True.
         """
         self._stale = True
+        self.notify_parents()
 
     def update(self):
         """
