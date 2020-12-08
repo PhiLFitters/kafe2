@@ -32,6 +32,8 @@ class XYPlotAdapter(PlotAdapterBase):
     )
     del PLOT_SUBPLOT_TYPES['model']  # don't plot model xy points
 
+    AVAILABLE_X_SCALES = ('linear', 'log')
+
     def __init__(self, xy_fit_object):
         """
         Construct an :py:obj:`XYPlotContainer` for a :py:obj:`~kafe2.fit.xy.XYFit` object:
@@ -48,10 +50,18 @@ class XYPlotAdapter(PlotAdapterBase):
     def _compute_plot_range_x(self, pad_coeff=1.1, additional_pad=None):
         if additional_pad is None:
             additional_pad = (0, 0)
-        _xmin, _xmax = self._fit.x_range
-        _w = _xmax - _xmin
-        return (0.5 * (_xmin + _xmax - _w * pad_coeff) - additional_pad[0],
-                0.5 * (_xmin + _xmax + _w * pad_coeff) + additional_pad[1])
+        if self.x_scale == 'linear':
+            _xmin, _xmax = self._fit.x_range
+            _w = _xmax - _xmin
+            return (0.5 * (_xmin + _xmax - _w * pad_coeff) - additional_pad[0],
+                    0.5 * (_xmin + _xmax + _w * pad_coeff) + additional_pad[1])
+        if self.x_scale == 'log':
+            _expmin, _expmax = np.log10(self._fit.x_range)
+            _w = _expmax - _expmin
+            return (10**(0.5 * (_expmin + _expmax - _w * pad_coeff) - additional_pad[0]),
+                    10**(0.5 * (_expmin + _expmax + _w * pad_coeff) + additional_pad[1]))
+        raise XYPlotAdapterException("x_range has to be one of {}. Found {} instead.".format(
+            self.AVAILABLE_X_SCALES, self.x_scale))
 
     # -- public properties
 
@@ -95,11 +105,25 @@ class XYPlotAdapter(PlotAdapterBase):
         """y error bars for model: total model uncertainty"""
         return self._fit.y_model_error
 
+    @PlotAdapterBase.x_scale.setter
+    def x_scale(self, scale):
+        # using super setters does not work, copying the code...
+        if scale not in self.AVAILABLE_X_SCALES:
+            raise PlotAdapterException("x_scale {} is not supported for this type of fit, "
+                                       "use one of {}".format(scale, self.AVAILABLE_X_SCALES))
+        self._x_scale = scale
+        self.x_range = self._compute_plot_range_x()
+
     @property
     def model_line_x(self):
         """x support values for model function"""
         _xmin, _xmax = self.x_range
-        return np.linspace(_xmin, _xmax, self.n_plot_points)
+        if self.x_scale == 'linear':
+            return np.linspace(_xmin, _xmax, self.n_plot_points)
+        if self.x_scale == 'log':
+            return np.geomspace(_xmin, _xmax, self.n_plot_points)
+        raise XYPlotAdapterException("x_range has to be one of {}. Found {} instead.".format(
+            self.AVAILABLE_X_SCALES, self.x_scale))
 
     @property
     def model_line_y(self):

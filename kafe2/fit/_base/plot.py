@@ -161,29 +161,31 @@ class PlotAdapterBase(object):
         ),
     )
 
-    def __init__(self, fit_object, axis_labels=(None, None)):
+    AVAILABLE_X_SCALES = ('linear',)
+    AVAILABLE_Y_SCALES = ('linear', 'log')
+
+    def __init__(self, fit_object):
         """
         Construct a :py:obj:`PlotAdapter` for a :py:obj:`Fit` object:
 
         :param fit_object: an object derived from :py:obj:`~kafe2.fit._base.FitBase`
         :type fit_object: :py:class:`~kafe2.fit._base.FitBase`
-        :param axis_labels: The x- and y-axis labels as a tuple
-        :type axis_labels: tuple[str, str]
         """
         self._fit = fit_object
         self._x_range = None
         self._y_range = None
+        self._x_scale = 'linear'
+        self._y_scale = 'linear'
         _axes = ('x', 'y')
-        _axis_labels = []
-        for i, label in enumerate(axis_labels):
-            if label is None:  # check for label from init arguments
-                label = self._fit.data_container.axis_labels[i]
-                if label is None:  # check for dataset axis label
-                    label = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', _axes[i])  # use default
+        _axis_labels = list()
+        for i, axis in enumerate(_axes):
+            label = self._fit.data_container.axis_labels[i]  # load from data_container
+            if label is None:  # fallback to default
+                label = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', axis)
             if label == '__del__':  # set axis label to None for special string __del__
                 label = None
             _axis_labels.append(label)
-        self._axis_labels = tuple(_axis_labels)
+        self._axis_labels = _axis_labels
 
         # specification of subplots for which this adapter provided plot routines
         self._subplots = None
@@ -228,7 +230,9 @@ class PlotAdapterBase(object):
         return self._subplots
 
     def _set_plot_labels(self):
-        """Obtain the labels from data and model container and set them accordingly"""
+        """Obtain the data and model labels from data and model container and set them
+        accordingly
+        """
         if self._fit.data_container.label is not None:
             try:
                 self.update_plot_kwargs('data', dict(label=self._fit.data_container.label))
@@ -305,14 +309,6 @@ class PlotAdapterBase(object):
         if np.all(_total_err == 0):
             return None
         return _total_err
-
-    def get_axis_labels(self):
-        """Get the axis labels used with this Plot Adapter.
-
-        :return: Tuple containing the axis labels.
-        :rtype: tuple[str or None, str or None]
-        """
-        return self._axis_labels
 
     # -- public API
 
@@ -500,6 +496,51 @@ class PlotAdapterBase(object):
     @y_range.setter
     def y_range(self, y_range):
         self._y_range = y_range
+
+    @property
+    def x_scale(self):
+        return self._x_scale
+
+    @x_scale.setter
+    def x_scale(self, scale):
+        if scale not in self.AVAILABLE_X_SCALES:
+            raise PlotAdapterException("x_scale {} is not supported for this type of fit, "
+                                       "use one of {}".format(scale, self.AVAILABLE_X_SCALES))
+        self._x_scale = scale
+
+    @property
+    def y_scale(self):
+        return self._y_scale
+
+    @y_scale.setter
+    def y_scale(self, scale):
+        if scale not in self.AVAILABLE_Y_SCALES:
+            raise PlotAdapterException("y_scale {} is not supported for this type of fit, "
+                                       "use one of {}".format(scale, self.AVAILABLE_Y_SCALES))
+        self._y_scale = scale
+
+    @property
+    def x_label(self):
+        """The x-axis label of the fit handled by this plot adapter.
+        :type: str
+        """
+        return self._axis_labels[0]
+
+    @x_label.setter
+    def x_label(self, label):
+        if label == '__del__':
+            label = None
+        self._axis_labels[0] = label
+
+    @property
+    def y_label(self):
+        return self._axis_labels[1]
+
+    @y_label.setter
+    def y_label(self, label):
+        if label == '__del__':
+            label = None
+        self._axis_labels[1] = label
 
     @abc.abstractmethod
     def plot_data(self, target_axes, **kwargs):
@@ -933,21 +974,24 @@ class Plot(object):
                 _ax.set_ylim(_ylim)
 
     def _set_axis_labels(self, plot_results, axes_keys):
-        '''set the x and y axis labels'''
+        """Set the x and y axis labels from given plot adapter labels"""
         for _axes_name, _axes_dict in six.iteritems(plot_results):
             _ax = self._get_axes(_axes_name)
 
             # collect different sets of axis labels
-            _seen_labels = []
+            _seen_x_labels = list()
+            _seen_y_labels = list()
             for _plot in _axes_dict['plots']:
+                _x_label = _plot['adapter'].x_label
+                _y_label = _plot['adapter'].y_label
+                if _x_label not in _seen_x_labels:
+                    _seen_x_labels.append(_x_label)
+                if _y_label not in _seen_y_labels:
+                    _seen_y_labels.append(_y_label)
 
-                _labels = _plot['adapter'].get_axis_labels()
-                if _labels not in _seen_labels:
-                    _seen_labels.append(_labels)
-
-            # use concatenation of labels as axis label
-            _ax.set_xlabel(', '.join(filter(None, [_l[0] for _l in _seen_labels])))  # use filter to skip None labels
-            _ax.set_ylabel(', '.join(filter(None, [_l[1] for _l in _seen_labels])))  # use filter to skip None labels
+            # use concatenation of labels as axis label, filter to skip None labels
+            _ax.set_xlabel(', '.join(filter(None, [label for label in _seen_x_labels])))
+            _ax.set_ylabel(', '.join(filter(None, [label for label in _seen_y_labels])))
 
         # hide x tick labels in all but the lowest axes
         for _key in axes_keys[:-1]:
@@ -1010,6 +1054,74 @@ class Plot(object):
         for i, _range in enumerate(y_range):
             _adapters[i].y_range = _range
 
+    def _repeat_str(self, var):
+        """Repeat a string with the count of the given plot adapters. Used by setters."""
+        _adapters = self._get_plot_adapters()
+        if isinstance(var, str):  # check if string, if not probably list
+            var = itertools.repeat(var, len(_adapters))
+        elif len(_adapters) != len(var):
+            raise PlotFigureException("Length of input and fits does not match. "
+                                      "Got {} inputs and have {} fits"
+                                      .format(len(var), len(_adapters)))
+        return var
+
+    @property
+    def x_scale(self):
+        """The x-scale for each fit used for creating the support values when plotting and axis
+        scaling.
+        :type: list[str] or str
+        """
+        return [_adapter.x_scale for _adapter in self._get_plot_adapters()]
+
+    @x_scale.setter
+    def x_scale(self, x_scale):
+        x_scale = self._repeat_str(x_scale)
+        for adapter, _scale in zip(self._get_plot_adapters(), x_scale):
+            adapter.x_scale = _scale
+
+    @property
+    def y_scale(self):
+        """The y-scale for each fit used when plotting.
+        :type: list[str] or str
+        """
+        return [_adapter.y_scale for _adapter in self._get_plot_adapters()]
+
+    @y_scale.setter
+    def y_scale(self, y_scale):
+        y_scale = self._repeat_str(y_scale)
+        for adapter, _scale in zip(self._get_plot_adapters(), y_scale):
+            adapter.y_scale = _scale
+
+    @property
+    def x_label(self):
+        """The x-label(s) of the plot. If multiple fits are handled by this plot this is a list of
+        strings. Multiple labels will be separated by a comma in the final plot while skipping
+        duplicates.
+        If a label is :py:obJ:`None` or ``'__del__'`` it will be removed.
+        :type: str or list[str]"""
+        return [_adapter.x_label for _adapter in self._get_plot_adapters()]
+
+    @x_label.setter
+    def x_label(self, label):
+        label = self._repeat_str(label)
+        for _l, adapter in zip(label, self._get_plot_adapters()):
+            adapter.x_label = _l
+
+    @property
+    def y_label(self):
+        """The y-label(s) of the plot. If multiple fits are handled by this plot this is a list of
+        strings. Multiple labels will be separated by a comma in the final plot while skipping
+        duplicates.
+        If a label is :py:obJ:`None` or ``'__del__'`` it will be removed.
+        :type: str or list[str]"""
+        return [_adapter.x_label for _adapter in self._get_plot_adapters()]
+
+    @y_label.setter
+    def y_label(self, label):
+        label = self._repeat_str(label)
+        for _l, adapter in zip(label, self._get_plot_adapters()):
+            adapter.y_label = _l
+
     # -- public methods
 
     def plot(self, legend=True, fit_info=True, asymmetric_parameter_errors=False, ratio=False, ratio_range=None,
@@ -1053,6 +1165,10 @@ class Plot(object):
                 )
 
                 _plot_results = self._plot_and_get_results(plot_indices=(i,) if self._separate_figs else None)
+
+                # set axis scales for the main plot, x-axis is shared with ratio plot
+                self._get_axes('main').set_xscale(self.x_scale[i])
+                self._get_axes('main').set_yscale(self.y_scale[i])
 
                 if legend:
                     self._render_legend(plot_results=_plot_results, axes_keys=('main',), fit_info=fit_info,

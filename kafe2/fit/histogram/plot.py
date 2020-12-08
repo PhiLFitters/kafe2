@@ -26,6 +26,8 @@ class HistPlotAdapter(PlotAdapterBase):
         ),
     )
 
+    AVAILABLE_X_SCALES = ('linear', 'log')
+
     def __init__(self, hist_fit_object):
         """
         Construct an :py:obj:`HistPlotContainer` for a :py:obj:`~kafe2.fit.histogram.HistFit` object:
@@ -95,7 +97,12 @@ class HistPlotAdapter(PlotAdapterBase):
     def model_density_x(self):
         """x support points for model density plot"""
         _xmin, _xmax = self.x_range
-        return np.linspace(_xmin, _xmax, self.n_plot_points)
+        if self.x_scale == 'linear':
+            return np.linspace(_xmin, _xmax, self.n_plot_points)
+        if self.x_scale == 'log':
+            return np.geomspace(_xmin, _xmax, self.n_plot_points)
+        raise HistPlotAdapterException("x_range has to be one of {}. Found {} instead.".format(
+            self.AVAILABLE_X_SCALES, self.x_scale))
 
     @property
     def model_density_y(self):

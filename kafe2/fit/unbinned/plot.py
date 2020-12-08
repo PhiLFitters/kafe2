@@ -25,6 +25,8 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
     )
     del PLOT_SUBPLOT_TYPES['model']  # don't show "model" points
 
+    AVAILABLE_X_SCALES = ('linear', 'log')
+
     def __init__(self, unbinned_fit_object):
         """
         Construct an :py:obj:`UnbinnedPlotAdapter` for a :py:obj:`~kafe2.fit.unbinned.UnbinnedFit` object:
@@ -40,10 +42,18 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
     def _compute_plot_range_x(self, pad_coeff=1.1, additional_pad=None):
         if additional_pad is None:
             additional_pad = (0, 0)
-        _xmin, _xmax = self._fit.data_range
-        _w = _xmax - _xmin
-        return (0.5 * (_xmin + _xmax - _w * pad_coeff) - additional_pad[0],
-                0.5 * (_xmin + _xmax + _w * pad_coeff) + additional_pad[1])
+        if self.x_scale == 'linear':
+            _xmin, _xmax = self._fit.data_range
+            _w = _xmax - _xmin
+            return (0.5 * (_xmin + _xmax - _w * pad_coeff) - additional_pad[0],
+                    0.5 * (_xmin + _xmax + _w * pad_coeff) + additional_pad[1])
+        if self.x_scale == 'log':
+            _expmin, _expmax = np.log10(self._fit.data_range)
+            _w = _expmax - _expmin
+            return (10**(0.5 * (_expmin + _expmax - _w * pad_coeff) - additional_pad[0]),
+                    10**(0.5 * (_expmin + _expmax + _w * pad_coeff) + additional_pad[1]))
+        raise UnbinnedPlotAdapterException("x_range has to be one of {}. Found {} instead.".format(
+            self.AVAILABLE_X_SCALES, self.x_scale))
 
     def _compute_plot_range_y(self, pad_coeff=1.1, additional_pad=None):
         if additional_pad is None:
@@ -135,27 +145,14 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
         """
         return None
 
-    @property
-    def x_range(self):
-        return self._x_range
-
-    @x_range.setter
-    def x_range(self, x_range):
-        if x_range is None:  # needed for model_line_x
-            warnings.warn("x_range can't be None, using defaults")
-            x_range = self._compute_plot_range_x()
-        self._x_range = x_range
-
-    @property
-    def y_range(self):
-        return self._y_range
-
-    @y_range.setter
-    def y_range(self, y_range):
-        if y_range is None:  # needed for plot_data
-            warnings.warn("y_range can't be None, using defaults")
-            y_range = self._compute_plot_range_y()
-        self._y_range = y_range
+    @PlotAdapterBase.x_scale.setter
+    def x_scale(self, scale):
+        # using super setters does not work, copying the code...
+        if scale not in self.AVAILABLE_X_SCALES:
+            raise PlotAdapterException("x_scale {} is not supported for this type of fit, "
+                                       "use one of {}".format(scale, self.AVAILABLE_X_SCALES))
+        self._x_scale = scale
+        self.x_range = self._compute_plot_range_x()
 
     # public methods
     def plot_data(self, target_axes, height=None, **kwargs):
