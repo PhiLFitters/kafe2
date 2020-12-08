@@ -1,4 +1,5 @@
 import abc
+import numpy  # help IDEs with type-hinting inside docstrings
 import numpy as np
 import six
 import textwrap
@@ -54,9 +55,11 @@ class Cycler(object):
                     _prop_size_i = len(_prop_vals)
                 else:
                     if len(_prop_vals) != _prop_size_i:
-                        raise CyclerException("Cannot cycle properties with mismatching value sequence lengths!")
+                        raise CyclerException("Cannot cycle properties with mismatching value "
+                                              "sequence lengths!")
                 if _prop_name in _processed_names:
-                    raise CyclerException("Cycle already contains a property named '%s'!" % (_prop_name,))
+                    raise CyclerException(
+                        "Cycle already contains a property named '%s'!" % (_prop_name,))
                 _prop_dict_i[_prop_name] = tuple(_prop_vals)
                 _processed_names.add(_prop_name)
             _pv_sizes.append(_prop_size_i)
@@ -79,7 +82,8 @@ class Cycler(object):
     # public methods
 
     def get(self, cycle_position):
-        _prop_positions = [(cycle_position//self._counter_divisors[i])%self._prop_val_sizes[i] for i in six.moves.range(self._dim)]
+        _prop_positions = [(cycle_position//self._counter_divisors[i]) % self._prop_val_sizes[i]
+                           for i in six.moves.range(self._dim)]
         _ps = {}
         for _i, _content in enumerate(self._props):
             for (_name, _values) in six.iteritems(_content):
@@ -125,21 +129,20 @@ class PlotAdapterException(Exception):
 
 @six.add_metaclass(abc.ABCMeta)
 class PlotAdapterBase(object):
-    """
-    This is a purely abstract class implementing the minimal interface required by all
+    """This is a purely abstract class implementing the minimal interface required by all
     types of plot adapters.
 
     A :py:obj:`PlotAdapter` object can be constructed for a :py:obj:`Fit` object of the
     corresponding type.
     Its main purpose is to provide an interface for accessing data stored in the
     :py:obj:`Fit` object, for the purposes of plotting.
-    Most importantly, it provides methods to call the relevant ``matplotlib`` methods
+    Most importantly, it provides methods to call the relevant :py:mod:`matplotlib` methods
     for plotting the data, model (and other information, depending on the fit type),
     and constructs the arrays required by these routines in a meaningful way.
 
-    Classes derived from :py:obj:`PlotAdapter` must at the very least contain
-    properties for constructing the ``x`` and ``y`` point arrays for both the
-    data and the fitted model, as well as methods calling the ``matplotlib`` routines
+    Classes derived from :py:class:`PlotAdapterBase` must at the very least contain
+    properties for constructing the *x* and *y* point arrays for both the
+    data and the fitted model, as well as methods calling the :py:mod:`matplotlib` routines
     doing the actual plotting.
     """
 
@@ -165,11 +168,10 @@ class PlotAdapterBase(object):
     AVAILABLE_Y_SCALES = ('linear', 'log')
 
     def __init__(self, fit_object):
-        """
-        Construct a :py:obj:`PlotAdapter` for a :py:obj:`Fit` object:
+        """Construct a :py:obj:`PlotAdapter` for a :py:obj:`Fit` object:
 
-        :param fit_object: an object derived from :py:obj:`~kafe2.fit._base.FitBase`
-        :type fit_object: :py:class:`~kafe2.fit._base.FitBase`
+        :param fit_object: An object derived from :py:obj:`~.FitBase`
+        :type fit_object: kafe2.fit._base.FitBase
         """
         self._fit = fit_object
         self._x_range = None
@@ -195,7 +197,11 @@ class PlotAdapterBase(object):
         self._set_plot_labels()
 
     def _get_subplots(self):
-        '''create dictionary containing all subplot specifications'''
+        """Create dictionary containing all subplot specifications.
+
+        :return: An ordered dictionary containing all information about the available plot methods.
+        :rtype: OrderedDict
+        """
         if not self._subplots:
             # create subplot dict
             self._subplots = OrderedDict()
@@ -231,7 +237,7 @@ class PlotAdapterBase(object):
 
     def _set_plot_labels(self):
         """Obtain the data and model labels from data and model container and set them
-        accordingly
+        accordingly.
         """
         if self._fit.data_container.label is not None:
             try:
@@ -239,7 +245,6 @@ class PlotAdapterBase(object):
             except ValueError:
                 pass  # no data present
         if self._fit.model_label is not None:
-            # setting those in the derived classes would cause lots of duplicates, do it here for now
             for plot_model_name in ('model', 'model_line'):
                 try:
                     self.update_plot_kwargs(plot_model_name, dict(label=self._fit.model_label))
@@ -253,7 +258,7 @@ class PlotAdapterBase(object):
                 pass  # no error band available
 
     def _get_subplot_kwargs(self, plot_index, plot_type):
-        '''resolve the keyword arguments passed to the plot method'''
+        """Resolve the keyword arguments passed to the plot method."""
         _subplots = self._get_subplots()
 
         _explicit_kwargs = _subplots[plot_type].get('plot_method_keywords', {})
@@ -313,10 +318,9 @@ class PlotAdapterBase(object):
     # -- public API
 
     def call_plot_method(self, plot_type, target_axes, **kwargs):
-        """
-        Call the registered plot method for `plot_type`.
+        """Call the registered plot method for `plot_type`.
 
-        :param plot_type: key identifying a registered plot type for this `PlotAdapter`
+        :param plot_type: key identifying a registered plot type for this :py:obj:`PlotAdapter`
         :type plot_type: str
         :param target_axes: axes to plot to
         :type target_axes: `matplotlib.Axes` object
@@ -352,8 +356,7 @@ class PlotAdapterBase(object):
         )
 
     def update_plot_kwargs(self, plot_type, plot_kwargs):
-        """
-        Update the value of keyword arguments `plot_kwargs` to be passed
+        """Update the value of keyword arguments `plot_kwargs` to be passed
         to the plot method for for `plot_type`.
 
         If a keyword argument should be removed, the value of the keyword
@@ -361,11 +364,10 @@ class PlotAdapterBase(object):
         To indicate that the default value should be used, the special
         value ``'__default__'`` can be set as a value.
 
-        :param plot_type: key identifying a registered plot type for this `PlotAdapter`
+        :param plot_type: key identifying a registered plot type for this :py:obj:`PlotAdapter`
         :type plot_type: str
         :param plot_kwargs: dictionary containing keywords arguments to override
         :type plot_kwargs: dict
-        :return:
         """
         _subplots = self._get_subplots()
 
@@ -394,86 +396,78 @@ class PlotAdapterBase(object):
     @property
     @abc.abstractmethod
     def data_x(self):
-        """
-        The 'x' coordinates of the data (used by :py:meth:`~plot_data`).
+        """The *x* coordinates of the data (used by :py:meth:`~plot_data`).
 
-        :return: iterable
+        :rtype: numpy.ndarray
         """
         pass
 
     @property
     @abc.abstractmethod
     def data_y(self):
-        """
-        The 'y' coordinates of the data (used by :py:meth:`~plot_data`).
+        """The *y* coordinates of the data (used by :py:meth:`~plot_data`).
 
-        :return: iterable
+        :rtype: numpy.ndarray
         """
         pass
 
     @property
     @abc.abstractmethod
     def data_xerr(self):
-        """
-        The magnitude of the data 'x' error bars (used by :py:meth:`~plot_data`).
+        """The magnitude of the data *x* error bars (used by :py:meth:`~plot_data`).
 
-        :return: iterable
+        :rtype: numpy.ndarray
         """
         pass
 
     @property
     @abc.abstractmethod
     def data_yerr(self):
-        """
-        The magnitude of the data 'y' error bars (used by :py:meth:`~plot_data`).
+        """The magnitude of the data *y* error bars (used by :py:meth:`~plot_data`).
 
-        :return: iterable
+        :rtype: numpy.ndarray
         """
         pass
 
     @property
     @abc.abstractmethod
     def model_x(self):
-        """
-        The 'x' coordinates of the model (used by :py:meth:`~plot_model`).
+        """The *x* coordinates of the model (used by :py:meth:`~plot_model`).
 
-        :return: iterable
+        :rtype: numpy.ndarray
         """
         pass
 
     @property
     @abc.abstractmethod
     def model_y(self):
-        """
-        The 'y' coordinates of the model (used by :py:meth:`~plot_model`).
+        """The *y* coordinates of the model (used by :py:meth:`~plot_model`).
 
-        :return: iterable
+        :rtype: numpy.ndarray
         """
         pass
 
     @property
     @abc.abstractmethod
     def model_xerr(self):
-        """
-        The magnitude of the model 'x' error bars (used by :py:meth:`~plot_model`).
+        """The magnitude of the model *x* error bars (used by :py:meth:`~plot_model`).
 
-        :return: iterable
+        :rtype: numpy.ndarray
         """
         pass
 
     @property
     @abc.abstractmethod
     def model_yerr(self):
-        """
-        The magnitude of the model 'y' error bars (used by :py:meth:`~plot_model`).
+        """The magnitude of the model *y* error bars (used by :py:meth:`~plot_model`).
 
-        :return: iterable
+        :rtype: numpy.ndarray
         """
         pass
 
     @property
     def x_range(self):
-        """The 'x' axis plot range.
+        """The *x* axis plot range.
 
         :rtype: tuple[float, float]
         """
@@ -485,7 +479,7 @@ class PlotAdapterBase(object):
 
     @property
     def y_range(self):
-        """The 'y' axis plot range.
+        """The *y* axis plot range.
 
         :rtype: tuple[float, float]
         """
@@ -497,6 +491,10 @@ class PlotAdapterBase(object):
 
     @property
     def x_scale(self):
+        """The *x* axis scale. Available scales are given in :py:const:`~.AVAILABLE_X_SCALES`
+
+        :rtype: str
+        """
         return self._x_scale
 
     @x_scale.setter
@@ -508,6 +506,10 @@ class PlotAdapterBase(object):
 
     @property
     def y_scale(self):
+        """The *y* axis scale. Available scales are given in :py:const:`~.AVAILABLE_Y_SCALES`
+
+        :rtype: str
+        """
         return self._y_scale
 
     @y_scale.setter
@@ -519,8 +521,10 @@ class PlotAdapterBase(object):
 
     @property
     def x_label(self):
-        """The x-axis label of the fit handled by this plot adapter.
-        :type: str
+        """The *x* axis label of the fit handled by this plot adapter. If ``'__del__'`` is used,
+        the label will be set to :py:obj:`None`.
+
+        :rtype: str
         """
         return self._axis_labels[0]
 
@@ -532,6 +536,11 @@ class PlotAdapterBase(object):
 
     @property
     def y_label(self):
+        """The *x* axis label of the fit handled by this plot adapter. If ``'__del__'`` is used,
+        the label will be set to :py:obj:`None`.
+
+        :rtype: str
+        """
         return self._axis_labels[1]
 
     @y_label.setter
@@ -542,40 +551,40 @@ class PlotAdapterBase(object):
 
     @abc.abstractmethod
     def plot_data(self, target_axes, **kwargs):
-        """
-        Method called by the main plot routine to plot the data points to a specified matplotlib ``Axes`` object.
+        """Method called by the main plot routine to plot the data points to a specified
+        :py:class:`matplotlib.axes.Axes` object.
 
-        :param target_axes: ``matplotlib`` ``Axes`` object
+        :param matplotlib.axes.Axes target_axes: The :py:mod:`matplotlib` target axes.
         :return: plot handle(s)
         """
         pass
 
     @abc.abstractmethod
     def plot_model(self, target_axes, **kwargs):
-        """
-        Method called by the main plot routine to plot the model to a specified matplotlib ``Axes`` object.
+        """Method called by the main plot routine to plot the model to a specified
+        :py:class:`matplotlib.axes.Axes` object.
 
-        :param target_axes: ``matplotlib`` ``Axes`` object
+        :param matplotlib.axes.Axes target_axes: The :py:mod:`matplotlib` target axes.
         :return: plot handle(s)
         """
         pass
 
     @abc.abstractmethod
     def plot_ratio(self, target_axes, **kwargs):
-        """
-        Method called by the main plot routine to plot the data/model ratio to a specified matplotlib ``Axes`` object.
+        """Method called by the main plot routine to plot the data/model ratio to a specified
+        :py:class:`matplotlib.axes.Axes` object.
 
-        :param target_axes: ``matplotlib`` ``Axes`` object
+        :param matplotlib.axes.Axes target_axes: The :py:mod:`matplotlib` target axes.
         :return: plot handle(s)
         """
         pass
 
-    #Overridden by multi plot adapters
+    # Overridden by multi plot adapters
     def get_formatted_model_function(self, **kwargs):
         """return model function string"""
         return self._fit.model_function.formatter.get_formatted(**kwargs)
 
-    #Overridden by multi plot adapters
+    # Overridden by multi plot adapters
     @property
     def model_function_parameter_formatters(self):
         """The model function parameter formatters, excluding the independent variable."""
@@ -1012,43 +1021,49 @@ class Plot(object):
 
     @property
     def x_range(self):
+        """The plotting x-range for each fit handled by this :py:obj:`~kafe2.Plot` object.
+        :param: List of tuples containing the x_ranges for each fit.
+        :type: list[tuple[float, float]] or tuple[float, float]
+        """
         return [_adapter.x_range for _adapter in self._get_plot_adapters()]
 
     @x_range.setter
     def x_range(self, x_range):
-        """The plotting x-range for each fit handled by this :py:obj:`~kafe2.Plot` object.
-        :param x_range: Iterable of tuples containing the x_ranges for each fit.
-        :type x_range: Iterable[tuple[float, float]] or tuple[float, float]"""
         _adapters = self._get_plot_adapters()
         if np.ndim(x_range) == 1:
             if len(x_range) != 2:
-                raise PlotFigureException("x_range must contain two elements. A lower and an upper limit. Got {} "
-                                          "elements".format(len(x_range)))
+                raise PlotFigureException("x_range must contain two elements. "
+                                          "A lower and an upper limit. Got {} elements"
+                                          .format(len(x_range)))
             x_range = itertools.repeat(x_range, len(_adapters))
         elif len(_adapters) != len(x_range):
-            raise PlotFigureException("Amount of x_ranges and fits does not match. Got {} x_ranges and have {} "
-                                      "fits".format(len(x_range), len(_adapters)))
+            raise PlotFigureException("Amount of x_ranges and fits does not match. "
+                                      "Got {} x_ranges and have {} fits"
+                                      .format(len(x_range), len(_adapters)))
         for i, _range in enumerate(x_range):
             _adapters[i].x_range = _range
 
     @property
     def y_range(self):
+        """The plotting y-range for each fit handled by this :py:obj:`~kafe2.Plot` object.
+        :param: List of tuples containing the y_ranges for each fit.
+        :type: list[tuple[float, float]] or tuple[float, float]
+        """
         return [_adapter.y_range for _adapter in self._get_plot_adapters()]
 
     @y_range.setter
     def y_range(self, y_range):
-        """Set the plotting y-range for each fit handled by this :py:obj:`~kafe2.Plot` object.
-        :param y_range: Iterable of tuples containing the y_ranges for each fit.
-        :type y_range: Iterable[tuple[float, float]] or tuple[float, float]"""
         _adapters = self._get_plot_adapters()
         if np.ndim(y_range) == 1:
             if len(y_range) != 2:
-                raise PlotFigureException("y_range must contain two elements. A lower and an upper limit. Got {} "
-                                          "elements".format(len(y_range)))
+                raise PlotFigureException("y_range must contain two elements. "
+                                          "A lower and an upper limit. Got {} elements"
+                                          .format(len(y_range)))
             y_range = itertools.repeat(y_range, len(_adapters))
         elif len(_adapters) != len(y_range):
-            raise PlotFigureException("Amount of y_ranges and fits does not match. Got {} y_ranges and have {} "
-                                      "fits".format(len(y_range), len(_adapters)))
+            raise PlotFigureException("Amount of y_ranges and fits does not match. "
+                                      "Got {} y_ranges and have {} fits"
+                                      .format(len(y_range), len(_adapters)))
         for i, _range in enumerate(y_range):
             _adapters[i].y_range = _range
 
