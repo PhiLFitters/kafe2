@@ -12,7 +12,7 @@ except (ImportError, SyntaxError):
     raise
 
 
-if int(iminuit.version.iminuit_version[0]) >= 2:
+if int(iminuit.__version__[0]) >= 2:
     raise MinimizerException("kafe2 currently only supports iminuit versions < 2")
 
 
