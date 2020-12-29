@@ -1,10 +1,10 @@
 import unittest2 as unittest
-from kafe2.test.core.minimizers._base import TestMinimizerMixin
+from kafe2.test.core.minimizers._base import TestMinimizerMixin, MinimizerException
 
 _cannot_import_IMinuit = False
 try:
     from kafe2.core.minimizers.iminuit_minimizer import MinimizerIMinuit
-except (ImportError, SyntaxError):
+except (ImportError, SyntaxError, MinimizerException):
     _cannot_import_IMinuit = True
 
 

@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 from copy import deepcopy
 
 from .minimizer_base import MinimizerBase, MinimizerException
@@ -10,7 +11,9 @@ except (ImportError, SyntaxError):
     # TODO: handle importing nonexistent minimizer
     raise
 
-import numpy as np
+
+if int(iminuit.version.iminuit_version[0]) >= 2:
+    raise MinimizerException("kafe2 currently only supports iminuit versions < 2")
 
 
 class MinimizerIMinuitException(MinimizerException):

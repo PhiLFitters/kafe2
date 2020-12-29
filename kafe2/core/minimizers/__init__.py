@@ -1,5 +1,7 @@
 import sys
+import warnings
 
+from .minimizer_base import MinimizerException
 from ...config import kc
 
 __all__ = ['get_minimizer']
@@ -33,6 +35,8 @@ except _catch_error_class:
     pass
 except SyntaxError:  # Newer versions of iminuit do not support Python 2.
     pass
+except MinimizerException as e:  # kafe2 does not support iminuit>2
+    warnings.warn("Problem importing iminuit: {}\nIminuit won't be available".format(e))
 
 try:
     from .root_tminuit_minimizer import MinimizerROOTTMinuit

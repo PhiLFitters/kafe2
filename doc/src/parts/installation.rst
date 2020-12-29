@@ -31,7 +31,7 @@ Optionally, a function minimizer other than ``scipy.optimize.minimize`` can be u
 by default if they're installed:
 
 * *MINUIT*, which is included in *CERN*'s data analysis package `ROOT <http://root.cern.ch>`_ (>= 5.34), or
-* `iminuit <https://github.com/iminuit/iminuit>`_ (>= 1.1.1), which is independent of ROOT
+* `iminuit <https://github.com/iminuit/iminuit>`_ (>= 1.1.1 and <2.0), which is independent of ROOT
 
 
 Installation notes (Linux)
@@ -152,7 +152,7 @@ To install the *iminuit* package for Python, the `Pip installer
 
     .. code:: bash
 
-        pip install iminuit
+        pip install iminuit<2
 
 You might also need to install the Python headers for *iminuit* to
 compile properly.
