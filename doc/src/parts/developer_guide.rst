@@ -48,7 +48,7 @@ Additionally, the following Python packages should be installed:
 * `mock <https://pypi.org/project/mock/>`_
 
 For support of newer versions of iminuit check out the current
-`GitHub issue<https://github.com/dsavoiu/kafe2/issues/163>`_.
+`GitHub issue <https://github.com/dsavoiu/kafe2/issues/163>`_.
 
 To install all of these packages automatically run::
 

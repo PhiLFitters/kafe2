@@ -23,7 +23,7 @@ import os
 # that pretend to be the external modules so they can be imported, but
 # don't actually do anything. This is needed for building the documentation
 # on e.g. ReadTheDocs.org
-import mock
+from mock import MagicMock
 
 MOCK_MODULES = [
     'matplotlib',
@@ -43,7 +43,7 @@ MOCK_MODULES = [
     'scipy.stats',
 ]
 for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = mock.Mock()
+    sys.modules[mod_name] = MagicMock()
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
