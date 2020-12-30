@@ -152,7 +152,7 @@ To install the *iminuit* package for Python, the `Pip installer
 
     .. code:: bash
 
-        pip install iminuit<2
+        pip install 'iminuit<2'
 
 You might also need to install the Python headers for *iminuit* to
 compile properly.
@@ -194,7 +194,7 @@ After installing *WinPython*, start 'WinPython Command Prompt.exe' in the
 
 .. code:: bash
 
-    pip install iminuit
+    pip install 'iminuit<2'
 
 
 Install `kafe2`
