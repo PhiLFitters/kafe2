@@ -184,7 +184,7 @@ class TestMinimizerMixin:
         self.m1.minimize()
         _par_vals = self.m1.parameter_values
         self.assertIs(type(_par_vals), np.ndarray)
-        self.assertAlmostEqual(_par_vals[0], 42.)
+        self.assertAlmostEqual(_par_vals[0], 42., places=6)
 
     def test_compare_par_errors_minimize_fcn1(self):
         self.m1.minimize()
@@ -350,7 +350,7 @@ class TestMinimizerMixin:
     def test_compare_par_values_minimize_fcn1_errdef_4(self):
         self.m1.errordef = 4.0
         self.m1.minimize()
-        self.assertAlmostEqual(self.m1.parameter_values[0], 42.)
+        self.assertAlmostEqual(self.m1.parameter_values[0], 42., places=6)
 
     def test_compare_par_errors_minimize_fcn1_errdef_4(self):
         self.m1.errordef = 4.0
@@ -424,8 +424,10 @@ class TestMinimizerMixin:
 
     def test_compare_asymm_errs_minimize_fnc1(self):
         self.m1.minimize()
-        self.assertAlmostEqual(self.m1.asymmetric_parameter_errors[0, 0], -np.sqrt(1.0 / 42.0))
-        self.assertAlmostEqual(self.m1.asymmetric_parameter_errors[0, 1], np.sqrt(1.0 / 42.0))
+        self.assertAlmostEqual(
+            self.m1.asymmetric_parameter_errors[0, 0], -np.sqrt(1.0 / 42.0), places=6)
+        self.assertAlmostEqual(
+            self.m1.asymmetric_parameter_errors[0, 1], np.sqrt(1.0 / 42.0), places=6)
         self.assertAlmostEqual(self.m1.function_value, 42)
         self.assertAlmostEqual(self.m1.parameter_values[0], 42.)
 

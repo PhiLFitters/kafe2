@@ -12,8 +12,7 @@ except (ImportError, SyntaxError):
     raise
 
 
-if int(iminuit.__version__[0]) >= 2:
-    raise MinimizerException("kafe2 currently only supports iminuit versions < 2")
+_IMINUIT_1 = int(iminuit.__version__[0]) < 2
 
 
 class MinimizerIMinuitException(MinimizerException):
@@ -84,10 +83,25 @@ class MinimizerIMinuit(MinimizerBase):
 
     def _get_iminuit(self):
         if self.__iminuit is None:
-            self.__iminuit = iminuit.Minuit(self._func_wrapper,
-                                            forced_parameters=self.parameter_names,
-                                            errordef=self.errordef,
-                                            **self._minimizer_param_dict)
+            if _IMINUIT_1:
+                self.__iminuit = iminuit.Minuit(self._func_wrapper,
+                                                forced_parameters=self.parameter_names,
+                                                errordef=self.errordef,
+                                                **self._minimizer_param_dict)
+            else:
+                _parameter_values = [
+                    self._minimizer_param_dict[_pn] for _pn in self.parameter_names]
+                self.__iminuit = iminuit.Minuit(
+                    self._func_wrapper, *_parameter_values,
+                    name=self.parameter_names
+                )
+                for _i, _par_name_i in enumerate(self.parameter_names):
+                    self.__iminuit.fixed[_i] = self._minimizer_param_dict["fix_" + _par_name_i]
+                    self.__iminuit.limits[_i] = self._minimizer_param_dict["limit_" + _par_name_i]
+                    _par_err_i = self._minimizer_param_dict.get("error_" + _par_name_i, None)
+                    if _par_err_i is not None:
+                        self.__iminuit.errors[_i] = _par_err_i
+                self.__iminuit.errordef = self.errordef
             # set logging level in iminuit arcording to the root logger
             if logging.root.level <= logging.DEBUG:
                 self.__iminuit.print_level = 2
@@ -101,17 +115,28 @@ class MinimizerIMinuit(MinimizerBase):
 
     def _calculate_asymmetric_parameter_errors(self):
         try:
-            _minos_result_dict = self._get_iminuit().minos()
+            if _IMINUIT_1:
+                _minos_result = self._get_iminuit().minos()
+            else:
+                _m = self._get_iminuit()
+                _m.minos()
+                _minos_result = _m.merrors
+                _par_names_free = [_pn for _pn in self.parameter_names if not self.is_fixed(_pn)]
         except RuntimeError:
             return None
         _asymm_par_errs = np.zeros(shape=(self.num_pars, 2))
         for _par_name in self.parameter_names:
-            _index = self.parameter_names.index(_par_name)
-            if _par_name in _minos_result_dict:
-                _asymm_par_errs[_index, 0] = _minos_result_dict[_par_name]['lower']
-                _asymm_par_errs[_index, 1] = _minos_result_dict[_par_name]['upper']
+            _par_index = self.parameter_names.index(_par_name)
+            if self.is_fixed(_par_name):
+                _asymm_par_errs[_par_index, :] = 0.0
             else:
-                _asymm_par_errs[_index, :] = 0
+                if _IMINUIT_1:
+                    _asymm_par_errs[_par_index, 0] = _minos_result[_par_name]['lower']
+                    _asymm_par_errs[_par_index, 1] = _minos_result[_par_name]['upper']
+                else:
+                    _par_index_free = _par_names_free.index(_par_name)
+                    _asymm_par_errs[_par_index, 0] = _minos_result[_par_index_free].lower
+                    _asymm_par_errs[_par_index, 1] = _minos_result[_par_index_free].upper
         self.minimize()
         return _asymm_par_errs
 
@@ -139,13 +164,18 @@ class MinimizerIMinuit(MinimizerBase):
             self._save_state()
             try:
                 self._get_iminuit().hesse()
-                # FIX_UPSTREAM we need skip_fixed=False, but this is unsupported
-                # _mat = self._get_iminuit().matrix(correlation, skip_fixed=False)
+                if _IMINUIT_1:
+                    # FIX_UPSTREAM we need skip_fixed=False, but this is unsupported
+                    # _mat = self._get_iminuit().matrix(correlation, skip_fixed=False)
 
-                # ... so use skip_fixed=True instead and fill in the gaps
-                _mat = self._get_iminuit().matrix(correlation=False, skip_fixed=True)
-                _mat = np.asarray(_mat)  # reshape into numpy matrix
-                _mat = self._fill_in_zeroes_for_fixed(_mat)  # fill in fixed par 'gaps'
+                    # ... so use skip_fixed=True instead and fill in the gaps
+                    _mat = self._get_iminuit().matrix(correlation=False, skip_fixed=True)
+                    _mat = np.asarray(_mat)  # reshape into numpy matrix
+                    _mat = self._fill_in_zeroes_for_fixed(_mat)  # fill in fixed par 'gaps'
+                else:
+                    # iminuit 2 already fills in zeros for fixed parameters.
+                    _mat = self._get_iminuit().covariance
+                    _mat = np.asarray(_mat)
                 self._func_wrapper_unpack_args(self.parameter_values)
             except RuntimeError:
                 _mat = None
@@ -161,13 +191,18 @@ class MinimizerIMinuit(MinimizerBase):
             self._save_state()
             try:
                 self._get_iminuit().hesse()
-                # FIX_UPSTREAM we need skip_fixed=False, but this is unsupported
-                # _mat = self._get_iminuit().matrix(correlation, skip_fixed=False)
+                if _IMINUIT_1:
+                    # FIX_UPSTREAM we need skip_fixed=False, but this is unsupported
+                    # _mat = self._get_iminuit().matrix(correlation, skip_fixed=False)
 
-                # ... so use skip_fixed=True instead and fill in the gaps
-                _mat = self._get_iminuit().matrix(correlation=True, skip_fixed=True)
-                _mat = np.asarray(_mat)  # reshape into numpy matrix
-                _mat = self._fill_in_zeroes_for_fixed(_mat)  # fill in fixed par 'gaps'
+                    # ... so use skip_fixed=True instead and fill in the gaps
+                    _mat = self._get_iminuit().matrix(correlation=True, skip_fixed=True)
+                    _mat = np.asarray(_mat)  # reshape into numpy matrix
+                    _mat = self._fill_in_zeroes_for_fixed(_mat)  # fill in fixed par 'gaps'
+                else:
+                    # iminuit 2 already fills in zeros for fixed parameters.
+                    _mat = self._get_iminuit().covariance.correlation()
+                    _mat = np.asarray(_mat)
                 self._func_wrapper_unpack_args(self.parameter_values)
             except RuntimeError:
                 _mat = None
@@ -187,15 +222,18 @@ class MinimizerIMinuit(MinimizerBase):
     def parameter_values(self):
         if self._par_val is None:
             _m = self._get_iminuit()
-            if not _m.is_clean_state():
-                # if the fit has been performed at least once
-                _param_struct = _m.get_param_states()
-                _pvals = [p.value for p in _param_struct]
+            if _IMINUIT_1:
+                if not _m.is_clean_state():
+                    # if the fit has been performed at least once
+                    _param_struct = _m.get_param_states()
+                    _pvals = [p.value for p in _param_struct]
+                else:
+                    # need to hack to get initial parameter values
+                    _v = _m.values
+                    _pvals = [_v[pname] for pname in self.parameter_names]
+                self._par_val = np.array(_pvals)
             else:
-                # need to hack to get initial parameter values
-                _v = _m.values
-                _pvals = [_v[pname] for pname in self.parameter_names]
-            self._par_val = np.array(_pvals)
+                self._par_val = np.array(_m.values)
         return self._par_val.copy()
 
     @parameter_values.setter
@@ -207,18 +245,26 @@ class MinimizerIMinuit(MinimizerBase):
     @property
     def parameter_errors(self):
         if self._par_err is None:
-            if not self._get_iminuit().is_clean_state():
-                # if the fit has been performed at least once
-                _param_struct = self._get_iminuit().get_param_states()
-                self._par_err = np.array(
-                    [p.error if not self._minimizer_param_dict["fix_%s" % pname] else 0.0
-                     for p, pname in zip(_param_struct, self.parameter_names)])
+            _m = self._get_iminuit()
+            if _IMINUIT_1:
+                if not _m.is_clean_state():
+                    # if the fit has been performed at least once
+                    _param_struct = _m.get_param_states()
+                    self._par_err = np.array(
+                        [_par.error if not self.is_fixed(_par_name) else 0.0
+                         for _par, _par_name in zip(_param_struct, self.parameter_names)])
+                else:
+                    # need to hack to get initial parameter errors
+                    _e = _m.errors
+                    self._par_err = np.array(
+                        [_e[_par_name] if not self.is_fixed(_par_name) else 0.0
+                         for _par_name in _e])
             else:
-                # need to hack to get initial parameter errors
-                _e = self._get_iminuit().errors
-                self._par_err = np.array(
-                    [_e[pname] if not self._minimizer_param_dict["fix_%s" % pname] else 0.0
-                     for pname in _e])
+                self._par_err = np.array(_m.errors)
+                # Explicitly set errors of fixed parameters to 0:
+                for _i, _par_name_i in enumerate(self.parameter_names):
+                    if self.is_fixed(_par_name_i):
+                        self._par_err[_i] = 0.0
         return self._par_err.copy()
 
     @parameter_errors.setter
@@ -269,8 +315,15 @@ class MinimizerIMinuit(MinimizerBase):
         if minimizer_contour_kwargs:
             raise MinimizerIMinuitException(
                 "Unknown keyword arguments for contour(): {}".format(minimizer_contour_kwargs.keys()))
-        _x_errs, _y_errs, _contour_line = self.__iminuit.mncontour(parameter_name_1, parameter_name_2,
-                                                                   numpoints=_numpoints, sigma=sigma)
+        if _IMINUIT_1:
+            _x_errs, _y_errs, _contour_line = self._get_iminuit().mncontour(
+                parameter_name_1, parameter_name_2, numpoints=_numpoints, sigma=sigma)
+        else:
+            # The following conversion is derived by integrating the two-dimensional standard
+            # normal distribution over a circle of radius sigma centered on (0, 0).
+            _cl = 1.0 - np.exp(-0.5 * sigma ** 2)
+            _contour_line = self._get_iminuit().mncontour(
+                parameter_name_1, parameter_name_2, size=_numpoints, cl=_cl)
         self.minimize()  # return to minimum
         if len(_contour_line) == 0:
             return None  # failed to find any point on contour
@@ -279,8 +332,12 @@ class MinimizerIMinuit(MinimizerBase):
     def profile(self, parameter_name, bins=20, bound=2, subtract_min=False):
         if not self.did_fit:
             raise MinimizerIMinuitException("Need to perform a fit before calling profile()!")
-        _bins, _vals, _statuses = self.__iminuit.mnprofile(parameter_name, bins=bins, bound=bound,
-                                                           subtract_min=subtract_min)
+        _kwargs = dict(bound=bound, subtract_min=subtract_min)
+        if _IMINUIT_1:
+            _kwargs["bins"] = bins
+        else:
+            _kwargs["size"] = bins
+        _bins, _vals, _statuses = self.__iminuit.mnprofile(parameter_name, **_kwargs)
         # TODO: check statuses (?)
         self.minimize()  # return to minimum
         return np.array([_bins, _vals])
@@ -293,15 +350,24 @@ class MinimizerIMinuit(MinimizerBase):
 
     def fix(self, parameter_name):
         self._minimizer_param_dict["fix_" + parameter_name] = True
-        self._get_iminuit().fixed[parameter_name] = True
+        if _IMINUIT_1:
+            self._get_iminuit().fixed[parameter_name] = True
+        else:
+            self._get_iminuit().fixed[self.parameter_names.index(parameter_name)] = True
         self._invalidate_cache()
 
     def is_fixed(self, parameter_name):
-        return self._minimizer_param_dict["fix_%s" % parameter_name]
+        if _IMINUIT_1:
+            return self._get_iminuit().fixed[parameter_name]
+        else:
+            return self._get_iminuit().fixed[self.parameter_names.index(parameter_name)]
 
     def release(self, parameter_name):
         self._minimizer_param_dict["fix_" + parameter_name] = False
-        self._get_iminuit().fixed[parameter_name] = False
+        if _IMINUIT_1:
+            self._get_iminuit().fixed[parameter_name] = False
+        else:
+            self._get_iminuit().fixed[self.parameter_names.index(parameter_name)] = False
         self._invalidate_cache()
 
     def limit(self, parameter_name, parameter_bounds):
