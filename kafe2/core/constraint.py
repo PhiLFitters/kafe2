@@ -19,6 +19,13 @@ class ParameterConstraint(FileIOMixin, object):
     def __init__(self):
         pass
 
+    @property
+    @abc.abstractmethod
+    def extra_ndf(self):
+        """
+        :return: the additional number of degrees of freedom introduced by this constraint.
+        """
+
     def _get_base_class(self):
         return ParameterConstraint
 
@@ -91,6 +98,10 @@ class GaussianSimpleParameterConstraint(ParameterConstraint):
     def relative(self):
         """whether the constraint was initialized with a relative uncertainty"""
         return self._relative
+
+    @property
+    def extra_ndf(self):
+        return 1
 
     def cost(self, parameter_values):
         """
@@ -262,6 +273,10 @@ class GaussianMatrixParameterConstraint(ParameterConstraint):
         if self._cov_mat_inverse is None:
             self._cov_mat_inverse = np.linalg.inv(self.cov_mat)
         return self._cov_mat_inverse
+
+    @property
+    def extra_ndf(self):
+        return len(self.indices)
 
     def cost(self, parameter_values):
         """

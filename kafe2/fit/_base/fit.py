@@ -650,7 +650,10 @@ class FitBase(FileIOMixin, object):
 
         :rtype: int
         """
-        return self._param_model.ndf + len(self._fitter.fixed_parameters)
+        _extra_ndf_constraints = 0
+        for _parameter_constraint in self._fit_param_constraints:
+            _extra_ndf_constraints += _parameter_constraint.extra_ndf
+        return self._param_model.ndf + len(self._fitter.fixed_parameters) + _extra_ndf_constraints
 
     @property
     def goodness_of_fit(self):
