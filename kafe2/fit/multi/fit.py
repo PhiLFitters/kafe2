@@ -300,6 +300,7 @@ class MultiFit(FitBase):
             par_names=self._cost_function.arg_names,
             existing_behavior='replace'
         )
+        self._initialize_fitter()
 
     def _initialize_fitter(self):
         self._fitter = NexusFitter(
