@@ -110,6 +110,8 @@ When doing so, rebinning and other options won't be available.
     histogram = HistContainer(n_bins=5, bin_range=(0, 5))
     histogram.set_bins([1, 3, 5, 2, 0], underflow=2, overflow=0)
 
+.. _container-labels:
+
 Data and axis labels
 --------------------
 
@@ -355,13 +357,18 @@ For displaying the results of a Fit, *kafe2* provides a :py:obj:`~.Plot`-class. 
 a :py:obj:`matplotlib.pyplot.figure`-object is created. This means that all customization possible
 with *Matplotlib* can be done with *kafe2*-Plots as well.
 
-The Plot class supports plotting multiple fits at once.
+The Plot class supports plotting multiple fits at once. By default they will all appear in the
+same figure.
+The keyword `separate_figures=True` changes this behaviour, so that each fit will be plotted to a
+separte figure.
 
 .. code-block:: python
 
     import matplotlib.pyplot as plt
     from kafe2 import Plot
     p = Plot([fit_1, fit_2])
+    # for separate figures use:
+    # p = Plot([fit_1, fit_2], separate_figures=True)
     # insert customization here
     p.plot()
     plt.show()
@@ -370,16 +377,72 @@ Running the :py:meth:`~.Plot.plot` function will perform the the plot. Customiza
 done before this. After plotting the fits, the according :py:mod:`matplotlib` objects can be
 accessed via the :py:attr:`~.Plot.figures` and :py:attr:`~.Plot.axes` properties.
 
+Customize the Plot
+------------------
+
+.. note::
+
+    The :py:meth:`~.Plot.plot` method must be called after all customization is done. Otherwise
+    not all customizations will appear in the plot.
+
+Axis Range
+^^^^^^^^^^
+
 The plot range can be set via the :py:attr:`~.Plot.x_range` and :py:attr:`~.Plot.y_range`
 properties:
 
 .. code-block:: python
 
+    # set the same range for all plots
     p.x_range = (0, 10)
     p.y_range = (-5, 25)
+    # set different ranges for each plot, the length must match the number of fits handled by the
+    # plot object.
+    p.x_range = [(0, 10), (-5, 5)]
+    p.y_range = [(-5, 25), (10, 100)]
+    p.plot()  # plot method must come after the customization
 
-Customize the Plot
-------------------
+Axis Scale
+^^^^^^^^^^
+
+Additionally the axis scale can be changed to logarithmic. When changing between a linear and
+logarithmic x-axis scale, the supporting points for plotting the model function will be updated
+and evenly spaced on a linear or logarithmic scale.
+
+.. code-block:: python
+
+    # set the same scale for all fits in this plot object
+    p.x_scale = "log"
+    p.y_scale = "linear
+    # or change the scale for each fit individually
+    # only use this when `separate_figures=True` is set in the Plot constructor
+    p.x_scale = ["linear", "log"]
+    p.y_scale = ["log", "log"]
+    p.plot()  # plot method must come after the customization
+
+Axis Labels
+^^^^^^^^^^^
+
+By default, the plot will use the labels specified for each dataset (see :ref:`container-labels`).
+If multiple fits are plotted to the same figure, the axis labels from the data containers are
+concatenated while skipping duplicates.
+
+Alternatively the axis labels can be overwritten for each fit. Again if multiple fits are plotted
+to the same figure, all labels will be concatenated while skipping duplicates.
+
+.. code-block:: python
+
+    # set the same axis labels for all fits in this plot object
+    p.x_label = "My $x$-label"
+    p.y_label = "Voltage [mV]"
+    # set different labels for each fit, the length must match the number of fits
+    p.x_label = ["$x_1$", "My other label for $x_2$"]
+    p.y_label = ["$Y_1$", "$y_2$"]
+    p.plot()  # plot method must come after the customization
+
+Plot Style
+^^^^^^^^^^
+
 Each graphic element has it's own plotting method and can be customized individually. Available
 *plot_types* for XYFits are
 :code:`'data', 'model_line', 'model_error_band', 'ratio', 'ratio_error_band'`.
@@ -394,7 +457,7 @@ To change the name for the data set and suppress the second output, use the foll
 
 .. code-block:: python
 
-    p.customize('data', 'label', [(0, "test data"),(1, '__del__')])
+    p.customize('data', 'label', [(0, "test data"), (1, '__del__')])
 
 Marker type, size and color of the marker and error bars can also be customized:
 
@@ -409,9 +472,9 @@ The corresponding values for the model function can also be customized:
 
 .. code-block:: python
 
-    p.customize('model_line', 'color', [(0, 'orange'),(1, 'lightgreen')])
-    p.customize('model_error_band', 'label', [(0, r'$\pm 1 \sigma$'),(1, r'$\pm 1 \sigma$')])
-    p.customize('model_error_band', 'color', [(0, 'orange'),(1, 'lightgreen')])
+    p.customize('model_line', 'color', [(0, 'orange'), (1, 'lightgreen')])
+    p.customize('model_error_band', 'label', [(0, r'$\pm 1 \sigma$'), (1, r'$\pm 1 \sigma$')])
+    p.customize('model_error_band', 'color', [(0, 'orange'), (1, 'lightgreen')])
 
 It is also possible to change parameters using matplotlib functions.
 To change the size of the axis labels, use the following calls:
