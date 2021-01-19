@@ -202,9 +202,16 @@ Creating the correct :py:obj:`~.FitBase` derived object can simply be done with 
     # Create an XYFit object from the xy data container.
     # By default, a linear function f=a*x+b will be used as the model function.
     line_fit = Fit(data=xy_data)
+    # further additions like constraints go here
+    line_fit.do_fit()
 
 Alternatively :py:obj:`~.XYFit`, :py:obj:`~.HistFit`, :py:obj:`~.UnbinnedFit` or
 :py:obj:`~.IndexedFit` can be used to create fits with corresponding datasets.
+
+.. warning::
+
+    Always run the :py:meth:`~.FitBase.do_fit` function of the Fit object when everything is set.
+    Only when calling this function the fit will be performed.
 
 Setting a model function
 ------------------------
@@ -299,14 +306,18 @@ For fits with many parameters fixing some of them at first and fitting multiple 
 help.
 
 Fixing parameters is done with the :py:meth:`~.FitBase.fix_parameter` method and limiting with the
-:py:meth:`~.FitBase.limit_parameter` method:
+:py:meth:`~.FitBase.limit_parameter` method. Releasing a fixed parameter is performed with
+:py:meth:`~.FitBase.release_parameter` and unlimiting a parameter with
+:py:meth:`~.FitBase.unlimit_parameter`:
 
 .. code-block:: python
 
     fit.fix_parameter("a", 1)
     fit.fix_parameter("b", 11.5)
+    fit.release_parameter("a")
     # limit parameter fbg to avoid unphysical region
     fit.limit_parameter("fbg", 0., 1.)
+    fit.unlimit_parameter("fbg")
 
 .. note::
     The names have to be identical to the argument names in the model function. The parameter
@@ -347,6 +358,52 @@ For more detailed information increase the logging level to :py:const:`logging.D
 This will give a more verbose output when using :py:mod:`iminuit`.
 The logger level should be reset to :py:const:`logging.WARNING` before plotting.
 Otherwise :py:mod:`matplotlib` will create logging messages as well.
+
+Access the fit results
+----------------------
+
+The :py:meth:`~.FitBase.do_fit` method returns a dictionary containing most of the relevant
+results. Additionally the results can be printed to the terminal with :py:meth:`~.FitBase.report`.
+The parameter values can also be accessed via the :py:meth:`~.FitBase.parameter_values` property
+as well as the symmetric and asymmetric parameter uncertainties and the correlation and
+covariance matrices via their respective properties:
+
+.. code-block::
+
+    fit = Fit(my_dataset)  # create a fit object
+    # perform the fit and calculate asymmetric uncertaintes
+    result = fit.do_fit(asymmetric_parameter_errors=True)
+    fit.report()  # print fit results to the terminal
+    par_vals = fit.parameter_values
+    par_errs = fit.parameter_errors
+    par_errs_asym = fit.asymmetric_parameter_errors
+    par_ocv_mat = fit.parameter_cov_mat
+    par_cor_mat = fit.parameter_cor_mat
+
+A typical dictionary returned by the :py:meth:`~.FitBase.do_fit` method looks like this:
+
+.. code-block::
+
+    {'did_fit': True,
+     'cost': 1.7759115950075888,
+     'ndf': 2,
+     'goodness_of_fit': 1.7759115950075888,
+     'cost/ndf': 0.8879557975037944,
+     'chi2_probability': 0.41149607486886164,
+     'parameter_values': OrderedDict([('a', 2.468773761415478), ('b', -0.3219331193129483)]),
+     'parameter_cov_mat': array([[ 0.0443453 , -0.1108627 ],
+                                 [-0.1108627 ,  0.33239252]]),
+     'parameter_errors': OrderedDict([('a', 0.2105624096609012), ('b', 0.576478065203752)]),
+     'parameter_cor_mat': array([[ 1.       , -0.9131448],
+                                 [-0.9131448,  1.       ]]),
+     'asymmetric_parameter_errors': None}
+
+.. note::
+
+    Asymmetric parameter uncertainties are only calculated when :py:meth:`~.FitBase.do_fit` is
+    called with the corresponding keyword :code:`fit.do_fit(asymmetric_parameter_errors=True)`.
+    Otherwise they will be :py:obj:`None`.
+
 
 .. _plotting:
 
