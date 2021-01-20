@@ -473,8 +473,7 @@ class PlotAdapterBase(object):
 
     @property
     def x_range(self):
-        """
-        The 'x' axis plot range.
+        """The 'x' axis plot range.
 
         :rtype: tuple[float, float]
         """
@@ -482,12 +481,11 @@ class PlotAdapterBase(object):
 
     @x_range.setter
     def x_range(self, x_range):
-        self._x_range = x_range
+        self._x_range = tuple(x_range)
 
     @property
     def y_range(self):
-        """
-        The 'y' axis plot range.
+        """The 'y' axis plot range.
 
         :rtype: tuple[float, float]
         """
@@ -495,7 +493,7 @@ class PlotAdapterBase(object):
 
     @y_range.setter
     def y_range(self, y_range):
-        self._y_range = y_range
+        self._y_range = tuple(y_range)
 
     @property
     def x_scale(self):
