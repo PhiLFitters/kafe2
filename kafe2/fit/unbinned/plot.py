@@ -3,6 +3,7 @@ from matplotlib.collections import LineCollection
 import warnings
 
 from .._base import PlotAdapterBase, PlotAdapterException
+from .._aux import add_pad_to_range
 
 
 __all__ = ["UnbinnedPlotAdapter"]
@@ -34,36 +35,13 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
         """
         super(UnbinnedPlotAdapter, self).__init__(fit_object=unbinned_fit_object)
         self.n_plot_points = 100 if len(self.data_x) < 100 else len(self.data_x)
-        self.x_range = self._compute_plot_range_x()
-        self.y_range = self._compute_plot_range_y()
 
-    # -- private methods
+        self.x_range = add_pad_to_range(self._fit.data_range, scale=self.x_scale)
+        _y = self.model_line_y
+        _y_range = np.amin(_y), np.amax(_y)
+        self.y_range = add_pad_to_range(_y_range, scale=self.y_scale)
 
-    def _compute_plot_range_x(self, pad_coeff=1.1, additional_pad=None):
-        if additional_pad is None:
-            additional_pad = (0, 0)
-        if self.x_scale == 'linear':
-            _xmin, _xmax = self._fit.data_range
-            _w = _xmax - _xmin
-            return (0.5 * (_xmin + _xmax - _w * pad_coeff) - additional_pad[0],
-                    0.5 * (_xmin + _xmax + _w * pad_coeff) + additional_pad[1])
-        if self.x_scale == 'log':
-            _expmin, _expmax = np.log10(self._fit.data_range)
-            _w = _expmax - _expmin
-            return (10**(0.5 * (_expmin + _expmax - _w * pad_coeff) - additional_pad[0]),
-                    10**(0.5 * (_expmin + _expmax + _w * pad_coeff) + additional_pad[1]))
-        raise UnbinnedPlotAdapterException("x_range has to be one of {}. Found {} instead.".format(
-            self.AVAILABLE_X_SCALES, self.x_scale))
-
-    def _compute_plot_range_y(self, pad_coeff=1.1, additional_pad=None):
-        if additional_pad is None:
-            additional_pad = (0, 0)
-        model = self.model_y
-        _ymax = np.nanmax(model[model != np.inf])
-        # no negative densities possible, ymin has to be 0, for data density to show
-        _ymin = 0
-        _w = _ymax - _ymin
-        return _ymin, 0.5 * (_ymin + _ymax + _w * pad_coeff) + additional_pad[1]
+    # -- public properties
 
     @property
     def data_x(self):
@@ -115,7 +93,12 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
     def model_line_x(self):
         """x support values for model function"""
         _xmin, _xmax = self.x_range
-        return np.linspace(_xmin, _xmax, self.n_plot_points)
+        if self.x_scale == 'linear':
+            return np.linspace(_xmin, _xmax, self.n_plot_points)
+        if self.x_scale == 'log':
+            return np.geomspace(_xmin, _xmax, self.n_plot_points)
+        raise UnbinnedPlotAdapterException("x_range has to be one of {}. Found {} instead.".format(
+            self.AVAILABLE_X_SCALES, self.x_scale))
 
     @property
     def model_line_y(self):
@@ -147,12 +130,10 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
 
     @PlotAdapterBase.x_scale.setter
     def x_scale(self, scale):
-        # using super setters does not work, copying the code...
-        if scale not in self.AVAILABLE_X_SCALES:
-            raise PlotAdapterException("x_scale {} is not supported for this type of fit, "
-                                       "use one of {}".format(scale, self.AVAILABLE_X_SCALES))
-        self._x_scale = scale
-        self.x_range = self._compute_plot_range_x()
+        update_xrange = self.x_range == add_pad_to_range(self._fit.data_range, scale=self.x_scale)
+        PlotAdapterBase.x_scale.fset(self, scale)  # use parent setter
+        if update_xrange:
+            self.x_range = add_pad_to_range(self._fit.data_range, scale=self.x_scale)
 
     # public methods
     def plot_data(self, target_axes, height=None, **kwargs):
@@ -167,10 +148,14 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
         kwargs.pop('marker', None)  # pop marker keyword, as LineCollection doesn't support it
 
         if height is None:
-            height = self.y_range[1]/10  # set height to 1/10th of the max height of the model
+            if self.y_scale == 'linear':
+                height = self.y_range[1]/10  # set height to 1/10th of the max height of the model
+            elif self.y_scale == 'log':
+                height = 10**(np.log10(self.y_range[1])/10)
 
         data = self.data_x
-        xy_pairs = np.column_stack([np.repeat(data, 2), np.tile([0, height], len(data))])
+        xy_pairs = np.column_stack([np.repeat(data, 2),
+                                    np.tile([self.y_range[0], height], len(data))])
         lines = xy_pairs.reshape([len(data), 2, 2])
         line_segments = LineCollection(lines, **kwargs)
         return target_axes.add_collection(line_segments)

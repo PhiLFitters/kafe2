@@ -1,6 +1,40 @@
+import warnings
 import numpy as np
 
 from copy import deepcopy
+
+
+def add_pad_to_range(data_range, pad_coeff=1.1, additional_pad=None, scale='linear'):
+    """Add padding to a range, so that plots will use more space to the left and right of the
+    data point range.
+
+    :param data_range: The range of the data points
+    :type data_range: tuple[float, float]
+    :param float pad_coeff: The padding coefficient. The default value ``1.1`` adds 10% padding in
+        total, meaning five percent at both sides.
+    :param additional_pad: A :py:obj:`tuple` containing additional static padding for the lower and
+        upper end.
+    :type additional_pad: tuple[float, float] or None
+    :param str scale: Either ``'linear'`` or ``'log'``. If ``'log'``. The space used for
+        calculating the padding.
+    :return tuple[float, float]: The data_range including the additional padding.
+    """
+    if additional_pad is None:
+        additional_pad = (0, 0)
+    if scale == 'linear':
+        _min, _max = data_range
+        _w = _max - _min
+        return (0.5 * (_min + _max - _w * pad_coeff) - additional_pad[0],
+                0.5 * (_min + _max + _w * pad_coeff) + additional_pad[1])
+    if scale == 'log':
+        _expmin, _expmax = np.log10(data_range)
+        _w = _expmax - _expmin
+        return (10 ** (0.5 * (_expmin + _expmax - _w * pad_coeff) - additional_pad[0]),
+                10 ** (0.5 * (_expmin + _expmax + _w * pad_coeff) + additional_pad[1]))
+    warnings.warn("Unknown scale \"{scale}\" when calculating the additional plot padding, "
+                  "returning without additional padding.".format(scale=scale))
+    return data_range
+
 
 # represent errors in a binwise fashion as rectangles
 def step_fill_between(axes,
