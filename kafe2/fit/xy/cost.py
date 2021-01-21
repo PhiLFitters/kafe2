@@ -1,6 +1,3 @@
-import warnings
-import numpy as np
-
 from .._base import (CostFunction, CostFunction_Chi2, CostFunction_NegLogLikelihood,
                      CostFunctionException)
 
@@ -12,13 +9,14 @@ __all__ = [
 
 class XYCostFunction_Chi2(CostFunction_Chi2):
     def __init__(self, errors_to_use='covariance', fallback_on_singular=True, axes_to_use='xy'):
-        """
-        Built-in least-squares cost function for *xy* data.
+        """Built-in least-squares cost function for *xy* data.
 
-        :param errors_to_use: which errors to use when calculating :math:`\chi^2`
-        :type errors_to_use: ``'covariance'``, ``'pointwise'`` or ``None``
-        :param axes_to_use: take into account errors for which axes
-        :type axes_to_use: ``'y'`` or ``'xy'``
+        :param errors_to_use: Which errors to use when calculating :math:`\\chi^2`. This is either
+            `'covariance'``, ``'pointwise'`` or :py:obj:`None`.
+        :type errors_to_use: str or None
+        :param axes_to_use: The errors for the given axes are taken into account when calculating
+            :math:`\\chi^2`. Either ``'y'`` or ``'xy'``
+        :type axes_to_use: str
         """
         self._DATA_NAME = "y_data"
         self._MODEL_NAME = "y_model"

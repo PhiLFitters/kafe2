@@ -1,3 +1,4 @@
+import numpy  # help IDEs with type-hinting inside docstrings
 import numpy as np
 
 from ...config import kc
@@ -10,6 +11,7 @@ __all__ = ["XYPlotAdapter"]
 
 class XYPlotAdapterException(PlotAdapterException):
     pass
+
 
 class XYPlotAdapter(PlotAdapterBase):
 
@@ -35,12 +37,12 @@ class XYPlotAdapter(PlotAdapterBase):
     AVAILABLE_X_SCALES = ('linear', 'log')
 
     def __init__(self, xy_fit_object):
-        """
-        Construct an :py:obj:`XYPlotContainer` for a :py:obj:`~kafe2.fit.xy.XYFit` object:
+        """Construct an :py:obj:`XYPlotContainer` for a :py:obj:`~.XYFit` object:
 
-        :param xy_fit_object: an :py:obj:`~kafe2.fit.xy.XYFit` object
-        :type xy_fit_object: :py:class:`~kafe2.fit.xy.XYFit`
+        :param kafe2.XYFit xy_fit_object: The :py:obj:`~.XYFit` object handled by this plot
+            adapter.
         """
+        self._fit = xy_fit_object  # needed for type hinting to work correctly
         super(XYPlotAdapter, self).__init__(fit_object=xy_fit_object)
         self.n_plot_points = 100 if len(self.data_x) < 50 else 2*len(self.data_x)
         self.x_range = add_pad_to_range(self._fit.x_range, scale=self.x_scale)
@@ -49,42 +51,34 @@ class XYPlotAdapter(PlotAdapterBase):
 
     @property
     def data_x(self):
-        """data x values"""
         return self._fit.x_data
 
     @property
     def data_y(self):
-        """data y values"""
         return self._fit.y_data
 
     @property
     def data_xerr(self):
-        """x error bars for data: total x uncertainty"""
         return self._fit.x_total_error
 
     @property
     def data_yerr(self):
-        """y error bars for data: total y uncertainty"""
         return self._fit.y_total_error
 
     @property
     def model_x(self):
-        """model x values"""
         return self._fit.x_model
 
     @property
     def model_y(self):
-        """model y values"""
         return self._fit.y_model
 
     @property
     def model_xerr(self):
-        """x error bars for model: ``None`` for :py:obj:`IndexedPlotContainer`"""
         return self._fit.x_model_error
 
     @property
     def model_yerr(self):
-        """y error bars for model: total model uncertainty"""
         return self._fit.y_model_error
 
     @PlotAdapterBase.x_scale.setter
@@ -96,7 +90,10 @@ class XYPlotAdapter(PlotAdapterBase):
 
     @property
     def model_line_x(self):
-        """x support values for model function"""
+        """*x* support values for model function. Adapts spacing to :py:obj:`.x_scale`.
+
+        :rtype: numpy.ndarray[float]
+        """
         _xmin, _xmax = self.x_range
         if self.x_scale == 'linear':
             return np.linspace(_xmin, _xmax, self.n_plot_points)
@@ -107,12 +104,16 @@ class XYPlotAdapter(PlotAdapterBase):
 
     @property
     def model_line_y(self):
-        """y values at support points for model function"""
+        """*y* values of the model function at the support points :py:obj:`.model_line_x`.
+
+        :rtype: numpy.ndarray[float]
+        """
         return self._fit.eval_model_function(x=self.model_line_x)
 
     @property
     def y_error_band(self):
-        """1D array representing the uncertainty band around the model function.
+        """1D array representing the uncertainty band around the model function at the support
+        points :py:obj:`.model_line_x`.
 
         :rtype: numpy.ndarray[float]
         """
@@ -121,11 +122,13 @@ class XYPlotAdapter(PlotAdapterBase):
     # public methods
 
     def plot_data(self, target_axes, error_contributions=('data',), **kwargs):
-        """
-        Plot the measurement data to a specified ``matplotlib`` ``Axes`` object.
+        """Plot the measurement data to a specified :py:obj:`matplotlib.axes.Axes` object.
 
-        :param target_axes: ``matplotlib`` ``Axes`` object
-        :param kwargs: keyword arguments accepted by the ``matplotlib`` methods ``errorbar`` or ``plot``
+        :param matplotlib.axes.Axes target_axes: The :py:obj:`matplotlib` axes used for plotting.
+        :param error_contributions: Which error contributions to include when plotting the data.
+            Can either be ``data``, ``'model'`` or both.
+        :type error_contributions: str or Tuple[str]
+        :param dict kwargs: Keyword arguments accepted by :py:obj:`matplotlib.pyplot.errorbar`.
         :return: plot handle(s)
         """
 
@@ -138,11 +141,13 @@ class XYPlotAdapter(PlotAdapterBase):
                                     **kwargs)
 
     def plot_model(self, target_axes, error_contributions=('model',), **kwargs):
-        """
-        Plot the measurement data to a specified ``matplotlib`` ``Axes`` object.
+        """Plot the model data to a specified :py:obj:`matplotlib.axes.Axes` object.
 
-        :param target_axes: ``matplotlib`` ``Axes`` object
-        :param kwargs: keyword arguments accepted by the ``matplotlib`` methods ``errorbar`` or ``plot``
+        :param matplotlib.axes.Axes target_axes: The :py:obj:`matplotlib` axes used for plotting.
+        :param error_contributions: Which error contributions to include when plotting the model.
+        :type error_contributions: str or Tuple[str]
+            Can either be ``data``, ``'model'`` or both.
+        :param dict kwargs: Keyword arguments accepted by :py:obj:`matplotlib.pyplot.errorbar`.
         :return: plot handle(s)
         """
 
@@ -155,11 +160,10 @@ class XYPlotAdapter(PlotAdapterBase):
                                     **kwargs)
 
     def plot_model_line(self, target_axes, **kwargs):
-        """
-        Plot the model function to a specified matplotlib ``Axes`` object.
+        """Plot the model function to a specified :py:obj:`matplotlib.axes.Axes` object.
 
-        :param target_axes: ``matplotlib`` ``Axes`` object
-        :param kwargs: keyword arguments accepted by the ``matplotlib`` ``plot`` method
+        :param matplotlib.axes.Axes target_axes: The :py:obj:`matplotlib` axes used for plotting.
+        :param dict kwargs: Keyword arguments accepted by :py:obj:`matplotlib.pyplot.plot`.
         :return: plot handle(s)
         """
         # TODO: how to handle 'data' errors and 'model' errors?
@@ -168,11 +172,10 @@ class XYPlotAdapter(PlotAdapterBase):
                                 **kwargs)
 
     def plot_model_error_band(self, target_axes, **kwargs):
-        """
-        Plot an error band around the model model function.
+        """Plot an error band around the model model function.
 
-        :param target_axes: ``matplotlib`` ``Axes`` object
-        :param kwargs: keyword arguments accepted by the ``matplotlib`` ``fill_between`` method
+        :param matplotlib.axes.Axes target_axes: The :py:obj:`matplotlib` axes used for plotting.
+        :param dict kwargs: Keyword arguments accepted by :py:obj:`matplotlib.pyplot.fill_between`.
         :return: plot handle(s)
         """
         if self._fit.did_fit and (self._fit.has_errors or not self._fit._cost_function.needs_errors):
@@ -185,12 +188,14 @@ class XYPlotAdapter(PlotAdapterBase):
         return None  # don't plot error band if fitter input data has no errors...
 
     def plot_ratio(self, target_axes, error_contributions=('data',), **kwargs):
-        """
-        Plot the data/model ratio to a specified ``matplotlib`` ``Axes`` object.
+        """Plot the data/model ratio to a specified :py:obj:`matplotlib.axes.Axes` object.
 
-        :param target_axes: ``matplotlib`` ``Axes`` object
-        :param kwargs: keyword arguments accepted by the ``matplotlib`` methods ``errorbar`` or ``plot``
-        :return: plot handle(s)
+        :param matplotlib.axes.Axes target_axes: The :py:obj:`matplotlib` axes used for plotting.
+        :param error_contributions: Which error contributions to include when plotting the data.
+            Can either be ``data``, ``'model'`` or both.
+        :type error_contributions: str or Tuple[str]
+        :param dict kwargs: Keyword arguments accepted by :py:obj:`matplotlib.pyplot.errorbar`.
+        :return: plot handle(s)        :return: error id
         """
 
         _yerr = self._get_total_error(error_contributions)
@@ -207,11 +212,11 @@ class XYPlotAdapter(PlotAdapterBase):
         )
 
     def plot_ratio_error_band(self, target_axes, **kwargs):
-        """
-        Plot model error band around the data/model ratio to a specified ``matplotlib`` ``Axes`` object.
+        """Plot model error band around the data/model ratio to specified
+        :py:obj:`matplotlib.axes.Axes` object.
 
-        :param target_axes: ``matplotlib`` ``Axes`` object
-        :param kwargs: keyword arguments accepted by the ``matplotlib`` methods ``errorbar`` or ``plot``
+        :param matplotlib.axes.Axes target_axes: The :py:obj:`matplotlib` axes used for plotting.
+        :param dict kwargs: Keyword arguments accepted by :py:obj:`matplotlib.pyplot.fill_between`.
         :return: plot handle(s)
         """
         if self._fit.did_fit and (self._fit.has_errors or not self._fit._cost_function.needs_errors):

@@ -1,3 +1,4 @@
+import typing  # help IDEs with type-hinting inside docstrings
 import numpy as np
 import scipy.stats
 import six
@@ -76,21 +77,26 @@ class XYFitEnsemble(FitEnsembleBase):
     def __init__(self, n_experiments, x_support, model_function, model_parameters,
                  cost_function=XYCostFunction_Chi2(axes_to_use='y', errors_to_use='covariance'),
                  requested_results=None):
-        """
-        Construct an :py:obj:`~kafe2.fit.XYFitEnsemble` object.
+        """Construct an :py:obj:`~kafe2.fit.XYFitEnsemble` object.
 
-        :param n_experiments: number of pseudoexperiments to perform
+        :param n_experiments: Number of pseudo experiments to perform.
         :type n_experiments: int
-        :param x_support: *x* values to use as support for calculating the "true" model ("true" *x*)
-        :type x_support: iterable of float
-        :param model_function: the model function
-        :type model_function: :py:class:`~kafe2.fit.indexed.XYModelFunction` or unwrapped native Python function
-        :param model_parameters: parameters of the "true" model
-        :type model_parameters: iterable of float
-        :param cost_function: the cost function
-        :type cost_function: :py:class:`~kafe2.fit._base.CostFunctionBase`-derived or unwrapped native Python function
-        :param requested_results: list of result variables to collect for each toy fit
-        :type requested_results: iterable of str
+        :param x_support: *x* values to use as support for calculating the "true" model
+            ("true" *x*).
+        :type x_support: typing.Sequence[float]
+        :param model_function: The model function. Either a
+            :py:class:`~kafe2.fit.indexed.XYModelFunction` object or an unwrapped native Python
+            function.
+        :type model_function: typing.Callable
+        :param model_parameters: Parameters of the "true" model
+        :type model_parameters: typing.Sequence[float]
+        :param cost_function: The cost function used for the fits. Either a
+            :py:class:`~kafe2.fit._base.CostFunctionBase`-derived object or an unwrapped native
+            Python function.
+        :type cost_function: typing.Callable
+        :param requested_results: List of result variables to collect for each toy fit. If
+            :py:obj:`None` it will default to ``('y_pulls', 'parameter_pulls', 'cost')``.
+        :type requested_results: typing.Sequence[str] or None.
         """
         self._n_exp = n_experiments
         self._ref_x_data = np.asarray(x_support, dtype=float)
@@ -313,27 +319,38 @@ class XYFitEnsemble(FitEnsembleBase):
         """property for ensemble variable 'cost'"""
         return self._toy_fit.cost_function_value
 
-
     # -- public properties
 
     @property
     def n_exp(self):
-        """the number of pseudo-experiments to perform"""
+        """The number of pseudo-experiments to perform.
+
+        :rtype: int
+        """
         return self._n_exp
 
     @property
     def n_par(self):
-        """the number of parameters"""
+        """The number of parameters.
+
+        :rtype: int
+        """
         return self._n_par
 
     @property
     def n_dat(self):
-        """the number of degrees of freedom for the fit"""
+        """The number of data points used for the fit.
+
+        :rtype: int
+        """
         return self._toy_fit.data_container.size
 
     @property
     def n_df(self):
-        """the number of degrees of freedom for the fit"""
+        """The number of degrees of freedom for the fit
+
+        :rtype: int
+        """
         # FIXME: not generally true -> update to handle constrained parameters
         # TODO: not applicable for all cost functions -> find a flexible solution
         return self.n_dat - self.n_par
@@ -369,12 +386,12 @@ class XYFitEnsemble(FitEnsembleBase):
             self._gather_results_from_toy_fit(_i_exp)
 
     def get_results(self, *results):
-        """
-        Return a dictionary containing the ensembles of result variables.
+        """Return a dictionary containing the ensembles of result variables.
 
-        :param results: names of result variables to retrieve
-        :type results: iterable of str. Calling without arguments retrieves *all* collected results.
-        :return: dict
+        :param results: Names of result variables to retrieve. Calling without arguments retrieves
+            *all* collected results.
+        :type results: typing.Iterable[str]
+        :rtype: dict
         """
         if not results:
             results = self._requested_results
@@ -396,14 +413,15 @@ class XYFitEnsemble(FitEnsembleBase):
         return _dict_to_return
 
     def get_results_statistics(self, results='all', statistics='all'):
-        """
-        Return a dictionary containing statistics (e.g. mean) of the result variables.
+        """Return a dictionary containing statistics (e.g. mean) of the result variables.
 
-        :param results: names of retrieved fit variable for which to return statistics
-        :type results: iterable of str or ``'all'`` (get statistics for all retrieved variables)
-        :param statistics: names of statistics to retrieve for each result variable
-        :type statistics: iterable of str or ``'all'`` (get all statistics for each retrieved variable)
-        :return: dict
+        :param results: Names of retrieved fit variable for which to return statistics. If
+            ``'all'``, get statistics for all retrieved variables
+        :type results: typing.Iterable[str] or str
+        :param statistics: Names of statistics to retrieve for each result variable. If ``'all'``,
+            get all statistics for each retrieved variable
+        :type statistics: typing.Iterable[str] or str
+        :rtype: dict
         """
         if results == 'all':
             results = self._requested_results
@@ -434,12 +452,13 @@ class XYFitEnsemble(FitEnsembleBase):
 
     def plot_result_distributions(self, results='all',
                                   show_legend=True):
-        """
-        Make plots with histograms of the requested fit variable values across all pseudo-experiments.
+        """Make plots with histograms of the requested fit variable values across all
+        pseudo-experiments.
 
-        :param results: names of retrieved fit variable for which to generate plots
-        :type results: iterable of str or ``'all'`` (make plots for all retrieved variables)
-        :param show_legend: if ``True``, show a plot legend on each figure
+        :param results: Names of retrieved fit variable for which to generate plots. If
+            ``'all'``, plots for all retrieved variables will be made.
+        :type results: typing.Iterable[str] or str
+        :param show_legend: If a legend is shown on each figure.
         :type show_legend: bool
         """
         if results == 'all':
@@ -536,12 +555,12 @@ class XYFitEnsemble(FitEnsembleBase):
 
     def plot_result_scatter(self, results='all',
                                   show_legend=True):
-        """
-        Make plots with histograms of the requested fit variable values across all pseudo-experiments.
+        """Make scatter plots of the requested fit variable values across all pseudo-experiments.
 
-        :param results: names of retrieved fit variable for which to generate plots
-        :type results: iterable of str or ``'all'`` (make plots for all retrieved variables)
-        :param show_legend: if ``True``, show a plot legend on each figure
+        :param results: Names of retrieved fit variable for which to generate plots. If
+            ``'all'``, plots for all retrieved variables will be made.
+        :type results: typing.Iterable[str] or str
+        :param show_legend: If a legend is shown on each figure.
         :type show_legend: bool
         """
         if results == 'all':

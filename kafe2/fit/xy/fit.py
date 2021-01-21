@@ -1,17 +1,17 @@
+import typing  # help IDEs with type-hinting inside docstrings
+import numpy  # help IDEs with type-hinting inside docstrings
 from collections import OrderedDict
 from copy import deepcopy
-
 import numpy as np
 
 from ...core.error import CovMat
 from ...tools import print_dict_as_table
-from ...config import kc
 from .._base import FitException, FitBase, DataContainerBase, ModelFunctionBase
 from .container import XYContainer
 from .cost import XYCostFunction_Chi2, STRING_TO_COST_FUNCTION
 from .model import XYParametricModel
 from .plot import XYPlotAdapter
-from ..util import function_library, add_in_quadrature, collect, invert_matrix
+from ..util import function_library, add_in_quadrature, invert_matrix
 
 
 __all__ = ['XYFit', 'XYFitException']
@@ -51,18 +51,21 @@ class XYFit(FitBase):
                     axes_to_use='xy', errors_to_use='covariance'),
                  minimizer=None, minimizer_kwargs=None,
                  dynamic_error_algorithm="nonlinear"):
-        """
-        Construct a fit of a model to *xy* data.
+        """Construct a fit of a model to *xy* data.
 
-        :param xy_data: the x and y measurement values
-        :type xy_data: (2, N)-array of float
-        :param model_function: the model function
-        :type model_function: :py:class:`~kafe2.fit.xy.XYModelFunction` or unwrapped native Python function
-        :param cost_function: the cost function
-        :type cost_function: :py:class:`~kafe2.fit._base.CostFunctionBase`-derived or unwrapped native Python function
-        :param minimizer: the minimizer to use for fitting.
-        :type minimizer: None, "iminuit", "tminuit", or "scipy".
-        :param minimizer_kwargs: dictionary with kwargs for the minimizer.
+        :param xy_data: A :py:obj:`~.XYContainer` or a raw 2D array of shape ``(2, N)``
+         containing the measurement data.
+        :type xy_data: XYContainer or typing.Sequence
+        :param model_function: The model function as a native Python function where the first
+            argument denotes the independent *x* variable or an already defined
+            :py:class:`~kafe2.fit.xy.XYModelFunction` object.
+        :type model_function: typing.Callable
+        :param cost_function: The cost function this fit uses to find the best parameters.
+        :type cost_function: str or typing.Callable
+        :param minimizer: The minimizer to use for fitting. Either :py:obj:`None`, ``"iminuit"``,
+            ``"tminuit"``, or ``"scipy"``.
+        :type minimizer: str or None
+        :param minimizer_kwargs: Dictionary with kwargs for the minimizer.
         :type minimizer_kwargs: dict
         """
         super(XYFit, self).__init__(
@@ -230,270 +233,412 @@ class XYFit(FitBase):
 
     @property
     def has_x_errors(self):
-        """``True`` if at least one *x* uncertainty source has been defined"""
+        """:py:obj:`True`` if at least one *x* uncertainty source has been defined.
+
+        :rtype: bool
+        """
         return self._data_container.has_x_errors or self._param_model.has_x_errors
 
     @property
     def has_y_errors(self):
-        """``True`` if at least one *y* uncertainty source has been defined"""
+        """:py:obj:`True`` if at least one *y* uncertainty source has been defined
+
+        :rtype: bool
+        """
         return self._data_container.has_y_errors or self._param_model.has_y_errors
 
     @property
     def x_data(self):
-        """array of measurement *x* values"""
+        """1D array containing the measurement *x* values.
+
+        :rtype: numpy.ndarray[float]
+        """
         return self._data_container.x
 
     @property
     def x_model(self):
+        """1D array containing the model *x* values. The same as :py;obj:`.x_data` for an
+        :py:obj:`~.XYFit`.
+
+        :rtype: numpy.ndarray[float]
+        """
         return self.x_data
 
     @property
     def y_data(self):
-        """array of measurement data *y* values"""
+        """1D array containing the measurement *y* values.
+
+        :rtype: numpy.ndarray[float]
+        """
         return self._data_container.y
 
     @property
     def model(self):
-        """(2, N)-array containing *x* and *y* model values"""
+        """2D array of shape ``(2, N)`` containing the *x* and *y* model values
+
+        :rtype: numpy.ndarray
+        """
         return self._param_model.data
 
     @property
     def x_data_error(self):
-        """array of pointwise *x* data uncertainties"""
+        """1D array containing the pointwise *x* data uncertainties
+
+        :rtype: numpy.ndarray[float]
+        """
         return self._data_container.x_err
 
     @property
     def y_data_error(self):
-        """array of pointwise *y* data uncertainties"""
+        """1D array containing the pointwise *y* data uncertainties
+
+        :rtype: numpy.ndarray[float]
+        """
         return self._data_container.y_err
 
     @property
     def data_error(self):
-        """array of pointwise *xy* uncertainties (projected onto the *y* axis)"""
+        """1D array containing the pointwise *xy* uncertainties projected onto the *y* axis.
+
+        :rtype: numpy.ndarray[float]
+        """
         return self._project_x_onto_y(x=self.x_data_error, y=self.y_data_error, sqrt=True)
 
     @property
     def x_data_cov_mat(self):
-        """the data *x* covariance matrix"""
+        """2D array of shape ``(N, N)`` containing the data *x* covariance matrix.
+
+        :rtype: numpy.ndarray
+        """
         return self._data_container.x_cov_mat
 
     @property
     def y_data_cov_mat(self):
-        """the data *y* covariance matrix"""
+        """2D array of shape ``(N, N)`` containing the data *y* covariance matrix.
+
+        :rtype: numpy.ndarray
+        """
         return self._data_container.y_cov_mat
 
     @property
     def data_cov_mat(self):
-        """the data *xy* covariance matrix (projected onto the *y* axis)"""
+        """2D array of shape ``(N, N)`` containing the data *xy* covariance matrix (projected
+        onto the *y* axis).
+
+        :rtype: numpy.ndarray
+        """
         return self._project_x_onto_y(x=self.x_data_cov_mat, y=self.y_data_cov_mat, sqrt=False)
 
     @property
     def x_data_cov_mat_inverse(self):
-        """inverse of the data *x* covariance matrix (or ``None`` if singular)"""
+        """2D array of shape ``(N, N)`` containing the inverse of the data *x* covariance matrix or
+        :py:obj:`None` if singular.
+
+        :rtype: numpy.ndarray or None
+        """
         return self._data_container.x_cov_mat_inverse
 
     @property
     def y_data_cov_mat_inverse(self):
-        """inverse of the data *y* covariance matrix (or ``None`` if singular)"""
+        """2D array of shape ``(N, N)`` containing the inverse of the data *y* covariance matrix or
+        :py:obj:`None` if singular.
+
+        :rtype: numpy.ndarray or None
+        """
         return self._data_container.y_cov_mat_inverse
 
     @property
     def data_cov_mat_inverse(self):
-        """
-        inverse of the data *xy* covariance matrix (projected onto the *y* axis, ``None`` if
-        singular)
+        """2D array of shape ``(N, N)`` containing the inverse of the data *xy* covariance matrix
+        projected onto the *y* axis. :py:obj:`None` if singular.
+
+        :rtype: numpy.ndarray or None
         """
         return invert_matrix(self.data_cov_mat)
 
     @property
     def x_data_cor_mat(self):
-        """the data *x* correlation matrix"""
+        """2D array of shape ``(N, N)`` containing the data *x* correlation matrix.
+
+        :rtype: numpy.ndarray
+        """
         return self._data_container.x_cor_mat
 
     @property
     def y_data_cor_mat(self):
-        """the data *y* correlation matrix"""
+        """2D array of shape ``(N, N)`` containing the data *y* correlation matrix.
+
+        :rtype: numpy.ndarray
+        """
         return self._data_container.y_cor_mat
 
     @property
     def data_cor_mat(self):
-        """the data *xy* correlation matrix (projected onto the *y* axis)"""
+        """2D array of shape ``(N, N)`` containing the data *xy* correlation matrix projected
+        onto the *y* axis.
+
+        :rtype: numpy.ndarray
+        """
         return CovMat(self.data_cov_mat).cor_mat
 
     @property
     def y_model(self):
-        """array of *y* model predictions for the data points"""
+        """1D array of *y* model predictions for the data points.
+
+        :rtype: numpy.ndarray[float]
+        """
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.y
 
     @property
     def x_model_error(self):
-        """array of pointwise model *x* uncertainties"""
+        """1D array of pointwise model *x* uncertainties.
+
+        :rtype: numpy.ndarray[float]
+        """
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.x_err
 
     @property
     def y_model_error(self):
-        """array of pointwise model *y* uncertainties"""
+        """1D array of pointwise model *y* uncertainties.
+
+        :rtype: numpy.ndarray[float]
+        """
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.y_err
 
     @property
     def model_error(self):
-        """array of pointwise model *xy* uncertainties (projected onto the *y* axis)"""
+        """1D array of pointwise model *xy* uncertainties projected onto the *y* axis.
+
+        :rtype: numpy.ndarray[float]
+        """
         return self._project_x_onto_y(x=self.x_model_error, y=self.y_model_error, sqrt=True)
 
     @property
     def x_model_cov_mat(self):
-        """the model *x* covariance matrix"""
+        """2D array of shape ``(N, N)`` containing the model *x* covariance matrix.
+
+        :rtype: numpy.ndarray
+        """
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.x_cov_mat
 
     @property
     def y_model_cov_mat(self):
-        """the model *y* covariance matrix"""
-        self._param_model.parameters = self.parameter_values # this is lazy, so just do it
+        """2D array of shape ``(N, N)`` containing the model *y* covariance matrix.
+
+        :rtype: numpy.ndarray
+        """
+        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.y_cov_mat
 
     @property
     def model_cov_mat(self):
-        """the model *xy* covariance matrix (projected onto the *y* axis)"""
+        """2D array of shape ``(N, N)`` containing the model *xy* covariance matrix projected onto
+        the *y* axis.
+
+        :rtype: numpy.ndarray
+        """
         return self._project_x_onto_y(x=self.x_model_cov_mat, y=self.y_model_cov_mat, sqrt=False)
 
     @property
     def x_model_cov_mat_inverse(self):
-        """inverse of the model *x* covariance matrix (or ``None`` if singular)"""
+        """2D array of shape ``(N, N)`` containing the inverse of the model *x* covariance matrix
+        or :py:obj:`None` if singular.
+
+        :rtype: numpy.ndarray or None
+        """
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.x_cov_mat_inverse
 
     @property
     def y_model_cov_mat_inverse(self):
-        """inverse of the model *y* covariance matrix (or ``None`` if singular)"""
+        """2D array of shape ``(N, N)`` containing the inverse of the model *y* covariance matrix
+        or :py:obj:`None` if singular.
+
+        :rtype: numpy.ndarray
+        """
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.y_cov_mat_inverse
 
     @property
     def model_cov_mat_inverse(self):
-        """
-        inverse of the model *xy* covariance matrix (projected onto the *y* axis, ``None`` if
-        singular)
+        """2D array of shape ``(N, N)`` containing the inverse of the model *xy* covariance matrix
+        projected onto the *y* axis. :py:obj:`None`` if singular.
+
+        :rtype: numpy.ndarray
         """
         return invert_matrix(self.model_cov_mat)
 
     @property
     def x_model_cor_mat(self):
-        """the model *x* correlation matrix"""
+        """2D array of shape ``(N, N)`` containing the model *x* correlation matrix.
+
+        :rtype: numpy.ndarray
+        """
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.x_cor_mat
 
     @property
     def y_model_cor_mat(self):
-        """the model *y* correlation matrix"""
+        """2D array of shape ``(N, N)`` containing the model *y* correlation matrix.
+
+        :rtype: numpy.ndarray
+        """
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.y_cor_mat
 
     @property
     def model_cor_mat(self):
-        """the model *xy* correlation matrix (projected onto the *y* axis)"""
+        """2D array of shape ``(N, N)`` containing the model *xy* correlation matrix projected onto
+        the *y* axis.
+
+        :rtype: numpy.ndarray
+        """
         return CovMat(self.model_cov_mat).cor_mat
 
     @property
     def x_total_error(self):
-        """array of pointwise total *x* uncertainties"""
+        """1D array of total pointwise *x* uncertainties.
+
+        :rtype: numpy.ndarray[float]
+        """
         return add_in_quadrature(self.x_model_error, self.x_data_error)
 
     @property
     def y_total_error(self):
-        """array of pointwise total *y* uncertainties"""
+        """1D array of total pointwise *y* uncertainties
+
+        :rtype: numpy.ndarray[float]
+        """
         return add_in_quadrature(self.y_model_error, self.y_data_error)
 
     @property
     def total_error(self):
-        """array of pointwise total *xy* uncertainties (projected onto the *y* axis)"""
+        """1D array of the total pointwise *xy* uncertainties projected onto the *y* axis.
+
+        :rtype: numpy.ndarray[float]
+        """
         return self._project_x_onto_y(x=self.x_total_error, y=self.y_total_error, sqrt=True)
 
     @property
     def x_total_cov_mat(self):
-        """the total *x* covariance matrix"""
+        """2D array of shape ``(N, N)`` containing the total *x* covariance matrix.
+
+        :rtype: numpy.ndarray
+        """
         return self.x_data_cov_mat + self.x_model_cov_mat
 
     @property
     def y_total_cov_mat(self):
-        """the total *y* covariance matrix"""
+        """2D array of shape ``(N, N)`` containing the total *y* covariance matrix.
+
+        :rtype: numpy.ndarray
+        """
         return self.y_data_cov_mat + self.y_model_cov_mat
 
     @property
     def total_cov_mat(self):
-        """the total *xy* covariance matrix (projected onto the *y* axis)"""
+        """2D array of shape ``(N, N)`` containing the total *xy* covariance matrix projected onto
+        the *y* axis.
+
+        :rtype: numpy.ndarray
+        """
         return self._project_x_onto_y(x=self.x_total_cov_mat, y=self.y_total_cov_mat, sqrt=False)
 
     @property
     def x_total_cov_mat_inverse(self):
-        """inverse of the total *x* covariance matrix (or ``None`` if singular)"""
+        """2D array of shape ``(N, N)`` containing inverse of the total *x* covariance matrix.
+        :py:obj:`None` if singular.
+
+        :rtype: numpy.ndarray
+        """
         return invert_matrix(self.x_total_cov_mat)
 
     @property
     def y_total_cov_mat_inverse(self):
-        """inverse of the total *y* covariance matrix (or ``None`` if singular)"""
+        """2D array of shape ``(N, N)`` containing inverse of the total *y* covariance matrix.
+        :py:obj:`None` if singular.
+
+        :rtype: numpy.ndarray
+        """
         return invert_matrix(self.y_total_cov_mat)
 
     @property
     def total_cov_mat_inverse(self):
-        """
-        inverse of the total *xy* covariance matrix (projected onto the *y* axis, ``None`` if
-        singular)
+        """2D array of shape ``(N, N)`` containing theinverse of the total *xy* covariance matrix
+        projected onto the *y* axis. :py:obj:`None` if singular.
+
+        :rtype: numpy.ndarray
         """
         return invert_matrix(self.total_cov_mat)
 
     @property
     def x_total_cor_mat(self):
-        """the total *x* correlation matrix"""
+        """2D array of shape ``(N, N)`` containing the total *x* correlation matrix.
+
+        :rtype: numpy.ndarray
+        """
         return CovMat(self.x_total_cov_mat).cor_mat
 
     @property
     def y_total_cor_mat(self):
-        """the total *y* correlation matrix"""
+        """2D array of shape ``(N, N)`` containing the total *y* correlation matrix.
+
+        :rtype: numpy.ndarray
+        """
         return CovMat(self.y_total_cov_mat).cor_mat
 
     @property
     def x_range(self):
-        """range of the *x* measurement data"""
+        """Minimum and maximum values of the *x* measurement data.
+
+        :rtype: tuple[float, float]
+        """
         return self._data_container.x_range
 
     @property
     def y_range(self):
-        """range of the *y* measurement data"""
+        """Minimum and maximum values of the *y* measurement data.
+
+        :rtype: tuple[float, float]
+        """
         return self._data_container.y_range
 
     # -- public methods
 
     def add_error(self, axis, err_val,
                   name=None, correlation=0, relative=False, reference='data'):
-        """
-        Add an uncertainty source for axis to the data container.
-        Returns an error id which uniquely identifies the created error source.
+        """Add an uncertainty source for an axis to the data container.
 
         :param axis: ``'x'``/``0`` or ``'y'``/``1``
         :type axis: str or int
-        :param err_val: pointwise uncertainty/uncertainties for all data points
-        :type err_val: float or iterable of float
-        :param correlation: correlation coefficient between any two distinct data points
+        :param err_val: Pointwise uncertainties or a single uncertainty for all data points.
+        :type err_val: float or typing.Sequence[float]
+        :param name: Unique name for this uncertainty source. If :py:obj:`None`, the name
+            of the error source will be set to a random alphanumeric string.
+        :type name: str or None
+        :param correlation: Correlation coefficient between any two distinct data points.
         :type correlation: float
-        :param relative: if ``True``, **err_val** will be interpreted as a *relative* uncertainty
+        :param relative: If :py:obj:`True`, **err_val** will be interpreted as a *relative*
+            uncertainty.
         :type relative: bool
-        :param reference: which reference values to use when calculating absolute errors from relative errors
-        :type reference: 'data' or 'model'
-        :return: error id
-        :rtype: int
+        :param reference: Which reference values to use when calculating absolute errors from
+            relative errors. Either ``'data'`` or ``'model'``.
+        :type reference: str
+        :return: An error id uniquely identifying the created error source.
+        :rtype: str
         """
         return super(XYFit, self).add_error(err_val=err_val,
                                             name=name,
@@ -504,23 +649,29 @@ class XYFit(FitBase):
 
     def add_matrix_error(self, axis, err_matrix, matrix_type,
                          name=None, err_val=None, relative=False, reference='data'):
-        """
-        Add a matrix uncertainty source for an axis to the data container.
-        Returns an error id which uniquely identifies the created error source.
+        """Add a matrix uncertainty source for an axis to the data container.
 
         :param axis: ``'x'``/``0`` or ``'y'``/``1``
         :type axis: str or int
-        :param err_matrix: covariance or correlation matrix
-        :param matrix_type: one of ``'covariance'``/``'cov'`` or ``'correlation'``/``'cor'``
+        :param err_matrix: 2D array of shape ``(size, size)`` containing the covariance or
+            correlation matrix
+        :type err_matrix: numpy.ndarray
+        :param matrix_type: One of ``'covariance'``/``'cov'`` or ``'correlation'``/``'cor'``.
         :type matrix_type: str
-        :param err_val: the pointwise uncertainties (mandatory if only a correlation matrix is given)
-        :type err_val: iterable of float
-        :param relative: if ``True``, the covariance matrix and/or **err_val** will be interpreted as a *relative* uncertainty
+        :param name: Unique name for this uncertainty source. If :py:obj:`None`, the name
+            of the error source will be set to a random alphanumeric string.
+        :type name: str or None
+        :param err_val: The pointwise uncertainties. This is mandatory if only a correlation
+            matrix is given.
+        :type err_val: typing.Sequence[float]
+        :param relative: If :py:obj:`True`, the covariance matrix and/or **err_val** will be
+            interpreted as a *relative* uncertainty.
         :type relative: bool
-        :param reference: which reference values to use when calculating absolute errors from relative errors
-        :type reference: 'data' or 'model'
-        :return: error id
-        :rtype: int
+        :param reference: Which reference values to use when calculating absolute errors from
+            relative errors. Either ``'data'`` or ``'model'``.
+        :type reference: str
+        :return: An error id uniquely identifying the created error source.
+        :rtype: str
         """
         return super(XYFit, self).add_matrix_error(err_matrix=err_matrix,
                                                    matrix_type=matrix_type,
@@ -531,30 +682,33 @@ class XYFit(FitBase):
                                                    axis=axis)
 
     def eval_model_function(self, x=None, model_parameters=None):
-        """
-        Evaluate the model function.
+        """Evaluate the model function.
 
-        :param x: values of *x* at which to evaluate the model function (if ``None``, the data *x* values are used)
-        :type x: iterable of float
-        :param model_parameters: the model parameter values (if ``None``, the current values are used)
-        :type model_parameters: iterable of float
-        :return: model function values
-        :rtype: :py:class:`numpy.ndarray`
+        :param x: 1D array containing the values of *x* at which to evaluate the model function. If
+            :py:obj:`None`, the data *x* values :py:obj:`~XYFit.x_data` are used.
+        :type x: numpy.ndarray[float]
+        :param model_parameters: The model parameter values. If :py:obj:`None`, the current values
+            :py:obj:`~.XYFit.parameter_values` are used.
+        :type model_parameters: typing.Collection[float]
+        :return: Model function values at the given *x*-values.
+        :rtype: numpy.ndarray[float]
         """
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
         return self._param_model.eval_model_function(x=x, model_parameters=model_parameters)
 
     def eval_model_function_derivative_by_parameters(self, x=None, model_parameters=None):
-        """
-        Evaluate the model function derivative for each parameter.
+        """Evaluate the derivative of the model function with respect to the model parameters.
 
-        :param x: values of *x* at which to evaluate the model function (if ``None``, the data *x* values are used)
-        :type x: iterable of float
-        :param model_parameters: the model parameter values (if ``None``, the current values are used)
-        :type model_parameters: iterable of float
-        :return: model function values
-        :rtype: :py:class:`numpy.ndarray`
+        :param x: 1D array containing the *x* values at which to evaluate the model function. If
+            :py:obj:`None`, the data *x* values :py:obj:`~XYFit.x_data` are used.
+        :type x: numpy.ndarray[float]
+        :param model_parameters: 1D array containing the model parameter values. If :py:obj:`None`,
+            the current values :py:obj:`~XYFit.parameter_values` are used.
+        :type model_parameters: typing.Collection[float]
+        :return: 2D array of shape ``(par, N)`` containing the model function derivatives for
+            each parameter at the given *x* values.
+        :rtype: numpy.ndarray[numpy.ndarray[float]]
         """
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
