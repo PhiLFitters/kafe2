@@ -558,4 +558,36 @@ class XYFit(FitBase):
         """
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
-        return self._param_model.eval_model_function_derivative_by_parameters(x=x, model_parameters=model_parameters)
+        return self._param_model.eval_model_function_derivative_by_parameters(
+            x=x, model_parameters=model_parameters)
+
+    def error_band(self, x=None):
+        """Calculate the symmetric model uncertainty at every given point *x*. This is only
+        possible after a fit has been performed with the :py:meth:`.do_fit` method.
+
+        :param numpy.ndarray[float] x: 1D array containing the values of *x* at which to calculate
+            the model uncertainty.
+        :return: 1D array containing the model uncertainties at the given *x* values.
+        :rtype: numpy.ndarray[float]
+        """
+        if not self.did_fit:
+            raise XYFitException('Cannot calculate an error band without first performing a fit.')
+        if x is None:
+            x = self.x_model
+        if self.parameter_cov_mat is None:
+            return np.zeros_like(x)
+
+        _f_deriv_by_params = self.eval_model_function_derivative_by_parameters(
+            x=x, model_parameters=self.parameter_values)
+        # here: df/dp[par_idx]|x=x[x_idx] = _f_deriv_by_params[par_idx][x_idx]
+
+        _f_deriv_by_params = _f_deriv_by_params.T
+        # here: df/dp[par_idx]|x=x[x_idx] = _f_deriv_by_params[x_idx][par_idx]
+
+        _band_y = np.zeros_like(x)
+        _n_poi = self.parameter_values.size
+        for _x_idx, _x_val in enumerate(x):
+            _p_res = _f_deriv_by_params[_x_idx]
+            _band_y[_x_idx] = _p_res.dot(self.parameter_cov_mat[:_n_poi, :_n_poi]).dot(_p_res)
+
+        return np.sqrt(_band_y)
