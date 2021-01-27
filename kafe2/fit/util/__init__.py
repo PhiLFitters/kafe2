@@ -38,6 +38,29 @@ def invert_matrix(mat):
         return None
 
 
+def cholesky_decomposition(mat):
+    """
+    Perform Cholesky decomposition of a matrix. Covariance matrices != 0 are always symmetric and
+    positive-definite.
+    """
+    try:
+        return np.linalg.cholesky(mat)
+    except np.linalg.LinAlgError:
+        warnings.warn(
+            "Singular covariance matrix. Are the errors for some data points equal to zero?")
+        return None
+
+
+def log_determinant(cholesky_mat):
+    """
+    Calculate the logarithm of the determinant of a matrix from its Cholesky decomposition.
+    """
+    if cholesky_mat is None:
+        return 0.0  # Easier to handle for multifits than returning None
+    else:
+        return 2.0 * np.sum(np.log(np.diag(cholesky_mat)))
+
+
 def collect(*args):
     '''collect arguments into array'''
     return np.asarray(args)

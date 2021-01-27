@@ -45,14 +45,22 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
                 )
 
         if _did_fit:
+            _gof = self._kafe_object.goodness_of_fit
+            _gof_name = "chi2" if self._kafe_object._cost_function.is_chi2 else "GoF"
             _cost = self._kafe_object.cost_function_value
             _ndf = self._kafe_object.ndf
-            _round_cost_sig = max(2, int(-np.floor(np.log(_cost) / np.log(10))) + 1)
-            _rounded_cost = round(_cost, _round_cost_sig)
-            _preface_comment += "# Cost: %s\n" % _rounded_cost
+            if _gof is None:
+                _round_cost_sig = max(2, int(-np.floor(np.log(np.abs(_cost)) / np.log(10))) + 1)
+                _rounded_cost = round(_cost, _round_cost_sig)
+                _preface_comment += "# Cost: %s\n" % _rounded_cost
+            else:
+                _preface_comment += "# %s: %s\n" % (_gof_name, _gof)
+                _round_gof_per_ndf_sig = max(
+                    2, int(-np.floor(np.log(np.abs(_gof) / _ndf) / np.log(10))) + 1)
             _preface_comment += '# ndf: %s\n' % _ndf
-            _round_cost_per_ndf_sig = max(2, int(-np.floor(np.log(_cost / _ndf) / np.log(10))) + 1)
-            _preface_comment += "# Cost/ndf: %s\n\n" % round(_cost / _ndf, _round_cost_per_ndf_sig)
+            if _gof is not None:
+                _preface_comment += "# %s/ndf: %s\n\n" % (
+                    _gof_name, round(_gof / _ndf, _round_gof_per_ndf_sig))
 
             # If asymmetric parameters errors were not calculated, check the loaded result dict
             _asymmetric_parameter_errors = self._kafe_object._fitter.asymmetric_fit_parameter_errors_if_calculated

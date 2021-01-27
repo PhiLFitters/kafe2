@@ -126,7 +126,7 @@ class MultiFit(FitBase):
             existing_behavior="replace"
         )
 
-        self._y_data_names = []
+        _log_det_names = []
         for _i, _fit_i in enumerate(self._fits):
             _fit_i._initialize_fitter()
 
@@ -143,7 +143,19 @@ class MultiFit(FitBase):
                 self._nexus.add(
                     Alias(ref=_y_data_node, name=_y_data_name),
                     add_children=False)
-                self._y_data_names.append(_y_data_name)
+
+            _log_det_node = _fit_i._nexus.get('total_cov_mat_log_determinant')
+            if _log_det_node is not None:
+                _log_det_name = 'total_cov_mat_log_determinant%s' % _i
+                self._nexus.add(
+                    Alias(ref=_log_det_node, name=_log_det_name),
+                    add_children=False)
+                _log_det_names.append(_log_det_name)
+
+        self._nexus.add_function(
+            lambda *log_dets: np.sum(log_dets),
+            func_name='total_cov_mat_log_determinant', par_names=_log_det_names,
+            existing_behavior="replace")
 
         _cost_functions = [_fit._cost_function for _fit in self._fits]
         _cost_names = ['cost%s' % _i for _i in range(len(self._fits))]

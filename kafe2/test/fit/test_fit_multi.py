@@ -492,13 +492,13 @@ class TestMultiFitIntegrityXY(TestMultiFit):
         self._x_error = "nonlinear"
         self._set_xy_fits()
         self._set_expected_xy_par_values()
-        self._assert_fits_match_expectation(atol=0, rtol=1e-6)
+        self._assert_fits_match_expectation(atol=0, rtol=2.5e-5)
 
     def test_parameter_values_match_expectation_iterative_linear_x_error(self):
         self._x_error = "iterative"
         self._set_xy_fits()
         self._set_expected_xy_par_values()
-        self._assert_fits_match_expectation(atol=0, rtol=1e-5)
+        self._assert_fits_match_expectation(atol=0, rtol=2.5e-5)
 
     def test_split_fit_integrity_simple(self):
         self._set_xy_fits()

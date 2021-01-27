@@ -760,42 +760,50 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
     MINIMIZER = 'scipy'
 
     def setUp(self):
+        """
+        This was changed because the results were suspicious when cov mat determinant was added
+        to cost.
+        """
         self._n_points = 16
+        self._x_error = 0.1
+        self._y_error = 0.1
         self._default_cost_function = XYCostFunction_Chi2(
             axes_to_use='xy', errors_to_use='covariance')
 
         # "jitter" for data smearing
-        self._y_jitter = np.array([ 0.2991,  1.558 , -0.714 ,  0.825 , -1.157 ,  0.462 ,  0.103 ,
-                                    1.167 ,  0.783 , -0.688 , -1.019 ,  0.14  , -0.11  , -0.87  ,
-                                    1.81  ,  0.35  ])
+        np.random.seed(0)
+        self._x_jitter = np.random.normal(scale=self._x_error, size=self._n_points)
+        self._y_jitter = np.random.normal(scale=self._y_error, size=self._n_points)
 
         assert len(self._y_jitter) == self._n_points
 
         # reference initial values
-        self._ref_initial_pars = np.array([1.0, 0.0])
-        self._ref_x = np.arange(self._n_points)
-        self._ref_initial_y_model = line_xy_model(self._ref_x, *self._ref_initial_pars)
-        self._ref_initial_xy_model = np.array([self._ref_x, self._ref_initial_y_model])
+        self._ref_initial_pars = np.array([1.0, 0.5])
+        self._ref_x_data = np.arange(self._n_points) + self._x_jitter
+        self._ref_initial_y_model = line_xy_model(self._ref_x_data, *self._ref_initial_pars)
+        self._ref_initial_xy_model = np.array([self._ref_x_data, self._ref_initial_y_model])
 
         # reference matrices/errors
-        self._ref_y_error_vector = np.ones(self._n_points) * 0.1
+        self._ref_y_error_vector = np.ones(self._n_points) * self._y_error
         self._ref_y_error_matrix = np.diag(self._ref_y_error_vector ** 2)
-        self._ref_x_error_vector = np.ones(self._n_points)
+        self._ref_x_error_vector = np.ones(self._n_points) * self._x_error
         self._ref_x_error_matrix = np.diag(self._ref_x_error_vector ** 2)
 
         def line_xy_model_derivative(x, a=1.0, b=0.0):
             return a
 
-        _fp = line_xy_model_derivative(self._ref_x, *self._ref_initial_pars)
+        _fp = line_xy_model_derivative(self._ref_x_data, *self._ref_initial_pars)
         self._ref_projected_xy_matrix = (
-            self._ref_y_error_matrix  +
+            self._ref_y_error_matrix +
             self._ref_x_error_matrix * np.outer(_fp, _fp)
         )
         self._ref_projected_xy_errors = np.diag(np.sqrt(self._ref_projected_xy_matrix))
+        self._ref_projected_xy_log_determinant = np.log(np.linalg.det(
+            self._ref_projected_xy_matrix))
 
         # fit data
-        self._ref_y_data = self._ref_initial_y_model + self._y_jitter
-        self._ref_xy_data = np.array([self._ref_x, self._ref_y_data])
+        self._ref_y_data = line_xy_model(self._ref_x_data, *self._ref_initial_pars) + self._y_jitter
+        self._ref_xy_data = np.array([self._ref_x_data, self._ref_y_data])
 
         # pre-fit cost value
         self._ref_initial_cost = self._default_cost_function(
@@ -804,16 +812,23 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
             np.linalg.inv(self._ref_projected_xy_matrix),
             self._ref_initial_pars,
             [],
+            self._ref_projected_xy_log_determinant
         )
 
         # reference fit result values
-        self._nominal_fit_result_pars = np.array([1.02590618, -0.00967721])
+        self._nominal_fit_result_pars = np.array([1.00441642, 0.48645824])
 
-        self._nominal_fit_result_y_model = line_xy_model(self._ref_x, *self._nominal_fit_result_pars)
-        self._nominal_fit_result_xy_model = np.array([self._ref_x, self._nominal_fit_result_y_model])
+        self._nominal_fit_result_y_model = line_xy_model(
+            self._ref_x_data, *self._nominal_fit_result_pars)
+        self._nominal_fit_result_xy_model = np.array(
+            [self._ref_x_data, self._nominal_fit_result_y_model])
 
-        self._nominal_fit_result_projected_xy_matrix = 1.0624835 * np.eye(self._n_points)
-        self._nominal_fit_result_projected_xy_errors = np.diag(np.sqrt(self._nominal_fit_result_projected_xy_matrix))
+        self._nominal_fit_result_projected_xy_matrix = self._ref_y_error_matrix\
+            + self._nominal_fit_result_pars[0] * self._ref_x_error_matrix
+        self._nominal_fit_result_projected_xy_errors = np.diag(np.sqrt(
+            self._nominal_fit_result_projected_xy_matrix))
+        self._nominal_fit_result_projected_xy_log_determinant = np.log(np.linalg.det(
+            self._nominal_fit_result_projected_xy_matrix))
 
         self._nominal_fit_result_cost = self._default_cost_function(
             self._ref_y_data,
@@ -821,14 +836,15 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
             np.linalg.inv(self._nominal_fit_result_projected_xy_matrix),
             self._nominal_fit_result_pars,
             [],
+            self._nominal_fit_result_projected_xy_log_determinant
         )
 
         # helper dict with all reference property values
         self._ref_prop_dict = dict(
             parameter_values=self._ref_initial_pars,
 
-            x_data=self._ref_x,
-            x_model=self._ref_x,
+            x_data=self._ref_x_data,
+            x_model=self._ref_x_data,
             y_data=self._ref_y_data,
             y_model=self._ref_initial_y_model,
             data=self._ref_xy_data,
@@ -956,20 +972,20 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
 
         print("============ rel data nonlinear vs rel data iterative ==========\n")
         self._assert_fit_results_equal(
-            _fit_rel_data_nonlinear, _fit_rel_data_iterative, rtol=1e-2)
+            _fit_rel_data_nonlinear, _fit_rel_data_iterative, rtol=1.25e-2, atol=5e-5)
         print("============ rel data nonlinear vs rel model nonlinear ==========\n")
         self._assert_fit_results_equal(
-            _fit_rel_data_nonlinear, _fit_rel_model_nonlinear, rtol=1e-2)
+            _fit_rel_data_nonlinear, _fit_rel_model_nonlinear, rtol=1.25e-2, atol=5e-5)
         print("============ rel data nonlinear vs rel model iterative ==========\n")
         self._assert_fit_results_equal(
-            _fit_rel_data_nonlinear, _fit_rel_model_iterative, rtol=1e-2)
+            _fit_rel_data_nonlinear, _fit_rel_model_iterative, rtol=1.25e-2, atol=5e-5)
         print("============ rel model nonlinear vs rel model iterative ==========\n")
         self._assert_fit_results_equal(
-            _fit_rel_model_nonlinear, _fit_rel_model_iterative, rtol=1e-2)
+            _fit_rel_model_nonlinear, _fit_rel_model_iterative, rtol=1.25e-2, atol=5e-5)
         print("============ rel data iterative vs rel model iterative ==========\n")
         self._assert_fit_results_equal(
-            _fit_rel_data_iterative, _fit_rel_model_iterative, rtol=1e-2)
+            _fit_rel_data_iterative, _fit_rel_model_iterative, rtol=1.25e-2, atol=5e-5)
         print("============ rel data iterative vs rel model nonlinear ==========\n")
         self._assert_fit_results_equal(
-            _fit_rel_data_iterative, _fit_rel_model_nonlinear, rtol=1e-2)
+            _fit_rel_data_iterative, _fit_rel_model_nonlinear, rtol=1.25e-2, atol=5e-5)
 

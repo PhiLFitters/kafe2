@@ -789,10 +789,7 @@ class Plot(object):
 
         _ndf = plot_adapter._fit.ndf
         _cost_function_value = plot_adapter._fit.cost_function_value
-        if plot_adapter._fit._cost_function.saturated:
-            _gof_value = _cost_function_value
-        else:
-            _gof_value = plot_adapter._fit.goodness_of_fit
+        _gof_value = plot_adapter._fit.goodness_of_fit
         _info_format_dict = dict(
             model_function=plot_adapter.get_formatted_model_function(
                 with_par_values=False,
@@ -847,16 +844,15 @@ class Plot(object):
             _multi_ndf = self._multifit.ndf
             _multi_cost_function = self._multifit._cost_function
             _multi_cost_function_value = self._multifit.cost_function_value
+            _multi_gof = self._multifit.goodness_of_fit
 
             _multi_info_dict = dict()
             if _multi_cost_function.is_chi2:
-                _multi_gof = _multi_cost_function_value
                 _template = "    $\\hookrightarrow$ global {fit_quality}\n"
                 _multi_info_dict["chi2_probability"] = self._multifit.chi2_probability
                 _template += "    $\\hookrightarrow$ global $\\chi^2 \\, \\mathrm{{probability}} " \
                              "= {chi2_probability:%s}$" % _float_template
             elif _multi_cost_function.saturated:
-                _multi_gof = _multi_cost_function_value
                 _template = "    $\\hookrightarrow$ global cost / ndf = {fit_quality}\n"
             else:
                 _template = "    $\\hookrightarrow$ global cost = {cost}\n"
@@ -865,7 +861,6 @@ class Plot(object):
                     with_name=False,
                     format_as_latex=format_as_latex
                 )
-                _multi_gof = self._multifit.goodness_of_fit
                 if _multi_gof is not None:
                     _template += "    $\\hookrightarrow$ global GoF / ndf = {fit_quality}\n"
 

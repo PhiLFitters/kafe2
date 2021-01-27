@@ -28,11 +28,14 @@ class TestCostBuiltin(unittest.TestCase):
         self._cov_mat_inv = np.linalg.inv(self._cov_mat)
         self._pointwise_errors = np.sqrt(np.diag(self._cov_mat))
 
-        self._cost_chi2_cov_mat = self._res.dot(self._cov_mat_inv).dot(self._res)
-        self._cost_chi2_pointwise = np.sum((self._res / self._pointwise_errors) ** 2)
-        self._cost_chi2_no_errors = np.sum(self._res ** 2)
+        self._cov_mat_log_det = np.log(np.linalg.det(self._cov_mat))
+        self._cost_chi2_cov_mat = self._res.dot(
+            self._cov_mat_inv).dot(self._res) + self._cov_mat_log_det
+        self._cost_chi2_pointwise = np.sum(
+            (self._res / self._pointwise_errors) ** 2) + self._cov_mat_log_det
+        self._cost_chi2_no_errors = np.sum(self._res ** 2) + self._cov_mat_log_det
         self._cost_nll_gaussian = self._cost_chi2_pointwise + 2.0 * np.sum(np.log(
-            np.sqrt((2.0 * np.pi)) * self._pointwise_errors))
+            np.sqrt((2.0 * np.pi)) * self._pointwise_errors)) - self._cov_mat_log_det
         self._cost_nll_poisson = -2.0 * np.sum(
             np.log(self._model_poisson ** self._data_poisson)
             - np.log(factorial(self._data_poisson)) - self._model_poisson)
@@ -59,33 +62,36 @@ class TestCostBuiltin(unittest.TestCase):
         self.assertAlmostEqual(
             self._cost_chi2_no_errors,
             self.CHI2_COST_FUNCTION(errors_to_use=None)
-            (self._data_chi2, self._model_chi2, None, None))
+            (self._data_chi2, self._model_chi2, None, None, self._cov_mat_log_det))
         self.assertAlmostEqual(
             self._cost_chi2_no_errors + self._par_cost,
             self.CHI2_COST_FUNCTION(errors_to_use=None)
-            (self._data_chi2, self._model_chi2, self._par_vals, self._par_constraints))
+            (self._data_chi2, self._model_chi2, self._par_vals, self._par_constraints,
+             self._cov_mat_log_det))
 
     def test_chi2_pointwise(self):
         self.assertAlmostEqual(
             self._cost_chi2_pointwise,
             self.CHI2_COST_FUNCTION(errors_to_use='pointwise')
-            (self._data_chi2, self._model_chi2, self._pointwise_errors, None, None))
+            (self._data_chi2, self._model_chi2, self._pointwise_errors, None, None,
+             self._cov_mat_log_det))
         self.assertAlmostEqual(
             self._cost_chi2_pointwise + self._par_cost,
             self.CHI2_COST_FUNCTION(errors_to_use='pointwise')
             (self._data_chi2, self._model_chi2, self._pointwise_errors,
-             self._par_vals, self._par_constraints))
+             self._par_vals, self._par_constraints, self._cov_mat_log_det))
 
     def test_chi2_cov_mat(self):
         self.assertAlmostEqual(
             self._cost_chi2_cov_mat,
             self.CHI2_COST_FUNCTION(errors_to_use='covariance')
-            (self._data_chi2, self._model_chi2, self._cov_mat_inv, None, None))
+            (self._data_chi2, self._model_chi2, self._cov_mat_inv, None, None,
+             self._cov_mat_log_det))
         self.assertAlmostEqual(
             self._cost_chi2_cov_mat + self._par_cost,
             self.CHI2_COST_FUNCTION(errors_to_use='covariance')
             (self._data_chi2, self._model_chi2, self._cov_mat_inv,
-             self._par_vals, self._par_constraints))
+             self._par_vals, self._par_constraints, self._cov_mat_log_det))
 
     def test_nll_gaussian(self):
         self.assertAlmostEqual(
@@ -110,11 +116,11 @@ class TestCostBuiltin(unittest.TestCase):
 
     def test_nllr_gaussian(self):
         self.assertAlmostEqual(
-            self._cost_chi2_pointwise,
+            self._cost_chi2_pointwise - self._cov_mat_log_det,
             self.NLL_COST_FUNCTION(data_point_distribution='gaussian', ratio=True)
             (self._data_chi2, self._model_chi2, self._pointwise_errors, None, None))
         self.assertAlmostEqual(
-            self._cost_chi2_pointwise + self._par_cost,
+            self._cost_chi2_pointwise + self._par_cost - self._cov_mat_log_det,
             self.NLL_COST_FUNCTION(data_point_distribution='gaussian', ratio=True)
             (self._data_chi2, self._model_chi2, self._pointwise_errors,
              self._par_vals, self._par_constraints))
@@ -134,14 +140,14 @@ class TestCostBuiltin(unittest.TestCase):
             self.CHI2_COST_FUNCTION(errors_to_use="XYZ")
         with self.assertRaises(ValueError):
             self.CHI2_COST_FUNCTION(errors_to_use="covariance")(
-                self._data_chi2, np.ones(10), self._cov_mat_inv, None, None)
+                self._data_chi2, np.ones(10), self._cov_mat_inv, None, None, self._cov_mat_log_det)
         with self.assertRaises(CostFunctionException):
             self.CHI2_COST_FUNCTION(errors_to_use="covariance", fallback_on_singular=False)(
-                self._data_chi2, self._model_chi2, None, None, None)
+                self._data_chi2, self._model_chi2, None, None, None, self._cov_mat_log_det)
         with self.assertRaises(CostFunctionException):
             self.CHI2_COST_FUNCTION(errors_to_use="pointwise", fallback_on_singular=False)(
                 self._data_chi2, self._model_chi2, np.arange(len(self._pointwise_errors)),
-                None, None)
+                None, None, self._cov_mat_log_det)
 
     def test_nll_raise(self):
         with self.assertRaises(ValueError):
@@ -152,18 +158,19 @@ class TestCostBuiltin(unittest.TestCase):
             np.inf,
             self.CHI2_COST_FUNCTION(errors_to_use="covariance")(
                 self._data_chi2, np.nan * np.ones_like(self._model_chi2), self._cov_mat_inv,
-                None, None)
+                None, None, self._cov_mat_log_det)
         )
         self.assertEqual(
             np.inf,
             self.CHI2_COST_FUNCTION(errors_to_use="pointwise")(
                 self._data_chi2, np.nan * np.ones_like(self._model_chi2), self._pointwise_errors,
-                None, None)
+                None, None, self._cov_mat_log_det)
         )
         self.assertEqual(
             np.inf,
             self.CHI2_COST_FUNCTION(errors_to_use=None)(
-                self._data_chi2, np.nan * np.ones_like(self._model_chi2), None, None)
+                self._data_chi2, np.nan * np.ones_like(self._model_chi2), None, None,
+                self._cov_mat_log_det)
         )
         self.assertEqual(
             np.inf,
@@ -222,13 +229,16 @@ class TestCostUserDefined(unittest.TestCase):
         self._ref_par_vals_constraints = self._ref_par_vals + [
             self._ref_par_vals, [self._constraint, self._matrix_constraint]]
 
-        self._cost_func = CostFunction(my_cost, arg_names=None, add_constraint_cost=False)
+        self._cost_func = CostFunction(
+            my_cost, arg_names=None, add_constraint_cost=False, add_determinant_cost=False)
         self._cost_func_constraints = CostFunction(
-            my_cost, arg_names=None, add_constraint_cost=True)
+            my_cost, arg_names=None, add_constraint_cost=True, add_determinant_cost=False)
         self._cost_func_varargs = CostFunction(
-            my_cost_varargs, arg_names=["a", "b", "c", "d"], add_constraint_cost=False)
+            my_cost_varargs, arg_names=["a", "b", "c", "d"], add_constraint_cost=False,
+            add_determinant_cost=False)
         self._cost_func_varargs_constraints = CostFunction(
-            my_cost_varargs, arg_names=["a", "b", "c", "d"], add_constraint_cost=True)
+            my_cost_varargs, arg_names=["a", "b", "c", "d"], add_constraint_cost=True,
+            add_determinant_cost=False)
 
     def test_properties(self):
         self.assertEqual(self._cost_func.name, "my_cost")

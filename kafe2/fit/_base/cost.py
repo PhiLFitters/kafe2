@@ -48,7 +48,9 @@ class CostFunction(FileIOMixin, object):
     _COV_MAT_INVERSE_NAME = "total_cov_mat_inverse"
     _ERROR_NAME = "total_error"
 
-    def __init__(self, cost_function, arg_names=None, add_constraint_cost=True):
+    def __init__(
+            self, cost_function, arg_names=None, add_constraint_cost=True,
+            add_determinant_cost=False):
         """
         Construct :py:class:`CostFunction` object (a wrapper for a native Python function):
 
@@ -57,6 +59,9 @@ class CostFunction(FileIOMixin, object):
             If None, detect from function signature.
         :param bool add_constraint_cost: If :py:obj:`True`, automatically add the cost for kafe2
             constraints.
+        :param bool add_determinant_cost: If :py:obj:`True`, automatically increase the cost
+            function value by the logarithm of the determinant of the covariance matrix to reduce
+            bias.
         """
         self._cost_function_handle = cost_function
         _signature = signature(self._cost_function_handle)
@@ -90,6 +95,10 @@ class CostFunction(FileIOMixin, object):
         if self._add_constraint_cost:
             self._arg_names += ["parameter_values", "parameter_constraints"]
             self._arg_count += 2
+        self._add_determinant_cost = add_determinant_cost
+        if self._add_determinant_cost:
+            self._arg_names += ["total_cov_mat_log_determinant"]
+            self._arg_count += 1
 
         self._needs_errors = True
         self._is_chi2 = False
@@ -106,6 +115,11 @@ class CostFunction(FileIOMixin, object):
 
     def __call__(self, *args):
         additional_cost = 0.0
+        if self._add_determinant_cost:
+            _log_determinant = args[-1]
+            args = args[:-1]
+            if _log_determinant is not None:
+                additional_cost += _log_determinant
         if self._add_constraint_cost:
             _par_constraints = args[-1]
             _par_vals = args[-2]
@@ -155,6 +169,11 @@ class CostFunction(FileIOMixin, object):
         """Whether the cost function value is calculated from a saturated likelihood."""
         return self._saturated
 
+    @property
+    def add_determinant_cost(self):
+        """Whether the determinant cost is being added automatically to the cost function value."""
+        return self._add_determinant_cost
+
     def goodness_of_fit(self, *args):
         """How well the model agrees with the data."""
         try:
@@ -162,8 +181,12 @@ class CostFunction(FileIOMixin, object):
             _index_model = self._arg_names.index(self._MODEL_NAME)
         except ValueError:
             return None
+        if self._add_determinant_cost:
+            args = args[:-1] + (0.0,)
         _cost = self(*args)
         args = list(args)
+        if self._add_determinant_cost:
+            args = args[:-1]
         if self._add_constraint_cost:
             args = args[:-2]
         args[_index_model] = args[_index_data]
@@ -203,7 +226,8 @@ class CostFunction(FileIOMixin, object):
 
 class CostFunction_Chi2(CostFunction):
     def __init__(
-            self, errors_to_use='covariance', fallback_on_singular=True, add_constraint_cost=True):
+            self, errors_to_use='covariance', fallback_on_singular=True, add_constraint_cost=True,
+            add_determinant_cost=True):
         """Base class for built-in least-squares cost function.
 
         :param errors_to_use: Which errors to use when calculating :math:`\\chi^2`.
@@ -213,6 +237,9 @@ class CostFunction_Chi2(CostFunction):
             (or the errors are zero), calculate :math:`\\chi^2` as with ``errors_to_use=None``
         :param bool add_constraint_cost: If :py:obj:`True`, automatically add the cost for kafe2
             constraints.
+        :param bool add_determinant_cost: If :py:obj:`True`, automatically increase the cost
+            function value by the logarithm of the determinant of the covariance matrix to reduce
+            bias.
         """
 
         _cost_function_description = "chi-square"
@@ -242,7 +269,8 @@ class CostFunction_Chi2(CostFunction):
         super(CostFunction_Chi2, self).__init__(
             cost_function=_chi2_func,
             arg_names=_arg_names,
-            add_constraint_cost=add_constraint_cost
+            add_constraint_cost=add_constraint_cost,
+            add_determinant_cost=add_determinant_cost
         )
 
         self._formatter.latex_name = "\\chi^2"
@@ -403,7 +431,8 @@ class CostFunction_NegLogLikelihood(CostFunction):
 
         super(CostFunction_NegLogLikelihood, self).__init__(
             cost_function=_nll_func,
-            arg_names=_arg_names
+            arg_names=_arg_names,
+            add_determinant_cost=False
         )
 
         if ratio:

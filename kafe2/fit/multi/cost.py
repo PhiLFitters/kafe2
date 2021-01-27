@@ -13,7 +13,7 @@ class SharedCostFunction(CostFunction_Chi2):
         self._COV_MAT_INVERSE_NAME = "total_cov_mat_inverse"
         super(SharedCostFunction, self).__init__(
             errors_to_use="covariance", fallback_on_singular=fallback_on_singular,
-            add_constraint_cost=False)
+            add_constraint_cost=False, add_determinant_cost=True)
 
 
 class MultiCostFunction(CostFunction):
@@ -22,7 +22,8 @@ class MultiCostFunction(CostFunction):
         super(MultiCostFunction, self).__init__(
             cost_function=MultiCostFunction.cost_sum,
             arg_names=cost_function_names,
-            add_constraint_cost=True
+            add_constraint_cost=True,
+            add_determinant_cost=False
         )
         self._needs_errors = np.any([_scf.needs_errors for _scf in singular_cost_functions])
         self._saturated = np.all([_scf.saturated for _scf in singular_cost_functions])

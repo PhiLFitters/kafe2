@@ -99,7 +99,8 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         self._nominal_fit_result_cost_nll = \
             -2*np.sum(stats.poisson.logpmf(self._ref_data, self._nominal_fit_result_model_nll))
-        self._nominal_fit_result_cost_chi2 = simple_chi2(self._ref_data, self._nominal_fit_result_model_chi2)
+        self._nominal_fit_result_cost_chi2 = simple_chi2(
+            self._ref_data, self._nominal_fit_result_model_chi2)
 
         # helper dict with all reference property values
         self._ref_prop_dict = dict(

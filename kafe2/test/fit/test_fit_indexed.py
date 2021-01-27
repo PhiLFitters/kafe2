@@ -341,7 +341,7 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
         ], dynamic_error_algorithm="nonlinear")
         _fit_data_err.do_fit()
         _fit_model_err.do_fit()
-        self._assert_fit_results_equal(_fit_data_err, _fit_model_err, rtol=3e-2)
+        self._assert_fit_results_equal(_fit_data_err, _fit_model_err, rtol=1e-2, atol=2e-2)
 
     def test_relative_model_error_iterative(self):
         _fit_data_err = self._get_fit(errors=[

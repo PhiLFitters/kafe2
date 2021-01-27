@@ -20,7 +20,8 @@ class UnbinnedCostFunction_NegLogLikelihood(CostFunction):
         In general, a negative log-likelihood cost function is defined as the double negative logarithm of the
         product of the individual likelihoods of the data points.
         """
-        super(UnbinnedCostFunction_NegLogLikelihood, self).__init__(cost_function=self.nll)
+        super(UnbinnedCostFunction_NegLogLikelihood, self).__init__(
+            cost_function=self.nll, add_determinant_cost=False)
         self._needs_errors = False
         self._formatter.latex_name = "-2\\ln\\mathcal{L}"
         self._formatter.name = "nll"

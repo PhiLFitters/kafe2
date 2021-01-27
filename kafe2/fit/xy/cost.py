@@ -8,7 +8,9 @@ __all__ = [
 
 
 class XYCostFunction_Chi2(CostFunction_Chi2):
-    def __init__(self, errors_to_use='covariance', fallback_on_singular=True, axes_to_use='xy'):
+    def __init__(
+            self, errors_to_use='covariance', fallback_on_singular=True, axes_to_use='xy',
+            add_constraint_cost=True, add_determinant_cost=True):
         """Built-in least-squares cost function for *xy* data.
 
         :param errors_to_use: Which errors to use when calculating :math:`\\chi^2`. This is either
@@ -16,7 +18,11 @@ class XYCostFunction_Chi2(CostFunction_Chi2):
         :type errors_to_use: str or None
         :param axes_to_use: The errors for the given axes are taken into account when calculating
             :math:`\\chi^2`. Either ``'y'`` or ``'xy'``
-        :type axes_to_use: str
+        :param bool add_constraint_cost: If :py:obj:`True`, automatically add the cost for kafe2
+            constraints.
+        :param bool add_determinant_cost: If :py:obj:`True`, automatically increase the cost
+            function value by the logarithm of the determinant of the covariance matrix to reduce
+            bias.
         """
         self._DATA_NAME = "y_data"
         self._MODEL_NAME = "y_model"
@@ -30,7 +36,8 @@ class XYCostFunction_Chi2(CostFunction_Chi2):
             raise CostFunctionException(
                 "Unknown value '%s' for 'axes_to_use': must be one of ('xy', 'y')")
         super(XYCostFunction_Chi2, self).__init__(
-            errors_to_use=errors_to_use, fallback_on_singular=fallback_on_singular)
+            errors_to_use=errors_to_use, fallback_on_singular=fallback_on_singular,
+            add_constraint_cost=add_constraint_cost, add_determinant_cost=add_determinant_cost)
 
 
 class XYCostFunction_NegLogLikelihood(CostFunction_NegLogLikelihood):

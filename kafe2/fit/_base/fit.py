@@ -184,6 +184,20 @@ class FitBase(FileIOMixin, object):
                     self._nexus.add_dependency(_mat_name, depends_on="parameter_values")
                 self._add_property_to_nexus(_mat_name + "_inverse", depends_on=_mat_name)
 
+        def _log_determinant(cov_mat):
+            _determinant = np.linalg.det(cov_mat)
+            if _determinant == 0:
+                return 0
+            else:
+                return np.log(_determinant)
+
+        if self._nexus.get("total_cov_mat") is not None:
+            self._nexus.add_function(
+                _log_determinant,
+                func_name="total_cov_mat_log_determinant",
+                par_names=["total_cov_mat"]
+            )
+
         if self._model_function is not None:
             # add the original function name as an alias to 'model'
             try:
@@ -307,22 +321,19 @@ class FitBase(FileIOMixin, object):
 
         _pf = self._cost_function.formatter
         output_stream.write(
-            indent * (indentation_level + 2) + "cost function: {}\n\n".format(_pf.description))
-        if self._cost_function.saturated:
-            _gof_string = "cost / ndf = "
-            _gof_value = self.cost_function_value
-        else:
-            output_stream.write(indent * (indentation_level + 2) + "cost = ")
+            indent * (indentation_level + 2) + "Cost function: {}\n\n".format(_pf.description))
+        _gof_value = self.goodness_of_fit
+        output_stream.write(indent * (indentation_level + 2))
+        if _gof_value is None:
+            output_stream.write("Cost = ")
             output_stream.write(_pf.get_formatted(
                 value=self.cost_function_value,
                 with_name=False,
-                format_as_latex=False,
+                format_as_latex=False
             ))
-            output_stream.write('\n\n')
-            _gof_string = "GoF / ndf = "
-            _gof_value = self.goodness_of_fit
-        if _gof_value is not None:
-            output_stream.write(indent * (indentation_level + 2) + _gof_string)
+        else:
+            _gof_string = "chi2 / ndf = " if self._cost_function.is_chi2 else "GoF / ndf = "
+            output_stream.write(_gof_string)
             output_stream.write(_pf.get_formatted(
                 value=_gof_value,
                 n_degrees_of_freedom=self.ndf,
@@ -330,7 +341,7 @@ class FitBase(FileIOMixin, object):
                 with_value_per_ndf=True,
                 format_as_latex=False
             ))
-            output_stream.write('\n\n')
+        output_stream.write('\n\n')
         _chi2_prob = self.chi2_probability
         if _chi2_prob is not None:
             output_stream.write("%schi2 probability = %#.3g\n\n" % (
@@ -679,7 +690,10 @@ class FitBase(FileIOMixin, object):
     @property
     def chi2_probability(self):
         """The chi2 probability for the current model values."""
-        return self._cost_function.chi2_probability(self.cost_function_value, self.ndf)
+        _cost = self.cost_function_value
+        if self._cost_function.add_determinant_cost:
+            _cost -= self._nexus.get("total_cov_mat_log_determinant").value
+        return self._cost_function.chi2_probability(_cost, self.ndf)
 
     # -- public methods
 
@@ -1061,8 +1075,9 @@ class FitBase(FileIOMixin, object):
         _ndf = self.ndf
         _result_dict['cost'] = _cost
         _result_dict['ndf'] = _ndf
-        _result_dict['goodness_of_fit'] = self.goodness_of_fit
-        _result_dict['cost/ndf'] = _cost / _ndf
+        _gof = self.goodness_of_fit
+        _result_dict['goodness_of_fit'] = _gof
+        _result_dict['gof/ndf'] = _gof / _ndf if _gof is not None else _gof
         _result_dict['chi2_probability'] = self.chi2_probability
         _result_dict['parameter_values'] = self.parameter_name_value_dict
         if _result_dict['did_fit']:
