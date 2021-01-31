@@ -1,4 +1,7 @@
-import typing  # help IDEs with type-hinting inside docstrings
+try:
+    import typing  # help IDEs with type-hinting inside docstrings
+except ImportError:
+    pass
 import numpy as np
 import scipy.stats
 import six
