@@ -168,11 +168,6 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
         except TypeError:
             _dxs = np.ones_like(_x)*_dxs
 
-        _ret = []
-        for _x_idx, (_x_val, _dx) in enumerate(zip(_x, _dxs)):
-            def _chipped_func(x_i):
-                return self._model_function_object(x_i, *_pars)
-
-            _der_val = derivative(_chipped_func, _x_val, dx=_dx)
-            _ret.append(_der_val)
-        return np.array(_ret)
+        _low = self._model_function_object(_x - _dxs, *_pars)
+        _high = self._model_function_object(_x + _dxs, *_pars)
+        return 0.5 * (_high - _low) / _dxs
