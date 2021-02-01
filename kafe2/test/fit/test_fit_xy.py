@@ -809,7 +809,7 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
         self._ref_initial_cost = self._default_cost_function(
             self._ref_y_data,
             self._ref_initial_y_model,
-            np.linalg.inv(self._ref_projected_xy_matrix),
+            np.linalg.cholesky(self._ref_projected_xy_matrix),
             self._ref_initial_pars,
             [],
             self._ref_projected_xy_log_determinant
@@ -833,7 +833,7 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
         self._nominal_fit_result_cost = self._default_cost_function(
             self._ref_y_data,
             self._nominal_fit_result_y_model,
-            np.linalg.inv(self._nominal_fit_result_projected_xy_matrix),
+            np.linalg.cholesky(self._nominal_fit_result_projected_xy_matrix),
             self._nominal_fit_result_pars,
             [],
             self._nominal_fit_result_projected_xy_log_determinant

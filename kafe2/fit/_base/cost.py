@@ -3,6 +3,7 @@ import six
 import warnings
 
 from scipy.stats import poisson, norm, chi2
+from scipy.linalg import cho_solve
 from ..io.file import FileIOMixin
 from .format import ParameterFormatter, CostFunctionFormatter
 
@@ -45,7 +46,7 @@ class CostFunction(FileIOMixin, object):
     EXCEPTION_TYPE = CostFunctionException
     _DATA_NAME = "data"
     _MODEL_NAME = "model"
-    _COV_MAT_INVERSE_NAME = "total_cov_mat_inverse"
+    _COV_MAT_CHOLESKY_NAME = "total_cov_mat_cholesky"
     _ERROR_NAME = "total_error"
 
     def __init__(
@@ -251,7 +252,7 @@ class CostFunction_Chi2(CostFunction):
             _cost_function_description += " (no uncertainties)"
         elif errors_to_use.lower() == 'covariance':
             _chi2_func = self.chi2_covariance
-            _arg_names = [self._DATA_NAME, self._MODEL_NAME, self._COV_MAT_INVERSE_NAME]
+            _arg_names = [self._DATA_NAME, self._MODEL_NAME, self._COV_MAT_CHOLESKY_NAME]
             self._fail_on_no_matrix = not fallback_on_singular
             self._fail_on_no_errors = True
             _cost_function_description += " (with covariance matrix)"
@@ -280,7 +281,7 @@ class CostFunction_Chi2(CostFunction):
         self._is_chi2 = True
         self._saturated = True
 
-    def _chi2(self, data, model, cov_mat_inverse=None, err=None):
+    def _chi2(self, data, model, cov_mat_cholesky=None, err=None):
         data = np.asarray(data)
         model = np.asarray(model)
 
@@ -292,10 +293,12 @@ class CostFunction_Chi2(CostFunction):
         _res = (data - model)
 
         # if a covariance matrix inverse is given, use it
-        if cov_mat_inverse is not None:
-            _cost = _res.dot(cov_mat_inverse).dot(_res)
-            if np.isnan(_cost):
-                _cost = np.inf
+        if cov_mat_cholesky is not None:
+            try:
+                _x = cho_solve((cov_mat_cholesky, True), _res, check_finite=True)
+            except ValueError:
+                return np.inf
+            _cost = _x.dot(_res)
             return _cost
 
         if self._fail_on_no_matrix:
@@ -339,7 +342,7 @@ class CostFunction_Chi2(CostFunction):
         """
         return self._chi2(data=data, model=model)
 
-    def chi2_covariance(self, data, model, total_cov_mat_inverse):
+    def chi2_covariance(self, data, model, total_cov_mat_cholesky):
         r"""A least-squares cost function calculated from `y` data and model values,
         considering the covariance matrix of the `y` measurements.
 
@@ -359,7 +362,7 @@ class CostFunction_Chi2(CostFunction):
 
         :return: cost function value
         """
-        return self._chi2(data=data, model=model, cov_mat_inverse=total_cov_mat_inverse)
+        return self._chi2(data=data, model=model, cov_mat_cholesky=total_cov_mat_cholesky)
 
     def chi2_pointwise_errors(self, data, model, total_error):
         r"""A least-squares cost function calculated from `y` data and model values,
@@ -382,7 +385,6 @@ class CostFunction_Chi2(CostFunction):
         :return: cost function value
         """
         return self._chi2(data=data, model=model, err=total_error)
-
 
 class CostFunction_NegLogLikelihood(CostFunction):
     def __init__(self, data_point_distribution='poisson', ratio=False):

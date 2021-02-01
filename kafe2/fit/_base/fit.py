@@ -16,7 +16,7 @@ from ...core.constraint import GaussianMatrixParameterConstraint, GaussianSimple
 from ...core.error import CovMat
 from ...tools import print_dict_as_table
 from .._base.cost import CostFunction, STRING_TO_COST_FUNCTION
-from ..util import invert_matrix, add_in_quadrature
+from ..util import invert_matrix, add_in_quadrature, cholesky_decomposition, log_determinant
 
 __all__ = ["FitBase", "FitException"]
 
@@ -183,20 +183,10 @@ class FitBase(FileIOMixin, object):
                     self._nexus.add_dependency(_error_name, depends_on="parameter_values")
                     self._nexus.add_dependency(_mat_name, depends_on="parameter_values")
                 self._add_property_to_nexus(_mat_name + "_inverse", depends_on=_mat_name)
-
-        def _log_determinant(cov_mat):
-            _determinant = np.linalg.det(cov_mat)
-            if _determinant == 0:
-                return 0
-            else:
-                return np.log(_determinant)
-
-        if self._nexus.get("total_cov_mat") is not None:
-            self._nexus.add_function(
-                _log_determinant,
-                func_name="total_cov_mat_log_determinant",
-                par_names=["total_cov_mat"]
-            )
+                self._nexus.add_function(cholesky_decomposition, func_name=_mat_name + "_cholesky",
+                                         par_names=[_mat_name])
+                self._nexus.add_function(log_determinant, func_name=_mat_name + "_log_determinant",
+                                         par_names=[_mat_name + "_cholesky"])
 
         if self._model_function is not None:
             # add the original function name as an alias to 'model'

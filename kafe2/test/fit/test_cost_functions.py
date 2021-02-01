@@ -25,6 +25,7 @@ class TestCostBuiltin(unittest.TestCase):
             [0.1, 2.0, 0.3],
             [0.2, 0.3, 3.0]
         ])
+        self._cov_mat_cholesky = np.linalg.cholesky(self._cov_mat)
         self._cov_mat_inv = np.linalg.inv(self._cov_mat)
         self._pointwise_errors = np.sqrt(np.diag(self._cov_mat))
 
@@ -85,12 +86,12 @@ class TestCostBuiltin(unittest.TestCase):
         self.assertAlmostEqual(
             self._cost_chi2_cov_mat,
             self.CHI2_COST_FUNCTION(errors_to_use='covariance')
-            (self._data_chi2, self._model_chi2, self._cov_mat_inv, None, None,
+            (self._data_chi2, self._model_chi2, self._cov_mat_cholesky, None, None,
              self._cov_mat_log_det))
         self.assertAlmostEqual(
             self._cost_chi2_cov_mat + self._par_cost,
             self.CHI2_COST_FUNCTION(errors_to_use='covariance')
-            (self._data_chi2, self._model_chi2, self._cov_mat_inv,
+            (self._data_chi2, self._model_chi2, self._cov_mat_cholesky,
              self._par_vals, self._par_constraints, self._cov_mat_log_det))
 
     def test_nll_gaussian(self):
@@ -140,7 +141,8 @@ class TestCostBuiltin(unittest.TestCase):
             self.CHI2_COST_FUNCTION(errors_to_use="XYZ")
         with self.assertRaises(ValueError):
             self.CHI2_COST_FUNCTION(errors_to_use="covariance")(
-                self._data_chi2, np.ones(10), self._cov_mat_inv, None, None, self._cov_mat_log_det)
+                self._data_chi2, np.ones(10), self._cov_mat_cholesky, None, None,
+                self._cov_mat_log_det)
         with self.assertRaises(CostFunctionException):
             self.CHI2_COST_FUNCTION(errors_to_use="covariance", fallback_on_singular=False)(
                 self._data_chi2, self._model_chi2, None, None, None, self._cov_mat_log_det)
@@ -157,7 +159,7 @@ class TestCostBuiltin(unittest.TestCase):
         self.assertEqual(
             np.inf,
             self.CHI2_COST_FUNCTION(errors_to_use="covariance")(
-                self._data_chi2, np.nan * np.ones_like(self._model_chi2), self._cov_mat_inv,
+                self._data_chi2, np.nan * np.ones_like(self._model_chi2), self._cov_mat_cholesky,
                 None, None, self._cov_mat_log_det)
         )
         self.assertEqual(

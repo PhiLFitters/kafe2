@@ -27,10 +27,10 @@ class XYCostFunction_Chi2(CostFunction_Chi2):
         self._DATA_NAME = "y_data"
         self._MODEL_NAME = "y_model"
         if axes_to_use.lower() == 'y':
-            self._COV_MAT_INVERSE_NAME = "y_total_cov_mat_inverse"
+            self._COV_MAT_CHOLESKY_NAME = "y_total_cov_mat_cholesky"
             self._ERROR_NAME = "y_total_error"
         elif axes_to_use.lower() == 'xy':
-            self._COV_MAT_INVERSE_NAME = "total_cov_mat_inverse"
+            self._COV_MAT_CHOLESKY_NAME = "total_cov_mat_cholesky"
             self._ERROR_NAME = "total_error"
         else:
             raise CostFunctionException(

@@ -11,6 +11,7 @@ from ...core import NexusFitter
 from ...core.error import SimpleGaussianError, MatrixGaussianError
 from ...core.fitters.nexus import Alias, Function, Array, Parameter
 from ...tools import random_alphanumeric
+from ..util import cholesky_decomposition
 
 __all__ = ['MultiFit']
 
@@ -289,14 +290,14 @@ class MultiFit(FitBase):
             func=lambda *p: _combine_cov_mats('y', *p),
             func_name='y_cov_mat', par_names=_y_cov_mat_names, add_children=False)
 
-        def total_cov_mat_inverse(x_cov_mat, derivatives, y_cov_mat):
+        def total_cov_mat_cholesky(x_cov_mat, derivatives, y_cov_mat):
             if self._min_x_error is not None:
                 _cov_mat = y_cov_mat + x_cov_mat * np.outer(derivatives, derivatives)
             else:
                 _cov_mat = y_cov_mat
-            return np.linalg.inv(_cov_mat)
+            return cholesky_decomposition(_cov_mat)
+        self._nexus.add_function(total_cov_mat_cholesky)
 
-        self._nexus.add_function(total_cov_mat_inverse)
         _shared_cost_function = SharedCostFunction()
         self._nexus.add_function(
             func=_shared_cost_function, func_name=_shared_cost_function.name,
