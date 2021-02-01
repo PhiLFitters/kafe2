@@ -201,6 +201,82 @@ class TestMultiFit(AbstractTestFit, unittest.TestCase):
             regular_fit, double_fit, rtol=rtol, atol=atol,
             check_cost_function_value=check_cost_function_value, fit_2_is_double_fit=True)
 
+    def _assert_properties_callable(self, fit):
+        with self.subTest("data"):
+            _ = fit.data
+        #with self.subTest("data_error"):
+        #    _ = fit.data_error
+        #with self.subTest("data_cov_mat"):
+        #    _ = fit.data_cov_mat
+        #with self.subTest("data_cov_mat_inverse"):
+        #    _ = fit.data_cov_mat_inverse
+        #with self.subTest("data_cor_mat"):
+        #    _ = fit.data_cor_mat
+        with self.subTest("data_container"):
+            _ = fit.data_container
+        with self.subTest("model"):
+            _ = fit.model
+        #with self.subTest("model_error"):
+        #    _ = fit.model_error
+        #with self.subTest("model_cov_mat"):
+        #    _ = fit.model_cov_mat
+        #with self.subTest("model_cov_mat_inverse"):
+        #    _ = fit.model_cov_mat_inverse
+        #with self.subTest("model_cor_mat"):
+        #    _ = fit.model_cor_mat
+        with self.subTest("total_error"):
+            _ = fit.total_error
+        with self.subTest("total_cov_mat"):
+            _ = fit.total_cov_mat
+        with self.subTest("total_cov_mat_inverse"):
+            _ = fit.total_cov_mat_inverse
+        with self.subTest("total_cor_mat"):
+            _ = fit.total_cor_mat
+        with self.subTest("model_function"):
+            _ = fit.model_function
+        with self.subTest("model_label"):
+            _ = fit.model_label
+        with self.subTest("parameter_values"):
+            _ = fit.parameter_values
+        with self.subTest("parameter_values"):
+            _ = fit.parameter_names
+        with self.subTest("parameter_errors"):
+            _ = fit.parameter_errors
+        with self.subTest("parameter_cov_mat"):
+            _ = fit.parameter_cov_mat
+        with self.subTest("parameter_cor_mat"):
+            _ = fit.parameter_cor_mat
+        with self.subTest("parameter_name_value_dict"):
+            _ = fit.parameter_name_value_dict
+        with self.subTest("parameter_constraints"):
+            _ = fit.parameter_constraints
+        with self.subTest("cost_function_value"):
+            _ = fit.cost_function_value
+        with self.subTest("data_size"):
+            _ = fit.data_size
+        with self.subTest("has_model_errors"):
+            _ = fit.has_model_errors
+        with self.subTest("has_data_errors"):
+            _ = fit.has_data_errors
+        with self.subTest("has_errors"):
+            _ = fit.has_errors
+        with self.subTest("model_count"):
+            _ = fit.model_count
+        with self.subTest("did_fit"):
+            _ = fit.did_fit
+        with self.subTest("ndf"):
+            _ = fit.ndf
+        with self.subTest("goodness_of_fit"):
+            _ = fit.goodness_of_fit
+        with self.subTest("dynamic_error_algorithm"):
+            _ = fit.dynamic_error_algorithm
+        with self.subTest("chi2_probability"):
+            _ = fit.chi2_probability
+
+
+
+
+
     @staticmethod
     def _get_hist_data(loc=2.5, scale=0.5):
         return np.random.normal(loc=loc, scale=scale, size=1000)
@@ -388,6 +464,10 @@ class TestMultiFitIntegrityHist(TestMultiFit):
     def setUp(self):
         TestMultiFit.setUp(self)
 
+    def test_properties_callable(self):
+        self._set_hist_fits()
+        self._assert_properties_callable(self._fit_hist_all_multi)
+
     def test_split_fit_integrity_simple_scipy(self):
         self._set_hist_fits()
         self._assert_fits_valid_and_equal(self._fit_hist_all, self._fit_hist_all_multi)
@@ -405,6 +485,10 @@ class TestMultiFitIntegrityIndexed(TestMultiFit):
 
     def setUp(self):
         TestMultiFit.setUp(self)
+
+    def test_properties_callable(self):
+        self._set_indexed_fits()
+        self._assert_properties_callable(self._fit_indexed_all_multi)
 
     def test_split_fit_integrity_simple_scipy(self):
         self._set_indexed_fits()
@@ -469,6 +553,10 @@ class TestMultiFitIntegrityXY(TestMultiFit):
         self._assert_values_equal(
             "all", self._expected_parameters_split_2, self._fit_xy_split_2_multi.parameter_values,
             atol=0, rtol=rtol)
+
+    def test_properties_callable(self):
+        self._set_xy_fits()
+        self._assert_properties_callable(self._fit_xy_all_multi)
 
     def test_parameter_values_match_expectation(self):
         self._set_xy_fits()

@@ -268,24 +268,6 @@ class TestNodes(unittest.TestCase):
 
         self.assertEqual(selector_new.value, 'blup')
 
-    def test_callback(self):
-
-        def increment_counter():
-            self.counter += 1
-
-        def update_sum(summand):
-            self.sum += summand
-
-        self.par_a.register_callback(lambda: 42)
-        self.par_a.register_callback(increment_counter)
-        self.func_sum_a_b.register_callback(update_sum, args=[10])
-        self.par_a.value = 5
-        self.assertEqual(self.counter, 1)
-        self.assertEqual(self.sum, 10)
-        self.par_a.value = 6
-        self.assertEqual(self.counter, 2)
-        self.assertEqual(self.sum, 20)
-
     def test_replace_child(self):
         par_a = Parameter(4)
         par_b = Parameter(5)

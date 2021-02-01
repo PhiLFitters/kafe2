@@ -10,7 +10,7 @@ class SharedCostFunction(CostFunction_Chi2):
     def __init__(self, fallback_on_singular=True):
         self._DATA_NAME = "y_data"
         self._MODEL_NAME = "y_model"
-        self._COV_MAT_INVERSE_NAME = "total_cov_mat_cholesky"
+        self._COV_MAT_CHOLESKY_NAME = "total_cov_mat_cholesky"
         super(SharedCostFunction, self).__init__(
             errors_to_use="covariance", fallback_on_singular=fallback_on_singular,
             add_constraint_cost=False, add_determinant_cost=True)

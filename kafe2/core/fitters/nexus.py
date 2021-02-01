@@ -120,7 +120,6 @@ class NodeBase(object):
 
         self._stale = True
         self._frozen = False
-        self._callbacks = []
         self._children = []
         self._parents = set()
 
@@ -167,16 +166,6 @@ class NodeBase(object):
         except SyntaxError:
             raise NodeException("Invalid node name '%s'. Must be Python identifier!"
                                 % (name,))
-
-    def _execute_callbacks(self):
-        """
-        Execute callbacks upon notifying parents.
-        """
-        for _cb in self._callbacks:
-            _cb['func'](
-                *(_cb['args'] or []),
-                **(_cb['kwargs'] or {})
-            )
 
     # -- properties
 
@@ -365,9 +354,6 @@ class NodeBase(object):
         if self.frozen:
             return
 
-        # execute any callback functions
-        self._execute_callbacks()
-
         for _p in self.iter_parents():
             _p.mark_for_update()
 
@@ -438,18 +424,6 @@ class NodeBase(object):
         new_child.add_parent(self)
         current_child.remove_parent(self)
 
-    def register_callback(self, func, args=None, kwargs=None):
-        """
-        Add a function to be called when this node notifies its parents.
-        :param func: the function to be called.
-        :type func: Callable
-        :param args: the args to call the function with.
-        :type args: list
-        :param kwargs: the kwargs to call the function with.
-        :type kwargs: dict
-        """
-        self._callbacks.append(dict(func=func, args=args, kwargs=kwargs))
-
     def print_descendants(self):
         """
         Recursively print this node and its children.
@@ -466,7 +440,6 @@ class RootNode(NodeBase):
     def __init__(self):
         self._name = '__root__'
         self._stale = True
-        self._callbacks = []
         self._children = []
         self._parents = set()  # root node has no parents
 
@@ -685,6 +658,7 @@ class Alias(ValueNode):
 
     def update(self):
         self._value = self.ref.value
+        self._stale = False
 
 
 class Function(ValueNode):
@@ -874,7 +848,7 @@ class Tuple(ValueNode):
     def nodes(self, nodes):
         self.set_children(nodes)
 
-    def _update(self):
+    def update(self):
         self._value = tuple([
             _node.value for _node in self.nodes
         ])
@@ -883,7 +857,7 @@ class Tuple(ValueNode):
     @property
     def value(self):
         if self.stale:
-            self._update()
+            self.update()
         return self._value
 
     def iter_values(self):
@@ -921,7 +895,7 @@ class Array(Tuple):
         self.set_children(nodes)
         self._value = np.empty(len(nodes), dtype=self._dtype)
 
-    def _update(self):
+    def update(self):
         for _i, _node in enumerate(self.nodes):
             self._value[_i] = _node.value
 

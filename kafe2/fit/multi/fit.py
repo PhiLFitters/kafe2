@@ -8,10 +8,10 @@ import numpy as np
 from .cost import SharedCostFunction, MultiCostFunction
 from .._base import FitBase
 from ...core import NexusFitter
-from ...core.error import SimpleGaussianError, MatrixGaussianError
+from ...core.error import SimpleGaussianError, MatrixGaussianError, CovMat
 from ...core.fitters.nexus import Alias, Function, Array, Parameter
 from ...tools import random_alphanumeric
-from ..util import cholesky_decomposition
+from ..util import cholesky_decomposition, log_determinant, invert_matrix
 
 __all__ = ['MultiFit']
 
@@ -297,6 +297,8 @@ class MultiFit(FitBase):
                 _cov_mat = y_cov_mat
             return cholesky_decomposition(_cov_mat)
         self._nexus.add_function(total_cov_mat_cholesky)
+        self._nexus.add_function(log_determinant, func_name="total_cov_mat_log_determinant",
+                                 par_names=["total_cov_mat_cholesky"], existing_behavior="replace")
 
         _shared_cost_function = SharedCostFunction()
         self._nexus.add_function(
@@ -458,6 +460,64 @@ class MultiFit(FitBase):
     @data.setter
     def data(self, new_data):
         raise NotImplementedError("Use data setters for individual fits instead.")
+
+    @property
+    def data_error(self):
+        raise NotImplementedError()
+
+    @property
+    def data_cov_mat(self):
+        raise NotImplementedError()
+
+    @property
+    def data_cov_mat_inverse(self):
+        raise NotImplementedError()
+
+    @property
+    def data_cor_mat(self):
+        raise NotImplementedError()
+
+    @property
+    def model_error(self):
+        raise NotImplementedError()
+
+    @property
+    def model_cov_mat(self):
+        raise NotImplementedError()
+
+    @property
+    def model_cov_mat_inverse(self):
+        raise NotImplementedError()
+
+    @property
+    def model_cor_mat(self):
+        raise NotImplementedError()
+
+    @property
+    def total_error(self):
+        return np.sqrt(np.diag(self.total_cov_mat))
+
+    @property
+    def total_cov_mat(self):
+        if self._shared_error_dicts:
+            _y_cov_mat = self._nexus.get("y_cov_mat").value
+            _x_cov_mat = self._nexus.get("x_cov_mat").value
+            _derivatives = self._nexus.get("derivatives").value
+            return _y_cov_mat + _x_cov_mat * np.outer(_derivatives, _derivatives)
+        else:
+            _total_cov_mat = np.zeros((self.data_size,) * 2)
+            _lower = 0
+            for _fit in self._fits:
+                _upper = _lower + _fit.data_size
+                _total_cov_mat[_lower:_upper, _lower:_upper] = _fit.total_cov_mat
+                _lower = _upper
+            return _total_cov_mat
+
+    def total_cov_mat_inverse(self):
+        return invert_matrix(self.total_cov_mat)
+
+    def total_cor_mat(self):
+        return CovMat(self.total_cov_mat).cor_mat
 
     @property
     def data_container(self):
