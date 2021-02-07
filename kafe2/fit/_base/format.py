@@ -5,7 +5,7 @@ import numpy as np
 
 from ..io.file import FileIOMixin
 
-__all__ = ["FormatterException", "ParameterFormatter", "FunctionFormatter",
+__all__ = ["FormatterException", "ScalarFormatter", "ParameterFormatter", "FunctionFormatter",
            "ModelFunctionFormatter", "CostFunctionFormatter", "latexify_ascii"]
 
 
@@ -27,6 +27,41 @@ def latexify_ascii(ascii_string):
 
 class FormatterException(Exception):
     pass
+
+
+class ScalarFormatter(object):
+    def __init__(self, sigma, n_significant_digits=2):
+        """Format a scalar to a specified precision, according to the uncertainty.
+
+        :param float sigma: The uncertainty of the parameter.
+        :param int n_significant_digits: Number of significant digits.
+        """
+        self._sigma = sigma
+        self._n_significant_digits = n_significant_digits
+        _sig = int(-np.floor(np.log10(self._sigma))) + self._n_significant_digits - 1
+        # inner rounding needed for errors like 0.9999999 -> 1.0 (shift in decimal place)
+        self._sig = int(-np.floor(np.log10(np.around(self._sigma, _sig)))) + self._n_significant_digits - 1
+
+    def __call__(self, x):
+        """Format the input to the precision given by the uncertainty.
+
+        :param float x: The value to format.
+        :rtype: str
+        """
+        # needed e.g. when rounding values like 9.999999 -> 10.0 (shift in decimal place)
+        _rounded_x = abs(np.around(x, self._sig))
+        # fallback to rounding to 10^(-1) if value is zero
+        _log_abs_x = -1
+        if _rounded_x:
+            _log_abs_x = np.log10(np.abs(_rounded_x))
+        _val_sig = int(self._sig - int(-np.floor(_log_abs_x)) + self._n_significant_digits - 1)
+
+        if _val_sig < 0:
+            raise FormatterException("Value significance is smaller than 0. Did you try to format a value which is "
+                                     "less precise than the uncertainty?")
+
+        _template = "%#.{significance}g".format(significance=_val_sig)
+        return _template % x
 
 
 class ParameterFormatter(FileIOMixin, object):
@@ -224,11 +259,6 @@ class ParameterFormatter(FileIOMixin, object):
             if with_name:
                 _display_string += " = "
 
-            # fallback to rounding to 10^(-1) if value is zero
-            _log_abs_value = -1
-            if self._value:
-                _log_abs_value = np.log10(np.abs(self._value))
-
             if self.fixed:
                 if format_as_latex:
                     _display_string += r"$%g$ (fixed)" % self._value
@@ -249,28 +279,37 @@ class ParameterFormatter(FileIOMixin, object):
                 # fallback to rounding to 10^(-1) if error is zero
                 if not _min_err or np.isnan(_min_err):
                     _min_err = 1e-1
-                if round_value_to_error:
-                    _sig = int(-np.floor(np.log10(_min_err))) + n_significant_digits - 1
-                else:
-                    _sig = int(-np.floor(_log_abs_value)) + n_significant_digits - 1
 
-                _display_val = round(self._value, _sig)
-                if asymmetric_error:
-                    _display_err_dn = round(self.error_down, _sig)
-                    _display_err_up = round(self.error_up, _sig)
-                    if format_as_latex:
-                        _display_string += "${%g}^{%+g}_{%g}$" % (_display_val, _display_err_up,
-                                                                  _display_err_dn)
-                    else:
-                        _display_string += "%g + %g (up) - %g (down)" % (_display_val,
-                                                                         _display_err_up,
-                                                                         abs(_display_err_dn))
+                # calculate decimal precision if rounding:
+                if round_value_to_error:
+                    val_formatter = ScalarFormatter(_min_err, n_significant_digits=n_significant_digits)
+                    _val = val_formatter(self.value)
+                    _err = "%#.{n}g".format(n=n_significant_digits) % self.error
+                    if asymmetric_error:  # needed for different powers of 10 in asymmetric errs
+                        if abs(self.error_down) <= abs(self.error_up):
+                            _err_u = val_formatter(abs(self.error_up))
+                            _err_d = "%#.{n}g".format(n=n_significant_digits) % abs(self.error_down)
+                        else:
+                            _err_d = val_formatter(abs(self.error_down))
+                            _err_u = "%#.{n}g".format(n=n_significant_digits) % abs(self.error_up)
+                # default cases if no rounding
                 else:
-                    _display_err = round(self.error, _sig)
+                    _val = "%.g" % self.value
+                    _err = "%.g" % self.error
+                    if asymmetric_error:
+                        _err_u = "%.g" % self.error_up
+                        _err_d = "%.g" % self.error_down
+
+                if asymmetric_error:
                     if format_as_latex:
-                        _display_string += r"$%g \pm %g$" % (_display_val, _display_err)
+                        _display_string += "${%s}^{+%s}_{-%s}$" % (_val, _err_u, _err_d)
                     else:
-                        _display_string += "%g +/- %g" % (_display_val, _display_err)
+                        _display_string += "%s + %s (up) - %s (down)" % (_val, _err_u, _err_d)
+                else:
+                    if format_as_latex:
+                        _display_string += "$%s \\pm %s$" % (_val, _err)
+                    else:
+                        _display_string += "%s +/- %s" % (_val, _err)
 
             # replace scientific notation with power of ten (LaTeX only)
             if format_as_latex:

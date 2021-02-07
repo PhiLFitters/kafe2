@@ -5,6 +5,7 @@ import matplotlib as mpl
 from ...config import kafe2_rc
 from ...core.confidence import ConfidenceLevel
 from .._base import FitBase
+from .._base.format import ScalarFormatter as ScalarBaseFormatter
 from matplotlib import pyplot as plt, rcParams
 from matplotlib import gridspec as gs
 from matplotlib import ticker as plticker
@@ -95,18 +96,11 @@ class ScalarFormatter(plticker.Formatter):
         :param float sigma: The uncertainty of the parameter.
         :param int n_significant_digits: Number of significant digits.
         """
-        self._sigma = sigma
-        self._n_significant_digits = n_significant_digits
+        self.formatter = ScalarBaseFormatter(sigma=sigma, n_significant_digits=n_significant_digits)
 
     def __call__(self, x, pos=None):
         """Return the format for tick val *x* at position *pos*"""
-        _sig = int(-np.floor(np.log10(self._sigma))) + self._n_significant_digits - 1
-        _numeric_label = np.round(x, _sig)
-        return str(_numeric_label)
-
-    def format_data_short(self, value):
-        """Short version of format string for tick"""
-        return self.__call__(value)
+        return self.formatter(x)
 
 
 class ContoursProfilerException(Exception):
@@ -383,9 +377,9 @@ class ContoursProfiler(object):
                     '\n'.join([
                         r"$\langle {}\rangle = {}$".format(
                             _par_formatted_name.strip('$'),
-                            ScalarFormatter(_par_err, n_significant_digits=2)(_par_val)
+                            ScalarBaseFormatter(_par_err, n_significant_digits=2)(_par_val)
                         ),
-                        r"$\sigma_{{{}}} = {:.2g}$".format(
+                        r"$\sigma_{{{}}} = {:#.2g}$".format(
                             _par_formatted_name.strip('$'),
                             _par_err
                         )]),
