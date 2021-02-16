@@ -1,6 +1,6 @@
 numpy
 scipy
-iminuit<2
+iminuit
 matplotlib
 numdifftools
 pyyaml

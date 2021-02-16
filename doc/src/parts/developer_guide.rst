@@ -34,7 +34,7 @@ Additionally, the following Python packages should be installed:
 
 * `NumPy <https://numpy.org/>`_
 * `Scipy <https://www.scipy.org/>`_
-* `iminuit <https://pypi.org/project/iminuit/>`_ <2
+* `iminuit <https://pypi.org/project/iminuit/>`_
 * `matplotlib <https://matplotlib.org/>`_
 * `numdifftools <https://pypi.org/project/numdifftools/>`_
 * `PyYaml <https://pyyaml.org/>`_
@@ -46,9 +46,6 @@ Additionally, the following Python packages should be installed:
 * `Sphinx <https://pypi.org/project/Sphinx/>`_
 * `Sphinx Bootstrap Theme <https://pypi.org/project/sphinx-bootstrap-theme/>`_
 * `mock <https://pypi.org/project/mock/>`_
-
-For support of newer versions of iminuit check out the current
-`GitHub issue <https://github.com/dsavoiu/kafe2/issues/163>`_.
 
 To install all of these packages automatically run::
 
