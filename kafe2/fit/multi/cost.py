@@ -1,4 +1,3 @@
-from funcsigs import Signature, Parameter
 import numpy as np
 
 from .._base import CostFunction, CostFunction_Chi2
