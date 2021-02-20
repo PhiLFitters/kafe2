@@ -261,7 +261,7 @@ class XYFit(FitBase):
     @property
     def x_model(self):
         """1D array containing the model *x* values. The same as :py;obj:`.x_data` for an
-        :py:obj:`~.XYFit`.
+            :py:obj:`~.XYFit`.
 
         :rtype: numpy.ndarray[float]
         """
@@ -700,7 +700,7 @@ class XYFit(FitBase):
         self._param_model.x = self.x_model
         return self._param_model.eval_model_function(x=x, model_parameters=model_parameters)
 
-    def eval_model_function_derivative_by_parameters(self, x=None, model_parameters=None):
+    def eval_model_function_derivative_by_parameters(self, x=None, model_parameters=None, par_dx=None):
         """Evaluate the derivative of the model function with respect to the model parameters.
 
         :param x: 1D array containing the *x* values at which to evaluate the model function. If
@@ -709,14 +709,20 @@ class XYFit(FitBase):
         :param model_parameters: 1D array containing the model parameter values. If :py:obj:`None`,
             the current values :py:obj:`~XYFit.parameter_values` are used.
         :type model_parameters: typing.Collection[float]
+        :param par_dx: 1D array with length ``pars`` containing the numeric differentiation step
+            size for each parameter. If :py:obj:`None` and a fit has been performed, 1% of the parameter uncertainties
+            is used.
+        :type par_dx: typing.Collection[float]
         :return: 2D array of shape ``(par, N)`` containing the model function derivatives for
             each parameter at the given *x* values.
         :rtype: numpy.ndarray[numpy.ndarray[float]]
         """
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
+        if par_dx is None and self.did_fit:
+            par_dx = 1e-2*self.parameter_errors
         return self._param_model.eval_model_function_derivative_by_parameters(
-            x=x, model_parameters=model_parameters)
+            x=x, model_parameters=model_parameters, par_dx=par_dx)
 
     def error_band(self, x=None):
         """Calculate the symmetric model uncertainty at every given point *x*. This is only
@@ -734,8 +740,7 @@ class XYFit(FitBase):
         if self.parameter_cov_mat is None:
             return np.zeros_like(x)
 
-        _f_deriv_by_params = self.eval_model_function_derivative_by_parameters(
-            x=x, model_parameters=self.parameter_values)
+        _f_deriv_by_params = self.eval_model_function_derivative_by_parameters(x=x)
         # here: df/dp[par_idx]|x=x[x_idx] = _f_deriv_by_params[par_idx][x_idx]
 
         _f_deriv_by_params = _f_deriv_by_params.T
