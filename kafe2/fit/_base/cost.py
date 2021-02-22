@@ -345,20 +345,28 @@ class CostFunction_Chi2(CostFunction):
     def chi2_covariance(self, data, model, total_cov_mat_cholesky):
         r"""A least-squares cost function calculated from `y` data and model values,
         considering the covariance matrix of the `y` measurements.
+        The cost function value can be calculated as follows:
 
         .. math::
-            C = \chi^2({\bf d}, {\bf m}) = ({\bf d} - {\bf m})^{\top}\,{{\bf V}^{-1}}\,({\bf d} - {\bf m})
+            C = \chi^2({\bf d}, {\bf m})
+            = ({\bf d} - {\bf m})^{\top}\,{{\bf V}^{-1}}\,({\bf d} - {\bf m})
                 +
-                C({\bf p})
+                C_{\rm con}({\bf p})
+                +
+                C_{\rm det}({\bf V})
 
         In the above, :math:`{\bf d}` are the measurements,
         :math:`{\bf m}` are the model predictions,
         :math:`{{\bf V}^{-1}}` is the inverse of the total covariance matrix,
-        and :math:`C({\bf p})` is the additional cost resulting from any constrained parameters.
+        :math:`C_{\rm par}({\bf p})` is the additional cost resulting from any constrained
+        parameters,
+        and :math:`C_{\rm det}({\bf V})` is the additional cost to compensate for a non-constant
+        covariance matrix.
 
         :param data: measurement data :math:`{\bf d}`
         :param model: model predictions :math:`{\bf m}`
-        :param total_cov_mat_inverse: inverse of the total covariance matrix :math:`{\bf V}^{-1}`
+        :param total_cov_mat_cholesky: Cholesky decomposition  of the total covariance matrix
+            :math:`{\bf L}` with :math:`{\bf L}^T {\bf L} = {\bf V}`
 
         :return: cost function value
         """

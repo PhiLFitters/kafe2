@@ -78,7 +78,7 @@ parameter space.
 
 .. math::
 
-    C = C\left(\bm{d}, \bm{m}(\bm{p})\right) =  C(\bm{p})
+    C = C\left(\bm{d}, \bm{m}(\bm{p})\right) =  C(\bm{p}) .
 
 Therefore parameter estimation essentially boils down to finding the
 vector of model parameters :math:`\hat{\bm{p}}` for which the cost
@@ -113,12 +113,12 @@ The method of **least squares** is the standard approach in parameter estimation
 To calculate the value of this cost function the differences between model and
 data are squared, then their sum is minimized with respect to
 the parameters (hence the name '*least squares*').
-More formally, using the data **covariance matrix** :math:`V`, the cost
+More formally, using the data **covariance matrix** :math:`\bm{V}`, the cost
 function is expressed as follows:
 
 .. math::
 
-    \chi^2(\bm{p}) = (\bm{d} - \bm{m}(\bm{p}))^T \ V^{-1}
+    \chi^2(\bm{p}) = (\bm{d} - \bm{m}(\bm{p}))^T \ \bm{V}^{-1}
         \ (\bm{d} - \bm{m}(\bm{p})).
 
 Since the value of the cost function at the minimum follows a :math:`\chi^2`
@@ -207,7 +207,7 @@ uncertainties that assume a normal distribution:
     \frac{1}{2} \left( \frac{d_i - m_i(\bm{p})}{\sigma_i} \right)^2\right) \\
     & = - \sum_i \log \frac{1}{\sqrt[]{2 \pi} \: \sigma_i} + \sum_i \frac{1}{2}
     \left( \frac{d_i - m_i(\bm{p})}{\sigma_i} \right)^2 \\
-    & = - \log L_\mathrm{max} + \frac{1}{2} \chi^2
+    & = - \log L_\mathrm{max} + \frac{1}{2} \chi^2 .
 
 As we can see the logarithm cancels out the exponential function of the normal
 distribution and we are left with two parts:
@@ -233,7 +233,7 @@ The *xy* covariance matrix is then calculated as follows:
 
 .. math::
 
-    \bm{V}_{ij} = \bm{V}_{y,ij} + f'\left(x_i\right)f'\left(x_j\right)\bm{V}_{x,ij}.
+    V_{ij} = V_{y,ij} + f'\left(x_i\right) f'\left(x_j\right) V_{x,ij} .
 
 .. warning::
     This procedure is only accurate if the model function is approximately linear on the scale of
@@ -268,18 +268,83 @@ With the cost functions used above :math:`C \equiv C_0`, the new cost function t
 
 .. math::
 
-    C_\mathrm{total} = C_0 + C_\mathrm{constraint}
+    C_\mathrm{total} = C_0 + C_\mathrm{con} .
 
 In general the penalty is given by the current parameter values :math:`\bm{p}`, the expected
-parameter values :math:`\bm{\mu}` and the covariance matrix :math:`V` describing the
-values and correlations between the constraints on the parameters:
+parameter values :math:`\bm{\mu}` and the covariance matrix :math:`\bm{V}_\mathrm{con}` describing
+the values and correlations between the constraints on the parameters:
 
 .. math::
 
-  C_\mathrm{constraint} = (\bm{p} - \bm{\mu})^T V^{-1} (\bm{p} - \bm{\mu})
+  C_\mathrm{con} = (\bm{p} - \bm{\mu})^T \bm{V}_\mathrm{con}^{-1} (\bm{p} - \bm{\mu}) .
 
 For a single parameter this simplifies to:
 
 .. math::
 
-  C_\mathrm{constraint} = \left ( \frac{p-\mu}{\sigma} \right )^2
+  C_\mathrm{con} = \left ( \frac{p-\mu}{\sigma} \right )^2 .
+
+Covariance Matrix Determinant
+-----------------------------
+For very simple :math:`\chi^2` fits the covariance matrix :math:`\bm{V}` is constant.
+However, when *y* uncertainties relative to the model or *x* uncertainties (see above) are specified
+the covariance matrix becomes a function of the model parameters:
+:math:`\bm{V} \equiv \bm{V}(\bm{p})`.
+Because an increase in :math:`\bm{V}(\bm{p})` results in a lower value for :math:`\chi^2` this
+introduces a bias towards parameter values :math:`\bm{p}` that result in an increase in
+:math:`\bm{V}(\bm{p})`.
+To compensate for this bias the logarithmic determinant of :math:`\bm{V}(\bm{p})` is added to the
+total cost:
+
+.. math::
+
+  C_\mathrm{det} = \ln \det(\bm{V}(\bm{p})) .
+
+Together with the additional cost from constraints the total cost becomes
+
+.. math::
+
+  C_\mathrm{total} = C_0 + C_\mathrm{con} + C_\mathrm{det} .
+
+Numerical Considerations
+------------------------
+The mathematical description of :math:`\chi^2` shown above makes use of the inverse of the
+covariance matrix :math:`\bm{V}^{-1}`.
+However, *kafe2* does **not** actually calculate :math:`V^{-1}`.
+Instead the `Cholesky decomposition <https://en.wikipedia.org/wiki/Cholesky_decomposition>`_
+:math:`\bm{L} \bm{L}^T = \bm{V}` of the covariance matrix is being used where :math:`\bm{L}` is a
+lower triangular matrix.
+Calculating :math:`\bm{L}` is much faster than calculating :math:`\bm{V}^{-1}` and it also reduces
+the rounding error from floating point operations.
+
+:math:`\bm{L}` can be used to
+`solve <https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.cho_solve.html>`_ the
+system of linear equations corresponding to :math:`\bm{V}` for the residual vector
+:math:`\bm{r} = \bm{d} - \bm{m}`:
+
+.. math::
+
+  \bm{V} \bm{x} = \bm{r} .
+
+With :math:`\bm{x} = \bm{V}^{-1} \bm{r}` we now find:
+
+.. math::
+
+  C_0 = \bm{r}^T \bm{V}^{-1} \bm{r} = \bm{r}^T \bm{x} .
+
+Because :math:`\bm{L}` is a triangular matrix it can also be used to efficiently calculate
+:math:`\ln \det(\bm{V})`:
+
+.. math::
+
+  \det (\bm{L}) = \det (\bm{L}^T) = \prod_i L_{ii},
+
+.. math::
+
+  C_\mathrm{det}
+  = \ln \det (\bm{V})
+  = \ln \det (\bm{L} \bm{L}^T)
+  = \ln (\det \bm{L} \cdot \det \bm{L}^T)
+  = \ln (\prod_i L_{ii}^2)
+  = 2 \sum_i \ln L_{ii}.
+
