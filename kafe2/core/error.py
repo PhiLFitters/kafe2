@@ -95,8 +95,6 @@ class CovMat(object):
         if self._mat.ndim != 2 or self._mat.shape[0] != self._mat.shape[1]:
             raise ValueError(
                 "Covariance matrix must be square matrix, shape %r given." % (self._mat.shape,))
-        if not np.allclose(self._mat - self._mat.T, 0):
-            raise ValueError("Covariance matrix must be symmetric!")
         self._size = self._mat.shape[0]
         self._cond = None
 
@@ -329,8 +327,6 @@ class SimpleGaussianError(GaussianErrorBase):
             cov_mat_cor_part = np.zeros_like(cov_mat_uncor_part)
 
         cov_mat = CovMat(cov_mat_uncor_part + cov_mat_cor_part)
-
-        assert np.allclose(np.diag(cov_mat.mat), error_array ** 2, atol=1e-4)
 
         return cov_mat, cov_mat_uncor_part, cov_mat_cor_part
 
@@ -694,3 +690,10 @@ class MatrixGaussianError(GaussianErrorBase):
     @property
     def fit_indices(self):
         return self._fit_indices
+
+    # For performance reasons this check is called manually from outside
+    def check_cov_mat_symmetry(self):
+        _mat = self.cov_mat
+        if np.any(_mat != _mat.T):
+            warnings.warn("Covariance matrix is not symmetrical: %s" % _mat)
+

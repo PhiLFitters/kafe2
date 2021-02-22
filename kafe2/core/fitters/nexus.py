@@ -350,10 +350,6 @@ class NodeBase(object):
         """
         Notify parents that they will need to be updated because this node has changed.
         """
-        # frozen nodes do not notify their parents
-        if self.frozen:
-            return
-
         for _p in self.iter_parents():
             _p.mark_for_update()
 
@@ -368,13 +364,15 @@ class NodeBase(object):
         Sets this node's frozen property to False.
         """
         self._frozen = False
+        self._stale = True
 
     def mark_for_update(self):
         """
         Sets this node's stale property to True.
         """
-        self._stale = True
-        self.notify_parents()
+        if not self.stale and not self.frozen:
+            self._stale = True
+            self.notify_parents()
 
     def update(self):
         """
@@ -423,6 +421,7 @@ class NodeBase(object):
         self._children = [_c if _c is not current_child else new_child for _c in self._children]
         new_child.add_parent(self)
         current_child.remove_parent(self)
+        self.mark_for_update()
 
     def print_descendants(self):
         """
@@ -730,6 +729,9 @@ class Function(ValueNode):
         self.add_child(parameter)
 
     def update(self):
+        for _child in self.get_children():
+            if _child.stale and not _child.frozen:
+                _child.update()
         self._par_cache = [
             _par.value
             for _par in self._parameters
@@ -853,12 +855,6 @@ class Tuple(ValueNode):
             _node.value for _node in self.nodes
         ])
         self._stale = False
-
-    @property
-    def value(self):
-        if self.stale:
-            self.update()
-        return self._value
 
     def iter_values(self):
         """
@@ -1090,8 +1086,8 @@ class NodeCycleChecker(object):
         # keep track of nodes encountered
         seen += (node,)
 
-        # recursively visit children
-        for _c in node.iter_children():
+        # recursively visit parents
+        for _c in node.iter_parents():
             self.run(node=_c, seen=seen)
 
 
@@ -1217,7 +1213,7 @@ class Nexus(object):
         self._nodes[node.name] = node
 
         # check for cycles
-        NodeCycleChecker(self._root_ref()).run()
+        NodeCycleChecker(node).run()
 
         return node
 
@@ -1472,7 +1468,7 @@ class Nexus(object):
             _node.add_child(self.get(_dep))
 
         # check for cycles
-        NodeCycleChecker(self._root_ref()).run()
+        NodeCycleChecker(_node).run()
 
     def get(self, node_name):
         """Retrieve a node by its name or ``None`` if no such node exists.

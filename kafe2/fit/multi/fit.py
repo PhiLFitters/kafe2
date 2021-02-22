@@ -647,6 +647,7 @@ class MultiFit(FitBase):
                 err_matrix=err_matrix, matrix_type=matrix_type, err_val=err_val, relative=relative,
                 fit_indices=fits
             )
+            _matrix_error.check_cov_mat_symmetry()
             return self._add_error_object(error_object=_matrix_error, reference=reference,
                                           name=name, axis=axis)
 

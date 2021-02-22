@@ -179,8 +179,9 @@ class FitBase(FileIOMixin, object):
                     _error_names.append(_error_name)
                     self._add_property_to_nexus(_mat_name)
                     _mat_names.append(_mat_name)
-                if _type == "model":
+                if _error_name in self._MODEL_ERROR_NODE_NAMES:
                     self._nexus.add_dependency(_error_name, depends_on="parameter_values")
+                if _mat_name in self._MODEL_ERROR_NODE_NAMES:
                     self._nexus.add_dependency(_mat_name, depends_on="parameter_values")
                 self._add_property_to_nexus(_mat_name + "_inverse", depends_on=_mat_name)
                 self._nexus.add_function(cholesky_decomposition, func_name=_mat_name + "_cholesky",

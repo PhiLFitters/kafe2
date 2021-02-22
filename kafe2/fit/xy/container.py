@@ -305,6 +305,7 @@ class XYContainer(IndexedContainer):
             err_matrix=err_matrix, matrix_type=matrix_type, err_val=err_val,
             relative=relative, reference=lambda: self._get_data_for_axis(_axis)
         )
+        _err.check_cov_mat_symmetry()
         _name = self._add_error_object(name=name, error_object=_err, axis=_axis)
         return _name
 

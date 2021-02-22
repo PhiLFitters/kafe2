@@ -246,6 +246,7 @@ class DataContainerBase(FileIOMixin, object):
         """
         _err = MatrixGaussianError(err_matrix=err_matrix, matrix_type=matrix_type, err_val=err_val,
                                    relative=relative, reference=reference)
+        _err.check_cov_mat_symmetry()
 
         _name = self._add_error_object(name=name, error_object=_err)
         return _name

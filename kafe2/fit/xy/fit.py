@@ -81,6 +81,8 @@ class XYFit(FitBase):
     def _init_nexus(self):
         super(XYFit, self)._init_nexus()
 
+        self._nexus.get("total_cov_mat").remove_child(self._nexus.get("data_cov_mat"))
+        self._nexus.get("total_cov_mat").remove_child(self._nexus.get("model_cov_mat"))
         self._nexus.add_dependency(
             'total_cov_mat',
             depends_on=(
@@ -90,6 +92,8 @@ class XYFit(FitBase):
                 'y_total_cov_mat'
             )
         )
+        self._nexus.get("total_error").remove_child(self._nexus.get("data_error"))
+        self._nexus.get("total_error").remove_child(self._nexus.get("model_error"))
         self._nexus.add_dependency(
             'total_error',
             depends_on=(

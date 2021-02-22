@@ -22,7 +22,7 @@ class MinimizerIMinuitException(MinimizerException):
 class MinimizerIMinuit(MinimizerBase):
     def __init__(self,
                  parameter_names, parameter_values, parameter_errors,
-                 function_to_minimize, tolerance=1e-6, errordef=iminuit.Minuit.LEAST_SQUARES,
+                 function_to_minimize, tolerance=1e-2, errordef=iminuit.Minuit.LEAST_SQUARES,
                  strategy=1):
         self._strategy = strategy
 

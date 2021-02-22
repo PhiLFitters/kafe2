@@ -175,12 +175,16 @@ class TestMatrixGaussianError(unittest.TestCase):
             MatrixGaussianError(self.wrong_cor_mat_diagonal_not_ones, 'cor', err_val=self.ref_err_val, reference=self.ref_reference)
 
     def test_raise_build_from_wrong_cov_mat_asymm(self):
-        with self.assertRaises(ValueError):
-            MatrixGaussianError(self.wrong_cov_mat_asymm, 'cov', err_val=self.ref_err_val, reference=self.ref_reference)
+        with self.assertWarns(UserWarning):
+            _err = MatrixGaussianError(self.wrong_cov_mat_asymm, 'cov', err_val=None,
+                                reference=self.ref_reference)
+            _err.check_cov_mat_symmetry()
 
     def test_raise_build_from_wrong_cor_mat_asymm(self):
-        with self.assertRaises(ValueError):
-            MatrixGaussianError(self.wrong_cor_mat_asymm, 'cor', err_val=self.ref_err_val, reference=self.ref_reference)
+        with self.assertWarns(UserWarning):
+            _err = MatrixGaussianError(self.wrong_cor_mat_asymm, 'cor', err_val=self.ref_err_val,
+                                reference=self.ref_reference)
+            _err.check_cov_mat_symmetry()
 
     def test_raise_build_cov_mat_with_err_val(self):
         with self.assertRaises(ValueError):

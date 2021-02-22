@@ -19,4 +19,4 @@ class TestMinimizerIMinuit(TestMinimizerMixin, unittest.TestCase):
 
     @property
     def _expected_tolerance(self):
-        return 1e-6
+        return 1e-2
