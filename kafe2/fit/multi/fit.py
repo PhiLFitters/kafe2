@@ -608,6 +608,19 @@ class MultiFit(FitBase):
         else:
             return super(MultiFit, self).goodness_of_fit
 
+    @property
+    def chi2_probability(self):
+        """The chi2 probability for the current model values."""
+        _cost = self.cost_function_value
+        if self._shared_error_nodes_initialized:
+            _cost -= self._nexus.get("total_cov_mat_log_determinant").value
+        for _fit in self._fits:
+            _cost_func = _fit._cost_function
+            if _cost_func.add_determinant_cost and not (
+                    self._shared_error_nodes_initialized and _cost_func.is_chi2):
+                _cost -= _fit._nexus.get("total_cov_mat_log_determinant").value
+        return self._cost_function.chi2_probability(_cost, self.ndf)
+
     # -- public methods
 
     def add_matrix_error(self, err_matrix, matrix_type, fits, axis=None, name=None, err_val=None,
