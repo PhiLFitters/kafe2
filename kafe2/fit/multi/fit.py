@@ -300,13 +300,13 @@ class MultiFit(FitBase):
         self._nexus.add_function(log_determinant, func_name="total_cov_mat_log_determinant",
                                  par_names=["total_cov_mat_cholesky"], existing_behavior="replace")
 
-        _shared_cost_function = SharedCostFunction()
+        self._shared_cost_function = SharedCostFunction()
         self._nexus.add_function(
-            func=_shared_cost_function, func_name=_shared_cost_function.name,
-            par_names=_shared_cost_function.arg_names
+            func=self._shared_cost_function, func_name=self._shared_cost_function.name,
+            par_names=self._shared_cost_function.arg_names
         )
-        _cost_functions.append(_shared_cost_function)
-        _cost_names.append(_shared_cost_function.name)
+        _cost_functions.append(self._shared_cost_function)
+        _cost_names.append(self._shared_cost_function.name)
         self._cost_function = MultiCostFunction(
             singular_cost_functions=_cost_functions, cost_function_names=_cost_names)
         self._nexus.add_function(
@@ -591,16 +591,19 @@ class MultiFit(FitBase):
 
     @property
     def goodness_of_fit(self):
-        if isinstance(self._cost_function, MultiCostFunction):
-            _sum = 0.0
-            for _fit in self._fits:
-                _gof = _fit.goodness_of_fit
-                if _gof is None:
-                    return None
-                _sum += _gof
-            return _sum
-        else:
-            return super(MultiFit, self).goodness_of_fit
+        _gof_sum = 0.0
+        for _fit in self._fits:
+            if self._shared_error_nodes_initialized and _fit._cost_function.is_chi2:
+                continue
+            _gof = _fit.goodness_of_fit
+            if _gof is None:
+                return None
+            _gof_sum += _gof
+        if self._shared_error_nodes_initialized:
+            _gof_sum += self._shared_cost_function.goodness_of_fit(
+                *[self._nexus.get(_node_name).value
+                  for _node_name in self._shared_cost_function.arg_names])
+        return _gof_sum
 
     @property
     def chi2_probability(self):
