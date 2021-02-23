@@ -94,7 +94,7 @@ class TestNodes(unittest.TestCase):
                 [par_1, par_2]
             )
 
-    def test_node_iter_children_iter_parents(self):
+    def test_node_iter_parents(self):
         par_1 = Parameter(3, name='par_1')
         par_2 = Parameter(2, name='par_2')
         par_lc_1 = par_1 + par_2
@@ -105,11 +105,6 @@ class TestNodes(unittest.TestCase):
                 [_parent for _parent in _par.iter_parents()],
                 [par_lc_1, par_lc_2]
             )
-        for _par in par_lc_1, par_lc_2:
-            self.assertEqual(
-                [_child for _child in _par.iter_children()],
-                [par_1, par_2]
-            )
 
     def test_node_add_child(self):
         par = Parameter(3, name='par')
@@ -117,7 +112,7 @@ class TestNodes(unittest.TestCase):
         par.add_child(2)
 
         self.assertEqual(
-            [p.value for p in par.iter_children()],
+            [p.value for p in par.get_children()],
             [1, 2]
         )
 

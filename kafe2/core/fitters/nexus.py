@@ -238,7 +238,7 @@ class NodeBase(object):
         :return: a list containing the children of this node.
         :rtype: list of NodeBase
         """
-        return list(self.iter_children())
+        return self._children
 
     def get_parents(self):
         """
@@ -290,13 +290,6 @@ class NodeBase(object):
         self._parents.remove(weakref.ref(node))
 
         # do *not* remove self node from node children
-
-    def iter_children(self):
-        """
-        Generator for child nodes.
-        """
-        for _child in self._children:
-            yield _child
 
     def iter_parents(self):
         """
@@ -923,7 +916,7 @@ class NodeChildrenPrinter(object):
         self.visit(node, indent=indent)
 
         # recursively visit children
-        for _c in node.iter_children():
+        for _c in node.get_children():
             self.run(_c, indent=indent + '  ')
 
 
@@ -954,7 +947,7 @@ class NodeSubgraphGraphvizSourceProducer(object):
 
     def visit(self, node):
         self._nodes.add(node)
-        for _c in node.iter_children():
+        for _c in node.get_children():
             self._nodes.add(node)
             if node in self._exclude or _c in self._exclude:
                 continue
@@ -987,7 +980,7 @@ class NodeSubgraphGraphvizSourceProducer(object):
         node_chain.add(node)
 
         # recursively visit children
-        for _c in node.iter_children():
+        for _c in node.get_children():
             NodeSubgraphGraphvizSourceProducer.run(self, _c, node_chain=node_chain)
         # recursively visit parents
         for _p in node.iter_parents():
@@ -1183,7 +1176,7 @@ class Nexus(object):
             if existing_behavior == 'replace':
                 if add_children:
                     # add all dependent children to the nexus first
-                    for _child in node.iter_children():
+                    for _child in node.get_children():
                         self.add(_child, add_children=True, existing_behavior='ignore')
                 # replace node
                 self._nodes[node.name].replace(node)
@@ -1196,14 +1189,14 @@ class Nexus(object):
         else:
             if add_children:
                 # add all dependent children to the nexus first
-                for _child in node.iter_children():
+                for _child in node.get_children():
                     self.add(_child, add_children=True, existing_behavior='ignore')
 
             # add new node as child of root node
             self._root_ref().add_child(node)
 
             # remove nexus root from all children's parents (if present)
-            for _child in node.iter_children():
+            for _child in node.get_children():
                 try:
                     self._root_ref().remove_child(_child)
                 except KeyError:
