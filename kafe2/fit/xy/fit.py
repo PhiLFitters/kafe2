@@ -81,27 +81,27 @@ class XYFit(FitBase):
     def _init_nexus(self):
         super(XYFit, self)._init_nexus()
 
-        self._nexus.get("total_cov_mat").remove_child(self._nexus.get("data_cov_mat"))
-        self._nexus.get("total_cov_mat").remove_child(self._nexus.get("model_cov_mat"))
-        self._nexus.add_dependency(
-            'total_cov_mat',
-            depends_on=(
-                'parameter_values',
-                'x_model',
-                'x_total_cov_mat',
-                'y_total_cov_mat'
-            )
+        self._nexus.add_function(
+            func=self._project_cov_mat,
+            func_name="total_cov_mat",
+            par_names=[
+                "x_total_cov_mat",
+                "y_total_cov_mat",
+                "x_model",
+                "parameter_values"
+            ],
+            existing_behavior="replace"
         )
-        self._nexus.get("total_error").remove_child(self._nexus.get("data_error"))
-        self._nexus.get("total_error").remove_child(self._nexus.get("model_error"))
-        self._nexus.add_dependency(
-            'total_error',
-            depends_on=(
-                'parameter_values',
-                'x_model',
-                'x_total_error',
-                'y_total_error'
-            )
+        self._nexus.add_function(
+            func=self._project_error,
+            func_name="total_error",
+            par_names=[
+                "x_total_error",
+                "y_total_error",
+                "x_model",
+                "parameter_values"
+            ],
+            existing_behavior="replace"
         )
 
         self._nexus.add_dependency(
@@ -191,26 +191,26 @@ class XYFit(FitBase):
             )
             output_stream.write("\n")
 
-    def _project_x_onto_y(self, x, y, sqrt=False):
-        if x.ndim not in (1, 2):
-            raise ValueError
-        self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
-        self._param_model.x = self.x_model
-
-        if np.all(x == 0):
-            return y
-
-        _diag = x if x.ndim == 1 else np.diag(x)
-        _precision = 0.01 * np.min(_diag) if sqrt else 0.01 * np.min(np.sqrt(_diag))
+    def _project_cov_mat(self, x_cov_mat, y_cov_mat, x_model, parameter_values):
+        _diag = np.diag(x_cov_mat)
+        if np.all(_diag == 0):
+            return y_cov_mat
         _derivatives = self._param_model.eval_model_function_derivative_by_x(
-            dx=_precision,
-            model_parameters=self.parameter_values
+            x=x_model,
+            dx=0.01 * np.sqrt(_diag),
+            model_parameters=parameter_values
         )
-        _x_scale = _derivatives ** 2 if x.ndim == 1 else np.outer(_derivatives, _derivatives)
-        if sqrt:
-            return np.sqrt(y ** 2 + x ** 2 * _x_scale)
-        else:
-            return y + x * _x_scale
+        return y_cov_mat + x_cov_mat * np.outer(_derivatives, _derivatives)
+
+    def _project_error(self, x_error, y_error, x_model, parameter_values):
+        if np.all(x_error == 0):
+            return y_error
+        _derivatives = self._param_model.eval_model_function_derivative_by_x(
+            x=x_model,
+            dx=0.01 * x_error,
+            model_parameters=parameter_values
+        )
+        return np.sqrt(np.square(y_error) + np.square(x_error * _derivatives))
 
     def _set_data_as_model_ref(self):
         _errs_and_old_refs = []
@@ -227,7 +227,7 @@ class XYFit(FitBase):
 
     def _second_fit_needed(self):
         return bool(self._param_model.get_matching_errors({"relative": True, "axis": 1})) \
-               and self._dynamic_error_algorithm == "iterative"
+               and self._dynamic_error_algorithm == "nonlinear"
 
     def _get_node_names_to_freeze(self, first_fit):
         if not self.has_x_errors or self._dynamic_error_algorithm == "iterative":
@@ -309,7 +309,8 @@ class XYFit(FitBase):
 
         :rtype: numpy.ndarray[float]
         """
-        return self._project_x_onto_y(x=self.x_data_error, y=self.y_data_error, sqrt=True)
+        return self._project_error(
+            self.x_data_error, self.y_data_error, self.x_model, self.parameter_values)
 
     @property
     def x_data_cov_mat(self):
@@ -334,7 +335,8 @@ class XYFit(FitBase):
 
         :rtype: numpy.ndarray
         """
-        return self._project_x_onto_y(x=self.x_data_cov_mat, y=self.y_data_cov_mat, sqrt=False)
+        return self._project_cov_mat(
+            self.x_data_cov_mat, self.y_data_cov_mat, self.x_model, self.parameter_values)
 
     @property
     def x_data_cov_mat_inverse(self):
@@ -424,7 +426,8 @@ class XYFit(FitBase):
 
         :rtype: numpy.ndarray[float]
         """
-        return self._project_x_onto_y(x=self.x_model_error, y=self.y_model_error, sqrt=True)
+        return self._project_error(
+            self.x_model_error, self.y_model_error, self.x_model, self.parameter_values)
 
     @property
     def x_model_cov_mat(self):
@@ -453,7 +456,8 @@ class XYFit(FitBase):
 
         :rtype: numpy.ndarray
         """
-        return self._project_x_onto_y(x=self.x_model_cov_mat, y=self.y_model_cov_mat, sqrt=False)
+        return self._project_cov_mat(
+            self.x_model_cov_mat, self.y_model_cov_mat, self.x_model, self.parameter_values)
 
     @property
     def x_model_cov_mat_inverse(self):
@@ -521,7 +525,7 @@ class XYFit(FitBase):
 
         :rtype: numpy.ndarray[float]
         """
-        return add_in_quadrature(self.x_model_error, self.x_data_error)
+        return self._nexus.get("x_total_error").value
 
     @property
     def y_total_error(self):
@@ -529,7 +533,7 @@ class XYFit(FitBase):
 
         :rtype: numpy.ndarray[float]
         """
-        return add_in_quadrature(self.y_model_error, self.y_data_error)
+        return self._nexus.get("y_total_error").value
 
     @property
     def total_error(self):
@@ -537,7 +541,7 @@ class XYFit(FitBase):
 
         :rtype: numpy.ndarray[float]
         """
-        return self._project_x_onto_y(x=self.x_total_error, y=self.y_total_error, sqrt=True)
+        return self._nexus.get("total_error").value
 
     @property
     def x_total_cov_mat(self):
@@ -545,7 +549,7 @@ class XYFit(FitBase):
 
         :rtype: numpy.ndarray
         """
-        return self.x_data_cov_mat + self.x_model_cov_mat
+        return self._nexus.get("x_total_cov_mat").value
 
     @property
     def y_total_cov_mat(self):
@@ -553,7 +557,7 @@ class XYFit(FitBase):
 
         :rtype: numpy.ndarray
         """
-        return self.y_data_cov_mat + self.y_model_cov_mat
+        return self._nexus.get("y_total_cov_mat").value
 
     @property
     def total_cov_mat(self):
@@ -562,7 +566,7 @@ class XYFit(FitBase):
 
         :rtype: numpy.ndarray
         """
-        return self._project_x_onto_y(x=self.x_total_cov_mat, y=self.y_total_cov_mat, sqrt=False)
+        return self._nexus.get("total_cov_mat").value
 
     @property
     def x_total_cov_mat_inverse(self):

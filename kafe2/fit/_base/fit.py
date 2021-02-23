@@ -171,8 +171,12 @@ class FitBase(FileIOMixin, object):
                 _mat_name = '_'.join((_axis, _type, "cov_mat")) if _axis is not None \
                     else '_'.join((_type, "cov_mat"))
                 if _type == "total":
-                    self._add_property_to_nexus(_error_name, depends_on=_error_names)
-                    self._add_property_to_nexus(_mat_name, depends_on=_mat_names)
+                    # Performance optimization: calculate total foo in Nexus
+                    self._nexus.add_function(
+                        lambda m, d: np.sqrt(m ** 2 + d ** 2),
+                        func_name=_error_name, par_names=_error_names)
+                    self._nexus.add_function(
+                        lambda m, d: m + d, func_name=_mat_name, par_names=_mat_names)
                 else:
                     self._add_property_to_nexus(_name)
                     self._add_property_to_nexus(_error_name)
@@ -475,12 +479,12 @@ class FitBase(FileIOMixin, object):
     @property
     def total_error(self):
         """array of pointwise total uncertainties"""
-        return add_in_quadrature(self.data_error, self.model_error)
+        return self._nexus.get("total_error").value
 
     @property
     def total_cov_mat(self):
         """the total covariance matrix"""
-        return self.data_cov_mat + self.model_cov_mat
+        return self._nexus.get("total_cov_mat").value
 
     @property
     def total_cov_mat_inverse(self):

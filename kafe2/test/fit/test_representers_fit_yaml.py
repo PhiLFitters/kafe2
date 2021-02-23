@@ -258,7 +258,6 @@ class TestHistFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
             )
         )
         self.assertTrue(
-            True or
             np.allclose(
                 self._test_density_do_fit,
                 _read_fit.eval_model_function_density(self._test_x)

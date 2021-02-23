@@ -513,12 +513,6 @@ class MultiFit(FitBase):
                 _lower = _upper
             return _total_cov_mat
 
-    def total_cov_mat_inverse(self):
-        return invert_matrix(self.total_cov_mat)
-
-    def total_cor_mat(self):
-        return CovMat(self.total_cov_mat).cor_mat
-
     @property
     def data_container(self):
         """List of the data containers of the individual fits."""
