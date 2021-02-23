@@ -10,7 +10,7 @@ import six
 from .container import DataContainerBase, DataContainerException
 from ..io.file import FileIOMixin
 from ...config import kc
-from ...core.fitters.nexus import Nexus, NexusError, Parameter
+from ...core.fitters.nexus import Nexus, NexusError, Parameter, Array
 from ...core.fitters.nexus_fitter import NexusFitter
 from ...core.constraint import GaussianMatrixParameterConstraint, GaussianSimpleParameterConstraint
 from ...core.error import CovMat
@@ -146,18 +146,18 @@ class FitBase(FileIOMixin, object):
 
         # -- fit parameters
 
+        _parameter_nodes = []
         # get names and default values of all parameters if the fit has a model function
         if self._model_function is not None:
             for _par_name, _par_value in six.iteritems(self._model_function.defaults_dict):
                 # create nexus node for function parameter
-                self._nexus.add(Parameter(_par_value, name=_par_name))
+                _parameter_nodes.append(self._nexus.add(Parameter(_par_value, name=_par_name)))
 
                 self._fit_param_names.append(_par_name)
 
-        self._nexus.add_function(lambda: self.parameter_values, func_name='parameter_values')
+        self._nexus.add(Array(_parameter_nodes, name="parameter_values"))
         self._nexus.add_function(lambda: self.parameter_constraints,
                                  func_name='parameter_constraints')
-        self._nexus.add_dependency('parameter_values', depends_on=self._fit_param_names)
 
         # -- errors
 
@@ -518,9 +518,7 @@ class FitBase(FileIOMixin, object):
 
         :rtype: numpy.ndarray[float]
         """
-        _par_val_dict = self.parameter_name_value_dict
-        _par_names = self.parameter_names
-        return np.array([_par_val_dict[_par_name] for _par_name in _par_names])
+        return self._nexus.get("parameter_values").value
 
     @property
     def parameter_names(self):
