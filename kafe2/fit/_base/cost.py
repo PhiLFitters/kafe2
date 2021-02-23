@@ -3,7 +3,7 @@ import six
 import warnings
 
 from scipy.stats import poisson, norm, chi2
-from scipy.linalg import cho_solve
+from scipy.linalg import solve_triangular
 from ..io.file import FileIOMixin
 from .format import ParameterFormatter, CostFunctionFormatter
 
@@ -295,10 +295,10 @@ class CostFunction_Chi2(CostFunction):
         # if a covariance matrix inverse is given, use it
         if cov_mat_cholesky is not None:
             try:
-                _x = cho_solve((cov_mat_cholesky, True), _res, check_finite=True)
+                _x = solve_triangular(cov_mat_cholesky, _res, lower=True)
             except ValueError:
                 return np.inf
-            _cost = _x.dot(_res)
+            _cost = np.sum(np.square(_x))
             return _cost
 
         if self._fail_on_no_matrix:
@@ -358,10 +358,10 @@ class CostFunction_Chi2(CostFunction):
         In the above, :math:`{\bf d}` are the measurements,
         :math:`{\bf m}` are the model predictions,
         :math:`{{\bf V}^{-1}}` is the inverse of the total covariance matrix,
-        :math:`C_{\rm par}({\bf p})` is the additional cost resulting from any constrained
+        :math:`C_{\rm con}({\bf p})` is the additional cost resulting from any constrained
         parameters,
-        and :math:`C_{\rm det}({\bf V})` is the additional cost to compensate for a non-constant
-        covariance matrix.
+        and :math:`C_{\rm det}({\bf V}) = \ln \det({\bf V})` is the additional cost to compensate
+        for a non-constant covariance matrix.
 
         :param data: measurement data :math:`{\bf d}`
         :param model: model predictions :math:`{\bf m}`

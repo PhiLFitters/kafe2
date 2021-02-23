@@ -317,20 +317,24 @@ lower triangular matrix.
 Calculating :math:`\bm{L}` is much faster than calculating :math:`\bm{V}^{-1}` and it also reduces
 the rounding error from floating point operations.
 
-:math:`\bm{L}` can be used to
-`solve <https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.cho_solve.html>`_ the
-system of linear equations corresponding to :math:`\bm{V}` for the residual vector
-:math:`\bm{r} = \bm{d} - \bm{m}`:
+Because :math:`\bm{L}` is a triangular matrix
+`solving <https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.solve_triangular.html>`_
+the corresponding system of linear equations for the residual vector
+:math:`\bm{r} = \bm{d} - \bm{m}` can be done very quickly:
 
 .. math::
 
-  \bm{V} \bm{x} = \bm{r} .
+  \bm{L} \bm{x} = \bm{r} .
 
-With :math:`\bm{x} = \bm{V}^{-1} \bm{r}` we now find:
+With :math:`\bm{x} = \bm{L}^{-1} \bm{r}` we now find:
 
 .. math::
 
-  C_0 = \bm{r}^T \bm{V}^{-1} \bm{r} = \bm{r}^T \bm{x} .
+  C_0
+  = \bm{r}^T \bm{V}^{-1} \bm{r}
+  = \bm{r}^T (\bm{L}^T \bm{L})^{-1} \bm{r}
+  = \bm{r}^T \bm{L}^{-T} \bm{L}^{-1} \bm{r}
+  = \bm{x}^T \bm{x}.
 
 Because :math:`\bm{L}` is a triangular matrix it can also be used to efficiently calculate
 :math:`\ln \det(\bm{V})`:
