@@ -4,8 +4,6 @@ import numpy as np
 from kafe2 import XYFit, Plot
 
 
-# FIXME: Use different matplotlib backend instead of skipping the tests
-@unittest.skipIf(sys.version_info[0] < 3, "Require Python3 for plotting on TravisCI servers.")
 class TestXYPlot(unittest.TestCase):
     def setUp(self):
         self._ref_data = [[1, 2, 3], [1, 2, 3]]
@@ -81,7 +79,6 @@ class TestXYPlot(unittest.TestCase):
         self.assertEqual(self.plot.axes[0]['main'].get_yscale(), 'log')
 
 
-@unittest.skipIf(sys.version_info[0] < 3, "Require Python3 for plotting on TravisCI servers.")
 class TestMultiPlot(unittest.TestCase):
     def setUp(self):
         self._ref_data1 = [[1, 2, 3], [1, 2, 3]]
@@ -146,4 +143,4 @@ class TestMultiPlot(unittest.TestCase):
         self.plot_sep.y_scale = y_scales
         for _ax, _xs, _ys in zip(self.plot_sep.axes, x_scales, y_scales):
             self.assertEqual(_ax['main'].get_xscale(), _xs)
-            self.assertEqual(_ax['main'].get_yscale(). _ys)
+            self.assertEqual(_ax['main'].get_yscale(), _ys)

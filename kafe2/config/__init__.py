@@ -3,6 +3,10 @@
 
 import os
 import yaml
+# WARNING! DO NOT REMOVE THE PYPLOT IMPORT, EVEN THOUGH IT IS NOT USED.
+# force pyplot import once to trigger eventual hooks for backend change, e.g. when running inside jupyter
+# those hooks are not triggered when only importing matplotlib
+import matplotlib.pyplot as plt
 import matplotlib as mpl
 from copy import deepcopy
 from tempfile import NamedTemporaryFile
@@ -24,7 +28,8 @@ class ConfigLookupError(ConfigError):
 class ConfigTypeError(ConfigError):
     def __init__(self, key_path, problematic_key_index):
         self.message = ("Error getting config key for '{}': "
-                        "scalar node '{}' encountered inside path!".format(', '.join(key_path), key_path[problematic_key_index]))
+                        "scalar node '{}' encountered inside path!".format(', '.join(key_path),
+                                                                           key_path[problematic_key_index]))
 
 
 class ConfigLoader(yaml.Loader):
@@ -38,6 +43,7 @@ class ConfigLoader(yaml.Loader):
         with open(os.path.join(self._current_dir, _include_path)) as _f:
             return yaml.load(_f, ConfigLoader)
 
+
 ConfigLoader.add_constructor('!include', ConfigLoader.include)
 
 # -- read in default global kafe2 configuration from file
@@ -47,11 +53,12 @@ with open(os.path.join(__path__[0], 'kafe2.yaml')) as _f:
 # make a copy of the default configuration
 _default_kc = deepcopy(_kc)
 
+
 def kc(*keys):
     """Lookup configuration entry by providing the path to it."""
     _dict = _kc
 
-    # if called without args, retreive the entire configuration dict
+    # if called without args, retrieve the entire configuration dict
     if not keys:
         return _kc
 
@@ -66,6 +73,7 @@ def kc(*keys):
     return _dict
 
 
+kafe2_rc = None  # if mpl is only a mock module
 try:
     if mpl.__version__.startswith('2'):
         kafe2_rc = mpl.rc_params_from_file(os.path.join(__path__[0], 'kafe2.matplotlibrc.conf'))
@@ -81,5 +89,5 @@ try:
         kafe2_rc = mpl.rc_params_from_file(_temp_file.name)
         _temp_file.close()
         os.remove(_temp_file.name)
-except AttributeError:
-    kafe2_rc = None  # if mpl is only a mock module
+except AttributeError:  # mock module
+    pass
