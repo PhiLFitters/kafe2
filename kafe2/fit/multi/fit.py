@@ -7,7 +7,7 @@ import numpy as np
 
 from .cost import SharedCostFunction, MultiCostFunction
 from .._base import FitBase
-from ...core import NexusFitter
+from ...core.fitters import NexusFitter
 from ...core.error import SimpleGaussianError, MatrixGaussianError, CovMat
 from ...core.fitters.nexus import Alias, Function, Array, Parameter
 from ...tools import random_alphanumeric

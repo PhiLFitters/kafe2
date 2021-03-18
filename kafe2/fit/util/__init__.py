@@ -10,8 +10,8 @@ import numpy as np
 
 from . import function_library
 
-# no __all__: import everything
-
+__all__ = ['string_join_if', 'add_in_quadrature', 'invert_matrix', 'cholesky_decomposition', 'log_determinant',
+           'collect']
 
 # -- general utility functions
 

@@ -3,6 +3,8 @@ from __future__ import print_function
 import numpy as np
 from scipy.special import gammainccinv, gammaincc
 
+__all__ = ['ConfidenceLevel']
+
 
 class ConfidenceLevel(object):
     """

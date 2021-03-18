@@ -148,8 +148,9 @@ from .unbinned import *
 from .histogram import *
 from .multi import *
 from .tools import *
-from .util import *
 from .xy import *
 
 from ._base.plot import Plot
 from .tools.fit_wrapper import Fit  # import after every fit to avoid import conflicts with other tools
+
+from .util import function_library

@@ -12,6 +12,8 @@ import logging
 logger = logging.getLogger(__name__)
 logging.basicConfig()
 
+__all__ = ['CovMat', 'SimpleGaussianError', 'MatrixGaussianError']
+
 
 def cov_mat_from_float(value, size, correlation=0.0):
     _val = float(value)
