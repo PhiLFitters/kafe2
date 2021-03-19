@@ -350,6 +350,9 @@ class PlotAdapterBase(object):
                 "is not callable!".format(
                     type(_callable), plot_type))
 
+        if kwargs.pop('hide', False):
+            return None
+
         return _callable(
             target_axes=target_axes,
             **kwargs

@@ -21,10 +21,10 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
         PlotAdapterBase.PLOT_SUBPLOT_TYPES,
         model_line=dict(
             plot_adapter_method='plot_model_line',
-            target_axes='main'
+            target_axes='main',
         )
     )
-    del PLOT_SUBPLOT_TYPES['model']  # don't show "model" points
+    PLOT_SUBPLOT_TYPES['model']['hide'] = True  # don't show "model" points
 
     AVAILABLE_X_SCALES = ('linear', 'log')
 

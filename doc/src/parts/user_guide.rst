@@ -417,7 +417,7 @@ with *Matplotlib* can be done with *kafe2*-Plots as well.
 The Plot class supports plotting multiple fits at once. By default they will all appear in the
 same figure.
 The keyword `separate_figures=True` changes this behaviour, so that each fit will be plotted to a
-separte figure.
+separate figure.
 
 .. code-block:: python
 
@@ -502,7 +502,8 @@ Plot Style
 
 Each graphic element has it's own plotting method and can be customized individually. Available
 *plot_types* for XYFits are
-:code:`'data', 'model_line', 'model_error_band', 'ratio', 'ratio_error_band'`.
+:code:`'data', 'model_line', 'model_error_band', 'ratio', 'ratio_error_band'` and 'model' which
+is hidden by default.
 The *plot_types* may differ for different types of fits.
 
 The currently set keywords can be obtained with the :py:meth:`~.Plot.get_keywords` method.
@@ -510,7 +511,14 @@ With :py:meth:`~.Plot.customize` new values can be added or existing values can
 be modified. Using :code:`'__del__'` will delete the keyword and :code:`'__default__'` will reset
 it.
 
-To change the name for the data set and suppress the second output, use the following call:
+Hiding specific elements from the plot (e.g. the uncertainty band) is done like this:
+
+.. code-block:: python
+
+    # the array length must match the amount of fits handled by this plot object.
+    p.customize('model_error_band', 'hide', [True])
+
+In order to change the name for the data set and suppress the second output, use the following call:
 
 .. code-block:: python
 
@@ -533,8 +541,8 @@ The corresponding values for the model function can also be customized:
     p.customize('model_error_band', 'label', [(0, r'$\pm 1 \sigma$'), (1, r'$\pm 1 \sigma$')])
     p.customize('model_error_band', 'color', [(0, 'orange'), (1, 'lightgreen')])
 
-It is also possible to change parameters using matplotlib functions.
-To change the size of the axis labels, use the following calls:
+Additionally it is possible to change parameters using matplotlib functions.
+Changing the size of the axis labels is done with the following calls:
 
 .. code-block:: python
 

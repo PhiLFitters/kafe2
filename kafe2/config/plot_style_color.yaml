@@ -23,6 +23,7 @@ default:
       marker: 'o'
       label: 'data %(subplot_id)s'
       zorder: 10
+      hide: False
     property_cycler:
       -
         color:
@@ -43,6 +44,7 @@ default:
       marker: 'o'
       label: 'model %(subplot_id)s'
       zorder: -10
+      hide: False
     property_cycler:
       -
         color:
@@ -71,6 +73,7 @@ histogram:
       edgecolor: 'none'
       linewidth: 0
       zorder: -100
+      hide: False
     property_cycler:
       -
         facecolor:
@@ -88,6 +91,7 @@ histogram:
       label: '%(model_label)s density'
       linewidth: 2
       #zorder: -10
+      hide: False
     property_cycler:
       -
         color:
@@ -116,6 +120,7 @@ indexed:
       label: 'model %(subplot_id)s'
       linewidth: 2
       zorder: -10
+      hide: False
     property_cycler:
       -
         color:
@@ -143,6 +148,7 @@ unbinned:
       linestyle: 'solid'
       label: 'data %(subplot_id)s'
       zorder: -100
+      hide: False
     property_cycler:
       -
         facecolor:
@@ -152,6 +158,9 @@ unbinned:
           - *kafe_light_orange
           - *kafe_light_violet
           - *kafe_light_brown
+  model:
+    plot_kwargs:
+      hide: True
   model_line:
     plot_kwargs:
       linestyle: '-'
@@ -159,6 +168,7 @@ unbinned:
       label: 'model %(subplot_id)s'
       linewidth: 2
       zorder: -10
+      hide: False
     property_cycler:
       - color:
           - *kafe_light_red
@@ -178,6 +188,9 @@ xy:
   axis_labels:
     x: "$x$"
     y: "$y$"
+  model:
+    plot_kwargs:
+      hide: True
   model_line:
     plot_kwargs:
       linestyle: '-'
@@ -185,6 +198,7 @@ xy:
       label: 'model %(subplot_id)s'
       linewidth: 2
       zorder: -10
+      hide: False
     property_cycler:
       -
         color:
@@ -207,6 +221,7 @@ xy:
       edgecolor: 'none'
       linewidth: 2
       zorder: -100
+      hide: False
     property_cycler:
       -
         facecolor:

@@ -32,7 +32,6 @@ class XYPlotAdapter(PlotAdapterBase):
             target_axes='ratio'
         ),
     )
-    del PLOT_SUBPLOT_TYPES['model']  # don't plot model xy points
 
     AVAILABLE_X_SCALES = ('linear', 'log')
 
