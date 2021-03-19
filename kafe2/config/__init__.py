@@ -53,6 +53,14 @@ with open(os.path.join(__path__[0], 'kafe2.yaml')) as _f:
 # make a copy of the default configuration
 _default_kc = deepcopy(_kc)
 
+# look for local config files in order to overwrite default config
+for ext in ('yaml', 'yml'):
+    try:
+        with open(os.path.join(os.getcwd(), 'kafe2.'+ext)) as _f:
+            _kc.update(yaml.load(_f, ConfigLoader))
+    except IOError:
+        pass
+
 
 def kc(*keys):
     """Lookup configuration entry by providing the path to it."""
@@ -77,6 +85,11 @@ kafe2_rc = None  # if mpl is only a mock module
 try:
     if mpl.__version__.startswith('2'):
         kafe2_rc = mpl.rc_params_from_file(os.path.join(__path__[0], 'kafe2.matplotlibrc.conf'))
+        try:  # look for local config
+            kafe2_rc.update(mpl.rc_params_from_file(os.path.join(os.getcwd(), 'kafe2.matplotlibrc.conf'),
+                                                    use_default_template=False))
+        except IOError:
+            pass
     elif mpl.__version__.startswith('3'):
         _temp_file = NamedTemporaryFile(delete=False)
         with open(os.path.join(__path__[0], 'kafe2.matplotlibrc.conf')) as _file:
@@ -86,6 +99,11 @@ try:
                 _temp_file.write(_line.encode())
                 _temp_file.write('\n'.encode())
         kafe2_rc = mpl.rc_params_from_file(_temp_file.name)
+        try:  # look for local config, assume correct mpl3 handling
+            kafe2_rc.update(mpl.rc_params_from_file(os.path.join(os.getcwd(), 'kafe2.matplotlibrc.conf'),
+                                                    use_default_template=False))
+        except IOError:
+            pass
         _temp_file.close()
         os.remove(_temp_file.name)
 except AttributeError:  # mock module
