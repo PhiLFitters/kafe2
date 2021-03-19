@@ -77,7 +77,6 @@ kafe2_rc = None  # if mpl is only a mock module
 try:
     if mpl.__version__.startswith('2'):
         kafe2_rc = mpl.rc_params_from_file(os.path.join(__path__[0], 'kafe2.matplotlibrc.conf'))
-        mpl.rcParams.update(**kafe2_rc)
     elif mpl.__version__.startswith('3'):
         _temp_file = NamedTemporaryFile(delete=False)
         with open(os.path.join(__path__[0], 'kafe2.matplotlibrc.conf')) as _file:
