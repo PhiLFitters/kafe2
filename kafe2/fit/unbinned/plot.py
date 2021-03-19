@@ -1,6 +1,5 @@
 import numpy as np
 from matplotlib.collections import LineCollection
-import warnings
 
 from .._base import PlotAdapterBase, PlotAdapterException
 from .._aux import add_pad_to_range

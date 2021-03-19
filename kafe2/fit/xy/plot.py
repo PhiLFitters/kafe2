@@ -1,9 +1,8 @@
 import numpy  # help IDEs with type-hinting inside docstrings
-import numpy as np
 
-from ...config import kc
-from .._base import PlotAdapterBase, PlotAdapterException, Plot, kc_plot_style
+from .._base import PlotAdapterBase, PlotAdapterException
 from .._aux import add_pad_to_range
+np = numpy
 
 
 __all__ = ["XYPlotAdapter"]

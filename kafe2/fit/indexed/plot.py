@@ -1,6 +1,6 @@
 import numpy as np
 
-from .._base import PlotAdapterBase, PlotAdapterException, Plot
+from .._base import PlotAdapterBase, PlotAdapterException
 from .._aux import step_fill_between
 
 
