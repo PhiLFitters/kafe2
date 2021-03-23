@@ -225,3 +225,12 @@ class XYPlotAdapter(PlotAdapterBase):
                 1 - _band_y/_y, 1 + _band_y/_y,
                 **kwargs)
         return None  # don't plot error band if fitter input data has no errors...
+
+    def update_plot_kwargs(self, plot_type, plot_kwargs):
+        # update ratio kwargs as well, when corresponding plot_types are updated
+        # can be overwritten by the user by explicitly setting the ratio kwargs last
+        if plot_type == 'data':
+            super(XYPlotAdapter, self).update_plot_kwargs(plot_type='ratio', plot_kwargs=plot_kwargs)
+        elif plot_type == 'model_error_band':
+            super(XYPlotAdapter, self).update_plot_kwargs(plot_type='ratio_error_band', plot_kwargs=plot_kwargs)
+        super(XYPlotAdapter, self).update_plot_kwargs(plot_type=plot_type, plot_kwargs=plot_kwargs)
