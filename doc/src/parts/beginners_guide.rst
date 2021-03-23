@@ -503,3 +503,43 @@ How to fix single parameters is highlighted in the example below.
     .. literalinclude:: ../../../examples/006_unbinned_fit/unbinned.py
         :lines: 19-
         :emphasize-lines: 36-41
+
+
+Example 7: Relative uncertainties
+=================================
+
+We had already seen that kafe2 allows the declaration of relative uncertainties which we want to
+examine more closely in this example.
+Adjustments with relative uncertainties suffer from the fact that the estimate of the parameter
+values is distorted.
+This is because measured values that fluctuate to smaller values have smaller uncertainties;
+the uncertainties are correspondingly greater when the measured values fluctuate upwards.
+If the random fluctuations were exactly the other way round, other uncertainties would be assigned.
+It would be correct to relate the relative uncertainties to the true values, which we do not know.
+Instead, the option reference='model' allows the uncertainties to be dependent on the model value
+- still not completely correct, but much better.
+
+.. figure:: ../_static/img/007_relative_uncertainties.png
+    :alt: A line fit showing the difference in using uncertainties relative to the data and
+          relative to the model.
+
+As seen in the example, the :math:`\chi^2` probability improves from around :math:`0.05` to
+:math:`0.08` and :math:`\chi^2/\mathrm{ndf}` improves from :math:`2.1` to :math:`1.9`.
+
+kafe2go
+-------
+
+This example is not yet available for `kafe2go`.
+
+Python
+------
+Referencing the model as source for relative uncertainties is done by setting the keyword
+:code:`reference='model'` in the :py:meth:`~.XYFit.add_error` method.
+
+.. bootstrap_collapsible::
+    :control_type: link
+    :control_text: relative_uncertainties.py
+
+    .. literalinclude:: ../../../examples/007_relative_uncertainties/relative_uncertainties.py
+        :lines: 13-
+        :emphasize-lines: 11, 18
