@@ -1,5 +1,6 @@
 import numpy as np
 import six
+import sys
 import matplotlib as mpl
 
 from ...config import kafe2_rc
@@ -14,6 +15,9 @@ from matplotlib import rc_context
 
 
 __all__ = ["ContoursProfiler"]
+
+_python_version = sys.version_info[0]
+_float_template = ".2g" if _python_version == 2 else "#.2g"
 
 
 def _linear_range_transform(range_, factor, asymmetry=0.0):
@@ -373,13 +377,14 @@ class ContoursProfiler(object):
                                                      label="fit minimum")
 
             if label_fit_minimum:
+                sigma_str = r"$\sigma_{{{}}} = {:%s}$" % _float_template
                 _axes.annotate(
                     '\n'.join([
                         r"$\langle {}\rangle = {}$".format(
                             _par_formatted_name.strip('$'),
                             ScalarBaseFormatter(_par_err, n_significant_digits=2)(_par_val)
                         ),
-                        r"$\sigma_{{{}}} = {:#.2g}$".format(
+                        sigma_str.format(
                             _par_formatted_name.strip('$'),
                             _par_err
                         )]),
