@@ -8,11 +8,11 @@ from ._base import ModelFunctionDReprBase, ParametricModelDReprBase
 from .. import _AVAILABLE_REPRESENTATIONS
 from .._base import DReprError
 from .._yaml_base import YamlReaderException, YamlReaderMixin, YamlWriterException, YamlWriterMixin
-from ..container import DataContainerYamlReader, DataContainerYamlWriter
+from ..error import common_error_tools
 from ..format import ModelFunctionFormatterYamlReader, ModelFunctionFormatterYamlWriter
-from ... import HistModelFunction, HistParametricModel, IndexedModelFunction, \
-    IndexedParametricModel, UnbinnedParametricModel, XYParametricModel
 from ..._base import ModelFunctionBase
+from ....fit import HistModelFunction, HistParametricModel, IndexedModelFunction, \
+    IndexedParametricModel, UnbinnedParametricModel, XYParametricModel
 from ....fit.util import function_library
 
 __all__ = ['ModelFunctionYamlWriter', 'ModelFunctionYamlReader', 'ParametricModelYamlWriter',
@@ -165,11 +165,11 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
 
 
 class ParametricModelYamlWriter(YamlWriterMixin, ParametricModelDReprBase):
+    DUMPER = common_error_tools.MatrixYamlDumper
 
     def __init__(self, parametric_model, output_io_handle):
-        super(ParametricModelYamlWriter, self).__init__(
-            output_io_handle=output_io_handle,
-            parametric_model=parametric_model)
+        super(ParametricModelYamlWriter, self).__init__(output_io_handle=output_io_handle,
+                                                        parametric_model=parametric_model)
 
     @classmethod
     def _make_representation(cls, parametric_model):
@@ -224,7 +224,8 @@ class ParametricModelYamlWriter(YamlWriterMixin, ParametricModelDReprBase):
 
         # -- write error representation for all container types
         if parametric_model.has_errors:
-            DataContainerYamlWriter._write_errors_to_yaml(parametric_model, _yaml_doc)
+            _yaml_doc = common_error_tools.write_errors_to_yaml(container=parametric_model,
+                                                                yaml_doc=_yaml_doc)
 
         return _yaml_doc
 
@@ -381,48 +382,8 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
         _parametric_model_object.label = yaml_doc.pop('model_label', None)
 
         # -- process error sources
-        if _class is XYParametricModel:
-            _xerrs = yaml_doc.pop('x_errors', [])
-            _yerrs = yaml_doc.pop('y_errors', [])
-            _errs = _xerrs + _yerrs
-            _axes = [0] * len(_xerrs) + [1] * len(_yerrs)  # 0 for 'x', 1 for 'y'
-        else:
-            _errs = yaml_doc.pop('errors', [])
-            _axes = [None] * len(_errs)
-
-        # add error sources, if any
-        for _err, _axis in zip(_errs, _axes):
-            _add_kwargs = dict()
-            # translate and check that all required keys are present
-            try:
-                _err_type = _err['type']
-
-                _add_kwargs['name'] = _err['name']
-
-                if _err_type == 'simple':
-                    _add_kwargs['err_val'] = _err['error_value']
-                    _add_kwargs['correlation'] = _err['correlation_coefficient']
-                elif _err_type == 'matrix':
-                    _add_kwargs['err_matrix'] = _err['matrix']
-                    _add_kwargs['matrix_type'] = _err['matrix_type']
-                    # only mandatory for cor mats; check done later
-                    _add_kwargs['err_val'] = _err.get('error_value', None)
-                else:
-                    raise DReprError("Unknown error type '{}'. "
-                                     "Valid: {}".format(_err_type, ('simple', 'matrix')))
-
-                _add_kwargs['relative'] = _err['relative']
-
-                # if needed, specify the axis (only for 'xy' containers)
-                if _axis is not None:
-                    _add_kwargs['axis'] = _axis
-            except KeyError as e:
-                # KeyErrors mean the YAML is incomplete -> raise
-                raise DReprError("Missing required key '%s' for error specification" % e.args[0])
-
-            # add error to parametric model
-            DataContainerYamlReader._add_error_to_container(_err_type, _parametric_model_object,
-                                                            **_add_kwargs)
+        _parametric_model_object, yaml_doc = common_error_tools.process_error_sources(
+            container_obj=_parametric_model_object, yaml_doc=yaml_doc)
 
         return _parametric_model_object, yaml_doc
 
