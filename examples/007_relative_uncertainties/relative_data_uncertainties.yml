@@ -1,0 +1,11 @@
+# This is a regular line fit using uncertainties relative to the data.
+
+x_data: [19.8, 3.0, 5.1, 16.1, 8.2, 11.7, 6.2, 10.1]
+y_data: [23.2, 3.2, 4.5, 19.9, 7.1, 12.5, 4.5, 7.2]
+x_errors: 0.3
+y_errors: 15%
+label: data + relative data error
+x_label: x-label
+y_label: y-label
+model_function: linear_model
+model_label: linear model

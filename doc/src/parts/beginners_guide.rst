@@ -528,8 +528,19 @@ As seen in the example, the :math:`\chi^2` probability improves from around :mat
 
 kafe2go
 -------
+For using uncertainties relative to the model, The :code:`parametric_model` section must be added
+inside the *YAML* file, as highlighted below.
+For comparison, one cane move the *y*-uncertainty out of the :code:`parametric_model` section.
+Then the uncertainty will be relative to the data.
 
-This example is not yet available for `kafe2go`.
+.. bootstrap_collapsible::
+    :control_type: link
+    :control_text: relative_uncertainties.py
+
+    .. literalinclude:: ../../../examples/007_relative_uncertainties/relative_model_uncertainties.yml
+        :language: yaml
+        :emphasize-lines: 11-15
+
 
 Python
 ------
