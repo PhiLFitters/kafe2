@@ -893,6 +893,8 @@ class Plot(object):
 
             _prev_fit_index = None
             _fit_info = {}
+            if isinstance(fit_info, bool):
+                fit_info = [fit_info] * len(self._fits)
             for _i_plot, _plot_dict in enumerate(_axes_plots):
                 # check if artist available for this plot
                 try:
@@ -912,16 +914,15 @@ class Plot(object):
                 _ls_sorted.append(_ls_unsorted[_artist_index])
 
                 # if requested, compute info of fit associated to this artist
-                if fit_info:
-                    _fit_index = _plot_dict['fit_index']
-
-                    # compute fit info string (if not computed yet)
+                _fit_index = _plot_dict['fit_index']
+                if fit_info[_fit_index]:
                     if _fit_index not in _fit_info:
+                        # compute fit info string (if not computed yet)
                         _fit_info[_fit_index] = dict(
                             text=self._get_fit_info(
                                 _plot_dict['adapter'],
                                 format_as_latex=True,
-                                asymmetric_parameter_errors=asymmetric_parameter_errors
+                                asymmetric_parameter_errors=asymmetric_parameter_errors,
                             )
                         )
 
@@ -1141,7 +1142,10 @@ class Plot(object):
         Plot data, model (and other subplots) for all child :py:obj:`Fit` objects.
 
         :param legend: if ``True``, a legend is rendered
-        :param fit_info: if ``True``, fit results will be shown in the legend
+        :param fit_info: If :py:obj:`True`, fit results will be shown in the legend. This can also
+            be a list of booleans, corresponding to the fits handled by this
+            :py:obj:`~.Plot`-object.
+        :type legend: bool or typing.Collection[bool]
         :param asymmetric_parameter_errors: if ``True``, parameter errors in fit results will be asymmetric
         :param ratio: if ``True``, a secondary plot containing data/model ratios is shown below the main plot
         :param ratio_range: the *y* range to set in the secondary plot
