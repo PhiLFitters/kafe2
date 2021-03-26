@@ -1,17 +1,17 @@
 colors:
-  - &kafe_red '#e41f21'
-  - &kafe_light_red '#f59a96'
-  - &kafe_blue '#2079b4'
-  - &kafe_light_blue '#a6cee3'
-  - &kafe_green '#36a12e'
-  - &kafe_light_green '#b0dd8b'
-  - &kafe_orange '#ff8001'
-  - &kafe_light_orange '#fdbe6f'
-  - &kafe_violet '#6d409c'
-  - &kafe_light_violet '#cbb1d2'
-  - &kafe_brown '#b15928'
-  - &kafe_light_brown '#faf899'
-  - &kafe_black '#000000'
+  - &kafe_color1 '#200000'         # red-black
+#  - &kafe_color1 '#403018'        # dunkle Kaffeebohne
+  - &kafe_light_color1 '#E09060'   # Latte Macchiato
+  - &kafe_color2 'navy'
+  - &kafe_light_color2 'skyblue'
+  - &kafe_color3 'darkgreen'
+  - &kafe_light_color3 'yellowgreen'
+  - &kafe_color4 'gray'
+  - &kafe_light_color4 'silver'
+  - &kafe_color5 'maroon'
+  - &kafe_light_color5 'darkgoldenrod'
+  - &kafe_color6 'firebrick'
+  - &kafe_light_color6 'orangered'
 
 default:
   axis_labels:
@@ -22,43 +22,40 @@ default:
       linestyle: ''
       marker: 'o'
       label: 'data %(subplot_id)s'
-      zorder: 10
+      zorder: 100  # each additional fit in the same plot is moved -10 in zorder
       hide: False
     property_cycler:
-      -
-        color:
-          - *kafe_red
-          - *kafe_blue
-          - *kafe_green
-          - *kafe_orange
-          - *kafe_violet
-          - *kafe_brown
-      -
-        marker:
-          - 'o'
-          - '^'
-          - 's'
+      - color:
+        - *kafe_color1
+        - *kafe_color2
+        - *kafe_color3
+        - *kafe_color4
+        - *kafe_color5
+        - *kafe_color6
+      - marker:
+        - 'o'
+        - '^'
+        - 's'
   model:
     plot_kwargs:
       linestyle: ''
       marker: 'o'
       label: 'model %(subplot_id)s'
-      zorder: -10
+      zorder: -100
       hide: False
     property_cycler:
-      -
-        color:
-          - *kafe_light_red
-          - *kafe_light_blue
-          - *kafe_light_green
-          - *kafe_light_orange
-          - *kafe_light_violet
-          - *kafe_light_brown
-      -
-        marker:
-          - 'o'
-          - '^'
-          - 's'
+      - color:
+        - *kafe_light_color1
+        - *kafe_light_color2
+        - *kafe_light_color3
+        - *kafe_light_color4
+        - *kafe_light_color5
+        - *kafe_light_color6
+      - marker:
+        - 'o'
+        - '^'
+        - 's'
+
 
 histogram:
   axis_labels:
@@ -75,38 +72,33 @@ histogram:
       zorder: -100
       hide: False
     property_cycler:
-      -
-        facecolor:
-          - *kafe_light_red
-          - *kafe_light_blue
-          - *kafe_light_green
-          - *kafe_light_orange
-          - *kafe_light_violet
-          - *kafe_light_brown
-
+      - facecolor:
+        - *kafe_light_color1
+        - *kafe_light_color2
+        - *kafe_light_color3
+        - *kafe_light_color4
+        - *kafe_light_color5
+        - *kafe_light_color6
   model_density:
     plot_kwargs:
       linestyle: '-'
       marker: ''
       label: '%(model_label)s density'
       linewidth: 2
-      #zorder: -10
+      zorder: 0
       hide: False
     property_cycler:
-      -
-        color:
-          - *kafe_red
-          - *kafe_blue
-          - *kafe_green
-          - *kafe_orange
-          - *kafe_violet
-          - *kafe_brown
-      -
-        linestyle:
-          - '-'
-          - '--'
-          - '-.'
-
+      - color:
+        - *kafe_light_color1
+        - *kafe_light_color2
+        - *kafe_light_color3
+        - *kafe_light_color4
+        - *kafe_light_color5
+        - *kafe_light_color6
+      - linestyle:
+        - '-'
+        - '--'
+        - '-.'
 
 
 indexed:
@@ -119,23 +111,20 @@ indexed:
       marker: ''
       label: 'model %(subplot_id)s'
       linewidth: 2
-      zorder: -10
+      zorder: -100
       hide: False
     property_cycler:
-      -
-        color:
-          - *kafe_light_red
-          - *kafe_light_blue
-          - *kafe_light_green
-          - *kafe_light_orange
-          - *kafe_light_violet
-          - *kafe_light_brown
-      -
-        linestyle:
-          - '-'
-          - '--'
-          - '-.'
-
+      - color:
+        - *kafe_light_color1
+        - *kafe_light_color2
+        - *kafe_light_color3
+        - *kafe_light_color4
+        - *kafe_light_color5
+        - *kafe_light_color6
+      - linestyle:
+        - '-'
+        - '--'
+        - '-.'
 
 
 unbinned:
@@ -144,20 +133,19 @@ unbinned:
     y: "Density"
   data:
     plot_kwargs:
-      alpha: 0.5
+      alpha: 0.2
       linestyle: 'solid'
       label: 'data %(subplot_id)s'
-      zorder: -100
+      zorder: -1000  # data is rug plot, show behind model
       hide: False
     property_cycler:
-      -
-        facecolor:
-          - *kafe_light_red
-          - *kafe_light_blue
-          - *kafe_light_green
-          - *kafe_light_orange
-          - *kafe_light_violet
-          - *kafe_light_brown
+      - color:  # data for unbinned is LineCollection -> use color, not facecolor
+        - *kafe_color1
+        - *kafe_color2
+        - *kafe_color3
+        - *kafe_color4
+        - *kafe_color5
+        - *kafe_color6
   model:
     plot_kwargs:
       hide: True
@@ -167,21 +155,20 @@ unbinned:
       marker: ''
       label: 'model %(subplot_id)s'
       linewidth: 2
-      zorder: -10
+      zorder: -100
       hide: False
     property_cycler:
       - color:
-          - *kafe_light_red
-          - *kafe_light_blue
-          - *kafe_light_green
-          - *kafe_light_orange
-          - *kafe_light_violet
-          - *kafe_light_brown
+          - *kafe_light_color1
+          - *kafe_light_color2
+          - *kafe_light_color3
+          - *kafe_light_color4
+          - *kafe_light_color5
+          - *kafe_light_color6
       - linestyle:
           - '-'
           - '--'
           - '-.'
-
 
 
 xy:
@@ -197,22 +184,20 @@ xy:
       marker: ''
       label: 'model %(subplot_id)s'
       linewidth: 2
-      zorder: -10
+      zorder: -100
       hide: False
     property_cycler:
-      -
-        color:
-          - *kafe_light_red
-          - *kafe_light_blue
-          - *kafe_light_green
-          - *kafe_light_orange
-          - *kafe_light_violet
-          - *kafe_light_brown
-      -
-        linestyle:
-          - '-'
-          - '--'
-          - '-.'
+      - color:
+        - *kafe_light_color1
+        - *kafe_light_color2
+        - *kafe_light_color3
+        - *kafe_light_color4
+        - *kafe_light_color5
+        - *kafe_light_color6
+      - linestyle:
+        - '--'
+        - '-.'
+        - '..'
   model_error_band:
     plot_kwargs:
       alpha: 0.5
@@ -220,14 +205,13 @@ xy:
       label: 'model %(subplot_id)s $\pm 1\sigma$'
       edgecolor: 'none'
       linewidth: 2
-      zorder: -100
+      zorder: -101
       hide: False
     property_cycler:
-      -
-        facecolor:
-          - *kafe_light_red
-          - *kafe_light_blue
-          - *kafe_light_green
-          - *kafe_light_orange
-          - *kafe_light_violet
-          - *kafe_light_brown
+      - facecolor:
+        - *kafe_light_color1
+        - *kafe_light_color2
+        - *kafe_light_color3
+        - *kafe_light_color4
+        - *kafe_light_color5
+        - *kafe_light_color6
