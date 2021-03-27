@@ -12,8 +12,9 @@ the y-axis of the data and then performing a fit with those uncertainties.
 Thanks to computers, however, this process can also be done numerically by applying parameter
 constraints.
 This example demonstrates the usage of those constraints in the kafe2 framework.
+It also demonstrates how parameters can be limited to specified intervals.
 
-More specifically, this example will simulate the following experiment:
+In terms of physics, this example simulates the following experiment:
 A steel ball of radius r has been connected to the ceiling by a string of length l, forming a
 pendulum.
 Due to earth's gravity providing a restoring force this system is a harmonic oscillator.
@@ -31,53 +32,63 @@ import matplotlib.pyplot as plt
 
 from kafe2 import XYContainer, Fit, Plot
 
-# Relevant physical magnitudes and their uncertainties
+# Relevant physical magnitudes and their uncertainties:
 l, delta_l = 10.0, 0.001  # length of the string, l = 10.0+-0.001 m
-r, delta_r = 0.052, 0.001  # radius of the steel ball, r = 0.052+-0.001 kg
+r, delta_r = 0.052, 0.001  # radius of the steel ball, r = 0.052+-0.001 m
 # amplitude of the steel ball at x=0 in degrees, y_0 = 0.6+-0.006% degrees
 y_0, delta_y_0 = 0.6, 0.01  # Note that the uncertainty on y_0 is relative to y_0
+g_0 = 9.81  # Initial guess for g
 
 
-# Model function for a pendulum as a 1d, damped harmonic oscillator with zero initial speed
-# x = time, y_0 = initial_amplitude, l = length of the string,
-# r = radius of the steel ball, g = gravitational acceleration, c = damping coefficient
-def damped_harmonic_oscillator(x, y_0, l, r, g, c):
-    # effective length of the pendulum = length of the string + radius of the steel ball
+# Model function for a pendulum as a 1d, damped harmonic oscillator with zero initial speed:
+# t = time, y_0 = initial_amplitude, l = length of the string,
+# r = radius of the steel ball, g = gravitational acceleration, c = damping coefficient.
+def damped_harmonic_oscillator(t, y_0, l, r, g, c):
+    # Effective length of the pendulum = length of the string + radius of the steel ball:
     l_total = l + r
-    omega_0 = np.sqrt(g / l_total)  # phase speed of an undamped pendulum
-    omega_d = np.sqrt(omega_0 ** 2 - c ** 2)  # phase speed of a damped pendulum
-    return y_0 * np.exp(-c * x) * (np.cos(omega_d * x) + c / omega_d * np.sin(omega_d * x))
+    omega_0 = np.sqrt(g / l_total)  # Phase speed of an undamped pendulum.
+    omega_d = np.sqrt(omega_0 ** 2 - c ** 2)  # Phase speed of a damped pendulum.
+    return y_0 * np.exp(-c * t) * (np.cos(omega_d * t) + c / omega_d * np.sin(omega_d * t))
 
 
-# Load data from yaml, contains data and errors
+# Load data from yaml, contains data and errors:
 data = XYContainer.from_file(filename='data.yml')
 
-# Create fit object from data and model function
+# Create fit object from data and model function:
 fit = Fit(data=data, model_function=damped_harmonic_oscillator)
 
-# Constrain model parameters to measurements
+# Constrain model parameters to measurements:
 fit.add_parameter_constraint(name='l',   value=l,   uncertainty=delta_l)
 fit.add_parameter_constraint(name='r',   value=r,   uncertainty=delta_r)
 fit.add_parameter_constraint(name='y_0', value=y_0, uncertainty=delta_y_0, relative=True)
 
-# Because the model function is oscillating the fit needs to be initialized with near guesses for
-# unconstrained parameters in order to converge
-g_initial = 9.81  # initial guess for g
-c_initial = 0.01  # initial guess for c
-fit.set_parameter_values(g=g_initial, c=c_initial)
+# Lengths between two points are by definition positive, this can be expressed with one-sided limit.
+# Note: for technical reasons these limits are inclusive.
+fit.limit_parameter("y_0", lower=1e-6)
+fit.limit_parameter("l", lower=1e-6)
+fit.limit_parameter("r", lower=1e-6)
 
-# Optional: Set the initial values of the remaining parameters to correspond to their constraint
-# values (this may help some minimization algorithms converge)
-fit.set_parameter_values(y_0=y_0, l=l, r=r)
+# Set limits for g that are much greater than the expected deviation but still close to 9.81:
+fit.limit_parameter("g", lower=9.71, upper=9.91)
 
-# Perform the fit
+# Solutions are real if c <= g / (l + r). Set the upper limit for c a little lower:
+c_max = 0.9 * g_0 / (l + r)
+fit.limit_parameter("c", lower=1e-6, upper=c_max)
+
+# Optional: Set the initial values of parameters to our initial guesses.
+# This can help with convergence, especially when no constraints or limits are specified.
+fit.set_parameter_values(y_0=y_0, l=l, r=r, g=g_0)
+# Note: this could also be achieved by changing the positional arguments of our model function
+# into keyword arguments with our initial guesses as the default values.
+
+# Perform the fit:
 fit.do_fit()
 
 # Optional: Print out a report on the fit results on the console.
 fit.report()
 
-# Optional: plot the fit results
+# Optional: plot the fit results.
 plot = Plot(fit)
-plot.plot(fit_info=True)
+plot.plot()
 
 plt.show()
