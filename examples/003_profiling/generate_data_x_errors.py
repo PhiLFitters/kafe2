@@ -14,4 +14,4 @@ y_jitter = np.random.normal(loc=0, scale=y_err, size=num_datapoints)
 y_data = y_0 + y_jitter
 
 data_container = XYContainer(x_data=x_0, y_data=y_data)
-data_container.to_file('x_errors.yml')
+data_container.to_file('03_x_errors.yml')

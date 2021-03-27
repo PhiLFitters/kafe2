@@ -12,7 +12,7 @@ from kafe2.fit.tools import ContoursProfiler
 # import matplotlib *after* kafe2
 import matplotlib.pyplot as plt
 
-def _generate_dataset(output_filename='double_slit.yml'):
+def _generate_dataset(output_filename='02_double_slit.yml'):
     """
     Create an XYContainer holding the measurement data
     and the errors and write it to a file.
@@ -87,7 +87,7 @@ def interference(x, I0=1., b=1e-5, g=2e-5, k=1e7):
 
 
 # read in the measurement data from a file
-d = XYContainer.from_file("double_slit.yml")
+d = XYContainer.from_file("02_double_slit.yml")
 
 # create XYFits, specifying the measurement data and model function
 f = XYFit(xy_data=d, model_function=interference, minimizer='iminuit')
