@@ -33,16 +33,16 @@ linear_fit2.data_container.label = "data + relative model error"
 linear_fit2.model_label = "linear model"
 linear_fit2.do_fit()
 
-plot = Plot((linear_fit1, linear_fit2))
+plot = Plot((linear_fit2, linear_fit1))  # first fit is shown on top of second fit
 # assign colors to data...
 plot.customize('data', 'marker', ('o', 'o'))
 plot.customize('data', 'markersize', (5, 5))
-plot.customize('data', 'color', ('grey', 'red'))
-plot.customize('data', 'ecolor', ('grey', 'red'))
+plot.customize('data', 'color', ('red', 'grey'))
+plot.customize('data', 'ecolor', ('red', 'grey'))
 # ... and model
-plot.customize('model_line', 'color', ('mistyrose', 'orange'))
+plot.customize('model_line', 'color', ('orange', 'mistyrose'))
 plot.customize('model_error_band', 'label', (r'$\pm 1 \sigma$', r'$\pm 1 \sigma$'))
-plot.customize('model_error_band', 'color', ('mistyrose', 'orange'))
+plot.customize('model_error_band', 'color', ('orange', 'mistyrose'))
 plot.plot(ratio=True)
 
 cpf1 = ContoursProfiler(linear_fit1)

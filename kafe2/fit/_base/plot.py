@@ -742,14 +742,15 @@ class Plot(object):
 
                 _axes_plots = _axes_plot_dicts.setdefault('plots', [])
 
-                _artist = _pdc.call_plot_method(
-                    _pt,
-                    target_axes=self._get_axes(_axes_key),
-                    **_pdc._get_subplot_kwargs(
-                        _i_pdc,
-                        _pt
-                    )
-                )
+                _plot_kwargs = _pdc._get_subplot_kwargs(_i_pdc, _pt)
+                if 'zorder' not in _plot_kwargs:
+                    _plot_kwargs['zorder'] = 0
+                _plot_kwargs['zorder'] = _plot_kwargs['zorder'] - 10*_i_pdc
+
+                _artist = _pdc.call_plot_method(_pt,
+                                                target_axes=self._get_axes(_axes_key),
+                                                **_plot_kwargs
+                                                )
 
                 _axes_plots.append({
                     'type' : _pt,
