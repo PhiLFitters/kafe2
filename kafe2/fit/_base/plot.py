@@ -1127,7 +1127,7 @@ class Plot(object):
         duplicates.
         If a label is :py:obJ:`None` or ``'__del__'`` it will be removed.
         :type: str or list[str]"""
-        return [_adapter.x_label for _adapter in self._get_plot_adapters()]
+        return [_adapter.y_label for _adapter in self._get_plot_adapters()]
 
     @y_label.setter
     def y_label(self, label):
