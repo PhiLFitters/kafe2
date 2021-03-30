@@ -35,7 +35,7 @@ from kafe2 import XYContainer, Fit, Plot
 # Relevant physical magnitudes and their uncertainties:
 l, delta_l = 10.0, 0.001  # length of the string, l = 10.0+-0.001 m
 r, delta_r = 0.052, 0.001  # radius of the steel ball, r = 0.052+-0.001 m
-# amplitude of the steel ball at x=0 in degrees, y_0 = 0.6+-0.006% degrees
+# Amplitude of the steel ball at t=0 in degrees, y_0 = 0.6+-0.006% degrees:
 y_0, delta_y_0 = 0.6, 0.01  # Note that the uncertainty on y_0 is relative to y_0
 g_0 = 9.81  # Initial guess for g
 
@@ -55,7 +55,7 @@ def damped_harmonic_oscillator(t, y_0, l, r, g, c):
 data = XYContainer.from_file(filename='data.yml')
 
 # Create fit object from data and model function:
-fit = Fit(data=data, model_function=damped_harmonic_oscillator)
+fit = Fit(data=data, model_function=damped_harmonic_oscillator, minimizer="scipy")
 
 # Constrain model parameters to measurements:
 fit.add_parameter_constraint(name='l',   value=l,   uncertainty=delta_l)
@@ -71,7 +71,7 @@ fit.limit_parameter("r", lower=1e-6)
 # Set limits for g that are much greater than the expected deviation but still close to 9.81:
 fit.limit_parameter("g", lower=9.71, upper=9.91)
 
-# Solutions are real if c <= g / (l + r). Set the upper limit for c a little lower:
+# Solutions are real if c < g / (l + r). Set the upper limit for c a little lower:
 c_max = 0.9 * g_0 / (l + r)
 fit.limit_parameter("c", lower=1e-6, upper=c_max)
 
