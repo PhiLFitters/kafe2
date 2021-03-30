@@ -96,7 +96,11 @@ class XYPlotAdapter(PlotAdapterBase):
         if self.x_scale == 'linear':
             return np.linspace(_xmin, _xmax, self.n_plot_points)
         if self.x_scale == 'log':
-            return np.geomspace(_xmin, _xmax, self.n_plot_points)
+            try:
+                return np.geomspace(_xmin, _xmax, self.n_plot_points)
+            except ValueError:
+                raise XYPlotAdapterException("Support point calculation failed. "
+                                             "The plot range can't include 0 when using log scale.")
         raise XYPlotAdapterException("x_range has to be one of {}. Found {} instead.".format(
             self.AVAILABLE_X_SCALES, self.x_scale))
 
