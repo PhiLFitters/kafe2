@@ -89,7 +89,7 @@ def I_U_model(x, R0=1., alph=0.004, p2=1.0, p1=1.0, p0=0.0):
 
 # load all data into numpy arrays
 U, I, T = np.loadtxt('OhmsLawExperiment.dat', unpack=True)  # data
-sigU, sigI, sigT = 0.1, 0.1, 0.1  # uncertainties
+sigU, sigI, sigT = 0.2, 0.1, 0.5  # uncertainties
 
 T0 = 273.15  # 0 degrees C as absolute Temperature (in Kelvin)
 T -= T0  # Measurements are in Kelvin, convert to °C
@@ -99,9 +99,15 @@ T -= T0  # Measurements are in Kelvin, convert to °C
 # Step 1: construct the singular fit objects
 fit_1 = XYFit(xy_data=[U, T], model_function=empirical_T_U_model)
 fit_1.add_error(axis='y', err_val=sigT)  # declare errors on T
+fit_1.data_container.axis_labels = ("Voltage (V)", "Temperature (°C)")
+fit_1.data_container.label = "Temperature data"
+fit_1.model_label = "Parametrization"
 
 fit_2 = XYFit(xy_data=[U, I], model_function=I_U_model)
 fit_2.add_error(axis='y', err_val=sigI)  # declare errors on I
+fit_2.data_container.axis_labels = ("Voltage (V)", "Current (A)")
+fit_2.data_container.label = "Current data"
+fit_2.model_label = "Temperature-dependent conductance"
 
 # Step 2: construct a MultiFit object
 multi_fit = MultiFit(fit_list=[fit_1, fit_2], minimizer='iminuit')

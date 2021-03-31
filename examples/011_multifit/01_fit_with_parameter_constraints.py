@@ -95,7 +95,7 @@ def I_U_model(x, R0=1., alph=0.004, p2=1.0, p1=1.0, p0=0.0):
 
 # load all data into numpy arrays
 U, I, T = np.loadtxt('OhmsLawExperiment.dat', unpack=True)  # data
-sigU, sigI, sigT = 0.1, 0.1, 0.1  # uncertainties
+sigU, sigI, sigT = 0.2, 0.1, 0.5  # uncertainties
 
 T0 = 273.15  # 0 degrees C as absolute Temperature (in Kelvin)
 T -= T0  # Measurements are in Kelvin, convert to °C
@@ -107,6 +107,9 @@ auxiliary_fit = XYFit(
     xy_data=[U, T],
     model_function=empirical_T_U_model
 )
+auxiliary_fit.data_container.axis_labels = ("Voltage (V)", "Temperature (°C)")
+auxiliary_fit.data_container.label = "Temperature data"
+auxiliary_fit.model_label = "Parametrization"
 
 # (Optional): Assign names for models and parameters
 auxiliary_fit.assign_parameter_latex_names(x='U', p2='p_2', p1='p_1', p0='p_0')
@@ -147,6 +150,9 @@ main_fit.add_matrix_parameter_constraint(
     matrix=auxiliary_fit.parameter_cov_mat,
     matrix_type='cov'  # default matrix type is cov, this kwarg is just for clarity
 )
+main_fit.data_container.axis_labels = ("Voltage (V)", "Current (A)")
+main_fit.data_container.label = "Current data"
+main_fit.model_label = "Temperature-dependent conductance"
 
 # (Optional): Assign names for models and parameters
 main_fit.assign_parameter_latex_names(x='U', p2='p_2', p1='p_1', p0='p_0', R0='R_0', alph=r'\alpha_\mathrm{T}')
