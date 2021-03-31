@@ -8,6 +8,11 @@
 Installing *kafe2*
 ******************
 
+.. warning::
+
+    *kafe2* versions 2.3.x are the latest versions which support Python 2.
+    Python 2 support will be dropped for all future releases.
+
 Requirements
 ============
 
@@ -31,7 +36,7 @@ Optionally, a function minimizer other than ``scipy.optimize.minimize`` can be u
 by default if they're installed:
 
 * *MINUIT*, which is included in *CERN*'s data analysis package `ROOT <http://root.cern.ch>`_ (>= 5.34), or
-* `iminuit <https://github.com/iminuit/iminuit>`_ (>= 1.1.1), which is independent of ROOT
+* `iminuit <https://github.com/iminuit/iminuit>`_ (>= 1.5.2), which is independent of ROOT
 
 
 Installation notes (Linux)

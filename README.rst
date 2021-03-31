@@ -40,3 +40,7 @@ If you have the package installer for Python just run
     pip install kafe2
 
 to install the latest stable version and you're ready to go.
+
+**Warning**
+*kafe2* versions 2.3.x are the latest versions which support Python 2.
+Python 2 support will be dropped for all future releases.
