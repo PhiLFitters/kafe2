@@ -32,7 +32,7 @@ def exponential_model(x, A0=1., x0=5.):
 
 
 # Read in the measurement data from a yaml file.
-# For more information on reading/writing kafe2 objects from/to files see TODO
+# For more information on reading/writing kafe2 objects from/to files see examples 005_convenience
 xy_data = XYContainer.from_file("data.yml")
 
 # Create 2 Fit objects with the same data but with different model functions:

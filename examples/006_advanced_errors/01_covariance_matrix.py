@@ -4,14 +4,9 @@ kafe2 example: Weighted average of measurements
 ===============================================
 """
 
-from __future__ import print_function
-
 import numpy as np
-
-from kafe2 import IndexedFit, Plot
-
-# import matplotlib *after* kafe2
 import matplotlib.pyplot as plt
+from kafe2 import IndexedFit, Plot
 
 
 ##################

@@ -1,72 +1,151 @@
 type: xy
-x_data:
-- -0.044
-- -0.04
-- -0.036
-- -0.03
-- -0.024
-- -0.018
-- -0.012
-- -0.008
-- -0.004
-- -0.001
-- 0.004
-- 0.008
-- 0.012
-- 0.018
-- 0.024
-- 0.03
-- 0.036
-- 0.04
-- 0.044
-x_errors:
-- name: "x_uncor_err"
-  correlation_coefficient: 0.0
-  error_value: 0.002
-  relative: false
-  type: simple
-y_data:
-- 0.06
-- 0.07
-- 0.03
-- 0.04
-- 0.32
-- 0.03
-- 0.64
-- 0.08
-- 0.2
-- 1.11
-- 0.52
-- 0.07
-- 0.89
-- 0.01
-- 0.17
-- 0.05
-- 0.09
-- 0.02
-- 0.01
-y_errors:
-- name: "y_uncor_err"
-  correlation_coefficient: 0.0
-  error_value:
-  - 0.02
-  - 0.02
-  - 0.02
-  - 0.02
-  - 0.04
-  - 0.02
-  - 0.05
+dataset:
+  type: xy
+  x_data:
+  - -0.044
+  - -0.04
+  - -0.036
+  - -0.03
+  - -0.024
+  - -0.018
+  - -0.012
+  - -0.008
+  - -0.004
+  - -0.001
+  - 0.004
+  - 0.008
+  - 0.012
+  - 0.018
+  - 0.024
   - 0.03
-  - 0.05
+  - 0.036
+  - 0.04
+  - 0.044
+  y_data:
+  - 0.06
+  - 0.07
+  - 0.03
+  - 0.04
+  - 0.32
+  - 0.03
+  - 0.64
   - 0.08
-  - 0.05
-  - 0.03
-  - 0.05
+  - 0.2
+  - 1.11
+  - 0.52
+  - 0.07
+  - 0.89
   - 0.01
-  - 0.04
-  - 0.03
-  - 0.03
+  - 0.17
+  - 0.05
+  - 0.09
   - 0.02
   - 0.01
-  relative: false
-  type: simple
+  x_errors:
+  - name: x_uncor_err
+    type: simple
+    error_value: 0.002
+    relative: false
+    correlation_coefficient: 0.0
+  y_errors:
+  - name: y_uncor_err
+    type: simple
+    error_value:
+    - 0.02
+    - 0.02
+    - 0.02
+    - 0.02
+    - 0.04
+    - 0.02
+    - 0.05
+    - 0.03
+    - 0.05
+    - 0.08
+    - 0.05
+    - 0.03
+    - 0.05
+    - 0.01
+    - 0.04
+    - 0.03
+    - 0.03
+    - 0.02
+    - 0.01
+    relative: false
+    correlation_coefficient: 0.0
+parametric_model:
+  type: xy
+  x_data:
+  - -0.044
+  - -0.04
+  - -0.036
+  - -0.03
+  - -0.024
+  - -0.018
+  - -0.012
+  - -0.008
+  - -0.004
+  - -0.001
+  - 0.004
+  - 0.008
+  - 0.012
+  - 0.018
+  - 0.024
+  - 0.03
+  - 0.036
+  - 0.04
+  - 0.044
+  y_data:
+  - 0.012890395056255161
+  - 0.08862350862000538
+  - 0.2357150002256744
+  - 0.43347428518506004
+  - 0.3279183716447424
+  - 0.03907303900576044
+  - 0.11630184629244372
+  - 0.46006685010595283
+  - 0.8371029466199726
+  - 0.98920853972322
+  - 0.8371029466199726
+  - 0.46006685010595283
+  - 0.11630184629244372
+  - 0.03907303900576044
+  - 0.3279183716447424
+  - 0.43347428518506004
+  - 0.2357150002256744
+  - 0.08862350862000538
+  - 0.012890395056255161
+  model_function:
+    model_function_formatter:
+      type: base
+      name: interference
+      latex_name: I
+      expression_string: null
+      latex_expression_string: '{i_0}\,\left(\frac{{\sin(\frac{{{k}}}{{2}}\,b\,\sin{{{x}}})}}{{\frac{{{k}}}{{2}}\,b\,\sin{{{x}}}}}\cos(\frac{{{k}}}{{2}}\,g\,\sin{{{x}}})\right)^2'
+      arg_formatters:
+        x: '{\tt x}'
+        i_0: '{I_0}'
+        b: '{b}'
+        g: '{g}'
+        k: '{k}'
+      signature:
+      - x
+      - i_0
+      - b
+      - g
+      - k
+    python_code: "def interference(x, i_0=1., b=1e-5, g=2e-5, k=1e7):\n    # our first\
+      \ model is a simple linear function\n    k_half_sine_alpha = k / 2 * np.sin(x)\
+      \  # helper variable\n    k_b = k_half_sine_alpha * b\n    k_g = k_half_sine_alpha\
+      \ * g\n    return i_0 * (np.sin(k_b) / k_b * np.cos(k_g)) ** 2\n"
+  model_parameters:
+  - 1.0
+  - 1.0e-05
+  - 2.0e-05
+  - 10000000.0
+  model_label: null
+minimizer: iminuit
+minimizer_kwargs: null
+parameter_constraints: []
+fixed_parameters:
+  k: 9670000.0
+limited_parameters: {}

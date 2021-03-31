@@ -1,6 +1,3 @@
-from kafe2 import XYContainer, Fit, Plot, ContoursProfiler
-import matplotlib.pyplot as plt
-
 """
 Typically, the uncertainties of the measurement data are much more complex than in the examples
 discussed so far. In most cases there are uncertainties in ordinate and abscissa, and in addition to
@@ -17,6 +14,9 @@ resonance. These are combined measurement data from the four experiments at CERN
 which were corrected for effects caused by photon radiation: Measurements of the hadronic cross
 section (sigma) as a function of the centre-of-mass energy (E).
 """
+
+from kafe2 import XYContainer, Fit, Plot, ContoursProfiler
+import matplotlib.pyplot as plt
 
 # Center-of-mass energy E (GeV):
 E = [88.387, 89.437, 90.223, 91.238, 92.059, 93.004, 93.916]  # x data
