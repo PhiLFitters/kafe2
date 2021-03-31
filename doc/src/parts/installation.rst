@@ -161,13 +161,16 @@ To install the *iminuit* package for Python, the `Pip installer
 
 Note that the above command does **not** upgrade *iminuit* if it is already installed;
 To do this add the "--upgrade" option to the above command.
-*kafe2* officially supports *iminuit* 1.5.2 and the newest version of *iminuit* 2.
+*kafe2* officially supports *iminuit* 1.5.4 and the newest version of *iminuit* 2.
 To install the legacy version of *iminuit*, do:
 
     .. code:: bash
 
-        pip install iminuit==1.5.2
+        pip install iminuit==1.5.4
 
+Note: the last version of *iminuit* that was usable in combination with *Python* 2.7
+was *iminuit* 1.3.10.
+The use of *Python* 2.7 in combination with *iminuit* is therefore not officially supported.
 You might also need to install the Python headers for *iminuit* to
 compile properly.
 
