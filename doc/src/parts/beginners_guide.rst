@@ -746,7 +746,7 @@ background ``fbg`` to physically correct values.
     :control_type: link
     :control_text: unbinned.yml
 
-    .. literalinclude:: ../../../examples/010_unbinned_fit/unbinned.yml
+    .. literalinclude:: ../../../examples/010_unbinned_fit/01_unbinned.yml
         :language: yaml
         :emphasize-lines: 43-47
 
@@ -760,7 +760,7 @@ How to fix single parameters is highlighted in the example below.
     :control_type: link
     :control_text: unbinned.py
 
-    .. literalinclude:: ../../../examples/010_unbinned_fit/unbinned.py
+    .. literalinclude:: ../../../examples/010_unbinned_fit/01_unbinned.py
         :lines: 19-
         :emphasize-lines: 36-41
 
