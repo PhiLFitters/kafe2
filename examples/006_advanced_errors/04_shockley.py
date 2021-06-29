@@ -15,7 +15,7 @@ which allows the user to specify the components of the uncertainties
 one after the other. The resulting individual covariance matrices 
 are all added to form the full covariance matrix used in the fit. 
 
-Here, we take as an example a typical digital amperemeter or voltmeter. 
+Here, we take as an example a typical digital ammeter or voltmeter.
 Device characteristics are specified as 4000 Counts, +/-(0.5% + 3 digits),
 where the calibration uncertainty is correlated among all measurements, 
 while the digitisation uncertainties are independent. There often also
@@ -82,7 +82,7 @@ diode_data.add_error(axis='x', err_val=deltaU)
 diode_data.add_error(axis='x', err_val=deltaU_noise)
 # note: relative uncertainties w.r.t. model to be added to fit object later
 
-#  - precision amperemeter: 2000 Counts, +/-(1.0% + 3 digits) 
+#  - precision ammeter: 2000 Counts, +/-(1.0% + 3 digits)
 #     - measurement ranges 200µA, 20mA und 200mA 
 crel_I = 0.010
 Idigits = 3

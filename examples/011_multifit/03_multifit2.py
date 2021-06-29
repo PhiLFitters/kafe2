@@ -18,7 +18,7 @@
    *Note*: in this simple case of two independent frequency distributions
    the results for the common parameters could also be determined by
    combination of the results from two individual fits to each of the
-   histrograms.
+   histograms.
 """
 
 from kafe2 import Fit, Plot, HistContainer, MultiFit
@@ -39,8 +39,8 @@ def generate_data(N, min, max, pos, width, s):
     return np.concatenate((data_s, data_b))
 
 
-# the fit functions, one for each version of the distritution with
-#  different resulution and signalfraction 
+# the fit functions, one for each version of the distribution with
+#  different resolution and signal fraction
 #
 def SplusBmodel1(x, mu=5., width=0.3, res1=0.3, sf1=0.5):
     """pdf of a Gaussian signal at position mu, with natural width width,
@@ -111,7 +111,7 @@ multi_fit.do_fit()  # do the fit
 print('\n*==*  Result of multi-fit to both histograms')
 multi_fit.report()  # Optional: print a report to the terminal
 
-# Optional: create ouput graphics
+# Optional: create output graphics
 multi_plot = Plot(multi_fit, separate_figures=True)
 multi_plot.plot(asymmetric_parameter_errors=True)
 
