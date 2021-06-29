@@ -1,3 +1,9 @@
+# kafe2 XYFit yaml representation written by johannesg on 29.06.2021, 20:47.
+
+# WARNING: No fit has been performed as of yet. Did you forget to run fit.do_fit()?
+
+# Model function: intensity(theta; i_0, b, g, wavelength)
+
 type: xy
 dataset:
   type: xy
@@ -95,57 +101,111 @@ parametric_model:
   - 0.04
   - 0.044
   y_data:
-  - 0.012890395056255161
-  - 0.08862350862000538
-  - 0.2357150002256744
-  - 0.43347428518506004
-  - 0.3279183716447424
-  - 0.03907303900576044
-  - 0.11630184629244372
-  - 0.46006685010595283
-  - 0.8371029466199726
-  - 0.98920853972322
-  - 0.8371029466199726
-  - 0.46006685010595283
-  - 0.11630184629244372
-  - 0.03907303900576044
-  - 0.3279183716447424
-  - 0.43347428518506004
-  - 0.2357150002256744
-  - 0.08862350862000538
-  - 0.012890395056255161
+  - 0.999999999949716
+  - 0.9999999999584384
+  - 0.9999999999663316
+  - 0.999999999976616
+  - 0.9999999999850326
+  - 0.9999999999915803
+  - 0.9999999999962574
+  - 0.9999999999983367
+  - 0.9999999999995841
+  - 0.999999999999974
+  - 0.9999999999995841
+  - 0.9999999999983367
+  - 0.9999999999962574
+  - 0.9999999999915803
+  - 0.9999999999850326
+  - 0.999999999976616
+  - 0.9999999999663316
+  - 0.9999999999584384
+  - 0.999999999949716
   model_function:
     model_function_formatter:
       type: base
-      name: interference
+      name: intensity
       latex_name: I
       expression_string: null
-      latex_expression_string: '{i_0}\,\left(\frac{{\sin(\frac{{{k}}}{{2}}\,b\,\sin{{{x}}})}}{{\frac{{{k}}}{{2}}\,b\,\sin{{{x}}}}}\cos(\frac{{{k}}}{{2}}\,g\,\sin{{{x}}})\right)^2'
+      latex_expression_string: '{i_0}\,\left(\frac{{\sin(\frac{{\pi}}{{{wavelength}}}\,b\,\sin{{{theta}}})}}{{\frac{{\pi}}{{{wavelength}}}\,b\,\sin{{{theta}}}}}\cos(\frac{{\pi}}{{{wavelength}}}\,g\,\sin{{{theta}}})\right)^2'
       arg_formatters:
-        x: '{\tt x}'
+        theta: '{\theta}'
         i_0: '{I_0}'
         b: '{b}'
         g: '{g}'
-        k: '{k}'
+        wavelength: '{\lambda}'
       signature:
-      - x
+      - theta
       - i_0
       - b
       - g
-      - k
-    python_code: "def interference(x, i_0=1., b=1e-5, g=2e-5, k=1e7):\n    # our first\
-      \ model is a simple linear function\n    k_half_sine_alpha = k / 2 * np.sin(x)\
-      \  # helper variable\n    k_b = k_half_sine_alpha * b\n    k_g = k_half_sine_alpha\
-      \ * g\n    return i_0 * (np.sin(k_b) / k_b * np.cos(k_g)) ** 2\n"
+      - wavelength
+    python_code: "def intensity(theta, i_0, b, g, wavelength):\n    \"\"\"\n    In\
+      \ this example our model function is the intensity of diffracted light as described\
+      \ by the\n    Fraunhofer equation.\n    :param theta: angle at which intensity\
+      \ is measured\n    :param i_0: intensity amplitude\n    :param b: width of a\
+      \ single slit\n    :param g: distance between the two slits\n    :param wavelength:\
+      \ wavelength of the laser light\n    :return: intensity of the diffracted light\n\
+      \    \"\"\"\n    single_slit_arg = np.pi * b * np.sin(theta) / wavelength\n\
+      \    single_slit_interference = np.sin(single_slit_arg) / single_slit_arg\n\
+      \    double_slit_interference = np.cos(np.pi * g * np.sin(theta) / wavelength)\n\
+      \    return i_0 * single_slit_interference ** 2 * double_slit_interference **\
+      \ 2\n"
   model_parameters:
   - 1.0
-  - 1.0e-05
   - 2.0e-05
-  - 10000000.0
+  - 5.0e-05
+  - 1.0
   model_label: null
 minimizer: iminuit
 minimizer_kwargs: null
 parameter_constraints: []
 fixed_parameters:
-  k: 9670000.0
-limited_parameters: {}
+  wavelength: 6.471e-07
+limited_parameters:
+  i_0: !!python/tuple
+  - 1.0e-08
+  - null
+  b: !!python/tuple
+  - 1.0e-08
+  - null
+  g: !!python/tuple
+  - 1.0e-08
+  - null
+fit_results:
+  did_fit: false
+  cost: -13.551117909178402
+  ndf: 16
+  goodness_of_fit: !!python/object/apply:numpy.core.multiarray.scalar
+  - &id001 !!python/object/apply:numpy.dtype
+    args:
+    - f8
+    - false
+    - true
+    state: !!python/tuple
+    - 3
+    - <
+    - null
+    - null
+    - null
+    - -1
+    - -1
+    - 0
+  - !!binary |
+    0KHfBKjWVkA=
+  gof/ndf: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    0KHfBKjWFkA=
+  chi2_probability: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    AAAAAIDDeD0=
+  parameter_values:
+  - 1.0
+  - 2.0e-05
+  - 5.0e-05
+  - 6.471e-07
+  parameter_cov_mat: null
+  parameter_errors: null
+  parameter_cor_mat: null
+  asymmetric_parameter_errors: null
