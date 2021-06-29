@@ -695,13 +695,16 @@ class FitBase(FileIOMixin, object):
 
         :param param_name_value_dict: new parameter values
         """
-        return self._fitter.set_fit_parameter_values(**param_name_value_dict)
+        _return_value = self._fitter.set_fit_parameter_values(**param_name_value_dict)
+        self._param_model.parameters = self.parameter_values
+        return _return_value
 
     def set_all_parameter_values(self, param_value_list):
         """Set all the fit parameters at the same time.
 
         :param typing.Iterable[float] param_value_list: List of parameter values (mind the order).
         """
+        self._param_model.parameters = param_value_list
         return self._fitter.set_all_fit_parameter_values(param_value_list)
 
     def fix_parameter(self, name, value=None):
