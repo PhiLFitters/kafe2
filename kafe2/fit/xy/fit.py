@@ -755,9 +755,13 @@ class XYFit(FitBase):
         # here: df/dp[par_idx]|x=x[x_idx] = _f_deriv_by_params[x_idx][par_idx]
 
         _band_y = np.zeros_like(x)
-        _n_poi = self.parameter_values.size
+
+        # Cut out fixed parameters which have nan as derivative:
+        _not_pars_fixed = [_par_name not in self._fitter.fixed_parameters
+                           for _par_name in self.parameter_names]
+        _cut_parameter_cov_mat = self.parameter_cov_mat[_not_pars_fixed][:, _not_pars_fixed]
         for _x_idx, _x_val in enumerate(x):
-            _p_res = _f_deriv_by_params[_x_idx]
-            _band_y[_x_idx] = _p_res.dot(self.parameter_cov_mat[:_n_poi, :_n_poi]).dot(_p_res)
+            _p_res = _f_deriv_by_params[_x_idx, _not_pars_fixed]
+            _band_y[_x_idx] = _p_res.dot(_cut_parameter_cov_mat).dot(_p_res)
 
         return np.sqrt(_band_y)
