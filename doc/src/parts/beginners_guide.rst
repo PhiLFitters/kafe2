@@ -340,7 +340,7 @@ Python
     :control_text: 02_double_slit.py
 
     .. literalinclude:: ../../../examples/003_profiling/02_double_slit.py
-        :lines: 7-
+        :lines: 13-
 
 
 .. _x_errors:

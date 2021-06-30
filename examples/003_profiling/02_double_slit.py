@@ -31,9 +31,14 @@ def _generate_dataset(output_filename='02_double_slit_data.yml'):
 
     data = XYContainer(x_data=xy_data[0], y_data=xy_data[1])
 
-    data.add_error('x', 0.002, relative=False)
-    data.add_error('y', [0.02, 0.02, 0.02, 0.02, 0.04, 0.02, 0.05, 0.03, 0.05, 0.08, 0.05, 0.03,
-                         0.05, 0.01, 0.04, 0.03, 0.03, 0.02, 0.01], relative=False)
+    data.add_error('x', 0.002, relative=False, name='x_uncor_err')
+    data.add_error(
+        'y',
+        [0.02, 0.02, 0.02, 0.02, 0.04, 0.02, 0.05, 0.03, 0.05, 0.08, 0.05, 0.03, 0.05, 0.01, 0.04,
+         0.03, 0.03, 0.02, 0.01],
+        relative=False,
+        name='y_uncor_err'
+    )
 
     data.to_file(output_filename)
 
@@ -113,7 +118,9 @@ cpf.plot_profiles_contours_matrix(parameters=['i_0', 'b', 'g'],
 
 # To see the fit results, plot using Plot:
 p = Plot(fit_objects=fit)
-p.plot(fit_info=True)
+p.x_label = r"$\theta$"
+p.y_label = r"$I$"
+p.plot(asymmetric_parameter_errors=True)
 
 # Show the fit results:
 plt.show()

@@ -1,3 +1,4 @@
+# kafe2 XYContainer yaml representation written by johannesg on 30.06.2021, 15:02.
 type: xy
 x_data:
 - -0.044
@@ -19,12 +20,6 @@ x_data:
 - 0.036
 - 0.04
 - 0.044
-x_errors:
-- name: "x_uncor_err"
-  correlation_coefficient: 0.0
-  error_value: 0.002
-  relative: false
-  type: simple
 y_data:
 - 0.06
 - 0.07
@@ -45,9 +40,15 @@ y_data:
 - 0.09
 - 0.02
 - 0.01
-y_errors:
-- name: "y_uncor_err"
+x_errors:
+- name: x_uncor_err
+  type: simple
+  error_value: 0.002
+  relative: false
   correlation_coefficient: 0.0
+y_errors:
+- name: y_uncor_err
+  type: simple
   error_value:
   - 0.02
   - 0.02
@@ -69,4 +70,4 @@ y_errors:
   - 0.02
   - 0.01
   relative: false
-  type: simple
+  correlation_coefficient: 0.0
