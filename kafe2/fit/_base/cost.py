@@ -104,6 +104,7 @@ class CostFunction(FileIOMixin, object):
         self._needs_errors = True
         self._is_chi2 = False
         self._saturated = False
+        self._kafe2go_identifier = None
         super(CostFunction, self).__init__()
 
     @classmethod
@@ -174,6 +175,11 @@ class CostFunction(FileIOMixin, object):
     def add_determinant_cost(self):
         """Whether the determinant cost is being added automatically to the cost function value."""
         return self._add_determinant_cost
+
+    @property
+    def kafe2go_identifier(self):
+        """Short string representation (if any) of this cost function when dumping to file."""
+        return self._kafe2go_identifier
 
     def goodness_of_fit(self, *args):
         """How well the model agrees with the data."""
@@ -280,6 +286,7 @@ class CostFunction_Chi2(CostFunction):
         self._needs_errors = errors_to_use is not None
         self._is_chi2 = True
         self._saturated = True
+        self._kafe2go_identifier = self.name
 
     def _chi2(self, data, model, cov_mat_cholesky=None, err=None):
         data = np.asarray(data)
@@ -306,18 +313,17 @@ class CostFunction_Chi2(CostFunction):
 
         # otherwise, if an array of point-wise errors is given, use that
         if err is not None:
-            err = np.asarray(err)
             if np.any(err == 0.0):
                 if self._fail_on_no_errors:
                     raise CostFunctionException("'err' must not contain any zero values!")
+                if self.needs_errors:
+                    # There are other warnings that notify the user about singular cov mat, etc.
+                    warnings.warn("Setting all data errors to 1 as a fallback.")
             else:
                 _res = _res / err
 
-        if self.needs_errors:
-            # There are other warnings that notify the user about singular cov mat, etc.
-            warnings.warn("Setting all data errors to 1 as a fallback.")
         # return sum of squared residuals
-        _cost = np.sum(_res ** 2)
+        _cost = np.sum(np.square(_res))
         if np.isnan(_cost):
             _cost = np.inf
         return _cost
@@ -456,6 +462,7 @@ class CostFunction_NegLogLikelihood(CostFunction):
         self._formatter.description = _cost_function_description
         self._needs_errors = _nll_func in [self.nll_gaussian, self.nllr_gaussian]
         self._saturated = ratio
+        self._kafe2go_identifier = self.name
 
     @staticmethod
     def nll_gaussian(data, model, total_error):
@@ -562,6 +569,10 @@ STRING_TO_COST_FUNCTION = {
     'chi_2': (CostFunction_Chi2, {}),
     'chisquared': (CostFunction_Chi2, {}),
     'chi_squared': (CostFunction_Chi2, {}),
+    'chi2_no_errors': (CostFunction_Chi2, {"errors_to_use": None}),
+    'chi2_pointwise': (CostFunction_Chi2, {"errors_to_use": "pointwise"}),
+    'chi2_pointwise_errors': (CostFunction_Chi2, {"errors_to_use": "pointwise"}),
+    'chi2_covariance': (CostFunction_Chi2, {"errors_to_use": "covariance"}),
     'nll': (CostFunction_NegLogLikelihood, {"ratio": False}),
     'nll-poisson': (CostFunction_NegLogLikelihood,
                     {"data_point_distribution": "poisson", "ratio": False}),

@@ -21,6 +21,13 @@ class YamlWriterMixin(DReprWriterMixin):
     relevant ``DRepr`` class (in that order).
     """
 
+    @staticmethod
+    def _to_float(property_dict, property_name):
+        property_value = property_dict.get(property_name, None)
+        if property_value is not None:
+            property_dict[property_name] = float(property_value)
+        return property_dict
+
     def write(self):
         self._yaml_doc = self._make_representation(self._kafe_object)
         with self._ohandle as _h:

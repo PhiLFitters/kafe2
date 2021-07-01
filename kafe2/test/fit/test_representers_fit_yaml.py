@@ -7,12 +7,14 @@ import abc
 
 from kafe2.fit.representation import FitYamlWriter, FitYamlReader
 from kafe2.fit.io.handle import IOStreamHandle
+from kafe2.fit.custom import CustomFit
 from kafe2.fit.histogram import HistFit
 from kafe2.fit.indexed import IndexedFit
 from kafe2.fit.unbinned import UnbinnedFit
 from kafe2.fit.xy import XYFit
 from kafe2.fit.histogram.container import HistContainer
 from kafe2.fit.representation._yaml_base import YamlReaderException
+from .test_fit_custom import TestCustomFitWithSimpleYErrors
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -81,8 +83,126 @@ class AbstractTestFitRepresenter(object):
         )
 
 
+TEST_FIT_CUSTOM="""
+type: custom
+cost_function: |
+    def chi2(a=1.5, b=-0.5):
+        x_data = np.array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+        y_data = np.array([
+            -1.0804945, 0.97336504, 2.75769933, 4.91093935, 6.98511206, 9.15059627, 10.9665515,
+            13.06741151, 14.95081026, 16.94404467
+        ])
+        y_err = 0.1
+        y_model = a * x_data + b
+        cost = np.sum(np.square((y_model - y_data) / y_err))
+        cost += 2 * x_data.shape[0] * np.log(y_err)
+        return cost
+parameter_constraints:
+      - type: simple
+        index: 0
+        value: 2.0
+        uncertainty: 1.0
+      - type: simple
+        name: b
+        value: -1.0
+        uncertainty: 0.5
+      - type: matrix
+        names: [a, b]
+        values: [2.05, -0.95]
+        matrix: [[1.1, 0.1], [0.1, 2.4]]
+parameter_formatters:
+    a: alpha
+    b: beta
+"""
+
+TEST_FIT_CUSTOM_MISSING_KEYWORD="""
+type: custom
+"""
+
+TEST_FIT_CUSTOM_EXTRA_KEYWORD = TEST_FIT_CUSTOM + """
+extra_keyword: 3.14
+"""
+
+class TestCustomFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
+    FIT_CLASS = CustomFit
+    TEST_FIT = TEST_FIT_CUSTOM
+    TEST_FIT_SIMPLE = None
+    TEST_FIT_EXTRA_KEYWORD = TEST_FIT_CUSTOM_EXTRA_KEYWORD
+    TEST_FIT_MISSING_KEYWORD = TEST_FIT_CUSTOM_MISSING_KEYWORD
+
+    def setUp(self):
+        self._test_parameters = np.array([2.0, -1.0])
+        self._test_parameters_default = np.array([1.5, -0.5])
+        self._test_parameters_do_fit = np.array([2.0115580399995032, -1.0889949779758534])
+        self._test_y_default = self._test_parameters_default[0] * np.arange(10) \
+                               + self._test_parameters_default[1]
+        self._test_y_do_fit = [-1.08899498, 0.92256306, 2.9341211, 4.94567914, 6.95723718,
+                               8.96879522, 10.98035326,
+                               12.9919113, 15.00346934, 17.01502738]
+
+        self._fit = CustomFit(TestCustomFitWithSimpleYErrors.chi2)
+        self._fit.assign_parameter_names(a='alpha', b='beta')
+        self._fit.add_parameter_constraint(name='a', value=2.0, uncertainty=1.0)
+        self._fit.add_parameter_constraint(name='b', value=-1.0, uncertainty=0.5)
+        self._fit.add_matrix_parameter_constraint(names=['a', 'b'], values=[2.05, -0.95],
+                                                  matrix=[[1.1, 0.1], [0.1, 2.4]])
+        self.setup_streams()
+
+    def test_read_from_testfile_stream(self):
+        _read_fit = self._testfile_streamreader.read()
+        self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
+        for _pf in _read_fit._parameter_formatters:
+            self.assertTrue(
+                _pf.arg_name == 'a' and _pf.name == 'alpha'
+                or _pf.arg_name == 'b' and _pf.name == 'beta'
+            )
+        self.assertTrue(
+            np.allclose(
+                self._test_parameters_default,
+                _read_fit.parameter_values
+            )
+        )
+
+        _read_fit.do_fit()
+
+        self.assertTrue(
+            np.allclose(
+                self._test_parameters_do_fit,
+                _read_fit.parameter_values
+            )
+        )
+
+    def test_round_trip_with_stringstream(self):
+        self._roundtrip_streamwriter.write()
+        self._roundtrip_stringstream.seek(0)  # return to beginning
+        _read_fit = self._roundtrip_streamreader.read()
+        self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
+        for _pf in _read_fit._parameter_formatters:
+            self.assertTrue(
+                _pf.arg_name == 'a' and _pf.name == 'alpha'
+                or _pf.arg_name == 'b' and _pf.name == 'beta'
+            )
+
+        self.assertTrue(
+            np.allclose(
+                self._test_parameters_default,
+                _read_fit.parameter_values
+            )
+        )
+
+        _read_fit.do_fit()
+
+        self.assertTrue(
+            np.allclose(
+                self._test_parameters_do_fit,
+                _read_fit.parameter_values
+            )
+        )
+
+
 TEST_FIT_HIST="""
 type: histogram
+cost_function: nll_poisson
 dataset:
     type: histogram
     n_bins: 8
@@ -332,6 +452,7 @@ class TestHistFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
 
 TEST_FIT_INDEXED="""
 type: indexed
+cost_function: chi2
 dataset:
     type: indexed
     data: [ -1.0804945, 0.97336504, 2.75769933, 4.91093935, 6.98511206,
@@ -531,6 +652,7 @@ class TestIndexedFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresente
 
 TEST_FIT_XY="""
 type: xy
+cost_function: chi2
 dataset:
     type: xy
     x_data: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
@@ -728,6 +850,7 @@ class TestXYFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
 
 
 TEST_FIT_UNBINNED = """
+cost_function: nll
 dataset:
   data: [1.0130614498386674, -1.1349287030839197, -0.10341784343652169, -1.390768642168136, -0.9744105188262357,
          0.6056117355777544, -0.5504328324999447, 0.526390450221898, -1.1119561843051506, 0.8564964441075679,
