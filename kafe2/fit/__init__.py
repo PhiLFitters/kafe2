@@ -143,12 +143,13 @@ using `matplotlib`.
 # public interface of submodule 'kafe2.fit'
 
 
+from .custom import *
 from .indexed import *
-from .unbinned import *
 from .histogram import *
 from .multi import *
 from .tools import *
 from .xy import *
+from .unbinned import *
 
 from ._base.plot import Plot
 from .tools.fit_wrapper import Fit  # import after every fit to avoid import conflicts with other tools

@@ -37,7 +37,7 @@ class FitBase(FileIOMixin, object):
     MODEL_FUNCTION_TYPE = None
     PLOT_ADAPTER_TYPE = None
     EXCEPTION_TYPE = FitException
-    RESERVED_NODE_NAMES = None
+    RESERVED_NODE_NAMES = set()
     _BASIC_ERROR_NAMES = {}
     _STRING_TO_COST_FUNCTION = STRING_TO_COST_FUNCTION
     _AXES = (None,)  # axes for which to for example create data nexus nodes
@@ -612,7 +612,7 @@ class FitBase(FileIOMixin, object):
 
         :rtype: bool
         """
-        return self._param_model.has_errors
+        return self._param_model is not None and self._param_model.has_errors
 
     @property
     def has_data_errors(self):
@@ -620,7 +620,7 @@ class FitBase(FileIOMixin, object):
 
         :rtype: bool
         """
-        return self._data_container.has_errors
+        return self._data_container is not None and self._data_container.has_errors
 
     @property
     def has_errors(self):
@@ -628,7 +628,7 @@ class FitBase(FileIOMixin, object):
 
         :rtype: bool
         """
-        return True if self.has_data_errors or self.has_model_errors else False
+        return self.has_data_errors or self.has_model_errors
 
     @property
     def model_count(self):
