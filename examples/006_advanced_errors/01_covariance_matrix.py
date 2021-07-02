@@ -1,61 +1,85 @@
 #!/usr/bin/env python
 """
-kafe2 example: Weighted average of measurements
+kafe2 Example: Weighted Average of Measurements
 ===============================================
-"""
 
+A physical parameter is typically investigated through multiple experiments. Because the results of
+these experiments are slightly different they can be averaged to receive a more precise estimate of
+the physical parameter. However, when this average is calculated it is important to not only
+consider the uncertainties of the individual measurements but also whether these uncertainties are
+correlated. This can for example happen if two or more measurements are made with the same
+experimental setup that leads to the same bias in the result.
+
+In this example we are going to calculate the average of some abstract physical quantity from four
+different results. Each result has a statistical uncertainty - these are completely uncorrelated.
+The results can further be divided into two distinct groups. Each group has some systematic
+uncertainties that affect all measurements of the group in the same way - in other words they are
+fully correlated. There are also systematic uncertainties that affect all measurements of both
+groups in the same way - these are also fully correlated. To correctly handle the aforementioned
+differences in uncertainties we are going to manually construct a covariance matrix which we can
+then directly use to specify our uncertainties. We will also see how we could achieve the same
+result by specifying multiple simple sources of uncertainty instead.
+"""
 import numpy as np
 import matplotlib.pyplot as plt
-from kafe2 import IndexedFit, Plot
+from kafe2 import IndexedContainer, Fit, Plot
+
+measurements = np.array([5.3, 5.2, 4.7, 4.8])  # The results we want to average.
+err_stat = 0.2  # Statistical uncertainty for each measurement.
+err_syst_1234 = 0.15  # Systematic uncertainty that affects all measurements.
+err_syst_12 = 0.175  # Systematic absolute uncertainty only affecting the first two measurements.
+err_syst_34 = 0.05  # Systematic relative uncertainty affecting only the last two measurements.
+
+# Create an IndexedContainer from our data:
+data = IndexedContainer(measurements)
+
+# Start with an empty matrix for our covariance matrix:
+covariance_matrix = np.zeros(shape=(4, 4))
+# Uncorrelated uncertainties only affect the diagonal of the covariance matrix:
+covariance_matrix += np.eye(4) * err_stat ** 2
+# Fully correlated uncertainties that affect all measurements affect all covariance matrix entries:
+covariance_matrix += err_syst_1234 ** 2
+# Fully correlated uncertainties that affect only a part of the measurements result in block-like
+# changes to the covariance matrix:
+covariance_matrix[0:2, 0:2] += err_syst_12 ** 2  # Magnitude of abs. uncertainty is the same.
+err_syst_34_abs = err_syst_34 * measurements[2:4]  # Magnitude of abs. uncertainty is different.
+covariance_matrix[2:4, 2:4] += np.outer(err_syst_34_abs, err_syst_34_abs)
+
+# The covariance matrix can now be simply added to our container to specify the uncertainties:
+data.add_matrix_error(covariance_matrix, matrix_type="cov")
+
+# To get the same result we could have also added the uncertainties one-by-one like this:
+# data.add_error(err_stat, correlation=0)
+# data.add_error(err_syst_1234, correlation=1)
+# data.add_error([err_syst_12, err_syst_12, 0, 0], correlation=1)
+# data.add_error([0, 0, err_syst_34, err_syst_34], correlation=1, relative=True)
+# See the next example for another demonstration of this approach.
 
 
-##################
-# Model function #
-##################
-def W_mass_model(m_W=80):
-    # our model is a simple constant function
-    #return float(m_W)  # FIXME: automatically adapt to measurement list length
-    return [float(m_W)]*8
+# Just for graphical output:
+data.label = 'Test data'
+data.axis_labels = [None, 'Measured value (a.o.)']
 
 
-# measurements of the W boson mass
-W_mass_measurements = [80.429, 80.339, 80.217, 80.449, 80.477, 80.310, 80.324, 80.353]
-# each measurement has a statistical uncertainty
-W_mass_stat_err =     [0.055,   0.073,  0.068,  0.058,  0.069,  0.091,  0.078,  0.068]
-#W_mass_stat_err =     [1,       1,      1,      1,      1,      1,      1,      1    ]
-
-# construct a covariance matrix for the systematic errors
-n_measurements = len(W_mass_measurements)
-W_mass_cov_mat = np.matrix(np.zeros((n_measurements, n_measurements)))
-W_mass_cov_mat[:4, :4] = 0.021**2
-W_mass_cov_mat[4:, 4:] = 0.044**2
-W_mass_cov_mat[:4, 4:] = 0.025**2
-W_mass_cov_mat[4:, :4] = 0.025**2
+# The very simple "model":
+def average(a):
+    return a
 
 
-# create an IndexedFit, specifying the measurement data, model function and cost function
-f = IndexedFit(data=W_mass_measurements,
-               model_function=W_mass_model)
+# Set up the fit:
+fit = Fit(data, average)
+fit.model_label = 'average value'
 
-# add two error sources
-f.add_error(W_mass_stat_err, correlation=0)    # statistical errors
-f.add_matrix_error(W_mass_cov_mat, matrix_type='cov') # systematic errors (using a covariance matrix)
+# Perform the fit:
+fit.do_fit()
 
-# assign LaTeX strings to various quantities (for nice display)
-f.assign_parameter_latex_names(m_W=r"m_{\rm W}")  # the function parameters
-f.assign_model_function_latex_expression(r"{0}")  # the function expression
+# Report and plot results:
+fit.report()
+p = Plot(fit)
+p.plot()
 
-#f._nexus.print_state()
+# Illustrate some a-posteriory fixes to plot layout by accessing the axis object:
+_ax = p.axes[0]['main']
+_ax.set_xticks(range(4))  # Integer axis ticks
 
-# perform the fit
-f.do_fit()
-
-# print out information about the fit
-f.report()
-
-# to see the fit results, plot using Plot
-p = Plot(f)
-p.plot(fit_info=True)
-
-# show the fit result
 plt.show()

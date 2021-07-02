@@ -526,7 +526,7 @@ Python
     :control_text: 01_covariance_matrix.py
 
     .. literalinclude:: ../../../examples/006_advanced_errors/01_covariance_matrix.py
-        :lines: 7-
+        :lines: 23-
 
 
 6.2: Error components
