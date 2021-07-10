@@ -14,6 +14,7 @@ from kafe2.fit.unbinned import UnbinnedFit
 from kafe2.fit.xy import XYFit
 from kafe2.fit.histogram.container import HistContainer
 from kafe2.fit.representation._yaml_base import YamlReaderException
+from .test_fit_custom import TestCustomFitWithSimpleYErrors
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -129,19 +130,6 @@ class TestCustomFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter
     TEST_FIT_EXTRA_KEYWORD = TEST_FIT_CUSTOM_EXTRA_KEYWORD
     TEST_FIT_MISSING_KEYWORD = TEST_FIT_CUSTOM_MISSING_KEYWORD
 
-    @staticmethod
-    def chi2(a=1.5, b=-0.5):
-        x_data = np.array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
-        y_data = np.array([
-            -1.0804945, 0.97336504, 2.75769933, 4.91093935, 6.98511206, 9.15059627, 10.9665515,
-            13.06741151, 14.95081026, 16.94404467
-        ])
-        y_err = 0.1
-        y_model = a * x_data + b
-        cost = np.sum(np.square((y_model - y_data) / y_err))
-        cost += 2 * x_data.shape[0] * np.log(y_err)
-        return cost
-
     def setUp(self):
         self._test_parameters = np.array([2.0, -1.0])
         self._test_parameters_default = np.array([1.5, -0.5])
@@ -152,7 +140,7 @@ class TestCustomFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter
                                8.96879522, 10.98035326,
                                12.9919113, 15.00346934, 17.01502738]
 
-        self._fit = CustomFit(self.chi2)
+        self._fit = CustomFit(TestCustomFitWithSimpleYErrors.chi2)
         self._fit.assign_parameter_names(a='alpha', b='beta')
         self._fit.add_parameter_constraint(name='a', value=2.0, uncertainty=1.0)
         self._fit.add_parameter_constraint(name='b', value=-1.0, uncertainty=0.5)
