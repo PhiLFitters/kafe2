@@ -39,7 +39,7 @@ class UnbinnedCostFunction_NegLogLikelihood(CostFunction):
 
 
 STRING_TO_COST_FUNCTION = {
-    'nll': UnbinnedCostFunction_NegLogLikelihood,
-    'negloglikelihood': UnbinnedCostFunction_NegLogLikelihood,
-    'neg_log_likelihood': UnbinnedCostFunction_NegLogLikelihood,
+    'nll': (UnbinnedCostFunction_NegLogLikelihood, {}),
+    'negloglikelihood': (UnbinnedCostFunction_NegLogLikelihood, {}),
+    'neg_log_likelihood': (UnbinnedCostFunction_NegLogLikelihood, {}),
 }

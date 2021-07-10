@@ -1,4 +1,4 @@
-# kafe2 XYFit yaml representation written by johannesg on 30.06.2021, 15:02.
+# kafe2 XYFit yaml representation written by johannesg on 07.07.2021, 17:16.
 
 # WARNING: No fit has been performed as of yet. Did you forget to run fit.do_fit()?
 
@@ -156,50 +156,29 @@ parametric_model:
   - 5.0e-05
   - 1.0
   model_label: null
+cost_function: chi2_covariance
 minimizer: iminuit
 minimizer_kwargs: null
 parameter_constraints: []
 fixed_parameters:
   wavelength: 6.471e-07
 limited_parameters:
-  i_0: !!python/tuple
+  i_0:
   - 1.0e-08
   - null
-  b: !!python/tuple
+  b:
   - 1.0e-08
   - null
-  g: !!python/tuple
+  g:
   - 1.0e-08
   - null
 fit_results:
   did_fit: false
   cost: -13.551117909178402
   ndf: 16
-  goodness_of_fit: !!python/object/apply:numpy.core.multiarray.scalar
-  - &id001 !!python/object/apply:numpy.dtype
-    args:
-    - f8
-    - false
-    - true
-    state: !!python/tuple
-    - 3
-    - <
-    - null
-    - null
-    - null
-    - -1
-    - -1
-    - 0
-  - !!binary |
-    0KHfBKjWVkA=
-  gof/ndf: !!python/object/apply:numpy.core.multiarray.scalar
-  - *id001
-  - !!binary |
-    0KHfBKjWFkA=
-  chi2_probability: !!python/object/apply:numpy.core.multiarray.scalar
-  - *id001
-  - !!binary |
-    AAAAAIDDeD0=
+  goodness_of_fit: 91.35400506819792
+  gof/ndf: 5.70962531676237
+  chi2_probability: 1.407651772922236e-12
   parameter_values:
   - 1.0
   - 2.0e-05

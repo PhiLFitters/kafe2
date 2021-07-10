@@ -48,11 +48,83 @@ class CustomFit(FitBase):
         return False
 
     @property
+    def data(self):
+        return None
+
+    @property
+    def data_error(self):
+        return None
+
+    @property
+    def data_cov_mat(self):
+        return None
+
+    @property
+    def data_cov_mat_inverse(self):
+        return None
+
+    @property
+    def data_cor_mat(self):
+        return None
+
+    @property
     def model(self):
         return None
 
     @property
+    def model_error(self):
+        return None
+
+    @property
+    def model_cov_mat(self):
+        return None
+
+    @property
+    def model_cov_mat_inverse(self):
+        return None
+
+    @property
+    def model_cor_mat(self):
+        return None
+
+    @property
+    def total_error(self):
+        return None
+
+    @property
+    def total_cov_mat(self):
+        return None
+
+    @property
+    def total_cov_mat_inverse(self):
+        return None
+
+    @property
+    def total_cor_mat(self):
+        return None
+
+    @property
+    def model_label(self):
+        return None
+
+    @property
+    def data_size(self):
+        return None
+
+    @property
+    def model_count(self):
+        return 0
+
+    @property
     def ndf(self):
+        return None
+
+    @property
+    def goodness_of_fit(self):
+        return None
+
+    @property
+    def chi2_probability(self):
         return None
 
     def report(self, output_stream=sys.stdout, asymmetric_parameter_errors=False):

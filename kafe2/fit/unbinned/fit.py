@@ -4,7 +4,7 @@ import sys
 
 from .._base import FitException, FitBase, DataContainerBase, ModelFunctionBase
 from .container import UnbinnedContainer
-from .cost import UnbinnedCostFunction_NegLogLikelihood
+from .cost import UnbinnedCostFunction_NegLogLikelihood, STRING_TO_COST_FUNCTION
 from .model import UnbinnedParametricModel
 from .plot import UnbinnedPlotAdapter
 from ..util import collect
@@ -23,6 +23,8 @@ class UnbinnedFit(FitBase):
     PLOT_ADAPTER_TYPE = UnbinnedPlotAdapter
     EXCEPTION_TYPE = UnbinnedFitException
     RESERVED_NODE_NAMES = {'data', 'model', 'cost', 'parameter_values', 'parameter_constraints'}
+
+    _STRING_TO_COST_FUNCTION = STRING_TO_COST_FUNCTION
 
     def __init__(self,
                  data,

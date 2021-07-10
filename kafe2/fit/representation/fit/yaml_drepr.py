@@ -1,3 +1,4 @@
+import inspect
 import numpy as np
 
 from ._base import FitDReprBase
@@ -6,8 +7,12 @@ from .._base import DReprError
 from .._yaml_base import YamlWriterMixin, YamlReaderMixin, YamlReaderException
 from ..constraint.yaml_drepr import ConstraintYamlReader, ConstraintYamlWriter
 from ..container.yaml_drepr import DataContainerYamlReader, DataContainerYamlWriter
-from ..model.yaml_drepr import ParametricModelYamlReader, ParametricModelYamlWriter
-from ....fit import IndexedFit, HistFit, UnbinnedFit, XYFit
+from ..model.yaml_drepr import ParametricModelYamlReader, ParametricModelYamlWriter, \
+    _process_function_code_for_dump, _parse_function
+from ....fit import CustomFit, HistFit, IndexedFit, UnbinnedFit, XYFit
+from ..._base.cost import STRING_TO_COST_FUNCTION
+from ...xy.cost import STRING_TO_COST_FUNCTION as STRING_TO_COST_FUNCTION_XY
+from ...unbinned.cost import STRING_TO_COST_FUNCTION as STRING_TO_COST_FUNCTION_UNBINNED
 from ....tools import get_compact_representation
 
 __all__ = ['FitYamlWriter', 'FitYamlReader']
@@ -57,7 +62,8 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
                 _preface_comment += "# %s: %s\n" % (_gof_name, _gof)
                 _round_gof_per_ndf_sig = max(
                     2, int(-np.floor(np.log(np.abs(_gof) / _ndf) / np.log(10))) + 1)
-            _preface_comment += '# ndf: %s\n' % _ndf
+            if _ndf is not None:
+                _preface_comment += '# ndf: %s\n' % _ndf
             if _gof is not None:
                 _preface_comment += "# %s/ndf: %s\n\n" % (
                     _gof_name, round(_gof / _ndf, _round_gof_per_ndf_sig))
@@ -87,10 +93,18 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
             raise DReprError("Fit type unknown or not supported: %s" % fit.__class__)
         _yaml_doc['type'] = _type
 
-        _yaml_doc['dataset'] = DataContainerYamlWriter._make_representation(fit.data_container)
-        _yaml_doc['parametric_model'] = ParametricModelYamlWriter._make_representation(fit._param_model)
+        if _type != 'custom':
+            _yaml_doc['dataset'] = DataContainerYamlWriter._make_representation(
+                fit.data_container)
+            _yaml_doc['parametric_model'] = ParametricModelYamlWriter._make_representation(
+                fit._param_model)
 
-        # TODO cost function
+        _cost_function_identifier = fit._cost_function.kafe2go_identifier
+        if _cost_function_identifier is not None:
+            _yaml_doc['cost_function'] = _cost_function_identifier
+        else:
+            _yaml_doc['cost_function'] = _process_function_code_for_dump(
+                inspect.getsource(fit._cost_function.func))
 
         _yaml_doc['minimizer'] = fit._minimizer
         _yaml_doc['minimizer_kwargs'] = fit._minimizer_kwargs
@@ -98,7 +112,9 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
         _yaml_doc['parameter_constraints'] = [ConstraintYamlWriter._make_representation(_parameter_constraint)
                                               for _parameter_constraint in fit.parameter_constraints]
         _yaml_doc['fixed_parameters'] = fit._fitter.fixed_parameters
-        _yaml_doc['limited_parameters'] = fit._fitter.limited_parameters
+        _yaml_doc['limited_parameters'] = {
+            _par_name: list(_par_limits)
+            for _par_name, _par_limits in fit._fitter.limited_parameters.items()}
 
         _fit_results = fit.get_result_dict()
         _fit_results['parameter_values'] = list(map(float, fit.parameter_values))
@@ -108,7 +124,12 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
                 float(_fit_results['parameter_errors'][_pn]) for _pn in fit.parameter_names]
             _fit_results['parameter_cor_mat'] = _fit_results['parameter_cor_mat'].tolist()
         if _fit_results['asymmetric_parameter_errors'] is not None:
-            _fit_results['asymmetric_parameter_errors'] = _fit_results['asymmetric_parameter_errors'].tolist()
+            _fit_results['asymmetric_parameter_errors'] = {
+                _par_name: [float(_asymm_errs[0]), float(_asymm_errs[1])]
+                for _par_name, _asymm_errs in _fit_results['asymmetric_parameter_errors'].items()}
+        FitYamlWriter._to_float(_fit_results, "goodness_of_fit")
+        FitYamlWriter._to_float(_fit_results, "gof/ndf")
+        FitYamlWriter._to_float(_fit_results, "chi2_probability")
         _yaml_doc['fit_results'] = _fit_results
         return _yaml_doc
 
@@ -122,6 +143,8 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
 
     @classmethod
     def _get_required_keywords(cls, yaml_doc, fit_class):
+        if fit_class is CustomFit:
+            return ['cost_function']
         if fit_class in (HistFit, XYFit):
             return ['dataset']
         return ['dataset', 'parametric_model']
@@ -134,8 +157,9 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
                           'expression_string': 'parametric_model',
                           'latex_expression_string': 'parametric_model',
                           }
-
-        if fit_class is HistFit:
+        if fit_class is CustomFit:
+            pass
+        elif fit_class is HistFit:
             _override_dict['n_bins'] = ['dataset', 'parametric_model']
             _override_dict['bin_range'] = ['dataset', 'parametric_model']
             _override_dict['bin_edges'] = ['dataset', 'parametric_model']
@@ -180,8 +204,9 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
         _fit_type = yaml_doc.pop('type')
         _class = cls._OBJECT_TYPE_NAME_TO_CLASS.get(_fit_type, None)
 
-        _data = DataContainerYamlReader._make_object(
-            yaml_doc.pop('dataset'), default_type=_fit_type)
+        if _fit_type != 'custom':
+            _data = DataContainerYamlReader._make_object(
+                yaml_doc.pop('dataset'), default_type=_fit_type)
         _parametric_model_entry = yaml_doc.pop('parametric_model', None)
         if _parametric_model_entry:
             _read_parametric_model = ParametricModelYamlReader._make_object(
@@ -190,12 +215,28 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
         else:
             _read_parametric_model = None
             _read_model_function = None
-        # TODO: cost function
+
+        _cost_function = yaml_doc.pop('cost_function', None)
+        if _cost_function is not None:
+            if _fit_type == 'xy':
+                _lookup_dict = STRING_TO_COST_FUNCTION_XY
+            elif _fit_type == 'unbinned':
+                _lookup_dict = STRING_TO_COST_FUNCTION_UNBINNED
+            else:
+                _lookup_dict = STRING_TO_COST_FUNCTION
+            if _cost_function not in _lookup_dict:
+                _cost_function = _parse_function(_cost_function)
+
         _minimizer = yaml_doc.pop('minimizer', None)
         _minimizer_kwargs = yaml_doc.pop('minimizer_kwargs', None)
         # change fit kwargs for different fit types if necessary
         _fit_kwargs = dict(minimizer=_minimizer, minimizer_kwargs=_minimizer_kwargs)
-        _fit_object = _class(_data, _read_model_function, **_fit_kwargs)
+        if _cost_function is not None:
+            _fit_kwargs["cost_function"] = _cost_function
+        if _fit_type != 'custom':
+            _fit_object = _class(_data, _read_model_function, **_fit_kwargs)
+        else:
+            _fit_object = _class(**_fit_kwargs)
 
         if _read_parametric_model is not None:
             _fit_object._param_model = _read_parametric_model
