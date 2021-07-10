@@ -109,6 +109,9 @@ parameter_constraints:
         names: [a, b]
         values: [2.05, -0.95]
         matrix: [[1.1, 0.1], [0.1, 2.4]]
+parameter_formatters:
+    a: alpha
+    b: beta
 """
 
 TEST_FIT_CUSTOM_MISSING_KEYWORD="""
@@ -150,6 +153,7 @@ class TestCustomFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter
                                12.9919113, 15.00346934, 17.01502738]
 
         self._fit = CustomFit(self.chi2)
+        self._fit.assign_parameter_names(a='alpha', b='beta')
         self._fit.add_parameter_constraint(name='a', value=2.0, uncertainty=1.0)
         self._fit.add_parameter_constraint(name='b', value=-1.0, uncertainty=0.5)
         self._fit.add_matrix_parameter_constraint(names=['a', 'b'], values=[2.05, -0.95],
@@ -159,6 +163,11 @@ class TestCustomFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter
     def test_read_from_testfile_stream(self):
         _read_fit = self._testfile_streamreader.read()
         self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
+        for _pf in _read_fit._parameter_formatters:
+            self.assertTrue(
+                _pf.arg_name == 'a' and _pf.name == 'alpha'
+                or _pf.arg_name == 'b' and _pf.name == 'beta'
+            )
         self.assertTrue(
             np.allclose(
                 self._test_parameters_default,
@@ -180,6 +189,11 @@ class TestCustomFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter
         self._roundtrip_stringstream.seek(0)  # return to beginning
         _read_fit = self._roundtrip_streamreader.read()
         self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
+        for _pf in _read_fit._parameter_formatters:
+            self.assertTrue(
+                _pf.arg_name == 'a' and _pf.name == 'alpha'
+                or _pf.arg_name == 'b' and _pf.name == 'beta'
+            )
 
         self.assertTrue(
             np.allclose(

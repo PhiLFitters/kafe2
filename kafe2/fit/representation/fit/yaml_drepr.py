@@ -11,6 +11,7 @@ from ..model.yaml_drepr import ParametricModelYamlReader, ParametricModelYamlWri
     _process_function_code_for_dump, _parse_function
 from ....fit import CustomFit, HistFit, IndexedFit, UnbinnedFit, XYFit
 from ..._base.cost import STRING_TO_COST_FUNCTION
+from ..._base.format import ParameterFormatter
 from ...xy.cost import STRING_TO_COST_FUNCTION as STRING_TO_COST_FUNCTION_XY
 from ...unbinned.cost import STRING_TO_COST_FUNCTION as STRING_TO_COST_FUNCTION_UNBINNED
 from ....tools import get_compact_representation
@@ -98,6 +99,13 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
                 fit.data_container)
             _yaml_doc['parametric_model'] = ParametricModelYamlWriter._make_representation(
                 fit._param_model)
+        else:
+            _par_formatter_dict = {
+                _par_formatter.arg_name: _par_formatter.name
+                for _par_formatter in fit._parameter_formatters
+            }
+            if _par_formatter_dict:
+                _yaml_doc['parameter_formatters'] = _par_formatter_dict
 
         _cost_function_identifier = fit._cost_function.kafe2go_identifier
         if _cost_function_identifier is not None:
@@ -237,6 +245,13 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
             _fit_object = _class(_data, _read_model_function, **_fit_kwargs)
         else:
             _fit_object = _class(**_fit_kwargs)
+            _par_formatters = yaml_doc.pop('parameter_formatters', None)
+            if _par_formatters is not None:
+                _fit_object._parameter_formatters = [
+                    ParameterFormatter(arg_name=_arg_name, name=_name)
+                    for (_arg_name, _name) in _par_formatters.items()
+                ]
+            _fit_object._update_parameter_formatters()
 
         if _read_parametric_model is not None:
             _fit_object._param_model = _read_parametric_model

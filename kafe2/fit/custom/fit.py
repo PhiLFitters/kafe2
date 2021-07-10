@@ -38,6 +38,9 @@ class CustomFit(FitBase):
     def _set_data_as_model_ref(self):
         pass
 
+    def _get_model_function_argument_formatters(self):
+        return self._parameter_formatters
+
     def _get_model_function_parameter_formatters(self):
         return self._parameter_formatters
 
