@@ -497,7 +497,11 @@ class MultiFit(FitBase):
 
     @property
     def total_error(self):
-        return np.sqrt(np.diag(self.total_cov_mat))
+        _total_cov_mat = self.total_cov_mat
+        if _total_cov_mat is None:
+            return None
+        else:
+            return np.sqrt(np.diag(self.total_cov_mat))
 
     @property
     def total_cov_mat(self):
@@ -507,7 +511,10 @@ class MultiFit(FitBase):
             _derivatives = self._nexus.get("derivatives").value
             return _y_cov_mat + _x_cov_mat * np.outer(_derivatives, _derivatives)
         else:
-            _total_cov_mat = np.zeros((self.data_size,) * 2)
+            _data_size = self.data_size
+            if _data_size is None:
+                return None
+            _total_cov_mat = np.zeros((_data_size,) * 2)
             _lower = 0
             for _fit in self._fits:
                 _upper = _lower + _fit.data_size
@@ -526,7 +533,11 @@ class MultiFit(FitBase):
 
         :rtype: int
         """
-        return np.sum([_fit.data_size for _fit in self._fits])
+        _data_sizes = [_fit.data_size for _fit in self._fits]
+        if None in _data_sizes:
+            return None
+        else:
+            return np.sum(_data_sizes)
 
     @property
     def has_errors(self):
@@ -588,8 +599,12 @@ class MultiFit(FitBase):
 
     @property
     def ndf(self):
-        return self.data_size - len(self._combined_parameter_node_dict.keys()) \
-               + len(self._fitter.fixed_parameters)
+        _data_size = self.data_size
+        if _data_size is None:
+            return None
+        else:
+            return self.data_size - len(self._combined_parameter_node_dict.keys()) \
+                + len(self._fitter.fixed_parameters)
 
     @property
     def goodness_of_fit(self):

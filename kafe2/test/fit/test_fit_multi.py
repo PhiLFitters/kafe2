@@ -4,7 +4,7 @@ import unittest2 as unittest
 import six
 from abc import ABCMeta
 
-from kafe2 import HistContainer, HistFit, IndexedFit, MultiFit, XYFit
+from kafe2 import CustomFit, HistContainer, HistFit, IndexedFit, MultiFit, XYFit
 from kafe2.test.tools import calculate_expected_fit_parameters_xy
 from kafe2.test.fit.test_fit import AbstractTestFit
 from kafe2.fit.util.function_library import quadratic_model, quadratic_model_derivative
@@ -242,6 +242,8 @@ class TestMultiFit(AbstractTestFit, unittest.TestCase):
             _ = fit.parameter_names
         with self.subTest("parameter_errors"):
             _ = fit.parameter_errors
+        with self.subTest("asymmetric_parameter_errors"):
+            _ = fit.asymmetric_parameter_errors
         with self.subTest("parameter_cov_mat"):
             _ = fit.parameter_cov_mat
         with self.subTest("parameter_cor_mat"):
@@ -273,9 +275,45 @@ class TestMultiFit(AbstractTestFit, unittest.TestCase):
         with self.subTest("chi2_probability"):
             _ = fit.chi2_probability
 
+    @staticmethod
+    def _cost_function_custom_fit(a, b, c, xy_data, err_x=0.01, err_y=0.01):
+        x_data, y_data = xy_data
+        y_model = quadratic_model(x_data, a, b, c)
+        residuals = y_data - y_model
+        error_squared = err_y ** 2 + (quadratic_model_derivative(x_data, a, b, c) * err_x) ** 2
+        chi2 = np.sum(residuals ** 2 / error_squared)
+        det_cost = np.sum(np.log(error_squared))
+        return chi2 + det_cost
 
+    def _get_custom_fit(self, xy_data):
+        _err_x = 0.01 if self._x_error else 0.0
 
+        def cost_function(a, b, c):
+            return TestMultiFit._cost_function_custom_fit(
+                a, b, c, xy_data=xy_data, err_x=_err_x)
 
+        return CustomFit(cost_function, minimizer=self._minimizer)
+
+    def _set_custom_fits(self):
+        self._xy_data = TestMultiFit._get_xy_data()
+        self._fit_custom_all = self._get_custom_fit(self._xy_data)
+        self._split_data_1, self._split_data_2 = TestMultiFit._split_data(self._xy_data, axis=1)
+        self._fit_custom_all_multi = MultiFit(
+            [self._get_custom_fit(self._xy_data)])
+        self._fit_custom_split_multi = MultiFit(fit_list=[
+            self._get_custom_fit(self._split_data_1),
+            self._get_custom_fit(self._split_data_2)
+        ])
+        self._fit_custom_split_1 = self._get_custom_fit(self._split_data_1)
+        self._fit_custom_split_1_multi = MultiFit(
+            [self._get_custom_fit(self._split_data_1)])
+        self._fit_custom_split_2 = self._get_custom_fit(self._split_data_2)
+        self._fit_custom_split_2_multi = MultiFit(
+            [self._get_custom_fit(self._split_data_2)])
+        self._fit_custom_all_double = MultiFit([
+            self._get_custom_fit(self._xy_data),
+            self._get_custom_fit(self._xy_data)
+        ])
 
     @staticmethod
     def _get_hist_data(loc=2.5, scale=0.5):
@@ -457,6 +495,73 @@ class TestMultiFit(AbstractTestFit, unittest.TestCase):
         self._minimizer = "scipy"
         self._relative_model_error = False
         self._x_error = None
+
+
+class TestMultiFitIntegrityCustom(TestMultiFit):
+
+    def setUp(self):
+        TestMultiFit.setUp(self)
+
+    def _assert_fits_match_expectation(self, atol, rtol):
+        self._fit_custom_all.do_fit()
+        self._assert_values_equal(
+            "all", self._expected_parameters_all, self._fit_custom_all.parameter_values,
+            atol=atol, rtol=rtol)
+        self._fit_custom_all_multi.do_fit()
+        self._assert_values_equal(
+            "all", self._expected_parameters_all, self._fit_custom_all_multi.parameter_values,
+            atol=atol, rtol=rtol)
+        self._fit_custom_split_multi.do_fit()
+        self._assert_values_equal(
+            "all", self._expected_parameters_all, self._fit_custom_split_multi.parameter_values,
+            atol=atol, rtol=rtol)
+        self._fit_custom_split_1.do_fit()
+        self._assert_values_equal(
+            "all", self._expected_parameters_split_1, self._fit_custom_split_1.parameter_values,
+            atol=atol, rtol=rtol)
+        self._fit_custom_split_1_multi.do_fit()
+        self._assert_values_equal(
+            "all", self._expected_parameters_split_1,
+            self._fit_custom_split_1_multi.parameter_values,
+            atol=atol, rtol=rtol)
+        self._fit_custom_split_2.do_fit()
+        self._assert_values_equal(
+            "all", self._expected_parameters_split_2, self._fit_custom_split_2.parameter_values,
+            atol=atol, rtol=rtol)
+        self._fit_custom_split_2_multi.do_fit()
+        self._assert_values_equal(
+            "all", self._expected_parameters_split_2,
+            self._fit_custom_split_2_multi.parameter_values,
+            atol=0, rtol=rtol)
+
+    def test_properties_callable(self):
+        self._set_custom_fits()
+        self._assert_properties_callable(self._fit_custom_all_multi)
+
+    def test_parameter_values_match_expectation(self):
+        self._set_custom_fits()
+        self._set_expected_xy_par_values()
+        self._assert_fits_match_expectation(atol=0, rtol=1e-6)
+
+    def test_split_fit_integrity_simple(self):
+        self._set_custom_fits()
+        self._assert_fits_valid_and_equal(self._fit_custom_all, self._fit_custom_all_multi)
+        self._assert_fits_valid_and_equal(self._fit_custom_split_1, self._fit_custom_split_1_multi)
+        self._assert_fits_valid_and_equal(self._fit_custom_split_2, self._fit_custom_split_2_multi)
+
+    def test_split_fit_vs_regular_fit(self):
+        self._set_custom_fits()
+        self._assert_fits_valid_and_equal(self._fit_custom_all, self._fit_custom_split_multi)
+
+    def test_double_fit_vs_regular_fit(self):
+        self._set_custom_fits()
+        self._assert_fits_valid_and_equal_double(self._fit_custom_all, self._fit_custom_all_double)
+
+    def test_parameter_values_match_expectation_nonlinear_x_error(self):
+        self._x_error = "nonlinear"
+        self._set_custom_fits()
+        self._set_expected_xy_par_values()
+        self._assert_fits_match_expectation(atol=0, rtol=2.5e-5)
 
 
 class TestMultiFitIntegrityHist(TestMultiFit):

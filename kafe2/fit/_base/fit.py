@@ -494,7 +494,11 @@ class FitBase(FileIOMixin, object):
     @property
     def total_cor_mat(self):
         """the total correlation matrix"""
-        return CovMat(self.total_cov_mat).cor_mat
+        _cov_mat = self.total_cov_mat
+        if _cov_mat is None:
+            return None
+        else:
+            return CovMat(self.total_cov_mat).cor_mat
 
     @property
     def model_function(self):
