@@ -660,7 +660,7 @@ class CostFunctionFormatter(FunctionFormatter):
                 else:
                     _name_string = "%s / ndf" % _name
                 _value_string = "%s / %d" % (_value_string, n_degrees_of_freedom)
-                if with_value_per_ndf:
+                if with_value_per_ndf and n_degrees_of_freedom > 0:
                     _value_string = "%s = %.4g" % (_value_string,
                                                    float(value) / n_degrees_of_freedom)
 

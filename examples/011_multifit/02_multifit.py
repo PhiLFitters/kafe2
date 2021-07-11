@@ -127,9 +127,9 @@ multi_fit.assign_model_function_latex_expression(r'\frac{{{x}}}{{{1} \cdot (1 + 
 multi_fit.do_fit()
 
 # (Optional): print the results
-multi_fit.report()
+multi_fit.report(asymmetric_parameter_errors=True)
 
 # (Optional): plot the results
 plot = Plot(multi_fit, separate_figures=True)
-plot.plot()
+plot.plot(asymmetric_parameter_errors=True)
 plt.show()

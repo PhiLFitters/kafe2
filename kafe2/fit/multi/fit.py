@@ -81,6 +81,8 @@ class MultiFit(FitBase):
         return [self.parameter_names.index(_parameter_name) for _parameter_name in singular_fit.parameter_names]
 
     def _update_parameter_formatters(self, update_asymmetric_errors=False):
+        if update_asymmetric_errors:
+            _ = self.asymmetric_parameter_errors  # Ensure asymm par errs are calculated.
         for _fit in self._fits:
             _fit._update_parameter_formatters(update_asymmetric_errors=update_asymmetric_errors)
 
