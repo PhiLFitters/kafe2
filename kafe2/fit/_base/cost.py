@@ -178,6 +178,7 @@ class CostFunction(FileIOMixin, object):
 
     @property
     def kafe2go_identifier(self):
+        """Short string representation (if any) of this cost function when dumping to file."""
         return self._kafe2go_identifier
 
     def goodness_of_fit(self, *args):

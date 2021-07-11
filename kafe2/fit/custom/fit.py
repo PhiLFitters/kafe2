@@ -28,6 +28,16 @@ class CustomFit(FitBase):
                         existing_behavior="replace")
         self._parameter_formatters = _dummy_model_function.formatter.arg_formatters
         self._initialize_fitter()
+        """
+        Construct a fit without explicit data and model from only a cost function.
+        
+        :param cost_function: the function to minimize.
+        :type cost_function: callable
+        :param minimizer: Name of the minimizer to use.
+        :type minimizer: str or None
+        :param minimizer_kwargs: Dictionary wit keywords for initializing the minimizer.
+        :type minimizer_kwargs: dict or None
+        """
 
     def _set_new_data(self, new_data):
         pass
