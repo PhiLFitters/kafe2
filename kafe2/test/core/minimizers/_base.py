@@ -332,7 +332,7 @@ class TestMinimizerMixin:
         self.m3.minimize()
         self.m3.fix('x')
         self.assertTrue(
-            np.allclose(self.m3.cov_mat, self._ref_cov_mat_fcn3_fix_x, rtol=0, atol=1e-6)
+            np.allclose(self.m3.cov_mat, self._ref_cov_mat_fcn3_fix_x, rtol=0, atol=2.5e-6)
         )
 
     def test_compare_cor_mat_minimize_fcn3_fix_x_reverse(self):
@@ -383,7 +383,7 @@ class TestMinimizerMixin:
         self.m3.minimize()
         self.m3.fix("x")
         self.assertTrue(
-            np.allclose(self.m3.hessian, self._ref_hessian_fcn3_fix_x, rtol=0, atol=1e-6)
+            np.allclose(self.m3.hessian, self._ref_hessian_fcn3_fix_x, rtol=0, atol=2.5e-6)
         )
 
     def test_compare_hessian_minimize_fcn3_errdef_4(self):
@@ -412,7 +412,7 @@ class TestMinimizerMixin:
         self.m3.minimize()
         self.m3.fix("x")
         self.assertTrue(
-            np.allclose(self.m3.hessian_inv, self._ref_hessian_inv_fcn3_fix_x, rtol=0, atol=1e-6)
+            np.allclose(self.m3.hessian_inv, self._ref_hessian_inv_fcn3_fix_x, rtol=0, atol=2.5e-6)
         )
 
     def test_compare_hessian_inv_minimize_fcn3_errdef_4(self):
