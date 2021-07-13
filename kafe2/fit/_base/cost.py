@@ -98,7 +98,10 @@ class CostFunction(FileIOMixin, object):
             self._arg_count += 2
         self._add_determinant_cost = add_determinant_cost
         if self._add_determinant_cost:
-            self._arg_names += ["total_cov_mat_log_determinant"]
+            if self.pointwise:
+                self._arg_names += ["total_error_squared_log_sum"]
+            else:
+                self._arg_names += ["total_cov_mat_log_determinant"]
             self._arg_count += 1
 
         self._needs_errors = True
@@ -180,6 +183,16 @@ class CostFunction(FileIOMixin, object):
     def kafe2go_identifier(self):
         """Short string representation (if any) of this cost function when dumping to file."""
         return self._kafe2go_identifier
+
+    @property
+    def pointwise(self):
+        """True if cost function result does not depend on covariances."""
+        return False
+
+    @property
+    def pointwise_version(self):
+        """Optimized version of cost function that uses pointwise errors, can be None."""
+        return None
 
     def goodness_of_fit(self, *args):
         """How well the model agrees with the data."""
@@ -399,6 +412,22 @@ class CostFunction_Chi2(CostFunction):
         :return: cost function value
         """
         return self._chi2(data=data, model=model, err=total_error)
+
+    @property
+    def pointwise(self):
+        return self._cost_function_handle != self.chi2_covariance
+
+    @property
+    def pointwise_version(self):
+        if self._cost_function_handle == self.chi2_covariance:
+            return type(self)(
+                errors_to_use="pointwise",
+                fallback_on_singular=not self._fail_on_no_matrix,
+                add_constraint_cost=self._add_constraint_cost,
+                add_determinant_cost=self._add_determinant_cost
+            )
+        else:
+            return None
 
 class CostFunction_NegLogLikelihood(CostFunction):
     def __init__(self, data_point_distribution='poisson', ratio=False):
