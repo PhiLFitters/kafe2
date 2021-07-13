@@ -10,8 +10,8 @@ import numpy as np
 
 from . import function_library
 
-__all__ = ['string_join_if', 'add_in_quadrature', 'invert_matrix', 'cholesky_decomposition', 'log_determinant',
-           'collect']
+__all__ = ['string_join_if', 'add_in_quadrature', 'invert_matrix', 'cholesky_decomposition',
+           'log_determinant', 'log_determinant_pointwise', 'collect', 'is_diagonal']
 
 # -- general utility functions
 
@@ -61,6 +61,18 @@ def log_determinant(cholesky_mat):
         return 2.0 * np.sum(np.log(np.diag(cholesky_mat)))
 
 
+def log_determinant_pointwise(pointwise_error):
+    """
+    Calculate the logarithm of the determinant of a matrix from its Cholesky decomposition.
+    """
+    return 2.0 * np.sum(np.log(pointwise_error))
+
+
 def collect(*args):
     '''collect arguments into array'''
     return np.asarray(args)
+
+
+def is_diagonal(matrix):
+    """Return True if only diagonal matrix elements are non-zero."""
+    return np.all(matrix - np.diag(np.diagonal(matrix)) == 0)

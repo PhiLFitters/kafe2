@@ -16,7 +16,8 @@ from ...core.constraint import GaussianMatrixParameterConstraint, GaussianSimple
 from ...core.error import CovMat
 from ...tools import print_dict_as_table
 from .._base.cost import CostFunction, STRING_TO_COST_FUNCTION
-from ..util import invert_matrix, add_in_quadrature, cholesky_decomposition, log_determinant
+from ..util import invert_matrix, is_diagonal, cholesky_decomposition, log_determinant, \
+    log_determinant_pointwise
 
 __all__ = ["FitBase", "FitException"]
 
@@ -109,6 +110,8 @@ class FitBase(FileIOMixin, object):
             # TODO: validate user-defined cost function? how?
         else:
             self._cost_function = None
+        self._cost_function_pointwise = None if self._cost_function is None \
+            else self._cost_function.pointwise_version
 
         # initialize the Nexus
         self._init_nexus()
@@ -192,6 +195,11 @@ class FitBase(FileIOMixin, object):
                                          par_names=[_mat_name])
                 self._nexus.add_function(log_determinant, func_name=_mat_name + "_log_determinant",
                                          par_names=[_mat_name + "_cholesky"])
+                self._nexus.add_function(
+                    log_determinant_pointwise,
+                    func_name=_error_name + "_squared_log_sum",
+                    par_names=[_error_name]
+                )
 
         if self._model_function is not None:
             # add the original function name as an alias to 'model'
@@ -209,6 +217,12 @@ class FitBase(FileIOMixin, object):
             )
 
             _cost_alias = self._nexus.add_alias('cost', alias_for=self._cost_function.name)
+        if self._cost_function_pointwise is not None:
+            self._nexus.add_function(
+                self._cost_function_pointwise,
+                par_names=self._cost_function_pointwise.arg_names,
+                func_name=self._cost_function_pointwise.name
+            )
 
     def _initialize_fitter(self):
         self._fitter = NexusFitter(nexus=self._nexus,
@@ -976,6 +990,13 @@ class FitBase(FileIOMixin, object):
         """
         if self._cost_function.needs_errors and not self.has_errors:
             warnings.warn("Cost function expects errors but no errors were specified.")
+
+        if self._cost_function_pointwise is not None:
+            if is_diagonal(self.total_cov_mat):
+                _cost_target = self._cost_function_pointwise.name
+            else:
+                _cost_target = self._cost_function.name
+            self._fitter.parameter_to_minimize = _cost_target
 
         # Give relative model errors data as reference for initial fit:
         self._set_data_as_model_ref()
