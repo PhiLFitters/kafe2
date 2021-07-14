@@ -679,8 +679,12 @@ class FitBase(FileIOMixin, object):
 
     @property
     def goodness_of_fit(self):
-        return self._cost_function.goodness_of_fit(
-            *[self._nexus.get(_node_name).value for _node_name in self._cost_function.arg_names])
+        if self._cost_function_pointwise is not None and is_diagonal(self.total_cov_mat):
+            _cost_function = self._cost_function_pointwise
+        else:
+            _cost_function = self._cost_function
+        return _cost_function.goodness_of_fit(
+            *[self._nexus.get(_node_name).value for _node_name in _cost_function.arg_names])
 
     @property
     def dynamic_error_algorithm(self):

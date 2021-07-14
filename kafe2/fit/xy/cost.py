@@ -1,9 +1,9 @@
-from .._base import (CostFunction, CostFunction_Chi2, CostFunction_NegLogLikelihood,
-                     CostFunctionException)
+from .._base import CostFunction_Chi2, CostFunction_NegLogLikelihood, CostFunctionException
 
 __all__ = [
     "XYCostFunction_Chi2",
-    "XYCostFunction_NegLogLikelihood"
+    "XYCostFunction_NegLogLikelihood",
+    "XYCostFunction_PseudoPoisson"
 ]
 
 
@@ -55,6 +55,42 @@ class XYCostFunction_NegLogLikelihood(CostFunction_NegLogLikelihood):
             data_point_distribution=data_point_distribution, ratio=ratio)
 
 
+class XYCostFunction_PseudoPoisson(CostFunction_Chi2):
+    def __init__(
+            self, errors_to_use='covariance', axes_to_use='xy',
+            add_constraint_cost=True, add_determinant_cost=True):
+        """
+        Built-in Gaussian approximation of the Poisson negative log-likelihood cost function for
+        *xy* data.
+
+        :param errors_to_use: Which errors to use when calculating :math:`\\chi^2`. This is either
+            `'covariance'``, ``'pointwise'``.
+        :type errors_to_use: str
+        :param axes_to_use: The errors for the given axes are taken into account when calculating
+            :math:`\\chi^2`. Either ``'y'`` or ``'xy'``
+        :param bool add_constraint_cost: If :py:obj:`True`, automatically add the cost for kafe2
+            constraints.
+        :param bool add_determinant_cost: If :py:obj:`True`, automatically increase the cost
+            function value by the logarithm of the determinant of the covariance matrix to reduce
+            bias.
+        """
+        self._DATA_NAME = "y_data"
+        self._MODEL_NAME = "y_model"
+        if axes_to_use.lower() == 'y':
+            self._COV_MAT_CHOLESKY_NAME = "y_total_cov_mat_cholesky"
+            self._ERROR_NAME = "y_total_error"
+        elif axes_to_use.lower() == 'xy':
+            self._COV_MAT_CHOLESKY_NAME = "total_cov_mat_cholesky"
+            self._ERROR_NAME = "total_error"
+        else:
+            raise CostFunctionException(
+                "Unknown value '%s' for 'axes_to_use': must be one of ('xy', 'y')")
+        super().__init__(
+            errors_to_use=errors_to_use, add_constraint_cost=add_constraint_cost,
+            add_determinant_cost=add_determinant_cost
+        )
+
+
 STRING_TO_COST_FUNCTION = {
     'chi2': (XYCostFunction_Chi2, {}),
     'chi_2': (XYCostFunction_Chi2, {}),
@@ -65,6 +101,8 @@ STRING_TO_COST_FUNCTION = {
     'chi2_pointwise_errors': (XYCostFunction_Chi2, {"errors_to_use": "pointwise"}),
     'chi2_covariance': (XYCostFunction_Chi2, {"errors_to_use": "covariance"}),
     'nll': (XYCostFunction_NegLogLikelihood, {"ratio": False}),
+    'poisson': (XYCostFunction_NegLogLikelihood,
+                    {"data_point_distribution": "poisson", "ratio": False}),
     'nll-poisson': (XYCostFunction_NegLogLikelihood,
                     {"data_point_distribution": "poisson", "ratio": False}),
     'nll_poisson': (XYCostFunction_NegLogLikelihood,
@@ -94,4 +132,10 @@ STRING_TO_COST_FUNCTION = {
                     {"data_point_distribution": "gaussian", "ratio": True}),
     'negloglikelihoodratio': (XYCostFunction_NegLogLikelihood, {"ratio": True}),
     'neg_log_likelihood_ratio': (XYCostFunction_NegLogLikelihood, {"ratio": True}),
+    'pseudo-poisson': (XYCostFunction_PseudoPoisson, {}),
+    'pseudo_poisson': (XYCostFunction_PseudoPoisson, {}),
+    'pseudo_poisson_covariance': (XYCostFunction_PseudoPoisson, {"errors_to_use": "covariance"}),
+    'pseudo_poisson_pointwise': (XYCostFunction_PseudoPoisson, {"errors_to_use": "pointwise"}),
+    'pseudo_poisson_pointwise_errors': (
+        XYCostFunction_PseudoPoisson, {"errors_to_use": "pointwise"}),
 }

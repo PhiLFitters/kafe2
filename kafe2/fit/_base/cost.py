@@ -6,7 +6,7 @@ from scipy.stats import poisson, norm, chi2
 from scipy.linalg import solve_triangular
 from ..io.file import FileIOMixin
 from .format import ParameterFormatter, CostFunctionFormatter
-
+from ..util import log_determinant
 
 if six.PY2:
     from funcsigs import signature
@@ -17,6 +17,7 @@ else:
 __all__ = ["CostFunction",
            "CostFunction_Chi2",
            "CostFunction_NegLogLikelihood",
+           "CostFunction_PseudoPoisson",
            "CostFunctionException"]
 
 
@@ -342,17 +343,18 @@ class CostFunction_Chi2(CostFunction):
         return _cost
 
     def chi2_no_errors(self, data, model):
-        r"""A least-squares cost function calculated from `y` data and model values,
+        r"""A least-squares cost function calculated from (`y`) data and model values,
         without considering uncertainties:
 
         .. math::
-            C = \chi^2({\bf d}, {\bf m}) = ({\bf d} - {\bf m})\cdot({\bf d} - {\bf m})
+            C = \chi^2({\bf d}, {\bf m}) = \sum_k (d_k - m_k)^2
                 +
-                C({\bf p})
+                C_{\rm con}({\bf p}).
 
         In the above, :math:`{\bf d}` are the measurements,
         :math:`{\bf m}` are the model predictions,
-        and :math:`C({\bf p})` is the additional cost resulting from any constrained parameters.
+        and :math:`C_{\rm con}({\bf p})` is the additional cost resulting from any constrained
+        parameters.
 
         :param data: measurement data :math:`{\bf d}`
         :param model: model predictions :math:`{\bf m}`
@@ -362,8 +364,8 @@ class CostFunction_Chi2(CostFunction):
         return self._chi2(data=data, model=model)
 
     def chi2_covariance(self, data, model, total_cov_mat_cholesky):
-        r"""A least-squares cost function calculated from `y` data and model values,
-        considering the covariance matrix of the `y` measurements.
+        r"""A least-squares cost function calculated from (`y`) data and model values,
+        considering the covariance matrix of the (`y`) measurements.
         The cost function value can be calculated as follows:
 
         .. math::
@@ -372,7 +374,7 @@ class CostFunction_Chi2(CostFunction):
                 +
                 C_{\rm con}({\bf p})
                 +
-                C_{\rm det}({\bf V})
+                C_{\rm det}({\bf V}).
 
         In the above, :math:`{\bf d}` are the measurements,
         :math:`{\bf m}` are the model predictions,
@@ -385,25 +387,30 @@ class CostFunction_Chi2(CostFunction):
         :param data: measurement data :math:`{\bf d}`
         :param model: model predictions :math:`{\bf m}`
         :param total_cov_mat_cholesky: Cholesky decomposition  of the total covariance matrix
-            :math:`{\bf L}` with :math:`{\bf L}^T {\bf L} = {\bf V}`
+            :math:`{\bf L}` with :math:`{\bf L}^\top {\bf L} = {\bf V}`
 
         :return: cost function value
         """
         return self._chi2(data=data, model=model, cov_mat_cholesky=total_cov_mat_cholesky)
 
     def chi2_pointwise_errors(self, data, model, total_error):
-        r"""A least-squares cost function calculated from `y` data and model values,
+        r"""A least-squares cost function calculated from (`y`) data and model values,
         considering pointwise (uncorrelated) uncertainties for each data point:
 
         .. math::
             C = \chi^2({\bf d}, {\bf m}, {\bf \sigma}) = \sum_k \frac{d_k - m_k}{\sigma_k}
                 +
-                C({\bf p})
+                C_{\rm con}({\bf p})
+                +
+                C_{\rm det}({\bf \sigma}).
 
         In the above, :math:`{\bf d}` are the measurements,
         :math:`{\bf m}` are the model predictions,
         :math:`{\bf \sigma}` are the pointwise total uncertainties,
-        and :math:`C({\bf p})` is the additional cost resulting from any constrained parameters.
+        :math:`C_{\rm con}({\bf p})` is the additional cost resulting from any constrained
+        parameters,
+        and :math:`C_{\rm det}({\bf \sigma}) = \ln \prod_k \sigma_k^2` is the additional cost
+        to compensate for non-constant errors.
 
         :param data: measurement data :math:`{\bf d}`
         :param model: model predictions :math:`{\bf m}`
@@ -428,6 +435,7 @@ class CostFunction_Chi2(CostFunction):
             )
         else:
             return None
+
 
 class CostFunction_NegLogLikelihood(CostFunction):
     def __init__(self, data_point_distribution='poisson', ratio=False):
@@ -502,18 +510,19 @@ class CostFunction_NegLogLikelihood(CostFunction):
         .. math::
             C = -2 \ln \mathcal{L}({\bf d}, {\bf m}, {\bf \sigma})
               = -2 \ln \prod_j \mathcal{L}_{\rm Gaussian} (x=d_j, \mu=m_j, \sigma=\sigma_j)
-                + C({\bf p})
+                + C_{\rm con}({\bf p}).
 
         .. math::
             \rightarrow C = -2 \ln \prod_j \frac{1}{\sqrt{2{\sigma_j}^2\pi}}
                             \exp{\left(-\frac{ (d_j-m_j)^2 }{ {\sigma_j}^2}\right)}
                             +
-                            C({\bf p})
+                            C_{\rm con}({\bf p}).
 
         In the above, :math:`{\bf d}` are the measurements,
         :math:`{\bf m}` are the model predictions,
         :math:`{\bf \sigma}` are the pointwise total uncertainties,
-        and :math:`C({\bf p})` is the additional cost resulting from any constrained parameters.
+        and :math:`C_{\rm con}({\bf p})` is the additional cost resulting from any constrained
+        parameters.
 
         :param data: measurement data :math:`{\bf d}`
         :param model: model predictions :math:`{\bf m}`
@@ -538,16 +547,17 @@ class CostFunction_NegLogLikelihood(CostFunction):
             C = -2 \ln \mathcal{L}({\bf d}, {\bf m})
               = -2 \ln \prod_j \mathcal{L}_{\rm Poisson} (k=d_j, \lambda=m_j)
                 +
-                C({\bf p})
+                C_{\rm con}({\bf p}).
 
         .. math::
             \rightarrow C = -2 \ln \prod_j \frac{{m_j}^{d_j} \exp(-m_j)}{d_j!}
                             +
-                            C({\bf p})
+                            C_{\rm con}({\bf p}).
 
         In the above, :math:`{\bf d}` are the measurements,
         :math:`{\bf m}` are the model predictions,
-        and :math:`C({\bf p})` is the additional cost resulting from any constrained parameters.
+        and :math:`C_{\rm con}({\bf p})` is the additional cost resulting from any constrained
+        parameters.
 
         :param data: measurement data :math:`{\bf d}`
         :param model: model predictions :math:`{\bf m}`
@@ -593,6 +603,155 @@ class CostFunction_NegLogLikelihood(CostFunction):
         return 0
 
 
+class CostFunction_PseudoPoisson(CostFunction):
+    def __init__(
+            self, errors_to_use='covariance', add_constraint_cost=True, add_determinant_cost=True):
+        """
+        Base class for built-in Gaussian approximation of the Poisson negative log-likelihood cost
+        function.
+
+        :param errors_to_use: Which errors to use when calculating :math:`\\chi^2`.
+            Either ``'covariance'``, ``'pointwise'``.
+        :type errors_to_use: str
+        :param bool add_constraint_cost: If :py:obj:`True`, automatically add the cost for kafe2
+            constraints.
+        :param bool add_determinant_cost: If :py:obj:`True`, automatically increase the cost
+            function value by the logarithm of the determinant of the covariance matrix to reduce
+            bias.
+        """
+
+        _cost_function_description = "pseudo-poisson"
+        if errors_to_use.lower() == 'covariance':
+            _pseudo_poisson_func = self.pseudo_poisson_covariance
+            _arg_names = [self._DATA_NAME, self._MODEL_NAME, self._COV_MAT_CHOLESKY_NAME]
+            _cost_function_description += " (with covariance matrix)"
+        elif errors_to_use.lower() == 'pointwise':
+            _pseudo_poisson_func = self.pseudo_poisson_pointwise_errors
+            _arg_names = [self._DATA_NAME, self._MODEL_NAME, self._ERROR_NAME]
+            _cost_function_description += " (with pointwise errors)"
+        else:
+            raise ValueError(
+                "Unknown value '%s' for 'errors_to_use': must be one of "
+                "('covariance', 'pointwise')")
+
+        super().__init__(
+            cost_function=_pseudo_poisson_func,
+            arg_names=_arg_names,
+            add_constraint_cost=add_constraint_cost,
+            add_determinant_cost=False
+        )
+        self._add_determinant_cost_pp = add_determinant_cost
+
+        self._formatter.latex_name = "\\chi^2"
+        self._formatter.name = "chi2"
+        self._formatter.description = _cost_function_description
+        self._needs_errors = False
+        self._is_chi2 = True
+        self._saturated = True
+        self._kafe2go_identifier = self.name
+
+    def pseudo_poisson_covariance(self, data, model, total_cov_mat_cholesky):
+        r"""A least-squares cost function calculated from (`y`) data and model values,
+        considering the covariance matrix of the (`y`) measurements.
+        The cost function value can be calculated as follows:
+
+        .. math::
+            C = \chi^2({\bf d}, {\bf m}, {\bf V})
+            = ({\bf d} - {\bf m})^{\top}\,{\tilde{\bf V}^{-1}}\,({\bf d} - {\bf m})
+                +
+                C_{\rm con}({\bf p})
+                +
+                C_{\rm det}(\tilde{\bf V}); \quad
+            \tilde{{\bf V}}_{ij} = {\bf V}_{ij} + \delta_{ij} {\bf m}_i.
+
+        In the above, :math:`{\bf d}` are the measurements,
+        :math:`{\bf m}` are the model predictions,
+        :math:`{{\bf V}^{-1}}` is the inverse of the total covariance matrix,
+        :math:`C_{\rm con}({\bf p})` is the additional cost resulting from any constrained
+        parameters,
+        and :math:`C_{\rm det}(\tilde{\bf V}) = \ln \det(\tilde{\bf V})` is the additional cost to
+        compensate for a non-constant covariance matrix.
+
+        :param data: measurement data :math:`{\bf d}`
+        :param model: model predictions :math:`{\bf m}`
+        :param total_cov_mat_cholesky: Cholesky decomposition  of the total covariance matrix
+            :math:`{\bf L}` with :math:`{\bf L}^\top {\bf L} = {\bf V}`
+
+        :return: cost function value
+        """
+        _cholesky = total_cov_mat_cholesky + np.diag(np.sqrt(model))
+        _residuals = model - data
+        try:
+            _x = solve_triangular(_cholesky, _residuals, lower=True)
+        except ValueError:
+            return np.inf
+        _cost = np.sum(np.square(_x))
+        if self._add_determinant_cost_pp:
+            _cost += log_determinant(_cholesky)
+        return _cost
+
+    def pseudo_poisson_pointwise_errors(self, data, model, total_error):
+        r"""A least-squares cost function calculated from data and model values,
+        considering pointwise (uncorrelated) uncertainties for each data point:
+
+        .. math::
+            C = \chi^2({\bf d}, {\bf m}, {\bf \sigma})
+                = \sum_k \left( \frac{d_k - m_k}{\sigma_k + \sqrt{m_k}} \right)^2
+                +
+                C_{\rm con}({\bf p})
+                +
+                C_{\rm det}({\bf \sigma}).
+
+        In the above, :math:`{\bf d}` are the measurements,
+        :math:`{\bf m}` are the model predictions,
+        :math:`{\bf \sigma}` are the pointwise total uncertainties,
+        :math:`C({\bf p})` is the additional cost resulting from any constrained parameters,
+        and :math:`C_{\rm det}({\bf \sigma}) = \ln \prod_k m_k + \sigma_k^2` is the additional cost
+        to compensate for non-constant errors.
+
+        :param data: measurement data :math:`{\bf d}`
+        :param model: model predictions :math:`{\bf m}`
+        :param total_error: total error vector :math:`{\bf \sigma}`
+
+        :return: cost function value
+        """
+        _residuals = model - data
+        if np.all(_residuals == 0):
+            return 0
+        _variances = model + total_error ** 2
+        _cost = np.sum(np.square(_residuals) / _variances)
+        if self._add_determinant_cost_pp:
+            _cost += np.sum(np.log(_variances))
+        if np.isnan(_cost):
+            _cost = np.inf
+        return _cost
+
+    @property
+    def pointwise(self):
+        return self._cost_function_handle == self.pseudo_poisson_pointwise_errors
+
+    @property
+    def pointwise_version(self):
+        if self._cost_function_handle == self.pseudo_poisson_covariance:
+            return type(self)(
+                errors_to_use="pointwise",
+                add_constraint_cost=self._add_constraint_cost,
+                add_determinant_cost=self._add_determinant_cost
+            )
+        else:
+            return None
+
+    def goodness_of_fit(self, *args):
+        _original_add_determinant_cost_pp = self._add_determinant_cost_pp
+        self._add_determinant_cost_pp = False
+        _gof = super().goodness_of_fit(*args)
+        self._add_determinant_cost_pp = _original_add_determinant_cost_pp
+        return _gof
+
+    def get_uncertainty_gaussian_approximation(self, data):
+        return np.sqrt(data)
+
+
 STRING_TO_COST_FUNCTION = {
     'chi2': (CostFunction_Chi2, {}),
     'chi_2': (CostFunction_Chi2, {}),
@@ -603,6 +762,8 @@ STRING_TO_COST_FUNCTION = {
     'chi2_pointwise_errors': (CostFunction_Chi2, {"errors_to_use": "pointwise"}),
     'chi2_covariance': (CostFunction_Chi2, {"errors_to_use": "covariance"}),
     'nll': (CostFunction_NegLogLikelihood, {"ratio": False}),
+    'poisson': (CostFunction_NegLogLikelihood,
+                {"data_point_distribution": "poisson", "ratio": False}),
     'nll-poisson': (CostFunction_NegLogLikelihood,
                     {"data_point_distribution": "poisson", "ratio": False}),
     'nll_poisson': (CostFunction_NegLogLikelihood,
@@ -632,4 +793,9 @@ STRING_TO_COST_FUNCTION = {
                     {"data_point_distribution": "gaussian", "ratio": True}),
     'negloglikelihoodratio': (CostFunction_NegLogLikelihood, {"ratio": True}),
     'neg_log_likelihood_ratio': (CostFunction_NegLogLikelihood, {"ratio": True}),
+    'pseudo-poisson': (CostFunction_PseudoPoisson, {}),
+    'pseudo_poisson': (CostFunction_PseudoPoisson, {}),
+    'pseudo_poisson_covariance': (CostFunction_PseudoPoisson, {"errors_to_use": "covariance"}),
+    'pseudo_poisson_pointwise': (CostFunction_PseudoPoisson, {"errors_to_use": "pointwise"}),
+    'pseudo_poisson_pointwise_errors': (CostFunction_PseudoPoisson, {"errors_to_use": "pointwise"}),
 }
