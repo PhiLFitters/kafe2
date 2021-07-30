@@ -3,7 +3,7 @@ from .._base import CostFunction_Chi2, CostFunction_NegLogLikelihood, CostFuncti
 __all__ = [
     "XYCostFunction_Chi2",
     "XYCostFunction_NegLogLikelihood",
-    "XYCostFunction_PseudoPoisson"
+    "XYCostFunction_GaussApproximation"
 ]
 
 
@@ -55,7 +55,7 @@ class XYCostFunction_NegLogLikelihood(CostFunction_NegLogLikelihood):
             data_point_distribution=data_point_distribution, ratio=ratio)
 
 
-class XYCostFunction_PseudoPoisson(CostFunction_Chi2):
+class XYCostFunction_GaussApproximation(CostFunction_Chi2):
     def __init__(
             self, errors_to_use='covariance', axes_to_use='xy',
             add_constraint_cost=True, add_determinant_cost=True):
@@ -132,10 +132,12 @@ STRING_TO_COST_FUNCTION = {
                     {"data_point_distribution": "gaussian", "ratio": True}),
     'negloglikelihoodratio': (XYCostFunction_NegLogLikelihood, {"ratio": True}),
     'neg_log_likelihood_ratio': (XYCostFunction_NegLogLikelihood, {"ratio": True}),
-    'pseudo-poisson': (XYCostFunction_PseudoPoisson, {}),
-    'pseudo_poisson': (XYCostFunction_PseudoPoisson, {}),
-    'pseudo_poisson_covariance': (XYCostFunction_PseudoPoisson, {"errors_to_use": "covariance"}),
-    'pseudo_poisson_pointwise': (XYCostFunction_PseudoPoisson, {"errors_to_use": "pointwise"}),
-    'pseudo_poisson_pointwise_errors': (
-        XYCostFunction_PseudoPoisson, {"errors_to_use": "pointwise"}),
+    'gauss-approximation': (XYCostFunction_GaussApproximation, {}),
+    'gauss_approximation': (XYCostFunction_GaussApproximation, {}),
+    'gauss_approximation_covariance': (
+        XYCostFunction_GaussApproximation, {"errors_to_use": "covariance"}),
+    'gauss_approximation_pointwise': (
+        XYCostFunction_GaussApproximation, {"errors_to_use": "pointwise"}),
+    'gauss_approximation_pointwise_errors': (
+        XYCostFunction_GaussApproximation, {"errors_to_use": "pointwise"}),
 }

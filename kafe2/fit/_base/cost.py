@@ -17,7 +17,7 @@ else:
 __all__ = ["CostFunction",
            "CostFunction_Chi2",
            "CostFunction_NegLogLikelihood",
-           "CostFunction_PseudoPoisson",
+           "CostFunction_GaussApproximation",
            "CostFunctionException"]
 
 
@@ -603,7 +603,7 @@ class CostFunction_NegLogLikelihood(CostFunction):
         return 0
 
 
-class CostFunction_PseudoPoisson(CostFunction):
+class CostFunction_GaussApproximation(CostFunction):
     def __init__(
             self, errors_to_use='covariance', add_constraint_cost=True, add_determinant_cost=True):
         """
@@ -620,13 +620,13 @@ class CostFunction_PseudoPoisson(CostFunction):
             bias.
         """
 
-        _cost_function_description = "pseudo-poisson"
+        _cost_function_description = "Gaussian approximation of Poisson NLL"
         if errors_to_use.lower() == 'covariance':
-            _pseudo_poisson_func = self.pseudo_poisson_covariance
+            _cost_function = self.gaussian_approximation_covariance
             _arg_names = [self._DATA_NAME, self._MODEL_NAME, self._COV_MAT_CHOLESKY_NAME]
             _cost_function_description += " (with covariance matrix)"
         elif errors_to_use.lower() == 'pointwise':
-            _pseudo_poisson_func = self.pseudo_poisson_pointwise_errors
+            _cost_function = self.gaussian_approximation_pointwise_errors
             _arg_names = [self._DATA_NAME, self._MODEL_NAME, self._ERROR_NAME]
             _cost_function_description += " (with pointwise errors)"
         else:
@@ -635,22 +635,22 @@ class CostFunction_PseudoPoisson(CostFunction):
                 "('covariance', 'pointwise')")
 
         super().__init__(
-            cost_function=_pseudo_poisson_func,
+            cost_function=_cost_function,
             arg_names=_arg_names,
             add_constraint_cost=add_constraint_cost,
             add_determinant_cost=False
         )
-        self._add_determinant_cost_pp = add_determinant_cost
+        self._add_determinant_cost_ga = add_determinant_cost
 
-        self._formatter.latex_name = "\\chi^2"
-        self._formatter.name = "chi2"
+        self._formatter.latex_name = r"-2\ln\tilde{\mathcal{L}}"
+        self._formatter.latex_name_saturated = r"-2\ln\tilde{\mathcal{L}}_{\rm R}"
         self._formatter.description = _cost_function_description
         self._needs_errors = False
-        self._is_chi2 = True
+        self._is_chi2 = False
         self._saturated = True
         self._kafe2go_identifier = self.name
 
-    def pseudo_poisson_covariance(self, data, model, total_cov_mat_cholesky):
+    def gaussian_approximation_covariance(self, data, model, total_cov_mat_cholesky):
         r"""A least-squares cost function calculated from (`y`) data and model values,
         considering the covariance matrix of the (`y`) measurements.
         The cost function value can be calculated as follows:
@@ -686,11 +686,11 @@ class CostFunction_PseudoPoisson(CostFunction):
         except ValueError:
             return np.inf
         _cost = np.sum(np.square(_x))
-        if self._add_determinant_cost_pp:
+        if self._add_determinant_cost_ga:
             _cost += log_determinant(_cholesky)
         return _cost
 
-    def pseudo_poisson_pointwise_errors(self, data, model, total_error):
+    def gaussian_approximation_pointwise_errors(self, data, model, total_error):
         r"""A least-squares cost function calculated from data and model values,
         considering pointwise (uncorrelated) uncertainties for each data point:
 
@@ -720,7 +720,7 @@ class CostFunction_PseudoPoisson(CostFunction):
             return 0
         _variances = model + total_error ** 2
         _cost = np.sum(np.square(_residuals) / _variances)
-        if self._add_determinant_cost_pp:
+        if self._add_determinant_cost_ga:
             _cost += np.sum(np.log(_variances))
         if np.isnan(_cost):
             _cost = np.inf
@@ -728,11 +728,11 @@ class CostFunction_PseudoPoisson(CostFunction):
 
     @property
     def pointwise(self):
-        return self._cost_function_handle == self.pseudo_poisson_pointwise_errors
+        return self._cost_function_handle == self.gaussian_approximation_pointwise_errors
 
     @property
     def pointwise_version(self):
-        if self._cost_function_handle == self.pseudo_poisson_covariance:
+        if self._cost_function_handle == self.gaussian_approximation_covariance:
             return type(self)(
                 errors_to_use="pointwise",
                 add_constraint_cost=self._add_constraint_cost,
@@ -742,10 +742,10 @@ class CostFunction_PseudoPoisson(CostFunction):
             return None
 
     def goodness_of_fit(self, *args):
-        _original_add_determinant_cost_pp = self._add_determinant_cost_pp
-        self._add_determinant_cost_pp = False
+        _original_add_determinant_cost_pp = self._add_determinant_cost_ga
+        self._add_determinant_cost_ga = False
         _gof = super().goodness_of_fit(*args)
-        self._add_determinant_cost_pp = _original_add_determinant_cost_pp
+        self._add_determinant_cost_ga = _original_add_determinant_cost_pp
         return _gof
 
     def get_uncertainty_gaussian_approximation(self, data):
@@ -793,9 +793,12 @@ STRING_TO_COST_FUNCTION = {
                     {"data_point_distribution": "gaussian", "ratio": True}),
     'negloglikelihoodratio': (CostFunction_NegLogLikelihood, {"ratio": True}),
     'neg_log_likelihood_ratio': (CostFunction_NegLogLikelihood, {"ratio": True}),
-    'pseudo-poisson': (CostFunction_PseudoPoisson, {}),
-    'pseudo_poisson': (CostFunction_PseudoPoisson, {}),
-    'pseudo_poisson_covariance': (CostFunction_PseudoPoisson, {"errors_to_use": "covariance"}),
-    'pseudo_poisson_pointwise': (CostFunction_PseudoPoisson, {"errors_to_use": "pointwise"}),
-    'pseudo_poisson_pointwise_errors': (CostFunction_PseudoPoisson, {"errors_to_use": "pointwise"}),
+    'gauss-approximation': (CostFunction_GaussApproximation, {}),
+    'gauss_approximation': (CostFunction_GaussApproximation, {}),
+    'gauss_approximation_covariance': (
+        CostFunction_GaussApproximation, {"errors_to_use": "covariance"}),
+    'gauss_approximation_pointwise': (
+        CostFunction_GaussApproximation, {"errors_to_use": "pointwise"}),
+    'gauss_approximation_pointwise_errors': (
+        CostFunction_GaussApproximation, {"errors_to_use": "pointwise"}),
 }
