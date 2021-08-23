@@ -142,6 +142,14 @@ class TestSharedErrorLogic(AbstractTestFit, unittest.TestCase):
             _multifit.add_error(
                 err_val=1.0, fits=[1, 3], axis="y", relative=True, reference="data")
 
+    def test_different_starting_parameters(self):
+        _multifit_default = self._get_multifit()
+        _multifit_default.do_fit()
+        _multifit = self._get_multifit()
+        _multifit.set_parameter_values(**{'mu': 1.2, 'sigma': 0.8, 'a': 1.2, 'b': 0.8})
+        _multifit.do_fit()
+        self._assert_fit_results_equal(_multifit_default, _multifit)
+
 
 @six.add_metaclass(ABCMeta)
 class TestMultiFit(AbstractTestFit, unittest.TestCase):
