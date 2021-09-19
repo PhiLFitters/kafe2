@@ -1,6 +1,9 @@
-.idea
-.coverage
-htmlcov/*
-*.pyc
+/.coverage
+/.eggs
+/.idea
 /.project
 /.pydevproject
+/htmlcov
+/kafe2.egg-info
+*.mypy_cache
+*.pyc
