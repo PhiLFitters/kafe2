@@ -897,23 +897,12 @@ class TestNexus(unittest.TestCase):
         # check function value
         self.assertEqual(func_node.value, my_func(x.value, y.value))
 
-    def test_add_function_signature_mismatch(self):
-        def my_func(a, b=2):
-            return 2 * a + b
-
-        with self.assertRaises(ValueError):
-            self._nexus.add_function(func=my_func, par_names=["a"])
-        with self.assertRaises(ValueError):
-            self._nexus.add_function(func=my_func, par_names=["a", "b", "c"])
-
     def test_add_function_var_kwargs(self):
         def my_func(a, b, c, **kwargs):
             return a + b + c + np.sum(kwargs.values())
 
         with self.assertRaises(ValueError):
             self._nexus.add_function(func=my_func)
-        with self.assertRaises(ValueError):
-            self._nexus.add_function(func=my_func, par_names=["a", "b", "c"])
 
     def test_add_function_combine_defaults(self):
         def my_func_1(a, b=2):
@@ -973,8 +962,7 @@ class TestNexus(unittest.TestCase):
             return 2 * x
 
         func_node = self._nexus.add_function(
-            func=test_func,
-            par_names=['x']
+            func=test_func
         )
 
         y = self._nexus.add(

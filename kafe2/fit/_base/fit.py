@@ -130,7 +130,8 @@ class FitBase(FileIOMixin, object):
         obj = obj if obj is not None else self
         _node = self._nexus.add_function(
             partial(getattr(obj.__class__, prop).fget, obj),
-            func_name=name or prop
+            func_name=name or prop,
+            par_names=[]
         )
         if depends_on is not None:
             self._nexus.add_dependency(name=_node.name, depends_on=depends_on)
@@ -160,7 +161,7 @@ class FitBase(FileIOMixin, object):
 
         self._nexus.add(Array(_parameter_nodes, name="parameter_values"))
         self._nexus.add_function(lambda: self.parameter_constraints,
-                                 func_name='parameter_constraints')
+                                 func_name='parameter_constraints', par_names=[])
 
         # -- errors
 

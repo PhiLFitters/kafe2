@@ -192,19 +192,14 @@ class XYFit(FitBase):
             output_stream.write("\n")
 
     def _project_cov_mat(self, x_cov_mat, y_cov_mat, x_model, parameter_values):
-        _diag = np.diag(x_cov_mat)
-        if np.all(_diag == 0):
-            return y_cov_mat
         _derivatives = self._param_model.eval_model_function_derivative_by_x(
             x=x_model,
-            dx=0.01 * np.sqrt(_diag),
+            dx=0.01 * np.sqrt(np.diag(x_cov_mat)),
             model_parameters=parameter_values
         )
         return y_cov_mat + x_cov_mat * np.outer(_derivatives, _derivatives)
 
     def _project_error(self, x_error, y_error, x_model, parameter_values):
-        if np.all(x_error == 0):
-            return y_error
         _derivatives = self._param_model.eval_model_function_derivative_by_x(
             x=x_model,
             dx=0.01 * x_error,

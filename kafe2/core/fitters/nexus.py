@@ -1269,12 +1269,21 @@ class Nexus(object):
         # resolve function name
         func_name = func_name or func.__name__
 
+        if par_names is not None:
+            _par_nodes = [
+                self._nodes[_par_name] if _par_name in self._nodes else Empty(_par_name)
+                for _par_name in par_names
+            ]
+            return self.add(
+                Function(func, name=func_name, parameters=_par_nodes),
+                add_children=add_children, existing_behavior=existing_behavior
+            )
+
         # resolve parameter names
         _sig = signature(func)
 
-        if par_names is None:
-            # take child node names from signature
-            par_names = [_p.name for _p in _sig.parameters.values()]
+        # take child node names from signature
+        par_names = [_p.name for _p in _sig.parameters.values()]
 
         # assert compatibility between function signature
         # and supplied node names

@@ -184,33 +184,6 @@ class MinimizerIMinuit(MinimizerBase):
         return None if self._par_cov_mat is None else self._par_cov_mat.copy()
 
     @property
-    def cor_mat(self):
-        if not self.did_fit:
-            return None
-        if self._par_cor_mat is None:
-            self._save_state()
-            try:
-                self._get_iminuit().hesse()
-                if _IMINUIT_1:
-                    # FIX_UPSTREAM we need skip_fixed=False, but this is unsupported
-                    # _mat = self._get_iminuit().matrix(correlation, skip_fixed=False)
-
-                    # ... so use skip_fixed=True instead and fill in the gaps
-                    _mat = self._get_iminuit().matrix(correlation=True, skip_fixed=True)
-                    _mat = np.asarray(_mat)  # reshape into numpy matrix
-                    _mat = self._fill_in_zeroes_for_fixed(_mat)  # fill in fixed par 'gaps'
-                else:
-                    # iminuit 2 already fills in zeros for fixed parameters.
-                    _mat = self._get_iminuit().covariance.correlation()
-                    _mat = np.asarray(_mat)
-                self._func_wrapper_unpack_args(self.parameter_values)
-            except RuntimeError:
-                _mat = None
-            self._load_state()
-            self._par_cor_mat = _mat
-        return None if self._par_cor_mat is None else self._par_cor_mat.copy()
-
-    @property
     def hessian_inv(self):
         if not self.did_fit:
             return None
