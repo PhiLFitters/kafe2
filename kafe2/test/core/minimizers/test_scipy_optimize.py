@@ -1,9 +1,10 @@
 import unittest2 as unittest
-from kafe2.test.core.minimizers._base import TestMinimizerMixin
+from kafe2.test.core.minimizers._base import AbstractMinimizerTest
 from kafe2.core.minimizers.scipy_optimize_minimizer import MinimizerScipyOptimize
 
 
-class TestMinimizerScipyOptimize(TestMinimizerMixin, unittest.TestCase):
+class TestMinimizerScipyOptimize(AbstractMinimizerTest, unittest.TestCase):
+
     def _get_minimizer(self, parameter_names, parameter_values, parameter_errors,
                        function_to_minimize):
         return MinimizerScipyOptimize(

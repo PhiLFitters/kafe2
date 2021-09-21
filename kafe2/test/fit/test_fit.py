@@ -1,10 +1,8 @@
 import abc
 import numpy as np
-import six
 
 
-@six.add_metaclass(abc.ABCMeta)
-class AbstractTestFit(object):
+class AbstractTestFit(abc.ABC):
 
     MINIMIZER = None
 

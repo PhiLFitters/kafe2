@@ -1,5 +1,5 @@
 import unittest2 as unittest
-from kafe2.test.core.minimizers._base import TestMinimizerMixin, MinimizerException
+from kafe2.test.core.minimizers._base import AbstractMinimizerTest, MinimizerException
 
 _cannot_import_IMinuit = False
 try:
@@ -9,7 +9,8 @@ except (ImportError, SyntaxError, MinimizerException):
 
 
 @unittest.skipIf(_cannot_import_IMinuit, "Cannot import iminuit")
-class TestMinimizerIMinuit(TestMinimizerMixin, unittest.TestCase):
+class TestMinimizerIMinuit(AbstractMinimizerTest, unittest.TestCase):
+
     def _get_minimizer(self, parameter_names, parameter_values, parameter_errors,
                        function_to_minimize):
         return MinimizerIMinuit(

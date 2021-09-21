@@ -1,5 +1,4 @@
-import six
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 import numpy as np
 from scipy.optimize import minimize
 import unittest2 as unittest
@@ -18,8 +17,7 @@ def fcn_3_wrapper(args):
     return fcn_3(*args)
 
 
-@six.add_metaclass(ABCMeta)
-class TestMinimizerMixin:
+class AbstractMinimizerTest(ABC):
 
     @abstractmethod
     def _get_minimizer(self, parameter_names, parameter_values, parameter_errors,
