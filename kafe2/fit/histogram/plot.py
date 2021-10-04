@@ -175,18 +175,3 @@ class HistPlotAdapter(PlotAdapterBase):
         return target_axes.plot(self.model_density_x,
                                 self.model_density_y,
                                 **kwargs)
-
-    def plot_ratio(self, target_axes, error_contributions=('data',), **kwargs):
-        """
-        Plot the data/model ratio to a specified ``matplotlib`` ``Axes`` object.
-
-        :param target_axes: ``matplotlib`` ``Axes`` object
-        :param kwargs: keyword arguments accepted by the ``matplotlib`` methods ``errorbar`` or ``plot``
-        :return: plot handle(s)
-        """
-        return six.get_unbound_function(XYPlotAdapter.plot_ratio)(
-            self,
-            target_axes=target_axes,
-            error_contributions=error_contributions,
-            **kwargs
-        )

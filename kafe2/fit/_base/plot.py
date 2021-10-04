@@ -162,6 +162,11 @@ class PlotAdapterBase(object):
             plot_adapter_method='plot_ratio',
             target_axes='ratio',
         ),
+        residual=dict(
+            plot_style_as='data',
+            plot_adapter_method='plot_residual',
+            target_axes='residual',
+        ),
     )
 
     AVAILABLE_X_SCALES = ('linear',)
@@ -572,15 +577,48 @@ class PlotAdapterBase(object):
         """
         pass
 
-    @abc.abstractmethod
-    def plot_ratio(self, target_axes, **kwargs):
-        """Method called by the main plot routine to plot the data/model ratio to a specified
-        :py:class:`matplotlib.axes.Axes` object.
+    def plot_ratio(self, target_axes, error_contributions=('data',), **kwargs):
+        """Plot the data/model ratio to a specified :py:obj:`matplotlib.axes.Axes` object.
 
-        :param matplotlib.axes.Axes target_axes: The :py:mod:`matplotlib` target axes.
+        :param matplotlib.axes.Axes target_axes: The :py:obj:`matplotlib` axes used for plotting.
+        :param error_contributions: Which error contributions to include when plotting the data.
+            Can either be ``data``, ``'model'`` or both.
+        :type error_contributions: str or Tuple[str]
+        :param dict kwargs: Keyword arguments accepted by :py:obj:`matplotlib.pyplot.errorbar`.
         :return: plot handle(s)
         """
-        pass
+
+        _yerr = self._get_total_error(error_contributions)
+        if _yerr is not None:
+            _yerr /= self.model_y
+
+        # TODO: how to handle case when x and y error/model differ?
+        return target_axes.errorbar(
+            self.data_x,
+            self.data_y / self.model_y,
+            xerr=self.data_xerr,
+            yerr=_yerr,
+            **kwargs
+        )
+
+    def plot_residual(self, target_axes, error_contributions=('data',), **kwargs):
+        """Plot the residuals to a :py:obj:`matplotlib.axes.Axes` object.
+
+        :param matplotlib.axes.Axes target_axes: The :py:obj:`matplotlib` axes used for plotting.
+        :param error_contributions: Which error contributions to include when plotting the data.
+            Can either be ``data``, ``'model'`` or both.
+        :type error_contributions: str or Tuple[str]
+        :param dict kwargs: Keyword arguments accepted by :py:obj:`matplotlib.pyplot.errorbar`.
+        :return: plot handle(s)
+        """
+        # TODO: how to handle case when x and y error/model differ?
+        return target_axes.errorbar(
+            self.data_x,
+            self.data_y - self.model_y,
+            xerr=self.data_xerr,
+            yerr=self._get_total_error(error_contributions),
+            **kwargs
+        )
 
     # Overridden by multi plot adapters
     def get_formatted_model_function(self, **kwargs):
@@ -1137,8 +1175,10 @@ class Plot(object):
 
     # -- public methods
 
-    def plot(self, legend=True, fit_info=True, asymmetric_parameter_errors=False, ratio=False, ratio_range=None,
-             ratio_height_share=0.25, plot_width_share=0.5, figsize=None):
+    def plot(self, legend=True, fit_info=True, asymmetric_parameter_errors=False,
+             ratio=False, ratio_range=None, ratio_height_share=0.25,
+             residual=False, residual_range=None, residual_height_share=0.25,
+             plot_width_share=0.5, figsize=None):
         """
         Plot data, model (and other subplots) for all child :py:obj:`Fit` objects.
 
@@ -1161,15 +1201,22 @@ class Plot(object):
         :return: dictionary containing information about the plotted objects
         :rtype: dict
         """
+        if ratio and residual:
+            raise NotImplementedError("Cannot plot ratio and residual at the same time.")
 
         with rc_context(kafe2_rc):
             _axes_keys = ('main',)
-            _height_ratios = None
+            _height_ratios = [1.0]
             _width_ratios = (plot_width_share, 1.0 - plot_width_share)
 
             if ratio:
                 _axes_keys += ('ratio',)
-                _height_ratios = (1.0 - ratio_height_share, ratio_height_share)
+                _height_ratios[0] -= ratio_height_share
+                _height_ratios.append(ratio_height_share)
+            elif residual:
+                _axes_keys += ('residual',)
+                _height_ratios[0] -= residual_height_share
+                _height_ratios.append(residual_height_share)
 
             _all_plot_results = []
             for i in range(len(self._fits) if self._separate_figs else 1):
@@ -1199,15 +1246,45 @@ class Plot(object):
                     pass
 
                 if ratio:
+                    _axis = self._current_axes['ratio']
                     _ratio_label = kc('fit', 'plot', 'ratio_label')
-                    self._current_axes['ratio'].set_ylabel(_ratio_label)
+                    _axis.set_ylabel(_ratio_label)
                     if ratio_range is None:
-                        # shift automatic plot range so that 1.0 is centered
-                        _ymin, _ymax = self._current_axes['ratio'].get_ylim()
-                        _yshift = 1.0 - 0.5 * (_ymin + _ymax)
-                        self._current_axes['ratio'].set_ylim((_ymin + _yshift, _ymax + _yshift))
+                        _plot_adapters = (self._get_plot_adapters()[i:i+1] if self._separate_figs
+                                          else self._get_plot_adapters())
+                        _max_abs_deviation = 0
+                        for _plot_adapter in _plot_adapters:
+                            _max_abs_deviation = max(_max_abs_deviation, np.max(
+                                (
+                                    np.abs(_plot_adapter.data_yerr)
+                                    + np.abs(_plot_adapter.data_y - _plot_adapter.model_y)
+                                ) / np.abs(_plot_adapter.model_y)
+                            ))
+                        # Small gap between highest error bar and plot border:
+                        _low = 1 - _max_abs_deviation * 1.05
+                        _high = 1 + _max_abs_deviation * 1.05
+                        _axis.set_ylim((_low, _high))
                     else:
-                        self._current_axes['ratio'].set_ylim(ratio_range)
+                        _axis.set_ylim(ratio_range)
+                if residual:
+                    _axis = self._current_axes['residual']
+                    _residual_label = kc('fit', 'plot', 'residual_label')
+                    _axis.set_ylabel(_residual_label)
+                    if residual_range is None:
+                        _plot_adapters = (self._get_plot_adapters()[i:i+1] if self._separate_figs
+                                          else self._get_plot_adapters())
+                        _max_abs_deviation = 0
+                        for _plot_adapter in _plot_adapters:
+                            _max_abs_deviation = max(_max_abs_deviation, np.max(
+                                np.abs(_plot_adapter.data_yerr)
+                                + np.abs(_plot_adapter.data_y - _plot_adapter.model_y)
+                            ))
+                        # Small gap between highest error bar and plot border:
+                        _low = -_max_abs_deviation * 1.05
+                        _high = _max_abs_deviation * 1.05
+                        _axis.set_ylim((_low, _high))
+                    else:
+                        _axis.set_ylim(residual_range)
 
                 _all_plot_results.append(_plot_results)
 

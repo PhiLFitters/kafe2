@@ -174,15 +174,11 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
         """
         return target_axes.plot(self.model_x, self.model_y, **kwargs)
 
-    def plot_ratio(self, target_axes, **kwargs):
-        """
-        Plot the data/model ratio to a specified ``matplotlib`` ``Axes`` object.
+    def plot_ratio(self, target_axes, error_contributions=('data',), **kwargs):
+        raise TypeError("Data/model ratio cannot be plotted for unbinned fits.")
 
-        :param target_axes: ``matplotlib`` ``Axes`` object
-        :param kwargs: keyword arguments accepted by the ``matplotlib`` methods ``errorbar`` or ``plot``
-        :return: plot handle(s)
-        """
-        raise NotImplementedError("Data/model ratio cannot be plotted for unbinned fits.")
+    def plot_residual(self, target_axes, error_contributions=('data',), **kwargs):
+        raise TypeError("Residuals cannot be plotted for unbinned fits.")
 
     def plot_model_line(self, target_axes, **kwargs):
         """

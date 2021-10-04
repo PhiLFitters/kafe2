@@ -29,6 +29,7 @@ fit:
       x: '$x$'
       y: '$y$'
     ratio_label: 'Ratio'
+    residual_label: 'Residual'
     error_label: "%(model_label)s $\\pm 1\\sigma$"
 
     style: !include plot_style_color.yaml

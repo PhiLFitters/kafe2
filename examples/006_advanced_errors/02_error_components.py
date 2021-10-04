@@ -88,7 +88,7 @@ BW_fit.report()
 # Plot the fit results:
 BW_plot = Plot(BW_fit)
 BW_plot.y_range = (0, 1.03*max(sig))  # Explicitly set y_range to start at 0.
-BW_plot.plot()
+BW_plot.plot(residual=True)
 
 # Create a contour plot:
 ContoursProfiler(BW_fit).plot_profiles_contours_matrix(show_grid_for='contours')

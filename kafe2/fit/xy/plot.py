@@ -30,6 +30,11 @@ class XYPlotAdapter(PlotAdapterBase):
             plot_adapter_method='plot_ratio_error_band',
             target_axes='ratio'
         ),
+        residual_error_band=dict(
+            plot_style_as='model_error_band',
+            plot_adapter_method='plot_residual_error_band',
+            target_axes='residual'
+        ),
     )
 
     AVAILABLE_X_SCALES = ('linear', 'log')
@@ -189,30 +194,6 @@ class XYPlotAdapter(PlotAdapterBase):
                 **kwargs)
         return None  # don't plot error band if fitter input data has no errors...
 
-    def plot_ratio(self, target_axes, error_contributions=('data',), **kwargs):
-        """Plot the data/model ratio to a specified :py:obj:`matplotlib.axes.Axes` object.
-
-        :param matplotlib.axes.Axes target_axes: The :py:obj:`matplotlib` axes used for plotting.
-        :param error_contributions: Which error contributions to include when plotting the data.
-            Can either be ``data``, ``'model'`` or both.
-        :type error_contributions: str or Tuple[str]
-        :param dict kwargs: Keyword arguments accepted by :py:obj:`matplotlib.pyplot.errorbar`.
-        :return: plot handle(s)        :return: error id
-        """
-
-        _yerr = self._get_total_error(error_contributions)
-        if _yerr is not None:
-            _yerr /= self.model_y
-
-        # TODO: how to handle case when x and y error/model differ?
-        return target_axes.errorbar(
-            self.data_x,
-            self.data_y / self.model_y,
-            xerr=self.data_xerr,
-            yerr=_yerr,
-            **kwargs
-        )
-
     def plot_ratio_error_band(self, target_axes, **kwargs):
         """Plot model error band around the data/model ratio to specified
         :py:obj:`matplotlib.axes.Axes` object.
@@ -221,12 +202,30 @@ class XYPlotAdapter(PlotAdapterBase):
         :param dict kwargs: Keyword arguments accepted by :py:obj:`matplotlib.pyplot.fill_between`.
         :return: plot handle(s)
         """
-        if self._fit.did_fit and (self._fit.has_errors or not self._fit._cost_function.needs_errors):
+        if self._fit.did_fit and (
+                self._fit.has_errors or not self._fit._cost_function.needs_errors):
             _band_y = self.y_error_band
             _y = self.model_line_y
             return target_axes.fill_between(
                 self.model_line_x,
                 1 - _band_y/_y, 1 + _band_y/_y,
+                **kwargs)
+        return None  # don't plot error band if fitter input data has no errors...
+
+    def plot_residual_error_band(self, target_axes, **kwargs):
+        """Plot model error band around the data/model ratio to specified
+        :py:obj:`matplotlib.axes.Axes` object.
+
+        :param matplotlib.axes.Axes target_axes: The :py:obj:`matplotlib` axes used for plotting.
+        :param dict kwargs: Keyword arguments accepted by :py:obj:`matplotlib.pyplot.fill_between`.
+        :return: plot handle(s)
+        """
+        if self._fit.did_fit and (
+                self._fit.has_errors or not self._fit._cost_function.needs_errors):
+            _band_y = self.y_error_band
+            return target_axes.fill_between(
+                self.model_line_x,
+                -_band_y, _band_y,
                 **kwargs)
         return None  # don't plot error band if fitter input data has no errors...
 

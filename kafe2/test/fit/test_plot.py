@@ -6,7 +6,7 @@ from kafe2 import XYFit, Plot
 
 class TestXYPlot(unittest.TestCase):
     def setUp(self):
-        self._ref_data = [[1, 2, 3], [1, 2, 3]]
+        self._ref_data = [[1, 2, 3], [0.9, 2.1, 3.0]]
         self._ref_dataset_label = 'My Dataset'
         self._ref_x_label = '$U$ [V]'
         self._ref_y_label = '$I$ [A]'
@@ -78,6 +78,60 @@ class TestXYPlot(unittest.TestCase):
         self.plot.plot()
         self.assertEqual(self.plot.axes[0]['main'].get_yscale(), 'log')
 
+    def test_no_ratio_no_residual(self):
+        self.plot.plot(ratio=False, residual=False)
+        _current_axes = self.plot._current_axes
+
+        with self.subTest():
+            self.assertIn('main', _current_axes)
+        with self.subTest():
+            self.assertNotIn('ratio', _current_axes)
+        with self.subTest():
+            self.assertNotIn('residual', _current_axes)
+
+    def test_ratio_no_residual(self):
+        self.plot.plot(ratio=True, residual=False)
+        _current_axes = self.plot._current_axes
+
+        with self.subTest():
+            self.assertIn('main', _current_axes)
+        with self.subTest():
+            self.assertIn('ratio', _current_axes)
+            _ylim = _current_axes['ratio'].get_ylim()
+            self.assertAlmostEqual(1 - _ylim[0], _ylim[1] - 1)
+            _model = self.fit.y_model
+            _data = self.fit.y_data
+            _err = self.fit.total_error
+            self.assertAlmostEqual(
+                _ylim[1],
+                1 + 1.05 * np.max((_err + np.abs(_model - _data)) / np.abs(_model)),
+            )
+        with self.subTest():
+            self.assertNotIn('residual', _current_axes)
+
+    def test_no_ratio_residual(self):
+        self.plot.plot(ratio=False, residual=True)
+        _current_axes = self.plot._current_axes
+
+        with self.subTest():
+            self.assertIn('main', _current_axes)
+        with self.subTest():
+            self.assertNotIn('ratio', _current_axes)
+        with self.subTest():
+            self.assertIn('residual', _current_axes)
+            _ylim = _current_axes['residual'].get_ylim()
+            self.assertAlmostEqual(-_ylim[0], _ylim[1])
+            _model = self.fit.y_model
+            _data = self.fit.y_data
+            _err = self.fit.total_error
+            self.assertAlmostEqual(
+                _ylim[1],
+                1.05 * np.max(_err + np.abs(_model - _data)),
+            )
+
+    def test_ratio_residual(self):
+        with self.assertRaises(NotImplementedError):
+            self.plot.plot(ratio=True, residual=True)
 
 class TestMultiPlot(unittest.TestCase):
     def setUp(self):

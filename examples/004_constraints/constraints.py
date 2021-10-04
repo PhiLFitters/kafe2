@@ -89,6 +89,6 @@ fit.report()
 
 # Optional: plot the fit results.
 plot = Plot(fit)
-plot.plot()
+plot.plot(residual=True)
 
 plt.show()

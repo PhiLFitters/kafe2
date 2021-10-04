@@ -44,6 +44,9 @@ def kafe2go():
     _parser.add_argument('-r', '--ratio',
                          action='store_true',
                          help="Show data/model ratio below the main plot.")
+    _parser.add_argument('-R', '--residual',
+                         action='store_true',
+                         help="Show residuals below the main plot.")
     _parser.add_argument('-a', '--asymmetric',
                          action='store_true',
                          help="Show asymmetric parameter uncertainties when displaying the fit "
@@ -80,6 +83,7 @@ def kafe2go():
     _report = not _args.noreport
     _infobox = not _args.noinfobox
     _ratio = _args.ratio
+    _residual = _args.residual
     _asymmetric = _args.asymmetric
     _separate = _args.separate
     _input_format = _args.inputformat
@@ -101,7 +105,9 @@ def kafe2go():
         XYPlotAdapter.PLOT_SUBPLOT_TYPES.pop('model_error_band')
 
     _plot = Plot(fit_objects=_fits, separate_figures=_separate)
-    _plot.plot(fit_info=_infobox, asymmetric_parameter_errors=_asymmetric, ratio=_ratio)
+    _plot.plot(
+        fit_info=_infobox, asymmetric_parameter_errors=_asymmetric, ratio=_ratio, residual=_residual
+    )
 
     _basenames = [name.rsplit('.', 1)[0] for name in _filenames]
 
