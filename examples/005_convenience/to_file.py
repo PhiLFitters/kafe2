@@ -31,16 +31,30 @@ line_fit = Fit(data=xy_data, model_function=quadratic_model)
 line_fit.to_file("fit_before_do_fit.yml")
 # Because the fit object contains a model function running kafe2go with this file as input will
 #     make use of the model function we defined above.
+#
+# Note: The context in which the model function is defined is NOT saved. If your model function
+#       depends on things outside the function block it cannot be loaded back (NumPy and SciPy
+#       are available in the context in which the function is being loaded though).
 
 line_fit.do_fit()
 
 # Save the fit with fit results to a file:
 line_fit.to_file("fit_after_do_fit.yml")
 
+# Alternatively we could save only the state (parameter values + fit results) to a file:
+line_fit.save_state("fit_results.yml")
+
 # Load it back into code:
 loaded_fit = XYFit.from_file("fit_after_do_fit.yml")
 # Note: this requires the use of a specific fit class like XYFit. The generic Fit pseudo-class
 #     does NOT work.
+
+# Alternatively we could have created a new fit and loaded the fit results:
+# loaded_fit = Fit(data=xy_data, model_function=quadratic_model)
+# loaded_fit.load_state("fit_results.yml")
+#
+# Note: Because we defined the model function in regular Python code there are no problems with
+#       the context in that it's being defined.
 
 loaded_fit.report()
 

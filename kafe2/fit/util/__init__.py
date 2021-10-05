@@ -6,6 +6,9 @@ r"""This submodule provides utility functions for other modules.
 """
 
 import warnings
+from collections import OrderedDict
+from typing import List, Optional
+
 import numpy as np
 
 from . import function_library
@@ -76,3 +79,27 @@ def collect(*args):
 def is_diagonal(matrix):
     """Return True if only diagonal matrix elements are non-zero."""
     return np.all(matrix - np.diag(np.diagonal(matrix)) == 0)
+
+def to_python_floats(yaml_dict: Optional[dict]):
+    if yaml_dict is None:
+        return None
+    _new_dict = {}
+    for _key, _value in yaml_dict.items():
+        if isinstance(_value, float):
+            _value = float(_value)  # Casts NumPy scalars to Python float.
+        elif isinstance(_value, np.ndarray):
+            _value = _value.tolist()
+        elif isinstance(_value, OrderedDict):
+            _value = [float(_v) for _v in _value.values()]
+        _new_dict[_key] = _value
+    return _new_dict
+
+def to_numpy_arrays(yaml_dict: Optional[dict]):
+    if yaml_dict is None:
+        return None
+    _new_dict = {}
+    for _key, _value in yaml_dict.items():
+        if isinstance(_value, list):
+            _value = np.array(_value)
+        _new_dict[_key] = _value
+    return _new_dict

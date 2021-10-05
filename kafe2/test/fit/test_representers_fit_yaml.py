@@ -4,6 +4,7 @@ from scipy.stats import norm
 import six
 from six import StringIO
 import abc
+import os
 
 from kafe2.fit.representation import FitYamlWriter, FitYamlReader
 from kafe2.fit.io.handle import IOStreamHandle
@@ -29,6 +30,9 @@ class AbstractTestFitRepresenter(object):
     def setUp(self):
         pass
 
+    def tearDown(self):
+        os.remove(self._state_filename)
+
     def setup_streams(self):
         self._testfile_stringstream = IOStreamHandle(StringIO(self.TEST_FIT))
         self._testfile_stringstream_simple = IOStreamHandle(StringIO(self.TEST_FIT_SIMPLE))
@@ -36,6 +40,7 @@ class AbstractTestFitRepresenter(object):
         self._testfile_streamreader_simple = FitYamlReader(self._testfile_stringstream_simple)
 
         self._roundtrip_stringstream = IOStreamHandle(StringIO())
+        self._state_filename = f"test-{self.FIT_CLASS.__name__}.yml"
         self._roundtrip_streamreader = FitYamlReader(self._roundtrip_stringstream)
         self._roundtrip_streamwriter = FitYamlWriter(self._fit, self._roundtrip_stringstream)
 
@@ -60,6 +65,37 @@ class AbstractTestFitRepresenter(object):
         self._roundtrip_streamwriter.write()
         self._roundtrip_stringstream.seek(0)  # return to beginning
         _read_fit = self._roundtrip_streamreader.read()
+        self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
+
+        self.assertTrue(self._fit.did_fit == _read_fit.did_fit)
+        self.assertTrue(
+            np.allclose(
+                self._fit.parameter_cov_mat,
+                _read_fit.parameter_cov_mat
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                self._fit.parameter_errors,
+                _read_fit.parameter_errors
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                self._fit.parameter_cor_mat,
+                _read_fit.parameter_cor_mat
+            )
+        )
+
+    def test_round_trip_save_results_2(self):
+        self._roundtrip_streamwriter.write()
+        self._roundtrip_stringstream.seek(0)  # return to beginning
+        _read_fit = self._roundtrip_streamreader.read()
+
+        self._fit.do_fit()
+        self._fit.save_state(self._state_filename)
+        _read_fit.load_state(self._state_filename)
+
         self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
 
         self.assertTrue(self._fit.did_fit == _read_fit.did_fit)

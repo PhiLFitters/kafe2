@@ -13,6 +13,7 @@ from ....fit import CustomFit, HistFit, IndexedFit, UnbinnedFit, XYFit
 from ..._base.cost import STRING_TO_COST_FUNCTION
 from ..._base.format import ParameterFormatter
 from ...xy.cost import STRING_TO_COST_FUNCTION as STRING_TO_COST_FUNCTION_XY
+from ...util import to_python_floats, to_numpy_arrays
 from ...unbinned.cost import STRING_TO_COST_FUNCTION as STRING_TO_COST_FUNCTION_UNBINNED
 from ....tools import get_compact_representation
 
@@ -124,21 +125,7 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
             _par_name: list(_par_limits)
             for _par_name, _par_limits in fit._fitter.limited_parameters.items()}
 
-        _fit_results = fit.get_result_dict()
-        _fit_results['parameter_values'] = list(map(float, fit.parameter_values))
-        if _fit_results['did_fit']:
-            _fit_results['parameter_cov_mat'] = _fit_results['parameter_cov_mat'].tolist()
-            _fit_results['parameter_errors'] = [
-                float(_fit_results['parameter_errors'][_pn]) for _pn in fit.parameter_names]
-            _fit_results['parameter_cor_mat'] = _fit_results['parameter_cor_mat'].tolist()
-        if _fit_results['asymmetric_parameter_errors'] is not None:
-            _fit_results['asymmetric_parameter_errors'] = {
-                _par_name: [float(_asymm_errs[0]), float(_asymm_errs[1])]
-                for _par_name, _asymm_errs in _fit_results['asymmetric_parameter_errors'].items()}
-        FitYamlWriter._to_float(_fit_results, "goodness_of_fit")
-        FitYamlWriter._to_float(_fit_results, "gof/ndf")
-        FitYamlWriter._to_float(_fit_results, "chi2_probability")
-        _yaml_doc['fit_results'] = _fit_results
+        _yaml_doc['fit_results'] = to_python_floats(fit.get_result_dict())
         return _yaml_doc
 
 
@@ -280,14 +267,7 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
                 _fit_object.limit_parameter(_par, _low, _high)
 
         _fit_results = yaml_doc.pop('fit_results', None)
-        if _fit_results is not None:
-            if _fit_results['did_fit']:
-                _fit_results['parameter_cov_mat'] = np.asarray(_fit_results['parameter_cov_mat'])
-                _fit_results['parameter_errors'] = np.array(_fit_results['parameter_errors'])
-                _fit_results['parameter_cor_mat'] = np.asarray(_fit_results['parameter_cor_mat'])
-            if _fit_results['asymmetric_parameter_errors'] is not None:
-                _fit_results['asymmetric_parameter_errors'] = np.array(_fit_results['asymmetric_parameter_errors'])
-        _fit_object._loaded_result_dict = _fit_results
+        _fit_object._loaded_result_dict = to_numpy_arrays(_fit_results)
         return _fit_object, yaml_doc
 
 

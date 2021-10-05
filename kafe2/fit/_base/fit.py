@@ -1,11 +1,14 @@
 import abc
 import sys
+import os
 import warnings
 from collections import OrderedDict
 from functools import partial
+from typing import Optional
 
 import numpy as np
 import six
+import yaml
 
 from .container import DataContainerBase, DataContainerException
 from ..io.file import FileIOMixin
@@ -17,7 +20,7 @@ from ...core.error import CovMat
 from ...tools import print_dict_as_table
 from .._base.cost import CostFunction, STRING_TO_COST_FUNCTION
 from ..util import invert_matrix, is_diagonal, cholesky_decomposition, log_determinant, \
-    log_determinant_pointwise
+    log_determinant_pointwise, to_python_floats, to_numpy_arrays
 
 __all__ = ["FitBase", "FitException"]
 
@@ -1175,3 +1178,41 @@ class FitBase(FileIOMixin, object):
         if calculate_asymmetric_errors:
             _ = self.asymmetric_parameter_errors  # force calculation of asymmetric errors if not calculated yet
         super(FitBase, self).to_file(filename=filename, file_format=file_format)
+
+    def save_state(
+            self, filename: str, file_format: Optional[str] = None,
+            calculate_asymmetric_errors: bool = False):
+        if file_format is None:
+            _, _extension = os.path.splitext(filename)
+            if len(_extension) >= 2:
+                file_format = _extension[1:]
+        if file_format is None:
+            file_format = "yml"
+        file_format = file_format.lower()
+
+        if calculate_asymmetric_errors:
+            _ = self.asymmetric_parameter_errors
+
+        if file_format in ("yaml", "yml"):
+            with open(filename, "w", encoding="utf8") as _f:
+                yaml.safe_dump(to_python_floats(self.get_result_dict()), _f)
+        else:
+            raise ValueError(f"Unknown file format: {file_format}. Available: yaml")
+
+    def load_state(self, filename: str, file_format: Optional[str] = None):
+        if file_format is None:
+            _, _extension = os.path.splitext(filename)
+            if len(_extension) >= 2:
+                file_format = _extension[1:]
+        if file_format is None:
+            file_format = "yml"
+        file_format = file_format.lower()
+
+        if file_format in ("yaml", "yml"):
+            with open(filename, "r", encoding="utf8") as _f:
+                self._loaded_result_dict = to_numpy_arrays(yaml.safe_load(_f))
+        else:
+            raise ValueError(f"Unknown file format: {file_format}. Available: yaml")
+        _new_par_vals = self._loaded_result_dict.pop("parameter_values", None)
+        if _new_par_vals is not None:
+            self._fitter.set_all_fit_parameter_values(_new_par_vals)
