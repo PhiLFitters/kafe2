@@ -202,7 +202,7 @@ For :math:`\rho = \pm 1` :math:`r_i` and :math:`r_j` are directly proportional t
 another with a positive (negative) proportional constant for :math:`\rho = +1` (:math:`\rho = -1`).
 Let's look at some toy samples for different values of :math:`\rho_{ij}`:
 
-.. figure:: ../../_static/img/covariance_plot.png
+.. figure:: ../_static/img/covariance_plot.png
 
 For :math:`\rho_{ij} = 0` the sample forms a circle around (0,0).
 As the absolute value of :math:`\rho_{ij}` increases the sample changes its shape to a tilted
@@ -437,7 +437,7 @@ Another way to check the profiles is to use the :py:obj:`~.ContoursProfiler` obj
 It is capable of plotting the profiles of parameters (and also their contours, see below).
 As an example, let us look at the profile of the parameter :math:`g` from the double slit example:
 
-.. figure:: ../../_static/img/003_double_slit_profile_g.png
+.. figure:: ../_static/img/003_double_slit_profile_g.png
 
 The profile of this parameter is very clearly asymmetric and not even close to the
 parabolic approximation.
@@ -458,7 +458,7 @@ while a contour defines a **confidence region** with a certain likelihood of con
 of parameters.
 Let us start by looking at the contours produced in the double slit example:
 
-.. figure:: ../../_static/img/003_double_slit_contours.png
+.. figure:: ../_static/img/003_double_slit_contours.png
 
 In this visualization the confidence region inside the contours is colored.
 By looking at the legend we find that the contours correspond to
@@ -496,7 +496,7 @@ As with the input uncertainties the confidence region calculated this way will
 For (nearly) linear fits such as the exponential fit from the model functions example the calculated
 contours will then look something like this:
 
-.. figure:: ../../_static/img/002_exponential_contours.png
+.. figure:: ../_static/img/002_exponential_contours.png
 
 If the fit were perfectly linear the 1-:math:`\sigma`-contour would reach exactly from
 :math:`-\sigma` to :math:`+\sigma`,
