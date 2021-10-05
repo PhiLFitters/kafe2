@@ -319,8 +319,7 @@ class CostFunction_Chi2(CostFunction):
                 _x = solve_triangular(cov_mat_cholesky, _res, lower=True)
             except ValueError:
                 return np.inf
-            _cost = np.sum(np.square(_x))
-            return _cost
+            return np.inner(_x, _x)
 
         if self._fail_on_no_matrix:
             raise CostFunctionException("Covariance matrix is singular!")
@@ -337,7 +336,7 @@ class CostFunction_Chi2(CostFunction):
                 _res = _res / err
 
         # return sum of squared residuals
-        _cost = np.sum(np.square(_res))
+        _cost = np.inner(_res, _res)
         if np.isnan(_cost):
             _cost = np.inf
         return _cost
