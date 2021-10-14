@@ -192,17 +192,40 @@ We therefore define the so-called **Pearson correlation coefficient** :math:`\rh
 .. math ::
    \rho_{ij} = \frac{\mathrm{Cov}_{ij}}{\sigma_i \sigma_j}.
 
-The correlation :math:`\rho_{ij}` is normalized to the interval :math:`[-1, 1]`.
-Its absolute value is a measure of how strongly the residuals :math:`r_k = d_k - \mu_k`
-depend on one another.
-In other words, the absolute value of :math:`\rho_{ij}` measures how much information you get about
-:math:`r_i` or :math:`r_j` if you know the other one.
-For :math:`\rho = 0` they are completely independent from one another.
-For :math:`\rho = \pm 1` :math:`r_i` and :math:`r_j` are directly proportional to one
-another with a positive (negative) proportional constant for :math:`\rho = +1` (:math:`\rho = -1`).
-Let's look at some toy samples for different values of :math:`\rho_{ij}`:
+.. only:: html
 
-.. figure:: ../_static/img/covariance_plot.png
+    The correlation :math:`\rho_{ij}` is normalized to the interval :math:`[-1, 1]`.
+    Its absolute value is a measure of how strongly the residuals :math:`r_k = d_k - \mu_k`
+    depend on one another.
+    In other words, the absolute value of :math:`\rho_{ij}` measures how much information
+    you get about :math:`r_i` or :math:`r_j` if you know the other one.
+    For :math:`\rho = 0` they are completely independent from one another.
+    For :math:`\rho = \pm 1` :math:`r_i` and :math:`r_j` are directly proportional to one
+    another with a positive (negative) proportional constant for
+    :math:`\rho = +1` (:math:`\rho = -1`).
+    Let's look at some toy samples for different values of :math:`\rho_{ij}`:
+
+    .. figure:: ../_static/img/covariance_plot.png
+
+.. only:: latex
+
+    The correlation :math:`\rho_{ij}` is normalized to the interval :math:`[-1, 1]`.
+    Its absolute value is a measure of how strongly the residuals :math:`r_k = d_k - \mu_k`
+    depend on one another.
+    In other words, the absolute value of :math:`\rho_{ij}` measures how much information
+    you get about :math:`r_i` or :math:`r_j` if you know the other one.
+    For :math:`\rho = 0` they are completely independent from one another.
+    For :math:`\rho = \pm 1` :math:`r_i` and :math:`r_j` are directly proportional to one
+    another with a positive (negative) proportional constant for
+    :math:`\rho = +1` (:math:`\rho = -1`).
+    Toy samples for different values of :math:`\rho_{ij}` are shown in :numref:`covariance_plot`.
+
+    .. _covariance_plot:
+    .. figure:: ../_static/img/covariance_plot.png
+
+        Toy samples for correlation between residuals :math:`r_i` and :math:`r_j` for different
+        values of the correlation coefficient :math:`\rho_{ij}`.
+        With an increasing absolute value the shape changes from a circle to a line.
 
 For :math:`\rho_{ij} = 0` the sample forms a circle around (0,0).
 As the absolute value of :math:`\rho_{ij}` increases the sample changes its shape to a tilted
@@ -227,7 +250,7 @@ event.
 For one reason or another the stopwatch we're using is also consistently
 off by a few percentage points.
 To account for this we assume a fully correlated (:math:`\rho_{ij} = 1`) uncertainty of
-:math:`\sigma_{watch} = 2 \%` for all data points.
+:math:`\sigma_{\rm watch} = 2 \%` for all data points.
 To determine the variance of a single data point we can simply add up the variances
 of the uncertainty sources:
 
@@ -433,11 +456,27 @@ Because these intervals are not necessarily symmetric around the cost function m
 referred to as **asymmetric parameter errors** in *kafe2*
 (in *Minuit* they are called Minos errors).
 
-Another way to check the profiles is to use the :py:obj:`~.ContoursProfiler` object.
-It is capable of plotting the profiles of parameters (and also their contours, see below).
-As an example, let us look at the profile of the parameter :math:`g` from the double slit example:
+.. only:: html
 
-.. figure:: ../_static/img/003_double_slit_profile_g.png
+    Another way to check the profiles is to use the :py:obj:`~.ContoursProfiler` object.
+    It is capable of plotting the profiles of parameters (and also their contours, see below).
+    As an example, let us look at the profile of the parameter :math:`g`
+    from the double slit example:
+
+    .. figure:: ../_static/img/003_double_slit_profile_g.png
+
+.. only:: latex
+
+    Another way to check the profiles is to use the :py:obj:`~.ContoursProfiler` object.
+    It is capable of plotting the profiles of parameters (and also their contours, see below).
+    :numref:`003_double_slit_profile_g` shows the profile of the parameter :math:`g`
+    from the double slit example:
+
+    .. _003_double_slit_profile_g:
+    .. figure:: ../_static/img/003_double_slit_profile_g.png
+
+       Profile of parameter :math:`g` from the double slit example.
+       The parabolic approximation of the confidence interval is very inaccurate.
 
 The profile of this parameter is very clearly asymmetric and not even close to the
 parabolic approximation.
@@ -447,18 +486,41 @@ confidence intervals would be very wrong.
 Profile Likelihood (2 parameters)
 *********************************
 
-In the previous section we learned about the profiles of single fit parameters,
-which serve as a replacement for the uncertainties of single fit parameters.
-In this section we will learn about so-called **contours**,
-which serve as a replacement for the covariance of two fit parameters.
-Conceptually they are very similar.
-A profile defines confidence intervals for a single parameter with a certain likelihood of
-containing the true value of a parameter
-while a contour defines a **confidence region** with a certain likelihood of containing a *pair*
-of parameters.
-Let us start by looking at the contours produced in the double slit example:
+.. only:: html
 
-.. figure:: ../_static/img/003_double_slit_contours.png
+    In the previous section we learned about the profiles of single fit parameters,
+    which serve as a replacement for the uncertainties of single fit parameters.
+    In this section we will learn about so-called **contours**,
+    which serve as a replacement for the covariance of two fit parameters.
+    Conceptually they are very similar.
+    A profile defines confidence intervals for a single parameter with a certain likelihood of
+    containing the true value of a parameter
+    while a contour defines a **confidence region** with a certain likelihood of containing a *pair*
+    of parameters.
+    Let us start by looking at the contours produced in the double slit example:
+
+    .. figure:: ../_static/img/003_double_slit_contours.png
+
+.. only:: latex
+
+    In the previous section we learned about the profiles of single fit parameters,
+    which serve as a replacement for the uncertainties of single fit parameters.
+    In this section we will learn about so-called **contours**,
+    which serve as a replacement for the covariance of two fit parameters.
+    Conceptually they are very similar.
+    A profile defines confidence intervals for a single parameter with a certain likelihood of
+    containing the true value of a parameter
+    while a contour defines a **confidence region** with a certain likelihood of containing a *pair*
+    of parameters.
+    :numref:`003_double_slit_contours` shows the contours produced
+    in the double slit example.
+
+    .. _003_double_slit_contours:
+    .. figure:: ../_static/img/003_double_slit_contours.png
+
+        Parameter confidence contours produced in the double slit example.
+        Due to the nonlinear model function the contours are heavily distorted.
+
 
 In this visualization the confidence region inside the contours is colored.
 By looking at the legend we find that the contours correspond to
@@ -489,14 +551,32 @@ With this formula we now find
    This is because (efficiently) calculating these contours is not straightforward and
    even in *kafe2* this is an area of active development.
 
-The parabolic equivalent of a contour is to look at the parameter covariance matrix and to
-extrapolate the correlated distribution of two parameters.
-As with the input uncertainties the confidence region calculated this way will
-*always* be an ellipse.
-For (nearly) linear fits such as the exponential fit from the model functions example the calculated
-contours will then look something like this:
+.. only:: html
 
-.. figure:: ../_static/img/002_exponential_contours.png
+    The parabolic equivalent of a contour is to look at the parameter covariance matrix and to
+    extrapolate the correlated distribution of two parameters.
+    As with the input uncertainties the confidence region calculated this way will
+    *always* be an ellipse.
+    For (nearly) linear fits such as the exponential fit from the model functions example the
+    calculated contours will then look something like this:
+
+    .. figure:: ../_static/img/002_exponential_contours.png
+
+.. only:: latex
+
+    The parabolic equivalent of a contour is to look at the parameter covariance matrix and to
+    extrapolate the correlated distribution of two parameters.
+    As with the input uncertainties the confidence region calculated this way will
+    *always* be an ellipse.
+    :numref:`002_exponential_contours` shows contours for the nearly linear exponential fit
+    from the model functions example.
+
+    .. _002_exponential_contours:
+    .. figure:: ../_static/img/002_exponential_contours.png
+
+        Parameter confidence contours for the exponential fit from the model functions example.
+        The fit is nearly linear on the scale of the uncertainty
+        so the confidence region is close to an ellipse.
 
 If the fit were perfectly linear the 1-:math:`\sigma`-contour would reach exactly from
 :math:`-\sigma` to :math:`+\sigma`,
@@ -505,6 +585,15 @@ As we can see the deviation from this is very small so we can probably use the p
 matrix (or the parameter uncertainties and the parameter correlation matrix) without issue.
 If we require highly precise confidence intervals for our parameters
 this might not be acceptable though.
+
+.. note::
+   The degree to which confidence intervals/regions are distorted from their parabolic
+   approximation depends on the scale at which the profile likelihood is calculated.
+   Because every function can be accurately approximated by a linear function at infinitesimally
+   small scales (Taylor expansion) the parabolic approximation becomes more accurate
+   for small parameter uncertainties.
+   Conversely, for large parameter uncertainties the parabolic approximation of the profile
+   likelihood becomes less accurate.
 
 Nonlinear Regression
 ====================
@@ -602,6 +691,8 @@ With the same *x* vector :math:`\bm{x} = (0, 1, 2)^T` as before we find:
    \bm{m}(\bm{p})
    = A \cdot e^{- \lambda \bm{x}}
    = A \cdot \sum_{k=0}^\infty \frac{(- \lambda \bm{x})^k}{k!}
+
+.. math::
    = A \cdot \begin{pmatrix}
             \bm{x}^0 & -\bm{x}^1 & \frac{\bm{x^2}}{2} & -\frac{\bm{x}^3}{6} & \cdots
     \end{pmatrix} \begin{pmatrix}
@@ -1074,7 +1165,7 @@ The negative log-likelihood :math:`\mathrm{NLL}(\bm{p})` thus becomes:
    = 2 \sum_i^N m_i(\bm{p}) - d_i \log m_i(\bm{p}) + \frac{d_i (d_i + 1)}{2}.
 
 Notably :math:`\mathrm{NLL}(\bm{p})` depends only on the data :math:`d_i` and the model
-:math:`m_i(\bm{p})` but *not* on any specified uncertainties :math:`\bm{sigma}`.
+:math:`m_i(\bm{p})` but *not* on any specified uncertainties :math:`\bm{\sigma}`.
 The advantage is that we don't need to specify any uncertainties -
 but the significant disadvantage is that we *can't* specify any uncertainties either.
 In such cases the cost function in the following section will need to be used.
