@@ -9,5 +9,5 @@ y_errors: [0.1060258, 0.05890727, 0.03230893, 0.07400725, 0.0213052, 0.00793693,
            0.0009649427]
 
 model_function: |
-  def exponential(x, A0=1, tau=1):
-      return A0 * np.exp(-x/tau)
+  def exponential(x, A_0=1, tau=1):
+      return A_0 * np.exp(-x/tau)

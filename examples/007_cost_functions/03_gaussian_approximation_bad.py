@@ -34,13 +34,13 @@ molar_mass_c14 = 14.003241  # Molar mass of the Carbon-14 isotope in g/mol
 expected_initial_num_c14_atoms = initial_c14_concentration * N_A * sample_mass / molar_mass_c14
 
 
-# x = years of death in the ancient calendar
+# t = years of death in the ancient calendar
 # Delta_t = difference between the ancient and the modern calendar in years
 # T_12_C14 = half life of carbon-14 in years, read as T 1/2 carbon-14
-def expected_activity_per_two_min(x, Delta_t=5000, T_12_C14=5730):
+def expected_activity_per_two_min(t, Delta_t=5000, T_12_C14=5730):
     # activity = number of radioactive decays
     expected_initial_activity_per_day = expected_initial_num_c14_atoms * np.log(2) / (T_12_C14 * two_min_per_year)
-    total_years_since_death = Delta_t + current_year - x
+    total_years_since_death = Delta_t + current_year - t
     return expected_initial_activity_per_day * np.exp(-np.log(2) * total_years_since_death / T_12_C14)
 
 
@@ -110,6 +110,12 @@ relative_error_full = abs((Delta_T_gaussian_full - Delta_T_poisson_full) / Delta
 print('Relative errors from Gaussian approximation:')
 print('For N~10:', relative_error_sparse)
 print('For N~6000:', relative_error_full)
+
+# Optional: Assign new parameter names:
+xy_fit_poisson_sparse.assign_parameter_latex_names(
+    Delta_t=r"\Delta t", T_12_C14=r"T_{1/2}({}^{14}C)")
+xy_fit_gaussian_sparse.assign_parameter_latex_names(
+    Delta_t=r"\Delta t", T_12_C14=r"T_{1/2}({}^{14}C)")
 
 # Optional: create a plot of the fit results using Plot
 xy_plot_poisson_sparse = Plot([xy_fit_gaussian_sparse, xy_fit_poisson_sparse])

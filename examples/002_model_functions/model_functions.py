@@ -27,8 +27,8 @@ def linear_model(x, a, b):
 
 # Our second model is a simple exponential function.
 # The kwargs in the function header specify parameter defaults.
-def exponential_model(x, A0=1., x0=5.):
-    return A0 * np.exp(x/x0)
+def exponential_model(x, A_0=1., x_0=5.):
+    return A_0 * np.exp(x/x_0)
 
 
 # Read in the measurement data from a yaml file.
@@ -40,10 +40,10 @@ linear_fit = Fit(data=xy_data, model_function=linear_model)
 exponential_fit = Fit(data=xy_data, model_function=exponential_model)
 
 # Optional: Assign LaTeX strings to parameters and model functions.
-linear_fit.assign_parameter_latex_names(a='a', b='b')
+# linear_fit.assign_parameter_latex_names(x="X", a=r"\alpha", b=r"\beta")  # Uncomment to activate
 linear_fit.assign_model_function_latex_expression("{a}{x} + {b}")
-exponential_fit.assign_parameter_latex_names(A0='A_0', x0='x_0')
-exponential_fit.assign_model_function_latex_expression("{A0} e^{{{x}/{x0}}}")
+# exponential_fit.assign_parameter_latex_names(x="X", A_0="B_0", x_0="X_0")  # Uncomment to activate
+exponential_fit.assign_model_function_latex_expression("{A_0} e^{{{x}/{x_0}}}")
 
 # Perform the fits:
 linear_fit.do_fit()

@@ -28,8 +28,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from kafe2 import Fit, Plot, ContoursProfiler
 
-def exponential(x, A0=1, tau=1):
-    return A0 * np.exp(-x/tau)
+def exponential(x, A_0=1, tau=1):
+    return A_0 * np.exp(-x/tau)
 
 # define the data as simple Python lists
 x = [8.018943e-01, 1.839664e+00, 1.941974e+00, 1.276013e+00, 2.839654e+00, 3.488302e+00, 3.775855e+00, 4.555187e+00,

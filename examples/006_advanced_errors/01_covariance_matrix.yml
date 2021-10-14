@@ -28,7 +28,6 @@ errors:
            [0.000625, 0.000625, 0.000625, 0.000625, 0.001936, 0.001936, 0.001936, 0.001936],
            [0.000625, 0.000625, 0.000625, 0.000625, 0.001936, 0.001936, 0.001936, 0.001936]]
 model_function: |
-    def W_mass_model(m_W=80):
+    def average(a):
         # our model is a simple constant function
-        #return float(m_W)  # FIXME: automatically adapt to measurement list length
-        return [float(m_W)]*8
+        return a

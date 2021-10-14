@@ -60,7 +60,7 @@ fit.limit_parameter("fbg", 0., 1.)
 
 # assign latex names for the parameters for nicer display
 fit.model_label = "exponential decay law + flat background"
-fit.assign_parameter_latex_names(tau=r'\tau', fbg='f', a='a', b='b')
+fit.assign_parameter_latex_names(fbg='f')
 # assign a latex expression for the fit function for nicer display
 fit.assign_model_function_latex_expression("\\frac{{ (1-{fbg}) \\, e^{{-{t}/{tau}}} }}"
                                            "{{{tau} \\, (e^{{-{a}/{tau}}}-e^{{-{b}/{tau}}}) }}"

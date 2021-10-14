@@ -50,13 +50,13 @@ molar_mass_c14 = 14.003241  # Molar mass of the Carbon-14 isotope in g/mol
 expected_initial_num_c14_atoms = initial_c14_concentration * N_A * sample_mass / molar_mass_c14
 
 
-# x = years of death in the ancient calendar
+# t = years of death in the ancient calendar
 # Delta_t = difference between the ancient and the modern calendar in years
 # T_12_C14 = half life of carbon-14 in years, read as T 1/2 carbon-14
-def expected_activity_per_day(x, Delta_t=5000, T_12_C14=5730):
+def expected_activity_per_day(t, Delta_t=5000, T_12_C14=5730):
     # activity = number of radioactive decays
     expected_initial_activity_per_day = expected_initial_num_c14_atoms * np.log(2) / (T_12_C14 * days_per_year)
-    total_years_since_death = Delta_t + current_year - x
+    total_years_since_death = Delta_t + current_year - t
     return expected_initial_activity_per_day * np.exp(-np.log(2) * total_years_since_death / T_12_C14)
 
 
@@ -74,6 +74,9 @@ xy_fit.add_parameter_constraint(name='T_12_C14', value=5730, uncertainty=40)
 # Note that since for a Poisson distribution the data error is directly linked to the mean.
 # Because of this fits can be performed without explicitly adding data errors.
 xy_fit.do_fit()
+
+# Optional: Assign new parameter names:
+xy_fit.assign_parameter_latex_names(Delta_t=r"\Delta t", T_12_C14=r"T_{1/2}({}^{14}C)")
 
 # Optional: print out a report on the fit results on the console
 xy_fit.report()

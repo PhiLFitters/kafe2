@@ -187,6 +187,9 @@ class PlotAdapterBase(object):
         _axis_labels = list()
         for i, axis in enumerate(_axes):
             label = self._fit.data_container.axis_labels[i]  # load from data_container
+            if label is None and axis == 'x' and type(fit_object).__name__ == "XYFit":
+                _latex_name = fit_object.model_function.formatter.arg_formatters[0].latex_name
+                label = f"${_latex_name}$"
             if label is None:  # fallback to default
                 label = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'axis_labels', axis)
             if label == '__del__':  # set axis label to None for special string __del__

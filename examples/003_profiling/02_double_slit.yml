@@ -1,8 +1,8 @@
-# kafe2 XYFit yaml representation written by johannesg on 07.07.2021, 17:16.
+# kafe2 XYFit yaml representation written by johannesg on 14.10.2021, 18:08.
 
 # WARNING: No fit has been performed as of yet. Did you forget to run fit.do_fit()?
 
-# Model function: intensity(theta; i_0, b, g, wavelength)
+# Model function: intensity(theta; I_0, b, g, varlambda)
 
 type: xy
 dataset:
@@ -126,29 +126,29 @@ parametric_model:
       name: intensity
       latex_name: I
       expression_string: null
-      latex_expression_string: '{i_0}\,\left(\frac{{\sin(\frac{{\pi}}{{{wavelength}}}\,b\,\sin{{{theta}}})}}{{\frac{{\pi}}{{{wavelength}}}\,b\,\sin{{{theta}}}}}\cos(\frac{{\pi}}{{{wavelength}}}\,g\,\sin{{{theta}}})\right)^2'
+      latex_expression_string: '{I_0}\,\left(\frac{{\sin(\frac{{\pi}}{{{varlambda}}}\,b\,\sin{{{theta}}})}}{{\frac{{\pi}}{{{varlambda}}}\,b\,\sin{{{theta}}}}}\cos(\frac{{\pi}}{{{varlambda}}}\,g\,\sin{{{theta}}})\right)^2'
       arg_formatters:
         theta: '{\theta}'
-        i_0: '{I_0}'
-        b: '{b}'
-        g: '{g}'
-        wavelength: '{\lambda}'
+        I_0: I_0
+        b: b
+        g: g
+        varlambda: '{\lambda}'
       signature:
       - theta
-      - i_0
+      - I_0
       - b
       - g
-      - wavelength
-    python_code: "def intensity(theta, i_0, b, g, wavelength):\n    \"\"\"\n    In\
+      - varlambda
+    python_code: "def intensity(theta, I_0, b, g, varlambda):\n    \"\"\"\n    In\
       \ this example our model function is the intensity of diffracted light as described\
       \ by the\n    Fraunhofer equation.\n    :param theta: angle at which intensity\
-      \ is measured\n    :param i_0: intensity amplitude\n    :param b: width of a\
-      \ single slit\n    :param g: distance between the two slits\n    :param wavelength:\
+      \ is measured\n    :param I_0: intensity amplitude\n    :param b: width of a\
+      \ single slit\n    :param g: distance between the two slits\n    :param varlambda:\
       \ wavelength of the laser light\n    :return: intensity of the diffracted light\n\
-      \    \"\"\"\n    single_slit_arg = np.pi * b * np.sin(theta) / wavelength\n\
-      \    single_slit_interference = np.sin(single_slit_arg) / single_slit_arg\n\
-      \    double_slit_interference = np.cos(np.pi * g * np.sin(theta) / wavelength)\n\
-      \    return i_0 * single_slit_interference ** 2 * double_slit_interference **\
+      \    \"\"\"\n    single_slit_arg = np.pi * b * np.sin(theta) / varlambda\n \
+      \   single_slit_interference = np.sin(single_slit_arg) / single_slit_arg\n \
+      \   double_slit_interference = np.cos(np.pi * g * np.sin(theta) / varlambda)\n\
+      \    return I_0 * single_slit_interference ** 2 * double_slit_interference **\
       \ 2\n"
   model_parameters:
   - 1.0
@@ -161,9 +161,9 @@ minimizer: iminuit
 minimizer_kwargs: null
 parameter_constraints: []
 fixed_parameters:
-  wavelength: 6.471e-07
+  varlambda: 6.471e-07
 limited_parameters:
-  i_0:
+  I_0:
   - 1.0e-08
   - null
   b:
@@ -174,10 +174,10 @@ limited_parameters:
   - null
 fit_results:
   did_fit: false
-  cost: -13.551117909178402
+  cost: -13.551117909178416
   ndf: 16
-  goodness_of_fit: 91.35400506819792
-  gof/ndf: 5.70962531676237
+  goodness_of_fit: 91.3540050681979
+  gof/ndf: 5.709625316762369
   chi2_probability: 1.407651772922236e-12
   parameter_values:
   - 1.0

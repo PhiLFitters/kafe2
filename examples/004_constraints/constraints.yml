@@ -45,7 +45,7 @@ y_errors: 0.01
 # unconstrained parameters in order to converge.
 # To use starting values for the fit, specify them as default values in the fit function.
 model_function: |
-    def damped_harmonic_oscillator(x, y_0=1.0, l=1.0, r=1.0, g=9.81, c=0.01):
+    def damped_harmonic_oscillator(theta, y_0=1.0, l=1.0, r=1.0, g=9.81, c=0.01):
         # Model function for a pendulum as a 1d, damped harmonic oscillator with zero initial speed
         # x = time, y_0 = initial_amplitude, l = length of the string,
         # r = radius of the steel ball, g = gravitational acceleration, c = damping coefficient
@@ -53,7 +53,7 @@ model_function: |
         l_total = l + r
         omega_0 = np.sqrt(g / l_total)  # phase speed of an undamped pendulum
         omega_d = np.sqrt(omega_0 ** 2 - c ** 2)  # phase speed of a damped pendulum
-        return y_0 * np.exp(-c * x) * (np.cos(omega_d *x) + c / omega_d * np.sin(omega_d * x))
+        return y_0 * np.exp(-c * theta) * (np.cos(omega_d * theta) + c / omega_d * np.sin(omega_d * theta))
 
 parameter_constraints:    # add parameter constraints
   l:

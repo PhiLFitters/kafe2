@@ -30,10 +30,10 @@ sigCor_rel = 0.0007  # Correlated relative y error
 
 
 # Breit-Wigner with s-dependent width:
-def BreitWigner(E, s0=41.0, M=91.2, G=2.5):
+def BreitWigner(E, s0=41.0, M_Z=91.2, G_Z=2.5):
     s = E*E
-    Msq = M*M
-    Gsq = G*G
+    Msq = M_Z*M_Z
+    Gsq = G_Z*G_Z
     return s0*s*Gsq/((s-Msq)*(s-Msq)+(s*s*Gsq/Msq))
 
 
@@ -74,10 +74,10 @@ BW_fit = Fit(BW_data, BreitWigner)
 BW_fit.model_label = 'Beit-Wigner with s-dependent width'
 
 # Set LaTeX names for printout in info-box:
-BW_fit.assign_parameter_latex_names(E='E', s0=r'\sigma^0', M=r'M_Z', G=r'\Gamma_Z')
+BW_fit.assign_parameter_latex_names(s0=r'\sigma^0')
 BW_fit.assign_model_function_latex_name(r'\sigma^{\rm ew}_{e^+e^-\to{\rm hadrons}}')
 BW_fit.assign_model_function_latex_expression(
-               r'{s0}\frac{{ {E}^2{G}^2}}{{({E}^2-{M}^2)^2+({E}^4{G}^2/{M}^2)}}')
+               r'{s0}\frac{{ {E}^2{G_Z}^2}}{{({E}^2-{M_Z}^2)^2+({E}^4{G_Z}^2/{M_Z}^2)}}')
 
 # Do the fit:
 BW_fit.do_fit()

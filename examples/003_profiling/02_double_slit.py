@@ -46,21 +46,21 @@ def _generate_dataset(output_filename='02_double_slit_data.yml'):
 # _generate_dataset()
 
 
-def intensity(theta, i_0, b, g, wavelength):
+def intensity(theta, I_0, b, g, varlambda):
     """
     In this example our model function is the intensity of diffracted light as described by the
     Fraunhofer equation.
     :param theta: angle at which intensity is measured
-    :param i_0: intensity amplitude
+    :param I_0: intensity amplitude
     :param b: width of a single slit
     :param g: distance between the two slits
-    :param wavelength: wavelength of the laser light
+    :param varlambda: wavelength of the laser light
     :return: intensity of the diffracted light
     """
-    single_slit_arg = np.pi * b * np.sin(theta) / wavelength
+    single_slit_arg = np.pi * b * np.sin(theta) / varlambda
     single_slit_interference = np.sin(single_slit_arg) / single_slit_arg
-    double_slit_interference = np.cos(np.pi * g * np.sin(theta) / wavelength)
-    return i_0 * single_slit_interference ** 2 * double_slit_interference ** 2
+    double_slit_interference = np.cos(np.pi * g * np.sin(theta) / varlambda)
+    return I_0 * single_slit_interference ** 2 * double_slit_interference ** 2
 
 
 # Read in the measurement data from the file generated above:
@@ -70,22 +70,21 @@ data = XYContainer.from_file("02_double_slit_data.yml")
 fit = Fit(data=data, model_function=intensity, minimizer="iminuit")
 
 # Optional: assign LaTeX names for prettier fit info box:
-fit.assign_parameter_latex_names(theta=r'\theta', i_0='I_0', b='b', g='g', wavelength=r'\lambda')
 fit.assign_model_function_latex_name('I')
 fit.assign_model_function_latex_expression(
-    r"{i_0}\,\left(\frac{{\sin(\frac{{\pi}}{{{wavelength}}}\,b\,\sin{{{theta}}})}}"
-    r"{{\frac{{\pi}}{{{wavelength}}}\,b\,\sin{{{theta}}}}}"
-    r"\cos(\frac{{\pi}}{{{wavelength}}}\,g\,\sin{{{theta}}})\right)^2"
+    r"{I_0}\,\left(\frac{{\sin(\frac{{\pi}}{{{varlambda}}}\,b\,\sin{{{theta}}})}}"
+    r"{{\frac{{\pi}}{{{varlambda}}}\,b\,\sin{{{theta}}}}}"
+    r"\cos(\frac{{\pi}}{{{varlambda}}}\,g\,\sin{{{theta}}})\right)^2"
 )
 
 # Limit parameters to positive values to better model physical reality:
 eps = 1e-8
-fit.limit_parameter('i_0', lower=eps)
+fit.limit_parameter('I_0', lower=eps)
 fit.limit_parameter('b', lower=eps)
 fit.limit_parameter('g', lower=eps)
 
 # Set fit parameters to near guesses to improve convergence:
-fit.set_parameter_values(i_0=1., b=20e-6, g=50e-6)
+fit.set_parameter_values(I_0=1., b=20e-6, g=50e-6)
 
 # The fit parameters have no preference in terms of values.
 # Their profiles are highly distorted, indicating a very non-linear fit.
@@ -94,7 +93,7 @@ fit.set_parameter_values(i_0=1., b=20e-6, g=50e-6)
 # f.add_parameter_constraint('g', value=50e-6, uncertainty=1e-6)
 
 # Fix the laser wavelength to 647.1 nm (krypton laser) since its uncertainty is negligible:
-fit.fix_parameter('wavelength', value=647.1e-9)
+fit.fix_parameter('varlambda', value=647.1e-9)
 
 # Fit objects can also be saved to files:
 fit.to_file('02_double_slit.yml')
@@ -106,7 +105,7 @@ fit.to_file('02_double_slit.yml')
 fit.do_fit()
 
 cpf = ContoursProfiler(fit)
-cpf.plot_profiles_contours_matrix(parameters=['i_0', 'b', 'g'],
+cpf.plot_profiles_contours_matrix(parameters=['I_0', 'b', 'g'],
                                   show_grid_for='all',
                                   show_fit_minimum_for='all',
                                   show_error_span_profiles=True,
@@ -118,7 +117,6 @@ cpf.plot_profiles_contours_matrix(parameters=['i_0', 'b', 'g'],
 
 # To see the fit results, plot using Plot:
 p = Plot(fit_objects=fit)
-p.x_label = r"$\theta$"
 p.y_label = r"$I$"
 p.plot(asymmetric_parameter_errors=True)
 

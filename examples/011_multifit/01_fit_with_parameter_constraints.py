@@ -76,19 +76,17 @@ from kafe2 import XYFit, Plot
 
 
 # empirical model for T(U): a parabola
-# independent variable MUST be named x!
-def empirical_T_U_model(x, p2=1.0, p1=1.0, p0=0.0):
+def empirical_T_U_model(U, p_2=1.0, p_1=1.0, p_0=0.0):
     # use quadratic model as empirical temperature dependence T(U)
-    return p2 * x**2 + p1 * x + p0
+    return p_2 * U**2 + p_1 * U + p_0
 
 
 # model of current-voltage dependence I(U) for a heating resistor
-# independent variable MUST be named x!
-def I_U_model(x, R0=1., alph=0.004, p2=1.0, p1=1.0, p0=0.0):
+def I_U_model(U, R_0=1., alpha=0.004, p_2=1.0, p_1=1.0, p_0=0.0):
     # use quadratic model as empirical temperature dependence T(U)
-    _temperature = empirical_T_U_model(x, p2, p1, p0)
+    _temperature = empirical_T_U_model(U, p_2, p_1, p_0)
     # plug the temperature into the model
-    return x / (R0 * (1.0 + _temperature * alph))
+    return U / (R_0 * (1.0 + _temperature * alpha))
 
 
 # -- Next, read the data from an external file
@@ -112,9 +110,8 @@ auxiliary_fit.data_container.label = "Temperature data"
 auxiliary_fit.model_label = "Parametrization"
 
 # (Optional): Assign names for models and parameters
-auxiliary_fit.assign_parameter_latex_names(x='U', p2='p_2', p1='p_1', p0='p_0')
-auxiliary_fit.assign_model_function_expression('{1}*{x}^2 + {2}*{x} + {3}')
-auxiliary_fit.assign_model_function_latex_expression(r'{1}\,{x}^2 + {2}\,{x} + {3}')
+auxiliary_fit.assign_model_function_expression('{1}*{U}^2 + {2}*{U} + {3}')
+auxiliary_fit.assign_model_function_latex_expression(r'{1}\,{U}^2 + {2}\,{U} + {3}')
 
 # declare errors on U
 auxiliary_fit.add_error(axis='x', err_val=sigU)
@@ -155,9 +152,9 @@ main_fit.data_container.label = "Current data"
 main_fit.model_label = "Temperature-dependent conductance"
 
 # (Optional): Assign names for models and parameters
-main_fit.assign_parameter_latex_names(x='U', p2='p_2', p1='p_1', p0='p_0', R0='R_0', alph=r'\alpha_\mathrm{T}')
-main_fit.assign_model_function_expression('{x} / ({0} * (1 + ({2}*{x}^2 + {3}*{x} + {4}) * {1}))')
-main_fit.assign_model_function_latex_expression(r'\frac{{{x}}}{{{0} \cdot (1 + ({2}{x}^2 + {3}{x} + {4}) \cdot {1})}}')
+main_fit.assign_parameter_latex_names(alpha=r'\alpha_\mathrm{T}')
+main_fit.assign_model_function_expression('{U} / ({0} * (1 + ({2}*{U}^2 + {3}*{U} + {4}) * {1}))')
+main_fit.assign_model_function_latex_expression(r'\frac{{{U}}}{{{0} \cdot (1 + ({2}{U}^2 + {3}{U} + {4}) \cdot {1})}}')
 
 # Step 4: do the fit
 main_fit.do_fit()

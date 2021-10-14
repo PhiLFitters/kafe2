@@ -36,7 +36,7 @@ y_errors:
   type: simple
 
 model_function: |
-  def exponential_model(x, A0=1., x0=5.):
+  def exponential_model(x, A_0=1., x_0=5.):
       # Our second model is a simple exponential function
       # The kwargs in the function header specify parameter defaults.
-      return A0 * np.exp(x/x0)
+      return A_0 * np.exp(x/x_0)

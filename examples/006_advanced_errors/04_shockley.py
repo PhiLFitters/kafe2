@@ -34,20 +34,20 @@ import matplotlib.pyplot as plt
 
 
 # model function to fit
-def Shockley(U, I_s=0.5, U0=0.03):
+def Shockley(U, I_S=0.5, U_0=0.03):
     """Parametrisation of a diode characteristic
-    U0 should be limited such that  U/U0<150 to avoid
+    U_0 should be limited such that  U/U_0<150 to avoid
     exceeding the 64 bit floating point range
 
     Args:
       - U: Voltage (V)
-      - I_s: reverse saturation current (nA)
-      - U0: thermal voltage (V) * emission coefficient
+      - I_S: reverse saturation current (nA)
+      - U_0: thermal voltage (V) * emission coefficient
     
     Returns:
       - float I: diode current (mA)
   """
-    return 1E-6 * I_s * np.exp((U / U0) - 1.)
+    return 1E-6 * I_S * np.exp((U / U_0) - 1.)
 
 
 # measurements:
@@ -111,8 +111,8 @@ ShockleyFit.add_error(axis='x', err_val=crel_U, correlation=1.,
                       relative=True, reference='model')
 ShockleyFit.add_error(axis='y', err_val=crel_I, correlation=1.,
                       relative=True, reference='model')
-# to avoid overflow of 64 bit floats, limit U0
-ShockleyFit.limit_parameter('U0', lower=0.005)
+# to avoid overflow of 64 bit floats, limit U_0
+ShockleyFit.limit_parameter('U_0', lower=0.005)
 
 ShockleyFit.do_fit()
 

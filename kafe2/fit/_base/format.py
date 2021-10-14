@@ -8,6 +8,12 @@ from ..io.file import FileIOMixin
 __all__ = ["FormatterException", "ScalarFormatter", "ParameterFormatter", "FunctionFormatter",
            "ModelFunctionFormatter", "CostFunctionFormatter", "latexify_ascii"]
 
+LATEX_GREEK_LETTERS = [
+    "alpha", "beta", "gamma", "Gamma", "delta", "Delta", "epsilon", "zeta", "eta", "theta", "Theta",
+    "vartheta", "iota", "kappa", "varlambda", "Lambda", "mu", "nu", "omicron", "pi", "Pi", "rho",
+    "sigma", "Sigma", "tau", "upsilon", "Upsilon", "phi", "Phi", "varphi", "chi", "psi", "Psi",
+    "omega", "Omega"
+]
 
 # -- formatters for model parameters and model functions
 def latexify_ascii(ascii_string):
@@ -17,6 +23,34 @@ def latexify_ascii(ascii_string):
     :type ascii_string: str
     :rtype: str
     """
+    if ascii_string is None:
+        return None
+    if len(ascii_string) == 1:
+        return r"{%s}" % ascii_string
+    elif re.compile("^[\d\w]_[\d\w]$").match(ascii_string):
+        return ascii_string
+    _greek_letter_string = None
+    for _greek_letter in LATEX_GREEK_LETTERS:
+        if ascii_string == _greek_letter:
+            _greek_letter_string = r"{\%s}" % _greek_letter
+            break
+        if re.compile("^%s_[\d\w]$" % _greek_letter).match(ascii_string):
+            _greek_letter_string = r"{\%s}" % ascii_string
+            break
+        if re.compile("^[\d\w]_%s$" % _greek_letter).match(ascii_string):
+            _greek_letter_string = r"{%s_\%s}" % (ascii_string[:1], _greek_letter)
+            break
+        if ascii_string.startswith(_greek_letter):
+            for _greek_letter_2 in LATEX_GREEK_LETTERS:
+                if ascii_string == _greek_letter + "_" + _greek_letter_2:
+                    _greek_letter_string = r"{\%s_\%s}" % (_greek_letter, _greek_letter_2)
+                    break
+            if _greek_letter_string is not None:
+                break
+
+    if _greek_letter_string is not None:
+        return re.sub("varlambda", "lambda", _greek_letter_string)
+
     _lpn = ascii_string.replace('_', r"\_")
     return r"{\tt %s}" % _lpn
 
