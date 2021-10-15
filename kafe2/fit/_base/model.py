@@ -54,7 +54,8 @@ class ModelFunctionBase(FileIOMixin, object):
         """
         # determine library function from string specification
         if isinstance(model_function, str):
-            self._model_function_handle = function_library.STRING_TO_FUNCTION.get(model_function, None)
+            self._model_function_handle = function_library.STRING_TO_FUNCTION.get(
+                model_function, None)
             if not self._model_function_handle:
                 raise self.__class__.EXCEPTION_TYPE('Unknown model function: %s' % model_function)
             self._callable = self._model_function_handle
@@ -129,7 +130,19 @@ class ModelFunctionBase(FileIOMixin, object):
         return [ParameterFormatter(_arg_name) for _arg_name in self.signature.parameters.keys()]
 
     def _assign_function_formatter(self):
-        self._formatter = self.__class__.FORMATTER_TYPE(self.name, arg_formatters=self._get_argument_formatters())
+        self._formatter = self.__class__.FORMATTER_TYPE(
+            self.name, arg_formatters=self._get_argument_formatters())
+        try:
+            self._formatter.expression_format_string = \
+                self._model_function_handle.expression_format_string
+        except AttributeError:
+            pass
+        try:
+            self._formatter.latex_expression_format_string = \
+                self._model_function_handle.latex_expression_format_string
+        except AttributeError:
+            pass
+
 
     def __call__(self, *args, **kwargs):
         return self._callable(*args, **kwargs)

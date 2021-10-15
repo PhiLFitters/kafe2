@@ -13,12 +13,20 @@ def linear_model_derivative(x, a, b):
     return np.ones_like(x) * a
 
 
+linear_model.expression_format_string = "{a} * {x} + {b}"
+linear_model.latex_expression_format_string = r"{a} \, {x} + {b}"
+
+
 def quadratic_model(x, a, b, c):
     return a * x ** 2 + b * x + c
 
 
 def quadratic_model_derivative(x, a, b, c):
     return 2 * a * x + b
+
+
+quadratic_model.expression_format_string = "{a} * {x} ** 2 + {b} * {x} + {c}"
+quadratic_model.latex_expression_format_string = r"{a} \, {x}^2 + {b} \, {x} + {c}"
 
 
 def cubic_model(x, a, b, c, d):
@@ -29,16 +37,31 @@ def cubic_model_derivative(x, a, b, c, d):
     return 3 * a * x ** 2 + 2 * b * x + c
 
 
-def exponential_model(x, A0, x0):
-    return A0 * np.exp(x / x0)
+cubic_model.expression_format_string = "{a} * {x} ** 3 + {b} * {x} ** 2 + {c} * {x} + {d}"
+cubic_model.latex_expression_format_string = r"{a} \, {x}^3 + {b} \, {x}^2 + {c} \, {x} + {d}"
 
 
-def exponential_model_derivative(x, A0, x0):
-    return A0 * np.exp(x / x0)
+def exponential_model(x, A_0, x_0):
+    return A_0 * np.exp(x / x_0)
+
+
+def exponential_model_derivative(x, A_0, x_0):
+    return A_0 * np.exp(x / x_0)
+
+
+exponential_model.expression_format_string = "{A_0} * exp({x} / {x_0})"
+exponential_model.latex_expression_format_string = r"{A_0} \, e^{{{x} \ / {x_0}}}"
 
 
 def normal_distribution_pdf(x, mu, sigma):
     return np.exp(-0.5 * ((x - mu) / sigma) ** 2) / np.sqrt(2.0 * np.pi * sigma ** 2)
+
+
+normal_distribution_pdf.expression_format_string = \
+    "1 / sqrt(2 * pi * {sigma}) * exp(-0.5 * (({x} - {mu}) / {sigma}) ** 2)"
+normal_distribution_pdf.latex_expression_format_string = \
+    (r"\frac{{1}}{{2 \pi {sigma}}} e^{{- \frac{{1}}{{2}}"
+    r"\left( \frac{{{x} - {mu}}}{{{sigma}}} \right)^2 }}")
 
 
 STRING_TO_FUNCTION = {
