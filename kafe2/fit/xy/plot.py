@@ -47,7 +47,7 @@ class XYPlotAdapter(PlotAdapterBase):
         """
         self._fit = xy_fit_object  # needed for type hinting to work correctly
         super(XYPlotAdapter, self).__init__(fit_object=xy_fit_object)
-        self.n_plot_points = 100 if len(self.data_x) < 25 else 4*len(self.data_x)
+        self.n_plot_points = max(200, 4*len(self.data_x))
         self.x_range = add_pad_to_range(self._fit.x_range, scale=self.x_scale)
 
     # -- public properties

@@ -69,7 +69,7 @@ class TestXYPlot(unittest.TestCase):
         self.assertNotEqual(x_range_lin, x_range_log)
         self.plot.x_range = (1e-3, 4)
         self.assertItemsEqual(self.plot._get_plot_adapters()[0].model_line_x,
-                              np.geomspace(1e-3, 4, 100))
+                              np.geomspace(1e-3, 4, 200))
         self.plot.plot()
         self.assertEqual(self.plot.axes[0]['main'].get_xscale(), 'log')
 
