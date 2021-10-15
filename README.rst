@@ -25,22 +25,24 @@ models. The numeric aspects are handled using the scientific Python
 stack (NumPy, SciPy, ...). Visualization of the data and the estimated
 model are provided by matplotlib.
 
-While *kafe2* supports both Python 2 and Python 3, the use of Python 3 is recommended.
-
-If you encounter any bugs or have an improvement proposal, please let us
-know by opening an issue `here <https://github.com/dsavoiu/kafe2/issues>`_.
-
-Documentation on how to get started, including installation instructions, can be found under
-`kafe2.readthedocs.io <https://kafe2.readthedocs.io/>`_.
-
-If you have the package installer for Python just run
+If you have installed pip just run
 
 .. code-block:: bash
 
     pip install kafe2
 
 to install the latest stable version and you're ready to go.
+As of *kafe2* v2.4.0 only Python 3 is supported.
 
-**Warning**
-*kafe2* versions 2.3.x are the latest versions which support Python 2.
-Python 2 support will be dropped for all future releases.
+The documentation under `kafe2.readthedocs.io <https://kafe2.readthedocs.io/>`_
+has more detailed installation instructions.
+It also explains basic *kafe2* features as well as the mathematical foundations
+upon which *kafe2* is built.
+
+If you prefer a more practical approach you can instead look at the various
+`examples <https://github.com/dsavoiu/kafe2/tree/master/examples>`_.
+In addition to the regular Python/kafe2go files there are also Jupyter notebook
+tutorials (in English and in German) that mostly cover the same topics.
+
+If you encounter any bugs or have an improvement proposal, please let us
+know by opening an issue `here <https://github.com/dsavoiu/kafe2/issues>`_.

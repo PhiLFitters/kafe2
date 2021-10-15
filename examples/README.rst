@@ -2,8 +2,8 @@ This directory contains examples for *kafe2*:
 files that illustrate how to use *kafe2* for various use cases.
 Because *kafe2* is intended as a tool for beginners these examples don't get into too much technical
 detail.
-For a more detailed explanation for why things are the way they are consult the files in the
-*case_studies* directory.
+For a more detailed explanation for why things are the way they are consult the
+`documentation <https://kafe2.readthedocs.io/en/latest/parts/mathematical_foundations.html>`.
 
 A quick overview of the examples available:
 
@@ -27,6 +27,7 @@ A quick overview of the examples available:
 * **010_unbinned_fit**: How to fit a probability distribution to data without binning it.
 * **011_multifit**: How to handle several fits using the same parameters.
   Either use constraints or a MultiFit.
+* **012_custom_fit**: How to define a fit using only a cost function without explicit model or data.
 
 All examples are available as Python scripts.
 Some are also available as YAML files intended for *kafe2go* (under progress).
