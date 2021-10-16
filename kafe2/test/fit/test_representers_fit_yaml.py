@@ -270,9 +270,7 @@ parametric_model:
     bin_range: [-2.0, 2.0]
     model_density_function:
         type: histogram
-        python_code: |
-            def hist_model_density(x, mu, sigma):
-                return np.exp(-0.5 * ((x - mu) / sigma) ** 2) / np.sqrt(2 * np.pi * sigma ** 2)
+        python_code: 'x mu sigma -> exp(-0.5 * ((x - mu) / sigma)^2) / sqrt(2 * pi * sigma ** 2)'
     model_parameters: [0.1, 1.0]
 parameter_constraints:
       - type: simple
@@ -704,9 +702,7 @@ parametric_model:
     type: xy
     x_data: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
     model_function:
-        python_code: |
-            def linear_model(x, a, b):
-                return a * x + b
+        python_code: 'x a b -> a * x + b'
     model_parameters: [1.5, -0.5]
 parameter_constraints:
       - type: simple

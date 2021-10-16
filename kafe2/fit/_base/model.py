@@ -1,10 +1,11 @@
 import abc
 import inspect
 import numpy as np
+import sympy as sp
 import six
 from collections import OrderedDict
 
-from .format import ParameterFormatter, ModelFunctionFormatter
+from .format import ParameterFormatter, ModelFunctionFormatter, latexify_ascii
 from ..io.file import FileIOMixin
 from ..util import function_library
 from ...config import kc
@@ -52,12 +53,44 @@ class ModelFunctionBase(FileIOMixin, object):
                                       model function will be treated as independent variables and will not be fitted.
         :type independent_argcount: int
         """
+        _custom_defaults = OrderedDict()
+        self._name = None
+
         # determine library function from string specification
         if isinstance(model_function, str):
             self._model_function_handle = function_library.STRING_TO_FUNCTION.get(
                 model_function, None)
+            if self._model_function_handle is None and "->" in model_function:
+                _symbol_string, _function_string = model_function.split("->")
+                _latex_name = None
+                if ":" in _symbol_string:
+                    self._name, _symbol_string = _symbol_string.split(":")
+                else:
+                    self._name = "model"
+                _latex_name = latexify_ascii(self._name)
+                _symbols = list(sp.symbols(_symbol_string))
+                for _i, _symbol_i in enumerate(_symbols):
+                    if _i < independent_argcount:
+                        continue
+                    _symbol_i_str = str(_symbol_i)
+                    if "=" in _symbol_i_str:
+                        _symbol_i_str, _values_str = _symbol_i_str.split("=")
+                        _symbol_i = sp.symbols(_symbol_i_str)
+                        _custom_defaults[_symbol_i_str] = float(_values_str)
+                        _symbols[_i] = _symbol_i
+                _symbolic_function = sp.sympify(_function_string)
+                self._model_function_handle = sp.lambdify(_symbols, _symbolic_function)
+                _latex_string = sp.latex(_symbolic_function)
+                _latex_string = _latex_string.replace(r"{", r"{{")
+                _latex_string = _latex_string.replace(r"}", r"}}")
+                for _symbol in _symbols:
+                    _latex_string = _latex_string.replace(r"{{%s}}" % _symbol, r"{%s}" % _symbol)
+
+                print(_latex_string)
+                self._model_function_handle.latex_name = _latex_name
+                self._model_function_handle.latex_expression_format_string = _latex_string
             if not self._model_function_handle:
-                raise self.__class__.EXCEPTION_TYPE('Unknown model function: %s' % model_function)
+                raise ValueError('Unknown model function: %s' % model_function)
             self._callable = self._model_function_handle
 
         # special handling of numpy vectorized functions
@@ -75,9 +108,12 @@ class ModelFunctionBase(FileIOMixin, object):
             raise ModelFunctionException("Cannot use {} as model function: "
                                          "object not callable!".format(model_function))
 
+        if self._name is None:
+            self._name = self._model_function_handle.__name__
+
         assert int(independent_argcount) >= 0, "The number of independent parameters must be greater than 0"
         self._independent_argcount = int(independent_argcount)
-        self._assign_model_function_signature_and_argcount()
+        self._assign_model_function_signature_and_argcount(_custom_defaults)
         self._validate_model_function_raise()
         self._assign_function_formatter()
         self._source_code = None
@@ -95,11 +131,16 @@ class ModelFunctionBase(FileIOMixin, object):
     def _get_default(cls):
         return function_library.linear_model
 
-    def _assign_model_function_signature_and_argcount(self):
+    def _assign_model_function_signature_and_argcount(self, custom_defaults={}):
         self._model_function_signature = signature(self._model_function_handle)
         self._model_function_argcount = self._model_function_handle.__code__.co_argcount
         # remove the amount of independent variables from the parameter count
         self._model_function_parcount = self._model_function_argcount - self._independent_argcount
+        if custom_defaults:
+            self.defaults = [
+                custom_defaults.get(_p_name, _p_val)
+                for _p_name, _p_val in self.defaults_dict.items()
+            ]
 
     def _validate_model_function_raise(self):
         # evaluate general model function requirements
@@ -133,6 +174,12 @@ class ModelFunctionBase(FileIOMixin, object):
         self._formatter = self.__class__.FORMATTER_TYPE(
             self.name, arg_formatters=self._get_argument_formatters())
         try:
+            _latex_name = self._model_function_handle.latex_name
+            if _latex_name is not None:
+                self._formatter.latex_name = _latex_name
+        except AttributeError:
+            pass
+        try:
             self._formatter.expression_format_string = \
                 self._model_function_handle.expression_format_string
         except AttributeError:
@@ -143,14 +190,13 @@ class ModelFunctionBase(FileIOMixin, object):
         except AttributeError:
             pass
 
-
     def __call__(self, *args, **kwargs):
         return self._callable(*args, **kwargs)
 
     @property
     def name(self):
         """The model function name (a valid Python identifier)"""
-        return self._model_function_handle.__name__
+        return self._name
 
     @property
     def func(self):
@@ -183,6 +229,11 @@ class ModelFunctionBase(FileIOMixin, object):
         if self._independent_argcount == 1:
             return _pars[0]
         return _pars[0:self._independent_argcount]
+
+    @property
+    def parameter_names(self):
+        """The names of the parameters."""
+        return list(self.signature.parameters.keys())[self._independent_argcount:]
 
     @property
     def formatter(self):
@@ -270,7 +321,7 @@ class ParametricModelBaseMixin(object):
             self._model_function_object = self.MODEL_FUNCTION_TYPE(model_func)
         self.parameters = model_parameters
         super(ParametricModelBaseMixin, self).__init__(*args, **kwargs)
-        self.label = self._model_function_object.formatter.name
+        self.label = "$%s$" % self._model_function_object.formatter.latex_name
 
     @classmethod
     def _get_base_class(cls):

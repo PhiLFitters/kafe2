@@ -35,8 +35,4 @@ y_errors:
   relative: true  # use relative errors, in this case 5% of each value
   type: simple
 
-model_function: |
-  def exponential_model(x, A_0=1., x_0=5.):
-      # Our second model is a simple exponential function
-      # The kwargs in the function header specify parameter defaults.
-      return A_0 * np.exp(x/x_0)
+model_function: "exponential_model: x A_0 x_0 -> A_0 * exp(x / x_0)"

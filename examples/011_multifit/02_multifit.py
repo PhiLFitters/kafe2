@@ -72,7 +72,6 @@ def empirical_T_U_model(U, p_2=1.0, p_1=1.0, p_0=0.0):
     # use quadratic model as empirical temperature dependence T(U)
     return p_2 * U**2 + p_1 * U + p_0
 
-
 # model of current-voltage dependence I(U) for a heating resistor
 def I_U_model(U, R_0=1., alpha=0.004, p_2=1.0, p_1=1.0, p_0=0.0):
     # use quadratic model as empirical temperature dependence T(U)
@@ -93,13 +92,19 @@ T -= T0  # Measurements are in Kelvin, convert to °C
 # -- Finally, go through the fitting procedure
 
 # Step 1: construct the singular fit objects
-fit_1 = XYFit(xy_data=[U, T], model_function=empirical_T_U_model)
+fit_1 = XYFit(
+    xy_data=[U, T],
+    model_function="empirical_T_U_model: U p_2 p_1 p_0 -> p_2 * U^2 + p_1 * U + p_0"
+)
 fit_1.add_error(axis='y', err_val=sigT)  # declare errors on T
 fit_1.data_container.axis_labels = ("Voltage (V)", "Temperature (°C)")
 fit_1.data_container.label = "Temperature data"
 fit_1.model_label = "Parametrization"
 
-fit_2 = XYFit(xy_data=[U, I], model_function=I_U_model)
+fit_2 = XYFit(
+    xy_data=[U, I],
+    model_function="I_U_model: U R_0 alpha=4e-3 p_2 p_1 p_0 -> U / (R_0 * (1 + alpha * (p_2 * U^2 + p_1 * U + p_0)))"
+)
 fit_2.add_error(axis='y', err_val=sigI)  # declare errors on I
 fit_2.data_container.axis_labels = ("Voltage (V)", "Current (A)")
 fit_2.data_container.label = "Current data"
@@ -107,17 +112,13 @@ fit_2.model_label = "Temperature-dependent conductance"
 
 # Step 2: construct a MultiFit object
 multi_fit = MultiFit(fit_list=[fit_1, fit_2], minimizer='iminuit')
+#multi_fit.set_parameter_values(alpha=0.004)
 
 # Step 3: Add a shared error error for the x axis.
 multi_fit.add_error(axis='x', err_val=sigU, fits='all')
 
 # (Optional): assign names for models and parameters
 multi_fit.assign_parameter_latex_names(alpha=r'\alpha_\mathrm{T}')
-
-multi_fit.assign_model_function_expression('{1}*{U}^2 + {2}*{U} + {3}', fit_index=0)
-multi_fit.assign_model_function_latex_expression(r'{1}\,{U}^2 + {2}\,{U} + {3}', fit_index=0)
-multi_fit.assign_model_function_expression('{U} / ({1} * (1 + ({3}*{U}^2 + {4}*{U} + {5}) * {2}))', fit_index=1)
-multi_fit.assign_model_function_latex_expression(r'\frac{{{U}}}{{{1} \cdot (1 + ({3}{U}^2 + {4}{U} + {5}) \cdot {2})}}', fit_index=1)
 
 # Step 4: do the fit
 multi_fit.do_fit()

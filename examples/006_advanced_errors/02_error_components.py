@@ -63,7 +63,10 @@ BW_data.axis_labels = ('CM Energy (GeV)', r'$\sigma_h$ (nb)')
 # Note: Because kafe2 containers are copied when a Fit object is created from them assigning labels
 # to the original XYContainer after the fit has already been created would NOT work.
 
-BW_fit = Fit(BW_data, BreitWigner)
+BW_fit = Fit(
+    BW_data,
+    "BreitWigner: x s0 M_Z G_Z -> s0 * x^2 * G_Z^2 / ((x^2 - M_Z^2)^2 + x^4 * G_Z^2 / M_Z^2)"
+)
 
 # Uncomment the following two lines to assign data labels after the fit has already been created:
 # BW_fit.data_container.label = 'QED-corrected hadronic cross-sections'
@@ -73,10 +76,7 @@ BW_fit = Fit(BW_data, BreitWigner)
 BW_fit.model_label = 'Beit-Wigner with s-dependent width'
 
 # Set LaTeX names for printout in info-box:
-BW_fit.assign_parameter_latex_names(s0=r'\sigma^0')
-BW_fit.assign_model_function_latex_name(r'\sigma^{\rm ew}_{e^+e^-\to{\rm hadrons}}')
-BW_fit.assign_model_function_latex_expression(
-               r'{s0}\frac{{ {E}^2{G_Z}^2}}{{({E}^2-{M_Z}^2)^2+({E}^4{G_Z}^2/{M_Z}^2)}}')
+BW_fit.assign_parameter_latex_names(x='E', s0=r'\sigma^0')
 
 # Do the fit:
 BW_fit.do_fit()

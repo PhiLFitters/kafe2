@@ -11,9 +11,7 @@ from kafe2.fit.representation._yaml_base import YamlReaderException
 
 TEST_MODEL_FUNCTION_HIST = """
 type: histogram
-python_code: |
-    def linear_model(x, a, b):
-        return a * x + b
+python_code: 'x a b -> a * x + b'
 """
 
 TEST_MODEL_FUNCTION_HIST_MISSING_KEYWORD="""
@@ -287,9 +285,7 @@ class TestIndexedModelFunctionYamlRepresenter(unittest.TestCase):
 
 
 TEST_MODEL_FUNCTION_BASE = """
-python_code: |
-    def linear_model(x, a, b):
-        return a * x + b
+python_code: 'x a b -> a * x + b'
 """
 
 TEST_MODEL_FUNCTION_BASE_MISSING_KEYWORD = """

@@ -27,8 +27,10 @@ def latexify_ascii(ascii_string):
         return None
     if len(ascii_string) == 1:
         return r"{%s}" % ascii_string
-    elif re.compile("^[\d\w]_[\d\w]$").match(ascii_string):
+    if ascii_string.startswith("{") and ascii_string.endswith("}"):
         return ascii_string
+    elif re.compile("^[\d\w]_[\d\w]$").match(ascii_string):
+        return r"{%s}" % ascii_string
     _greek_letter_string = None
     for _greek_letter in LATEX_GREEK_LETTERS:
         if ascii_string == _greek_letter:

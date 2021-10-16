@@ -144,10 +144,9 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
             raise YamlReaderException("Unknown model function class: %s" % _class)
 
         _raw_string = yaml_doc.pop("python_code")
-        _function_library_entry = function_library.STRING_TO_FUNCTION.get(_raw_string, None)
-        if _function_library_entry:
-            _model_function_object = _class(_function_library_entry)
-        else:
+        try:
+            _model_function_object = _class(_raw_string)
+        except ValueError:
             _parsed_function = _parse_function(_raw_string)
             _model_function_object = _class(_parsed_function)
             _model_function_object._source_code = _raw_string
