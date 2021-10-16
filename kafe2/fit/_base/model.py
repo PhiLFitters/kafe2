@@ -270,6 +270,7 @@ class ParametricModelBaseMixin(object):
             self._model_function_object = self.MODEL_FUNCTION_TYPE(model_func)
         self.parameters = model_parameters
         super(ParametricModelBaseMixin, self).__init__(*args, **kwargs)
+        self.label = self._model_function_object.formatter.name
 
     @classmethod
     def _get_base_class(cls):
