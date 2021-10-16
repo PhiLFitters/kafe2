@@ -1,10 +1,11 @@
 import abc
 import inspect
 import numpy as np
+import sympy as sp
 import six
 from collections import OrderedDict
 
-from .format import ParameterFormatter, ModelFunctionFormatter
+from .format import ParameterFormatter, ModelFunctionFormatter, latexify_ascii
 from ..io.file import FileIOMixin
 from ..util import function_library
 from ...config import kc
@@ -56,6 +57,24 @@ class ModelFunctionBase(FileIOMixin, object):
         if isinstance(model_function, str):
             self._model_function_handle = function_library.STRING_TO_FUNCTION.get(
                 model_function, None)
+            if self._model_function_handle is None:
+                _symbol_string, _function_string = model_function.split("->")
+                _latex_name = None
+                if ":" in _symbol_string:
+                    _latex_name, _symbol_string = _symbol_string.split(":")
+                    _latex_name = latexify_ascii(_latex_name)
+                else:
+                    _latex_name = latexify_ascii("model")
+                _symbols = sp.symbols(_symbol_string)
+                _symbolic_function = sp.sympify(_function_string)
+                self._model_function_handle = sp.lambdify(_symbols, _symbolic_function)
+                _symbol_names = {_symbol: r"{%s}" % _symbol for _symbol in _symbols}
+                _latex_string = sp.latex(_symbolic_function, symbol_names=_symbol_names)
+                for _i in range(1000):
+                    _latex_string = _latex_string.replace(r"{%s}" % _i, r"{{%s}}" % _i)
+                print(_latex_string)
+                self._model_function_handle.latex_name = _latex_name
+                self._model_function_handle.latex_expression_format_string = _latex_string
             if not self._model_function_handle:
                 raise self.__class__.EXCEPTION_TYPE('Unknown model function: %s' % model_function)
             self._callable = self._model_function_handle
@@ -132,6 +151,12 @@ class ModelFunctionBase(FileIOMixin, object):
     def _assign_function_formatter(self):
         self._formatter = self.__class__.FORMATTER_TYPE(
             self.name, arg_formatters=self._get_argument_formatters())
+        try:
+            _latex_name = self._model_function_handle.latex_name
+            if _latex_name is not None:
+                self._formatter.latex_name = _latex_name
+        except AttributeError:
+            pass
         try:
             self._formatter.expression_format_string = \
                 self._model_function_handle.expression_format_string
