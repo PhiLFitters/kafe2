@@ -39,5 +39,5 @@ model_density_function:
       mu: '\mu'
       sigma: '\sigma'
   python_code: |
-    def normal_distribution_pdf(x, mu, sigma):
+    def normal_distribution(x, mu, sigma):
         return np.exp(-0.5 * ((x - mu) / sigma) ** 2) / np.sqrt(2.0 * np.pi * sigma ** 2)

@@ -12,7 +12,7 @@ class UnbinnedParametricModelException(UnbinnedContainerException):
 
 
 class UnbinnedParametricModel(ParametricModelBaseMixin, UnbinnedContainer):
-    def __init__(self, data, model_density_function=function_library.normal_distribution_pdf,
+    def __init__(self, data, model_density_function=function_library.normal_distribution,
                  model_parameters=[1.0, 1.0]):
 
         self.support = np.array(data)

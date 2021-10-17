@@ -44,7 +44,7 @@ class HistParametricModel(ParametricModelBaseMixin, HistContainer):
 
     #TODO n_bins, bin_range, bin_edges contain redundant information, should the arguments for HistParametricModel be refactored?
     def __init__(self, n_bins, bin_range,
-                 model_density_func=function_library.normal_distribution_pdf,
+                 model_density_func=function_library.normal_distribution,
                  model_parameters=[1.0, 1.0], bin_edges=None, bin_evaluation="simpson"):
         super(HistParametricModel, self).__init__(
             model_density_func, model_parameters, n_bins, bin_range,

@@ -28,7 +28,7 @@ class HistFit(FitBase):
 
     def __init__(self,
                  data,
-                 model_density_function=function_library.normal_distribution_pdf,
+                 model_density_function=function_library.normal_distribution,
                  cost_function=CostFunction_NegLogLikelihood(
                     data_point_distribution='poisson'),
                  bin_evaluation="simpson",

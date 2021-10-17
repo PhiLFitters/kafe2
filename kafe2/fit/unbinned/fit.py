@@ -28,7 +28,7 @@ class UnbinnedFit(FitBase):
 
     def __init__(self,
                  data,
-                 model_density_function='normal_distribution_pdf',
+                 model_density_function='normal_distribution',
                  cost_function=UnbinnedCostFunction_NegLogLikelihood(),
                  minimizer=None,
                  minimizer_kwargs=None):
