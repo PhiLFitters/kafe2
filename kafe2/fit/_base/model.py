@@ -57,7 +57,7 @@ class ModelFunctionBase(FileIOMixin, object):
         if isinstance(model_function, str):
             self._model_function_handle = function_library.STRING_TO_FUNCTION.get(
                 model_function, None)
-            if self._model_function_handle is None:
+            if self._model_function_handle is None and "->" in model_function:
                 _symbol_string, _function_string = model_function.split("->")
                 _latex_name = None
                 if ":" in _symbol_string:
@@ -68,10 +68,13 @@ class ModelFunctionBase(FileIOMixin, object):
                 _symbols = sp.symbols(_symbol_string)
                 _symbolic_function = sp.sympify(_function_string)
                 self._model_function_handle = sp.lambdify(_symbols, _symbolic_function)
-                _symbol_names = {_symbol: r"{%s}" % _symbol for _symbol in _symbols}
+                _symbol_names = {_symbol: "\0\0\0%s\0\0\0" % _symbol for _symbol in _symbols}
                 _latex_string = sp.latex(_symbolic_function, symbol_names=_symbol_names)
-                for _i in range(1000):
-                    _latex_string = _latex_string.replace(r"{%s}" % _i, r"{{%s}}" % _i)
+                _latex_string = _latex_string.replace(r"{", r"{{")
+                _latex_string = _latex_string.replace(r"}", r"}}")
+                for _symbol, _symbol_name in _symbol_names.items():
+                    _latex_string = _latex_string.replace(_symbol_name, r"{%s}" % _symbol)
+
                 print(_latex_string)
                 self._model_function_handle.latex_name = _latex_name
                 self._model_function_handle.latex_expression_format_string = _latex_string
@@ -295,7 +298,7 @@ class ParametricModelBaseMixin(object):
             self._model_function_object = self.MODEL_FUNCTION_TYPE(model_func)
         self.parameters = model_parameters
         super(ParametricModelBaseMixin, self).__init__(*args, **kwargs)
-        self.label = self._model_function_object.formatter.name
+        self.label = "$%s$" % self._model_function_object.formatter.latex_name
 
     @classmethod
     def _get_base_class(cls):
