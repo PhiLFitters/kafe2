@@ -3,7 +3,7 @@ files that illustrate how to use *kafe2* for various use cases.
 Because *kafe2* is intended as a tool for beginners these examples don't get into too much technical
 detail.
 For a more detailed explanation for why things are the way they are consult the
-`documentation <https://kafe2.readthedocs.io/en/latest/parts/mathematical_foundations.html>`.
+`documentation <https://kafe2.readthedocs.io/en/latest/parts/mathematical_foundations.html>`_.
 
 A quick overview of the examples available:
 
