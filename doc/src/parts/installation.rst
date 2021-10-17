@@ -3,6 +3,7 @@
                          models to several types of data with
    :robots: index, follow
 
+.. _installing_kafe2:
 
 ******************
 Installing *kafe2*

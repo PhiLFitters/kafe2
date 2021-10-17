@@ -5,6 +5,7 @@
 
 .. role:: python(code)
 
+.. _developer_guide:
 
 ***************
 Developer Guide

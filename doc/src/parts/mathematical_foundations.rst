@@ -3,6 +3,8 @@
                          models to several types of data with
    :robots: index, follow
 
+.. _mathematical_foundations:
+
 ************************
 Mathematical Foundations
 ************************

@@ -21,8 +21,8 @@ An interactive `Jupyter <https://jupyter.org/>`_ Notebook teaching the usage of 
 `English <https://github.com/dsavoiu/kafe2/blob/master/examples/jupyter_tutorial_en.ipynb>`_ and
 `German <https://github.com/dsavoiu/kafe2/blob/master/examples/jupyter_tutorial_de.ipynb>`_.
 
-More detailed information for the advanced use of *kafe2* is found in the :ref:`user-guide` and
-in the :ref:`api-documentation`.
+More detailed information for the advanced use of *kafe2* is found in the :ref:`user_guide` and
+in the :ref:`user_guide_kafe2go`.
 
 Basic Fitting Procedure
 =======================

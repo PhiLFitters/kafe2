@@ -3,6 +3,8 @@
                          models to several types of data with
    :robots: index, follow
 
+.. _user_guide_kafe2go:
+
 *************
 kafe2go Guide
 *************

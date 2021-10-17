@@ -3,7 +3,7 @@
                          models to several types of data with
    :robots: index, follow
 
-.. _user-guide:
+.. _user_guide:
 
 **********
 User Guide

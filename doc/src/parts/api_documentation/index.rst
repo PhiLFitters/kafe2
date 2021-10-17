@@ -4,7 +4,7 @@
       uncertainties in both dimensions
    :robots: index, follow
 
-.. _api-documentation:
+.. _api_documentation:
 
 *****************
 API documentation
