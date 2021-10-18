@@ -8,12 +8,11 @@ python:
 # matrix of several CONDA_PYTHON_VERSIONs
 env:
   matrix:
-    - CONDA_PYTHON_VERSION=2.7.14
-    - CONDA_PYTHON_VERSION=2.7.15
-    - CONDA_PYTHON_VERSION=2.7.16
     - CONDA_PYTHON_VERSION=3.6
     - CONDA_PYTHON_VERSION=3.7
-
+    - CONDA_PYTHON_VERSION=3.8
+    - CONDA_PYTHON_VERSION=3.9
+    - CONDA_PYTHON_VERSION=3.10
 addons:
   apt:
     packages:
