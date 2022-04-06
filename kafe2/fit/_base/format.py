@@ -75,6 +75,7 @@ class ScalarFormatter(object):
         _sig = int(-np.floor(np.log10(self._sigma))) + self._n_significant_digits - 1
         # inner rounding needed for errors like 0.9999999 -> 1.0 (shift in decimal place)
         self._sig = int(-np.floor(np.log10(np.around(self._sigma, _sig)))) + self._n_significant_digits - 1
+        self._sig = max(0, self._sig)
 
     def __call__(self, x):
         """Format the input to the precision given by the uncertainty.

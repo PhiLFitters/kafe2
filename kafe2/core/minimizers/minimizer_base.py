@@ -404,7 +404,10 @@ class MinimizerBase(object):
         if not self.did_fit:
             return None
         if self._par_cor_mat is None:
-            _subcov_mat = self._remove_zeroes_for_fixed(self.cov_mat)
+            _cov_mat = self.cov_mat
+            if _cov_mat is None:
+                return None
+            _subcov_mat = self._remove_zeroes_for_fixed(_cov_mat)
             _subcor_mat = CovMat(_subcov_mat).cor_mat
             self._par_cor_mat = self._fill_in_zeroes_for_fixed(_subcor_mat)
         return self._par_cor_mat.copy()

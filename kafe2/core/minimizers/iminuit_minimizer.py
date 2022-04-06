@@ -175,7 +175,8 @@ class MinimizerIMinuit(MinimizerBase):
                 else:
                     # iminuit 2 already fills in zeros for fixed parameters.
                     _mat = self._get_iminuit().covariance
-                    _mat = np.asarray(_mat)
+                    if _mat is not None:
+                        _mat = np.asarray(_mat)
                 self._func_wrapper_unpack_args(self.parameter_values)
             except RuntimeError:
                 _mat = None
