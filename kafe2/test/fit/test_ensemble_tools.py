@@ -99,6 +99,7 @@ class TestCustomBroadcast(unittest.TestCase):
         self.assertEqual(_broadcasted_array.shape, _result_shape)
 
 
+@unittest.skip("Problem with collections.Sequence")
 class TestEnsembleVariable(unittest.TestCase):
 
     def setUp(self):
