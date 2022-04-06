@@ -418,20 +418,21 @@ class TestMultiFit(AbstractTestFit, unittest.TestCase):
             _split_data_2, TestMultiFit.quadratic_model_indexed_split_2)])
 
     @staticmethod
-    def _get_xy_data(err_x=0.01, err_y=0.01, a=1.2, b=2.3, c=3.4):
+    def _get_xy_data(err_x=0.01, err_y=0.01, a=0.2, b=2.3, c=13.4, relative_model_error=False):
         _x_0 = np.linspace(start=-10, stop=10, num=25, endpoint=True)
         _x_jitter = np.random.normal(loc=0, scale=err_x, size=25)
         _x_data = _x_0 + _x_jitter
 
         _y_0 = quadratic_model(_x_data, a, b, c)
-        _y_jitter = np.random.normal(loc=0, scale=err_y, size=25)
+        _y_scale = err_y if not relative_model_error else err_y * _y_0
+        _y_jitter = np.random.normal(loc=0, scale=_y_scale, size=25)
         _y_data = _y_0 + _y_jitter
 
         return np.array([_x_data, _y_data])
 
     def _get_xy_fit(self, xy_data):
         _err_x = dict(axis="x", err_val=0.01, name="x") if self._x_error is not None else None
-        _err_y = dict(axis="y", err_val=0.1, relative=True, reference="model", name="y") \
+        _err_y = dict(axis="y", err_val=0.01, relative=True, reference="model", name="y") \
             if self._relative_model_error else dict(axis="y", err_val=0.01, name="y")
         if self._x_error is None:
             _xy_fit = XYFit(
@@ -454,7 +455,7 @@ class TestMultiFit(AbstractTestFit, unittest.TestCase):
         return _xy_fit
 
     def _set_xy_fits(self):
-        self._xy_data = TestMultiFit._get_xy_data()
+        self._xy_data = TestMultiFit._get_xy_data(relative_model_error=self._relative_model_error)
         self._fit_xy_all = self._get_xy_fit(self._xy_data)
         self._split_data_1, self._split_data_2 = TestMultiFit._split_data(self._xy_data, axis=1)
         self._fit_xy_all_multi = MultiFit(
@@ -475,27 +476,27 @@ class TestMultiFit(AbstractTestFit, unittest.TestCase):
         ])
 
     def _set_expected_xy_par_values(self):
-        _x_err_val = 0.01 if self._x_error else 0.0
+        _x_err_val = 0.01 if self._x_error is not None else None
         # Note that when self._relative_model_error is True data errors are added here.
         self._expected_parameters_all = calculate_expected_fit_parameters_xy(
             x_data=self._xy_data[0], y_data=self._xy_data[1], model_function=quadratic_model,
-            y_error=0.1 * self._xy_data[1] if self._relative_model_error else 0.01,
-            initial_parameter_values=[1.0, 1.0, 1.0], x_error=_x_err_val,
-            model_function_derivative=quadratic_model_derivative
+            y_error=0.01, initial_parameter_values=[1.0, 1.0, 1.0], x_error=_x_err_val,
+            model_function_derivative=quadratic_model_derivative,
+            relative_model_y_error=self._relative_model_error
         )
         self._expected_parameters_split_1 = calculate_expected_fit_parameters_xy(
             x_data=self._split_data_1[0], y_data=self._split_data_1[1],
             model_function=quadratic_model,
-            y_error=0.1 * self._split_data_1[1] if self._relative_model_error else 0.01,
-            initial_parameter_values=[1.0, 1.0, 1.0], x_error=_x_err_val,
-            model_function_derivative=quadratic_model_derivative
+            y_error=0.01, initial_parameter_values=[1.0, 1.0, 1.0], x_error=_x_err_val,
+            model_function_derivative=quadratic_model_derivative,
+            relative_model_y_error=self._relative_model_error
         )
         self._expected_parameters_split_2 = calculate_expected_fit_parameters_xy(
             x_data=self._split_data_2[0], y_data=self._split_data_2[1],
             model_function=quadratic_model,
-            y_error=0.1 * self._split_data_2[1] if self._relative_model_error else 0.01,
-            initial_parameter_values=[1.0, 1.0, 1.0], x_error=_x_err_val,
-            model_function_derivative=quadratic_model_derivative
+            y_error=0.01, initial_parameter_values=[1.0, 1.0, 1.0], x_error=_x_err_val,
+            model_function_derivative=quadratic_model_derivative,
+            relative_model_y_error=self._relative_model_error
         )
 
     def setUp(self):
@@ -569,7 +570,7 @@ class TestMultiFitIntegrityCustom(TestMultiFit):
         self._x_error = "nonlinear"
         self._set_custom_fits()
         self._set_expected_xy_par_values()
-        self._assert_fits_match_expectation(atol=0, rtol=2.5e-5)
+        self._assert_fits_match_expectation(atol=0, rtol=5e-4)
 
 
 class TestMultiFitIntegrityHist(TestMultiFit):
@@ -640,31 +641,31 @@ class TestMultiFitIntegrityXY(TestMultiFit):
     def _assert_fits_match_expectation(self, atol, rtol):
         self._fit_xy_all.do_fit()
         self._assert_values_equal(
-            "all", self._expected_parameters_all, self._fit_xy_all.parameter_values,
+            "all", self._fit_xy_all.parameter_values, self._expected_parameters_all,
             atol=atol, rtol=rtol)
         self._fit_xy_all_multi.do_fit()
         self._assert_values_equal(
-            "all", self._expected_parameters_all, self._fit_xy_all_multi.parameter_values,
+            "all", self._fit_xy_all_multi.parameter_values, self._expected_parameters_all,
             atol=atol, rtol=rtol)
         self._fit_xy_split_multi.do_fit()
         self._assert_values_equal(
-            "all", self._expected_parameters_all, self._fit_xy_split_multi.parameter_values,
+            "all", self._fit_xy_split_multi.parameter_values, self._expected_parameters_all,
             atol=atol, rtol=rtol)
         self._fit_xy_split_1.do_fit()
         self._assert_values_equal(
-            "all", self._expected_parameters_split_1, self._fit_xy_split_1.parameter_values,
+            "all", self._fit_xy_split_1.parameter_values, self._expected_parameters_split_1,
             atol=atol, rtol=rtol)
         self._fit_xy_split_1_multi.do_fit()
         self._assert_values_equal(
-            "all", self._expected_parameters_split_1, self._fit_xy_split_1_multi.parameter_values,
+            "all", self._fit_xy_split_1_multi.parameter_values, self._expected_parameters_split_1,
             atol=atol, rtol=rtol)
         self._fit_xy_split_2.do_fit()
         self._assert_values_equal(
-            "all", self._expected_parameters_split_2, self._fit_xy_split_2.parameter_values,
+            "all", self._fit_xy_split_2.parameter_values, self._expected_parameters_split_2,
             atol=atol, rtol=rtol)
         self._fit_xy_split_2_multi.do_fit()
         self._assert_values_equal(
-            "all", self._expected_parameters_split_2, self._fit_xy_split_2_multi.parameter_values,
+            "all", self._fit_xy_split_2_multi.parameter_values, self._expected_parameters_split_2,
             atol=0, rtol=rtol)
 
     def test_properties_callable(self):
@@ -677,10 +678,11 @@ class TestMultiFitIntegrityXY(TestMultiFit):
         self._assert_fits_match_expectation(atol=0, rtol=1e-6)
 
     def test_parameter_values_match_expectation_relative_y_error_nonlinear(self):
+        self._x_error = "nonlinear"
         self._relative_model_error = True
         self._set_xy_fits()
         self._set_expected_xy_par_values()
-        self._assert_fits_match_expectation(atol=0, rtol=2e-3)
+        self._assert_fits_match_expectation(atol=0, rtol=1e-4)
 
     def test_parameter_values_match_expectation_relative_y_error_iterative(self):
         self._x_error = "iterative"
@@ -693,13 +695,13 @@ class TestMultiFitIntegrityXY(TestMultiFit):
         self._x_error = "nonlinear"
         self._set_xy_fits()
         self._set_expected_xy_par_values()
-        self._assert_fits_match_expectation(atol=0, rtol=2.5e-5)
+        self._assert_fits_match_expectation(atol=0, rtol=5e-4)
 
     def test_parameter_values_match_expectation_iterative_linear_x_error(self):
         self._x_error = "iterative"
         self._set_xy_fits()
         self._set_expected_xy_par_values()
-        self._assert_fits_match_expectation(atol=0, rtol=2.5e-5)
+        self._assert_fits_match_expectation(atol=0, rtol=5e-4)
 
     def test_split_fit_integrity_simple(self):
         self._set_xy_fits()

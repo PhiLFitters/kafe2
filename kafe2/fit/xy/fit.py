@@ -221,11 +221,11 @@ class XYFit(FitBase):
                and self._dynamic_error_algorithm == "iterative"
 
     def _second_fit_needed(self):
-        return bool(self._param_model.get_matching_errors({"relative": True, "axis": 1})) \
-               and self._dynamic_error_algorithm == "nonlinear"
+        return (bool(self._param_model.get_matching_errors({"relative": True, "axis": 1}))
+                or self.has_x_errors) and self._dynamic_error_algorithm == "nonlinear"
 
     def _get_node_names_to_freeze(self, first_fit):
-        if not self.has_x_errors or self._dynamic_error_algorithm == "iterative":
+        if self._dynamic_error_algorithm == "iterative" or (first_fit and self.has_x_errors):
             return self._PROJECTED_NODE_NAMES + super(
                 XYFit, self)._get_node_names_to_freeze(first_fit)
         else:
