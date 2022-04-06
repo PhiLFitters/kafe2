@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import numpy as np
 from scipy.optimize import minimize
-import unittest2 as unittest
+import unittest
 from kafe2.core.minimizers.minimizer_base import MinimizerException
 
 

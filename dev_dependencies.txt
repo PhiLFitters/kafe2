@@ -7,7 +7,6 @@ pyyaml
 six
 funcsigs
 tabulate
-unittest2
 coverage
 sphinx
 sphinx_bootstrap_theme

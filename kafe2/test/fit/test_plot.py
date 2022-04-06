@@ -1,4 +1,4 @@
-import unittest2 as unittest
+import unittest
 import sys
 import numpy as np
 from kafe2 import XYFit, Plot
@@ -68,8 +68,8 @@ class TestXYPlot(unittest.TestCase):
         # check if additional pad has adapted to new scale
         self.assertNotEqual(x_range_lin, x_range_log)
         self.plot.x_range = (1e-3, 4)
-        self.assertItemsEqual(self.plot._get_plot_adapters()[0].model_line_x,
-                              np.geomspace(1e-3, 4, 200))
+        self.assertTrue(
+            np.all(self.plot._get_plot_adapters()[0].model_line_x == np.geomspace(1e-3, 4, 200)))
         self.plot.plot()
         self.assertEqual(self.plot.axes[0]['main'].get_xscale(), 'log')
 

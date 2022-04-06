@@ -1,6 +1,6 @@
 import numpy as np
 import six
-import unittest2 as unittest
+import unittest
 
 from kafe2.core.minimizers import AVAILABLE_MINIMIZERS
 from kafe2.core.fitters.nexus import Nexus, Parameter, Function

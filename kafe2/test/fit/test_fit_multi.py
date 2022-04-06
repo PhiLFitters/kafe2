@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.stats import norm
-import unittest2 as unittest
+import unittest
 import six
 from abc import ABCMeta
 

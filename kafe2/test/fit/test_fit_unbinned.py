@@ -1,5 +1,5 @@
 import abc
-import unittest2 as unittest
+import unittest
 import numpy as np
 import six
 

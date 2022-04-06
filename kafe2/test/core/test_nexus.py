@@ -1,5 +1,5 @@
 import numpy as np
-import unittest2 as unittest
+import unittest
 
 from kafe2.core.fitters.nexus import (
     NodeBase,

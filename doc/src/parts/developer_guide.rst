@@ -42,7 +42,6 @@ Additionally, the following Python packages should be installed:
 * `six <https://pypi.org/project/six/>`_
 * `funcsigs <https://pypi.org/project/funcsigs/>`_
 * `tabulate <https://pypi.org/project/tabulate/>`_
-* `unittest2 <https://pypi.org/project/unittest2/>`_
 * `coverage <https://pypi.org/project/coverage/>`_
 * `Sphinx <https://pypi.org/project/Sphinx/>`_
 * `Sphinx Bootstrap Theme <https://pypi.org/project/sphinx-bootstrap-theme/>`_

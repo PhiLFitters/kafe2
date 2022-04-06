@@ -1,4 +1,4 @@
-import unittest2 as unittest
+import unittest
 
 from kafe2.core.confidence import ConfidenceLevel
 

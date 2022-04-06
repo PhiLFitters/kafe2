@@ -1,4 +1,4 @@
-import unittest2 as unittest
+import unittest
 from kafe2.test.core.minimizers._base import AbstractMinimizerTest, MinimizerException
 
 _cannot_import_IMinuit = False

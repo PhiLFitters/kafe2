@@ -1,4 +1,4 @@
-import unittest2 as unittest
+import unittest
 from kafe2.test.core.minimizers._base import AbstractMinimizerTest
 from kafe2.core.minimizers.scipy_optimize_minimizer import MinimizerScipyOptimize
 

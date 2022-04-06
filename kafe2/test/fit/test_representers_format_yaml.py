@@ -1,4 +1,4 @@
-import unittest2 as unittest
+import unittest
 from six import StringIO
 
 from kafe2.fit._base import ParameterFormatter, ModelFunctionFormatter
