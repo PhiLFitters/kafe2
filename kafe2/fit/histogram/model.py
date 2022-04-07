@@ -24,15 +24,15 @@ class HistModelFunctionException(ModelFunctionException):
 class HistModelFunction(ModelFunctionBase):
     EXCEPTION_TYPE = HistModelFunctionException
 
-    def __init__(self, model_density_function=None):
+    def __init__(self, model_function=None):
         """
         Construct :py:class:`XYModelFunction` object (a wrapper for a native Python function):
 
-        :param model_density_function: function handle
+        :param model_function: function handle
         """
         # TODO: default model function
         super(HistModelFunction, self).__init__(
-            model_function=model_density_function, independent_argcount=1)
+            model_function=model_function, independent_argcount=1)
 
 
 class HistParametricModelException(HistContainerException):

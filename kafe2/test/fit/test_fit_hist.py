@@ -125,7 +125,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         _fit = HistFit(
             data=self._ref_hist_cont,
-            model_density_function=model_density_function,
+            model_function=model_density_function,
             bin_evaluation=bin_evaluation,
             cost_function=cost_function,
             minimizer=self.MINIMIZER
@@ -253,7 +253,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         with self.assertRaises(HistFitException) as _exc:
             HistFit(data=self._ref_hist_cont,
-                    model_density_function=dummy_model,
+                    model_function=dummy_model,
                     minimizer=self.MINIMIZER)
 
         self.assertIn('reserved', _exc.exception.args[0])
@@ -265,7 +265,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         with self.assertRaises(HistModelFunctionException) as _exc:
             HistFit(data=self._ref_hist_cont,
-                    model_density_function=dummy_model,
+                    model_function=dummy_model,
                     bin_evaluation=dummy_model,
                     minimizer=self.MINIMIZER)
 
@@ -279,7 +279,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         with self.assertRaises(HistModelFunctionException) as _exc:
             HistFit(data=self._ref_hist_cont,
-                    model_density_function=dummy_model,
+                    model_function=dummy_model,
                     bin_evaluation=dummy_model,
                     minimizer=self.MINIMIZER)
 
@@ -294,7 +294,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         with self.assertRaises(HistModelFunctionException) as _exc:
             HistFit(data=self._ref_hist_cont,
-                    model_density_function=dummy_model,
+                    model_function=dummy_model,
                     bin_evaluation=dummy_model,
                     minimizer=self.MINIMIZER)
 
@@ -308,7 +308,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         with self.assertRaises(HistModelFunctionException) as _exc:
             HistFit(data=self._ref_hist_cont,
-                    model_density_function=dummy_model,
+                    model_function=dummy_model,
                     bin_evaluation=dummy_model,
                     minimizer=self.MINIMIZER)
 
@@ -322,7 +322,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         with self.assertRaises(HistModelFunctionException) as _exc:
             HistFit(data=self._ref_hist_cont,
-                    model_density_function=dummy_model,
+                    model_function=dummy_model,
                     bin_evaluation=dummy_model,
                     minimizer=self.MINIMIZER)
 
@@ -340,7 +340,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         with self.assertRaises(ValueError) as _exc:
             HistFit(data=self._ref_hist_cont,
-                    model_density_function=dummy_model,
+                    model_function=dummy_model,
                     bin_evaluation=dummy_model_antiderivative,
                     minimizer=self.MINIMIZER)
 
@@ -353,7 +353,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         # should not raise an error
         HistFit(data=self._ref_hist_cont,
-                model_density_function=legendre_grade_2,
+                model_function=legendre_grade_2,
                 bin_evaluation=legendre_grade_2_integrated,
                 minimizer=self.MINIMIZER)
 

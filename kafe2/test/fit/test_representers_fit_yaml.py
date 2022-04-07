@@ -380,7 +380,7 @@ class TestHistFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
         _data = HistContainer(n_bins=self._test_n_bins, bin_range=self._test_bin_range, fill_data=self._test_raw_data)
         self._fit = HistFit(
             data=_data,
-            model_density_function=TestHistFitYamlRepresenter.hist_model_density
+            model_function=TestHistFitYamlRepresenter.hist_model_density
         )
         self._fit.add_error(err_val=0.1)
         self._fit.add_parameter_constraint("mu", 0.1, 1.0)

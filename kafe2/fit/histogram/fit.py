@@ -28,7 +28,7 @@ class HistFit(FitBase):
 
     def __init__(self,
                  data,
-                 model_density_function=function_library.normal_distribution,
+                 model_function=function_library.normal_distribution,
                  cost_function=CostFunction_NegLogLikelihood(
                     data_point_distribution='poisson'),
                  bin_evaluation="simpson",
@@ -46,8 +46,8 @@ class HistFit(FitBase):
 
         :param data: a :py:class:`~kafe2.fit.hist.HistContainer` representing histogrammed data
         :type data: :py:class:`~kafe2.fit.hist.HistContainer`
-        :param model_density_function: the model density function
-        :type model_density_function: :py:class:`~kafe2.fit.hist.HistModelFunction` or unwrapped
+        :param model_function: the model (density) function
+        :type model__function: :py:class:`~kafe2.fit.hist.HistModelFunction` or unwrapped
             native Python function
         :param cost_function: the cost function
         :type cost_function: :py:class:`~kafe2.fit._base.CostFunctionBase`-derived or unwrapped
@@ -64,7 +64,7 @@ class HistFit(FitBase):
         self._bin_evaluation = bin_evaluation
         self._density = density
         super(HistFit, self).__init__(
-            data=data, model_function=model_density_function, cost_function=cost_function,
+            data=data, model_function=model_function, cost_function=cost_function,
             minimizer=minimizer, minimizer_kwargs=minimizer_kwargs,
             dynamic_error_algorithm=dynamic_error_algorithm)
 
