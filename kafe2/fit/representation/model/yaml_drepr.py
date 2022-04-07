@@ -200,6 +200,7 @@ class ParametricModelYamlWriter(YamlWriterMixin, ParametricModelDReprBase):
             else:
                 _yaml_doc['bin_evaluation'] = _process_function_code_for_dump(
                     parametric_model.bin_evaluation_string)
+            _yaml_doc['density'] = parametric_model.density
         elif _class is IndexedParametricModel:
             _yaml_doc['shape_like'] = parametric_model.data.tolist()
             _yaml_doc['model_function'] = ModelFunctionYamlWriter._make_representation(
@@ -331,6 +332,8 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
                     _hist_model_bin_evaluation_source = _bin_evaluation
                 else:
                     _constructor_kwargs['bin_evaluation'] = _bin_evaluation
+            if 'density' in yaml_doc:
+                _constructor_kwargs['density'] = yaml_doc.pop('density')
         elif _class is IndexedParametricModel:
             _kwarg_list.append('shape_like')
         elif _class is UnbinnedParametricModel:

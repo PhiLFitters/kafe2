@@ -18,8 +18,8 @@ import matplotlib.pyplot as plt
 from kafe2 import HistContainer, Fit, Plot
 
 
-def normal_distribution(x, mu, sigma):
-    return np.exp(-0.5 * ((x - mu) / sigma) ** 2) / np.sqrt(2.0 * np.pi * sigma ** 2)
+def normal_distribution(x, A, mu, sigma):
+    return A * np.exp(-0.5 * ((x - mu) / sigma) ** 2) / np.sqrt(2.0 * np.pi * sigma ** 2)
 
 
 # random dataset of 100 random values, following a normal distribution with mu=0 and sigma=1

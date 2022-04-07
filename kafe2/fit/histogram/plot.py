@@ -115,7 +115,10 @@ class HistPlotAdapter(PlotAdapterBase):
         _hist_cont = self._fit.data_container
         _mean_bin_size = float(_hist_cont.high - _hist_cont.low)/_hist_cont.size
         _factor = _hist_cont.n_entries * _mean_bin_size
-        return _factor * self._fit.eval_model_function_density(x=self.model_density_x)
+        if self._fit.density:
+            return _factor * self._fit.eval_model_function_density(x=self.model_density_x)
+        else:
+            return _mean_bin_size * self._fit.eval_model_function_density(x=self.model_density_x)
 
     # public methods
 

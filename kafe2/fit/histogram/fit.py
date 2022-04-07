@@ -32,6 +32,7 @@ class HistFit(FitBase):
                  cost_function=CostFunction_NegLogLikelihood(
                     data_point_distribution='poisson'),
                  bin_evaluation="simpson",
+                 density=True,
                  minimizer=None,
                  minimizer_kwargs=None,
                  dynamic_error_algorithm="nonlinear"):
@@ -53,12 +54,15 @@ class HistFit(FitBase):
             native Python function
         :param bin_evaluation: how the model evaluates bin heights.
         :type bin_evaluation: str, callable, or numpy.vectorize
+        :param density: if True, scale model function to the number of data points.
+        :type density: bool
         :param minimizer: the minimizer to use for fitting.
         :type minimizer: None, "iminuit", "tminuit", or "scipy".
         :param minimizer_kwargs: dictionary with kwargs for the minimizer.
         :type minimizer_kwargs: dict
         """
         self._bin_evaluation = bin_evaluation
+        self._density = density
         super(HistFit, self).__init__(
             data=data, model_function=model_density_function, cost_function=cost_function,
             minimizer=minimizer, minimizer_kwargs=minimizer_kwargs,
@@ -93,7 +97,7 @@ class HistFit(FitBase):
         self._param_model = HistParametricModel(
             self._data_container.size, self._data_container.bin_range, self._model_function,
             self.parameter_values, self._data_container.bin_edges,
-            bin_evaluation=self._bin_evaluation)
+            bin_evaluation=self._bin_evaluation, density=self._density)
 
     # -- public properties
 
@@ -101,7 +105,15 @@ class HistFit(FitBase):
     def model(self):
         """array of model predictions for the data points"""
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
-        return self._param_model.data * self._data_container.n_entries  # NOTE: model is just a density->scale up
+        # if model is just a density, scale it to the number of data points
+        if self._param_model.density:
+            return self._param_model.data * self._data_container.n_entries
+        else:
+            return self._param_model.data
+
+    @property
+    def density(self):
+        return self._param_model.density
 
     # FIXME: how to handle scaling of model_error
 
