@@ -16,7 +16,6 @@ section (sigma) as a function of the centre-of-mass energy (E).
 """
 
 from kafe2 import XYContainer, Fit, Plot, ContoursProfiler
-import matplotlib.pyplot as plt
 
 # Center-of-mass energy E (GeV):
 E = [88.387, 89.437, 90.223, 91.238, 92.059, 93.004, 93.916]  # x data
@@ -101,4 +100,4 @@ BW_fit.disable_error(error_name_ECor)
 BW_fit.do_fit()
 BW_fit.report(show_data=False, show_model=False)
 
-plt.show()
+BW_plot.show()

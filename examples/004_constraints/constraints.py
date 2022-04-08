@@ -28,7 +28,6 @@ For reference, at Germany's latitude g lies at approximately 9.81 m/s^2.
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 from kafe2 import XYContainer, Fit, Plot
 
@@ -91,4 +90,4 @@ fit.report()
 plot = Plot(fit)
 plot.plot(residual=True)
 
-plt.show()
+plot.show()

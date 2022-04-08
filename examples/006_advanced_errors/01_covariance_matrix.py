@@ -21,7 +21,6 @@ then directly use to specify our uncertainties. We will also see how we could ac
 result by specifying multiple simple sources of uncertainty instead.
 """
 import numpy as np
-import matplotlib.pyplot as plt
 from kafe2 import IndexedContainer, Fit, Plot
 
 measurements = np.array([5.3, 5.2, 4.7, 4.8])  # The results we want to average.
@@ -82,4 +81,4 @@ p.plot()
 _ax = p.axes[0]['main']
 _ax.set_xticks(range(4))  # Integer axis ticks
 
-plt.show()
+p.show()

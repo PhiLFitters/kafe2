@@ -25,7 +25,6 @@ par_value+par_err_up-par_err_down.
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
 from kafe2 import Fit, Plot, ContoursProfiler
 
 def exponential(x, A_0=1, tau=1):
@@ -56,4 +55,4 @@ plot.plot(asymmetric_parameter_errors=True, ratio=True)  # add the ratio data/fu
 cpf = ContoursProfiler(fit)
 cpf.plot_profiles_contours_matrix()  # plot the contour profile matrix for all parameters
 
-plt.show()
+plot.show()

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf8 -*-
 r"""
 Fitting several related models using parameter constraints
 ==========================================================
@@ -70,7 +69,6 @@ a simultaneous multi-model fit, which is demonstrated in the example called
 
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 from kafe2 import XYFit, Plot
 
@@ -166,4 +164,4 @@ main_fit.report()
 plot = Plot(main_fit)
 plot.plot(fit_info=True)
 
-plt.show()
+plot.show()

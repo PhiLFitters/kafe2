@@ -16,7 +16,6 @@ axis and chi2 on the y axis).
 The effects of this deformation are explained in the 01_non_linear_fit.py example.
 """
 
-import matplotlib.pyplot as plt
 from kafe2 import XYContainer, Fit, Plot
 from kafe2.fit.tools import ContoursProfiler
 
@@ -44,4 +43,4 @@ plot.plot(fit_info=True, asymmetric_parameter_errors=True)
 profiler = ContoursProfiler(nonlinear_fit)
 profiler.plot_profiles_contours_matrix(show_grid_for='all')
 
-plt.show()
+plot.show()

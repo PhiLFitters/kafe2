@@ -202,17 +202,17 @@ Python
 Inside a *Python* script a custom function is defined like this:
 
 .. literalinclude:: ../../../examples/002_model_functions/model_functions.py
-    :lines: 18-31
+    :lines: 17-30
 
 Those functions are passed on to the Fit objects:
 
 .. literalinclude:: ../../../examples/002_model_functions/model_functions.py
-    :lines: 38-40
+    :lines: 37-39
 
 It's also possible to assign LaTeX expressions to the function and its variables.
 
 .. literalinclude:: ../../../examples/002_model_functions/model_functions.py
-    :lines: 42-46
+    :lines: 41-45
 
 Please note that the function *LaTeX* expression needs to contain all parameters present in the
 function definition. The placeholders are then automatically replaced by their corresponding
@@ -228,7 +228,7 @@ highlighted in the following example.
 
     .. literalinclude:: ../../../examples/002_model_functions/model_functions.py
         :lines: 13-
-        :emphasize-lines: 54-56
+        :emphasize-lines: 53-55
 
 
 .. _profiling:
@@ -303,7 +303,7 @@ highlighted in the code example below.
 
     .. literalinclude:: ../../../examples/003_profiling/01_non_linear_fit.py
         :lines: 27-
-        :emphasize-lines: 23, 27, 29-31
+        :emphasize-lines: 22, 26, 28-30
 
 
 3.2: Double Slit
@@ -458,7 +458,7 @@ Using *kafe2* inside a *Python* script, parameter constraints can be set with
 
     .. literalinclude:: ../../../examples/004_constraints/constraints.py
         :lines: 30-
-        :emphasize-lines: 31-34
+        :emphasize-lines: 30-33
 
 
 5: Convenience
@@ -608,7 +608,7 @@ Referencing the model as source for relative uncertainties is done by setting th
 
     .. literalinclude:: ../../../examples/006_advanced_errors/03_relative_uncertainties.py
         :lines: 13-
-        :emphasize-lines: 12, 19
+        :emphasize-lines: 11, 18
 
 
 7: Poisson Cost Function
@@ -660,7 +660,7 @@ Python
 
 .. bootstrap_collapsible::
     :control_type: link
-    :control_text: relative_uncertainties.py
+    :control_text: 01_poisson_cost_function.py
 
     .. literalinclude:: ../../../examples/007_cost_functions/01_poisson_cost_function.py
         :lines: 35-
@@ -762,7 +762,7 @@ How to fix single parameters is highlighted in the example below.
 
     .. literalinclude:: ../../../examples/010_unbinned_fit/01_unbinned.py
         :lines: 19-
-        :emphasize-lines: 36-41
+        :emphasize-lines: 35-40
 
 
 11: Multifit
@@ -834,7 +834,7 @@ a simultaneous multi-model fit, which is demonstrated in the next example.
     :control_text: 01_fit_with_parameter_constraints.py
 
     .. literalinclude:: ../../../examples/011_multifit/01_fit_with_parameter_constraints.py
-        :lines: 72-
+        :lines: 71-
 
 Approach 2: multi-model fit
 ---------------------------
@@ -853,5 +853,4 @@ parameter constraints, which is demonstrated in the example called
     :control_text: 02_multifit.py
 
     .. literalinclude:: ../../../examples/011_multifit/02_multifit.py
-        :lines: 66-
-
+        :lines: 65-

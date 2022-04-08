@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from kafe2 import CustomFit, ContoursProfiler
 
 x_data = np.array([1.0, 2.0, 3.0, 4.0])
@@ -33,4 +32,6 @@ fit.report(asymmetric_parameter_errors=True)
 cpf = ContoursProfiler(fit)
 cpf.plot_profiles_contours_matrix()
 
-plt.show()
+cpf.save()
+
+cpf.show()  # Just a convenience wrapper for matplotlib.pyplot.show()

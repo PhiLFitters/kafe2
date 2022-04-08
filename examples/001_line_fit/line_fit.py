@@ -12,7 +12,6 @@ how to extract the results.
 """
 
 from kafe2 import XYContainer, Fit, Plot
-import matplotlib.pyplot as plt
 
 # Create an XYContainer object to hold the xy data for the fit:
 xy_data = XYContainer(x_data=[1.0, 2.0, 3.0, 4.0],
@@ -37,7 +36,13 @@ line_fit.report()
 
 # Optional: Create a plot of the fit results using Plot.
 plot = Plot(fit_objects=line_fit)  # Create a kafe2 plot object.
+plot.x_label = 'x'  # Set x axis label.
+plot.y_label = 'y'  # Set y axis label.
 plot.plot()  # Do the plot.
 
+plot.save()  # Saves the plot to file 'fit.png' .
+# plot.save('my_fit.pdf')  # Saves the plot to a different file / with a different file extension.
+
 # Show the fit result.
-plt.show()
+plot.show()  # Just a convenience wrapper for matplotlib.pyplot.show() .
+# NOTE: Calling matplotlib.pyplot.show() closes all figures by default so call this AFTER saving.

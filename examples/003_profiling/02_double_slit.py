@@ -11,7 +11,6 @@ the intensity of laser light
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
 from kafe2.fit import XYContainer, Fit, Plot
 from kafe2.fit.tools import ContoursProfiler
 
@@ -121,4 +120,4 @@ p.y_label = r"$I$"
 p.plot(asymmetric_parameter_errors=True)
 
 # Show the fit results:
-plt.show()
+p.show()

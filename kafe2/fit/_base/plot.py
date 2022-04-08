@@ -1178,6 +1178,12 @@ class Plot(object):
 
     # -- public methods
 
+    @staticmethod
+    def show(*args, **kwargs):
+        """Convenience wrapper for matplotlib.pyplot.show()"""
+        plt.show(*args, **kwargs)
+
+
     def plot(self, legend=True, fit_info=True, asymmetric_parameter_errors=False,
              ratio=False, ratio_range=None, ratio_height_share=0.25,
              residual=False, residual_range=None, residual_height_share=0.25,
@@ -1533,3 +1539,30 @@ class Plot(object):
             ]
 
         return self.set_keywords(plot_type, _dicts)
+
+    def save(self, fname=None, figures='all', *args, **kwargs):
+        """
+        Saves the plot figures to files.
+        args and kwargs are passed on to matplotlib.Figure.savefig() .
+
+        :param fname: Output file name(s), defaults to fit.png or fit_0.png, fit_1.png, ...
+        :type fname: None or str or iterable of str.
+        :param figures: Which figures to save.
+        :type figures: 'all' or int or iterable of int
+        """
+        if figures == 'all':
+            _figure_indices = range(len(self._figure_dicts))
+        elif isinstance(figures, int):
+            _figure_indices = [figures]
+        if fname is None:
+            if len(self._figure_dicts) == 1:
+                _file_name_list = ['fit.png']
+            else:
+                _file_name_list = [f'fit_{_i}.png' for _i in _figure_indices]
+        if len(_file_name_list) != len(_figure_indices):
+            raise ValueError(
+                f'Received {len(_file_name_list)} file names for {len(_figure_indices)} figures.'
+                'Must be the same!'
+            )
+        for _figure_index, _file_name in zip(_figure_indices, _file_name_list):
+            self._figure_dicts[_figure_index]['figure'].savefig(_file_name, *args, **kwargs)

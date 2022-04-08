@@ -7,7 +7,6 @@ It briefly demonstrates methods that modify the optics of kafe2 output.
 """
 
 from kafe2 import XYContainer, Fit, Plot
-import matplotlib.pyplot as plt
 
 # The same setup as in 001_line_fit/line_fit.py :
 xy_data = XYContainer(x_data=[1.0, 2.0, 3.0, 4.0],
@@ -85,4 +84,4 @@ plot.y_scale = 'log'  # Set the y axis to a logarithmic scale.
 
 # Finally, perform the plot:
 plot.plot(ratio=True)
-plt.show()
+plot.show()

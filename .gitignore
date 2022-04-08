@@ -5,6 +5,8 @@
 /.pydevproject
 /htmlcov
 /kafe2.egg-info
+/examples/*/fit.png
+/examples/*/fit_?.png
 *.ipynb_checkpoints
 *.mypy_cache
 *.pyc

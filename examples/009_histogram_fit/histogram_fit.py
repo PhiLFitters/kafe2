@@ -14,7 +14,6 @@ of entries N of the histogram.
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
 from kafe2 import HistContainer, Fit, Plot
 
 
@@ -30,7 +29,7 @@ data = np.random.normal(loc=0, scale=1, size=100)
 histogram = HistContainer(n_bins=10, bin_range=(-5, 5), fill_data=data)
 
 # create the Fit object by specifying a density function
-fit = Fit(data=histogram, model_function=normal_distribution, density=False)
+fit = Fit(data=histogram, model_function=normal_distribution, density=True)
 
 fit.do_fit()  # do the fit
 fit.report()  # Optional: print a report to the terminal
@@ -38,4 +37,4 @@ fit.report()  # Optional: print a report to the terminal
 # Optional: create a plot and show it
 plot = Plot(fit)
 plot.plot()
-plt.show()
+plot.show()

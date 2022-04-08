@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf8 -*-
 r"""
 Fitting several related models in a multi-model fit
 ===================================================
@@ -64,7 +63,6 @@ parameter constraints, which is demonstrated in the example called
 
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 from kafe2 import XYFit, MultiFit, Plot
 
@@ -130,4 +128,7 @@ multi_fit.report(asymmetric_parameter_errors=True)
 # (Optional): plot the results
 plot = Plot(multi_fit, separate_figures=True)
 plot.plot(asymmetric_parameter_errors=True)
-plt.show()
+
+plot.save()  # Automatically saves the plots to different files.
+
+plot.show()

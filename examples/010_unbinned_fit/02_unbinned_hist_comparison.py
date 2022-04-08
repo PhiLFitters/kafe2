@@ -8,7 +8,6 @@
 
 from kafe2 import Fit, Plot, HistContainer, UnbinnedContainer
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 def generate_data(N, min, max, pos, width, s):
@@ -62,4 +61,4 @@ hist_plot = Plot(hist_fit)
 hist_plot.plot(asymmetric_parameter_errors=True)
 
 # - show all results
-plt.show()
+hist_plot.show()  # Just a convenience wrapper for matplotlib.pyplot.show() .

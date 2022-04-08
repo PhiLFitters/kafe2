@@ -252,6 +252,12 @@ class ContoursProfiler(object):
 
     # - get numeric profiles/contours
 
+    @staticmethod
+    def show(*args, **kwargs):
+        """Convenience wrapper for matplotlib.pyplot.show()"""
+        plt.show(*args, **kwargs)
+
+
     def get_profile(self, parameter):
         """
         Calculate and return a profile of the cost function in a parameter.
@@ -774,3 +780,32 @@ class ContoursProfiler(object):
             _maybe_set_tight_layout(_fig)
 
             return _fig
+
+
+    def save(self, fname=None, figures='all', *args, **kwargs):
+        """
+        Saves the profile figures to files.
+        args and kwargs are passed on to matplotlib.Figure.savefig() .
+
+        :param fname: Output file name(s), defaults to profile.png or profile_0.png,
+            profile_1.png, ...
+        :type fname: None or str or iterable of str.
+        :param figures: Which figures to save.
+        :type figures: 'all' or int or iterable of int
+        """
+        if figures == 'all':
+            _figure_indices = range(len(self._figures))
+        elif isinstance(figures, int):
+            _figure_indices = [figures]
+        if fname is None:
+            if len(self._figures) == 1:
+                _file_name_list = ['profile.png']
+            else:
+                _file_name_list = [f'profile_{_i}.png' for _i in _figure_indices]
+        if len(_file_name_list) != len(_figure_indices):
+            raise ValueError(
+                f'Received {len(_file_name_list)} file names for {len(_figure_indices)} figures.'
+                'Must be the same!'
+            )
+        for _figure_index, _file_name in zip(_figure_indices, _file_name_list):
+            self._figures[_figure_index].savefig(_file_name, *args, **kwargs)

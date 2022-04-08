@@ -23,7 +23,6 @@
 
 from kafe2 import Fit, Plot, HistContainer, MultiFit
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 # function fo generate the signal-plus-background distributions
@@ -115,4 +114,4 @@ multi_fit.report()  # Optional: print a report to the terminal
 multi_plot = Plot(multi_fit, separate_figures=True)
 multi_plot.plot(asymmetric_parameter_errors=True)
 
-plt.show()
+multi_plot.show()

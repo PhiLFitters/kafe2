@@ -15,7 +15,6 @@ approximation becomes important.
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
 from kafe2 import XYFit, Plot, XYCostFunction_NegLogLikelihood
 
 # Years of death are our x-data, measured c14 activity is our y-data.
@@ -121,4 +120,4 @@ xy_fit_gaussian_sparse.assign_parameter_latex_names(
 xy_plot_poisson_sparse = Plot([xy_fit_gaussian_sparse, xy_fit_poisson_sparse])
 xy_plot_poisson_sparse.plot(fit_info=True)
 
-plt.show()
+xy_plot_poisson_sparse.show()

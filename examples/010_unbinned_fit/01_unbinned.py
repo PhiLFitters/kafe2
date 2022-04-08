@@ -20,7 +20,6 @@ from kafe2.fit import UnbinnedContainer, Fit, Plot
 from kafe2.fit.tools import ContoursProfiler
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 def pdf(t, tau=2.2, fbg=0.1, a=1., b=9.75):
@@ -77,4 +76,4 @@ cpf = ContoursProfiler(fit, profile_subtract_min=False)
 # Optional: plot the contour matrix for tau and fbg
 cpf.plot_profiles_contours_matrix(parameters=['tau', 'fbg'])
 
-plt.show()  # show the plot(s)
+plot.show()  # show the plot(s)

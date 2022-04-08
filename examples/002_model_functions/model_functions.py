@@ -12,7 +12,6 @@ a kafe2 fit.
 
 from kafe2 import XYContainer, Fit, Plot, ContoursProfiler
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 # To define a model function for kafe2 simply write it as a Python function.
@@ -68,4 +67,4 @@ cpf = ContoursProfiler(exponential_fit)
 cpf.plot_profiles_contours_matrix(show_grid_for='contours')
 
 # Show the fit results:
-plt.show()
+p.show()

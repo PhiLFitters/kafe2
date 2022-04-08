@@ -33,7 +33,6 @@ i.e. the times of death of the ancient kings.
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
 from kafe2 import XYFit, Plot
 
 # Years of death are our x-data, measured c14 activity is our y-data.
@@ -85,4 +84,4 @@ xy_fit.report()
 xy_plot = Plot(xy_fit)
 xy_plot.plot(fit_info=True)
 
-plt.show()
+xy_plot.show()

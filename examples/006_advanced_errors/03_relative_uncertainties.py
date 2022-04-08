@@ -10,7 +10,6 @@ Instead, the option reference='model' allows the uncertainties to be dependent o
 - still not completely correct, but much better.
 """
 
-import matplotlib.pyplot as plt
 from kafe2 import XYContainer, Fit, Plot, ContoursProfiler
 
 x = [19.8, 3.0, 5.1, 16.1, 8.2,  11.7, 6.2, 10.1]
@@ -51,4 +50,4 @@ cpf1.plot_profiles_contours_matrix(show_grid_for='contours')
 cpf2 = ContoursProfiler(linear_fit2)
 cpf2.plot_profiles_contours_matrix(show_grid_for='contours')
 
-plt.show()
+plot.show()

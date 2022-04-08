@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf8 -*-
 """
 Fit of Shockley equation to I-U characteristic of a diode
 =========================================================
@@ -30,7 +29,6 @@ to the other examples discussed already.
 
 from kafe2 import Fit, Plot, XYContainer
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 # model function to fit
@@ -120,4 +118,4 @@ ShockleyFit.do_fit()
 plotShockleyFit = Plot(ShockleyFit)
 plotShockleyFit.plot(asymmetric_parameter_errors=True)
 
-plt.show()
+plotShockleyFit.show()

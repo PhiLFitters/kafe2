@@ -14,7 +14,6 @@ of entries N of the histogram.
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
 from kafe2 import HistContainer, Fit, Plot
 
 
@@ -38,4 +37,4 @@ fit.report()  # Optional: print a report to the terminal
 # Optional: create a plot and show it
 plot = Plot(fit)
 plot.plot()
-plt.show()
+plot.show()

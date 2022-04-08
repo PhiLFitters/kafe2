@@ -7,7 +7,6 @@ These files can then be used to load the objects into Python code or as input fo
 """
 
 from kafe2 import XYContainer, XYFit, Fit, Plot
-import matplotlib.pyplot as plt
 
 # The same data as in 001_line_fit/line_fit.py :
 xy_data = XYContainer(x_data=[1.0, 2.0, 3.0, 4.0],
@@ -61,4 +60,4 @@ loaded_fit.report()
 plot = Plot(fit_objects=loaded_fit)
 
 plot.plot()
-plt.show()
+plot.show()
