@@ -560,13 +560,19 @@ class FitBase(FileIOMixin, object):
 
     @property
     def parameter_errors(self):
-        """The current parameter uncertainties.
+        """
+        The current parameter uncertainties.
+        Can be set to control initial step size during minimization.
 
         :rtype: numpy.ndarray[float]
         """
         if self._loaded_result_dict is not None:
             return self._loaded_result_dict['parameter_errors']
         return self._fitter.fit_parameter_errors
+
+    @parameter_errors.setter
+    def parameter_errors(self, new_errors):
+        self._fitter.fit_parameter_errors = new_errors
 
     @property
     def parameter_cov_mat(self):

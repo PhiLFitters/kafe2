@@ -138,6 +138,10 @@ class NexusFitter(object):
     def fit_parameter_errors(self):
         return self._minimizer.parameter_errors
 
+    @fit_parameter_errors.setter
+    def fit_parameter_errors(self, new_errors):
+        self._minimizer.parameter_errors = new_errors
+
     @property
     def asymmetric_fit_parameter_errors(self):
         return self._minimizer.asymmetric_parameter_errors
