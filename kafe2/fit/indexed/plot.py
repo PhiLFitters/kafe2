@@ -101,6 +101,7 @@ class IndexedPlotAdapter(PlotAdapterBase):
                                  xerr=self.model_xerr,
                                  yerr=self.model_yerr,
                                  draw_central_value=True,
+                                 continuous=False,
                                  **kwargs
                                  )
 

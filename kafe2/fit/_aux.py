@@ -37,10 +37,8 @@ def add_pad_to_range(data_range, pad_coeff=1.1, additional_pad=None, scale='line
 
 
 # represent errors in a binwise fashion as rectangles
-def step_fill_between(axes,
-                      x, y,
-                      yerr=None, xerr=None,
-                      draw_central_value=False, **kwargs):
+def step_fill_between(
+        axes, x, y, yerr=None, xerr=None, draw_central_value=False, continuous=True, **kwargs):
     """
     Draw two step functions and fill the area in-between.
 
@@ -106,17 +104,23 @@ def step_fill_between(axes,
         _x_lo = x - _xerr[0]
         _x_hi = x + _xerr[1]
 
-        # interleave x and y bin boundaries
-        _x_plot = np.zeros(len(x)*2)
-        _x_plot[0::2] = _x_lo
-        _x_plot[1::2] = _x_hi
+        if continuous:
+            # interleave x and y bin boundaries
+            _x_plot = np.zeros(len(x)*2)
+            _x_plot[0::2] = _x_lo
+            _x_plot[1::2] = _x_hi
+        else:
+            _x_plot = np.array([_x_lo, _x_hi])
     else:
         raise ValueError('xerr cannot be None')
 
     if draw_central_value:
-        _y_plot_central = np.zeros(len(y) * 2)
-        _y_plot_central[0::2] = y
-        _y_plot_central[1::2] = y
+        if continuous:
+            _y_plot_central = np.zeros(len(y) * 2)
+            _y_plot_central[0::2] = y
+            _y_plot_central[1::2] = y
+        else:
+            _y_plot_central = np.array([y, y])
         _modkwargs = deepcopy(kwargs)
         _modkwargs.pop('edgecolor', None)
         _modkwargs.pop('alpha', None)
