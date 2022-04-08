@@ -1,4 +1,5 @@
-from .._base import CostFunction_Chi2, CostFunction_NegLogLikelihood, CostFunctionException
+from .._base import CostFunction_Chi2, CostFunction_NegLogLikelihood, CostFunctionException, \
+    CostFunction_GaussApproximation
 
 __all__ = [
     "XYCostFunction_Chi2",
@@ -55,7 +56,7 @@ class XYCostFunction_NegLogLikelihood(CostFunction_NegLogLikelihood):
             data_point_distribution=data_point_distribution, ratio=ratio)
 
 
-class XYCostFunction_GaussApproximation(CostFunction_Chi2):
+class XYCostFunction_GaussApproximation(CostFunction_GaussApproximation):
     def __init__(
             self, errors_to_use='covariance', axes_to_use='xy',
             add_constraint_cost=True, add_determinant_cost=True):
