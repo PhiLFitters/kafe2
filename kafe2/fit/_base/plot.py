@@ -196,6 +196,8 @@ class PlotAdapterBase(object):
                 label = None
             _axis_labels.append(label)
         self._axis_labels = _axis_labels
+        _x_ticks = fit_object._get_default_x_ticks()
+        self._ticks = [_x_ticks, []]
 
         # specification of subplots for which this adapter provided plot routines
         self._subplots = None
@@ -559,6 +561,22 @@ class PlotAdapterBase(object):
         if label == '__del__':
             label = None
         self._axis_labels[1] = label
+
+    @property
+    def x_ticks(self):
+        return self._ticks[0]
+
+    @x_ticks.setter
+    def x_ticks(self, ticks):
+        self._ticks[0] = ticks
+
+    @property
+    def y_ticks(self):
+        return self._ticks[1]
+
+    @y_ticks.setter
+    def y_ticks(self, ticks):
+        self._ticks[1] = ticks
 
     @abc.abstractmethod
     def plot_data(self, target_axes, **kwargs):
@@ -1041,6 +1059,19 @@ class Plot(object):
             _ax.set_xlabel(', '.join(filter(None, [label for label in _seen_x_labels])))
             _ax.set_ylabel(', '.join(filter(None, [label for label in _seen_y_labels])))
 
+            _adapter = _axes_dict['plots'][0]['adapter']
+            _x_ticks = _adapter.x_ticks
+            _y_ticks = _adapter.y_ticks
+
+            if len(_x_ticks) > 0:
+                if isinstance(_x_ticks[0], str):
+                    _ax.set_xticks(np.arange(len(_x_ticks)), labels=_x_ticks)
+                else:
+                    _ax.set_xticks(_x_ticks)
+
+            if len(_y_ticks) > 0:
+                _ax.set_yticks(_y_ticks)
+
         # hide x tick labels in all but the lowest axes
         for _key in axes_keys[:-1]:
             self._current_axes[_key].set_xlabel(None)
@@ -1119,6 +1150,20 @@ class Plot(object):
                                       .format(len(var), len(_adapters)))
         return var
 
+    def _repeat_ticks(self, ticks):
+        try:
+            iter(ticks)
+        except TypeError:
+            raise TypeError(f"Ticks have to be iterable but received {ticks}")
+        try:
+            iter(ticks[0])
+            _ticks_is_1d_iter = isinstance(ticks[0], str)
+        except TypeError:
+            _ticks_is_1d_iter = True
+        if _ticks_is_1d_iter:
+            ticks = itertools.repeat(ticks, len(self._get_plot_adapters()))
+        return ticks
+
     @property
     def x_scale(self):
         """The x-scale for each fit used for creating the support values when plotting and axis
@@ -1176,7 +1221,25 @@ class Plot(object):
         for _l, adapter in zip(label, self._get_plot_adapters()):
             adapter.y_label = _l
 
-    # -- public methods
+    @property
+    def x_ticks(self):
+        return [_adapter.x_ticks for _adapter in self._get_plot_adapters()]
+
+    @x_ticks.setter
+    def x_ticks(self, ticks):
+        for _t, adapter in zip(self._repeat_ticks(ticks), self._get_plot_adapters()):
+            adapter.x_ticks = _t
+
+    @property
+    def y_ticks(self):
+        return [_adapter.y_ticks for _adapter in self._get_plot_adapters()]
+
+    @y_ticks.setter
+    def y_ticks(self, ticks):
+        for _t, adapter in zip(self._repeat_ticks(ticks), self._get_plot_adapters()):
+            adapter.y_ticks = _t
+
+    # public methods
 
     @staticmethod
     def show(*args, **kwargs):

@@ -77,8 +77,4 @@ fit.report()
 p = Plot(fit)
 p.plot()
 
-# Illustrate some a-posteriory fixes to plot layout by accessing the axis object:
-_ax = p.axes[0]['main']
-_ax.set_xticks(range(4))  # Integer axis ticks
-
 p.show()

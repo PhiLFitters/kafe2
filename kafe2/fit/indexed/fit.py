@@ -1,6 +1,8 @@
 from collections import OrderedDict
 from copy import deepcopy
 
+import numpy as np
+
 from ...tools import print_dict_as_table
 from .._base import FitException, FitBase, DataContainerBase
 from .container import IndexedContainer
@@ -129,6 +131,12 @@ class IndexedFit(FitBase):
             self.parameter_values,
             shape_like=self.data
         )
+
+    def _get_default_x_ticks(self):
+        if self.data_size <= 10:
+            return np.arange(self.data_size)
+        else:
+            return []
 
     # -- public properties
 

@@ -420,6 +420,10 @@ class FitBase(FileIOMixin, object):
                 "calculated with iterative dynamic errors. Used nonlinear errors instead.")
             self._dynamic_error_warning_printed = True
 
+
+    def _get_default_x_ticks(self):
+        return []
+
     # -- public properties
 
     @property
