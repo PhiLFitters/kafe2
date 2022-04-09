@@ -144,6 +144,18 @@ class TestDatastoreHistogram(unittest.TestCase):
         with self.assertRaises(DataContainerException):
             self.hist_cont_binedges_manual_equal.rebin(self._ref_bin_edges_manual_variablespacing)
 
+    def test_raise_add_error_bad_shape(self):
+        with self.assertRaises(ValueError):
+            self.hist_cont_binedges_auto.add_error([1, 2, 3])
+
+    def test_raise_add_matrix_error_bad_shape(self):
+        with self.assertRaises(ValueError):
+            self.hist_cont_binedges_auto.add_matrix_error([[1, 0], [0, 4]], "cov")
+        with self.assertRaises(ValueError):
+            self.hist_cont_binedges_auto.add_matrix_error(np.eye(5), "cor", err_val=np.ones(10))
+        with self.assertRaises(ValueError):
+            self.hist_cont_binedges_auto.add_matrix_error(np.eye(5), "cor", err_val=np.eye(5))
+
 
 class TestDatastoreHistParametricModel(unittest.TestCase):
     @staticmethod

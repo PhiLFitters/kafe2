@@ -53,6 +53,9 @@ class DataContainerBase(FileIOMixin, object):
     def _add_error_object(self, name, error_object, **additional_error_dict_keys):
         """create a new entry <name> under self._error_dicts,
         with keys err=<ErrorObject> and arbitrary additional keys"""
+        if error_object.error.shape[0] != self.size:
+            raise ValueError(f"Error must have size {self.size} but"
+                             f"received error with size {error_object.error.shape[0]}")
         _name = name
         if _name is not None and _name in self._error_dicts:
             raise DataContainerException("Cannot create error source with name '{}': "

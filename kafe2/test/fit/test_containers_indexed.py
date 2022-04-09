@@ -123,6 +123,17 @@ class TestDatastoreIndexed(unittest.TestCase):
         with self.assertRaises(DataContainerException):
             self.idx_cont.get_error("MyInexistentError")
 
+    def test_raise_add_error_bad_shape(self):
+        with self.assertRaises(ValueError):
+            self.idx_cont.add_error([1, 2, 3])
+
+    def test_raise_add_matrix_error_bad_shape(self):
+        with self.assertRaises(ValueError):
+            self.idx_cont.add_matrix_error([[1, 0], [0, 4]], "cov")
+        with self.assertRaises(ValueError):
+            self.idx_cont.add_matrix_error(np.eye(5), "cor", err_val=np.ones(10))
+        with self.assertRaises(ValueError):
+            self.idx_cont.add_matrix_error(np.eye(5), "cor", err_val=np.eye(5))
 
 
 class TestDatastoreIndexedParametricModel(unittest.TestCase):

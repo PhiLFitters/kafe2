@@ -162,6 +162,25 @@ class TestDatastoreXY(unittest.TestCase):
         with self.assertRaises(DataContainerException):
             self.data_xy.get_error("MyInexistentYError")
 
+    def test_raise_add_error_bad_shape(self):
+        with self.assertRaises(ValueError):
+            self.data_xy.add_error("x", [1, 2, 3])
+        with self.assertRaises(ValueError):
+            self.data_xy.add_error("y", [1, 2, 3])
+
+    def test_raise_add_matrix_error_bad_shape(self):
+        with self.assertRaises(ValueError):
+            self.data_xy.add_matrix_error("x", [[1, 0], [0, 4]], "cov")
+        with self.assertRaises(ValueError):
+            self.data_xy.add_matrix_error("y", [[1, 0], [0, 4]], "cov")
+        with self.assertRaises(ValueError):
+            self.data_xy.add_matrix_error("x", np.eye(5), "cor", err_val=np.ones(10))
+        with self.assertRaises(ValueError):
+            self.data_xy.add_matrix_error("y", np.eye(5), "cor", err_val=np.ones(10))
+        with self.assertRaises(ValueError):
+            self.data_xy.add_matrix_error("x", np.eye(5), "cor", err_val=np.eye(5))
+        with self.assertRaises(ValueError):
+            self.data_xy.add_matrix_error("y", np.eye(5), "cor", err_val=np.eye(5))
 
 class TestDatastoreXYParametricModel(unittest.TestCase):
 

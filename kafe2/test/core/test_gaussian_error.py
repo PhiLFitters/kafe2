@@ -216,6 +216,11 @@ class TestMatrixGaussianError(unittest.TestCase):
         with self.assertRaises(AttributeError):
             _ = self.ge_cov_wref.cov_mat_rel_uncor
 
+    def test_raise_bad_input_shape(self):
+        with self.assertRaises(ValueError):
+            _ = MatrixGaussianError([1, 0], "cov")
+        with self.assertRaises(ValueError):
+            _ = MatrixGaussianError([[1, 0], [0, 1]], "cor", err_val=[[1, 2], [3, 4]])
 
 class TestSimpleGaussianError(unittest.TestCase):
 
@@ -277,9 +282,13 @@ class TestSimpleGaussianError(unittest.TestCase):
 
     def test_constructor_raise(self):
         with self.assertRaises(ValueError):
-            SimpleGaussianError(err_val=1, corr_coeff=2.0)
+            _ = SimpleGaussianError(err_val=1, corr_coeff=0.5)
         with self.assertRaises(ValueError):
-            SimpleGaussianError(err_val=1, corr_coeff=-1.0)
+            _ = SimpleGaussianError(err_val=[[1]], corr_coeff=0.5)
+        with self.assertRaises(ValueError):
+            _ = SimpleGaussianError(err_val=[1], corr_coeff=2.0)
+        with self.assertRaises(ValueError):
+            _ = SimpleGaussianError(err_val=[1], corr_coeff=-1.0)
 
     def test_set_error_raise(self):
         self.sge_abs_noref.error = 2.0

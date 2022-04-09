@@ -307,6 +307,10 @@ class SimpleGaussianError(GaussianErrorBase):
     def __init__(self, err_val, corr_coeff, relative=False, reference=None, fit_indices=None):
         if not (0.0 <= corr_coeff <= 1.0):
             raise ValueError("Correlation must be between 0 and 1, %g given," % (corr_coeff,))
+        err_val = np.asarray(err_val)
+        if err_val.ndim != 1:
+            raise ValueError(
+                f"Error must be one-dimensional but received array with {err_val.ndim} dimensions.")
         self._corr_coeff = float(corr_coeff)
         self._is_relative = relative
         self.reference = reference
@@ -524,12 +528,19 @@ class MatrixGaussianError(GaussianErrorBase):
     """
     def __init__(self, err_matrix, matrix_type, err_val=None, relative=False,
                  reference=None, fit_indices=None):
+        err_matrix = np.asarray(err_matrix)
+        err_val = err_val if err_val is None else np.asarray(err_val)
+        if err_matrix.ndim != 2:
+            raise ValueError(
+                "Error matrix must be two-dimensional but received "
+                f"array with {err_matrix.ndim} dimensions.")
+        if err_val is not None and err_val.ndim > 1:
+            raise ValueError(
+                "Error array must be scalar or one-dimensional but received "
+                f"array with {err_val.ndim} dimensions.")
         self._is_relative = relative
         self.reference = reference
         self._fit_indices = fit_indices
-
-        if err_val is not None:
-            err_val = np.asarray(err_val)
 
         self._err = None
         self._err_rel = None
@@ -568,6 +579,10 @@ class MatrixGaussianError(GaussianErrorBase):
         if not np.allclose(np.diag(corr_mat), 1.0):
             raise ValueError("Corelation matrix has non-unit entry on diagonal!")
         # TODO: check if corr_mat is symmetric and positive definite (?)
+        if error_array.ndim > 0 and error_array.shape[0] != corr_mat.shape[0]:
+            raise ValueError(
+                f"Error array has size {error_array.shape[0]} but "
+                f"correlation matrix has size {corr_mat.shape[0]}, must be the same.")
         cov_mat = np.asarray(np.outer(error_array, error_array)) * np.asarray(corr_mat)
         return CovMat(cov_mat)
 
