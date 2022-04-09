@@ -156,6 +156,12 @@ class TestDatastoreHistogram(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.hist_cont_binedges_auto.add_matrix_error(np.eye(5), "cor", err_val=np.eye(5))
 
+    def test_raise_bad_data_shape(self):
+        with self.assertRaises(ValueError):
+            self.hist_cont_binedges_auto.fill([[1, 2], [3, 4]])
+        with self.assertRaises(ValueError):
+            self.hist_cont_binedges_auto.set_bins(np.eye(self._ref_n_bins_auto))
+
 
 class TestDatastoreHistParametricModel(unittest.TestCase):
     @staticmethod

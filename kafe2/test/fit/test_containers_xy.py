@@ -182,6 +182,15 @@ class TestDatastoreXY(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.data_xy.add_matrix_error("y", np.eye(5), "cor", err_val=np.eye(5))
 
+    def test_raise_bad_data_shape(self):
+        with self.assertRaises(ValueError):
+            _ = XYContainer(x_data=[[1, 2], [3, 4]], y_data=[1, 2])
+        with self.assertRaises(ValueError):
+            _ = XYContainer(x_data=[1, 2], y_data=[[1, 2], [3, 4]])
+        with self.assertRaises(ValueError):
+            _ = XYContainer(x_data=[1, 2, 3], y_data=[1, 2])
+
+
 class TestDatastoreXYParametricModel(unittest.TestCase):
 
     @staticmethod

@@ -135,6 +135,9 @@ class TestDatastoreIndexed(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.idx_cont.add_matrix_error(np.eye(5), "cor", err_val=np.eye(5))
 
+    def test_raise_bad_data_shape(self):
+        with self.assertRaises(ValueError):
+            _ = IndexedContainer([[1, 2], [3, 4]])
 
 class TestDatastoreIndexedParametricModel(unittest.TestCase):
     def _ref_model_func(self, slope, intercept):

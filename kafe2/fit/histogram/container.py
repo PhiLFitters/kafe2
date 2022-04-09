@@ -218,6 +218,9 @@ class HistContainer(IndexedContainer):
         if self._manual_heights:
             raise HistContainerException("The bin heights have been set manually. Filling additional data is not "
                                          "possible anymore. Please construct a new HistContainer!")
+        if np.asarray(entries).ndim > 1:
+            raise ValueError("Fill data must be scalar or one-dimensional "
+                             f"but received fill data with {np.asarray(entries).ndim} dimensions.")
         try:
             self._unprocessed_entries += list(entries)
         except TypeError:
@@ -257,9 +260,9 @@ class HistContainer(IndexedContainer):
         """
         self._manual_heights = True
         _new_data = np.array(bin_heights)
-        if len(_new_data.shape) != 1:
-            raise HistContainerException('Invalid dimensions for bin heights. '
-                                         'Got {}-d array, expected 1-d array'.format(len(_new_data.shape)))
+        if _new_data.ndim != 1:
+            raise ValueError('Invalid dimensions for bin heights. '
+                             f'Got {_new_data.ndim}-d array, expected 1-d array')
         _new_data = np.append(np.insert(_new_data, 0, underflow), overflow)
         if len(_new_data) != len(self._data):
             raise HistContainerException('Length of bin entries does not match binning. '

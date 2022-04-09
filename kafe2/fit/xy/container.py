@@ -37,8 +37,17 @@ class XYContainer(IndexedContainer):
         :type dtype: type
         """
         # TODO: check user input (?)
-        if len(x_data) != len(y_data):
-            raise XYContainerException("x_data and y_data must have the same length!")
+        x_data = np.asarray(x_data)
+        y_data = np.asarray(y_data)
+        if x_data.ndim > 1:
+            raise ValueError("x_data must be scalar or one-dimensional "
+                             f"but received data with {x_data.ndim} dimensions.")
+        if y_data.ndim > 1:
+            raise ValueError("y_data must be scalar or one-dimensional "
+                             f"but received data with {y_data.ndim} dimensions.")
+        if x_data.shape != y_data.shape:
+            raise ValueError("x_data and y_data must have the same shape but received "
+                             f"{x_data.shape} for x_data and {y_data.shape} for y_data.")
         # super constructor doesn't allow 2D arrays
         super(XYContainer, self).__init__(np.zeros(len(x_data)))
         self._data = np.array([x_data, y_data], dtype=dtype)  # overwrite internal data storage

@@ -27,6 +27,9 @@ class IndexedContainer(DataContainerBase):
         """
         super(IndexedContainer, self).__init__()
         self._data = np.array(data, dtype=dtype)
+        if self._data.ndim != 1:
+            raise ValueError("Input data must be one-dimensional but received"
+                             f" data with {self._data.ndim} dimensions.")
 
     # -- private methods
 
