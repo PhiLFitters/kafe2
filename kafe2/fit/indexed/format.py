@@ -89,7 +89,7 @@ class IndexedModelFunctionFormatter(FunctionFormatter):
             _par_expr_string = self._get_formatted_expression(format_as_latex=format_as_latex)
 
         if format_as_latex:
-            _out_string = r"%s_{%s}\left(%s\right)" % (self._latex_name, self.latex_index_name, ", ".join(_par_strings))
+            _out_string = r"{%s}_{%s}\left(%s\right)" % (self._latex_name, self.latex_index_name, ", ".join(_par_strings))
             if _par_expr_string:
                 _out_string += " = " + _par_expr_string
             _out_string = "$%s$" % (_out_string,)
