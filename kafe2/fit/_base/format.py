@@ -300,9 +300,9 @@ class ParameterFormatter(FileIOMixin, object):
                     (asymmetric_error and (
                             self.asymmetric_error is None or np.all(self.asymmetric_error == 0))):
                 if format_as_latex:
-                    _display_string += "$%g$" % self.value
+                    _display_string += f"$%.{n_significant_digits}g$" % self.value
                 else:
-                    _display_string += "%g" % self.value
+                    _display_string += f"%.{n_significant_digits}g" % self.value
             else:
                 if asymmetric_error:
                     _min_err = min(abs(self.error_up), abs(self.error_down))
@@ -326,11 +326,11 @@ class ParameterFormatter(FileIOMixin, object):
                             _err_u = "%#.{n}g".format(n=n_significant_digits) % abs(self.error_up)
                 # default cases if no rounding
                 else:
-                    _val = "%.g" % self.value
-                    _err = "%.g" % self.error
+                    _val = f"%.{n_significant_digits}g" % self.value
+                    _err = f"%.{n_significant_digits}g" % self.error
                     if asymmetric_error:
-                        _err_u = "%.g" % self.error_up
-                        _err_d = "%.g" % self.error_down
+                        _err_u = f"%.{n_significant_digits}g" % self.error_up
+                        _err_d = f"%.{n_significant_digits}g" % self.error_down
 
                 if asymmetric_error:
                     if format_as_latex:
@@ -695,6 +695,10 @@ class CostFunctionFormatter(FunctionFormatter):
                 if with_value_per_ndf and n_degrees_of_freedom > 0:
                     _value_string = "%s = %.4g" % (_value_string,
                                                    float(value) / n_degrees_of_freedom)
+        if format_as_latex:
+            # replace scientific notation with power of ten (LaTeX only)
+            _value_string = re.sub(r'(-?\d*\.?\d+?)0*e\+?(-?[0-9]*[1-9]?)',
+                                     r'\1\\times10^{\2}', _value_string)
 
         if with_name:
             _out_string = "%s = %s" % (_name_string, _value_string)

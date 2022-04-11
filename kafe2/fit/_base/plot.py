@@ -8,6 +8,7 @@ import itertools
 import matplotlib as mpl
 import sys
 
+from .format import ParameterFormatter
 from ..multi.fit import MultiFit
 from ...config import kc, ConfigError, kafe2_rc
 
@@ -19,9 +20,6 @@ from matplotlib import rc_context
 
 __all__ = ["PlotAdapterBase", "Plot", "PlotAdapterException", "PlotFigureException",
            "kc_plot_style"]
-
-_python_version = sys.version_info[0]
-_float_template = ".3g" if _python_version == 2 else "#.3g"
 
 
 def kc_plot_style(data_type, subplot_key, property_key):
@@ -676,8 +674,8 @@ class Plot(object):
         {model_function}
         {parameters}
             $\\hookrightarrow${fit_quality}
-            $\\hookrightarrow \\chi^2 \\, \\mathrm{{probability =}}${chi2_probability:%s}
-    """ % _float_template)
+            $\\hookrightarrow \\chi^2 \\, \\mathrm{{probability =}}${chi2_probability}
+    """)
     FIT_INFO_STRING_FORMAT_SATURATED = textwrap.dedent("""\
         {model_function}
         {parameters}
@@ -883,7 +881,9 @@ class Plot(object):
             )
             if plot_adapter._fit._cost_function.is_chi2:
                 _info_format_string = self.FIT_INFO_STRING_FORMAT_CHI2
-                _info_format_dict["chi2_probability"] = plot_adapter._fit.chi2_probability
+                _chi2_pf = ParameterFormatter("chi2", plot_adapter._fit.chi2_probability)
+                _info_format_dict["chi2_probability"] = _chi2_pf.get_formatted(
+                    n_significant_digits=3, format_as_latex=format_as_latex)
             elif plot_adapter._fit._cost_function.saturated:
                 _info_format_string = self.FIT_INFO_STRING_FORMAT_SATURATED
             else:
@@ -912,9 +912,11 @@ class Plot(object):
             _multi_info_dict = dict()
             if _multi_cost_function.is_chi2:
                 _template = "    $\\hookrightarrow$ global {fit_quality}\n"
-                _multi_info_dict["chi2_probability"] = self._multifit.chi2_probability
+                _chi2_pf = ParameterFormatter("chi2", self._multifit.chi2_probability)
+                _multi_info_dict["chi2_probability"] = _chi2_pf.get_formatted(
+                    n_significant_digits=3, format_as_latex=format_as_latex)
                 _template += "    $\\hookrightarrow$ global $\\chi^2 \\, \\mathrm{{probability}} " \
-                             "= {chi2_probability:%s}$" % _float_template
+                             "= {chi2_probability}$"
             elif _multi_cost_function.saturated:
                 _template = "    $\\hookrightarrow$ global cost / ndf = {fit_quality}\n"
             else:
