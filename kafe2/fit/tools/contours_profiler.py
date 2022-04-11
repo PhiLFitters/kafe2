@@ -258,17 +258,31 @@ class ContoursProfiler(object):
         plt.show(*args, **kwargs)
 
 
-    def get_profile(self, parameter):
+    def get_profile(self, parameter, points=None, bound=None, subtract_min=None):
         """
         Calculate and return a profile of the cost function in a parameter.
 
-        :param parameter: name of the parameter to profile in
+        :param parameter: name of the parameter to profile (referred to as *x* here).
         :type parameter: str
+        :param points: number of equidistant points to use as *x* values
+        :type points: int
+        :param bound: parameter region for the profile. A single value is interpreted as a sigma
+            value for an interval symmetric around the cost function minimum. A tuple of two values
+            is interpreted as the bounds of an arbitrary *x* interval to be profiled.
+        :type bound: int or tuple of int
+        :subtract_min: if the minimal cost function value should be subtracted from the profile
+            *y* values.
+        :type subtract_min: bool
         :return: two-dimensional array of *x* (parameter) values and *y* (cost function) values
         :rtype: two-dimensional array of float
         """
-        _kwargs = dict(bins=self._profile_kwargs['points'], bound=self._profile_kwargs['bound'],
-                       args=None, subtract_min=self._profile_kwargs['subtract_min'])
+        if bound is None:
+            bound = 2
+        if points is None:
+            points = self._profile_kwargs['points']
+        if subtract_min is None:
+            subtract_min = self._profile_kwargs['subtract_min']
+        _kwargs = dict(bins=points, bound=bound, args=None, subtract_min=subtract_min)
         self._fit._check_dynamic_error_compatibility()
         return self._fit._fitter.profile(parameter, **_kwargs)  # TODO fix for single fit inside multifit
 
