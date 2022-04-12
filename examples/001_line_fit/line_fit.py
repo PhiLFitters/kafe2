@@ -23,6 +23,8 @@ xy_data = XYContainer(x_data=[1.0, 2.0, 3.0, 4.0],
 xy_data.add_error(axis='x', err_val=0.1)
 xy_data.add_error(axis='y', err_val=0.4)
 
+xy_data.label = 'Data'  # How the data is called in plots
+
 # Create an XYFit object from the xy data container.
 # By default, a linear function f=a*x+b will be used as the model function.
 line_fit = Fit(data=xy_data)
