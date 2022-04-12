@@ -916,7 +916,7 @@ class Plot(object):
                 _multi_info_dict["chi2_probability"] = _chi2_pf.get_formatted(
                     n_significant_digits=3, format_as_latex=format_as_latex)
                 _template += "    $\\hookrightarrow$ global $\\chi^2 \\, \\mathrm{{probability}} " \
-                             "= {chi2_probability}$"
+                             "= ${chi2_probability}"
             elif _multi_cost_function.saturated:
                 _template = "    $\\hookrightarrow$ global cost / ndf = {fit_quality}\n"
             else:
