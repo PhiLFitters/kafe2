@@ -50,8 +50,7 @@ class XYFit(FitBase):
     def __init__(self,
                  xy_data,
                  model_function=function_library.linear_model,
-                 cost_function=XYCostFunction_Chi2(
-                    axes_to_use='xy', errors_to_use='covariance'),
+                 cost_function="chi2",
                  minimizer=None, minimizer_kwargs=None,
                  dynamic_error_algorithm="nonlinear"):
         """Construct a fit of a model to *xy* data.

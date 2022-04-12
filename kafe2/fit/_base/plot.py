@@ -862,7 +862,7 @@ class Plot(object):
                 '    ' + _pf.get_formatted(
                     with_name=True,
                     with_value=True,
-                    with_errors=True,
+                    with_errors=plot_adapter._fit.errors_valid,
                     asymmetric_error=asymmetric_parameter_errors,
                     format_as_latex=format_as_latex
                 )
@@ -870,7 +870,7 @@ class Plot(object):
             ])
         )
         # _gof_value is None for UnbinnedFit and some user-defined cost functions.
-        if _gof_value is not None:
+        if plot_adapter._fit.errors_valid and _gof_value is not None:
             _info_format_dict["fit_quality"] = _cost_func.formatter.get_formatted(
                 value=_gof_value,
                 with_name=True,

@@ -34,9 +34,7 @@ class IndexedFit(FitBase):
     def __init__(self,
                  data,
                  model_function,
-                 cost_function=CostFunction_Chi2(
-                    errors_to_use='covariance',
-                    fallback_on_singular=True),
+                 cost_function="chi2",
                  minimizer=None,
                  minimizer_kwargs=None,
                  dynamic_error_algorithm="nonlinear"):

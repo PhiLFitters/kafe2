@@ -97,7 +97,7 @@ STRING_TO_COST_FUNCTION = {
     'chi_2': (XYCostFunction_Chi2, {}),
     'chisquared': (XYCostFunction_Chi2, {}),
     'chi_squared': (XYCostFunction_Chi2, {}),
-    'chi2_no_errors': (XYCostFunction_Chi2, {"errors_to_use": None}),
+    'chi2_no_errors': (XYCostFunction_Chi2, {"errors_to_use": None, "add_determinant_cost": False}),
     'chi2_pointwise': (XYCostFunction_Chi2, {"errors_to_use": "pointwise"}),
     'chi2_pointwise_errors': (XYCostFunction_Chi2, {"errors_to_use": "pointwise"}),
     'chi2_covariance': (XYCostFunction_Chi2, {"errors_to_use": "covariance"}),

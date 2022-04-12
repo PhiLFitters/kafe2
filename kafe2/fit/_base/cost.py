@@ -105,6 +105,7 @@ class CostFunction(FileIOMixin, object):
                 self._arg_names += ["total_cov_mat_log_determinant"]
             self._arg_count += 1
 
+        self._errors_valid = True
         self._needs_errors = True
         self._is_chi2 = False
         self._saturated = False
@@ -194,6 +195,10 @@ class CostFunction(FileIOMixin, object):
     def pointwise_version(self):
         """Optimized version of cost function that uses pointwise errors, can be None."""
         return None
+
+    @property
+    def errors_valid(self):
+        return self._errors_valid
 
     def goodness_of_fit(self, *args):
         """How well the model agrees with the data."""
@@ -297,7 +302,7 @@ class CostFunction_Chi2(CostFunction):
         self._formatter.latex_name = "\\chi^2"
         self._formatter.name = "chi2"
         self._formatter.description = _cost_function_description
-        self._needs_errors = errors_to_use is not None
+        self._errors_valid = self._needs_errors = errors_to_use is not None
         self._is_chi2 = True
         self._saturated = True
         self._kafe2go_identifier = self.name
@@ -756,7 +761,7 @@ STRING_TO_COST_FUNCTION = {
     'chi_2': (CostFunction_Chi2, {}),
     'chisquared': (CostFunction_Chi2, {}),
     'chi_squared': (CostFunction_Chi2, {}),
-    'chi2_no_errors': (CostFunction_Chi2, {"errors_to_use": None}),
+    'chi2_no_errors': (CostFunction_Chi2, {"errors_to_use": None, "add_determinant_cost": False}),
     'chi2_pointwise': (CostFunction_Chi2, {"errors_to_use": "pointwise"}),
     'chi2_pointwise_errors': (CostFunction_Chi2, {"errors_to_use": "pointwise"}),
     'chi2_covariance': (CostFunction_Chi2, {"errors_to_use": "covariance"}),

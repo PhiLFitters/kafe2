@@ -185,7 +185,7 @@ class XYPlotAdapter(PlotAdapterBase):
         :param dict kwargs: Keyword arguments accepted by :py:obj:`matplotlib.pyplot.fill_between`.
         :return: plot handle(s)
         """
-        if self._fit.did_fit and (self._fit.has_errors or not self._fit._cost_function.needs_errors):
+        if self._fit.errors_valid:
             _band_y = self.y_error_band
             _y = self.model_line_y
             return target_axes.fill_between(

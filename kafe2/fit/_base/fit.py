@@ -99,6 +99,10 @@ class FitBase(FileIOMixin, object):
                     % (_invalid_args,))
 
         # set and validate the cost function
+        self._implicit_no_errors = cost_function == "chi2" and isinstance(data, DataContainerBase) \
+            and not data.has_errors
+        if self._implicit_no_errors:
+            cost_function = "chi2_no_errors"
         if isinstance(cost_function, CostFunction):
             self._cost_function = cost_function
         elif isinstance(cost_function, str):
@@ -211,21 +215,27 @@ class FitBase(FileIOMixin, object):
                 self._nexus.add_alias(self._model_function.name, alias_for=self._MODEL_NAME)
             except NexusError:
                 pass  # allow 'model' as function name for model
+        self._init_cost_function()
 
+
+    def _init_cost_function(self, existing_behavior='fail'):
         if self._cost_function is not None:
             # the cost function (the function to be minimized)
             _cost_node = self._nexus.add_function(
                 self._cost_function,
                 par_names=self._cost_function.arg_names,
                 func_name=self._cost_function.name,
+                existing_behavior=existing_behavior
             )
 
-            _cost_alias = self._nexus.add_alias('cost', alias_for=self._cost_function.name)
+            _cost_alias = self._nexus.add_alias(
+                'cost', alias_for=self._cost_function.name, existing_behavior=existing_behavior)
         if self._cost_function_pointwise is not None:
             self._nexus.add_function(
                 self._cost_function_pointwise,
                 par_names=self._cost_function_pointwise.arg_names,
-                func_name=self._cost_function_pointwise.name
+                func_name=self._cost_function_pointwise.name,
+                existing_behavior=existing_behavior
             )
 
     def _initialize_fitter(self):
@@ -305,29 +315,31 @@ class FitBase(FileIOMixin, object):
             output_stream.write(
                 _pf.get_formatted(with_name=True,
                                   with_value=True,
-                                  with_errors=True,
+                                  with_errors=self.errors_valid,
                                   format_as_latex=False,
                                   asymmetric_error=asymmetric_parameter_errors)
             )
             output_stream.write('\n')
         output_stream.write('\n')
 
-        output_stream.write(indent * (indentation_level + 1) + "Model Parameter Correlations\n")
-        output_stream.write(indent * (indentation_level + 1) + "============================\n\n")
+        if self.errors_valid:
+            output_stream.write(indent * (indentation_level + 1) + "Model Parameter Correlations\n")
+            output_stream.write(indent * (indentation_level + 1)
+                                + "============================\n\n")
 
-        _cor_mat_content = self.parameter_cor_mat
-        if _cor_mat_content is not None:
-            par_display_names = [_pf.name for _pf in
-                                 self._get_model_function_parameter_formatters()]
-            _cor_mat_as_dict = OrderedDict()
-            _cor_mat_as_dict['_invisible_first_column'] = par_display_names
-            for _par_name, _row in zip(par_display_names, self.parameter_cor_mat.T):
-                _cor_mat_as_dict[_par_name] = np.atleast_1d(np.squeeze(np.asarray(_row)))
+            _cor_mat_content = self.parameter_cor_mat
+            if _cor_mat_content is not None:
+                par_display_names = [_pf.name for _pf in
+                                    self._get_model_function_parameter_formatters()]
+                _cor_mat_as_dict = OrderedDict()
+                _cor_mat_as_dict['_invisible_first_column'] = par_display_names
+                for _par_name, _row in zip(par_display_names, self.parameter_cor_mat.T):
+                    _cor_mat_as_dict[_par_name] = np.atleast_1d(np.squeeze(np.asarray(_row)))
 
-            print_dict_as_table(_cor_mat_as_dict, output_stream=output_stream, indent_level=2)
-        else:
-            output_stream.write(indent * (indentation_level + 2) + '<not available>\n')
-        output_stream.write('\n')
+                print_dict_as_table(_cor_mat_as_dict, output_stream=output_stream, indent_level=2)
+            else:
+                output_stream.write(indent * (indentation_level + 2) + '<not available>\n')
+            output_stream.write('\n')
 
         output_stream.write(indent * (indentation_level + 1) + "Cost Function\n")
         output_stream.write(indent * (indentation_level + 1) + "=============\n\n")
@@ -337,7 +349,7 @@ class FitBase(FileIOMixin, object):
             indent * (indentation_level + 2) + "Cost function: {}\n\n".format(_pf.description))
         _gof_value = self.goodness_of_fit
         output_stream.write(indent * (indentation_level + 2))
-        if _gof_value is None:
+        if _gof_value is None or not self.errors_valid:
             output_stream.write("Cost = ")
             output_stream.write(_pf.get_formatted(
                 value=self.cost_function_value,
@@ -356,7 +368,7 @@ class FitBase(FileIOMixin, object):
             ))
         output_stream.write('\n\n')
         _chi2_prob = self.chi2_probability
-        if _chi2_prob is not None:
+        if _chi2_prob is not None and self.errors_valid:
             output_stream.write("%schi2 probability = %#.3g\n\n" % (
                 indent * (indentation_level + 2), _chi2_prob))
 
@@ -379,6 +391,13 @@ class FitBase(FileIOMixin, object):
         self._fitter.reset_minimizer()
         for _error_name in self._BASIC_ERROR_NAMES:
             self._nexus.get(_error_name).mark_for_update()
+        if self._implicit_no_errors:
+            _cost_function_class, _kwargs = self._STRING_TO_COST_FUNCTION["chi2_covariance"]
+            self._cost_function = _cost_function_class(**_kwargs)
+            self._cost_function_pointwise = self._cost_function.pointwise_version
+            self._init_cost_function(existing_behavior='replace')
+            self._implicit_no_errors = False
+
 
     def _set_data_as_model_ref(self):
         for _err in self._param_model.get_matching_errors({"relative": True}).values():
@@ -724,7 +743,11 @@ class FitBase(FileIOMixin, object):
             _cost -= self._nexus.get("total_cov_mat_log_determinant").value
         return self._cost_function.chi2_probability(_cost, self.ndf)
 
-    # -- public methods
+    @property
+    def errors_valid(self):
+        return self._cost_function.errors_valid and self.did_fit and (
+            self.has_errors or not self._cost_function.needs_errors)
+    # public methods
 
     def set_parameter_values(self, **param_name_value_dict):
         """Set the fit parameters to new values. Valid keyword arguments are the names of the declared fit parameters.
@@ -1008,6 +1031,9 @@ class FitBase(FileIOMixin, object):
         """
         if self._cost_function.needs_errors and not self.has_errors:
             warnings.warn("Cost function expects errors but no errors were specified.")
+        if self._implicit_no_errors:
+            warnings.warn(
+                "No data/model errors were specified. Parameter errors cannot be calculated.")
 
         if self._cost_function_pointwise is not None:
             if is_diagonal(self.total_cov_mat):
