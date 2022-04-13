@@ -1,16 +1,12 @@
 #!/usr/bin/env python
 
 """
-kafe2 example: Histogram Fit
-============================
+kafe2 example: Histogram Fit (Absolute)
+=======================================
 
-kafe2 is not only capable of performing XY-Fits.
-One way to handle one-dimensional data with kafe2 is by fitting a histogram.
-The distribution of a random stochastic variable follows a probability density function.
-The fit will determine the parameters of that density function, which the dataset is most likely
-to follow.
-To get to the height of a bin, please multiply the results of the fitted function with the amount
-of entries N of the histogram.
+This example is equivalent to the other histogram example in this folder except for the fact that
+the model function is not a density but has an amplitude as one of its parameters. Long-term this
+will be replaced by a better example.
 """
 
 import numpy as np
@@ -28,7 +24,7 @@ data = np.random.normal(loc=0, scale=1, size=100)
 # Alternatively the bin edges can be set.
 histogram = HistContainer(n_bins=10, bin_range=(-5, 5), fill_data=data)
 
-# create the Fit object by specifying a density function
+# create the Fit object by specifying a scalable model function
 fit = Fit(data=histogram, model_function=normal_distribution, density=False)
 
 fit.do_fit()  # do the fit
