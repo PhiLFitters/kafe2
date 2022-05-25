@@ -35,7 +35,7 @@
 # ---------------------------------------------------------------
 
 label: Beispieldaten
-x_label: x
+x_label: 'x'
 x_data: [0., 0.2, 0.4, 0.6, 0.8, 1., 1.2, 1.4, 1.6, 1.8, 2., 2.2, 2.4, 2.6]
 x_errors:
 # independent
@@ -59,25 +59,12 @@ x_errors:
   correlation_coefficient: 1. 
   relative: true
 
-y_label: y / f(x, *par)
+y_label: 'y / f(x, *par)'
 y_data: [ 1.149, 0.712, 0.803, 0.464, 0.398, 0.355, 0.148,
           0.328, 0.181, 0.140, 0.0651, 0.005, -0.005, 0.116 ]
 # y-errors contain components dependent on the model values
-#  and are therefore specified in the model part below
-
-model_label: 'Exponential Fit'
+#  and are therefore specified under a special label:
 parametric_model:
-  model_function:
-    python_code: |
-      def exp_model(x, A=1., x0=1.):
-        return A*np.exp(-x/x0)
-    model_function_formatter:
-      latex_name: "f\\,"
-      latex_expression_string: "{A}\\,\\exp({x}/{x0})"
-      arg_formatters:
-        A: "{A}"
-        x0: "{x_0}"
-      
   y_errors:
   # independent
   - type: simple
@@ -100,3 +87,17 @@ parametric_model:
     correlation_coefficient: 1. 
     relative: true
 
+# model specification
+model_label: 'Exponential Fit'
+model_function: 
+  python_code: | 
+    def exp_model(x, A=1., x0=1.):
+      return A*np.exp(-x/x0)
+
+# here, we specify "nice" LaTeX labels for result figure   
+  model_function_formatter:
+    latex_name: "f\\,"
+    latex_expression_string: "{A}\\,\\exp({x}/{x0})"
+    arg_formatters:
+      A: "{A}"
+      x0: "{x_0}"
