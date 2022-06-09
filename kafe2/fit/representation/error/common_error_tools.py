@@ -93,48 +93,64 @@ def process_error_sources(container_obj, yaml_doc):
     # lists of the above are also valid, if the error object is not a list
     if isinstance(container_obj, XYContainer):  # also applies for XYParamModel
         _xerrs = yaml_doc.pop('x_errors', [])
-        if not isinstance(_xerrs, list) or (len(_xerrs) > 0 and isinstance(_xerrs[0], float)):
+        if isinstance(_xerrs, (int, float, str)):
+            _xerrs = [_xerrs] * container_obj.size
+        if len(_xerrs) > 0 and isinstance(_xerrs[0], (int, float, str)):
             _xerrs = [_xerrs]
         _yerrs = yaml_doc.pop('y_errors', [])
-        if not isinstance(_yerrs, list) or (len(_yerrs) > 0 and isinstance(_yerrs[0], float)):
+        if not isinstance(_yerrs, list):
+            _yerrs = [_yerrs] * container_obj.size
+        if len(_yerrs) > 0 and isinstance(_yerrs[0], (int, float, str)):
             _yerrs = [_yerrs]
         _errs = _xerrs + _yerrs
         _axes = [0] * len(_xerrs) + [1] * len(_yerrs)  # 0 for 'x', 1 for 'y'
     else:
         _errs = yaml_doc.pop('errors', [])
-        if not isinstance(_errs, list) or (len(_errs) > 0 and isinstance(_errs[0], float)):
+        if not isinstance(_errs, list):
+            _errs = [_errs] * container_obj.size
+        if len(_errs) > 0 and isinstance(_errs[0], float):
             _errs = [_errs]
         _axes = [None] * len(_errs)
 
     # add error sources, if any
     for _err, _axis in zip(_errs, _axes):
-        # if error is a float/int or a list thereof add it as a simple error and don't
-        # try to interpret it as a kafe2 error object
-        if isinstance(_err, (float, int, list)):
+        # If error is a list, check for mixture of relative/absolute errors.
+        # Add it as a simple error and don't try to interpret it as a kafe2 error object
+        if isinstance(_err, list):
+            _rel = np.zeros(len(_err))
+            _abs = np.zeros(len(_err))
+            for i, _val in enumerate(_err):
+                if isinstance(_val, str) and _val.endswith("%"):
+                    try:
+                        _rel_err_percent = float(_val[:-1])
+                    except ValueError:
+                        raise DReprError("Cannot convert string to relative error: %s" % _err)
+                    _rel[i] = _rel_err_percent
+                else:
+                    try:
+                        _abs_err = float(_val)
+                    except ValueError:
+                        raise DReprError("Cannot convert {} to error value.".format(_val))
+                    _abs[i] = _val
             if _axis is not None:
-                container_obj = add_error_to_container('simple', container_obj, err_val=_err,
+                container_obj = add_error_to_container('simple', container_obj,
+                                                       err_val=0.01 * _rel,
+                                                       relative=True,
+                                                       axis=_axis)
+                container_obj = add_error_to_container('simple', container_obj,
+                                                       err_val=_abs,
+                                                       relative=False,
                                                        axis=_axis)
             else:
-                container_obj = add_error_to_container('simple', container_obj, err_val=_err)
+                container_obj = add_error_to_container('simple', container_obj,
+                                                       err_val=0.01 * _rel,
+                                                       relative=True)
+                container_obj = add_error_to_container('simple', container_obj,
+                                                       err_val=_abs,
+                                                       relative=False)
             continue
-        elif isinstance(_err, str):
-            if _err.endswith("%"):
-                try:
-                    _rel_err_percent = float(_err[:-1])
-                except ValueError:
-                    raise DReprError("Cannot convert string to relative error: %s" % _err)
-                if _axis is not None:
-                    container_obj = add_error_to_container('simple', container_obj,
-                                                           err_val=0.01 * _rel_err_percent,
-                                                           relative=True,
-                                                           axis=_axis)
-                else:
-                    container_obj = add_error_to_container('simple', container_obj,
-                                                           err_val=0.01 * _rel_err_percent,
-                                                           relative=True)
-                continue
-            else:
-                raise DReprError("Cannot convert string to error: %s" % _err)
+        elif isinstance(_err, (float, int, str)):
+            raise DReprError("Failed to read in errors: {}".format(_err))
 
         _add_kwargs = dict()
         # translate and check that all required keys are present
