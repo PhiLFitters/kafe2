@@ -6,7 +6,7 @@ import textwrap
 import warnings
 import itertools
 import matplotlib as mpl
-import sys
+import os
 
 from .format import ParameterFormatter
 from ..multi.fit import MultiFit
@@ -1605,7 +1605,7 @@ class Plot(object):
 
         return self.set_keywords(plot_type, _dicts)
 
-    def save(self, fname=None, figures='all', *args, **kwargs):
+    def save(self, fname='fit.png', figures='all', *args, **kwargs):
         """
         Saves the plot figures to files.
         args and kwargs are passed on to matplotlib.Figure.savefig() .
@@ -1619,11 +1619,13 @@ class Plot(object):
             _figure_indices = range(len(self._figure_dicts))
         elif isinstance(figures, int):
             _figure_indices = [figures]
-        if fname is None:
+        _file_name_list = fname
+        if isinstance(_file_name_list, str):
             if len(self._figure_dicts) == 1:
-                _file_name_list = ['fit.png']
+                _file_name_list = [fname]
             else:
-                _file_name_list = [f'fit_{_i}.png' for _i in _figure_indices]
+                name, extension = os.path.splitext(fname)
+                _file_name_list = [f'{name}_{_i}.{extension}' for _i in _figure_indices]
         if len(_file_name_list) != len(_figure_indices):
             raise ValueError(
                 f'Received {len(_file_name_list)} file names for {len(_figure_indices)} figures.'
