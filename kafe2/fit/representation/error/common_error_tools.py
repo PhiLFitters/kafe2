@@ -155,13 +155,13 @@ def process_error_sources(container_obj, yaml_doc):
         _add_kwargs = dict()
         # translate and check that all required keys are present
         try:
-            _err_type = _err['type']
+            _err_type = _err.get('type', 'simple')
 
-            _add_kwargs['name'] = _err.get('name')
+            _add_kwargs['name'] = _err.get('name', None)
 
             if _err_type == 'simple':
                 _add_kwargs['err_val'] = _err['error_value']
-                _add_kwargs['correlation'] = _err['correlation_coefficient']
+                _add_kwargs['correlation'] = _err.get('correlation_coefficient', 0)
             elif _err_type == 'matrix':
                 _add_kwargs['err_matrix'] = _err['matrix']
                 _add_kwargs['matrix_type'] = _err['matrix_type']
