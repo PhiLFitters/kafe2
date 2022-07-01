@@ -129,6 +129,9 @@ class HistContainer(IndexedContainer):
 
         self._unprocessed_entries = []
 
+    def _get_error_reference(self):
+        return self._data[1:-1]
+
     # -- public properties
 
     @property

@@ -47,6 +47,9 @@ class IndexedContainer(DataContainerBase):
     def _clear_total_error_cache(self):
         self._total_error = None
 
+    def _get_error_reference(self):
+        return self._data
+
     # -- public properties
 
     @property
@@ -127,7 +130,7 @@ class IndexedContainer(DataContainerBase):
             name=name,
             correlation=correlation,
             relative=relative,
-            reference=lambda: self.data  # set the reference appropriately
+            reference=self._get_error_reference
         )
 
     def add_matrix_error(self, err_matrix, matrix_type,
@@ -156,5 +159,5 @@ class IndexedContainer(DataContainerBase):
             name=name,
             err_val=err_val,
             relative=relative,
-            reference=lambda: self.data  # set the reference appropriately
+            reference=self._get_error_reference
         )

@@ -69,6 +69,9 @@ class XYContainer(IndexedContainer):
     def _get_data_for_axis(self, axis_id):
         return np.array(self._data[axis_id])
 
+    def _get_error_reference(self, axis_id):
+        return self._data[axis_id]
+
     def _calculate_total_error(self):
         _sz = self.size
         _tmp_cov_mat_x = np.zeros((_sz, _sz))
@@ -282,8 +285,10 @@ class XYContainer(IndexedContainer):
         if err_val.ndim == 0:  # if dimensionless numpy array (i.e. float64), add a dimension
             err_val = np.ones(self.size) * err_val
 
-        _err = SimpleGaussianError(err_val=err_val, corr_coeff=correlation,
-                                   relative=relative, reference=lambda: self._get_data_for_axis(_axis))
+        _err = SimpleGaussianError(
+            err_val=err_val, corr_coeff=correlation, relative=relative,
+            reference=lambda: self._get_error_reference(_axis)
+        )
         _name = self._add_error_object(name=name, error_object=_err, axis=_axis)
         return _name
 
@@ -312,7 +317,7 @@ class XYContainer(IndexedContainer):
         _axis = self._find_axis_raise(axis)
         _err = MatrixGaussianError(
             err_matrix=err_matrix, matrix_type=matrix_type, err_val=err_val,
-            relative=relative, reference=lambda: self._get_data_for_axis(_axis)
+            relative=relative, reference=lambda: self._get_error_reference(axis)
         )
         _err.check_cov_mat_symmetry()
         _name = self._add_error_object(name=name, error_object=_err, axis=_axis)
