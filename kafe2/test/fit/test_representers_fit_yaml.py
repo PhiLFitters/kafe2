@@ -747,6 +747,23 @@ model_function: linear
 y_errors: 0.1
 """
 
+TEST_FIT_XY_RELATIVE_ERROR="""
+x_data: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
+y_data: [ -1.0804945, 0.97336504, 2.75769933, 4.91093935, 6.98511206,
+        9.15059627, 10.9665515, 13.06741151, 14.95081026, 16.94404467]
+model_function: linear
+x_errors: 10%
+y_errors: [10%, 10%, 10%, 10%, 10%, 10%, 10%, 10%, 10%, 10%]
+"""
+
+TEST_FIT_XY_RELATIVE_ERROR_MIXED="""
+x_data: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
+y_data: [ -1.0804945, 0.97336504, 2.75769933, 4.91093935, 6.98511206,
+        9.15059627, 10.9665515, 13.06741151, 14.95081026, 16.94404467]
+model_function: linear
+x_errors: 10%
+y_errors: [0.10804945, 10%, 10%, 0.491093935, 10%, 0.915059627, 10%, 10%, 10%, 1.694404467]
+"""
 
 class TestXYFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
     FIT_CLASS = XYFit
@@ -766,6 +783,7 @@ class TestXYFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
         self._test_parameters_default_simple = np.array([1.0, 1.0])
         self._test_parameters_do_fit = np.array([2.0115580399995032, -1.0889949779758534])
         self._test_parameters_do_fit_simple = np.array([2.0117809129092095, -1.090410559090481])
+        self._test_parameters_do_fit_relative = np.array([1.98399075, -1.06814031])
         self._test_y = [-1.0804945, 0.97336504, 2.75769933, 4.91093935, 6.98511206,
                         9.15059627, 10.9665515, 13.06741151, 14.95081026, 16.94404467]
         self._test_y_default = self.linear_model(self._test_x, *self._test_parameters_default)
@@ -775,6 +793,9 @@ class TestXYFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
 
         self._test_y_do_fit_simple = [-1.09041056, 0.92137035, 2.93315127, 4.94493218, 6.95671309,
                                       8.96849401, 10.98027492, 12.99205583, 15.00383674, 17.01561766]
+        self._test_y_do_fit_relative = [
+            -1.06814032, 0.91585043, 2.89984117, 4.88383192, 6.86782267,
+            8.85181341, 10.83580416, 12.81979491, 14.80378565, 16.7877764]
 
         self._fit = XYFit(
             xy_data=[self._test_x, self._test_y],
@@ -787,6 +808,11 @@ class TestXYFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
                                                   matrix=[[1.1, 0.1], [0.1, 2.4]])
 
         self.setup_streams()
+        self._testfile_stringstream_relative = IOStreamHandle(StringIO(TEST_FIT_XY_RELATIVE_ERROR))
+        self._testfile_streamreader_relative = FitYamlReader(self._testfile_stringstream_relative)
+        self._testfile_stringstream_mixed = IOStreamHandle(
+            StringIO(TEST_FIT_XY_RELATIVE_ERROR_MIXED))
+        self._testfile_streamreader_mixed = FitYamlReader(self._testfile_stringstream_mixed)
 
     def test_read_from_testfile_stream(self):
         _read_fit = self._testfile_streamreader.read()
@@ -846,6 +872,71 @@ class TestXYFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
         self.assertTrue(
             np.allclose(
                 self._test_y_do_fit_simple,
+                _read_fit.y_model
+            )
+        )
+
+    def test_read_from_testfile_stream_relative(self):
+        _read_fit = self._testfile_streamreader_relative.read()
+        self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
+        self.assertTrue(
+            np.allclose(
+                self._test_parameters_default_simple,
+                _read_fit.parameter_values
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                self._test_y_default_simple,
+                _read_fit.y_model
+            )
+        )
+
+        _read_fit.do_fit()
+
+        self.assertTrue(
+            np.allclose(
+                self._test_parameters_do_fit_relative,
+                _read_fit.parameter_values
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                self._test_y_do_fit_relative,
+                _read_fit.y_model
+            )
+        )
+
+    def test_read_from_testfile_stream_relative_mixed(self):
+        _read_fit = self._testfile_streamreader_mixed.read()
+        self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
+        self.assertTrue(
+            np.allclose(
+                self._test_parameters_default_simple,
+                _read_fit.parameter_values
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                self._test_y_default_simple,
+                _read_fit.y_model
+            )
+        )
+
+        _read_fit.do_fit()
+
+        print(_read_fit.x_total_error)
+        print(_read_fit.y_total_error)
+
+        self.assertTrue(
+            np.allclose(
+                self._test_parameters_do_fit_relative,
+                _read_fit.parameter_values
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                self._test_y_do_fit_relative,
                 _read_fit.y_model
             )
         )
