@@ -7,6 +7,7 @@ import warnings
 import itertools
 import matplotlib as mpl
 import os
+from collections.abc import Iterable
 
 from .format import ParameterFormatter
 from ..multi.fit import MultiFit
@@ -1605,7 +1606,7 @@ class Plot(object):
 
         return self.set_keywords(plot_type, _dicts)
 
-    def save(self, fname='fit.png', figures='all', *args, **kwargs):
+    def save(self, fname=None, figures='all', *args, **kwargs):
         """
         Saves the plot figures to files.
         args and kwargs are passed on to matplotlib.Figure.savefig() .
@@ -1620,12 +1621,24 @@ class Plot(object):
         elif isinstance(figures, int):
             _figure_indices = [figures]
         _file_name_list = fname
-        if isinstance(_file_name_list, str):
+        if fname is None:
             if len(self._figure_dicts) == 1:
+                _file_name_list = ["fit.png"]
+            else:
+                _file_name_list = [f'fit_{_i}.png' for _i in _figure_indices]
+        elif isinstance(fname, str):
+            if len(_figure_indices) == 1:
                 _file_name_list = [fname]
             else:
                 name, extension = os.path.splitext(fname)
-                _file_name_list = [f'{name}_{_i}.{extension}' for _i in _figure_indices]
+                _file_name_list = [f'{name}_{_i}{extension}' for _i in _figure_indices]
+        elif isinstance(fname, Iterable):
+            _file_name_list = fname
+        else:
+            raise ValueError(
+                "fname must be either None, a string, or an iterable, but received type "
+                f"{type(fname)}"
+            )
         if len(_file_name_list) != len(_figure_indices):
             raise ValueError(
                 f'Received {len(_file_name_list)} file names for {len(_figure_indices)} figures.'

@@ -1,6 +1,7 @@
 import unittest
 import sys
 import numpy as np
+import os
 from kafe2 import XYFit, Plot
 
 
@@ -133,6 +134,17 @@ class TestXYPlot(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             self.plot.plot(ratio=True, residual=True)
 
+    def test_save(self):
+        self.plot.plot()
+
+        self.plot.save()
+        self.assertTrue(os.path.exists("fit.png"))
+        os.remove("fit.png")
+
+        self.plot.save("my_fit.png")
+        self.assertTrue(os.path.exists("my_fit.png"))
+        os.remove("my_fit.png")
+
 class TestMultiPlot(unittest.TestCase):
     def setUp(self):
         self._ref_data1 = [[1, 2, 3], [1, 2, 3]]
@@ -198,3 +210,54 @@ class TestMultiPlot(unittest.TestCase):
         for _ax, _xs, _ys in zip(self.plot_sep.axes, x_scales, y_scales):
             self.assertEqual(_ax['main'].get_xscale(), _xs)
             self.assertEqual(_ax['main'].get_yscale(), _ys)
+
+    def test_save(self):
+        self.plot.plot()
+        self.plot_sep.plot()
+
+        self.plot.save()
+        self.assertTrue(os.path.exists("fit.png"))
+        os.remove("fit.png")
+
+        self.plot.save("my_fit.png")
+        self.assertTrue(os.path.exists("my_fit.png"))
+        os.remove("my_fit.png")
+
+        self.plot_sep.save()
+        self.assertTrue(os.path.exists("fit_0.png"))
+        os.remove("fit_0.png")
+        self.assertTrue(os.path.exists("fit_1.png"))
+        os.remove("fit_1.png")
+
+        self.plot_sep.save(figures=0)
+        self.assertTrue(os.path.exists("fit_0.png"))
+        os.remove("fit_0.png")
+        self.plot_sep.save(figures=1)
+        self.assertTrue(os.path.exists("fit_1.png"))
+        os.remove("fit_1.png")
+
+        self.plot_sep.save("my_fit.png")
+        self.assertTrue(os.path.exists("my_fit_0.png"))
+        os.remove("my_fit_0.png")
+        self.assertTrue(os.path.exists("my_fit_1.png"))
+        os.remove("my_fit_1.png")
+
+        self.plot_sep.save("one_fit.png", figures=0)
+        self.assertTrue(os.path.exists("one_fit.png"))
+        os.remove("one_fit.png")
+        self.plot_sep.save("another_fit", figures=1)
+        self.assertTrue(os.path.exists("another_fit.png"))
+        os.remove("another_fit.png")
+
+        self.plot_sep.save(["one_fit.png", "another_fit.png"])
+        self.assertTrue(os.path.exists("one_fit.png"))
+        os.remove("one_fit.png")
+        self.assertTrue(os.path.exists("another_fit.png"))
+        os.remove("another_fit.png")
+
+    def test_save_raise(self):
+        self.plot_sep.plot()
+        with self.assertRaises(ValueError):
+            self.plot_sep.save(fname=1)
+        with self.assertRaises(ValueError):
+            self.plot_sep.save(fname=["fit_0.png", "fit_1.png", "fit_2.png"])
