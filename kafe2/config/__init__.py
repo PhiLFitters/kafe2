@@ -11,6 +11,9 @@ import matplotlib as mpl
 from copy import deepcopy
 from tempfile import NamedTemporaryFile
 
+import logging
+logger = logging.getLogger(__name__)
+
 __all__ = ['ConfigLoader', 'ConfigError', 'ConfigTypeError', 'ConfigLookupError', 'kafe2_rc', 'kc']
 
 
@@ -106,5 +109,6 @@ try:
             pass
         _temp_file.close()
         os.remove(_temp_file.name)
+    logger.debug("matplotlib backend: %s", mpl.get_backend())
 except AttributeError:  # mock module
     pass
