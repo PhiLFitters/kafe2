@@ -145,6 +145,13 @@ class TestXYPlot(unittest.TestCase):
         self.assertTrue(os.path.exists("my_fit.png"))
         os.remove("my_fit.png")
 
+    def test_get_keywords(self):
+        self.plot.get_keywords("model")
+
+        with self.assertRaises(ValueError):
+            self.plot.get_keywords("This does not exist")
+
+
 class TestMultiPlot(unittest.TestCase):
     def setUp(self):
         self._ref_data1 = [[1, 2, 3], [1, 2, 3]]

@@ -270,7 +270,12 @@ class PlotAdapterBase(object):
         """Resolve the keyword arguments passed to the plot method."""
         _subplots = self._get_subplots()
 
-        _explicit_kwargs = _subplots[plot_type].get('plot_method_keywords', {})
+        try:
+            _subplot = _subplots[plot_type]
+        except KeyError as exc:
+            raise ValueError(
+                f"Unknown subplot: {plot_type} . Available: {list(_subplots.keys())}") from exc
+        _explicit_kwargs = _subplot.get('plot_method_keywords', {})
 
         # get static kwargs
         _plot_style_as = _subplots[plot_type].get('plot_style_as', plot_type)
