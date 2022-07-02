@@ -35,6 +35,8 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
         """
         _x_data_array = np.array(x_data)
         _y_data = model_func(_x_data_array, *model_parameters)
+        if np.isscalar(_y_data):
+            _y_data = np.ones_like(_x_data_array) * _y_data
         self._pm_calculation_stale = False
         super(XYParametricModel, self).__init__(model_func, model_parameters,
                                                 _x_data_array, _y_data)
@@ -109,7 +111,10 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
         """
         _x = x if x is not None else self.x
         _pars = model_parameters if model_parameters is not None else self._model_parameters
-        return self._model_function_object(_x, *_pars)
+        _y = self._model_function_object(_x, *_pars)
+        if np.isscalar(_y):
+            _y = np.ones_like(_x) * _y
+        return _y
 
     def eval_model_function_derivative_by_parameters(self, x=None, model_parameters=None,
                                                      par_dx=None):

@@ -108,21 +108,21 @@ class HistParametricModel(ParametricModelBaseMixin, HistContainer):
         self._pm_calculation_stale = False
 
     def _bin_evaluation_rectangle(self):
-        _height_centers = self._model_function_object(self.bin_centers, *self._model_parameters)
+        _height_centers = self.eval_model_function_density(self.bin_centers)
         return self.bin_widths * _height_centers
 
     def _bin_evaluation_trapezoid(self):
-        _height_edges = self._model_function_object(self._bin_edges, *self._model_parameters)
+        _height_edges = self.eval_model_function_density(self._bin_edges)
         return self.bin_widths / 2.0 * (_height_edges[:-1] + _height_edges[1:])
 
     def _bin_evaluation_simpson(self):
-        _height_edges = self._model_function_object(self._bin_edges, *self._model_parameters)
-        _height_centers = self._model_function_object(self.bin_centers, *self._model_parameters)
+        _height_edges = self.eval_model_function_density(self._bin_edges)
+        _height_centers = self.eval_model_function_density(self.bin_centers)
         return self.bin_widths / 6.0 * (
                 _height_edges[:-1] + 4.0 * _height_centers + _height_edges[1:])
 
     def _bin_evaluation_numerical(self):
-        _integrand_func = lambda x: self._model_function_object(x, *self._model_parameters)
+        _integrand_func = lambda x: self.eval_model_function_density(x)
         _int_val = np.zeros(self.size)
         for _i, (_a, _b) in enumerate(zip(self._bin_edges[:-1], self._bin_edges[1:])):
             _int_val[_i], _ = integrate.quad(_integrand_func, _a, _b)
@@ -181,7 +181,10 @@ class HistParametricModel(ParametricModelBaseMixin, HistContainer):
         :rtype: :py:obj:`numpy.ndarray`
         """
         _pars = model_parameters if model_parameters is not None else self._model_parameters
-        return self._model_function_object(x, *_pars)
+        _y = self._model_function_object(x, *_pars)
+        if np.isscalar(_y):
+            _y = np.ones_like(x) * _y
+        return _y
 
     def fill(self, entries):
         raise HistParametricModelException("Parametric model of histogram cannot be filled!")

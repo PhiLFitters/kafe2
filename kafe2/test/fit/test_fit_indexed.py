@@ -356,6 +356,16 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
         _fit_model_err.do_fit()
         self._assert_fit_results_equal(_fit_data_err, _fit_model_err, rtol=1e-2)
 
+    def test_fit_scalar_model_function(self):
+        def _model_function(a):
+            return a
+
+        _fit = IndexedFit([1, 2], _model_function)
+        _fit.add_error(1.0)
+        _fit.do_fit()
+        self.assertAlmostEqual(_fit.parameter_values[0], 1.5)
+        _fit.report()
+
 
 class TestIndexedFitWithSimpleErrors(AbstractTestFit, unittest.TestCase):
 

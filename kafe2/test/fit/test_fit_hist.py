@@ -371,3 +371,13 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         _fit.do_fit()
         _fit.report(output_stream=_buffer)
         self.assertNotEqual(_buffer.getvalue(), "")
+
+    def test_fit_scalar_model_function(self):
+        def _model_function(x, a):
+            return a
+
+        _container = HistContainer(n_bins=2, bin_range=(0, 2), fill_data=[0.5, 1.5, 1.5])
+        _fit = HistFit(_container, _model_function, density=False)
+        _fit.do_fit()
+        self.assertAlmostEqual(_fit.parameter_values[0], 1.5, places=4)
+        _fit.report()

@@ -17,13 +17,16 @@ class UnbinnedParametricModel(ParametricModelBaseMixin, UnbinnedContainer):
 
         self.support = np.array(data)
 
+        _model = model_density_function(self.support, *model_parameters)
+        if np.isscalar(_model):
+            _model = np.ones_like(self.support) * _model
+
         super(UnbinnedParametricModel, self).__init__(
             # this gets passed to ParametricModelBaseMixin.__init__
             model_func=model_density_function,
             model_parameters=model_parameters,
             # this gets passed to UnbinnedContainer.__init__
-            data=model_density_function(
-                self.support, *model_parameters)
+            data=_model
         )
 
     # -- private methods
@@ -65,4 +68,7 @@ class UnbinnedParametricModel(ParametricModelBaseMixin, UnbinnedContainer):
         """
         _x = support if support is not None else self.support
         _pars = model_parameters if model_parameters is not None else self.parameters
-        return self._model_function_object(_x, *_pars)
+        _y = self._model_function_object(_x, *_pars)
+        if np.isscalar(_y):
+            _y = np.ones_like(_x) * _y
+        return _y

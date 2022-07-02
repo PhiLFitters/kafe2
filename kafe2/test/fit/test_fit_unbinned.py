@@ -250,3 +250,13 @@ class TestUnbinnedFitBasicInterface(AbstractTestFit, unittest.TestCase):
         _fit.do_fit()
         _fit.report(output_stream=_buffer)
         self.assertNotEqual(_buffer.getvalue(), "")
+
+    def test_fit_scalar_model_function(self):
+        def _model_function(x, a):
+            return a
+
+        _fit = UnbinnedFit([1.0, 2.0], _model_function)
+        _fit.limit_parameter("a", 0.001, 0.999)
+        _fit.do_fit()
+        self.assertAlmostEqual(_fit.parameter_values[0], 0.999)
+        _fit.report()
