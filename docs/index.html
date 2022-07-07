@@ -5,15 +5,25 @@ generated via   pandoc README.md -o index.html
 <body style="background-color:white;">
 <p style="background-color:AliceBlue;">
 </p>
-<p><img src="kafe_logo.png" width=120
+<p><img src="kafe2_logo.png" width=120
      style= "float: left; margin-right: 10px;" /> <br></p>
 <h1 ALIGN="center"; style="background-color:GhostWhite"> 
-      Data Visualisation and Model Fitting 
+      <i>kafe2</i> - Data Visualisation and Model Fitting 
 </h1>
-<br>
+<blockquote>
+<p>          <a href="https://github.com/PhiLFitters/kafe2"><strong>github Repository</strong> of the <em>kafe2</em> project</a>.</p>
+</blockquote>
 <p style="background-color:AliceBlue;">
 <hr>
 </p>
-<p><strong>kafe2</strong> is an open-source Python package designed to provide a flexible Python interface for the estimation of model parameters from measured data. It is the spiritual successor to the original <em>kafe</em> package.</p>
-<p>kafe2 offers support for several types of data formats (including series of indexed measurements, x-y value pairs, and histograms) and data uncertainty models, as well as arbitrarily complex parametric models. The numeric aspects are handled using the scientific Python stack (<em>NumPy</em>, <em>SciPy</em>, …). Visualization of the data and the estimated model are provided by matplotlib.</p>
-<p><a href="https://github.com/PhiLFitters/kafe2">Repository of the <em>kafe2</em> project</a>.</p>
+<p><strong><em>kafe2</em></strong> is an open-source <i>Python</i> package designed to provide a flexible Python interface for the estimation of model parameters from measured data. It is the spiritual successor to the original <a href="https://github.com/dsavoiu/kafe"><em>kafe</em></a> package.</p>
+<figure>
+<img src="kafe_graph1.png" alt="" /><figcaption>Example: Fit of two models with kafe2</figcaption>
+</figure>
+<p><em>kafe2</em> offers support for several types of data types (including series of indexed measurements, <em>x-y</em> value pairs, and histogram data) and uncertainty models, as well as arbitrarily complex parametric models. The numeric aspects are handled using the scientific <em>Python</em> stack (<em>NumPy</em>, <em>SciPy</em>, …). Visualization of the data and the estimated model are provided by <em>matplotlib</em>. High-dimensional numerical optimization and uncertainty analyis rely on the packages <em>scipy.optimize</em> or <em>iminuit</em> (based on the MINUIT2 package developed and maintained at CERN).</p>
+<p>Fitting procedures in <em>kafe2</em> are based on negative log-likelihood cost-functions (<em>nlL</em>). As the default and for consistency with other tools, uncertainties are determined via the Cramér-Rao-Frechét bound, i.e. based on the 2nd derivatives of the <em>nlL</em> function with respect to the parameters. Optionally, one and two-dimensional scans of the profile likelihood can be performed, which provide asymmetric confidence intervals for the parameter values, as is shown in the example below.</p>
+<figure>
+<img src="kafe_graph2.png" alt="" /><figcaption>Example: Profile Likelihoods and Confidence Contour for the two-parameter fit of the exponential model</figcaption>
+</figure>
+<p>Handling different kinds of uncertainties is one of the unique features of the <em>kafe2</em> package. Data points are affected by uncertainties in the <em>x</em> and <em>y</em> directions, which may be absolute, relative, uncorrelated or correlated among all or groups of data points. These different kinds of uncertainties are all supported by <em>kafe2</em> and taken into account by construction of the overall covariance matrix in each step of the numerical optimization. This is particularly important for relative uncertainties and for uncertainties in the <em>x</em>-direction, which depend on the model values rather than on the observed values in data. This procedure is numerically expensive, but avoids biases in the predicted parameters and leads to an optimal statistical coverage of the confidence intervals derived for the parameter estimates.</p>
+<p>Code, documentation and examples are available in the <a href="https://github.com/PhiLFitters/kafe2"><strong>Repository</strong> of the <em>kafe2</em> project</a>.</p>
