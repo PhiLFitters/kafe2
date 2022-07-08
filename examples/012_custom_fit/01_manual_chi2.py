@@ -1,3 +1,18 @@
+#!/usr/bin/env python
+r"""
+Fit a user-defined cost function
+================================
+
+This example illustrates an application of *CustomFit*, which does not 
+explicitly use data *d* or a model *m*. Instead the user must manually 
+define how the cost function value is calculated from the fit 
+parameters *p*.
+
+Because any potential data is outside *kafe2* there is no built-in 
+visualization (plotting) available except for the fit parameter 
+profiles/contours calculated by ContoursProfiler.
+"""
+
 import numpy as np
 from kafe2 import CustomFit, ContoursProfiler
 
