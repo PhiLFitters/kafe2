@@ -2,38 +2,56 @@
 This is the source for https://kafe2.github.io/index.html,
 generated via   pandoc README.md -o index.html
 -->
-<body style="background-color:white;">
+<style> 
+  body {
+    background-color:white; 
+    text-align:justify; 
+    max-width:50em;
+  }
+  h1 {
+    align:center;
+    background-color:GhostWhite;
+  }
+  p {
+    background-color:white;
+  }
+</style>
+<!-- header -->
 <p style="background-color:AliceBlue;">
 </p>
-<p><img src="kafe2_logo.png" width=120
-     style= "float: left; margin-right: 10px;" /> <br></p>
-<h1 ALIGN="center"; style="background-color:GhostWhite"> 
-      <i>kafe2</i> - Data Visualisation and Model Fitting 
+<img src="kafe2_logo.png" width=120
+     style= "float: left; margin-right: 10px;" /> <br>
+<h1>
+<i>kafe2</i> - Data Visualisation and Model Fitting
 </h1>
 <blockquote>
-<p>          Link to <a href="https://github.com/PhiLFitters/kafe2"><strong>github Repository</strong> of the <em>kafe2</em> project</a>.</p>
-</blockquote>
-<p style="background-color:AliceBlue;">
+          Link to <a href="https://github.com/PhiLFitters/kafe2"><strong>github Repository</strong> of the <em>kafe2</em> project</a>.
+<p  style="background-color:AliceBlue;">
 <hr>
 </p>
+</blockquote>
+<!-- body -->
 <h2 id="kafe2"><strong><em>kafe2</em></strong></h2>
 <p>  is an open-source <i>Python</i> package designed to provide a flexible interface for the estimation of model parameters from measured data. It is the spiritual successor to the original <a href="https://github.com/dsavoiu/kafe"><em>kafe</em></a> package.</p>
+<p><em>kafe2</em> offers support for <strong>several types of input data</strong> like series of indexed measurements, <em>x-y</em> value pairs, and histogram data. Different types of uncertainties are taken into account, like <strong>statistical and relative or absolute systematic uncertainties</strong>. Arbitrarily complex parametric models to describe the data can be provided as <em>Python</em> code.</p>
+<p>Fitting procedures in <em>kafe2</em> are based on <strong>negative log-likelihood cost-functions</strong> (<em>nlL</em>). As the default and for consistency with other tools, parameter uncertainties are determined via the Cramér-Rao-Frechét bound, i.e. based on the 2nd derivatives of the <em>nlL</em> function with respect to the parameters. Optionally, one and two-dimensional profile-likelihood scans can be performed, which provide asymmetric confidence intervals for the parameter values.</p>
+<p>The graphical result of a fit of two models to data with <em>kafe2</em> is shown in the figures below.</p>
+<figure>
+<img src="kafe_graph1.png" alt="" /><figcaption>Example: Fit of two models with kafe2</figcaption>
+</figure>
+<blockquote>
+<figure>
+<img src="kafe_graph2.png" alt="" /><figcaption>Profile Likelihoods and one- and two-sigma Confidence Contour<br />
+for the two-parameter fit of the exponential model</figcaption>
+</figure>
+</blockquote>
+<p>Handling different kinds of uncertainties is one of the unique features of the <em>kafe2</em> package. Data points are affected by uncertainties in both the <em>x</em> and <em>y</em> directions, which may be absolute, relative, uncorrelated or correlated among all data points or among groups of data points. These different kinds of uncertainties are taken into account by construction of the overall covariance matrix in each step of the numerical optimization. This detail of the numerical procedure is particularly important for relative uncertainties and for uncertainties in the <em>x</em>-direction, which depend on the parameter-dependent model values rather than on the observed values in data. Although computationally expensive, this method avoids biases in the predicted parameters and leads to an optimal statistical coverage of the confidence intervals derived for the parameter estimates.</p>
+<p>The <em>kafe2</em> package comes with extensive documentation for beginners, advanced users and programmers wanting to include powerful fits in their own projects. A large number of examples explain practical applications and may serve as simple function wrappers for own projects. The stand-alone program <em>kafe2go</em> permits data-driven fits without the need for the user providing <em>Python</em> code; the input format describing data and their uncertainties as well as meta-data and the fit model is based on the very light-weight human-readable data description language <em>yaml</em>.</p>
+<p>Click this link to see the <a href="https://kafe2.readthedocs.io/en/latest/">full <strong>documentation</strong></a>. Installation is easy via <a href="https://pypi.org/project/kafe2/">PyPi</a>, just type <code>pip3 install kafe2</code>. The <em>kafe2</em> code, documentation and application examples are available in the <a href="https://github.com/PhiLFitters/kafe2"><strong>Repository</strong> of the <em>kafe2</em> project</a>.</p>
+<h3 id="dependencies">Dependencies</h3>
 <ul>
 <li><em>Python</em> versions 3.8+ are supported.</li>
 <li>Numerical aspects are handled by the scientific <em>Python</em> stack (<em>NumPy</em>, <em>SciPy</em>, …).</li>
 <li>Visualizations of the data, the estimated model and of parameter confidence regions are provided by <em>matplotlib</em>.</li>
 <li>High-dimensional numerical optimization and uncertainty analysis rely on the packages <em>scipy.optimize</em> or <em>iminuit</em> (based on the Minuit2 C++ package developed and maintained at CERN).</li>
 </ul>
-<h2 id="fitting-with-kafe2-in-a-nutshell">Fitting with <em>kafe2</em> in a nutshell</h2>
-<p><em>kafe2</em> offers support for several types of data (including series of indexed measurements, <em>x-y</em> value pairs, and histogram data) and uncertainty models, as well as arbitrarily complex parametric models implemented in <em>Python</em>.</p>
-<p>Fitting procedures in <em>kafe2</em> are based on negative log-likelihood cost-functions (<em>nlL</em>). As the default and for consistency with other tools, uncertainties are determined via the Cramér-Rao-Frechét bound, i.e. based on the 2nd derivatives of the <em>nlL</em> function with respect to the parameters. Optionally, one and two-dimensional scans of the profile likelihood can be performed, which provide asymmetric confidence intervals for the parameter values, as is shown in the example below.</p>
-<figure>
-<img src="kafe_graph1.png" alt="" /><figcaption>Example: Fit of two models with kafe2</figcaption>
-</figure>
-<blockquote>
-<figure>
-<img src="kafe_graph2.png" alt="" /><figcaption>Profile Likelihoods and Confidence Contour for the two-parameter fit of the exponential model</figcaption>
-</figure>
-</blockquote>
-<p>Handling different kinds of uncertainties is one of the unique features of the <em>kafe2</em> package. Data points are affected by uncertainties in the <em>x</em> and <em>y</em> directions, which may be absolute, relative, uncorrelated or correlated among all or groups of data points. These different kinds of uncertainties are taken into account by construction of the overall covariance matrix in each step of the numerical optimization. This is particularly important for relative uncertainties and for uncertainties in the <em>x</em>-direction, which depend on the model values rather than on the observed values in data. This procedure is numerically expensive, but avoids biases in the predicted parameters and leads to an optimal statistical coverage of the confidence intervals derived for the parameter estimates.</p>
-<p>Click this link to see the <a href="https://kafe2.readthedocs.io/en/latest/">full <strong>documentation</strong></a>. Installation is easy via <a href="https://pypi.org/project/kafe2/">PyPi</a>, just type <code>pip3 install kafe2</code>. The <em>kafe2</em> code and application examples are available in the <a href="https://github.com/PhiLFitters/kafe2"><strong>Repository</strong> of the <em>kafe2</em> project</a>.</p>
