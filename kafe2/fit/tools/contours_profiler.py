@@ -2,7 +2,9 @@ import numpy as np
 import six
 import sys
 import matplotlib as mpl
+import os
 
+from collections.abc import Iterable
 from ...config import kafe2_rc
 from ...core.confidence import ConfidenceLevel
 from .._base import FitBase
@@ -795,7 +797,6 @@ class ContoursProfiler(object):
 
             return _fig
 
-
     def save(self, fname=None, figures='all', *args, **kwargs):
         """
         Saves the profile figures to files.
@@ -811,11 +812,28 @@ class ContoursProfiler(object):
             _figure_indices = range(len(self._figures))
         elif isinstance(figures, int):
             _figure_indices = [figures]
+        else:
+            raise TypeError(f"figures must be either 'all', int or iterable of int, but received type"
+                            f"{type(figures)}")
+        _file_name_list = fname
         if fname is None:
             if len(self._figures) == 1:
                 _file_name_list = ['profile.png']
             else:
                 _file_name_list = [f'profile_{_i}.png' for _i in _figure_indices]
+        elif isinstance(fname, str):
+            if len(_figure_indices) == 1:
+                _file_name_list = [fname]
+            else:
+                name, extension = os.path.splitext(fname)
+                _file_name_list = [f'{name}_{_i}{extension}' for _i in _figure_indices]
+        elif isinstance(fname, Iterable):
+            _file_name_list = fname
+        else:
+            raise ValueError(
+                "fname must be either None, a string, or an iterable, but received type "
+                f"{type(fname)}"
+            )
         if len(_file_name_list) != len(_figure_indices):
             raise ValueError(
                 f'Received {len(_file_name_list)} file names for {len(_figure_indices)} figures.'
