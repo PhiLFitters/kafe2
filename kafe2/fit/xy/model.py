@@ -167,8 +167,9 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
         """
         _x = x if x is not None else self.x
         _pars = model_parameters if model_parameters is not None else self._model_parameters
-        _dxs = dx if dx is not None else 1e-2 * (np.abs(_x) + 1.0/(1.0+np.abs(_x)))
-        _dxs = np.where(_dxs == 0, 1.0, _dxs)  # Replace zeros with ones
+        _dxs = dx if dx is not None else np.zeros_like(_x)
+        _dxs_default = 1e-2 * (np.abs(_x) + 1.0/(1.0+np.abs(_x)))
+        _dxs = np.where(_dxs == 0, _dxs_default, _dxs)  # Replace zero values with defaults
 
         _low = self._model_function_object(_x - _dxs, *_pars)
         _high = self._model_function_object(_x + _dxs, *_pars)
