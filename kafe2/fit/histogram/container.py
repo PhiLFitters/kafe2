@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 
 from ..indexed import IndexedContainer
@@ -128,6 +129,8 @@ class HistContainer(IndexedContainer):
             self._processed_entries += list(_overflow_entries)
 
         self._unprocessed_entries = []
+        if np.all(self._data == np.floor(self._data)):
+            warnings.warn("Historam data is int. Make sure to consider this for your bin edges!")
 
     def _get_error_reference(self):
         return self._data[1:-1]

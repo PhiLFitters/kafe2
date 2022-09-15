@@ -162,6 +162,10 @@ class TestDatastoreHistogram(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.hist_cont_binedges_auto.set_bins(np.eye(self._ref_n_bins_auto))
 
+    def test_warn_int_data(self):
+        container = HistContainer(n_bins=10, bin_range=(0.0, 10.0), fill_data=[1, 2, 3])
+        with self.assertWarns(Warning):
+            _ = container.data
 
 class TestDatastoreHistParametricModel(unittest.TestCase):
     @staticmethod
