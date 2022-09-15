@@ -6,7 +6,7 @@ from scipy.stats import poisson, norm, chi2
 from scipy.linalg import solve_triangular
 from ..io.file import FileIOMixin
 from .format import ParameterFormatter, CostFunctionFormatter
-from ..util import log_determinant
+from ..util import cholesky_decomposition, log_determinant
 
 if six.PY2:
     from funcsigs import signature
@@ -654,7 +654,7 @@ class CostFunction_GaussApproximation(CostFunction):
         self._saturated = True
         self._kafe2go_identifier = self.name
 
-    def gaussian_approximation_covariance(self, data, model, total_cov_mat_cholesky):
+    def gaussian_approximation_covariance(self, data, model, total_cov_mat):
         r"""A least-squares cost function calculated from (`y`) data and model values,
         considering the covariance matrix of the (`y`) measurements.
         The cost function value can be calculated as follows:
@@ -678,12 +678,11 @@ class CostFunction_GaussApproximation(CostFunction):
 
         :param data: measurement data :math:`{\bf d}`
         :param model: model predictions :math:`{\bf m}`
-        :param total_cov_mat_cholesky: Cholesky decomposition  of the total covariance matrix
-            :math:`{\bf L}` with :math:`{\bf L}^\top {\bf L} = {\bf V}`
+        :param total_cov_mat: The total covariance matrix :math:`{\bf V}`
 
         :return: cost function value
         """
-        _cholesky = total_cov_mat_cholesky + np.diag(np.sqrt(model))
+        _cholesky = cholesky_decomposition(total_cov_mat + np.diag(model))
         _residuals = model - data
         try:
             _x = solve_triangular(_cholesky, _residuals, lower=True)
