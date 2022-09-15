@@ -20,7 +20,7 @@ from ...core.error import CovMat
 from ...tools import print_dict_as_table
 from .._base.cost import CostFunction, STRING_TO_COST_FUNCTION
 from ..util import invert_matrix, is_diagonal, cholesky_decomposition, log_determinant, \
-    log_determinant_pointwise, to_python_floats, to_numpy_arrays
+    log_determinant_pointwise, to_python_types, to_numpy_arrays
 
 __all__ = ["FitBase", "FitException"]
 
@@ -1219,6 +1219,21 @@ class FitBase(FileIOMixin, object):
     def save_state(
             self, filename: str, file_format: Optional[str] = None,
             calculate_asymmetric_errors: bool = False):
+        """Write current state of the fit to file.
+        Unlike to `to_file` this does not contain information regarding how the fit is constructed -
+        this is because for complex fit objects a reconstruction from e.g. YAML may not work.
+        In such cases the fit object should be contructed via Python and `save_state` and
+        `load_state` should be used.
+
+        :param filename: Filename for the output.
+        :type filename: str
+        :param file_format: A format for the output file. If :py:obj:`None`, the extension from the
+            filename is used.
+        :type file_format: str or None
+        :param calculate_asymmetric_errors: If asymmetric errors should be calculated before saving
+            the results.
+        :type calculate_asymmetric_errors: bool
+        """
         if file_format is None:
             _, _extension = os.path.splitext(filename)
             if len(_extension) >= 2:
@@ -1232,11 +1247,19 @@ class FitBase(FileIOMixin, object):
 
         if file_format in ("yaml", "yml"):
             with open(filename, "w", encoding="utf8") as _f:
-                yaml.safe_dump(to_python_floats(self.get_result_dict()), _f)
+                yaml.safe_dump(to_python_types(self.get_result_dict()), _f)
         else:
             raise ValueError(f"Unknown file format: {file_format}. Available: yaml")
 
     def load_state(self, filename: str, file_format: Optional[str] = None):
+        """load current fit state from the specified file that was written with `save_state`.
+
+        :param filename: Filename for the input.
+        :type filename: str
+        :param file_format: A format for the output file. If :py:obj:`None`, the extension from the
+            filename is used.
+        :type file_format: str or None
+        """
         if file_format is None:
             _, _extension = os.path.splitext(filename)
             if len(_extension) >= 2:

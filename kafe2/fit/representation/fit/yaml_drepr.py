@@ -13,7 +13,7 @@ from ....fit import CustomFit, HistFit, IndexedFit, UnbinnedFit, XYFit
 from ..._base.cost import STRING_TO_COST_FUNCTION
 from ..._base.format import ParameterFormatter
 from ...xy.cost import STRING_TO_COST_FUNCTION as STRING_TO_COST_FUNCTION_XY
-from ...util import to_python_floats, to_numpy_arrays
+from ...util import to_python_types, to_numpy_arrays
 from ...unbinned.cost import STRING_TO_COST_FUNCTION as STRING_TO_COST_FUNCTION_UNBINNED
 from ....tools import get_compact_representation
 
@@ -125,7 +125,7 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
             _par_name: list(_par_limits)
             for _par_name, _par_limits in fit._fitter.limited_parameters.items()}
 
-        _yaml_doc['fit_results'] = to_python_floats(fit.get_result_dict())
+        _yaml_doc['fit_results'] = to_python_types(fit.get_result_dict())
         return _yaml_doc
 
 
