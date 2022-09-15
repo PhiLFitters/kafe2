@@ -32,7 +32,10 @@ try:
         'iminuit': MinimizerIMinuit,
     })
 except _catch_error_class:
-    pass
+    warnings.warn(
+        "iminuit is not installed. While not strictly needed its use is "
+        "heavily recommended for better performance and convergence."
+    )
 except SyntaxError:  # Newer versions of iminuit do not support Python 2.
     pass
 except MinimizerException as e:  # kafe2 does not support iminuit>2
