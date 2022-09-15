@@ -228,8 +228,9 @@ class FitBase(FileIOMixin, object):
                 existing_behavior=existing_behavior
             )
 
-            _cost_alias = self._nexus.add_alias(
-                'cost', alias_for=self._cost_function.name, existing_behavior=existing_behavior)
+            if self._cost_function.name != "cost":
+                _cost_alias = self._nexus.add_alias(
+                    'cost', alias_for=self._cost_function.name, existing_behavior=existing_behavior)
         if self._cost_function_pointwise is not None:
             self._nexus.add_function(
                 self._cost_function_pointwise,
