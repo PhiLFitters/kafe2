@@ -68,12 +68,11 @@ class ModelFunctionBase(FileIOMixin, object):
                 _symbols = sp.symbols(_symbol_string)
                 _symbolic_function = sp.sympify(_function_string)
                 self._model_function_handle = sp.lambdify(_symbols, _symbolic_function)
-                _symbol_names = {_symbol: "\0\0\0%s\0\0\0" % _symbol for _symbol in _symbols}
-                _latex_string = sp.latex(_symbolic_function, symbol_names=_symbol_names)
+                _latex_string = sp.latex(_symbolic_function)
                 _latex_string = _latex_string.replace(r"{", r"{{")
                 _latex_string = _latex_string.replace(r"}", r"}}")
-                for _symbol, _symbol_name in _symbol_names.items():
-                    _latex_string = _latex_string.replace(_symbol_name, r"{%s}" % _symbol)
+                for _symbol in _symbols:
+                    _latex_string = _latex_string.replace(r"{{%s}}" % _symbol, r"{%s}" % _symbol)
 
                 print(_latex_string)
                 self._model_function_handle.latex_name = _latex_name
