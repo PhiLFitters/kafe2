@@ -13,6 +13,7 @@ from kafe2.fit.xy.cost import *
 class TestCostBuiltin(unittest.TestCase):
     CHI2_COST_FUNCTION = CostFunction_Chi2
     NLL_COST_FUNCTION = CostFunction_NegLogLikelihood
+    GAUSS_APPROXIMATION_COST_FUNCTION = CostFunction_GaussApproximation
 
     def setUp(self):
         self._data_chi2 = np.array([-0.5, 2.1, 8.9])
@@ -28,15 +29,18 @@ class TestCostBuiltin(unittest.TestCase):
         self._cov_mat_cholesky = np.linalg.cholesky(self._cov_mat)
         self._cov_mat_inv = np.linalg.inv(self._cov_mat)
         self._pointwise_errors = np.sqrt(np.diag(self._cov_mat))
+        self._data_poisson_large = np.array([100000, 200000, 300000])
+        self._model_poisson_large = np.array([99990, 200010, 300000])
 
         self._cov_mat_log_det = np.log(np.linalg.det(self._cov_mat))
+        self._total_error_squared_log_sum = 2.0 * np.sum(np.log(self._pointwise_errors))
         self._cost_chi2_cov_mat = self._res.dot(
             self._cov_mat_inv).dot(self._res) + self._cov_mat_log_det
         self._cost_chi2_pointwise = np.sum(
-            (self._res / self._pointwise_errors) ** 2) + self._cov_mat_log_det
-        self._cost_chi2_no_errors = np.sum(self._res ** 2) + self._cov_mat_log_det
+            (self._res / self._pointwise_errors) ** 2) + self._total_error_squared_log_sum
+        self._cost_chi2_no_errors = np.sum(self._res ** 2)
         self._cost_nll_gaussian = self._cost_chi2_pointwise + 2.0 * np.sum(np.log(
-            np.sqrt((2.0 * np.pi)) * self._pointwise_errors)) - self._cov_mat_log_det
+            np.sqrt((2.0 * np.pi)) * self._pointwise_errors)) - self._total_error_squared_log_sum
         self._cost_nll_poisson = -2.0 * np.sum(
             np.log(self._model_poisson ** self._data_poisson)
             - np.log(factorial(self._data_poisson)) - self._model_poisson)
@@ -62,25 +66,24 @@ class TestCostBuiltin(unittest.TestCase):
     def test_chi2_no_errors(self):
         self.assertAlmostEqual(
             self._cost_chi2_no_errors,
-            self.CHI2_COST_FUNCTION(errors_to_use=None)
-            (self._data_chi2, self._model_chi2, None, None, self._cov_mat_log_det))
+            self.CHI2_COST_FUNCTION(errors_to_use=None, add_determinant_cost=False)
+            (self._data_chi2, self._model_chi2, None, None))
         self.assertAlmostEqual(
             self._cost_chi2_no_errors + self._par_cost,
-            self.CHI2_COST_FUNCTION(errors_to_use=None)
-            (self._data_chi2, self._model_chi2, self._par_vals, self._par_constraints,
-             self._cov_mat_log_det))
+            self.CHI2_COST_FUNCTION(errors_to_use=None, add_determinant_cost=False)
+            (self._data_chi2, self._model_chi2, self._par_vals, self._par_constraints))
 
     def test_chi2_pointwise(self):
         self.assertAlmostEqual(
             self._cost_chi2_pointwise,
             self.CHI2_COST_FUNCTION(errors_to_use='pointwise')
             (self._data_chi2, self._model_chi2, self._pointwise_errors, None, None,
-             self._cov_mat_log_det))
+             self._total_error_squared_log_sum))
         self.assertAlmostEqual(
             self._cost_chi2_pointwise + self._par_cost,
             self.CHI2_COST_FUNCTION(errors_to_use='pointwise')
             (self._data_chi2, self._model_chi2, self._pointwise_errors,
-             self._par_vals, self._par_constraints, self._cov_mat_log_det))
+             self._par_vals, self._par_constraints, self._total_error_squared_log_sum))
 
     def test_chi2_cov_mat(self):
         self.assertAlmostEqual(
@@ -117,11 +120,11 @@ class TestCostBuiltin(unittest.TestCase):
 
     def test_nllr_gaussian(self):
         self.assertAlmostEqual(
-            self._cost_chi2_pointwise - self._cov_mat_log_det,
+            self._cost_chi2_pointwise - self._total_error_squared_log_sum,
             self.NLL_COST_FUNCTION(data_point_distribution='gaussian', ratio=True)
             (self._data_chi2, self._model_chi2, self._pointwise_errors, None, None))
         self.assertAlmostEqual(
-            self._cost_chi2_pointwise + self._par_cost - self._cov_mat_log_det,
+            self._cost_chi2_pointwise + self._par_cost - self._total_error_squared_log_sum,
             self.NLL_COST_FUNCTION(data_point_distribution='gaussian', ratio=True)
             (self._data_chi2, self._model_chi2, self._pointwise_errors,
              self._par_vals, self._par_constraints))
@@ -135,6 +138,39 @@ class TestCostBuiltin(unittest.TestCase):
             self._cost_nllr_poisson + self._par_cost,
             self.NLL_COST_FUNCTION(data_point_distribution='poisson', ratio=True)
             (self._data_poisson, self._model_poisson, self._par_vals, self._par_constraints))
+
+    def test_gauss_approximation(self):
+        self.assertAlmostEqual(
+            self.NLL_COST_FUNCTION(data_point_distribution='poisson')
+            (self._data_poisson_large, self._model_poisson_large, None, None),
+            self.GAUSS_APPROXIMATION_COST_FUNCTION(errors_to_use='covariance')
+            (self._data_poisson_large, self._model_poisson_large,
+             np.zeros_like(self._cov_mat), None, None) + 3 * np.log(2 * np.pi),
+            places=3
+        )
+        self.assertAlmostEqual(
+            self.GAUSS_APPROXIMATION_COST_FUNCTION(errors_to_use='covariance')
+            (self._data_poisson, self._model_poisson,
+             np.zeros_like(self._cov_mat), None, None),
+            self.GAUSS_APPROXIMATION_COST_FUNCTION(errors_to_use='pointwise')
+            (self._data_poisson, self._model_poisson,
+             np.zeros_like(self._pointwise_errors), None, None),
+        )
+        self.assertAlmostEqual(
+            self.CHI2_COST_FUNCTION(errors_to_use='covariance')
+            (self._data_chi2, np.zeros_like(self._model_chi2), self._cov_mat_cholesky, None, None,
+             self._cov_mat_log_det),
+            self.GAUSS_APPROXIMATION_COST_FUNCTION(errors_to_use='covariance')
+            (self._data_chi2, np.zeros_like(self._model_chi2), self._cov_mat, None, None),
+        )
+        self.assertAlmostEqual(
+            self.CHI2_COST_FUNCTION(errors_to_use='pointwise')
+            (self._data_chi2, np.zeros_like(self._model_chi2), self._pointwise_errors, None, None,
+             self._total_error_squared_log_sum),
+            self.GAUSS_APPROXIMATION_COST_FUNCTION(errors_to_use='pointwise')
+            (self._data_chi2, np.zeros_like(self._model_chi2), self._pointwise_errors, None, None),
+        )
+
 
     def test_chi2_raise(self):
         with self.assertRaises(ValueError):
