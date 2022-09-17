@@ -12,6 +12,7 @@ from typing import List, Optional
 import numpy as np
 
 from . import function_library
+from .wrapper import *
 
 __all__ = ['string_join_if', 'add_in_quadrature', 'invert_matrix', 'cholesky_decomposition',
            'log_determinant', 'log_determinant_pointwise', 'collect', 'is_diagonal']
