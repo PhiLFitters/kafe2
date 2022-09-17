@@ -54,6 +54,7 @@ class ModelFunctionBase(FileIOMixin, object):
         :type independent_argcount: int
         """
         _custom_defaults = OrderedDict()
+        self._name = None
 
         # determine library function from string specification
         if isinstance(model_function, str):
@@ -63,10 +64,10 @@ class ModelFunctionBase(FileIOMixin, object):
                 _symbol_string, _function_string = model_function.split("->")
                 _latex_name = None
                 if ":" in _symbol_string:
-                    _latex_name, _symbol_string = _symbol_string.split(":")
-                    _latex_name = latexify_ascii(_latex_name)
+                    self._name, _symbol_string = _symbol_string.split(":")
                 else:
-                    _latex_name = latexify_ascii("model")
+                    self._name = "model"
+                _latex_name = latexify_ascii(self._name)
                 _symbols = list(sp.symbols(_symbol_string))
                 for _i, _symbol_i in enumerate(_symbols):
                     if _i < independent_argcount:
@@ -89,7 +90,7 @@ class ModelFunctionBase(FileIOMixin, object):
                 self._model_function_handle.latex_name = _latex_name
                 self._model_function_handle.latex_expression_format_string = _latex_string
             if not self._model_function_handle:
-                raise self.__class__.EXCEPTION_TYPE('Unknown model function: %s' % model_function)
+                raise ValueError('Unknown model function: %s' % model_function)
             self._callable = self._model_function_handle
 
         # special handling of numpy vectorized functions
@@ -106,6 +107,9 @@ class ModelFunctionBase(FileIOMixin, object):
         else:
             raise ModelFunctionException("Cannot use {} as model function: "
                                          "object not callable!".format(model_function))
+
+        if self._name is None:
+            self._name = self._model_function_handle.__name__
 
         assert int(independent_argcount) >= 0, "The number of independent parameters must be greater than 0"
         self._independent_argcount = int(independent_argcount)
@@ -192,7 +196,7 @@ class ModelFunctionBase(FileIOMixin, object):
     @property
     def name(self):
         """The model function name (a valid Python identifier)"""
-        return self._model_function_handle.__name__
+        return self._name
 
     @property
     def func(self):
@@ -225,6 +229,11 @@ class ModelFunctionBase(FileIOMixin, object):
         if self._independent_argcount == 1:
             return _pars[0]
         return _pars[0:self._independent_argcount]
+
+    @property
+    def parameter_names(self):
+        """The names of the parameters."""
+        return list(self.signature.parameters.keys())[self._independent_argcount:]
 
     @property
     def formatter(self):
