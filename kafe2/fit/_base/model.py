@@ -53,6 +53,8 @@ class ModelFunctionBase(FileIOMixin, object):
                                       model function will be treated as independent variables and will not be fitted.
         :type independent_argcount: int
         """
+        _custom_defaults = OrderedDict()
+
         # determine library function from string specification
         if isinstance(model_function, str):
             self._model_function_handle = function_library.STRING_TO_FUNCTION.get(
@@ -65,7 +67,16 @@ class ModelFunctionBase(FileIOMixin, object):
                     _latex_name = latexify_ascii(_latex_name)
                 else:
                     _latex_name = latexify_ascii("model")
-                _symbols = sp.symbols(_symbol_string)
+                _symbols = list(sp.symbols(_symbol_string))
+                for _i, _symbol_i in enumerate(_symbols):
+                    if _i < independent_argcount:
+                        continue
+                    _symbol_i_str = str(_symbol_i)
+                    if "=" in _symbol_i_str:
+                        _symbol_i_str, _values_str = _symbol_i_str.split("=")
+                        _symbol_i = sp.symbols(_symbol_i_str)
+                        _custom_defaults[_symbol_i_str] = float(_values_str)
+                        _symbols[_i] = _symbol_i
                 _symbolic_function = sp.sympify(_function_string)
                 self._model_function_handle = sp.lambdify(_symbols, _symbolic_function)
                 _latex_string = sp.latex(_symbolic_function)
@@ -98,7 +109,7 @@ class ModelFunctionBase(FileIOMixin, object):
 
         assert int(independent_argcount) >= 0, "The number of independent parameters must be greater than 0"
         self._independent_argcount = int(independent_argcount)
-        self._assign_model_function_signature_and_argcount()
+        self._assign_model_function_signature_and_argcount(_custom_defaults)
         self._validate_model_function_raise()
         self._assign_function_formatter()
         self._source_code = None
@@ -116,11 +127,16 @@ class ModelFunctionBase(FileIOMixin, object):
     def _get_default(cls):
         return function_library.linear_model
 
-    def _assign_model_function_signature_and_argcount(self):
+    def _assign_model_function_signature_and_argcount(self, custom_defaults={}):
         self._model_function_signature = signature(self._model_function_handle)
         self._model_function_argcount = self._model_function_handle.__code__.co_argcount
         # remove the amount of independent variables from the parameter count
         self._model_function_parcount = self._model_function_argcount - self._independent_argcount
+        if custom_defaults:
+            self.defaults = [
+                custom_defaults.get(_p_name, _p_val)
+                for _p_name, _p_val in self.defaults_dict.items()
+            ]
 
     def _validate_model_function_raise(self):
         # evaluate general model function requirements
@@ -169,7 +185,6 @@ class ModelFunctionBase(FileIOMixin, object):
                 self._model_function_handle.latex_expression_format_string
         except AttributeError:
             pass
-
 
     def __call__(self, *args, **kwargs):
         return self._callable(*args, **kwargs)

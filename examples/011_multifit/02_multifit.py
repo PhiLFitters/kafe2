@@ -103,7 +103,7 @@ fit_1.model_label = "Parametrization"
 
 fit_2 = XYFit(
     xy_data=[U, I],
-    model_function="I_U_model: U R_0 alpha p_2 p_1 p_0 -> U / (R_0 * (1 + alpha * (p_2 * U^2 + p_1 * U + p_0)))"
+    model_function="I_U_model: U R_0 alpha=4e-3 p_2 p_1 p_0 -> U / (R_0 * (1 + alpha * (p_2 * U^2 + p_1 * U + p_0)))"
 )
 fit_2.add_error(axis='y', err_val=sigI)  # declare errors on I
 fit_2.data_container.axis_labels = ("Voltage (V)", "Current (A)")
@@ -112,7 +112,7 @@ fit_2.model_label = "Temperature-dependent conductance"
 
 # Step 2: construct a MultiFit object
 multi_fit = MultiFit(fit_list=[fit_1, fit_2], minimizer='iminuit')
-multi_fit.set_parameter_values(alpha=0.004)
+#multi_fit.set_parameter_values(alpha=0.004)
 
 # Step 3: Add a shared error error for the x axis.
 multi_fit.add_error(axis='x', err_val=sigU, fits='all')

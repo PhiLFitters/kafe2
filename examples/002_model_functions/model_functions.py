@@ -38,7 +38,7 @@ xy_data = XYContainer.from_file("data.yml")
 linear_fit = Fit(data=xy_data, model_function="linear_model: x a b -> a * x + b")
 exponential_fit = Fit(
     data=xy_data, model_function="exponential_model: x A_0 x_0 -> A_0 * exp(x / x_0)")
-exponential_fit.set_parameter_values(x_0=5.0)
+#exponential_fit.set_parameter_values(x_0=5.0)
 
 # Optional: Assign LaTeX strings to parameters and model functions.
 # linear_fit.assign_parameter_latex_names(x="X", a=r"\alpha", b=r"\beta")  # Uncomment to activate
