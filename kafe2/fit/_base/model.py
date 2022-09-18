@@ -1,9 +1,13 @@
 import abc
 import inspect
 import numpy as np
-import sympy as sp
 import six
 from collections import OrderedDict
+
+try:
+    import sympy as sp
+except ModuleNotFoundError:
+    sp = None
 
 from .format import ParameterFormatter, ModelFunctionFormatter, latexify_ascii
 from ..io.file import FileIOMixin
@@ -61,6 +65,9 @@ class ModelFunctionBase(FileIOMixin, object):
             self._model_function_handle = function_library.STRING_TO_FUNCTION.get(
                 model_function, None)
             if self._model_function_handle is None and "->" in model_function:
+                if sp is None:
+                    raise ModuleNotFoundError(
+                        "SymPy is not installed so it cannot be used to define model functions.")
                 _symbol_string, _function_string = model_function.split("->")
                 _latex_name = None
                 if ":" in _symbol_string:
