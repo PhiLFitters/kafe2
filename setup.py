@@ -50,6 +50,7 @@ setup(
         'PyYaml',
         'six',
         'funcsigs',
+        'SymPy',
     ],
     classifiers=[
         'Development Status :: 5 - Production/Stable',

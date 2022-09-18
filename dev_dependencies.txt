@@ -11,3 +11,4 @@ coverage
 sphinx
 sphinx_bootstrap_theme
 mock
+sympy
