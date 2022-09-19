@@ -154,4 +154,4 @@ from .unbinned import *
 from ._base.plot import Plot
 from .tools.fit_wrapper import Fit  # import after every fit to avoid import conflicts with other tools
 
-from .util import function_library, xy_fit
+from .util import function_library, xy_fit, plot
