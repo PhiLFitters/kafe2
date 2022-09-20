@@ -67,19 +67,32 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
          error_band_label=None, model_name=None, model_expression=None, legend=True, fit_info=True,
          error_band=True, profile=None, plot_profile=None, show=True):
     from kafe2 import Plot, ContoursProfiler
+
+    _fit_profiles = None
     if isinstance(fits, int):
         if fits >= 0:
-            fit_profiles = [_fit_history[fits]["profile"]]
+            _fit_profiles = [_fit_history[fits]["profile"]]
             fits = [_fit_history[fits]["fit"]]
         else:
             fits = _fit_history[fits:]
-            fit_profiles = [_f["profile"] for _f in fits]
+            _fit_profiles = [_f["profile"] for _f in fits]
             fits = [_f["fit"] for _f in fits]
+    else:
+        try:
+            iter(fits)
+        except TypeError:
+            fits = [fits]
     if model_name is not None:
-        fits[0].assign_model_function_latex_name(model_name)
+        if isinstance(model_name, str):
+            model_name = [model_name for _ in fits]
+        for _f, _mn in zip(fits, model_name):
+            _f.assign_model_function_latex_name(_mn)
     if model_expression is not None:
-        fits[0].assign_model_function_latex_expression(model_expression)
-    _plot = Plot(fits[0])
+        if isinstance(model_expression, str):
+            model_expression = [model_expression for _ in fits]
+        for _f, _me in zip(fits, model_expression):
+            _f.assign_model_function_latex_expression(_me)
+    _plot = Plot(fits)
     if x_label is not None:
         _plot.x_label = x_label
     if y_label is not None:
@@ -95,13 +108,22 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
         _plot.customize("model_error_band", "hide", [True])
 
     if profile is None:
-        profile = fit_profiles[0]
+        profile = np.any(_fit_profiles)
     _plot.plot(legend=legend, fit_info=fit_info, asymmetric_parameter_errors=profile)
+    _plot.save("plot.png", dpi=240)
 
-    if plot_profile is None:
-        plot_profile = fit_profiles[0]
-    if plot_profile:
-        _cpf = ContoursProfiler(fits[0])
-        _cpf.plot_profiles_contours_matrix()
+    if plot_profile is None and _fit_profiles is not None:
+        plot_profile = _fit_profiles
+    if plot_profile is not None:
+        try:
+            iter(plot_profile)
+        except TypeError:
+            plot_profile = [plot_profile for _ in fits]
+        for _f, _pp in zip(fits, plot_profile):
+            if not _pp:
+                continue
+            _cpf = ContoursProfiler(_f)
+            _cpf.plot_profiles_contours_matrix()
+            _cpf.save("profile.png", dpi=240)
     if show:
         _plot.show()

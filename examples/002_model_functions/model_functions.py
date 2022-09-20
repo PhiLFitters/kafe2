@@ -10,8 +10,8 @@ This example demonstrates how to specify arbitrary model functions for
 a kafe2 fit.
 """
 
-from kafe2 import XYContainer, Fit, Plot, ContoursProfiler
 import numpy as np
+import kafe2
 
 
 # To define a model function for kafe2 simply write it as a Python function.
@@ -24,49 +24,40 @@ def linear_model(x, a, b):
     return a * x + b
 
 
+# If SymPy is installed you can also define the model like this:
+# linear_model = "linear_model: x a b -> a * x + b"
+
+
 # Our second model is a simple exponential function.
 # The kwargs in the function header specify parameter defaults.
 def exponential_model(x, A_0=1., x_0=5.):
     return A_0 * np.exp(x/x_0)
 
 
-# Read in the measurement data from a yaml file.
-# For more information on reading/writing kafe2 objects from/to files see examples 005_convenience
-xy_data = XYContainer.from_file("data.yml")
+# If SymPy is installed you can also define the model like this:
+# exponential_model = "exponential_model: x A_0 x_0=5.0 -> A_0 * exp(x / x0)"
 
-# Create 2 Fit objects with the same data but with different model functions:
-linear_fit = Fit(data=xy_data, model_function="linear_model: x a b -> a * x + b")
-exponential_fit = Fit(
-    data=xy_data, model_function="exponential_model: x A_0 x_0 -> A_0 * exp(x / x_0)")
-#exponential_fit.set_parameter_values(x_0=5.0)
 
-# Optional: Assign LaTeX strings to parameters and model functions.
-# linear_fit.assign_parameter_latex_names(x="X", a=r"\alpha", b=r"\beta")  # Uncomment to activate
-#linear_fit.assign_model_function_latex_expression("{a}{x} + {b}")
-# exponential_fit.assign_parameter_latex_names(x="X", A_0="B_0", x_0="X_0")  # Uncomment to activate
-#exponential_fit.assign_model_function_latex_expression("{A_0} e^{{{x}/{x_0}}}")
+x_data = [0.38, 0.83, 1.96, 2.82, 4.28, 4.69, 5.97, 7.60, 7.62, 8.81, 9.87, 10.91]
+y_data = [1.60, 1.66, 2.12, 3.05, 3.57, 4.65, 6.21, 7.57, 8.27, 10.79, 14.27, 18.48]
+x_error = 0.3
+y_error_rel = 0.05
 
-# Perform the fits:
-linear_fit.do_fit()
-exponential_fit.do_fit()
+# kafe2.xy_fit needs to be called twice to do two fits:
+kafe2.xy_fit(x_data, y_data, model_function=linear_model, x_error=x_error, y_error_rel=y_error_rel)
+kafe2.xy_fit(x_data, y_data, model_function=exponential_model,
+             x_error=x_error, y_error_rel=y_error_rel, profile=True)
+# Make sure to specify profile=True whenever you use a nonlinear model function.
+# A model function is linear if it is a linear function of each of its parameters.
+# The model function does not need to be a linear function of the independent variable x.
+# Examples: all polynomial model functions are linear, trigonometric functions are nonlinear.
 
-# Optional: Print out a report on the result of each fit.
-linear_fit.report()
-exponential_fit.report()
-
-# Optional: Create a plot of the fit results using Plot.
-p = Plot(fit_objects=[linear_fit, exponential_fit], separate_figures=False)
-
-# Optional: Customize the plot appearance; only show the data points once.
-p.customize('data', 'color', values=['k', 'none'])  # Hide points for second fit.
-p.customize('data', 'label', values=['data points', None])  # No second legend entry.
-
-# Do the plotting:
-p.plot(fit_info=True)
-
-# Optional: Create a contour plot for the exponential fit to show the parameter correlations.
-cpf = ContoursProfiler(exponential_fit)
-cpf.plot_profiles_contours_matrix(show_grid_for='contours')
-
-# Show the fit results:
-p.show()
+# To specify that you want a plot of the last two fits pass -2 as the first argument:
+kafe2.plot(
+    -2,
+    # When Python functions are used as custom model functions kafe2 does not know
+    # how to express them as LaTeX. The LaTeX can be manually defined like this:
+    model_expression=["{a}{x} + {b}", "{A_0} e^{{{x}/{x_0}}}"]
+    # Parameter names have to be put between {}. To get {} for LaTex double them like {{ or }}.
+    # When using SymPy to define model function the LaTeX expression can be derived automatically.
+)
