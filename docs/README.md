@@ -32,71 +32,77 @@ generated via   pandoc README.md -o index.html
 
 ## **_kafe2_**  
 
-&nbsp; is an open-source <i>Python</i> package designed to provide a flexible
-interface for the estimation of model parameters from measured data.
-It is the spiritual successor to the original
-[*kafe*](https://github.com/dsavoiu/kafe) package.
+&nbsp; is an open-source <i>Python</i> package for the likelihood-based
+estimation of parameters from measured data.
+Its selling points are
 
+1. that it offers state-of-the-art statistical methods
+   (e.g. confidence intervals/regions based on the profile likelihood method),
+2. that it only uses open-source software which allows users to understand and reproduce results with relative ease,
+3. and that it offers an easy-to-use and performance-optimized pipeline that takes numerical data and
+   produces for example parameter confidence intervals or publication-quality plots.
 
-_kafe2_ offers support for **several types of input data** like series of
-indexed measurements, *x-y* value pairs, and histogram data. Different types
-of uncertainties are taken into account, like 
-**statistical and relative or absolute systematic uncertainties**. 
-Arbitrarily complex parametric models to describe the
-data can be provided as *Python* code. 
+Let's look at a brief example:
 
-Fitting procedures in _kafe2_ are based on **negative log-likelihood cost-functions**
-(*nlL*). As the default and for consistency with other tools, parameter uncertainties 
-are determined via the Cramér-Rao-Frechét bound, i.e. based on the 2nd derivatives 
-of the *nlL* function with respect to the parameters. Optionally, one and 
-two-dimensional profile-likelihood scans can be performed, which provide 
-asymmetric confidence intervals for the parameter values.
+``` python
+import kafe2
 
-The graphical result of a fit of two models to data with _kafe2_ is shown 
-in the figures below.
+# Just some numerical data:
+x_data = [1.0, 2.0, 3.0, 4.0]
+y_data = [2.3, 4.2, 7.5, 9.4]
 
-![Example: Fit of two models with kafe2](kafe_graph1.png)
+kafe2.xy_fit(x_data, y_data, x_error=0.1, y_error=[0.40, 0.45, 0.40, 0.25],
+             y_error_cor_rel=0.05)
+kafe2.plot(x_label="$t$ [s]", y_label="$h$ [m]")
+```
 
-  > ![Profile Likelihoods and one- and two-sigma Confidence Contour  
-    for the two-parameter fit of the exponential model](kafe_graph2.png)
+With just two function calls we get the following plot:
 
-Handling different kinds of uncertainties is one of the unique features 
-of the *kafe2* package. Data points are affected by uncertainties in both 
-the *x* and *y* directions, which may be absolute, relative, uncorrelated 
-or correlated among all data points or among groups of data points. 
-These different kinds of uncertainties are taken into account by construction 
-of the overall covariance matrix in each step of the numerical optimization. 
-This detail of the numerical procedure is particularly important for relative 
-uncertainties and for uncertainties in the *x*-direction, which depend on the 
-parameter-dependent model values rather than on the observed values in data. 
-Although computationally expensive, this method avoids biases in the predicted 
-parameters and leads to an optimal statistical coverage of the confidence 
-intervals derived for the parameter estimates.
+![Example kafe2 plot](kafe_graph1.png)
 
-The *kafe2* package comes with extensive documentation for beginners, advanced
-users and programmers wanting to include powerful fits in their own projects.
-A large number of examples explain practical applications and may serve as
-simple function wrappers for own projects. The stand-alone program _kafe2go_
-permits data-driven fits without the need for the user providing _Python_ code; 
-the input format describing data and their uncertainties as well as meta-data 
-and the fit model is based on the very light-weight  human-readable data 
-description language *yaml*.
+Ignoring imports and variable definitions the example consists of just two function calls
+but a lot is happening under the hood:
 
-Click this link to see the [full **documentation**](
+1. A negative log-likelihood (NLL) function given the data and uncertainties is constructed.
+   Uncertainties in x and y direction can be defined as either absolute or relative,
+   and as either correlated or uncorrelated.
+   If a simple float is provided as input the same amount of uncertainty is applied to each data point.
+   Since the user did not specify a model function a line is used by default.
+2. A numerical optimization algorithm is applied to the likelihood function to find the
+   best estimates for the model parameter values.
+3. Because the user defined uncertainties in x direction and uncertainties relative to the y model values
+   the total covariance matrix has become a function of the model parameters.
+   It is therefore necessary to re-calculate the total covariance matrix at each optimization step;
+   while somewhat computationally expensive this ensures that the fit result is unbiased and that
+   the parameter confidence intervals have optimal statistical coverage.
+   Due to the parameter-dependent uncertainties the regression problem as a whole has also become nonlinear.
+   _kafe2_ recognizes the change and switches from estimating symmetrical parameter uncertainties from the
+   Cramér-Rao-Frechét bound to estimating confidence intervals via the profile likelihood method.
+4. The data and model are plotted along with a confidence band for the model function.
+   A legend containing information about the model, the parameter estimates, and the results of a hypothesis test
+   (Pearson's chi-squared test) is added automatically.
+5. Because the regression problem is nonlinear _kafe2_ by default also produces plots of the confidence intervals
+   of single model parameters as well as plots of the confidence regions of pairs of parameters:
+   
+![Example kafe2 plot of confidence intervals/regions](kafe_graph2.png)
+
+The above example is of course highly configurable:
+among other things users can define arbitrarily complex _Python_ functions to model the data,
+they can switch to different data types (e.g. histogram data),
+they can use different likelihoods (e.g. Poisson),
+or they can simultaneously fit multiple models with shared parameters.
+Since tools have an inherent trade-off between usability and complex functionality 
+_kafe2_ offers several interfaces for fitting:
+
+* For users that have no programming knowledge a command line interface "_kafe2go_" is provided.
+  Users only have to write a configuration file in _YAML_ (a standard data serialization language).
+* Slightly more advanced users that do have programming knowledge can call the _Python_ interface
+  of the _kafe2_ pipeline as part of a larger _Python_ script.
+* Advanced users can construct custom pipelines by directly using the _kafe2_ objects
+  that represent for example data or plots.
+
+By offering several interfaces with varying levels of complexity _kafe2_ aims to meet the needs of
+both beginners and experts.
+To learn more we invite you to take a look at the [full **documentation**](
 https://kafe2.readthedocs.io/en/latest/).
-Installation is easy via [PyPi](https://pypi.org/project/kafe2/), just type
-`pip3 install kafe2`.
-The  *kafe2* code, documentation and application examples are available in the 
-[**Repository** of the *kafe2* project](https://github.com/PhiLFitters/kafe2). 
-
-### Dependencies
-
-  - *Python* versions 3.8+ are supported.
-  - Numerical aspects are handled by the scientific _Python_ stack
-    (*NumPy*, *SciPy*, ...). 
-  - Visualizations of the data, the estimated model and of parameter confidence regions 
-    are provided by *matplotlib*. 
-  - High-dimensional numerical optimization and uncertainty analysis rely on 
-    the packages *scipy.optimize* or *iminuit* (based on the Minuit2 C++ package 
-    developed and maintained at CERN). 
 
