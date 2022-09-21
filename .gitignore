@@ -7,6 +7,8 @@
 /kafe2.egg-info
 /examples/*/fit.png
 /examples/*/fit_?.png
+/examples/*/results
+/build
 *.ipynb_checkpoints
 *.mypy_cache
 *.pyc

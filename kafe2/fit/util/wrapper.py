@@ -88,7 +88,8 @@ def xy_fit(x_data, y_data, model_function=None, p0=None, dp0=None,
 
 
 def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
-         error_band_label=None, parameter_names=None, model_name=None, model_expression=None,
+         error_band_label=None, x_range=None, y_range=None, x_scale=None, y_scale=None,
+         x_ticks=None, y_ticks=None, parameter_names=None, model_name=None, model_expression=None,
          legend=True, fit_info=True, error_band=True, profile=None, plot_profile=None, show=True,
          save=True):
     from kafe2 import Plot, ContoursProfiler
@@ -137,6 +138,19 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
     if not error_band:
         _plot.customize("model_error_band", "label", [None])
         _plot.customize("model_error_band", "hide", [True])
+
+    if x_range is not None:
+        _plot.x_range = x_range
+    if y_range is not None:
+        _plot.y_range = y_range
+    if x_scale is not None:
+        _plot.x_scale = x_scale
+    if y_scale is not None:
+        _plot.y_scale = y_scale
+    if x_ticks is not None:
+        _plot.x_ticks = x_ticks
+    if y_ticks is not None:
+        _plot.y_ticks = y_ticks
 
     if profile is None:
         profile = np.any(_fit_profiles)
