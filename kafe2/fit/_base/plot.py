@@ -770,6 +770,11 @@ class Plot(object):
                 self._plot_adapters.append(
                     _fit.PLOT_ADAPTER_TYPE(_fit)
                 )
+        if not self._separate_figs:
+            _x_range_min = np.min([_pa.x_range[0] for _pa in self._plot_adapters])
+            _x_range_max = np.max([_pa.x_range[1] for _pa in self._plot_adapters])
+            for _plot_adapter in self._plot_adapters:
+                _plot_adapter.x_range = (_x_range_min, _x_range_max)
 
         return [self._plot_adapters[_idx] for _idx in plot_indices]
 
