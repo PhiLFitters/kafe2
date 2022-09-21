@@ -67,6 +67,7 @@ normal_distribution_pdf = normal_distribution  # Backwards compatibility
 
 
 STRING_TO_FUNCTION = {
+    'line': linear_model,
     'linear': linear_model,
     'linear_model': linear_model,
     'quadratic': quadratic_model,

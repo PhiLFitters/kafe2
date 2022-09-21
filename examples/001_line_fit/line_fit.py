@@ -33,3 +33,8 @@ kafe2.plot(
     y_label="y",  # y axis label
     data_label="Data",  # label of data in legend
 )
+
+# For backwards compatibility with PhyPraKit kafe2 also has a function k2Fit.
+# Internally this method simply uses xy_fit and plot:
+# kafe2.k2Fit("line", x_data, y_data, sx=x_error, sy=y_error)
+# New code should not use this function!

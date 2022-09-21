@@ -6,7 +6,7 @@ _fit_history = []
 def xy_fit(x_data, y_data, model_function=None, p0=None, dp0=None,
            x_error=None, y_error=None, x_error_rel=None, y_error_rel=None,
            x_error_cor=None, y_error_cor=None, x_error_cor_rel=None, y_error_cor_rel=None,
-           limits=None, constraints=None, report=True, profile=None):
+           errors_rel_to_model=True, limits=None, constraints=None, report=True, profile=None):
     from kafe2.fit.xy.fit import XYFit
 
     if model_function is None:
@@ -22,7 +22,7 @@ def xy_fit(x_data, y_data, model_function=None, p0=None, dp0=None,
         if error is None:
             return
         error = np.asarray(error)
-        _reference = "model" if axis == "y" and relative else "data"
+        _reference = "model" if errors_rel_to_model and axis == "y" and relative else "data"
         if correlated:
             if error.ndim == 0:
                 error = np.reshape(error, (1,))
@@ -57,10 +57,12 @@ def xy_fit(x_data, y_data, model_function=None, p0=None, dp0=None,
     if profile is None:
         profile = x_error is not None or x_error_rel is not None or y_error_rel is not None
 
-    _fit.do_fit(asymmetric_parameter_errors=profile)
+    _fit_result = _fit.do_fit(asymmetric_parameter_errors=profile)
     if report:
         _fit.report(asymmetric_parameter_errors=profile)
     _fit_history.append(dict(fit=_fit, profile=profile))
+
+    return _fit_result
 
 
 def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
@@ -127,3 +129,32 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
             _cpf.save("profile.png", dpi=240)
     if show:
         _plot.show()
+
+
+_plot_func = plot
+
+
+def k2Fit(func, x, y, sx=None, sy=None, srelx=None, srely=None, xabscor=None, yabscor=None,
+          xrelcor=None, yrelcor=None, ref_to_model=True, constraints=None, p0=None, dp0=None,
+          limits=None, plot=True, axis_labels=['x-data', 'y-data'], data_legend='data',
+          model_expression=None, model_name=None, model_legend='model',
+          model_band=r'$\pm 1 \sigma$', fit_info=True, plot_band=True, asym_parerrs=True,
+          plot_cor=False, showplots=True, quiet=True):
+    xy_fit(
+        x, y, func, p0=p0, dp0=dp0, x_error=sx, y_error=sy, x_error_rel=srelx, y_error_rel=srely,
+        x_error_cor=xabscor, y_error_cor=yabscor, x_error_cor_rel=xrelcor, y_error_cor_rel=yrelcor,
+        errors_rel_to_model=ref_to_model, limits=limits, constraints=constraints, report=not quiet,
+        profile=True
+    )
+    if plot:
+        _plot_func(
+            x_label=axis_labels[0], y_label=axis_labels[1], data_label=data_legend,
+            model_label=model_legend, error_band_label=model_band, model_name=model_name,
+            model_expression=model_expression, legend=True, fit_info=fit_info, error_band=plot_band,
+            profile=True, plot_profile=plot_cor, show=showplots
+        )
+    _fit_object = _fit_history[-1]["fit"]
+    _parameter_errors = _fit_object.asymmetric_parameter_errors if asym_parerrs else \
+        np.stack([-_fit_object.parameter_errors, _fit_object.parameter_errors], axis=-1)
+    return (_fit_object.parameter_values, _parameter_errors, _fit_object.parameter_cor_mat,
+            _fit_object.goodness_of_fit)
