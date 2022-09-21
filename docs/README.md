@@ -73,8 +73,8 @@ but a lot is happening under the hood:
 3. Because the user defined uncertainties in x direction and uncertainties relative to the y model values
    the total covariance matrix has become a function of the model parameters.
    It is therefore necessary to re-calculate the total covariance matrix at each optimization step;
-   while somewhat computationally expensive this ensures that the fit result is unbiased and that
-   the parameter confidence intervals have optimal statistical coverage.
+   while somewhat computationally expensive this ensures minimal bias and good statistical coverage
+   of the confidence intervals.
    Due to the parameter-dependent uncertainties the regression problem as a whole has also become nonlinear.
    _kafe2_ recognizes the change and switches from estimating symmetrical parameter uncertainties from the
    Cramér-Rao-Frechét bound to estimating confidence intervals via the profile likelihood method.

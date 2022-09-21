@@ -91,12 +91,11 @@ function to find the best estimates for the model parameter values.</li>
 uncertainties relative to the y model values the total covariance matrix
 has become a function of the model parameters. It is therefore necessary
 to re-calculate the total covariance matrix at each optimization step;
-while somewhat computationally expensive this ensures that the fit
-result is unbiased and that the parameter confidence intervals have
-optimal statistical coverage. Due to the parameter-dependent
-uncertainties the regression problem as a whole has also become
-nonlinear. <em>kafe2</em> recognizes the change and switches from
-estimating symmetrical parameter uncertainties from the
+while somewhat computationally expensive this ensures minimal bias and
+good statistical coverage of the confidence intervals. Due to the
+parameter-dependent uncertainties the regression problem as a whole has
+also become nonlinear. <em>kafe2</em> recognizes the change and switches
+from estimating symmetrical parameter uncertainties from the
 Cramér-Rao-Frechét bound to estimating confidence intervals via the
 profile likelihood method.</li>
 <li>The data and model are plotted along with a confidence band for the
