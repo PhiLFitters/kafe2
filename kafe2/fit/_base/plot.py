@@ -19,8 +19,7 @@ from matplotlib import gridspec as gs
 from matplotlib.legend_handler import HandlerBase
 from matplotlib import rc_context
 
-__all__ = ["PlotAdapterBase", "Plot", "PlotAdapterException", "PlotFigureException",
-           "kc_plot_style"]
+__all__ = ["PlotAdapterBase", "Plot", "kc_plot_style"]
 
 
 def kc_plot_style(data_type, subplot_key, property_key):
@@ -30,10 +29,6 @@ def kc_plot_style(data_type, subplot_key, property_key):
     except ConfigError:
         # if not available, do lookup for the default data type
         return kc('fit', 'plot', 'style', 'default', subplot_key, property_key)
-
-
-class CyclerException(Exception):
-    pass
 
 
 class Cycler(object):
@@ -54,10 +49,10 @@ class Cycler(object):
                     _prop_size_i = len(_prop_vals)
                 else:
                     if len(_prop_vals) != _prop_size_i:
-                        raise CyclerException("Cannot cycle properties with mismatching value "
-                                              "sequence lengths!")
+                        raise ValueError("Cannot cycle properties with mismatching value "
+                                         "sequence lengths!")
                 if _prop_name in _processed_names:
-                    raise CyclerException(
+                    raise ValueError(
                         "Cycle already contains a property named '%s'!" % (_prop_name,))
                 _prop_dict_i[_prop_name] = tuple(_prop_vals)
                 _processed_names.add(_prop_name)
@@ -122,12 +117,8 @@ class DummyLegendHandler(HandlerBase):
         return None
 
 
-class PlotAdapterException(Exception):
-    pass
-
-
 @six.add_metaclass(abc.ABCMeta)
-class PlotAdapterBase(object):
+class PlotAdapterBase:
     """This is a purely abstract class implementing the minimal interface required by all
     types of plot adapters.
 
@@ -221,17 +212,17 @@ class PlotAdapterBase(object):
                         _pt_spec,
                         plot_adapter_method=getattr(self, _pt_spec['plot_adapter_method']),
                     )
-                except KeyError:
-                    raise PlotAdapterException(
+                except KeyError as _e:
+                    raise ValueError(
                         "Invalid subplot configuration: missing "
                         "key `plot_adapter_method` for subplot type '{}' "
                         "in PLOT_SUBPLOT_TYPES in {}!".format(
                             _pt,
                             self.__class__
                         )
-                    )
-                except AttributeError:
-                    raise PlotAdapterException(
+                    ) from _e
+                except AttributeError as _e:
+                    raise TypeError(
                         "Cannot handle plot of type '{}': "
                         "cannot find corresponding plot method "
                         "'{}' in {}!".format(
@@ -239,7 +230,7 @@ class PlotAdapterBase(object):
                             _pt_spec['plot_adapter_method'],
                             self.__class__
                         )
-                    )
+                    ) from _e
                 self._subplots[_pt].setdefault('plot_method_keywords', {})
 
         return self._subplots
@@ -517,8 +508,8 @@ class PlotAdapterBase(object):
     @x_scale.setter
     def x_scale(self, scale):
         if scale not in self.AVAILABLE_X_SCALES:
-            raise PlotAdapterException("x_scale {} is not supported for this type of fit, "
-                                       "use one of {}".format(scale, self.AVAILABLE_X_SCALES))
+            raise TypeError("x_scale {} is not supported for this type of fit, "
+                            "use one of {}".format(scale, self.AVAILABLE_X_SCALES))
         self._x_scale = scale
 
     @property
@@ -532,8 +523,8 @@ class PlotAdapterBase(object):
     @y_scale.setter
     def y_scale(self, scale):
         if scale not in self.AVAILABLE_Y_SCALES:
-            raise PlotAdapterException("y_scale {} is not supported for this type of fit, "
-                                       "use one of {}".format(scale, self.AVAILABLE_Y_SCALES))
+            raise TypeError("y_scale {} is not supported for this type of fit, "
+                            "use one of {}".format(scale, self.AVAILABLE_Y_SCALES))
         self._y_scale = scale
 
     @property
@@ -659,12 +650,8 @@ class PlotAdapterBase(object):
 # -- must come last!
 
 
-class PlotFigureException(Exception):
-    pass
-
-
 @six.add_metaclass(abc.ABCMeta)  # TODO: check if needed
-class Plot(object):
+class Plot:
     """
     This is a purely abstract class implementing the minimal interface required by all
     types of plotters.
@@ -1117,14 +1104,12 @@ class Plot(object):
         _adapters = self._get_plot_adapters()
         if np.ndim(x_range) == 1:
             if len(x_range) != 2:
-                raise PlotFigureException("x_range must contain two elements. "
-                                          "A lower and an upper limit. Got {} elements"
-                                          .format(len(x_range)))
+                raise ValueError("x_range must contain two elements. A lower and an upper limit. "
+                                 "Got {} elements".format(len(x_range)))
             x_range = itertools.repeat(x_range, len(_adapters))
         elif len(_adapters) != len(x_range):
-            raise PlotFigureException("Amount of x_ranges and fits does not match. "
-                                      "Got {} x_ranges and have {} fits"
-                                      .format(len(x_range), len(_adapters)))
+            raise ValueError("Amount of x_ranges and fits does not match. Got {} x_ranges and have "
+                             "{} fits".format(len(x_range), len(_adapters)))
         for i, _range in enumerate(x_range):
             _adapters[i].x_range = _range
 
@@ -1141,14 +1126,12 @@ class Plot(object):
         _adapters = self._get_plot_adapters()
         if np.ndim(y_range) == 1:
             if len(y_range) != 2:
-                raise PlotFigureException("y_range must contain two elements. "
-                                          "A lower and an upper limit. Got {} elements"
-                                          .format(len(y_range)))
+                raise ValueError("y_range must contain two elements. A lower and an upper limit. "
+                                 "Got {} elements".format(len(y_range)))
             y_range = itertools.repeat(y_range, len(_adapters))
         elif len(_adapters) != len(y_range):
-            raise PlotFigureException("Amount of y_ranges and fits does not match. "
-                                      "Got {} y_ranges and have {} fits"
-                                      .format(len(y_range), len(_adapters)))
+            raise ValueError("Amount of y_ranges and fits does not match. Got {} y_ranges and "
+                             "have {} fits".format(len(y_range), len(_adapters)))
         for i, _range in enumerate(y_range):
             _adapters[i].y_range = _range
 
@@ -1158,9 +1141,8 @@ class Plot(object):
         if isinstance(var, str):  # check if string, if not probably list
             var = itertools.repeat(var, len(_adapters))
         elif len(_adapters) != len(var):
-            raise PlotFigureException("Length of input and fits does not match. "
-                                      "Got {} inputs and have {} fits"
-                                      .format(len(var), len(_adapters)))
+            raise ValueError("Length of input and fits does not match. Got {} inputs and have {} "
+                             "fits".format(len(var), len(_adapters)))
         return var
 
     def _repeat_ticks(self, ticks):

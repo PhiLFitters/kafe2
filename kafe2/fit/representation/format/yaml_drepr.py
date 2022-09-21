@@ -1,7 +1,6 @@
 from ._base import ModelFunctionFormatterDReprBase, ParameterFormatterDReprBase
 from .. import _AVAILABLE_REPRESENTATIONS
-from .._base import DReprError
-from .._yaml_base import YamlReaderException, YamlReaderMixin, YamlWriterException, YamlWriterMixin
+from .._yaml_base import YamlReaderMixin, YamlWriterMixin
 from ..._base import ModelFunctionFormatter, ParameterFormatter
 from ...indexed import IndexedModelFunctionFormatter
 
@@ -30,7 +29,7 @@ class ModelFunctionFormatterYamlWriter(YamlWriterMixin, ModelFunctionFormatterDR
 
         _type = cls._CLASS_TO_OBJECT_TYPE_NAME.get(_class, None)
         if _type is None:
-            raise DReprError("Model function formatter unknown or not supported: %s" % _class)
+            raise TypeError("Model function formatter unknown or not supported: %s" % _class)
         _yaml_doc['type'] = _type
 
         if _class is IndexedModelFunctionFormatter:
@@ -39,7 +38,7 @@ class ModelFunctionFormatterYamlWriter(YamlWriterMixin, ModelFunctionFormatterDR
         elif _class is ModelFunctionFormatter:
             pass
         else:
-            raise YamlWriterException("Unknown formatter type!")
+            raise TypeError("Unknown formatter type!")
 
         _yaml_doc['name'] = model_function_formatter.name
         _yaml_doc['latex_name'] = model_function_formatter.latex_name
@@ -95,7 +94,7 @@ class ModelFunctionFormatterYamlReader(YamlReaderMixin, ModelFunctionFormatterDR
         elif _class is ModelFunctionFormatter:
             pass
         else:
-            raise YamlReaderException("Unknown formatter type!")
+            raise TypeError("Unknown formatter type!")
         _constructor_kwargs = {key: yaml_doc.pop(key, None) for key in _kwarg_list}
 
         _signature = yaml_doc.pop('signature')  # either list or dict, definitely a dict when

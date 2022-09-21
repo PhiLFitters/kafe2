@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 import numpy as np
 from scipy.optimize import minimize
 import unittest
-from kafe2.core.minimizers.minimizer_base import MinimizerException
 
 
 def fcn_1(x):
@@ -342,7 +341,7 @@ class AbstractMinimizerTest(ABC):
 
     def test_raise_fix_xyz(self):
         self.m3.fix_several(["x", "y", "z"])
-        with self.assertRaises(MinimizerException):
+        with self.assertRaises(RuntimeError):
             self.m3.minimize()
 
     def test_compare_par_values_minimize_fcn1_errdef_4(self):
@@ -505,7 +504,7 @@ class AbstractMinimizerTest(ABC):
         ))
 
     def test_profile_raise_no_fit(self):
-        with self.assertRaises(MinimizerException):
+        with self.assertRaises(RuntimeError):
             self.m3.profile("x")
 
     @unittest.skip("Testing contours not yet implemented!")
@@ -517,5 +516,5 @@ class AbstractMinimizerTest(ABC):
         )
 
     def test_contour_raise_no_fit(self):
-        with self.assertRaises(MinimizerException):
+        with self.assertRaises(RuntimeError):
             self.m3.contour("x", "y")

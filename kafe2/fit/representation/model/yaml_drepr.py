@@ -6,8 +6,7 @@ import six
 
 from ._base import ModelFunctionDReprBase, ParametricModelDReprBase
 from .. import _AVAILABLE_REPRESENTATIONS
-from .._base import DReprError
-from .._yaml_base import YamlReaderException, YamlReaderMixin, YamlWriterException, YamlWriterMixin
+from .._yaml_base import YamlReaderMixin, YamlWriterMixin
 from ..error import common_error_tools
 from ..format import ModelFunctionFormatterYamlReader, ModelFunctionFormatterYamlWriter
 from ..._base import ModelFunctionBase
@@ -27,11 +26,11 @@ def _parse_function(input_string):
     _tokens = tokenize.generate_tokens(six.StringIO(input_string).readline)
     for _toknum, _tokval, _spos, _epos, _line_string in _tokens:
         if _tokval in ModelFunctionYamlReader.FORBIDDEN_TOKENS:
-            raise DReprError("Encountered forbidden token '%s' in user-entered code on line '%s'."
+            raise ValueError("Encountered forbidden token '%s' in user-entered code on line '%s'."
                              % (_tokval, _line_string))
 
     if "__" in input_string:
-        raise DReprError("Model function input must not contain '__'!")
+        raise ValueError("Model function input must not contain '__'!")
 
     _imports = ""
     _imports += "import numpy as np\n"  # import numpy
@@ -59,9 +58,9 @@ def _parse_function(input_string):
         if _post_reference not in _locals_pre:
             _new_references.append(_post_reference)
     if len(_new_references) != 1:
-        raise YamlReaderException(
-            "Expected to receive exactly one new reference as a model function but instead received %s in the following string:\n%s"
-            % (len(_new_references), input_string))
+        raise ValueError(
+            "Expected to receive exactly one new reference as a model function but instead received"
+            "%s in the following string:\n%s" % (len(_new_references), input_string))
     return _new_references[0]
 
 
@@ -87,7 +86,7 @@ class ModelFunctionYamlWriter(YamlWriterMixin, ModelFunctionDReprBase):
         _class = model_function.__class__
         _type = cls._CLASS_TO_OBJECT_TYPE_NAME.get(_class, None)
         if _type is None:
-            raise DReprError("Model function type unknown or not supported: %s" % _class)
+            raise TypeError("Model function type unknown or not supported: %s" % _class)
         if _type != 'base':  # 'base' is default, no need to store type
             _yaml_doc['type'] = _type  # store all other custom types
         _yaml_doc['model_function_formatter'] =\
@@ -125,7 +124,7 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
     def _get_required_keywords(cls, yaml_doc, model_function_class):
         if issubclass(model_function_class, ModelFunctionBase):
             return ['python_code']
-        raise YamlReaderException("Unknown model function class: %s" % model_function_class)
+        raise TypeError("Unknown model function class: %s" % model_function_class)
 
     @classmethod
     def _process_string(cls, string_representation, default_type):
@@ -141,7 +140,7 @@ class ModelFunctionYamlReader(YamlReaderMixin, ModelFunctionDReprBase):
         _model_function_type = yaml_doc.pop('type', 'base')  # if no type is specified assume base
         _class = cls._OBJECT_TYPE_NAME_TO_CLASS.get(_model_function_type)
         if _class not in KNOWN_MODEL_FUNCTIONS:
-            raise YamlReaderException("Unknown model function class: %s" % _class)
+            raise TypeError("Unknown model function class: %s" % _class)
 
         _raw_string = yaml_doc.pop("python_code")
         try:
@@ -184,7 +183,7 @@ class ParametricModelYamlWriter(YamlWriterMixin, ParametricModelDReprBase):
         _class = parametric_model.__class__
         _type = cls._CLASS_TO_OBJECT_TYPE_NAME.get(_class, None)
         if _type is None:
-            raise DReprError("Parametric model type unknown or not supported: %s" % _class)
+            raise TypeError("Parametric model type unknown or not supported: %s" % _class)
         _yaml_doc['type'] = _type
 
         # -- write representation for model types
@@ -214,7 +213,7 @@ class ParametricModelYamlWriter(YamlWriterMixin, ParametricModelDReprBase):
             _yaml_doc['model_function'] = ModelFunctionYamlWriter._make_representation(
                 parametric_model._model_function_object)
         else:
-            raise YamlWriterException("Unkonwn parametric model type")
+            raise TypeError("Unkonwn parametric model type")
 
         # convert all numpy array entries to regular float, then convert to list, improves readability
         _yaml_doc['model_parameters'] = np.array(parametric_model.parameters, dtype=float).tolist()
@@ -260,7 +259,7 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
             _override_dict['expression_string'] = 'model_function'
             _override_dict['latex_expression_string'] = 'model_function'
         else:
-            raise YamlReaderException("Unknown parametric model type")
+            raise TypeError("Unknown parametric model type")
         return _override_dict
 
     @classmethod
@@ -322,8 +321,8 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
                 _kwarg_list.append('n_bins')
                 _kwarg_list.append('bin_range')
             else:
-                raise YamlReaderException("When reading in a histogram parametric model either "
-                                          "bin_edges or n_bins and bin_range have to be specified!")
+                raise ValueError("When reading in a histogram parametric model either "
+                                 "bin_edges or n_bins and bin_range have to be specified!")
             if 'bin_evaluation' in yaml_doc:
                 _bin_evaluation = yaml_doc.pop('bin_evaluation')
                 if 'def' in _bin_evaluation:
@@ -341,7 +340,7 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
             _kwarg_list.append('x_data')
             yaml_doc.pop('y_data', None)  # remove y_data from dict
         else:
-            raise YamlReaderException("Unknown parametric model type")
+            raise TypeError("Unknown parametric model type")
 
         _model_func = None
         if _class is HistParametricModel:
@@ -363,7 +362,7 @@ class ParametricModelYamlReader(YamlReaderMixin, ParametricModelDReprBase):
                     _model_func_entry, default_type=_parametric_model_type)
                 _constructor_kwargs['model_func'] = _model_func
         else:
-            raise YamlReaderException('Unknown model type: %s' % _parametric_model_type)
+            raise TypeError('Unknown model type: %s' % _parametric_model_type)
 
         if _model_func:
             # if model parameters are given, apply those to the model function

@@ -10,7 +10,6 @@ from kafe2.fit.histogram.model import HistParametricModel
 from kafe2.fit.indexed.model import IndexedParametricModel
 from kafe2.fit.xy.model import XYParametricModel
 from kafe2.fit.io.handle import IOStreamHandle
-from kafe2.fit.representation._yaml_base import YamlReaderException
 
 TEST_PARAMETRIC_MODEL_HIST="""
 type: histogram
@@ -192,12 +191,12 @@ class TestHistParametricModelYamlRepresenter(unittest.TestCase):
             _read_parametric_model, self._test_parametric_model_numpy_vectorize)
 
     def test_read_from_testfile_stream_missing_keyword(self):
-        with self.assertRaises(YamlReaderException):
+        with self.assertRaises(ValueError):
             _read_parametric_model = TestHistParametricModelYamlRepresenter._get_model_from_string(
                 TEST_PARAMETRIC_MODEL_HIST_MISSING_KEYWORD)
 
     def test_read_from_testfile_stream_extra_keyword(self):
-        with self.assertRaises(YamlReaderException):
+        with self.assertRaises(ValueError):
             _read_parametric_model = TestHistParametricModelYamlRepresenter._get_model_from_string(
                 TEST_PARAMETRIC_MODEL_HIST_EXTRA_KEYWORD)
 
@@ -336,11 +335,11 @@ class TestIndexedParametricModelYamlRepresenter(unittest.TestCase):
         )
         
     def test_read_from_testfile_stream_missing_keyword(self):
-        with self.assertRaises(YamlReaderException):
+        with self.assertRaises(ValueError):
             self._testfile_streamreader_missing_keyword.read()
 
     def test_read_from_testfile_stream_extra_keyword(self):
-        with self.assertRaises(YamlReaderException):
+        with self.assertRaises(ValueError):
             self._testfile_streamreader_extra_keyword.read()
 
     def test_read_from_testfile_stream_with_errors(self):
@@ -530,11 +529,11 @@ class TestXYParametricModelYamlRepresenter(unittest.TestCase):
         )
         
     def test_read_from_testfile_stream_missing_keyword(self):
-        with self.assertRaises(YamlReaderException):
+        with self.assertRaises(ValueError):
             self._testfile_streamreader_missing_keyword.read()
 
     def test_read_from_testfile_stream_extra_keyword(self):
-        with self.assertRaises(YamlReaderException):
+        with self.assertRaises(ValueError):
             self._testfile_streamreader_extra_keyword.read()
 
     def test_read_from_testfile_stream_with_errors(self):

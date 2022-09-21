@@ -2,18 +2,14 @@ from copy import deepcopy
 
 import sys
 
-from .._base import FitException, FitBase, DataContainerBase, ModelFunctionBase
+from .._base import FitBase, DataContainerBase, ModelFunctionBase
 from .container import UnbinnedContainer
 from .cost import UnbinnedCostFunction_NegLogLikelihood, STRING_TO_COST_FUNCTION
 from .model import UnbinnedParametricModel
 from .plot import UnbinnedPlotAdapter
 from ..util import collect
 
-__all__ = ['UnbinnedFit', 'UnbinnedFitException']
-
-
-class UnbinnedFitException(FitException):
-    pass
+__all__ = ['UnbinnedFit']
 
 
 class UnbinnedFit(FitBase):
@@ -21,7 +17,6 @@ class UnbinnedFit(FitBase):
     MODEL_TYPE = UnbinnedParametricModel
     MODEL_FUNCTION_TYPE = ModelFunctionBase
     PLOT_ADAPTER_TYPE = UnbinnedPlotAdapter
-    EXCEPTION_TYPE = UnbinnedFitException
     RESERVED_NODE_NAMES = {'data', 'model', 'cost', 'parameter_values', 'parameter_constraints'}
 
     _STRING_TO_COST_FUNCTION = STRING_TO_COST_FUNCTION
@@ -69,7 +64,7 @@ class UnbinnedFit(FitBase):
         if isinstance(new_data, self.CONTAINER_TYPE):
             self._data_container = deepcopy(new_data)
         elif isinstance(new_data, DataContainerBase):
-            raise UnbinnedFitException("Incompatible container type '%s' (expected '%s')"
+            raise TypeError("Incompatible container type '%s' (expected '%s')"
                                        % (type(new_data), self.CONTAINER_TYPE))
         else:
             self._data_container = UnbinnedContainer(new_data, dtype=float)

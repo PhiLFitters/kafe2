@@ -5,7 +5,7 @@ import numpy as np
 
 from ..io.file import FileIOMixin
 
-__all__ = ["FormatterException", "ScalarFormatter", "ParameterFormatter", "FunctionFormatter",
+__all__ = ["ScalarFormatter", "ParameterFormatter", "FunctionFormatter",
            "ModelFunctionFormatter", "CostFunctionFormatter", "latexify_ascii"]
 
 LATEX_GREEK_LETTERS = [
@@ -59,10 +59,6 @@ def latexify_ascii(ascii_string):
 
 # Naming convention: Arguments describe all arguments of a function, parameters only the fitted
 # parameters excluding the independent variable(s)
-
-
-class FormatterException(Exception):
-    pass
 
 
 class ScalarFormatter(object):
@@ -496,8 +492,8 @@ class FunctionFormatter(FileIOMixin, object):
         except LookupError:  # fetch key and index errors. Other Errors have other causes.
             _af_arg_names = [_af.arg_name for _af in self.arg_formatters] if self.arg_formatters \
                 else None
-            raise FormatterException("Expression string %s does not match argument structure %s"
-                                     % (expression_format_string, _af_arg_names))
+            raise ValueError("Expression string %s does not match argument structure %s"
+                             % (expression_format_string, _af_arg_names))
 
     @property
     def latex_expression_format_string(self):
@@ -521,13 +517,13 @@ class FunctionFormatter(FileIOMixin, object):
         self._latex_expr_string = latex_expression_format_string
         try:
             self._get_formatted_expression(format_as_latex=True)
-        except LookupError:  # fetch key and index errors. Other Errors have other causes.
+        except LookupError as _e:  # fetch key and index errors. Other Errors have other causes.
             _af_arg_names = [_af.arg_name for _af in self.arg_formatters] if self.arg_formatters \
                 else None
-            raise FormatterException(
+            raise ValueError(
                 "LaTeX expression string %s does not match argument structure %s" % (
                     latex_expression_format_string, _af_arg_names)
-            )
+            ) from _e
 
     @property
     def name(self):

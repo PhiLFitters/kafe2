@@ -1,4 +1,3 @@
-from .._base import DReprError
 from .._yaml_base import YamlWriterMixin, YamlReaderMixin
 from ._base import ConstraintDReprBase
 from .. import _AVAILABLE_REPRESENTATIONS
@@ -22,7 +21,7 @@ class ConstraintYamlWriter(YamlWriterMixin, ConstraintDReprBase):
         _class = constraint.__class__
         _type = cls._CLASS_TO_OBJECT_TYPE_NAME.get(_class, None)
         if _type is None:
-            raise DReprError("Constraint type unknown or not supported: %s" % constraint.__class__)
+            raise TypeError("Constraint type unknown or not supported: %s" % constraint.__class__)
         _yaml_doc['type'] = _type
 
         if _class is GaussianSimpleParameterConstraint:
@@ -48,7 +47,7 @@ class ConstraintYamlWriter(YamlWriterMixin, ConstraintDReprBase):
             _yaml_doc['relative'] = constraint.relative
             _yaml_doc['matrix_type'] = constraint.matrix_type
         else:
-            raise DReprError('Unknown constraint class: %s' % _class)
+            raise TypeError('Unknown constraint class: %s' % _class)
 
         return _yaml_doc
 
@@ -66,7 +65,7 @@ class ConstraintYamlReader(YamlReaderMixin, ConstraintDReprBase):
             return ['index', 'value', 'uncertainty']
         if constraint_class is GaussianMatrixParameterConstraint:
             return ['indices', 'values', 'matrix']
-        raise DReprError('Unknown constraint class: %s' % constraint_class)
+        raise TypeError('Unknown constraint class: %s' % constraint_class)
 
     @classmethod
     def _modify_yaml_doc(cls, yaml_doc, kafe_object_class, parameter_names=None, **kwargs):
@@ -103,7 +102,7 @@ class ConstraintYamlReader(YamlReaderMixin, ConstraintDReprBase):
                 relative=yaml_doc.pop('relative', False)
             )
         else:
-            raise DReprError('Unknown constraint class: %s' % _class)
+            raise TypeError('Unknown constraint class: %s' % _class)
         return _constraint_object, yaml_doc
 
 

@@ -7,7 +7,6 @@ from kafe2.fit.histogram import HistModelFunction
 from kafe2.fit.indexed import IndexedModelFunction, IndexedModelFunctionFormatter
 from kafe2.fit.representation import ModelFunctionYamlWriter, ModelFunctionYamlReader
 from kafe2.fit.io.handle import IOStreamHandle
-from kafe2.fit.representation._yaml_base import YamlReaderException
 
 TEST_MODEL_FUNCTION_HIST = """
 type: histogram
@@ -80,11 +79,11 @@ class TestHistModelFunctionYamlRepresenter(unittest.TestCase):
         )
 
     def test_read_from_testfile_stream_missing_keyword(self):
-        with self.assertRaises(YamlReaderException):
+        with self.assertRaises(ValueError):
             self._testfile_streamreader_missing_keyword.read()
 
     def test_read_from_testfile_stream_extra_keyword(self):
-        with self.assertRaises(YamlReaderException):
+        with self.assertRaises(ValueError):
             self._testfile_streamreader_extra_keyword.read()
 
     def test_read_from_testfile_stream_with_formatter(self):
@@ -221,11 +220,11 @@ class TestIndexedModelFunctionYamlRepresenter(unittest.TestCase):
         )
 
     def test_read_from_testfile_stream_missing_keyword(self):
-        with self.assertRaises(YamlReaderException):
+        with self.assertRaises(ValueError):
             self._testfile_streamreader_missing_keyword.read()
 
     def test_read_from_testfile_stream_extra_keyword(self):
-        with self.assertRaises(YamlReaderException):
+        with self.assertRaises(ValueError):
             self._testfile_streamreader_extra_keyword.read()
 
     def test_read_from_testfile_stream_with_formatter(self):
@@ -355,11 +354,11 @@ class TestModelFunctionBaseYamlRepresenter(unittest.TestCase):
         )
 
     def test_read_from_testfile_stream_missing_keyword(self):
-        with self.assertRaises(YamlReaderException):
+        with self.assertRaises(ValueError):
             self._testfile_streamreader_missing_keyword.read()
 
     def test_read_from_testfile_stream_extra_keyword(self):
-        with self.assertRaises(YamlReaderException):
+        with self.assertRaises(ValueError):
             self._testfile_streamreader_extra_keyword.read()
 
     def test_read_from_testfile_stream_with_formatter(self):

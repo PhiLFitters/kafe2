@@ -2,14 +2,9 @@ import warnings
 import numpy as np
 
 from ..indexed import IndexedContainer
-from ..indexed.container import IndexedContainerException
 
 
-__all__ = ['HistContainer', 'HistContainerException']
-
-
-class HistContainerException(IndexedContainerException):
-    pass
+__all__ = ['HistContainer']
 
 
 class HistContainer(IndexedContainer):
@@ -47,7 +42,7 @@ class HistContainer(IndexedContainer):
         # TODO: think of a way to implement weights
 
         if len(bin_range) != 2:
-            raise HistContainerException(
+            raise ValueError(
                 "Invalid bin range specification: %r! Must be tuple of 2 floats..." % (bin_range,))
         low, high = tuple(bin_range)
 
@@ -57,7 +52,7 @@ class HistContainer(IndexedContainer):
             if len(bin_edges) == _sz + 1:
                 # assume bin edges given including bin range
                 if not (bin_edges[0] == low and bin_edges[-1] == high):
-                    raise HistContainerException(
+                    raise ValueError(
                         "Invalid bin edge specification! First and last elements %r must match histogram bin range %r."
                         % ((bin_edges[0], bin_edges[-1]), bin_range))
                 _bin_edges_including_low_and_high = bin_edges
@@ -65,7 +60,7 @@ class HistContainer(IndexedContainer):
                 # <check if ordered and strictly within bin range>
                 _bin_edges_including_low_and_high = [low] + bin_edges + [high]
             else:
-                raise HistContainerException(
+                raise ValueError(
                     "Invalid bin edge specification! Number of elements (%d) must match histogram bin number (%d) +/- 1."
                     % (len(bin_edges), _sz))
             self.rebin(new_bin_edges=_bin_edges_including_low_and_high)
@@ -81,8 +76,8 @@ class HistContainer(IndexedContainer):
     def _fill_unprocessed(self):
         """fill any entries marked as unprocessed into the histogram"""
         if self._manual_heights:
-            raise HistContainerException("The bin heights have been set manually. Filling entries is not available "
-                                         "anymore. Please construct a new HistContainer!")
+            raise RuntimeError("The bin heights have been set manually. Filling entries is not "
+                               "available anymore. Please construct a new HistContainer!")
         if not self._unprocessed_entries:
             return
         _entries_sorted = np.sort(self._unprocessed_entries)
@@ -157,7 +152,7 @@ class HistContainer(IndexedContainer):
 
     @data.setter
     def data(self, data):
-        raise HistContainerException("Changing histogram data directly is not allowed! Use fill() or set_bins().")
+        raise TypeError("Changing histogram data directly is not allowed! Use fill() or set_bins().")
 
     @property
     def raw_data(self):
@@ -222,8 +217,8 @@ class HistContainer(IndexedContainer):
         :type entries: list of floats
         """
         if self._manual_heights:
-            raise HistContainerException("The bin heights have been set manually. Filling additional data is not "
-                                         "possible anymore. Please construct a new HistContainer!")
+            raise RuntimeError("The bin heights have been set manually. Filling additional data is not "
+                               "possible anymore. Please construct a new HistContainer!")
         if np.asarray(entries).ndim > 1:
             raise ValueError("Fill data must be scalar or one-dimensional "
                              f"but received fill data with {np.asarray(entries).ndim} dimensions.")
@@ -240,12 +235,12 @@ class HistContainer(IndexedContainer):
         :type new_bin_edges: list of float
         """
         if self._manual_heights:
-            raise HistContainerException("The bin heights have been set manually. Rebinning is not possible anymore. "
-                                         "Please construct a new HistContainer!")
+            raise RuntimeError("The bin heights have been set manually. Rebinning is not possible "
+                               "anymore. Please construct a new HistContainer!")
         _new_bin_edges = np.asarray(new_bin_edges, dtype=float)
         # check if list is sorted
         if not (np.diff(_new_bin_edges) >= 0).all():
-            raise HistContainerException(
+            raise ValueError(
                 "Invalid bin edge specification! Edge sequence must be sorted in ascending order!")
         self._bin_edges = _new_bin_edges
         self._data = np.zeros(len(self._bin_edges) - 1 + 2)
@@ -271,8 +266,8 @@ class HistContainer(IndexedContainer):
                              f'Got {_new_data.ndim}-d array, expected 1-d array')
         _new_data = np.append(np.insert(_new_data, 0, underflow), overflow)
         if len(_new_data) != len(self._data):
-            raise HistContainerException('Length of bin entries does not match binning. '
-                                         'Got {}, expected {}'.format(len(_new_data)-2, len(self._data)-2))
+            raise ValueError('Length of bin entries does not match binning. '
+                             'Got {}, expected {}'.format(len(_new_data)-2, len(self._data)-2))
         self._data = _new_data
         self._processed_entries = []
         self._unprocessed_entries = []

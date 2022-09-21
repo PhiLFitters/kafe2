@@ -1,17 +1,13 @@
 from copy import deepcopy
 
-from .._base import FitException, FitBase, DataContainerBase
+from .._base import FitBase, DataContainerBase
 from .container import HistContainer
 from .._base.cost import CostFunction_NegLogLikelihood
 from .model import HistParametricModel, HistModelFunction
 from .plot import HistPlotAdapter
 from ..util import function_library, collect
 
-__all__ = ['HistFit', 'HistFitException']
-
-
-class HistFitException(FitException):
-    pass
+__all__ = ['HistFit']
 
 
 class HistFit(FitBase):
@@ -19,7 +15,6 @@ class HistFit(FitBase):
     MODEL_TYPE = HistParametricModel
     MODEL_FUNCTION_TYPE = HistModelFunction
     PLOT_ADAPTER_TYPE = HistPlotAdapter
-    EXCEPTION_TYPE = HistFitException
     RESERVED_NODE_NAMES = {'data', 'model', 'model_density', 'cost',
                           'data_error', 'model_error', 'total_error',
                           'data_cov_mat', 'model_cov_mat', 'total_cov_mat',
@@ -84,10 +79,10 @@ class HistFit(FitBase):
         if isinstance(new_data, self.CONTAINER_TYPE):
             self._data_container = deepcopy(new_data)
         elif isinstance(new_data, DataContainerBase):
-            raise HistFitException("Incompatible container type '{}' (expected '{}')"
-                                   .format(type(new_data), self.CONTAINER_TYPE))
+            raise TypeError("Incompatible container type '{}' (expected '{}')"
+                            .format(type(new_data), self.CONTAINER_TYPE))
         else:
-            raise HistFitException("Fitting a histogram requires a HistContainer!")
+            raise TypeError("Fitting a histogram requires a HistContainer!")
         self._data_container._on_error_change_callback = self._on_error_change
 
         self._nexus.get('data').mark_for_update()

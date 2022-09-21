@@ -1,7 +1,7 @@
 from __future__ import print_function
 import six
 import ctypes
-from .minimizer_base import MinimizerBase, MinimizerException
+from .minimizer_base import MinimizerBase
 from ..contour import ContourFactory
 try:
     from ROOT import TMinuit, Double, Long
@@ -13,10 +13,6 @@ except ImportError:
 from array import array as arr  # array needed for TMinuit arguments
 
 import numpy as np
-
-
-class MinimizerROOTTMinuitException(MinimizerException):
-    pass
 
 
 class MinimizerROOTTMinuit(MinimizerBase):
@@ -309,7 +305,7 @@ class MinimizerROOTTMinuit(MinimizerBase):
     def limit(self, parameter_name, parameter_bounds):
         assert len(parameter_bounds) == 2
         if parameter_bounds[0] is None or parameter_bounds[1] is None:
-            raise MinimizerROOTTMinuitException(
+            raise RuntimeError(
                 "Cannot define one-sided parameter limits when using the ROOT TMinuit Minimizer.")
         # set local flag
         _par_id = self.parameter_names.index(parameter_name)
@@ -345,7 +341,7 @@ class MinimizerROOTTMinuit(MinimizerBase):
 
     def minimize(self, max_calls=6000):
         if np.all(self._par_fixed):
-            raise MinimizerROOTTMinuitException("Cannot perform a fit if all parameters are fixed!")
+            raise RuntimeError("Cannot perform a fit if all parameters are fixed!")
         self._migrad(max_calls=max_calls)
 
         # retrieve fitters parameters
@@ -361,10 +357,10 @@ class MinimizerROOTTMinuit(MinimizerBase):
         
     def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, **minimizer_contour_kwargs):
         if not self.did_fit:
-            raise MinimizerROOTTMinuitException("Need to perform a fit before calling contour()!")
+            raise RuntimeError("Need to perform a fit before calling contour()!")
         _numpoints = minimizer_contour_kwargs.pop("numpoints", 100)
         if minimizer_contour_kwargs:
-            raise MinimizerROOTTMinuitException("Unknown parameters: {}".format(minimizer_contour_kwargs))
+            raise ValueError("Unknown parameters: {}".format(minimizer_contour_kwargs))
         _id_1 = self.parameter_names.index(parameter_name_1)
         _id_2 = self.parameter_names.index(parameter_name_2)
         self.__gMinuit.SetErrorDef(sigma ** 2)
@@ -381,7 +377,7 @@ class MinimizerROOTTMinuit(MinimizerBase):
     
     def profile(self, parameter_name, bins=21, bound=2, args=None, subtract_min=False):
         if not self.did_fit:
-            raise MinimizerROOTTMinuitException("Need to perform a fit before calling profile()!")
+            raise RuntimeError("Need to perform a fit before calling profile()!")
         
         MAX_ITERATIONS = 6000
         

@@ -4,8 +4,8 @@ import numpy as np
 
 from kafe2.fit.io import IOStreamHandle
 from kafe2.fit.representation import ConstraintYamlReader, ConstraintYamlWriter
-from kafe2.fit.representation._yaml_base import YamlReaderException
-from kafe2.core.constraint import GaussianSimpleParameterConstraint, GaussianMatrixParameterConstraint
+from kafe2.core.constraint import GaussianSimpleParameterConstraint, \
+    GaussianMatrixParameterConstraint
 
 TEST_SIMPLE_GAUSSIAN_CONSTRAINT_ABS = """
 type: simple
@@ -78,11 +78,11 @@ class TestSimpleGaussianConstraintRepresenter(unittest.TestCase):
         self._assert_constraints_equal(_read_constraint, self._constraint)
 
     def test_read_from_testfile_stream_missing_keyword(self):
-        with self.assertRaises(YamlReaderException):
+        with self.assertRaises(ValueError):
             self._testfile_streamreader_missing_keyword.read()
 
     def test_read_from_testfile_stream_extra_keyword(self):
-        with self.assertRaises(YamlReaderException):
+        with self.assertRaises(ValueError):
             self._testfile_streamreader_extra_keyword.read()
 
     def test_round_trip_with_stringstream(self):
@@ -196,11 +196,11 @@ class TestMatrixGaussianConstraintRepresenter(unittest.TestCase):
         self._assert_constraints_equal(_read_constraint, self._constraint)
 
     def test_read_from_testfile_stream_missing_keyword(self):
-        with self.assertRaises(YamlReaderException):
+        with self.assertRaises(ValueError):
             self._testfile_streamreader_missing_keyword.read()
 
     def test_read_from_testfile_stream_extra_keyword(self):
-        with self.assertRaises(YamlReaderException):
+        with self.assertRaises(ValueError):
             self._testfile_streamreader_extra_keyword.read()
 
     def test_round_trip_with_stringstream(self):

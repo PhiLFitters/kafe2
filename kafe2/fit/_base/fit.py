@@ -10,10 +10,10 @@ import numpy as np
 import six
 import yaml
 
-from .container import DataContainerBase, DataContainerException
+from .container import DataContainerBase
 from ..io.file import FileIOMixin
 from ...config import kc
-from ...core.fitters.nexus import Nexus, NexusError, Parameter, Array
+from ...core.fitters.nexus import Nexus, Parameter, Array
 from ...core.fitters.nexus_fitter import NexusFitter
 from ...core.constraint import GaussianMatrixParameterConstraint, GaussianSimpleParameterConstraint
 from ...core.error import CovMat
@@ -22,11 +22,7 @@ from .._base.cost import CostFunction, STRING_TO_COST_FUNCTION
 from ..util import invert_matrix, is_diagonal, cholesky_decomposition, log_determinant, \
     log_determinant_pointwise, to_python_types, to_numpy_arrays
 
-__all__ = ["FitBase", "FitException"]
-
-
-class FitException(Exception):
-    pass
+__all__ = ["FitBase"]
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -40,7 +36,6 @@ class FitBase(FileIOMixin, object):
     MODEL_TYPE = None
     MODEL_FUNCTION_TYPE = None
     PLOT_ADAPTER_TYPE = None
-    EXCEPTION_TYPE = FitException
     RESERVED_NODE_NAMES = set()
     _BASIC_ERROR_NAMES = {}
     _STRING_TO_COST_FUNCTION = STRING_TO_COST_FUNCTION
@@ -94,7 +89,7 @@ class FitBase(FileIOMixin, object):
                     set(self._model_function.signature.parameters)):
                 _invalid_args = self.RESERVED_NODE_NAMES.intersection(
                     set(self._model_function.signature.parameters))
-                raise self.__class__.EXCEPTION_TYPE(
+                raise ValueError(
                     "The following names are reserved and cannot be used as model function arguments: %r"
                     % (_invalid_args,))
 
@@ -213,7 +208,7 @@ class FitBase(FileIOMixin, object):
             # add the original function name as an alias to 'model'
             try:
                 self._nexus.add_alias(self._model_function.name, alias_for=self._MODEL_NAME)
-            except NexusError:
+            except ValueError:
                 pass  # allow 'model' as function name for model
         self._init_cost_function()
 
@@ -457,7 +452,7 @@ class FitBase(FileIOMixin, object):
         # validate cost function
         _data_and_cost_compatible, _reason = self._cost_function.is_data_compatible(self.data)
         if not _data_and_cost_compatible:
-            raise self.EXCEPTION_TYPE('Fit data and cost function are not compatible: %s' % _reason)
+            raise ValueError('Fit data and cost function are not compatible: %s' % _reason)
         self._set_new_parametric_model()
         self._param_model._on_error_change_callbacks = [self._on_error_change]
 
@@ -846,14 +841,14 @@ class FitBase(FileIOMixin, object):
         :type relative: bool
         """
         if len(names) != len(values):
-            raise self.EXCEPTION_TYPE(
+            raise ValueError(
                 'Lengths of names and values are different: %s <-> %s' % (len(names), len(values)))
         _par_indices = []
         for _name in names:
             try:
                 _par_indices.append(self.parameter_names.index(_name))
-            except ValueError:
-                raise self.EXCEPTION_TYPE('Unknown parameter name: %s' % _name)
+            except ValueError as _e:
+                raise ValueError('Unknown parameter name: %s' % _name) from _e
         self._fit_param_constraints.append(GaussianMatrixParameterConstraint(
             indices=_par_indices, values=values, matrix=matrix, matrix_type=matrix_type, uncertainties=uncertainties,
             relative=relative
@@ -869,8 +864,8 @@ class FitBase(FileIOMixin, object):
         """
         try:
             _index = self.parameter_names.index(name)
-        except ValueError:
-            raise self.EXCEPTION_TYPE('Unknown parameter name: %s' % name)
+        except ValueError as _e:
+            raise ValueError('Unknown parameter name: %s' % name) from _e
         self._fit_param_constraints.append(GaussianSimpleParameterConstraint(
             index=_index, value=value, uncertainty=uncertainty, relative=relative
         ))
@@ -951,8 +946,8 @@ class FitBase(FileIOMixin, object):
             # delegate to model container
             _reference_object = self._param_model
         else:
-            raise FitException("Cannot add error: unknown reference "
-                               "specification '{}', expected one of: 'data', 'model'...".format(reference))
+            raise ValueError("Cannot add error: unknown reference specification '{}',"
+                             "expected one of: 'data', 'model'...".format(reference))
 
         _ret = _reference_object.add_error(err_val=err_val,
                                            name=name, correlation=correlation, relative=relative, **kwargs)
@@ -989,7 +984,7 @@ class FitBase(FileIOMixin, object):
             if relative:
                 raise NotImplementedError("Errors relative to model not implemented!")
         else:
-            raise FitException("Cannot add matrix error: unknown reference "
+            raise ValueError("Cannot add matrix error: unknown reference "
                                "specification '{}', expected one of: 'data', 'model'...".format(reference))
 
         _ret = _reference_object.add_matrix_error(err_matrix=err_matrix, matrix_type=matrix_type,
@@ -1005,7 +1000,7 @@ class FitBase(FileIOMixin, object):
         try:
             # try to find error in data container
             _ret = self._data_container.disable_error(err_id)  # TODO: this call does not return anything
-        except DataContainerException:
+        except ValueError:
             # try to find error in model container
             _ret = self._param_model.disable_error(err_id)  # TODO: this call does not return anything
         return _ret
@@ -1018,7 +1013,7 @@ class FitBase(FileIOMixin, object):
         try:
             # try to find error in data container
             _ret = self._data_container.enable_error(err_id)  # TODO: this call does not return anything
-        except DataContainerException:
+        except ValueError:
             # try to find error in model container
             _ret = self._param_model.enable_error(err_id)  # TODO: this call does not return anything
         return _ret

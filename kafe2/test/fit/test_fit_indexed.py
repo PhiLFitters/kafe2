@@ -4,13 +4,10 @@ import numpy as np
 import six
 
 from kafe2.core.minimizers import AVAILABLE_MINIMIZERS
-from kafe2.core.fitters import NexusFitterException
 
 from kafe2.config import kc
 
 from kafe2.fit import IndexedFit
-from kafe2.fit.indexed.fit import IndexedFitException
-from kafe2.fit.indexed.model import IndexedModelFunctionException, IndexedParametricModelException
 from kafe2.fit.indexed.cost import IndexedCostFunction_Chi2
 
 from kafe2.test.fit.test_fit import AbstractTestFit
@@ -184,12 +181,9 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
         )
 
     def test_set_all_parameter_values_wrong_number_raise(self):
-        # FIXME: discrepancy
-        #with self.assertRaises(IndexedFitException):
-        with self.assertRaises(NexusFitterException):
+        with self.assertRaises(ValueError):
             self._get_fit().set_all_parameter_values((1,))
-        #with self.assertRaises(IndexedFitException):
-        with self.assertRaises(NexusFitterException):
+        with self.assertRaises(ValueError):
             self._get_fit().set_all_parameter_values((1,2,3,4,5))
 
     def test_parameter_defaults(self):
@@ -246,14 +240,14 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
     def test_update_data_length_mismatch_raise(self):
         # TODO: update when different length limitation is fixed
         _fit = self._get_fit()
-        with self.assertRaises(IndexedParametricModelException):
+        with self.assertRaises(ValueError):
             _fit.data = np.arange(self._n_points + 1)
 
     def test_reserved_parameter_names_raise(self):
         def dummy_model(data):
             pass
 
-        with self.assertRaises(IndexedFitException) as _exc:
+        with self.assertRaises(ValueError) as _exc:
             IndexedFit(data=self._ref_data,
                   model_function=dummy_model,
                   minimizer=self.MINIMIZER)
@@ -265,7 +259,7 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model():
             pass
 
-        with self.assertRaises(IndexedModelFunctionException) as _exc:
+        with self.assertRaises(ValueError) as _exc:
             IndexedFit(data=self._ref_data,
                   model_function=dummy_model,
                   minimizer=self.MINIMIZER)
@@ -279,7 +273,7 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model(x, par, *varargs):
             pass
 
-        with self.assertRaises(IndexedModelFunctionException) as _exc:
+        with self.assertRaises(ValueError) as _exc:
             IndexedFit(data=self._ref_data,
                   model_function=dummy_model,
                   minimizer=self.MINIMIZER)
@@ -292,7 +286,7 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model(x, par, **varkwargs):
             pass
 
-        with self.assertRaises(IndexedModelFunctionException) as _exc:
+        with self.assertRaises(ValueError) as _exc:
             IndexedFit(data=self._ref_data,
                   model_function=dummy_model,
                   minimizer=self.MINIMIZER)
@@ -305,7 +299,7 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model(x, par, *varargs, **varkwargs):
             pass
 
-        with self.assertRaises(IndexedModelFunctionException) as _exc:
+        with self.assertRaises(ValueError) as _exc:
             IndexedFit(data=self._ref_data,
                   model_function=dummy_model,
                   minimizer=self.MINIMIZER)

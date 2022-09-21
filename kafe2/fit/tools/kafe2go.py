@@ -11,11 +11,6 @@ from kafe2.fit.tools.contours_profiler import ContoursProfiler
 from kafe2.fit.xy.plot import XYPlotAdapter
 
 
-class Kafe2GoException(Exception):
-    pass
-
-
-# TODO documentation
 def kafe2go():
     _parser = argparse.ArgumentParser(
         description="Perform a fit with the kafe2 package driven by an input file.\n"

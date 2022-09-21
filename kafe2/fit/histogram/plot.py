@@ -2,16 +2,12 @@ import matplotlib as mpl
 import numpy as np
 import six
 
-from .._base import PlotAdapterBase, PlotAdapterException
+from .._base import PlotAdapterBase
 from .._base.plot import kc_plot_style
 
 from ..xy.plot import XYPlotAdapter
 
 __all__ = ["HistPlotAdapter"]
-
-
-class HistPlotAdapterException(PlotAdapterException):
-    pass
 
 
 class HistPlotAdapter(PlotAdapterBase):
@@ -102,11 +98,10 @@ class HistPlotAdapter(PlotAdapterBase):
         if self.x_scale == 'log':
             try:
                 return np.geomspace(_xmin, _xmax, self.n_plot_points)
-            except ValueError:
-                raise HistPlotAdapterException("Support point calculation failed. "
-                                               "The plot range can't include 0 when using log "
-                                               "scale.")
-        raise HistPlotAdapterException("x_range has to be one of {}. Found {} instead.".format(
+            except ValueError as _e:
+                raise ValueError("Support point calculation failed. The plot range can't include 0"
+                                 "when using log scale.") from _e
+        raise ValueError("x_range has to be one of {}. Found {} instead.".format(
             self.AVAILABLE_X_SCALES, self.x_scale))
 
     @property

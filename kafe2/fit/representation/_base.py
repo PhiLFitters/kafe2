@@ -4,10 +4,6 @@ import datetime
 import six
 
 
-class DReprError(Exception):
-    pass
-
-
 @six.add_metaclass(abc.ABCMeta)
 class GenericDReprBase(object):
     BASE_OBJECT_TYPE_NAME = None

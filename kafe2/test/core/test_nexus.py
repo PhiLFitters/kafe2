@@ -6,13 +6,12 @@ from kafe2.core.fitters.nexus import (
     Parameter, Alias,
     Function, Empty,
     Fallback, Tuple, Array, RootNode,
-    NodeException, FallbackError,
 
     NodeChildrenPrinter, NodeCycleChecker,
 
     _OPERATORS, _UNARY_OPERATORS,
 
-    Nexus, NexusError,
+    Nexus
 )
 
 
@@ -124,7 +123,7 @@ class TestNodes(unittest.TestCase):
             par.add_parent("notanode")
 
         # Manually adding parents is not allowed:
-        with self.assertRaises(NodeException):
+        with self.assertRaises(ValueError):
             par.add_parent(par_2)
 
         par_2.add_child(par)
@@ -165,7 +164,7 @@ class TestNodes(unittest.TestCase):
 
         parent_1.add_child(par)
         parent_2.add_child(par)
-        with self.assertRaises(NodeException):
+        with self.assertRaises(ValueError):
             par.remove_parent(parent_1)
         self.assertEqual(
             par.get_parents(),
@@ -269,10 +268,10 @@ class TestNodes(unittest.TestCase):
         par_c = Parameter(6)
         par_a.add_child(par_b)
         self.assertEqual(par_a.get_children(), [par_b])
-        with self.assertRaises(NodeException):
+        with self.assertRaises(ValueError):
             par_a.replace_child(current_child=par_c, new_child=par_b)
         par_a.replace_child(current_child=par_b, new_child=par_c)
-        with self.assertRaises(NodeException):
+        with self.assertRaises(ValueError):
             par_a.replace_child(current_child=par_b, new_child=par_c)
         self.assertEqual(par_a.get_children(), [par_c])
         par_a.replace_child(current_child=par_c, new_child=7)
@@ -298,9 +297,9 @@ class TestNodes(unittest.TestCase):
 
     def test_empty_value(self):
         e = Empty()
-        with self.assertRaises(NodeException):
+        with self.assertRaises(TypeError):
             _ = e.value
-        with self.assertRaises(NodeException):
+        with self.assertRaises(TypeError):
             e.value = 33
 
     # -- Parameter
@@ -319,12 +318,12 @@ class TestNodes(unittest.TestCase):
         self.assertEqual(par.name, 'bla')
 
     def test_parameter_invalid_name_raise(self):
-        with self.assertRaises(NodeException):
+        with self.assertRaises(ValueError):
             par = Parameter(3, name='2bla')
 
     def test_parameter_reserved_name_raise(self):
         for _rn in NodeBase.RESERVED_PARAMETER_NAMES:
-            with self.assertRaises(NodeException):
+            with self.assertRaises(ValueError):
                 par = Parameter(3, name=_rn)
 
     def test_tuple_iter_raise(self):
@@ -373,7 +372,7 @@ class TestNodes(unittest.TestCase):
         par = Parameter(3)
         alias = Alias(par, name='alias')
         self.assertEqual(alias.value, par.value)
-        with self.assertRaises(NodeException):
+        with self.assertRaises(TypeError):
             alias.value = 5
 
     def test_multiple_alias_value(self):
@@ -410,7 +409,7 @@ class TestNodes(unittest.TestCase):
             func(par_a.value, par_b.value),
         )
 
-        with self.assertRaises(NodeException):
+        with self.assertRaises(TypeError):
             func_a_b.value = 5
 
     def test_function_value_update_frozen(self):
@@ -552,7 +551,7 @@ class TestNodes(unittest.TestCase):
         )
 
         # no exception yet
-        with self.assertRaises(FallbackError):
+        with self.assertRaises(RuntimeError):
             div_a_b.value,
 
     # -- Tuple
@@ -689,7 +688,7 @@ class TestNexus(unittest.TestCase):
         par = Parameter('my_value')
         self._nexus.add(par)
 
-        with self.assertRaises(NexusError):
+        with self.assertRaises(ValueError):
             self._nexus.add(par, existing_behavior='fail')
 
     def test_add_existing_replace(self):
@@ -711,7 +710,7 @@ class TestNexus(unittest.TestCase):
         self._nexus.add(alias_orig)
 
         par_new = Parameter('my_new_value', name='par')
-        with self.assertRaises(NexusError):
+        with self.assertRaises(ValueError):
             self._nexus.add(par_new, existing_behavior='replace_if_alias')
         self.assertIs(
             self._nexus.get('par'),
@@ -731,7 +730,7 @@ class TestNexus(unittest.TestCase):
         self._nexus.add(empty_orig)
 
         par_new = Parameter('my_new_value', name='par')
-        with self.assertRaises(NexusError):
+        with self.assertRaises(ValueError):
             self._nexus.add(par_new, existing_behavior='replace_if_empty')
         self.assertIs(
             self._nexus.get('par'),
@@ -912,7 +911,7 @@ class TestNexus(unittest.TestCase):
             return a * b
 
         func_node_1 = self._nexus.add_function(my_func_1)
-        with self.assertRaises(NodeException):
+        with self.assertRaises(TypeError):
             _ = func_node_1.value
         func_node_2 = self._nexus.add_function(my_func_2)
         # Parameters of second function are reversed:

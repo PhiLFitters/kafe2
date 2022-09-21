@@ -1,14 +1,10 @@
 import numpy as np
 
-from ...core.error import MatrixGaussianError, SimpleGaussianError
-from .._base import DataContainerException, DataContainerBase
+from ...core.error import MatrixGaussianError
+from .._base import DataContainerBase
 
 
-__all__ = ['IndexedContainer', 'IndexedContainerException']
-
-
-class IndexedContainerException(DataContainerException):
-    pass
+__all__ = ['IndexedContainer']
 
 
 class IndexedContainer(DataContainerBase):
@@ -66,7 +62,8 @@ class IndexedContainer(DataContainerBase):
     def data(self, data):
         _data = np.squeeze(np.array(data, dtype=float))
         if len(_data.shape) > 1:
-            raise IndexedContainerException("IndexedContainer data must be 1-d array of floats! Got shape: %r..." % (_data.shape,))
+            raise ValueError("IndexedContainer data must be 1-d array of floats! Got shape: %r..."
+                             % (_data.shape,))
         self._data[:] = _data
         # reset member error references to the new data values
         for _err_dict in self._error_dicts.values():

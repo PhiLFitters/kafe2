@@ -2,20 +2,15 @@ import numpy as np
 
 from scipy.misc import derivative
 
-from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException
-from .container import IndexedContainer, IndexedContainerException
+from .._base import ParametricModelBaseMixin, ModelFunctionBase
+from .container import IndexedContainer
 from .format import IndexedModelFunctionFormatter
 
 
 __all__ = ["IndexedParametricModel", "IndexedModelFunction"]
 
 
-class IndexedModelFunctionException(ModelFunctionException):
-    pass
-
-
 class IndexedModelFunction(ModelFunctionBase):
-    EXCEPTION_TYPE = IndexedModelFunctionException
     FORMATTER_TYPE = IndexedModelFunctionFormatter
 
     def __init__(self, model_function):
@@ -26,10 +21,6 @@ class IndexedModelFunction(ModelFunctionBase):
         """
         # Indexed Fit Functions don't have independent arguments. They solely consist of parameters to be fitted.
         super(IndexedModelFunction, self).__init__(model_function=model_function, independent_argcount=0)
-
-
-class IndexedParametricModelException(IndexedContainerException):
-    pass
 
 
 class IndexedParametricModel(ParametricModelBaseMixin, IndexedContainer):
@@ -48,10 +39,9 @@ class IndexedParametricModel(ParametricModelBaseMixin, IndexedContainer):
             _data = np.zeros_like(shape_like)
             try:
                 _data[:] = model_func(*model_parameters)
-            except ValueError:
-                raise IndexedParametricModelException("Indexed Data and Function must have the same shape! "
-                                                      "Got {} and {}".format(len(_data),
-                                                                             len(model_func(*model_parameters))))
+            except ValueError as _e:
+                raise ValueError("Indexed Data and Function must have the same shape! Got {} and {}"
+                                 .format(len(_data), len(model_func(*model_parameters)))) from _e
         else:
             _data = model_func(*model_parameters)
         super(IndexedParametricModel, self).__init__(model_func, model_parameters, _data)
@@ -75,7 +65,7 @@ class IndexedParametricModel(ParametricModelBaseMixin, IndexedContainer):
 
     @data.setter
     def data(self, new_data):
-        raise IndexedParametricModelException("Parametric model data cannot be set!")
+        raise TypeError("Parametric model data cannot be set!")
 
     @property
     def data_range(self):

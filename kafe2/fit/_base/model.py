@@ -21,11 +21,7 @@ else:
     from inspect import signature, Signature, Parameter
 
 
-__all__ = ["ParametricModelBaseMixin", "ModelFunctionBase", "ModelFunctionException"]
-
-
-class ModelFunctionException(Exception):
-    pass
+__all__ = ["ParametricModelBaseMixin", "ModelFunctionBase"]
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -45,7 +41,6 @@ class ModelFunctionBase(FileIOMixin, object):
 
     """
 
-    EXCEPTION_TYPE = ModelFunctionException
     FORMATTER_TYPE = ModelFunctionFormatter
 
     def __init__(self, model_function=function_library.linear_model, independent_argcount=1):
@@ -112,8 +107,8 @@ class ModelFunctionBase(FileIOMixin, object):
 
         # raise if not callable
         else:
-            raise ModelFunctionException("Cannot use {} as model function: "
-                                         "object not callable!".format(model_function))
+            raise TypeError("Cannot use {} as model function: object not callable!".format(
+                model_function))
 
         if self._name is None:
             self._name = self._model_function_handle.__name__
@@ -153,7 +148,7 @@ class ModelFunctionBase(FileIOMixin, object):
         # evaluate general model function requirements
         for _par in self.signature.parameters.values():
             if _par.kind == _par.VAR_POSITIONAL:
-                raise self.__class__.EXCEPTION_TYPE(
+                raise ValueError(
                     "Model function '{}' with variable number of positional "
                     "arguments (*{}) is not supported".format(
                         self._model_function_handle.__name__,
@@ -161,7 +156,7 @@ class ModelFunctionBase(FileIOMixin, object):
                     )
                 )
             if _par.kind == _par.VAR_KEYWORD:
-                raise self.__class__.EXCEPTION_TYPE(
+                raise ValueError(
                     "Model function '{}' with variable number of keyword "
                     "arguments (**{}) is not supported".format(
                         self._model_function_handle.__name__,
@@ -170,9 +165,9 @@ class ModelFunctionBase(FileIOMixin, object):
                 )
         # require at least one parameter to fit
         if self._model_function_parcount < 1:
-            raise self.__class__.EXCEPTION_TYPE("Model function {0!r} needs at least one parameter besides the "
-                                                "first {0!s} independent variable(s)!".format(
-                                                 self._model_function_handle, self._independent_argcount))
+            raise ValueError("Model function {0!r} needs at least one parameter besides the "
+                             "first {0!s} independent variable(s)!".format(
+                             self._model_function_handle, self._independent_argcount))
 
     def _get_argument_formatters(self):
         return [ParameterFormatter(_arg_name) for _arg_name in self.signature.parameters.keys()]
@@ -255,8 +250,8 @@ class ModelFunctionBase(FileIOMixin, object):
     @defaults.setter
     def defaults(self, new_defaults):
         if self.parcount != len(new_defaults):  # first arg is independent variable, but not a parameter
-            raise ModelFunctionException('Expected %s parameter defaults (1 per parameter), but received %s'
-                                         % (self.parcount, len(new_defaults)))
+            raise ValueError('Expected %s parameter defaults (1 per parameter), but received %s'
+                             % (self.parcount, len(new_defaults)))
 
         # pad defaults with empties for 'x'
         new_defaults = [Parameter.empty] * (self.argcount - self.parcount) + new_defaults

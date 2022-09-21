@@ -109,10 +109,6 @@ class ScalarFormatter(plticker.Formatter):
         return self.formatter(x)
 
 
-class ContoursProfilerException(Exception):
-    pass
-
-
 class ContoursProfiler(object):
     """
     Object dedicated to *profiling* the cost function in one or two parameters.
@@ -164,7 +160,7 @@ class ContoursProfiler(object):
         :type contour_smoothing_sigma: float
         """
         if not isinstance(fit_object, FitBase):
-            raise ContoursProfilerException("Object %r is not a fit object!" % (fit_object,))
+            raise TypeError("Object %r is not a fit object!" % (fit_object,))
 
         _contour_confidence_levels = [ConfidenceLevel(n_dimensions=2, sigma=_sigma)
                                       for _sigma in contour_sigma_values]
@@ -506,7 +502,7 @@ class ContoursProfiler(object):
             elif naming_convention.lower() == 'sigma':
                 _use_cl_in_label = False
             else:
-                raise ContoursProfilerException("Unknown contour naming convention '%s'! "
+                raise ValueError("Unknown contour naming convention '%s'! "
                                                 "Must be one of: ('cl', 'sigma')"
                                                 % (naming_convention,))
 
@@ -616,7 +612,7 @@ class ContoursProfiler(object):
                 # check if there are any unknown parameters
                 _unknown_parameters = set(_par_names) - set(self._fit.parameter_name_value_dict.keys())
                 if _unknown_parameters:
-                    raise ContoursProfilerException("Unknown parameters: {}".format(_unknown_parameters))
+                    raise ValueError("Unknown parameters: {}".format(_unknown_parameters))
 
             # # check if any parameters are fixed and exclude them from the matrix:
             # # TODO: public interface for querying parameter status
@@ -629,14 +625,14 @@ class ContoursProfiler(object):
             _show_spec_options = ('all', 'profiles', 'contours')
 
             if show_grid_for is not None and show_grid_for not in _show_spec_options:
-                raise ContoursProfilerException("Unknown specification '%s' for 'show_grid_for'. "
-                                                "Expected: one of %r" % (show_grid_for, _show_spec_options))
+                raise ValueError("Unknown specification '%s' for 'show_grid_for'. "
+                                 "Expected: one of %r" % (show_grid_for, _show_spec_options))
             if show_ticks_for is not None and show_ticks_for not in _show_spec_options:
-                raise ContoursProfilerException("Unknown specification '%s' for 'show_ticks_for'. "
-                                                "Expected: one of %r" % (show_ticks_for, _show_spec_options))
+                raise ValueError("Unknown specification '%s' for 'show_ticks_for'. "
+                                 "Expected: one of %r" % (show_ticks_for, _show_spec_options))
             if show_fit_minimum_for is not None and show_fit_minimum_for not in _show_spec_options:
-                raise ContoursProfilerException("Unknown specification '%s' for 'show_fit_minimum_for'. "
-                                                "Expected: one of %r" % (show_fit_minimum_for, _show_spec_options))
+                raise ValueError("Unknown specification '%s' for 'show_fit_minimum_for'. "
+                                 "Expected: one of %r" % (show_fit_minimum_for, _show_spec_options))
 
             # determine which plot elements to show for each subplot type
             _show_grid_profiles = show_grid_for in ('all', 'profiles')

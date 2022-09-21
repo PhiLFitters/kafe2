@@ -1,7 +1,5 @@
 from ..minimizers import MinimizerIMinuit
 
-class SimpleFitterException(Exception):
-    pass
 
 class SimpleFitter(object):
     def __init__(self, nexus, parameters_to_fit, parameter_to_minimize, minimizer_class=MinimizerIMinuit):
@@ -26,7 +24,8 @@ class SimpleFitter(object):
     def _check_parnames_in_par_space_raise(self, fit_pars):
         for _pn in fit_pars:
             if self._nx.get_by_name(_pn) is None:
-                raise NexusFitterException("No parameter with name '%s' registered in ParameterSpace (%r)!" % (_pn, self._nx))
+                raise ValueError("No parameter with name '%s' registered in ParameterSpace (%r)!"
+                                 % (_pn, self._nx))
 
     def _renew_par_cache(self):
         _fpns = self.parameters_to_fit

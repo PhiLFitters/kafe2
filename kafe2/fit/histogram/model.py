@@ -3,8 +3,8 @@ import six
 from scipy import integrate
 from inspect import getsource
 
-from .._base import ParametricModelBaseMixin, ModelFunctionBase, ModelFunctionException
-from .container import HistContainer, HistContainerException
+from .._base import ParametricModelBaseMixin, ModelFunctionBase
+from .container import HistContainer
 from ..util import function_library
 
 
@@ -17,12 +17,7 @@ else:
 __all__ = ["HistParametricModel", "HistModelFunction"]
 
 
-class HistModelFunctionException(ModelFunctionException):
-    pass
-
-
 class HistModelFunction(ModelFunctionBase):
-    EXCEPTION_TYPE = HistModelFunctionException
 
     def __init__(self, model_function=None):
         """
@@ -33,10 +28,6 @@ class HistModelFunction(ModelFunctionBase):
         # TODO: default model function
         super(HistModelFunction, self).__init__(
             model_function=model_function, independent_argcount=1)
-
-
-class HistParametricModelException(HistContainerException):
-    pass
 
 
 class HistParametricModel(ParametricModelBaseMixin, HistContainer):
@@ -145,7 +136,7 @@ class HistParametricModel(ParametricModelBaseMixin, HistContainer):
 
     @data.setter
     def data(self, new_data):
-        raise HistParametricModelException("Parametric model data cannot be set!")
+        raise TypeError("Parametric model data cannot be set!")
 
     @property
     def bin_evaluation(self):
@@ -187,4 +178,4 @@ class HistParametricModel(ParametricModelBaseMixin, HistContainer):
         return _y
 
     def fill(self, entries):
-        raise HistParametricModelException("Parametric model of histogram cannot be filled!")
+        raise TypeError("Parametric model of histogram cannot be filled!")

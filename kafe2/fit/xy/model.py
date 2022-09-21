@@ -8,15 +8,11 @@ import numpy as np
 from scipy.misc import derivative
 
 from .._base import ParametricModelBaseMixin
-from .container import XYContainer, XYContainerException
+from .container import XYContainer
 from ..util import function_library
 
 
-__all__ = ['XYParametricModel', 'XYParametricModelException']
-
-
-class XYParametricModelException(XYContainerException):
-    pass
+__all__ = ['XYParametricModel']
 
 
 class XYParametricModel(ParametricModelBaseMixin, XYContainer):
@@ -62,7 +58,7 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
 
     @data.setter
     def data(self, new_data):
-        raise XYParametricModelException("Parametric model data cannot be set!")
+        raise TypeError("Parametric model data cannot be set!")
 
     @property
     def x(self):
@@ -93,7 +89,7 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
 
     @y.setter
     def y(self, new_y):
-        raise XYParametricModelException("Parametric model data cannot be set!")
+        raise TypeError("Parametric model data cannot be set!")
 
     # -- public methods
 

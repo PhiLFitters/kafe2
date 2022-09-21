@@ -14,7 +14,6 @@ from kafe2.fit.indexed import IndexedFit
 from kafe2.fit.unbinned import UnbinnedFit
 from kafe2.fit.xy import XYFit
 from kafe2.fit.histogram.container import HistContainer
-from kafe2.fit.representation._yaml_base import YamlReaderException
 from .test_fit_custom import TestCustomFitWithSimpleYErrors
 
 
@@ -53,11 +52,11 @@ class AbstractTestFitRepresenter(object):
         self._roundtrip_streamwriter.write()
 
     def test_read_from_testfile_stream_missing_keyword(self):
-        with self.assertRaises(YamlReaderException):
+        with self.assertRaises(ValueError):
             self._testfile_streamreader_missing_keyword.read()
 
     def test_read_from_testfile_stream_extra_keyword(self):
-        with self.assertRaises(YamlReaderException):
+        with self.assertRaises(ValueError):
             self._testfile_streamreader_extra_keyword.read()
 
     def test_round_trip_save_results(self):

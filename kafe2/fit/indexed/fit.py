@@ -4,7 +4,7 @@ from copy import deepcopy
 import numpy as np
 
 from ...tools import print_dict_as_table
-from .._base import FitException, FitBase, DataContainerBase
+from .._base import FitBase, DataContainerBase
 from .container import IndexedContainer
 from .._base.cost import CostFunction_Chi2
 from .model import IndexedParametricModel, IndexedModelFunction
@@ -12,11 +12,7 @@ from .plot import IndexedPlotAdapter
 from ..util import collect
 
 
-__all__ = ['IndexedFit', 'IndexedFitException']
-
-
-class IndexedFitException(FitException):
-    pass
+__all__ = ['IndexedFit']
 
 
 class IndexedFit(FitBase):
@@ -24,7 +20,6 @@ class IndexedFit(FitBase):
     MODEL_TYPE = IndexedParametricModel
     MODEL_FUNCTION_TYPE = IndexedModelFunction
     PLOT_ADAPTER_TYPE = IndexedPlotAdapter
-    EXCEPTION_TYPE = IndexedFitException
     RESERVED_NODE_NAMES = {'data', 'model', 'cost',
                           'data_error', 'model_error', 'total_error',
                           'data_cov_mat', 'model_cov_mat', 'total_cov_mat',
@@ -115,7 +110,7 @@ class IndexedFit(FitBase):
         if isinstance(new_data, self.CONTAINER_TYPE):
             self._data_container = deepcopy(new_data)
         elif isinstance(new_data, DataContainerBase):
-            raise IndexedFitException("Incompatible container type '%s' (expected '%s')"
+            raise TypeError("Incompatible container type '%s' (expected '%s')"
                                       % (type(new_data), self.CONTAINER_TYPE))
         else:
             self._data_container = IndexedContainer(new_data, dtype=float)

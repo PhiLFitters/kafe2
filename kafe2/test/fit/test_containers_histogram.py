@@ -3,10 +3,7 @@ import numpy as np
 import scipy.stats as stats
 
 from kafe2.fit import HistContainer, HistParametricModel
-from kafe2.fit._base import DataContainerException
-from kafe2.fit.histogram.container import HistContainerException
-from kafe2.fit.histogram.model import HistParametricModelException,\
-    HistModelFunction
+from kafe2.fit.histogram.model import HistModelFunction
 from kafe2.fit.util.function_library import linear_model, quadratic_model
 
 
@@ -102,27 +99,27 @@ class TestDatastoreHistogram(unittest.TestCase):
         _hc = HistContainer(self._ref_n_bins_manual, self._ref_n_bin_range, bin_edges=self._probe_bin_edges_variablespacing_noedges)
 
     def test_raise_construct_bin_edges_variablespacing_wrongedges1(self):
-        with self.assertRaises(HistContainerException):
+        with self.assertRaises(ValueError):
             _hc = HistContainer(self._ref_n_bins_manual, self._ref_n_bin_range,
                                 bin_edges=self._probe_bin_edges_variablespacing_wrongedges1)
 
     def test_raise_construct_bin_edges_variablespacing_wrongedges2(self):
-        with self.assertRaises(HistContainerException):
+        with self.assertRaises(ValueError):
             _hc = HistContainer(self._ref_n_bins_manual, self._ref_n_bin_range,
                                 bin_edges=self._probe_bin_edges_variablespacing_wrongedges2)
 
     def test_raise_construct_bin_edges_variablespacing_wrongedges3(self):
-        with self.assertRaises(HistContainerException):
+        with self.assertRaises(ValueError):
             _hc = HistContainer(self._ref_n_bins_manual, self._ref_n_bin_range,
                                 bin_edges=self._probe_bin_edges_variablespacing_wrongedges3)
 
     def test_raise_construct_bin_edges_variablespacing_wrongnumber(self):
-        with self.assertRaises(HistContainerException):
+        with self.assertRaises(ValueError):
             _hc = HistContainer(self._ref_n_bins_manual, self._ref_n_bin_range,
                                 bin_edges=self._probe_bin_edges_variablespacing_wrongnumber)
 
     def test_raise_construct_bin_edges_variablespacing_unsorted(self):
-        with self.assertRaises(HistContainerException):
+        with self.assertRaises(ValueError):
             _hc = HistContainer(self._ref_n_bins_manual, self._ref_n_bin_range,
                                 bin_edges=self._probe_bin_edges_variablespacing_unsorted)
 
@@ -130,18 +127,18 @@ class TestDatastoreHistogram(unittest.TestCase):
         self.hist_cont_binedges_auto.add_error(0.1,
                                                name="MyNewError",
                                                correlation=0, relative=False)
-        with self.assertRaises(DataContainerException):
+        with self.assertRaises(ValueError):
             self.hist_cont_binedges_auto.add_error(0.1,
                                                    name="MyNewError",
                                                    correlation=0, relative=False)
 
     def test_raise_get_inexistent_error(self):
-        with self.assertRaises(DataContainerException):
+        with self.assertRaises(ValueError):
             self.hist_cont_binedges_auto.get_error("MyInexistentError")
 
     def test_raise_manual_bin_heights_rebin(self):
         self.hist_cont_binedges_manual_equal.set_bins(self._ref_bin_heights_manual)
-        with self.assertRaises(DataContainerException):
+        with self.assertRaises(RuntimeError):
             self.hist_cont_binedges_manual_equal.rebin(self._ref_bin_edges_manual_variablespacing)
 
     def test_raise_add_error_bad_shape(self):
@@ -227,11 +224,11 @@ class TestDatastoreHistParametricModel(unittest.TestCase):
         self.assertTrue(np.allclose(self.hist_param_model_numerical.data, self._ref_test_data))
 
     def test_raise_set_data(self):
-        with self.assertRaises(HistParametricModelException):
+        with self.assertRaises(TypeError):
             self.hist_param_model_numerical.data = self._ref_test_data
 
     def test_raise_fill(self):
-        with self.assertRaises(HistParametricModelException):
+        with self.assertRaises(TypeError):
             self.hist_param_model_numerical.fill([-1, 2, 700])
 
     def test_raise_unknown_bin_evaluation_raise(self):

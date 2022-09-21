@@ -3,10 +3,6 @@ import numpy as np
 
 from kafe2.fit import HistContainer, HistFit, IndexedContainer, IndexedFit, XYContainer, XYFit
 
-from kafe2.fit.indexed.fit import IndexedFitException
-from kafe2.fit.xy.fit import XYFitException
-from kafe2.fit.histogram.fit import HistFitException
-
 
 class TestParameterConstraintInHistFit(unittest.TestCase):
 
@@ -80,11 +76,11 @@ class TestParameterConstraintInHistFit(unittest.TestCase):
     def test_bad_input_exception(self):
         _fit_with_constraint = HistFit(self._data_container, model_function=self._model_function,
                                        bin_evaluation=self._model_function_antiderivative)
-        with self.assertRaises(HistFitException):
+        with self.assertRaises(ValueError):
             _fit_with_constraint.add_parameter_constraint('c', 1.0, 1.0)
-        with self.assertRaises(HistFitException):
+        with self.assertRaises(ValueError):
             _fit_with_constraint.add_matrix_parameter_constraint(['a', 'c'], [1.0, 2.0], [[0.2, 0.0], [0.0, 0.1]])
-        with self.assertRaises(HistFitException):
+        with self.assertRaises(ValueError):
             _fit_with_constraint.add_matrix_parameter_constraint(['a'], [1.0, 2.0], [[0.2, 0.0], [0.0, 0.1]])
 
     def test_fit_profile_cov_mat_uncorrelated(self):
@@ -174,11 +170,11 @@ class TestParameterConstraintInIndexedFit(unittest.TestCase):
 
     def test_bad_input_exception(self):
         _fit_with_constraint = IndexedFit(self._data_container, model_function=self._model)
-        with self.assertRaises(IndexedFitException):
+        with self.assertRaises(ValueError):
             _fit_with_constraint.add_parameter_constraint('c', 1.0, 1.0)
-        with self.assertRaises(IndexedFitException):
+        with self.assertRaises(ValueError):
             _fit_with_constraint.add_matrix_parameter_constraint(['a', 'c'], [1.0, 2.0], [[0.2, 0.0], [0.0, 0.1]])
-        with self.assertRaises(IndexedFitException):
+        with self.assertRaises(ValueError):
             _fit_with_constraint.add_matrix_parameter_constraint(['a'], [1.0, 2.0], [[0.2, 0.0], [0.0, 0.1]])
 
     def test_fit_profile_cov_mat_uncorrelated(self):
@@ -260,11 +256,11 @@ class TestParameterConstraintInXYFit(unittest.TestCase):
 
     def test_bad_input_exception(self):
         _fit_with_constraint = XYFit(self._data_container)
-        with self.assertRaises(XYFitException):
+        with self.assertRaises(ValueError):
             _fit_with_constraint.add_parameter_constraint('c', 1.0, 1.0)
-        with self.assertRaises(XYFitException):
+        with self.assertRaises(ValueError):
             _fit_with_constraint.add_matrix_parameter_constraint(['a', 'c'], [1.0, 2.0], [[0.2, 0.0], [0.0, 0.1]])
-        with self.assertRaises(XYFitException):
+        with self.assertRaises(ValueError):
             _fit_with_constraint.add_matrix_parameter_constraint(['a'], [1.0, 2.0], [[0.2, 0.0], [0.0, 0.1]])
 
     def test_fit_profile_cov_mat_uncorrelated(self):

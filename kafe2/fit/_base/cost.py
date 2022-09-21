@@ -14,15 +14,8 @@ else:
     from inspect import signature
 
 
-__all__ = ["CostFunction",
-           "CostFunction_Chi2",
-           "CostFunction_NegLogLikelihood",
-           "CostFunction_GaussApproximation",
-           "CostFunctionException"]
-
-
-class CostFunctionException(Exception):
-    pass
+__all__ = ["CostFunction", "CostFunction_Chi2", "CostFunction_NegLogLikelihood",
+           "CostFunction_GaussApproximation"]
 
 
 class CostFunction(FileIOMixin, object):
@@ -44,7 +37,6 @@ class CostFunction(FileIOMixin, object):
     cost function and to ensure the function can be used as a cost function (validation).
     """
 
-    EXCEPTION_TYPE = CostFunctionException
     _DATA_NAME = "data"
     _MODEL_NAME = "model"
     _COV_MAT_CHOLESKY_NAME = "total_cov_mat_cholesky"
@@ -71,22 +63,21 @@ class CostFunction(FileIOMixin, object):
             self._arg_names = list(_signature.parameters.keys())
             for _par in _signature.parameters.values():
                 if _par.kind == _par.VAR_POSITIONAL:
-                    raise self.__class__.EXCEPTION_TYPE(
+                    raise ValueError(
                         "Cost function '{}' with variable number of positional arguments "
                         "(*{}) needs explicit argument names.".format(
                             self._cost_function_handle.__name__, _par.name))
         else:
             self._arg_names = list(arg_names)
         if "cost" in self._arg_names:
-            raise self.__class__.EXCEPTION_TYPE(
+            raise ValueError(
                 "The alias 'cost' for the cost function value cannot be used as a name for one of"
                 "the cost function arguments!")
         for _par in _signature.parameters.values():
             if _par.kind == _par.VAR_KEYWORD:
-                raise self.__class__.EXCEPTION_TYPE(
-                    "Cost function '{}' with variable number of keyword arguments "
-                    "(**{}) is not supported.".format(
-                        self._cost_function_handle.__name__, _par.name, ))
+                raise ValueError("Cost function '{}' with variable number of keyword arguments "
+                                 "(**{}) is not supported.".format(
+                                     self._cost_function_handle.__name__, _par.name, ))
         self._arg_count = len(self._arg_names)
         self._formatter = CostFunctionFormatter(
             name=self.name,
@@ -327,13 +318,13 @@ class CostFunction_Chi2(CostFunction):
             return np.inner(_x, _x)
 
         if self._fail_on_no_matrix:
-            raise CostFunctionException("Covariance matrix is singular!")
+            raise ValueError("Covariance matrix is singular!")
 
         # otherwise, if an array of point-wise errors is given, use that
         if err is not None:
             if np.any(err == 0.0):
                 if self._fail_on_no_errors:
-                    raise CostFunctionException("'err' must not contain any zero values!")
+                    raise ValueError("'err' must not contain any zero values!")
                 if self.needs_errors:
                     # There are other warnings that notify the user about singular cov mat, etc.
                     warnings.warn("Setting all data errors to 1 as a fallback.")

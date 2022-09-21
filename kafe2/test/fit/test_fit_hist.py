@@ -6,13 +6,10 @@ import six
 from scipy import stats
 
 from kafe2.core.minimizers import AVAILABLE_MINIMIZERS
-from kafe2.core.fitters import NexusFitterException
 
 from kafe2.config import kc
 
 from kafe2.fit import HistFit, HistContainer
-from kafe2.fit.histogram.fit import HistFitException
-from kafe2.fit.histogram.model import HistModelFunctionException, HistParametricModelException
 from kafe2.fit.histogram.cost import HistCostFunction_NegLogLikelihood
 
 from kafe2.test.fit.test_fit import AbstractTestFit
@@ -251,7 +248,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model(x, data):
             pass
 
-        with self.assertRaises(HistFitException) as _exc:
+        with self.assertRaises(ValueError) as _exc:
             HistFit(data=self._ref_hist_cont,
                     model_function=dummy_model,
                     minimizer=self.MINIMIZER)
@@ -263,7 +260,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model():
             pass
 
-        with self.assertRaises(HistModelFunctionException) as _exc:
+        with self.assertRaises(ValueError) as _exc:
             HistFit(data=self._ref_hist_cont,
                     model_function=dummy_model,
                     bin_evaluation=dummy_model,
@@ -277,7 +274,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model(x):
             pass
 
-        with self.assertRaises(HistModelFunctionException) as _exc:
+        with self.assertRaises(ValueError) as _exc:
             HistFit(data=self._ref_hist_cont,
                     model_function=dummy_model,
                     bin_evaluation=dummy_model,
@@ -292,7 +289,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model(x, par, *varargs):
             pass
 
-        with self.assertRaises(HistModelFunctionException) as _exc:
+        with self.assertRaises(ValueError) as _exc:
             HistFit(data=self._ref_hist_cont,
                     model_function=dummy_model,
                     bin_evaluation=dummy_model,
@@ -306,7 +303,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model(x, par, **varkwargs):
             pass
 
-        with self.assertRaises(HistModelFunctionException) as _exc:
+        with self.assertRaises(ValueError) as _exc:
             HistFit(data=self._ref_hist_cont,
                     model_function=dummy_model,
                     bin_evaluation=dummy_model,
@@ -320,7 +317,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model(x, par, *varargs, **varkwargs):
             pass
 
-        with self.assertRaises(HistModelFunctionException) as _exc:
+        with self.assertRaises(ValueError) as _exc:
             HistFit(data=self._ref_hist_cont,
                     model_function=dummy_model,
                     bin_evaluation=dummy_model,

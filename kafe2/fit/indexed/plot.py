@@ -1,14 +1,10 @@
 import numpy as np
 
-from .._base import PlotAdapterBase, PlotAdapterException
+from .._base import PlotAdapterBase
 from .._aux import step_fill_between
 
 
 __all__ = ["IndexedPlotAdapter"]
-
-
-class IndexedPlotAdapterException(PlotAdapterException):
-    pass
 
 
 class IndexedPlotAdapter(PlotAdapterBase):

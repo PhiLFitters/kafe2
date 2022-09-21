@@ -2,7 +2,7 @@ from __future__ import print_function
 
 import logging
 
-from .minimizer_base import MinimizerBase, MinimizerException
+from .minimizer_base import MinimizerBase
 from ..contour import ContourFactory
 
 try:
@@ -13,10 +13,6 @@ except ImportError:
 
 import numpy as np
 import numdifftools as nd
-
-
-class MinimizerScipyOptimizeException(MinimizerException):
-    pass
 
 
 class MinimizerScipyOptimize(MinimizerBase):
@@ -144,8 +140,7 @@ class MinimizerScipyOptimize(MinimizerBase):
 
     def minimize(self, max_calls=6000):
         if np.all(self._par_fixed):
-            raise MinimizerScipyOptimizeException(
-                "Cannot perform a fit if all parameters are fixed!")
+            raise RuntimeError("Cannot perform a fit if all parameters are fixed!")
         if np.any(self._par_fixed):
             # if pars are fixed arg list becomes shorter -> pick and insert fixed pars from self.parameter_values
             _par_fixed_indices = np.array(self._par_fixed, dtype=int)  # 1 if fixed, 0 otherwise
@@ -216,7 +211,7 @@ class MinimizerScipyOptimize(MinimizerBase):
 
     def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, **minimizer_contour_kwargs):
         if not self.did_fit:
-            raise MinimizerScipyOptimizeException("Need to perform a fit before calling contour()!")
+            raise RuntimeError("Need to perform a fit before calling contour()!")
         _algorithm = minimizer_contour_kwargs.pop("algorithm", "heuristic_grid")
 
         if _algorithm == "beacon":
@@ -226,10 +221,10 @@ class MinimizerScipyOptimize(MinimizerBase):
             _iterations = minimizer_contour_kwargs.pop("iterations", 5)
             _area_scale_factor = minimizer_contour_kwargs.pop("area_scale_factor", 1.5)
         else:
-            raise MinimizerScipyOptimizeException("Unknown algorithm: {}".format(_algorithm))
+            raise ValueError("Unknown algorithm: {}".format(_algorithm))
 
         if minimizer_contour_kwargs:
-            raise MinimizerScipyOptimizeException(
+            raise ValueError(
                 "Unknown parameters for {}: {}".format(_algorithm, minimizer_contour_kwargs.keys()))
 
         if _algorithm == "beacon":
@@ -549,7 +544,7 @@ class MinimizerScipyOptimize(MinimizerBase):
 
     def profile(self, parameter_name, bins=21, bound=2, subtract_min=False):
         if not self.did_fit:
-            raise MinimizerScipyOptimizeException("Need to perform a fit before calling profile()!")
+            raise RuntimeError("Need to perform a fit before calling profile()!")
         _par_id = self._par_names.index(parameter_name)
         _par_err = self.parameter_errors[_par_id]
         _par_min = self._par_val[_par_id]

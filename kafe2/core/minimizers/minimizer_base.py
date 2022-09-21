@@ -8,10 +8,6 @@ from scipy.optimize import brentq
 from ..error import CovMat
 
 
-class MinimizerException(Exception):
-    pass
-
-
 @six.add_metaclass(ABCMeta)
 class MinimizerBase(object):
 

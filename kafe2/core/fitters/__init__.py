@@ -1,10 +1,10 @@
 import abc
 import six
 from .nexus import Nexus
-from .nexus_fitter import NexusFitter, NexusFitterException
+from .nexus_fitter import NexusFitter
 from ...config import kc
 
-__all__ = ['get_fitter', 'Nexus', 'NexusFitter', 'NexusFitterException']
+__all__ = ['get_fitter', 'Nexus', 'NexusFitter']
 
 AVAILABLE_FITTERS = {'nexus_fitter': NexusFitter}
 

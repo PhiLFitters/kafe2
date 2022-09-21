@@ -2,10 +2,7 @@ import unittest
 import numpy as np
 
 from kafe2.fit import IndexedContainer, IndexedParametricModel
-from kafe2.fit._base import DataContainerException
-from kafe2.fit.indexed.container import IndexedContainerException
-from kafe2.fit.indexed.model import IndexedParametricModelException,\
-    IndexedModelFunction
+from kafe2.fit.indexed.model import IndexedModelFunction
 from kafe2.core.error import cov_mat_from_float_list
 
 
@@ -114,13 +111,13 @@ class TestDatastoreIndexed(unittest.TestCase):
         self.idx_cont.add_error(0.1,
                                 name="MyNewError",
                                 correlation=0, relative=False)
-        with self.assertRaises(DataContainerException):
+        with self.assertRaises(ValueError):
             self.idx_cont.add_error(0.1,
                                     name="MyNewError",
                                     correlation=0, relative=False)
 
     def test_raise_get_inexistent_error(self):
-        with self.assertRaises(DataContainerException):
+        with self.assertRaises(ValueError):
             self.idx_cont.get_error("MyInexistentError")
 
     def test_raise_add_error_bad_shape(self):
@@ -176,5 +173,5 @@ class TestDatastoreIndexedParametricModel(unittest.TestCase):
         self.assertTrue(np.all(self.idx_param_model.data == self._ref_test_data))
 
     def test_raise_set_data(self):
-        with self.assertRaises(IndexedParametricModelException):
+        with self.assertRaises(TypeError):
             self.idx_param_model.data = self._ref_test_data

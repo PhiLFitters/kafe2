@@ -15,7 +15,7 @@ if six.PY2:
 else:
     from inspect import signature, Parameter as SigParameter
 
-__all__ = ['Nexus', 'NexusError', 'Alias', 'Array', 'Fallback', 'Function', 'Parameter', 'Tuple']
+__all__ = ['Nexus', 'Alias', 'Array', 'Fallback', 'Function', 'Parameter', 'Tuple']
 
 # -- helpers
 
@@ -91,14 +91,6 @@ def _add_common_operators(cls):
 
 # -- Nodes -------------------------------------
 
-class NodeException(Exception):
-    pass
-
-
-class FallbackError(NodeException):
-    pass
-
-
 @six.add_metaclass(abc.ABCMeta)
 class NodeBase(object):
     """
@@ -159,13 +151,11 @@ class NodeBase(object):
         :type name: str
         """
         if name in Parameter.RESERVED_PARAMETER_NAMES:
-            raise NodeException("Invalid node name: '%s' is a reserved keyword!"
-                                % (name,))
+            raise ValueError("Invalid node name: '%s' is a reserved keyword!" % (name,))
         try:
             parse('dict(%s=0.123)' % (name,))
         except SyntaxError:
-            raise NodeException("Invalid node name '%s'. Must be Python identifier!"
-                                % (name,))
+            raise ValueError("Invalid node name '%s'. Must be Python identifier!" % (name,))
 
     # -- properties
 
@@ -230,7 +220,7 @@ class NodeBase(object):
                 "node type, got {}".format(type(node))
             )
         if self not in node.get_children():
-            raise NodeException("Child must be added to parent, not the other way around!")
+            raise ValueError("Child must be added to parent, not the other way around!")
         self._parents.add(weakref.ref(node))
 
     def get_children(self):
@@ -284,7 +274,7 @@ class NodeBase(object):
             )
 
         if self in node.get_children():
-            raise NodeException("Must remove child from parent, not the other way around!")
+            raise ValueError("Must remove child from parent, not the other way around!")
 
         # remove node from node parents
         self._parents.remove(weakref.ref(node))
@@ -409,7 +399,7 @@ class NodeBase(object):
             # wrap non-node values inside `Parameter`
             new_child = Parameter(new_child)
         if current_child not in self._children:
-            raise NodeException("Cannot replace child %s because it is not a child of %s."
+            raise ValueError("Cannot replace child %s because it is not a child of %s."
                                 % (current_child.name, self.name))
         self._children = [_c if _c is not current_child else new_child for _c in self._children]
         new_child.add_parent(self)
@@ -583,7 +573,7 @@ class Empty(ValueNode):
 
     @property
     def value(self):
-        raise NodeException(
+        raise TypeError(
             "Empty node '{}' does not have a value.".format(
                 self.name
             )
@@ -591,7 +581,7 @@ class Empty(ValueNode):
 
     @value.setter
     def value(self, value):
-        raise NodeException(
+        raise TypeError(
             "Cannot set value of empty node '{}'.".format(
                 self.name
             )
@@ -630,7 +620,7 @@ class Alias(ValueNode):
 
     @ValueNode.value.setter
     def value(self, value):
-        raise NodeException(
+        raise TypeError(
             "Cannot set value of alias node '{}'.".format(
                 self.name
             )
@@ -709,7 +699,7 @@ class Function(ValueNode):
 
     @ValueNode.value.setter
     def value(self, value):
-        raise NodeException("Function node value cannot be set!")
+        raise TypeError("Function node value cannot be set!")
 
     def add_parameter(self, parameter):
         """
@@ -774,7 +764,7 @@ class Fallback(ValueNode):
             except self._exception_type:
                 pass  # function failed; try next
 
-        raise FallbackError(
+        raise RuntimeError(
             "Error evaluating fallback node '{}': "
             "no alternative succeeded".format(self.name)
         )
@@ -1086,10 +1076,6 @@ class NodeCycleChecker(object):
 
 # -- Nexus
 
-class NexusError(Exception):
-    pass
-
-
 class Nexus(object):
     """
     Object representing an entire computation graph. Used in the kafe2 NexusFitter object to manage
@@ -1119,7 +1105,7 @@ class Nexus(object):
         has already been added, the behavior of this function can
         be configured via `existing_behavior`, which takes one of
         three values:
-        - ``fail``: raise a `NexusError`
+        - ``fail``: raise a `ValueError`
         - ``replace``: replace the existing node with the one being added
         - ``replace_if_alias``: replace the existing node with the one
             only if the existing node is an alias
@@ -1168,7 +1154,7 @@ class Nexus(object):
 
             # execute behavior
             if existing_behavior == 'fail':
-                raise NexusError(
+                raise ValueError(
                     "Node '{}' already exists.".format(
                         node.name
                     )

@@ -1,15 +1,11 @@
 import numpy  # help IDEs with type-hinting inside docstrings
 
-from .._base import PlotAdapterBase, PlotAdapterException
+from .._base import PlotAdapterBase
 from .._aux import add_pad_to_range
 np = numpy
 
 
 __all__ = ["XYPlotAdapter"]
-
-
-class XYPlotAdapterException(PlotAdapterException):
-    pass
 
 
 class XYPlotAdapter(PlotAdapterBase):
@@ -103,10 +99,10 @@ class XYPlotAdapter(PlotAdapterBase):
         if self.x_scale == 'log':
             try:
                 return np.geomspace(_xmin, _xmax, self.n_plot_points)
-            except ValueError:
-                raise XYPlotAdapterException("Support point calculation failed. "
-                                             "The plot range can't include 0 when using log scale.")
-        raise XYPlotAdapterException("x_range has to be one of {}. Found {} instead.".format(
+            except ValueError as _e:
+                raise ValueError("Support point calculation failed. "
+                                 "The plot range can't include 0 when using log scale.") from _e
+        raise ValueError("x_range has to be one of {}. Found {} instead.".format(
             self.AVAILABLE_X_SCALES, self.x_scale))
 
     @property

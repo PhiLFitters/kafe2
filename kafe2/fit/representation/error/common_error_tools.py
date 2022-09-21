@@ -2,7 +2,6 @@ import yaml
 import re
 import numpy as np
 
-from .._base import DReprError
 from ....core.error import SimpleGaussianError, MatrixGaussianError
 from ...xy import XYContainer
 
@@ -22,7 +21,7 @@ def add_error_to_container(err_type, container_obj, **kwargs):
     elif err_type == 'matrix':
         container_obj.add_matrix_error(**kwargs)
     else:
-        raise DReprError("Unknown error type '{}'. "
+        raise TypeError("Unknown error type '{}'. "
                          "Valid: {}".format(err_type, ('simple', 'matrix')))
     return container_obj
 
@@ -78,10 +77,10 @@ def write_errors_to_yaml(container, yaml_doc):
                 _yaml_section[-1]['matrix'] = _err_obj.cor_mat  # .tolist()
                 _yaml_section[-1]['error_value'] = _err_val
             else:
-                raise DReprError("Unknown error matrix type '{}'. "
-                                 "Valid: 'correlation' or 'covariance'.")
+                raise TypeError("Unknown error matrix type '{}'. "
+                                "Valid: 'correlation' or 'covariance'.")
         else:
-            raise DReprError("No representation for error type {} "
+            raise TypeError("No representation for error type {} "
                              "implemented!".format(type(_err_obj)))
 
     return yaml_doc
@@ -124,13 +123,13 @@ def process_error_sources(container_obj, yaml_doc):
                     try:
                         _rel_err_percent = float(_val[:-1])
                     except ValueError:
-                        raise DReprError("Cannot convert string to relative error: %s" % _err)
+                        raise ValueError("Cannot convert string to relative error: %s" % _err)
                     _rel[i] = _rel_err_percent
                 else:
                     try:
                         _abs_err = float(_val)
                     except ValueError:
-                        raise DReprError("Cannot convert {} to error value.".format(_val))
+                        raise ValueError("Cannot convert {} to error value.".format(_val))
                     _abs[i] = _val
             if _axis is not None:
                 container_obj = add_error_to_container('simple', container_obj,
@@ -150,7 +149,7 @@ def process_error_sources(container_obj, yaml_doc):
                                                        relative=False)
             continue
         elif isinstance(_err, (float, int, str)):
-            raise DReprError("Failed to read in errors: {}".format(_err))
+            raise ValueError("Failed to read in errors: {}".format(_err))
 
         _add_kwargs = dict()
         # translate and check that all required keys are present
@@ -168,7 +167,7 @@ def process_error_sources(container_obj, yaml_doc):
                 # default None only mandatory for cor mats; check done later
                 _add_kwargs['err_val'] = _err.get('error_value', None)
             else:
-                raise DReprError("Unknown error type '{}'. "
+                raise TypeError("Unknown error type '{}'. "
                                  "Valid: {}".format(_err_type, ('simple', 'matrix')))
 
             _add_kwargs['relative'] = _err.get('relative', False)
@@ -178,7 +177,7 @@ def process_error_sources(container_obj, yaml_doc):
                 _add_kwargs['axis'] = _axis
         except KeyError as e:
             # KeyErrors mean the YAML is incomplete -> raise
-            raise DReprError("Missing required key '%s' for error specification" % e.args[0])
+            raise ValueError("Missing required key '%s' for error specification" % e.args[0])
 
         # add error to data container
         container_obj = add_error_to_container(_err_type, container_obj, **_add_kwargs)
@@ -240,7 +239,7 @@ class MatrixYamlLoader(yaml.Loader):
         for _i, _row in enumerate(_mat):
             # check shape -> row index must match row length
             if len(_row) != _i + 1:
-                raise DReprError("Cannot parse lower triangular matrix: "
+                raise ValueError("Cannot parse lower triangular matrix: "
                                  "row #{} should have length {}, got {} "
                                  "instead!".format(_i+1, _i+1, len(_row)))
             # fill matrix

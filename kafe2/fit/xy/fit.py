@@ -9,7 +9,7 @@ import numpy as np
 
 from ...core.error import CovMat
 from ...tools import print_dict_as_table
-from .._base import FitException, FitBase, DataContainerBase, ModelFunctionBase
+from .._base import FitBase, DataContainerBase, ModelFunctionBase
 from .container import XYContainer
 from .cost import XYCostFunction_Chi2, STRING_TO_COST_FUNCTION
 from .model import XYParametricModel
@@ -17,11 +17,7 @@ from .plot import XYPlotAdapter
 from ..util import function_library, add_in_quadrature, invert_matrix
 
 
-__all__ = ['XYFit', 'XYFitException']
-
-
-class XYFitException(FitException):
-    pass
+__all__ = ['XYFit']
 
 
 class XYFit(FitBase):
@@ -29,7 +25,6 @@ class XYFit(FitBase):
     MODEL_TYPE = XYParametricModel
     MODEL_FUNCTION_TYPE = ModelFunctionBase
     PLOT_ADAPTER_TYPE = XYPlotAdapter
-    EXCEPTION_TYPE = XYFitException
     RESERVED_NODE_NAMES = {'y_data', 'y_model', 'cost',
                            'x_error', 'y_data_error', 'y_model_error', 'total_error',
                            'x_cov_mat', 'y_data_cov_mat', 'y_model_cov_mat', 'total_cov_mat',
@@ -122,7 +117,7 @@ class XYFit(FitBase):
         if isinstance(new_data, self.CONTAINER_TYPE):
             self._data_container = deepcopy(new_data)
         elif isinstance(new_data, DataContainerBase):
-            raise XYFitException("Incompatible container type '%s' (expected '%s')"
+            raise TypeError("Incompatible container type '%s' (expected '%s')"
                                  % (type(new_data), self.CONTAINER_TYPE))
         else:
             _x_data = new_data[0]
@@ -736,7 +731,7 @@ class XYFit(FitBase):
         :rtype: numpy.ndarray[float]
         """
         if not self.did_fit:
-            raise XYFitException('Cannot calculate an error band without first performing a fit.')
+            raise RuntimeError('Cannot calculate an error band without first performing a fit.')
         if x is None:
             x = self.x_model
         if self.parameter_cov_mat is None:

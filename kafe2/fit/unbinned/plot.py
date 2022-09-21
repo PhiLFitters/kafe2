@@ -1,15 +1,11 @@
 import numpy as np
 from matplotlib.collections import LineCollection
 
-from .._base import PlotAdapterBase, PlotAdapterException
+from .._base import PlotAdapterBase
 from .._aux import add_pad_to_range
 
 
 __all__ = ["UnbinnedPlotAdapter"]
-
-
-class UnbinnedPlotAdapterException(PlotAdapterException):
-    pass
 
 
 class UnbinnedPlotAdapter(PlotAdapterBase):
@@ -58,7 +54,7 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
 
         :return: iterable
         """
-        raise UnbinnedPlotAdapterException("There's no y-data in the unbinned container")
+        raise TypeError("There's no y-data in the unbinned container")
 
     @property
     def data_xerr(self):
@@ -71,7 +67,7 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
 
     @property
     def data_yerr(self):
-        raise UnbinnedPlotAdapterException("There's no y-data in the unbinned container, hence no y-error")
+        raise TypeError("There's no y-data in the unbinned container, hence no y-error")
 
     @property
     def model_x(self):
@@ -86,7 +82,6 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
         :return: iterable
         """
         return self._fit.model
-        #raise UnbinnedPlotAdapterException("There's no y-model in the unbinned container")
 
     @property
     def model_line_x(self):
@@ -98,10 +93,9 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
             try:
                 return np.geomspace(_xmin, _xmax, self.n_plot_points)
             except ValueError:
-                raise UnbinnedPlotAdapterException("Support point calculation failed. "
-                                                   "The plot range can't include 0 when using log "
-                                                   "scale.")
-        raise UnbinnedPlotAdapterException("x_range has to be one of {}. Found {} instead.".format(
+                raise ValueError("Support point calculation failed. The plot range can't include 0 "
+                                 "when using log scale.")
+        raise ValueError("x_range has to be one of {}. Found {} instead.".format(
             self.AVAILABLE_X_SCALES, self.x_scale))
 
     @property

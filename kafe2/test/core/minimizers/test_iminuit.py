@@ -1,10 +1,10 @@
 import unittest
-from kafe2.test.core.minimizers._base import AbstractMinimizerTest, MinimizerException
+from kafe2.test.core.minimizers._base import AbstractMinimizerTest
 
 _cannot_import_IMinuit = False
 try:
     from kafe2.core.minimizers.iminuit_minimizer import MinimizerIMinuit
-except (ImportError, SyntaxError, MinimizerException):
+except (ImportError, SyntaxError):
     _cannot_import_IMinuit = True
 
 

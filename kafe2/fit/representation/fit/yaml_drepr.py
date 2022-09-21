@@ -3,8 +3,7 @@ import numpy as np
 
 from ._base import FitDReprBase
 from .. import _AVAILABLE_REPRESENTATIONS
-from .._base import DReprError
-from .._yaml_base import YamlWriterMixin, YamlReaderMixin, YamlReaderException
+from .._yaml_base import YamlWriterMixin, YamlReaderMixin
 from ..constraint.yaml_drepr import ConstraintYamlReader, ConstraintYamlWriter
 from ..container.yaml_drepr import DataContainerYamlReader, DataContainerYamlWriter
 from ..model.yaml_drepr import ParametricModelYamlReader, ParametricModelYamlWriter, \
@@ -92,7 +91,7 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
         # -- determine fit type
         _type = cls._CLASS_TO_OBJECT_TYPE_NAME.get(fit.__class__, None)
         if _type is None:
-            raise DReprError("Fit type unknown or not supported: %s" % fit.__class__)
+            raise TypeError("Fit type unknown or not supported: %s" % fit.__class__)
         _yaml_doc['type'] = _type
 
         if _type != 'custom':
@@ -185,7 +184,7 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
             _override_dict['model_function_name'] = 'parametric_model'
             _override_dict['latex_model_function_name'] = 'parametric_model'
         else:
-            raise YamlReaderException("Unknown fit type")
+            raise TypeError("Unknown fit type")
         # override labels for every fit type
         _override_dict['label'] = 'dataset'
         _override_dict['model_label'] = 'parametric_model'

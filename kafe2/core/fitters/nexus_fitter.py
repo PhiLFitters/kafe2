@@ -6,10 +6,6 @@ from ..minimizers import get_minimizer
 from.nexus import Nexus
 
 
-class NexusFitterException(Exception):
-    pass
-
-
 class NexusFitter(object):
 
     def __init__(self, nexus, parameters_to_fit, parameter_to_minimize, minimizer=None,
@@ -68,7 +64,7 @@ class NexusFitter(object):
                 _pars.append(_par)
 
         if _not_found:
-            raise NexusFitterException(
+            raise ValueError(
                 "Parameters not registered in Nexus: {}".format(
                     ', '.join(_not_found)
                 )
@@ -197,7 +193,7 @@ class NexusFitter(object):
 
     def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, **kwargs):
         if not self.__state_is_from_minimizer:
-            raise NexusFitterException(
+            raise RuntimeError(
                 "To calculate a contour the do_fit method has to be called first."
             )
 
@@ -205,7 +201,7 @@ class NexusFitter(object):
 
     def profile(self, parameter_name, bins=20, bound=2, args=None, subtract_min=False):
         if not self.__state_is_from_minimizer:
-            raise NexusFitterException(
+            raise RuntimeError(
                 "To calculate a profile the do_fit method has to be called first."
             )
 
@@ -226,7 +222,7 @@ class NexusFitter(object):
         # test parameter names
         if not _dict_key_set.issubset(_par_name_set):
             _unknown_par_names = _dict_key_set - _par_name_set
-            raise NexusFitterException("Cannot set fit parameter values: Unknown fit parameters: %r!"
+            raise ValueError("Cannot set fit parameter values: Unknown fit parameters: %r!"
                                        % (_unknown_par_names,))
 
         # set values in nexus
@@ -240,7 +236,7 @@ class NexusFitter(object):
     def set_all_fit_parameter_values(self, fit_par_value_list):
         # test list length
         if not len(fit_par_value_list) == len(self.parameters_to_fit):
-            raise NexusFitterException(
+            raise ValueError(
                 "Cannot set all fit parameter values: "
                 "{} fit parameters declared, "
                 "but {} provided!".format(

@@ -2,9 +2,7 @@ import unittest
 import numpy as np
 
 from kafe2.fit import XYContainer, XYParametricModel
-from kafe2.fit._base import DataContainerException, ModelFunctionBase
-from kafe2.fit.xy.container import XYContainerException
-from kafe2.fit.xy.model import XYParametricModelException
+from kafe2.fit._base import ModelFunctionBase
 from kafe2.core.error import cov_mat_from_float_list
 
 
@@ -153,13 +151,13 @@ class TestDatastoreXY(unittest.TestCase):
         self.data_xy.add_error('y', 0.1,
                                name="MyNewYError",
                                correlation=0, relative=False)
-        with self.assertRaises(DataContainerException):
+        with self.assertRaises(ValueError):
             self.data_xy.add_error('y', 0.1,
                                    name="MyNewYError",
                                    correlation=0, relative=False)
 
     def test_raise_get_inexistent_error(self):
-        with self.assertRaises(DataContainerException):
+        with self.assertRaises(ValueError):
             self.data_xy.get_error("MyInexistentYError")
 
     def test_raise_add_error_bad_shape(self):
@@ -269,9 +267,9 @@ class TestDatastoreXYParametricModel(unittest.TestCase):
         self.assertTrue(np.allclose(self.xy_param_model.y, self._ref_data_test_x_test_params))
 
     def test_raise_set_data(self):
-        with self.assertRaises(XYParametricModelException):
+        with self.assertRaises(TypeError):
             self.xy_param_model.data = self._ref_data_ref_x_test_params
 
     def test_raise_set_y(self):
-        with self.assertRaises(XYParametricModelException):
+        with self.assertRaises(TypeError):
             self.xy_param_model.y = self._ref_data_ref_x_test_params

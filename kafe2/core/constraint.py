@@ -4,12 +4,8 @@ import six
 
 from ..fit.io.file import FileIOMixin
 
-__all__ = ['ParameterConstraintException', 'ParameterConstraint', 'GaussianSimpleParameterConstraint',
+__all__ = ['ParameterConstraint', 'GaussianSimpleParameterConstraint',
            'GaussianMatrixParameterConstraint']
-
-
-class ParameterConstraintException(Exception):
-    pass
 
 
 @six.add_metaclass(abc.ABCMeta)

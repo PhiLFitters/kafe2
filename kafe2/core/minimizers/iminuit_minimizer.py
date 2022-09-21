@@ -2,21 +2,16 @@ import logging
 import numpy as np
 from copy import deepcopy
 
-from .minimizer_base import MinimizerBase, MinimizerException
+from .minimizer_base import MinimizerBase
 from ..contour import ContourFactory
 
 try:
     import iminuit
 except (ImportError, SyntaxError):
-    # TODO: handle importing nonexistent minimizer
     raise
 
 
 _IMINUIT_1 = int(iminuit.__version__[0]) < 2
-
-
-class MinimizerIMinuitException(MinimizerException):
-    pass
 
 
 class MinimizerIMinuit(MinimizerBase):
@@ -77,7 +72,6 @@ class MinimizerIMinuit(MinimizerBase):
 
     def _get_fmin_struct(self):
         if self._fmin_struct is None:
-            # raise MinimizerIMinuitException("Cannot get requested information: No fit performed!")
             self._fmin_struct = self._get_iminuit().get_fmin()
         return self._fmin_struct
 
@@ -284,10 +278,10 @@ class MinimizerIMinuit(MinimizerBase):
 
     def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, **minimizer_contour_kwargs):
         if not self.did_fit:
-            raise MinimizerIMinuitException("Need to perform a fit before calling contour()!")
+            raise RuntimeError("Need to perform a fit before calling contour()!")
         _numpoints = minimizer_contour_kwargs.pop("numpoints", 100)
         if minimizer_contour_kwargs:
-            raise MinimizerIMinuitException(
+            raise ValueError(
                 "Unknown keyword arguments for contour(): {}".format(minimizer_contour_kwargs.keys()))
         if _IMINUIT_1:
             _x_errs, _y_errs, _contour_line = self._get_iminuit().mncontour(
@@ -305,7 +299,7 @@ class MinimizerIMinuit(MinimizerBase):
 
     def profile(self, parameter_name, bins=20, bound=2, subtract_min=False):
         if not self.did_fit:
-            raise MinimizerIMinuitException("Need to perform a fit before calling profile()!")
+            raise RuntimeError("Need to perform a fit before calling profile()!")
         _kwargs = dict(bound=bound, subtract_min=subtract_min)
         if _IMINUIT_1:
             _kwargs["bins"] = bins
@@ -355,7 +349,7 @@ class MinimizerIMinuit(MinimizerBase):
 
     def minimize(self, max_calls=6000):
         if np.all([self.is_fixed(_par_name) for _par_name in self.parameter_names]):
-            raise MinimizerIMinuitException("Cannot perform a fit if all parameters are fixed!")
+            raise RuntimeError("Cannot perform a fit if all parameters are fixed!")
 
         self._get_iminuit().migrad(ncall=max_calls)
 

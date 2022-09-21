@@ -7,14 +7,9 @@ import numpy as np
 
 from ...core.error import MatrixGaussianError, SimpleGaussianError
 from ..indexed import IndexedContainer
-from ..indexed.container import IndexedContainerException
 
 
-__all__ = ['XYContainer', 'XYContainerException']
-
-
-class XYContainerException(IndexedContainerException):
-    pass
+__all__ = ['XYContainer']
 
 
 class XYContainer(IndexedContainer):
@@ -63,7 +58,7 @@ class XYContainer(IndexedContainer):
             pass
         _axis_id = XYContainer._AXIS_SPEC_DICT.get(axis_spec, None)
         if _axis_id is None:
-            raise XYContainerException("No axis with id %r!" % (axis_spec,))
+            raise ValueError("No axis with id %r!" % (axis_spec,))
         return _axis_id
 
     def _get_data_for_axis(self, axis_id):
@@ -116,15 +111,15 @@ class XYContainer(IndexedContainer):
     def data(self, new_data):
         _new_data = np.asarray(new_data)
         if _new_data.ndim != 2:
-            raise XYContainerException("XYContainer data must be 2-d array of floats! "
-                                       "Got shape: %r..." % (_new_data.shape,))
+            raise ValueError("XYContainer data must be 2-d array of floats! "
+                             "Got shape: %r..." % (_new_data.shape,))
         if _new_data.shape[0] == 2:
             self._data = _new_data.copy()
         elif _new_data.shape[1] == 2:
             self._data = _new_data.T.copy()
         else:
-            raise XYContainerException("XYContainer data length must be 2 in at least one axis! "
-                                       "Got shape: %r..." % (_new_data.shape,))
+            raise ValueError("XYContainer data length must be 2 in at least one axis! "
+                             "Got shape: %r..." % (_new_data.shape,))
         self._clear_total_error_cache()
 
     @property
@@ -139,8 +134,8 @@ class XYContainer(IndexedContainer):
     def x(self, new_x):
         _new_x_data = np.squeeze(np.array(new_x))
         if len(_new_x_data.shape) > 1:
-            raise XYContainerException("XYContainer 'x' data must be 1-d array of floats! "
-                                       "Got shape: %r..." % (_new_x_data.shape,))
+            raise ValueError("XYContainer 'x' data must be 1-d array of floats! "
+                             "Got shape: %r..." % (_new_x_data.shape,))
         self._data[0, :] = new_x
         for _err_dict in self._error_dicts.values():
             if _err_dict['axis'] == 0:
@@ -195,8 +190,8 @@ class XYContainer(IndexedContainer):
     def y(self, new_y):
         _new_y_data = np.squeeze(np.array(new_y))
         if len(_new_y_data.shape) > 1:
-            raise XYContainerException("XYContainer 'y' data must be 1-d array of floats! "
-                                       "Got shape: %r..." % (_new_y_data.shape,))
+            raise ValueError("XYContainer 'y' data must be 1-d array of floats! "
+                             "Got shape: %r..." % (_new_y_data.shape,))
         self._data[1, :] = new_y
         for _err_dict in self._error_dicts.values():
             if _err_dict['axis'] == 1:

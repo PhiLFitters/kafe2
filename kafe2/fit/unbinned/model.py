@@ -1,14 +1,10 @@
 import numpy as np
 
 from .._base import ParametricModelBaseMixin
-from .container import UnbinnedContainer, UnbinnedContainerException
+from .container import UnbinnedContainer
 from ..util import function_library
 
-__all__ = ['UnbinnedParametricModel', 'UnbinnedParametricModelException']
-
-
-class UnbinnedParametricModelException(UnbinnedContainerException):
-    pass
+__all__ = ['UnbinnedParametricModel']
 
 
 class UnbinnedParametricModel(ParametricModelBaseMixin, UnbinnedContainer):
@@ -53,7 +49,7 @@ class UnbinnedParametricModel(ParametricModelBaseMixin, UnbinnedContainer):
 
     @data.setter
     def data(self):
-        raise UnbinnedParametricModelException("Parametric model data cannot be set!")
+        raise TypeError("Parametric model data cannot be set!")
 
     def eval_model_function(self, support=None, model_parameters=None):
         """

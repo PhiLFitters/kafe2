@@ -179,10 +179,10 @@ class TestCostBuiltin(unittest.TestCase):
             self.CHI2_COST_FUNCTION(errors_to_use="covariance")(
                 self._data_chi2, np.ones(10), self._cov_mat_cholesky, None, None,
                 self._cov_mat_log_det)
-        with self.assertRaises(CostFunctionException):
+        with self.assertRaises(ValueError):
             self.CHI2_COST_FUNCTION(errors_to_use="covariance", fallback_on_singular=False)(
                 self._data_chi2, self._model_chi2, None, None, None, self._cov_mat_log_det)
-        with self.assertRaises(CostFunctionException):
+        with self.assertRaises(ValueError):
             self.CHI2_COST_FUNCTION(errors_to_use="pointwise", fallback_on_singular=False)(
                 self._data_chi2, self._model_chi2, np.arange(len(self._pointwise_errors)),
                 None, None, self._cov_mat_log_det)
@@ -295,16 +295,16 @@ class TestCostUserDefined(unittest.TestCase):
             return cost
 
         _ = CostFunction(_cost_args, arg_names=["a", "b"])
-        with self.assertRaises(CostFunctionException):
+        with self.assertRaises(ValueError):
             _ = CostFunction(_cost_args)
-        with self.assertRaises(CostFunctionException):
+        with self.assertRaises(ValueError):
             _ = CostFunction(_cost_kwargs)
-        with self.assertRaises(CostFunctionException):
+        with self.assertRaises(ValueError):
             _ = CostFunction(_cost_kwargs, arg_names=["a", "b"])
-        with self.assertRaises(CostFunctionException):
+        with self.assertRaises(ValueError):
             _ = CostFunction(_cost_bad_arg_name)
         _ = CostFunction(_cost_bad_arg_name, arg_names=["a"])
-        with self.assertRaises(CostFunctionException):
+        with self.assertRaises(ValueError):
             _ = CostFunction(_cost_args, arg_names=["cost"])
 
     def test_compare_cost(self):

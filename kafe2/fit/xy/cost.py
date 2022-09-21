@@ -1,4 +1,4 @@
-from .._base import CostFunction_Chi2, CostFunction_NegLogLikelihood, CostFunctionException, \
+from .._base import CostFunction_Chi2, CostFunction_NegLogLikelihood, \
     CostFunction_GaussApproximation
 
 __all__ = [
@@ -34,7 +34,7 @@ class XYCostFunction_Chi2(CostFunction_Chi2):
             self._COV_MAT_CHOLESKY_NAME = "total_cov_mat_cholesky"
             self._ERROR_NAME = "total_error"
         else:
-            raise CostFunctionException(
+            raise ValueError(
                 "Unknown value '%s' for 'axes_to_use': must be one of ('xy', 'y')")
         super(XYCostFunction_Chi2, self).__init__(
             errors_to_use=errors_to_use, fallback_on_singular=fallback_on_singular,
@@ -50,7 +50,7 @@ class XYCostFunction_NegLogLikelihood(CostFunction_NegLogLikelihood):
         elif axes_to_use.lower() == 'xy':
             self._ERROR_NAME = "total_error"
         else:
-            raise CostFunctionException(
+            raise ValueError(
                 "Unknown value '%s' for 'axes_to_use': must be one of ('xy', 'y')")
         super(XYCostFunction_NegLogLikelihood, self).__init__(
             data_point_distribution=data_point_distribution, ratio=ratio)
@@ -84,7 +84,7 @@ class XYCostFunction_GaussApproximation(CostFunction_GaussApproximation):
             self._COV_MAT_CHOLESKY_NAME = "total_cov_mat_cholesky"
             self._ERROR_NAME = "total_error"
         else:
-            raise CostFunctionException(
+            raise ValueError(
                 "Unknown value '%s' for 'axes_to_use': must be one of ('xy', 'y')")
         super().__init__(
             errors_to_use=errors_to_use, add_constraint_cost=add_constraint_cost,

@@ -4,7 +4,7 @@ import unittest
 
 from kafe2.core.minimizers import AVAILABLE_MINIMIZERS
 from kafe2.core.fitters.nexus import Nexus, Parameter, Function
-from kafe2.core.fitters.nexus_fitter import NexusFitter, NexusFitterException
+from kafe2.core.fitters.nexus_fitter import NexusFitter
 
 
 class AbstractTestNexusFitter(object):
@@ -85,7 +85,7 @@ class AbstractTestNexusFitter(object):
     # -- init
 
     def test_init_inexistent_fit_parameters_raise(self):
-        with self.assertRaises(NexusFitterException):
+        with self.assertRaises(ValueError):
             NexusFitter(
                 self.nexus,
                 parameters_to_fit=('bogus_parameter',),
@@ -93,7 +93,7 @@ class AbstractTestNexusFitter(object):
             )
 
     def test_init_inexistent_min_parameter_raise(self):
-        with self.assertRaises(NexusFitterException):
+        with self.assertRaises(ValueError):
             NexusFitter(
                 self.nexus,
                 parameters_to_fit=('x', 'y'),
@@ -129,9 +129,9 @@ class AbstractTestNexusFitter(object):
         self._assert_fit_results(xy_val=[7, 2])
 
     def test_set_all_fit_parameter_values_length_mismatch_raise(self):
-        with self.assertRaises(NexusFitterException):
+        with self.assertRaises(ValueError):
             self.fitter.set_all_fit_parameter_values([7, 2, 30])
-        with self.assertRaises(NexusFitterException):
+        with self.assertRaises(ValueError):
             self.fitter.set_all_fit_parameter_values([2])
 
     def test_set_fit_parameter_values(self):
@@ -139,7 +139,7 @@ class AbstractTestNexusFitter(object):
         self._assert_fit_results(xy_val=[7, 2])
 
     def test_set_fit_parameter_values_unknown_raise(self):
-        with self.assertRaises(NexusFitterException):
+        with self.assertRaises(ValueError):
             self.fitter.set_fit_parameter_values(bogus_parameter=7)
 
     def test_do_fit(self):
@@ -235,7 +235,7 @@ class AbstractTestNexusFitter(object):
     # -- profiles & contours
 
     def test_profile_without_do_fit(self):
-        with self.assertRaises(NexusFitterException):
+        with self.assertRaises(RuntimeError):
             self.fitter.profile('x')
 
     def test_profile(self):
@@ -251,7 +251,7 @@ class AbstractTestNexusFitter(object):
         )
 
     def test_contour_without_do_fit(self):
-        with self.assertRaises(NexusFitterException):
+        with self.assertRaises(RuntimeError):
             self.fitter.contour('x', 'y')
 
     def test_contour(self):

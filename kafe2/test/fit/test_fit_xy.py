@@ -4,14 +4,10 @@ import numpy as np
 import six
 
 from kafe2.core.minimizers import AVAILABLE_MINIMIZERS
-from kafe2.core.fitters import NexusFitterException
 
 from kafe2.config import kc
 
-from kafe2.fit._base import ModelFunctionException
 from kafe2.fit import XYFit
-from kafe2.fit.xy.fit import XYFitException
-from kafe2.fit.xy.model import XYParametricModelException
 from kafe2.fit.xy.cost import XYCostFunction_Chi2
 
 from kafe2.test.fit.test_fit import AbstractTestFit
@@ -220,12 +216,9 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         )
 
     def test_set_all_parameter_values_wrong_number_raise(self):
-        # FIXME: discrepancy
-        #with self.assertRaises(XYFitException):
-        with self.assertRaises(NexusFitterException):
+        with self.assertRaises(ValueError):
             self._get_fit().set_all_parameter_values((1,))
-        #with self.assertRaises(XYFitException):
-        with self.assertRaises(NexusFitterException):
+        with self.assertRaises(ValueError):
             self._get_fit().set_all_parameter_values((1,2,3,4,5))
 
     def test_parameter_defaults(self):
@@ -361,7 +354,7 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model(x, y_data):
             pass
 
-        with self.assertRaises(XYFitException) as _exc:
+        with self.assertRaises(ValueError) as _exc:
             XYFit(xy_data=self._ref_xy_data,
                   model_function=dummy_model,
                   minimizer=self.MINIMIZER)
@@ -373,7 +366,7 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model():
             pass
 
-        with self.assertRaises(ModelFunctionException) as _exc:
+        with self.assertRaises(ValueError) as _exc:
             XYFit(xy_data=self._ref_xy_data,
                   model_function=dummy_model,
                   minimizer=self.MINIMIZER)
@@ -386,7 +379,7 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model(x):
             pass
 
-        with self.assertRaises(ModelFunctionException) as _exc:
+        with self.assertRaises(ValueError) as _exc:
             XYFit(xy_data=self._ref_xy_data,
                   model_function=dummy_model,
                   minimizer=self.MINIMIZER)
@@ -400,7 +393,7 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model(x, par, *varargs):
             pass
 
-        with self.assertRaises(ModelFunctionException) as _exc:
+        with self.assertRaises(ValueError) as _exc:
             XYFit(xy_data=self._ref_xy_data,
                   model_function=dummy_model,
                   minimizer=self.MINIMIZER)
@@ -413,7 +406,7 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model(x, par, **varkwargs):
             pass
 
-        with self.assertRaises(ModelFunctionException) as _exc:
+        with self.assertRaises(ValueError) as _exc:
             XYFit(xy_data=self._ref_xy_data,
                   model_function=dummy_model,
                   minimizer=self.MINIMIZER)
@@ -426,7 +419,7 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         def dummy_model(x, par, *varargs, **varkwargs):
             pass
 
-        with self.assertRaises(ModelFunctionException) as _exc:
+        with self.assertRaises(ValueError) as _exc:
             XYFit(xy_data=self._ref_xy_data,
                   model_function=dummy_model,
                   minimizer=self.MINIMIZER)
@@ -461,7 +454,7 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         self._get_fit(model_function=model)
 
     def test_data_and_cost_incompatible(self):
-        with self.assertRaises(XYFitException):
+        with self.assertRaises(ValueError):
             self._get_fit(cost_function="nll")
 
     def test_relative_model_error_nonlinear(self):

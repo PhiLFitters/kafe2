@@ -10,15 +10,11 @@ from ..io.file import FileIOMixin
 from ...core.error import SimpleGaussianError, MatrixGaussianError
 from ...tools import random_alphanumeric  # relative import of kafe2.tools not kafe2.fit.tools
 
-__all__ = ["DataContainerBase", "DataContainerException"]
-
-
-class DataContainerException(Exception):
-    pass
+__all__ = ["DataContainerBase"]
 
 
 @six.add_metaclass(abc.ABCMeta)
-class DataContainerBase(FileIOMixin, object):
+class DataContainerBase(FileIOMixin):
     """This is a purely abstract class implementing the minimal interface required by all types of data containers.
 
     It stores measurement data and uncertainties.
@@ -58,8 +54,8 @@ class DataContainerBase(FileIOMixin, object):
                              f"received error with size {error_object.error.shape[0]}")
         _name = name
         if _name is not None and _name in self._error_dicts:
-            raise DataContainerException("Cannot create error source with name '{}': "
-                                         "there is already an error source registered under that name!".format(_name))
+            raise ValueError("Cannot create error source with name '{}': there is already an error "
+                             "source registered under that name!".format(_name))
         # be paranoid about name collisions
         while _name is None or _name in self._error_dicts:
             _name = random_alphanumeric(size=8)
@@ -82,7 +78,7 @@ class DataContainerBase(FileIOMixin, object):
         """return a dictionary containing the error object for error 'name' and additional information"""
         _err_dict = self._error_dicts.get(error_name, None)
         if _err_dict is None:
-            raise DataContainerException("No error with name '{}'!".format(error_name))
+            raise ValueError("No error with name '{}'!".format(error_name))
         return _err_dict
 
     def _on_error_change(self):

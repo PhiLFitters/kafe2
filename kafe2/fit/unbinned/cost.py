@@ -1,7 +1,7 @@
 import numpy as np
 from types import FunctionType
 
-from .._base import CostFunction, CostFunctionException
+from .._base import CostFunction
 from ..util import function_library
 
 __all__ = [

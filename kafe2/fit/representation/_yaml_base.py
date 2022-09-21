@@ -3,10 +3,6 @@ import yaml
 from ._base import DReprReaderMixin, DReprWriterMixin
 
 
-class YamlWriterException(Exception):
-    pass
-
-
 class YamlWriterMixin(DReprWriterMixin):
     DREPR_FLAVOR_NAME = 'yaml'
     DUMPER = yaml.Dumper
@@ -41,10 +37,6 @@ class YamlWriterMixin(DReprWriterMixin):
             yaml.dump(self._yaml_doc, _h, default_flow_style=False, sort_keys=False)
 
 
-class YamlReaderException(Exception):
-    pass
-
-
 class YamlReaderMixin(DReprReaderMixin):
     DREPR_FLAVOR_NAME = 'yaml'
     LOADER = yaml.Loader  # TODO SafeLoader
@@ -70,7 +62,7 @@ class YamlReaderMixin(DReprReaderMixin):
             if _keyword in _leftover_yaml_doc and _leftover_yaml_doc[_keyword] is None:
                 _leftover_yaml_doc.pop(_keyword, None)
         if _leftover_yaml_doc:
-            raise YamlReaderException("Received unknown or unsupported keywords for constructing a "
+            raise ValueError("Received unknown or unsupported keywords for constructing a "
                                       "%s object: %s" % (cls.BASE_OBJECT_TYPE_NAME,
                                                          list(_leftover_yaml_doc.keys())))
         return _object
@@ -87,7 +79,7 @@ class YamlReaderMixin(DReprReaderMixin):
             yaml_doc.update(type=_object_type)
             _kafe_object_class = cls._OBJECT_TYPE_NAME_TO_CLASS.get(_object_type, None)
             if _kafe_object_class is None:
-                raise YamlReaderException("%s type unknown or not supported: %s"
+                raise TypeError("%s type unknown or not supported: %s"
                                           % (cls.BASE_OBJECT_TYPE_NAME, _object_type))
 
         yaml_doc = cls._modify_yaml_doc(yaml_doc.copy(), _kafe_object_class, **modify_kwargs)
@@ -109,7 +101,7 @@ class YamlReaderMixin(DReprReaderMixin):
                              if _keyword not in yaml_doc]
         if _missing_keywords:
             # TODO rework
-            raise YamlReaderException("Missing required information for reading in a %s object: %s"
+            raise ValueError("Missing required information for reading in a %s object: %s"
                                       % (_kafe_object_class, _missing_keywords))
 
         return yaml_doc
@@ -125,7 +117,7 @@ class YamlReaderMixin(DReprReaderMixin):
     @classmethod
     def _modify_yaml_doc(cls, yaml_doc, kafe_object_class, **kwargs):
         if kwargs:
-            raise YamlReaderException('Received unexpected kwargs: %s' % kwargs)
+            raise ValueError('Received unexpected kwargs: %s' % kwargs)
         return yaml_doc
 
     @classmethod
