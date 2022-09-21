@@ -130,14 +130,14 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
     if y_label is not None:
         _plot.y_label = y_label
     if data_label is not None:
-        _plot.customize("data", "label", [data_label])
+        _plot.customize("data", "label", data_label)
     if model_label is not None:
-        _plot.customize("model_line", "label", [model_label])
+        _plot.customize("model_line", "label", model_label)
     if error_band_label is not None:
-        _plot.customize("model_error_band", "label", [error_band_label])
+        _plot.customize("model_error_band", "label", error_band_label)
     if not error_band:
-        _plot.customize("model_error_band", "label", [None])
-        _plot.customize("model_error_band", "hide", [True])
+        _plot.customize("model_error_band", "label", None)
+        _plot.customize("model_error_band", "hide", True)
 
     if x_range is not None:
         _plot.x_range = x_range

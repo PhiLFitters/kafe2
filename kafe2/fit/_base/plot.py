@@ -1571,6 +1571,8 @@ class Plot(object):
         :return: this `Plot` instance
         :rtype: `Plot`
         """
+        if values is None or isinstance(values, (int, float, str)):
+            values = (values,) * len(self._fits)
 
         _has_tuples = None
         for _val in values:

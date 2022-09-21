@@ -52,21 +52,21 @@ plot = Plot(fit_objects=line_fit)
 # The third argument is a list of values to set for the keyword for each fit managed
 #     by the plot object.
 
-plot.customize('data', 'label', ["My data label 2"])  # Overwrite data label in info box.
-# plot.customize('data', 'label', [None])  # Hide data label in info box.
-plot.customize('data', 'marker', ['o'])  # Set the data marker shape in the plot.
-plot.customize('data', 'markersize', [5])  # Set the data marker size in the plot.
-plot.customize('data', 'color', ['blue'])  # Set the data marker color in the plot.
-plot.customize('data', 'ecolor', ['gray'])  # Set the data errorbar color in the plot.
+plot.customize('data', 'label', "My data label 2")  # Overwrite data label in info box.
+# plot.customize('data', 'label', None)  # Hide data label in info box.
+plot.customize('data', 'marker', 'o')  # Set the data marker shape in the plot.
+plot.customize('data', 'markersize', 5)  # Set the data marker size in the plot.
+plot.customize('data', 'color', 'blue')  # Set the data marker color in the plot.
+plot.customize('data', 'ecolor', 'gray')  # Set the data errorbar color in the plot.
 
-plot.customize('model_line', 'label', ['My model label 2'])  # Set the model label in the info box.
-# plot.customize('model_line', 'label', [None])  # Hide the model label in the info box.
-plot.customize('model_line', 'color', ['lightgreen'])  # Set the model line color in the plot.
-plot.customize('model_line', 'linestyle', ['-'])  # Set the style of the model line in the plot.
-plot.customize('model_error_band', 'label', [r'$\pm 1 \sigma$'])  # Error band label in info box.
-# plot.customize('model_error_band', 'label', [None])  # Hide error band label.
-plot.customize('model_error_band', 'color', ['lightgreen'])  # Error band color in plot.
-# plot.customize('model_error_band', 'hide', [True])  # Hide error band in plot and info box.
+plot.customize('model_line', 'label', 'My model label 2')  # Set the model label in the info box.
+# plot.customize('model_line', 'label', None)  # Hide the model label in the info box.
+plot.customize('model_line', 'color', 'lightgreen')  # Set the model line color in the plot.
+plot.customize('model_line', 'linestyle', '-')  # Set the style of the model line in the plot.
+plot.customize('model_error_band', 'label', r'$\pm 1 \sigma$')  # Error band label in info box.
+# plot.customize('model_error_band', 'label', None)  # Hide error band label.
+plot.customize('model_error_band', 'color', 'lightgreen')  # Error band color in plot.
+# plot.customize('model_error_band', 'hide', True)  # Hide error band in plot and info box.
 
 # Available keywords can be retrieved with Plot.get_keywords(subplot_type) .
 # subplot_type is for example 'data', 'model_line', or 'model_error_band'.
