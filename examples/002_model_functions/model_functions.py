@@ -55,6 +55,11 @@ kafe2.xy_fit(x_data, y_data, model_function=exponential_model,
 # To specify that you want a plot of the last two fits pass -2 as the first argument:
 kafe2.plot(
     -2,
+
+    # Uncomment the following line to use different names for the parameters:
+    # parameter_names=dict(x="t", a=r"\alpha", b=r"\beta", A_0="I_0", x_0="t_0"),
+    # Use LaTeX for special characters like greek letters.
+
     # When Python functions are used as custom model functions kafe2 does not know
     # how to express them as LaTeX. The LaTeX can be manually defined like this:
     model_expression=["{a}{x} + {b}", "{A_0} e^{{{x}/{x_0}}}"]

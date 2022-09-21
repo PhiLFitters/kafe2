@@ -1,12 +1,25 @@
+import os
+from glob import glob
 import numpy as np
 
 _fit_history = []
 
 
+def _get_file_index():
+    os.makedirs("results", exist_ok=True)
+    _file_index = 0
+    _globbed_files = glob(f"results/fit-{_file_index:03d}-*")
+    while len(_globbed_files) > 0:
+        _file_index += 1
+        _globbed_files = glob(f"results/fit-{_file_index:03d}-*")
+    return _file_index
+
+
 def xy_fit(x_data, y_data, model_function=None, p0=None, dp0=None,
            x_error=None, y_error=None, x_error_rel=None, y_error_rel=None,
            x_error_cor=None, y_error_cor=None, x_error_cor_rel=None, y_error_cor_rel=None,
-           errors_rel_to_model=True, limits=None, constraints=None, report=True, profile=None):
+           errors_rel_to_model=True, limits=None, constraints=None, report=False, profile=None,
+           save=True):
     from kafe2.fit.xy.fit import XYFit
 
     if model_function is None:
@@ -60,30 +73,46 @@ def xy_fit(x_data, y_data, model_function=None, p0=None, dp0=None,
     _fit_result = _fit.do_fit(asymmetric_parameter_errors=profile)
     if report:
         _fit.report(asymmetric_parameter_errors=profile)
-    _fit_history.append(dict(fit=_fit, profile=profile))
+
+    if save:
+        _file_index = _get_file_index()
+        _fit.save_state(f"results/fit-{_file_index:03d}-results.yml")
+        with open(f"results/fit-{_file_index:03d}-report.txt", "w", encoding="utf8") as _f:
+            _fit.report(_f, asymmetric_parameter_errors=profile)
+    else:
+        _file_index = None
+
+    _fit_history.append(dict(fit=_fit, profile=profile, file_index=_file_index))
 
     return _fit_result
 
 
 def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
-         error_band_label=None, model_name=None, model_expression=None, legend=True, fit_info=True,
-         error_band=True, profile=None, plot_profile=None, show=True):
+         error_band_label=None, parameter_names=None, model_name=None, model_expression=None,
+         legend=True, fit_info=True, error_band=True, profile=None, plot_profile=None, show=True,
+         save=True):
     from kafe2 import Plot, ContoursProfiler
 
     _fit_profiles = None
+    _file_indices = None
     if isinstance(fits, int):
         if fits >= 0:
             _fit_profiles = [_fit_history[fits]["profile"]]
+            _file_indices = [_fit_history[fits]["file_index"]]
             fits = [_fit_history[fits]["fit"]]
         else:
             fits = _fit_history[fits:]
             _fit_profiles = [_f["profile"] for _f in fits]
+            _file_indices = [_f["file_index"] for _f in fits]
             fits = [_f["fit"] for _f in fits]
     else:
         try:
             iter(fits)
         except TypeError:
             fits = [fits]
+    if parameter_names is not None:
+        for _f in fits:
+            _f.assign_parameter_latex_names(**parameter_names)
     if model_name is not None:
         if isinstance(model_name, str):
             model_name = [model_name for _ in fits]
@@ -112,7 +141,12 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
     if profile is None:
         profile = np.any(_fit_profiles)
     _plot.plot(legend=legend, fit_info=fit_info, asymmetric_parameter_errors=profile)
-    _plot.save("plot.png", dpi=240)
+
+    _start_index = _get_file_index()
+    if save:
+        for _i, _ in enumerate(fits):
+            _file_index = _start_index + _i if _file_indices is None else _file_indices[_i]
+            _plot.save(f"results/fit-{_file_index:03d}-plot.png", dpi=240)
 
     if plot_profile is None and _fit_profiles is not None:
         plot_profile = _fit_profiles
@@ -121,12 +155,14 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
             iter(plot_profile)
         except TypeError:
             plot_profile = [plot_profile for _ in fits]
-        for _f, _pp in zip(fits, plot_profile):
-            if not _pp:
+        for _i, (_f_i, _pp_i) in enumerate(zip(fits, plot_profile)):
+            if not _pp_i:
                 continue
-            _cpf = ContoursProfiler(_f)
+            _cpf = ContoursProfiler(_f_i)
             _cpf.plot_profiles_contours_matrix()
-            _cpf.save("profile.png", dpi=240)
+            if save:
+                _file_index = _start_index + _i if _file_indices is None else _file_indices[_i]
+                _cpf.save(f"results/fit-{_file_index:03d}-profile.png", dpi=240)
     if show:
         _plot.show()
 
