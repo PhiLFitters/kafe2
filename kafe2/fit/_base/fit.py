@@ -379,7 +379,12 @@ class FitBase(FileIOMixin, object):
             _fpf.error = _pe
         if update_asymmetric_errors:
             self._check_dynamic_error_compatibility()
-            for _fpf, _ape in zip(self._get_model_function_parameter_formatters(), self.asymmetric_parameter_errors):
+            _asymmetric_parameter_errors = self.asymmetric_parameter_errors
+            if _asymmetric_parameter_errors is None:
+                _asymmetric_parameter_errors = np.stack(
+                    [-self.parameter_errors, self.parameter_errors], axis=1)
+            for _fpf, _ape in zip(self._get_model_function_parameter_formatters(),
+                                  _asymmetric_parameter_errors):
                 _fpf.asymmetric_error = _ape
 
     def _on_error_change(self):

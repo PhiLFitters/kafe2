@@ -312,6 +312,8 @@ class MinimizerBase(object):
             return None
         if self._par_asymm_err is None:
             self._par_asymm_err = self._calculate_asymmetric_parameter_errors()
+        if self._par_asymm_err is None:
+            return None
         return self._par_asymm_err.copy()
 
     @property
