@@ -35,14 +35,16 @@ class XYPlotAdapter(PlotAdapterBase):
 
     AVAILABLE_X_SCALES = ('linear', 'log')
 
-    def __init__(self, xy_fit_object):
+    def __init__(self, xy_fit_object, from_container=False):
         """Construct an :py:obj:`XYPlotContainer` for a :py:obj:`~.XYFit` object:
 
         :param kafe2.XYFit xy_fit_object: The :py:obj:`~.XYFit` object handled by this plot
             adapter.
+        :param from_container: Whether xy_fit_object was created ad-hoc from just a data container.
+        :type from_container: bool
         """
         self._fit = xy_fit_object  # needed for type hinting to work correctly
-        super(XYPlotAdapter, self).__init__(fit_object=xy_fit_object)
+        super(XYPlotAdapter, self).__init__(fit_object=xy_fit_object, from_container=from_container)
         self.n_plot_points = max(200, 4*len(self.data_x))
         self.x_range = add_pad_to_range(self._fit.x_range, scale=self.x_scale)
 

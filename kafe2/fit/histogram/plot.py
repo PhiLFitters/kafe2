@@ -24,14 +24,18 @@ class HistPlotAdapter(PlotAdapterBase):
 
     AVAILABLE_X_SCALES = ('linear', 'log')
 
-    def __init__(self, hist_fit_object):
+    def __init__(self, hist_fit_object, from_container=False):
         """
         Construct an :py:obj:`HistPlotContainer` for a :py:obj:`~kafe2.fit.histogram.HistFit` object:
 
         :param fit_object: an :py:obj:`~kafe2.fit.histogram.HistFit` object
         :param n_plot_points_model_density: number of plot points to use for plotting the model density
+        :param from_container: Whether hist_fit_object was created ad-hoc from just a data
+            container.
+        :type from_container: bool
         """
-        super(HistPlotAdapter, self).__init__(fit_object=hist_fit_object)
+        super(HistPlotAdapter, self).__init__(
+            fit_object=hist_fit_object, from_container=from_container)
         self.n_plot_points = 100 if len(self.data_x) < 100 else len(self.data_x)
         self.x_range = self._fit.data_container.bin_range
 

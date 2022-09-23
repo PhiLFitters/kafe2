@@ -23,12 +23,16 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
 
     AVAILABLE_X_SCALES = ('linear', 'log')
 
-    def __init__(self, unbinned_fit_object):
+    def __init__(self, unbinned_fit_object, from_container=False):
         """
         Construct an :py:obj:`UnbinnedPlotAdapter` for a :py:obj:`~kafe2.fit.unbinned.UnbinnedFit` object:
         :param unbinned_fit_object: an :py:obj:`~kafe2.fit.unbinned.UnbinnedFit` object
+        :param from_container: Whether unbinned_fit_object was created ad-hoc from just a data
+            container.
+        :type from_container: bool
         """
-        super(UnbinnedPlotAdapter, self).__init__(fit_object=unbinned_fit_object)
+        super(UnbinnedPlotAdapter, self).__init__(
+            fit_object=unbinned_fit_object, from_container=from_container)
         self.n_plot_points = 100 if len(self.data_x) < 100 else len(self.data_x)
 
         self.x_range = add_pad_to_range(self._fit.data_range, scale=self.x_scale)

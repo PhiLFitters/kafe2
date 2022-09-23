@@ -9,6 +9,7 @@ import matplotlib as mpl
 import os
 from collections.abc import Iterable
 
+from .container import DataContainerBase
 from .format import ParameterFormatter
 from ..multi.fit import MultiFit
 from ...config import kc, ConfigError, kafe2_rc
@@ -142,6 +143,7 @@ class PlotAdapterBase:
         data=dict(
             plot_adapter_method='plot_data',
             target_axes='main',
+            container_valid=True,
         ),
         model=dict(
             plot_adapter_method='plot_model',
@@ -162,13 +164,16 @@ class PlotAdapterBase:
     AVAILABLE_X_SCALES = ('linear',)
     AVAILABLE_Y_SCALES = ('linear', 'log')
 
-    def __init__(self, fit_object):
+    def __init__(self, fit_object, from_container=False):
         """Construct a :py:obj:`PlotAdapter` for a :py:obj:`Fit` object:
 
         :param fit_object: An object derived from :py:obj:`~.FitBase`
         :type fit_object: kafe2.fit._base.FitBase
+        :param from_container: Whether fit_object was created ad-hoc from just a data container.
+        :type from_container: bool
         """
         self._fit = fit_object
+        self._from_container = from_container
         self._x_range = None
         self._y_range = None
         self._x_scale = 'linear'
@@ -300,6 +305,10 @@ class PlotAdapterBase:
         if 'zorder' not in _kwargs:
             _kwargs['zorder'] = plot_index * _n_defined_plot_types + list(_subplots).index(plot_type)
 
+        _container_valid = _subplots[plot_type].get("container_valid", None)
+        if _container_valid is not None:
+            _kwargs["container_valid"] = _container_valid
+
         return _kwargs
 
     def _get_total_error(self, error_contributions):
@@ -357,6 +366,9 @@ class PlotAdapterBase:
 
         if kwargs.pop('hide', False):
             return None
+
+        if not kwargs.pop('container_valid', False) and self._from_container:
+            return
 
         return _callable(
             target_axes=target_axes,
@@ -573,6 +585,11 @@ class PlotAdapterBase:
     def y_ticks(self, ticks):
         self._ticks[1] = ticks
 
+    @property
+    def from_container(self):
+        """Whether the contained fit object was created ad-hoc from just a data container."""
+        return self._from_container
+
     @abc.abstractmethod
     def plot_data(self, target_axes, **kwargs):
         """Method called by the main plot routine to plot the data points to a specified
@@ -650,18 +667,13 @@ class PlotAdapterBase:
 # -- must come last!
 
 
-@six.add_metaclass(abc.ABCMeta)  # TODO: check if needed
 class Plot:
     """
-    This is a purely abstract class implementing the minimal interface required by all
-    types of plotters.
-
-    A :py:obj:`PlotBase` object manages one or several ``matplotlib`` figures that
-    contain plots created from various :py:obj:`FitBase`-derived objects.
-
-    It controls the overall figure layout and is responsible for axes, subplot and legend management.
+    This is a class implementing the creation of Fits from one of more subclasses of
+    :py:obj`PlotAdapterBase`. Consequently a :py:obj:`Plot` object manages one or several
+    ``matplotlib`` figures. It controls the overall figure layout and is responsible for axes,
+    subplot and legend management.
     """
-    # TODO update documentation
 
     FIT_INFO_STRING_FORMAT_CHI2 = textwrap.dedent("""\
         {model_function}
@@ -682,6 +694,7 @@ class Plot:
     """)
 
     def __init__(self, fit_objects, separate_figures=False):
+        from kafe2.fit.tools.fit_wrapper import Fit
 
         # set the managed fit objects
         if isinstance(fit_objects, MultiFit):
@@ -693,7 +706,9 @@ class Plot:
             iter(fit_objects)
         except TypeError:
             fit_objects = (fit_objects,)
-        self._fits = fit_objects
+        self._from_container = tuple(isinstance(_fo, DataContainerBase) for _fo in fit_objects)
+        self._fits = tuple(
+            Fit(_fo) if _fc else _fo for _fc, _fo in zip(self._from_container, fit_objects))
 
         self._separate_figs = separate_figures
 
@@ -753,9 +768,9 @@ class Plot:
 
         if self._plot_adapters is None:
             self._plot_adapters = []
-            for _fit in self._fits:
+            for _fit, _from_container in zip(self._fits, self._from_container):
                 self._plot_adapters.append(
-                    _fit.PLOT_ADAPTER_TYPE(_fit)
+                    _fit.PLOT_ADAPTER_TYPE(_fit, _from_container)
                 )
         if not self._separate_figs:
             _x_range_min = np.min([_pa.x_range[0] for _pa in self._plot_adapters])
@@ -767,18 +782,17 @@ class Plot:
 
     def _plot_and_get_results(self, plot_indices=None):
         plot_indices = plot_indices or range(len(self._fits))
+        _plot_adapters = self._get_plot_adapters(plot_indices)
         if self._multifit is None:
-            for _fit in self._fits:
-                if not _fit.did_fit:
+            for _plot_adapter in _plot_adapters:
+                if not _plot_adapter._fit.did_fit and not _plot_adapter.from_container:
                     warnings.warn(
                         "No fit has been performed for {}. Did you forget to run fit.do_fit()?"
-                            .format(_fit))
+                            .format(_plot_adapter._fit))
         elif not self._multifit.did_fit:
             warnings.warn(
                 "No fit has been performed for {}. Did you forget to run fit.do_fit()?"
                     .format(self._multifit))
-
-        _plot_adapters = self._get_plot_adapters(plot_indices)
 
         _plots = {}
         for _i_pdc, _pdc in zip(plot_indices, _plot_adapters):
@@ -975,12 +989,13 @@ class Plot:
 
                 # if requested, compute info of fit associated to this artist
                 _fit_index = _plot_dict['fit_index']
-                if fit_info[_fit_index]:
+                _plot_adapter = _plot_dict['adapter']
+                if fit_info[_fit_index] and not _plot_adapter.from_container:
                     if _fit_index not in _fit_info:
                         # compute fit info string (if not computed yet)
                         _fit_info[_fit_index] = dict(
                             text=self._get_fit_info(
-                                _plot_dict['adapter'],
+                                _plot_adapter,
                                 format_as_latex=True,
                                 asymmetric_parameter_errors=asymmetric_parameter_errors,
                             )

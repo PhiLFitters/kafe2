@@ -15,13 +15,17 @@ class IndexedPlotAdapter(PlotAdapterBase):
         PlotAdapterBase.PLOT_SUBPLOT_TYPES,
     )
 
-    def __init__(self, indexed_fit_object):
+    def __init__(self, indexed_fit_object, from_container=False):
         """
         Construct an :py:obj:`IndexedPlotContainer` for a :py:obj:`~kafe2.fit.indexed.IndexedFit` object:
 
         :param fit_object: an :py:obj:`~kafe2.fit.indexed.IndexedFit` object
+        :param from_container: Whether indexed_fit_object was created ad-hoc from just a data
+            container.
+        :type from_container: bool
         """
-        super(IndexedPlotAdapter, self).__init__(fit_object=indexed_fit_object)
+        super(IndexedPlotAdapter, self).__init__(
+            fit_object=indexed_fit_object, from_container=from_container)
         self.x_range = (-0.5, self._fit.data_size - 0.5)
 
     @property
