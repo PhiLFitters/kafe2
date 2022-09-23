@@ -23,7 +23,7 @@ class UnbinnedFit(FitBase):
 
     def __init__(self,
                  data,
-                 model_density_function='normal_distribution',
+                 model_function='normal_distribution',
                  cost_function=UnbinnedCostFunction_NegLogLikelihood(),
                  minimizer=None,
                  minimizer_kwargs=None):
@@ -31,8 +31,8 @@ class UnbinnedFit(FitBase):
         Construct a fit to a model of *unbinned* data.
 
         :param data: the data points
-        :param model_density_function: the model density
-        :type model_density_function: :py:class:`~kafe2.fit._base.ModelFunctionBase` or unwrapped native Python function
+        :param model_function: the model density
+        :type model_function: :py:class:`~kafe2.fit._base.ModelFunctionBase` or unwrapped native Python function
         :param cost_function: the cost function
         :param minimizer: the minimizer to use for fitting.
         :type minimizer: None, "iminuit", "tminuit", or "scipy".
@@ -40,7 +40,7 @@ class UnbinnedFit(FitBase):
         :type minimizer_kwargs: dict
         """
         super(UnbinnedFit, self).__init__(
-            data=data, model_function=model_density_function, cost_function=cost_function,
+            data=data, model_function=model_function, cost_function=cost_function,
             minimizer=minimizer, minimizer_kwargs=minimizer_kwargs)
 
     # private methods

@@ -79,7 +79,7 @@ class TestUnbinnedFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         _fit = UnbinnedFit(
             data=self._ref_cont,
-            model_density_function=model_density_function,
+            model_function=model_density_function,
             cost_function=cost_function,
             minimizer=self.MINIMIZER
         )
@@ -160,7 +160,7 @@ class TestUnbinnedFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         with self.assertRaises(ValueError) as _exc:
             UnbinnedFit(data=self._ref_cont,
-                    model_density_function=dummy_model,
+                    model_function=dummy_model,
                     minimizer=self.MINIMIZER)
 
         self.assertIn('reserved', _exc.exception.args[0])
@@ -172,7 +172,7 @@ class TestUnbinnedFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         with self.assertRaises(ValueError) as _exc:
             UnbinnedFit(data=self._ref_cont,
-                    model_density_function=dummy_model,
+                    model_function=dummy_model,
                     minimizer=self.MINIMIZER)
 
         self.assertIn(
@@ -185,7 +185,7 @@ class TestUnbinnedFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         with self.assertRaises(ValueError) as _exc:
             UnbinnedFit(data=self._ref_cont,
-                    model_density_function=dummy_model,
+                    model_function=dummy_model,
                     minimizer=self.MINIMIZER)
 
         self.assertIn(
@@ -199,7 +199,7 @@ class TestUnbinnedFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         with self.assertRaises(ValueError) as _exc:
             UnbinnedFit(data=self._ref_cont,
-                    model_density_function=dummy_model,
+                    model_function=dummy_model,
                     minimizer=self.MINIMIZER)
 
         self.assertIn('variable', _exc.exception.args[0])
@@ -212,7 +212,7 @@ class TestUnbinnedFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         with self.assertRaises(ValueError) as _exc:
             UnbinnedFit(data=self._ref_cont,
-                    model_density_function=dummy_model,
+                    model_function=dummy_model,
                     minimizer=self.MINIMIZER)
 
         self.assertIn('variable', _exc.exception.args[0])
@@ -225,7 +225,7 @@ class TestUnbinnedFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         with self.assertRaises(ValueError) as _exc:
             UnbinnedFit(data=self._ref_cont,
-                    model_density_function=dummy_model,
+                    model_function=dummy_model,
                     minimizer=self.MINIMIZER)
 
         self.assertIn('variable', _exc.exception.args[0])
