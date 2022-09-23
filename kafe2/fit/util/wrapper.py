@@ -184,6 +184,23 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
 _plot_func = plot
 
 
+def plot_xy_data(x_data, y_data, x_error=None, y_error=None, x_error_rel=None, y_error_rel=None,
+                 x_label=None, y_label=None, data_label=None, x_range=None, y_range=None,
+                 x_scale=None, y_scale=None, x_ticks=None, y_ticks=None, show=True, save=True):
+    from kafe2.fit.xy.container import XYContainer
+    _container = XYContainer(x_data, y_data)
+    if x_error is not None:
+        _container.add_error("x", x_error)
+    if y_error is not None:
+        _container.add_error("y", y_error)
+    if x_error_rel is not None:
+        _container.add_error("x", x_error_rel, relative=True)
+    if y_error_rel is not None:
+        _container.add_error("y", y_error_rel, relative=True)
+    plot(_container, x_label=x_label, y_label=y_label, data_label=data_label, x_range=x_range,
+         y_range=y_range, x_scale=x_scale, y_scale=y_scale, x_ticks=x_ticks, y_ticks=y_ticks,
+         show=show, save=save)
+
 def k2Fit(func, x, y, sx=None, sy=None, srelx=None, srely=None, xabscor=None, yabscor=None,
           xrelcor=None, yrelcor=None, ref_to_model=True, constraints=None, p0=None, dp0=None,
           limits=None, plot=True, axis_labels=['x-data', 'y-data'], data_legend='data',
