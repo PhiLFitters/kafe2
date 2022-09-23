@@ -84,10 +84,10 @@ fit.set_parameter_values(y_0=y_0, l=l, r=r, g=g_0)
 fit.do_fit()
 
 # Optional: Print out a report on the fit results on the console.
-fit.report()
+fit.report(asymmetric_parameter_errors=True)
 
 # Optional: plot the fit results.
 plot = Plot(fit)
-plot.plot(residual=True)
+plot.plot(residual=True, asymmetric_parameter_errors=True)
 
 plot.show()
