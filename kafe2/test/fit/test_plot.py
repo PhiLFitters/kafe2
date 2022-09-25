@@ -2,6 +2,7 @@ import unittest
 import sys
 import numpy as np
 import os
+import matplotlib.pyplot as plt
 from kafe2 import XYFit, Plot
 
 
@@ -23,6 +24,9 @@ class TestXYPlot(unittest.TestCase):
         self.fit.model_label = self._ref_model_label
 
         self.plot = Plot(self.fit)
+
+    def tearDown(self):
+        plt.close("all")
 
     def test_warning_no_fit_performed(self):
         _fit = XYFit(xy_data=self._ref_data)
@@ -165,6 +169,9 @@ class TestMultiPlot(unittest.TestCase):
 
         self.plot = Plot([self.fit1, self.fit2])
         self.plot_sep = Plot([self.fit1, self.fit2], separate_figures=True)
+
+    def tearDown(self):
+        plt.close("all")
 
     def test_label_setter_str(self):
         x_label, y_label = "123x", "Y_test"

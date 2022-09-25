@@ -40,7 +40,7 @@ def xy_fit(x_data, y_data, model_function=None, p0=None, dp0=None,
             if error.ndim == 0:
                 error = np.reshape(error, (1,))
             for _err in error:
-                _fit.add_error(axis, _err, correlation=1.0, reference=_reference)
+                _fit.add_error(axis, _err, correlation=1.0, relative=relative, reference=_reference)
         else:
             if error.ndim == 2:
                 _fit.add_matrix_error(axis, error, "cov", relative=relative, reference=_reference)

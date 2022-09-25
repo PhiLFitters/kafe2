@@ -1079,7 +1079,7 @@ class TestUnbinnedFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresent
         self._test_parameters_do_fit = np.array([0.1, 1.09727982])
         self._test_parameters_do_fit_simple = np.array([-0.07060323, 1.02375445])
 
-        self._fit = UnbinnedFit(data=self._test_data, model_density_function='normal_distribution_pdf')
+        self._fit = UnbinnedFit(data=self._test_data, model_function='normal_distribution_pdf')
         self._fit.fix_parameter('mu', 0.1)
 
         self.setup_streams()
