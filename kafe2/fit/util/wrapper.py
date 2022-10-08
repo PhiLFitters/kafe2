@@ -1,3 +1,8 @@
+try:
+    import typing  # help IDEs with type-hinting inside docstrings
+except ImportError:
+    pass
+
 import os
 from glob import glob
 import numpy as np
@@ -20,6 +25,67 @@ def xy_fit(x_data, y_data, model_function=None, p0=None, dp0=None,
            x_error_cor=None, y_error_cor=None, x_error_cor_rel=None, y_error_cor_rel=None,
            errors_rel_to_model=True, limits=None, constraints=None, report=False, profile=None,
            save=True):
+    """
+    Built-in function for fitting a model function to xy data.
+
+    Interpretation of x_error, y_error, x_error_rel, and y_error_rel:
+    If the input error is a simple float it is broadcast across the entire data vector.
+    If the input error is a one-dimensional vector it is interpreted as a pointwise error vector.
+    If the input error is a two-dimensional matrix it is interpreted as a covariance matrix.
+
+    Interpretation of x_error_cor, y_error_cor, x_error_cor_rel, and y_error_cor_rel:
+    If the input error is a simple float it is broadcast across the entire data vector.
+    If the input error is a one-dimensional vector then each individual value is added as
+    a separate error that is being broadcast across the entire data vector.
+
+    :param x_data: the x data values for the fit. Must be one-dimensional.
+    :type x_data: typing.Sequence[float]
+    :param y_data: the y data values for the fit. Must be one-dimensional.
+    :type y_data: typing.Sequence[float]
+    :param model_function: The model function as a native Python function where the first
+        argument denotes the independent *x* variable. Alternatively an already defined
+        :py:class:`~kafe2.fit.xy.XYModelFunction` object. Defaults to a straight line.
+    :type model_function: typing.Callable
+    :param p0: the initial parameter values for the fit.
+    :type p0: typing.Sequence[float]
+    :param dp0: the initial parameter step size for the fit.
+    :type dp0: typing.Sequence[float]
+    :param x_error: uncorrelated absolute *x* error.
+    :type x_error: float or typing.Sequence[float]
+    :param y_error: uncorrelated absolute *y* error.
+    :type y_error: float or typing.Sequence[float]
+    :param x_error_rel: uncorrelated relative *x* error.
+    :type x_error_rel: float or typing.Sequence[float]
+    :param y_error_rel: uncorrelated relative *y* error.
+    :type y_error_rel: float or typing.Sequence[float]
+    :param x_error_cor: correlated absolute *x* error.
+    :type x_error_cor: float or typing.Sequence[float]
+    :param y_error_cor: correlated absolute *y* error.
+    :type y_error_cor: float or typing.Sequence[float]
+    :param x_error_cor_rel: correlated relative *x* error.
+    :type x_error_cor_rel: float or typing.Sequence[float]
+    :param y_error_cor_rel: correlated relative *y* error.
+    :type y_error_cor_rel: float or typing.Sequence[float]
+    :param errors_rel_to_model: whether the relative *y* errors should be relative to the model.
+        Otherwise they are relative to the data.
+    :type errors_rel_to_model: bool
+    :param limits: limits to be applied to the model parameter. The expected format for each limit
+        is an iterable consisting of the parameter name, the lower bound, and then the upper bound.
+        An iterable of limits can be passed to limit multiple parameters.
+    :type limits: typing.Sequence or typing.Sequence[Union[list, tuple]]
+    :param constraints: constraints to be applied to the model parameter. The expected format for
+        each constraint is an iterable consisting of the parameter name, the parameter mean, and
+        then the parameter uncertainty. An iterable of constraints can be passed to limit multiple
+        parameters.
+    :type constraints: typing.Sequence or typing.Sequence[Union[list, tuple]]
+    :param report: whether a report of the data and fit results should be printed to the console.
+    :type report: bool
+    :param profile: whether the profile likelihood method should be used for asymmetric parameter
+        errors and profile/contour plots.
+    :type profile: bool
+    :param save: whether the fit results should be saved to disk under `results`.
+    :type save: bool
+    """
     from kafe2.fit.xy.fit import XYFit
 
     if model_function is None:
@@ -92,6 +158,59 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
          x_ticks=None, y_ticks=None, parameter_names=None, model_name=None, model_expression=None,
          legend=True, fit_info=True, error_band=True, profile=None, plot_profile=None, show=True,
          save=True):
+    """
+    Plots kafe2 fits.
+
+    :param fits: which kafe2 fits to use for the plot. A positive integer is interpreted as the fit
+        with the given index that has been performed since the program started. A negative integer
+        *-n* is interpreted as the last *n* fits. kafe2 fit objects are used directly.
+    :type fits: int or :py:class:`~kafe2.fit._base.FitBase`
+    :param x_label: the *x* axis label.
+    :type x_label: str
+    :param y_label: the *y* axis label.
+    :type y_label: str
+    :param data_label: the data label(s) in the legend.
+    :type data_label: str or typing.Sequence[str]
+    :param model_label: the model label(s) in the legend (under data label).
+    :type model_label: str or typing.Sequence[str]
+    :param error_band_label: the error band label(s) in the legend.
+    :type error_band_label: str or typing.Sequence[str]
+    :param x_range: *x* range for the plot.
+    :type x_range: typing.Sequence[float], len(x_range) == 2
+    :param y_range: *y* range for the plot.
+    :type y_range: typing.Sequence[float], len(y_range) == 2
+    :param x_scale: the scale to use for the *x* axis.
+    :type x_scale: "linear" or "log"
+    :param y_scale: the scale to use for the *y* axis.
+    :type y_scale: "linear" or "log"
+    :param x_ticks: the ticks at which to show values on the *x* axis.
+    :type x_ticks: typing.Sequence[float]
+    :param y_ticks: the ticks at which to show values on the *y* axis.
+    :type y_ticks: typing.Sequence[float]
+    :param parameter_names: custom parameter LaTeX names to display in the plot. The dictionary keys
+        are the regular parameter names and the dictionary values are the names to show in the plot.
+    :type parameter_names: dict
+    :param model_name: the model LaTeX name(s) in the legend (in the mathematical expression of the
+        model function).
+    :type model_name: str or typing.Sequence[str]
+    :param model_expression: the model LaTeX expression(s) in the legend.
+    :type model_expression: str or typing.Sequence[str]
+    :param legend: whether the legend should be shown.
+    :type legend: bool
+    :param fit_info: whether the fit information (fit results, goodness of fit) should be shown.
+    :type fit_info: bool
+    :param error_band: whether the model error band should be shown.
+    :type error_band: bool
+    :param profile: whether the profile likelihood method should be used for asymmetric parameter
+        errors and profile/contour plots.
+    :type profile: bool
+    :param plot_profile: whether the profile plots should be created.
+    :type plot_profile: bool
+    :param show: whether the plots should be shown.
+    :type show: bool
+    :param save: whether the plots should be saved to disk under `results`.
+    :type save: bool
+    """
     from kafe2 import Plot, ContoursProfiler
 
     _fit_profiles = None

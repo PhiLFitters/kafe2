@@ -54,8 +54,8 @@ class XYFit(FitBase):
          containing the measurement data.
         :type xy_data: XYContainer or typing.Sequence
         :param model_function: The model function as a native Python function where the first
-            argument denotes the independent *x* variable or an already defined
-            :py:class:`~kafe2.fit.xy.XYModelFunction` object.
+            argument denotes the independent *x* variable. Alternatively an already defined
+            :py:class:`~kafe2.fit.xy.XYModelFunction` object. Defaults to a straight line.
         :type model_function: typing.Callable
         :param cost_function: The cost function this fit uses to find the best parameters.
         :type cost_function: str or typing.Callable
