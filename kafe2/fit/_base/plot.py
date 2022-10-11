@@ -1089,9 +1089,13 @@ class Plot:
                     _ax.set_xticks(np.arange(len(_x_ticks)), labels=_x_ticks)
                 else:
                     _ax.set_xticks(_x_ticks)
+                # Use default formatter for custom ticks, log formatter doesn't seem to work:
+                _ax.get_xaxis().set_major_formatter(mpl.ticker.ScalarFormatter())
 
             if len(_y_ticks) > 0:
                 _ax.set_yticks(_y_ticks)
+                # Use default formatter for custom ticks, log formatter doesn't seem to work:
+                _ax.get_yaxis().set_major_formatter(mpl.ticker.ScalarFormatter())
 
         # hide x tick labels in all but the lowest axes
         for _key in axes_keys[:-1]:
