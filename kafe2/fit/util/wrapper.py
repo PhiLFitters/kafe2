@@ -85,6 +85,8 @@ def xy_fit(x_data, y_data, model_function=None, p0=None, dp0=None,
     :type profile: bool
     :param save: whether the fit results should be saved to disk under `results`.
     :type save: bool
+    :return: the fit results.
+    :rtype: dict
     """
     from kafe2.fit.xy.fit import XYFit
 
@@ -136,7 +138,8 @@ def xy_fit(x_data, y_data, model_function=None, p0=None, dp0=None,
     if profile is None:
         profile = x_error is not None or x_error_rel is not None or y_error_rel is not None
 
-    _fit_result = _fit.do_fit(asymmetric_parameter_errors=profile)
+    _fit_results = _fit.do_fit(asymmetric_parameter_errors=profile)
+    _fit_results["fit"] = _fit
     if report:
         _fit.report(asymmetric_parameter_errors=profile)
 
@@ -150,7 +153,7 @@ def xy_fit(x_data, y_data, model_function=None, p0=None, dp0=None,
 
     _fit_history.append(dict(fit=_fit, profile=profile, file_index=_file_index))
 
-    return _fit_result
+    return _fit_results
 
 
 def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
@@ -210,6 +213,8 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
     :type show: bool
     :param save: whether the plots should be saved to disk under `results`.
     :type save: bool
+    :return: a *kafe2* plot object containing the relevant matplotlib plots.
+    :rtype: :py:class:`~kafe2.fit._base.Plot`
     """
     from kafe2 import Plot, ContoursProfiler
 
@@ -298,6 +303,8 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
                 _cpf.save(f"results/fit-{_file_index:03d}-profile.png", dpi=240)
     if show:
         _plot.show()
+
+    return _plot
 
 
 _plot_func = plot

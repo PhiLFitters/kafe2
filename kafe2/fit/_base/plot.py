@@ -12,6 +12,7 @@ from collections.abc import Iterable
 from .container import DataContainerBase
 from .format import ParameterFormatter
 from ..multi.fit import MultiFit
+from ..util.wrapper import _fit_history
 from ...config import kc, ConfigError, kafe2_rc
 
 from collections import OrderedDict
@@ -702,6 +703,11 @@ class Plot:
             fit_objects = fit_objects.fits
         else:
             self._multifit = None
+        if isinstance(fit_objects, int):
+            if fit_objects >= 0:
+                fit_objects = [_fit_history[fit_objects]["fit"]]
+            else:
+                fit_objects = [_f["fit"] for _f in _fit_history[fit_objects:]]
         try:
             iter(fit_objects)
         except TypeError:
