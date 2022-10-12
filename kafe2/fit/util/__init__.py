@@ -50,8 +50,9 @@ def cholesky_decomposition(mat):
     try:
         return np.linalg.cholesky(mat)
     except np.linalg.LinAlgError:
-        warnings.warn(
-            "Singular covariance matrix. Are the errors for some data points equal to zero?")
+        if np.all(np.isfinite(mat)):
+            warnings.warn(
+                "Singular covariance matrix. Are the errors for some data points equal to zero?")
         return None
 
 

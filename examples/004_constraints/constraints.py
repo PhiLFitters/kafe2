@@ -54,7 +54,7 @@ def damped_harmonic_oscillator(t, y_0, l, r, g, c):
 data = XYContainer.from_file(filename='data.yml')
 
 # Create fit object from data and model function:
-fit = Fit(data=data, model_function=damped_harmonic_oscillator, minimizer="iminuit")
+fit = Fit(data=data, model_function=damped_harmonic_oscillator)
 
 # Constrain model parameters to measurements:
 fit.add_parameter_constraint(name='l',   value=l,   uncertainty=delta_l)
