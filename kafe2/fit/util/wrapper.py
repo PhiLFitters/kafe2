@@ -3,7 +3,9 @@ try:
 except ImportError:
     pass
 
+import warnings
 import os
+from copy import deepcopy
 from glob import glob
 import numpy as np
 
@@ -236,8 +238,18 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
         except TypeError:
             fits = [fits]
     if parameter_names is not None:
+        _unused_parameter_names = deepcopy(parameter_names)
         for _f in fits:
-            _f.assign_parameter_latex_names(**parameter_names)
+            _plns = {_p:_pn for _p, _pn in parameter_names.items() if _p in _f.parameter_names}
+            _f.assign_parameter_latex_names(**_plns)
+            for _parameter_name in _f.parameter_names:
+                _unused_parameter_names.pop(_parameter_name, None)
+            for _x_name in _f._model_function.x_name:
+                _unused_parameter_names.pop(_x_name, None)
+        if _unused_parameter_names:
+            warnings.warn(
+                f"Unused parameter names for plot: {_unused_parameter_names}"
+            )
     if model_name is not None:
         if isinstance(model_name, str):
             model_name = [model_name for _ in fits]

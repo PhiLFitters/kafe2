@@ -35,7 +35,7 @@ def exponential_model(x, A_0=1., x_0=5.):
 
 
 # If SymPy is installed you can also define the model like this:
-# exponential_model = "exponential_model: x A_0 x_0=5.0 -> A_0 * exp(x / x0)"
+# exponential_model = "exponential_model: x A_0 x_0=5.0 -> A_0 * exp(x / x_0)"
 
 
 x_data = [0.38, 0.83, 1.96, 2.82, 4.28, 4.69, 5.97, 7.60, 7.62, 8.81, 9.87, 10.91]

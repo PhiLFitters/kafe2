@@ -82,12 +82,12 @@ BW_fit.assign_parameter_latex_names(x='E', s0=r'\sigma^0')
 BW_fit.do_fit()
 
 # Print a report:
-BW_fit.report()
+BW_fit.report(asymmetric_parameter_errors=True)
 
 # Plot the fit results:
 BW_plot = Plot(BW_fit)
 BW_plot.y_range = (0, 1.03*max(sig))  # Explicitly set y_range to start at 0.
-BW_plot.plot(residual=True)
+BW_plot.plot(residual=True, asymmetric_parameter_errors=True)
 
 # Create a contour plot:
 ContoursProfiler(BW_fit).plot_profiles_contours_matrix(show_grid_for='contours')

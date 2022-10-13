@@ -88,7 +88,6 @@ class ModelFunctionBase(FileIOMixin, object):
                 for _symbol in _symbols:
                     _latex_string = _latex_string.replace(r"{{%s}}" % _symbol, r"{%s}" % _symbol)
 
-                print(_latex_string)
                 self._model_function_handle.latex_name = _latex_name
                 self._model_function_handle.latex_expression_format_string = _latex_string
             if not self._model_function_handle:
