@@ -15,10 +15,10 @@ _fit_history = []
 def _get_file_index():
     os.makedirs("results", exist_ok=True)
     _file_index = 0
-    _globbed_files = glob(f"results/fit-{_file_index:03d}-*")
+    _globbed_files = glob(f"results/fit-{_file_index:04d}-*")
     while len(_globbed_files) > 0:
         _file_index += 1
-        _globbed_files = glob(f"results/fit-{_file_index:03d}-*")
+        _globbed_files = glob(f"results/fit-{_file_index:04d}-*")
     return _file_index
 
 
@@ -147,8 +147,8 @@ def xy_fit(x_data, y_data, model_function=None, p0=None, dp0=None,
 
     if save:
         _file_index = _get_file_index()
-        _fit.save_state(f"results/fit-{_file_index:03d}-results.yml")
-        with open(f"results/fit-{_file_index:03d}-report.txt", "w", encoding="utf8") as _f:
+        _fit.save_state(f"results/fit-{_file_index:04d}-results.yml")
+        with open(f"results/fit-{_file_index:04d}-report.txt", "w", encoding="utf8") as _f:
             _fit.report(_f, asymmetric_parameter_errors=profile)
     else:
         _file_index = None
@@ -296,7 +296,7 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
     if save:
         for _i, _ in enumerate(fits):
             _file_index = _start_index + _i if _file_indices is None else _file_indices[_i]
-            _plot.save(f"results/fit-{_file_index:03d}-plot.png", dpi=240)
+            _plot.save(f"results/fit-{_file_index:04d}-plot.png", dpi=240)
 
     if plot_profile is None and _fit_profiles is not None:
         plot_profile = _fit_profiles
@@ -312,7 +312,7 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
             _cpf.plot_profiles_contours_matrix()
             if save:
                 _file_index = _start_index + _i if _file_indices is None else _file_indices[_i]
-                _cpf.save(f"results/fit-{_file_index:03d}-profile.png", dpi=240)
+                _cpf.save(f"results/fit-{_file_index:04d}-profile.png", dpi=240)
     if show:
         _plot.show()
 
