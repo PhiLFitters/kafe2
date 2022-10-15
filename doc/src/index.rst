@@ -18,11 +18,15 @@
 
 Welcome to **kafe2**, the *Karlsruhe Fit Environment 2*!
 
-*kafe2* is a data fitting framework designed for use in undergraduate
-physics lab courses. It provides a basic Python toolkit for fitting
-models to data as well as visualizing the data and the model function.
+*kafe2* is a data fitting framework originally designed for use in undergraduate
+physics lab courses. It provides a *Python* toolkit for fitting
+models to data as well as visualizing the fit results.
+A quick rundown of why you'd want to use *kafe2* can be found
+`here https://philfitters.github.io/kafe2/`_.
+The gist of it is that *kafe2* provides a simple, user-friendly interface for
+state-of-the-art statistical methods.
 It relies on Python packages such as :py:mod:`numpy` and :py:mod:`matplotlib`,
-and can use the Python interface to the minimizer `Minuit` contained in the data
+and can use the *Python* interface to the minimizer `Minuit` contained in the data
 analysis framework `ROOT` or in the Python package `iminuit`.
 
 The :ref:`first chapter <installing_kafe2>` of this documentation gives detailed installation

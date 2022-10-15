@@ -7,7 +7,7 @@
 .. _api_documentation:
 
 *****************
-API documentation
+API Documentation
 *****************
 
 This page contains documentation which was automatically extracted from
@@ -19,8 +19,18 @@ you think that a particular part needs to be better documented, please open an
 issue on the `kafe2 GitHub page <https://github.com/dsavoiu/kafe2>`_.
 
 
-*kafe2* in a nutshell
-=====================
+*kafe2* Wrappers
+================
+
+.. automodule:: kafe2.fit.util.wrapper
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+
+*kafe2* Oject-Oriented Programming
+==================================
 
 .. automodule:: kafe2.__init__
     :members:
@@ -29,25 +39,15 @@ issue on the `kafe2 GitHub page <https://github.com/dsavoiu/kafe2>`_.
     
 
 
-Parameter estimation tools: :py:mod:`~kafe2.fit`
+Parameter Estimation Tools: :py:mod:`~kafe2.fit`
 ================================================
 
 .. automodule:: kafe2.fit
     
 
 
-Tools for fitting series of indexed measurements (:py:mod:`~kafe2.fit.indexed`)
--------------------------------------------------------------------------------
-
-.. automodule:: kafe2.fit.indexed
-    :members:
-    :undoc-members:
-    :imported-members:
-    :show-inheritance:
-    
-
-Tools for fitting *xy* data (:py:mod:`~kafe2.fit.xy`)
------------------------------------------------------
+Tools for Fitting *xy* Data: :py:mod:`~kafe2.fit.xy`
+----------------------------------------------------
 
 .. automodule:: kafe2.fit.xy
     :members:
@@ -56,8 +56,18 @@ Tools for fitting *xy* data (:py:mod:`~kafe2.fit.xy`)
     :show-inheritance:
     
 
-Tools for fitting histograms (:py:mod:`~kafe2.fit.histogram`)
--------------------------------------------------------------
+Tools for Fitting Series of Indexed Measurements: :py:mod:`~kafe2.fit.indexed`
+------------------------------------------------------------------------------
+
+.. automodule:: kafe2.fit.indexed
+    :members:
+    :undoc-members:
+    :imported-members:
+    :show-inheritance:
+
+
+Tools for Fitting Histograms: :py:mod:`~kafe2.fit.histogram`
+------------------------------------------------------------
 
 .. automodule:: kafe2.fit.histogram
     :members:
@@ -66,8 +76,8 @@ Tools for fitting histograms (:py:mod:`~kafe2.fit.histogram`)
     :show-inheritance:
     
 
-Abstract base classes (:py:mod:`~kafe2.fit._base`)
---------------------------------------------------
+Abstract Base Classes: :py:mod:`~kafe2.fit._base`
+-------------------------------------------------
 
 .. automodule:: kafe2.fit._base
     :members:
