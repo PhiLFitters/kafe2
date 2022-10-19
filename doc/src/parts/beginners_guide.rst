@@ -16,10 +16,11 @@ showing examples.
 Specifically, it teaches users how to specify measurement data and uncertainties, how to specify
 model functions, and how to extract the fit results.
 
-An interactive `Jupyter <https://jupyter.org/>`_ Notebook teaching the usage of *kafe2* with
-*Python* is available in
-`English <https://github.com/dsavoiu/kafe2/blob/master/examples/jupyter_tutorial_en.ipynb>`_ and
-`German <https://github.com/dsavoiu/kafe2/blob/master/examples/jupyter_tutorial_de.ipynb>`_.
+An interactive `*Jupyter* <https://jupyter.org/>`_ Notebook teaching the usage of the *kafe2*
+*Python* interface is available in
+`English <https://github.com/PhiLFitters/kafe2/blob/master/examples/jupyter_tutorial_en.ipynb>`_ and
+`German <https://github.com/PhiLFitters/kafe2/blob/master/examples/jupyter_tutorial_de.ipynb>`_.
+The use of the aforementioned *Jupyter* notebooks is recommended
 
 More detailed information for the advanced use of *kafe2* is found in the :ref:`user_guide` and
 in the :ref:`user_guide_kafe2go`.
@@ -27,15 +28,11 @@ in the :ref:`user_guide_kafe2go`.
 Basic Fitting Procedure
 =======================
 
-Generally, any simple fit performed by *kafe2* can be divided into the following steps:
-
-1. Specifying the data
-2. Specifying the uncertainties
-3. Specifying the model function
-4. Performing the fit
-5. Extracting the fit results
-
-This document will gradually introduce the above steps via example code.
+Generally, any fit performed by *kafe2* requires the specification of some sort of data.
+This uncertainties of said data usually also need to be defined in order to calculate parameter
+uncertainties.
+A specific model function can also be defined; depending on the data type there are defaults
+(e.g. a straight line for *xy* data).
 
 Using kafe2go
 -------------
@@ -52,24 +49,42 @@ Using Python
 ------------
 When using *kafe2* via a *Python* script it is possible to precisely control how fits are performed
 and plotted.
-For using *kafe2* inside a *Python* script, import the required *kafe2* modules:
+However, because there is an inherent tradeoff between complexity and ease of use simplified
+interfaces for the most common use cases exist.
+The simplified interfaces in the documentation are functions called directly on the *kafe2* module.
+The code looks something like this:
+
+.. code-block:: python
+
+    import kafe2
+    kafe2.xy_fit(x_data, y_data, y_error=my_y_error)
+    kafe2.plot()
+
+The mode complex object-oriented interface imports the objects from the *kafe2* module instead:
 
 .. code-block:: python
 
     from kafe2 import XYFit, Plot
 
+Notice how the objects are capitalized according to CamelCase while the simplified functions are
+written with snake_case.
+The difference in how the interfaces are imported is entirely arbitrary and only serves to highlight
+the difference for educational purposes.
+
 If a code example contains a line similar to :python:`data = XYContainer.from_file("data.yml")`
-the corresponding *YAML* file is found in the same directory that contains the example Python
+then a *kafe2* object is loaded from a *YAML* file on disk.
+The corresponding *YAML* files can found in the same directory that contains the example Python
 script.
-The example files are available on
-`GitHub <https://github.com/dsavoiu/kafe2/tree/master/examples>`_.
+
+All example files are available on
+`GitHub <https://github.com/PhiLFitters/kafe2/tree/master/examples>`_.
 
 1. Line Fit
 ===========
 The simplest, and also the most common use case of a fitting framework
 is performing a line fit: A linear function of the form
-:math:`f(x) = a * x + b` is made to align with a series of xy data points that
-have some uncertainty along the x axis and the y axis.
+:math:`f(x) = a * x + b` is made to align with a series of *xy* data points that
+have some uncertainty along the *x* axis and the *y* axis.
 This example demonstrates how to perform such a line fit in kafe2 and
 how to extract the results.
 
@@ -103,6 +118,10 @@ The same fit can also be performed by using a *Python* script.
         :lines: 14-
 
 
+If you're performing the fit via *Python* code there should be two plots.
+The second plot which shows the so-called profile likelihood ("contour plot")
+will be explained in the next chapter.
+
 2. Model Functions
 ==================
 
@@ -110,7 +129,7 @@ In experimental physics a line fit will only suffice for a small number
 of applications. In most cases you will need a more complex model function
 with more parameters to accurately model physical reality.
 This example demonstrates how to specify arbitrary model functions for
-a kafe2 fit.
+a *kafe2* fit.
 When a different function has to be fitted, those functions need to be defined either in the
 *YAML* file or the *Python* script.
 
@@ -138,12 +157,10 @@ parameters.
 This can be done by appending the ``-c`` or ``--contours`` option to *kafe2go*.
 Additionally a grid can be added to the contour plots with the ``--grid all`` flag.
 
-To achieve the same with a *Python* script, import the ``ContoursProfiler`` with
-:python:`from kafe2 import ContoursProfiler`.
-This class can create contour and profile plots.
-The usage is shown in the following code example.
-By creating the contours in a *Python* script the user can more precisely control the appearance of
-the contour plot as well as which parameters to profile.
+With the simplified *Python* interface a contour plot is created automatically when *x* errors or
+relative *y* errors are specified or when setting the keyword argument ``profile=True``.
+The object-oriented interface uses the ``ContoursProfiler`` object
+the usage of which is shown further down.
 
 The corresponding contour plot for the exponential fit shown above looks like this:
 
@@ -158,8 +175,15 @@ See :ref:`profiling` for more information.
 kafe2go
 -------
 Inside a *YAML* file custom fit functions can be defined with the ``model_function`` keyword.
-The custom function must be a *Python* function. *NumPy* functions are supported without extra import
+The default way to define said model functions is to write a function *Python* function.
+*NumPy* and *SciPy* functions are supported without extra import
 statements, as shown in the example.
+Alternatively model functions can be defined via *SymPy* (symbolic Python).
+The part of the model function left of the string ``->`` is interpreted as *SymPy* symbols,
+the part on the right is interpreted as a *SymPy* expression using said symbols.
+The leftmost part of the string up to ``:`` is interpreted as the model function name
+(can be omitted).
+
 For more advanced fit functions, consider using *kafe2* inside a *Python* script.
 
 .. bootstrap_collapsible::
@@ -168,7 +192,7 @@ For more advanced fit functions, consider using *kafe2* inside a *Python* script
 
     .. literalinclude:: ../../../examples/002_model_functions/exponential_fit.yml
         :language: yaml
-        :emphasize-lines: 38-42
+        :emphasize-lines: 38-43
 
 .. bootstrap_collapsible::
     :control_type: link
@@ -176,7 +200,7 @@ For more advanced fit functions, consider using *kafe2* inside a *Python* script
 
     .. literalinclude:: ../../../examples/002_model_functions/line_fit.yml
         :language: yaml
-        :emphasize-lines: 38-41
+        :emphasize-lines: 38-43
 
 To use multiple input files with kafe2go, simply run
 
@@ -199,28 +223,9 @@ for all given fits.
 
 Python
 ------
-Inside a *Python* script a custom function is defined like this:
-
-.. literalinclude:: ../../../examples/002_model_functions/model_functions.py
-    :lines: 17-30
-
-Those functions are passed on to the Fit objects:
-
-.. literalinclude:: ../../../examples/002_model_functions/model_functions.py
-    :lines: 37-39
-
-It's also possible to assign LaTeX expressions to the function and its variables.
-
-.. literalinclude:: ../../../examples/002_model_functions/model_functions.py
-    :lines: 41-45
-
-Please note that the function *LaTeX* expression needs to contain all parameters present in the
-function definition. The placeholders are then automatically replaced by their corresponding
-*LaTeX* names. Due to the way *Python* implements string formatting, curly braces used in *LaTeX*
-need to be typed twice, as shown in the code example.
-
-The full example additionally contains the creation of a contour plot. The corresponding lines are
-highlighted in the following example.
+When using *Python* multiple model functions can be defined in the same file.
+They are plotted together by first calling ``kafe2.xy_fit`` multiple times and then calling
+``kafe2.plot``.
 
 .. bootstrap_collapsible::
     :control_type: link
@@ -228,7 +233,6 @@ highlighted in the following example.
 
     .. literalinclude:: ../../../examples/002_model_functions/model_functions.py
         :lines: 13-
-        :emphasize-lines: 53-55
 
 
 .. _profiling:
@@ -244,8 +248,8 @@ example.
 .. figure:: ../_static/img/003_non_linear_fit.png
     :alt: Fit of a non-linear function.
 
-In the case of a nonlinear fit, the minimum of a :math:`\chi^2` cost function is not longer shaped
-like a parabola (with a model parameter on the x axis and chi2 on the y axis).
+In the case of a nonlinear fit, the minimum of a :math:`\chi^2` cost function is no longer shaped
+like a parabola (with a model parameter on the *x* axis and :math:`\chi^2` on the *y* axis).
 Now, you might be wondering why you should care about the shape of the :math:`\chi^2` function.
 The reason why it's important is that the common notation of :math:`p\pm\sigma` for fit results
 is only valid for a parabola-shaped cost function.
@@ -254,7 +258,7 @@ If your likelihood function is distorted it will also affect your fit results!
 Luckily nonlinear fits oftentimes still produce meaningful fit results as long as the distortion is
 not too big - you just need to be more careful during the evaluation of your fit results.
 A common approach for handling nonlinearity is to trace the profile of the cost function
-in this case :math:`\chi^2`) in either direction of the cost function minimum and find the points
+(in this case :math:`\chi^2`) in either direction of the cost function minimum and find the points
 at which the cost function value has increased by a specified amount relative to the cost function
 minimum.
 In other words, two cuts are made on either side of the cost function minimum at a specified height.
@@ -294,6 +298,20 @@ and model function is shown below the plot. This can be done by appending the ``
 Python
 ------
 
+From this point on the examples use the object-oriented *Python* interface.
+For a quick intorduction consider this code that is mostly equivalent to the very first example of
+a straight line with *xy* errors:
+
+
+.. bootstrap_collapsible::
+    :control_type: link
+    :control_text: object_oriented_programming.py
+
+    .. literalinclude:: ../../../examples/003_profiling/00_object_oriented_programming.py
+        :lines: 16-
+
+
+Now for the actual example.
 The relevant lines to display asymmetric uncertainties and to create the contour plot are
 highlighted in the code example below.
 
@@ -324,7 +342,7 @@ This is also reflected by the highly distorted contours.
 kafe2go
 -------
 A *YAML* file for this example is available on
-`GitHub <https://github.com/dsavoiu/kafe2/tree/master/examples/003_profiling>`_.
+`GitHub <https://github.com/PhiLFitters/kafe2/tree/master/examples/003_profiling>`_.
 It works perfectly fine with kafe2go, but is not edited to a compact form.
 It is in fact a direct dump from the fit object used in the python script.
 *kafe2* supports writing fits and datasets to a kafe2go compatible file with the

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-kafe2 example: Object Oriented Programming
+kafe2 example: Object-Oriented Programming
 ==========================================
 
 Until now fits were performed using the methods kafe2.xy_fit and kafe2.plot. These methods provide
