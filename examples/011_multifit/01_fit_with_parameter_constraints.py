@@ -121,11 +121,11 @@ auxiliary_fit.add_error(axis='y', err_val=sigT)
 auxiliary_fit.do_fit()
 
 # (Optional) print the results
-auxiliary_fit.report()
+auxiliary_fit.report(asymmetric_parameter_errors=True)
 
 # (Optional) plot the results
 auxiliary_plot = Plot(auxiliary_fit)
-auxiliary_plot.plot(fit_info=True)
+auxiliary_plot.plot(asymmetric_parameter_errors=True)
 
 # Step 2: perform the main fit
 main_fit = XYFit(
@@ -158,10 +158,10 @@ main_fit.assign_model_function_latex_expression(r'\frac{{{U}}}{{{0} \cdot (1 + (
 main_fit.do_fit()
 
 # (Optional) print the results
-main_fit.report()
+main_fit.report(asymmetric_parameter_errors=True)
 
 # (Optional) plot the results
 plot = Plot(main_fit)
-plot.plot(fit_info=True)
+plot.plot(asymmetric_parameter_errors=True)
 
 plot.show()

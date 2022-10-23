@@ -52,9 +52,9 @@ fit.model_label = '$r$-$\phi$ from x-y'
 fit.do_fit()
 
 # Report and plot results:
-fit.report()
+fit.report(asymmetric_parameter_errors=True)
 p = Plot(fit)
-p.plot()
+p.plot(asymmetric_parameter_errors=True)
 
 contours = ContoursProfiler(fit)
 contours.plot_profiles_contours_matrix()

@@ -28,9 +28,9 @@ histogram = HistContainer(n_bins=10, bin_range=(-5, 5), fill_data=data)
 fit = Fit(data=histogram, model_function=normal_distribution, density=False)
 
 fit.do_fit()  # do the fit
-fit.report()  # Optional: print a report to the terminal
+fit.report(asymmetric_parameter_errors=True)  # Optional: print a report to the terminal
 
 # Optional: create a plot and show it
 plot = Plot(fit)
-plot.plot()
+plot.plot(asymmetric_parameter_errors=True)
 plot.show()

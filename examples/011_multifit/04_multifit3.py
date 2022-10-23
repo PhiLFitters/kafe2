@@ -87,12 +87,12 @@ multiFit = MultiFit( fit_list=[xyFit1, xyFit2] )
 multiFit.do_fit()
 
 # 5. report fit results
-multiFit.report()
+multiFit.report(asymmetric_parameter_errors=True)
 
 # 6. create and draw plots
 multiPlot = Plot(multiFit)
 ##multiPlot = Plot(multiFit, separate_figures=True)
-multiPlot.plot(figsize=(13., 7.))
+multiPlot.plot(figsize=(13., 7.), asymmetric_parameter_errors=True)
 
 # 7. show or save plots #
 ##for i, fig in enumerate(multiPlot.figures):
