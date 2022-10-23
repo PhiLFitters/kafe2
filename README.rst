@@ -32,7 +32,7 @@ The Python package *iminuit* which *kafe2* uses internally for numerical optimiz
 <https://iminuit.readthedocs.io/en/stable/install.html>`_ .
 While *iminuit* is strictly speaking not required its use is heavily recommended.
 **Make sure to read the pip installation log.**
-As of **kafe2* v2.4.0 only Python 3 is supported.
+As of *kafe2* v2.4.0 only Python 3 is supported.
 
 The documentation under `kafe2.readthedocs.io <https://kafe2.readthedocs.io/>`_
 has more detailed installation instructions.
@@ -44,4 +44,4 @@ In addition to the regular Python/kafe2go files there are also Jupyter notebook
 tutorials (in English and in German) that mostly cover the same topics.
 
 If you encounter any bugs or have an improvement proposal, please let us
-know by opening an issue `here <https://github.com/PhiLFitters/kafe2/tree/master/issues>`_.
+know by opening an issue `here <https://github.com/PhiLFitters/kafe2/issues>`_.
