@@ -77,7 +77,7 @@ but a lot is happening under the hood:
    of the confidence intervals.
    Due to the parameter-dependent uncertainties the regression problem as a whole has also become nonlinear.
    _kafe2_ recognizes the change and switches from estimating symmetrical parameter uncertainties from the
-   Cramér-Rao-Frechét bound to estimating confidence intervals via the profile likelihood method.
+   Rao-Cramér-Fréchet bound to estimating confidence intervals from the profile likelihood.
 4. The data and model are plotted along with a confidence band for the model function.
    A legend containing information about the model, the parameter estimates, and the results of a hypothesis test
    (Pearson's chi-squared test) is added automatically.

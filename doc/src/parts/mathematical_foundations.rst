@@ -10,7 +10,8 @@ Mathematical Foundations
 ************************
 
 This chapter describes the mathematical foundations on which *kafe2* is built,
-in particular the method of maximum likelihood and the profile likelihood method.
+in particular the method of maximum likelihood and how confidence intervals are determined from the
+profile likelihood.
 
 When performing a fit (as a physicist) the problem is as follows:
 you have some amount of measurement **data** from an experiment that you need to compare to one or
@@ -98,11 +99,8 @@ with standard deviations (uncertainties) :math:`\sigma_i`:
 
 The immediate trouble that we run into with this definition is that we have no idea what the
 means :math:`\mu_i` are - after all these are the "true values" that our data deviates from.
-However, we can still use this likelihood function by choosing :math:`\mu_i = m_i({\bm p})`.
-This is because for an infinite amount of data the model values :math:`m_i({\bm p})`
-converge against the true values :math:`\mu_i`
-(assuming our model is accurate and our understanding
-of the uncertainties :math:`\sigma_i` is correct).
+However, since we are trying to determine the likelihood with which our data would be produced
+given our model we can set :math:`\mu_i = m_i({\bm p})`.
 
 .. note ::
     Conceptually uncertainties are typically associated with the data :math:`\bm{d}` even though
@@ -182,8 +180,7 @@ An element outside the diagonal at position :math:`(i,j)` represents the covaria
 .. math ::
    \mathrm{Cov}_{ij}
    = E[ (d_i - E[d_i])(d_j - E[d_j]) ]
-   = E[d_i \cdot d_j] - E[d_i] \cdot E[d_j]
-   = E[d_i \cdot d_j] - \mu_i \cdot \mu_j,
+   = E[d_i \cdot d_j] - E[d_i] \cdot E[d_j],
 
 where :math:`E` is the expected value of a variable.
 The covariance :math:`\mathrm{Cov}_{ij}` is a measure of the joint variability of :math:`d_i` and
@@ -234,10 +231,6 @@ As the absolute value of :math:`\rho_{ij}` increases the sample changes its shap
 ellipse - some combinations of :math:`r_i` and :math:`r_j` become more likely than others.
 For :math:`\rho_{ij} = \pm 1` the ellipse becomes a line -
 in this degenerate case we really only have one source of uncertainty that affects two data points.
-
-As before, if we have "enough" data we can assume :math:`r_k \approx d_k - m_k(\bm{p})`.
-This is useful because it allows us to use a covariance matrix to express the correlations of our
-uncertainties in our cost function, as we will see shortly.
 
 Covariance Matrix Construction
 ******************************
@@ -338,130 +331,108 @@ If the uncertainties are completely uncorrelated then :math:`\bm{V}` is a diagon
 To invert such a matrix you only need to replace the diagonal elements
 :math:`V_{ii}` with :math:`1 / V_{ii}`.
 
-Profile Likelihood
-==================
+Parameter Confidence Intervals
+==============================
 
 When we perform a fit we are not only interested in the parameter values that fit our data "best",
 we also want to determine the uncertainty on our result.
-Fortunately likelihood-based cost functions provide a straightforward solution to our problem:
-the so-called **profile likelihood method**.
-By analyzing how a variation of one or more parameters affects the cost function value relative
-to the global cost function minimum we can determine areas that contain the true values
-of our parameters with a given **confidence level** of, say 95%.
+The standard method with which fitting tools determine **parameter confidence intervals** is to make
+use of the so-called **Rao-Cramér-Fréchet bound**.
+It states for the variance of the estimator of a single parameter estimate :math:`\hat{p}`:
+
+.. math::
+   \mathrm{Var}_{\hat{p}} \ge 2 \frac{1 + \frac{\partial b}{\partial p}}
+   {E \left[ \frac{\partial^2 \mathrm{NLL}}{\partial p^2} \right]},
+
+where :math:`b` is the bias of the estimator.
+Because the bias cannot be easily computed it is usually assumed to be 0 in practice
+(check with a Monte Carlo study when in doubt).
+Furthermore, because likelihood methods are **efficient** (if an efficient estimator exists at all)
+the uncertainties on the fit results decrease "quickly" as more data is added and the RCF bound
+becomes an equality.
+Finally, in the large sample limit (i.e. if you have "enough" data and your uncertainties are
+sufficiently small) the expectation in the
+denominator can be replaced with the derivative of the likelihood at the cost function minimum.
+All together we thus find for the uncertainty of our fit result:
+
+.. math::
+   \hat{\mathrm{Var}}_{\hat{p}}
+   = \left. - \frac{2}{\frac{\partial^2 \mathrm{NLL}}{\partial p^2}} \right|_{p = \hat{p}}.
+
+The default output of a fitting tool are :math:`\hat{p}` as the parameter value and
+:math:`\hat{\sigma}_{\hat{p}} = \sqrt{\hat{\mathrm{Var}}_{\hat{p}}}` as the parameter error.
+For reasons that will become clear in the following sections these errors will also be referred to
+as the "parabolic errors".
+If the estimator :math:`\hat{p}` of a parameter  is normally distributed then so-called
+**confidence intervals** can be calculated which (for a random dataset) contain the true value
+:math:`p` with a given probability called the **confidence level** :math:`\mathrm{CL}`.
+For a confidence interval :math:`[a, b)` the confidence level is calculated by integrating the
+probability density function of the normal distribution:
+
+.. math::
+   \mathrm{CL} = \int_a^b \frac{1}{\hat{\sigma}_{\hat{p}} \sqrt{2 \pi}}
+   \exp \left( {-\frac{1}{2} \frac{(x - \hat{p})^2}{\hat{\sigma}_{\hat{p}}^2}} \right).
+
+The confidence interval bounds are frequently chosen symmetrically around :math:`\hat{p}` and
+expressed as multiples of :math:`\hat{\sigma}_{\hat{p}}`.
+For example, the ":math:`1 \sigma` interval"
+:math:`[\hat{p} - \hat{\sigma}_{\hat{p}}, \hat{p} + \hat{\sigma}_{\hat{p}})` has a confidence level
+of approximately 68\%.
+
+If :math:`\hat{p}` is normally distributed then the method described above can be used directly.
+In the large sample limit this is always the case for maximum likelihood estimators.
+If you don't have enough data (or if you don't know) you will need to use e.g. the method described
+in the next section.
 
 Profile Likelihood (1 Parameter)
 ********************************
 
-Let's say we performed a fit and found the global cost function minimum of our
-negative log-likelihood cost function with optimal parameters :math:`\hat{a}, \hat{\bm{p}}`
-(:math:`a` is just one of the parameters that we consider separately).
-Because we have some amount of uncertainty on our input data we end up having some amount of
-uncertainty on our fit result as well.
-The global cost function minimum is the best fit (according to our cost function).
-And because our cost function measures how good a fit is given some parameter value :math:`a`,
-investigating how flat or steep the cost function minimum is as a function of :math:`a`
-tells us something about this parameter:
-if the cost function value increases very sharply when we move away from the cost function minimum
-then this tells us that even a small deviation from our fit result would result in a
-significantly worse fit, making large deviations unlikely.
+Let's assume we have a fit with only a single parameter :math:`a`.
+If the estimator :math:`\hat{a}` is normally distributed then the negative log-likelihood
+:math:`\mathrm{NLL}` is a parabola.
+If :math:`a` is varied by :math:`N` standard deviations :math:`\hat{\sigma}_{\hat{a}}` from the
+optimal value in either direction then :math:`\mathrm{NLL}` increases by :math:`N^2`.
+For a non-Gaussian estimator the confidence intervals derived from the RCF bound can be approximated
+by determining the parameter values at which
+:math:`\Delta \mathrm{NLL}(a) = \mathrm{NLL}(a) - \mathrm{NLL}(\hat{a})` is equal to the squared
+equivalent sigma value :math:`N^2`.
+In general the confidence intervals determined in this manner with what Glen Cowan calls the
+"graphical method" in his book on statistics will be asymmetrical.
+In loose terms, if the cost function value increases very sharply when we move away from the cost
+function minimum then this tells us that even a small deviation from our fit result would result in
+a significantly worse fit, making large deviations unlikely.
 Conversely, if the cost function value increases very slowly when we move away
 from the cost function minimum then this tells us that a deviation from our
 fit result would result in a fit that is only slightly worse than our optimal fit result,
 making such a deviation from our fit result quite possible.
 
-We are trying to determine a so-called **confidence interval** for :math:`a`:
-an interval that we expect to contain the true value of :math:`a` with a given probability
-called the **confidence level** :math:`\mathrm{CL}`.
-The relevant metric for determining these intervals can be derived by considering
-the cost function increase relative to the global cost function minimum:
-
-.. math::
-   \Delta \mathrm{NLL}(a, \bm{p}) = \mathrm{NLL}(a, \bm{p}) - \mathrm{NLL}(\hat{a}, \hat{\bm{p}}).
-
-The obvious problem with this definition is that we need values not only for :math:`a`
-but also for all other parameters :math:`\bm{p}` which we aren't actually interested in right now.
-So how do we determine the values for these parameters?
-The approach of the profile likelihood method is to choose :math:`\bm{p}` in such a way that
-:math:`\Delta \mathrm{NLL}(a, \bm{p})` becomes minimal.
+The obvious problem with the graphical method described above is that in practice fits will almost
+always have more than one parameter (the additional parameters being denoted as :math:`\bm{p}`).
+So how do we determine the values for these other parameters as we vary just one of them?
+The approach of the so-called **profile likelihood method** is to choose :math:`\bm{p}` in such a
+way that :math:`\Delta \mathrm{NLL}(a, \bm{p})` becomes minimal.
 In practical terms this means that we fix :math:`a` to several values near the cost function minimum
 and then perform a fit over all other parameters for each of these values
 (this process is called profiling).
 In this context the parameters :math:`\bm{p}` are called **nuisance parameters**:
 we don't care about their values (right now) but we need to include them in our fits for
 a statistically correct result.
-If we were to instead use the optimal parameters :math:`\hat{\bm{p}}` then we would save on
-computing time but we would also be neglecting correlations between our fit parameters.
-Very often a variation of one fit parameter can (in part) be compensated by varying
-one of the other fit parameters.
-If we were to use the optimal parameters :math:`\hat{\bm{p}}` instead of performing a fit
-the cost function would increase more quickly when we vary :math:`a` so we would end up
-*understimating* the uncertainty on :math:`a`.
 
-Now, the question is how to translate a desired confidence level :math:`\mathrm{CL}`
-to a difference in cost :math:`\Delta \mathrm{NLL}(a, \bm{p})`.
-As it turns out the confidence level for a confidence interval can be calculated
-from the probability density function (PDF) of the standard normal distribution:
-
-.. math::
-   \mathrm{CL} = \int_{-x_\mathrm{max}}^{x_\mathrm{max}}
-   \frac{1}{\sqrt{2 \pi}} e^{-\frac{x^2}{2}},
-   \quad x_\mathrm{max} = \sqrt{\Delta \mathrm{NLL}(a, \bm{p})}.
-
-What we're actually interested in however, is the inverse case of calculating
-:math:`\Delta \mathrm{NLL}(a, \bm{p})` for a given confidence level.
-Because the PDF of the normal distribution cannot be integrated analytically we have to
-resort to numerical integration -
-SciPy's **percent point function** (`scipy.stats.norm.ppf`)
-conveniently provides the function we need.
-We can use it to calculate :math:`\Delta \mathrm{NLL}(a, \bm{p})` like this:
-
-.. math::
-   \Delta \mathrm{NLL}(a, \bm{p})
-   = \left(\mathrm{PPF}\left(\frac{1}{2} + \frac{CL}{2}\right)\right)^2.
-
-The takeaway of this complicated-looking formula is this:
-the difference in cost is equal to the square of the "sigma value" of the
-commonly used confidence intervals of the normal distribution:
-the 1-:math:`\sigma`-interval with :math:`\mathrm{CL} \approx 68\%` corresponds to
-:math:`\Delta \mathrm{NLL}(a, \bm{p}) = 1^2 = 1`,
-the 2-:math:`\sigma`-interval with :math:`\mathrm{CL} \approx 95\%` corresponds to
-:math:`\Delta \mathrm{NLL}(a, \bm{p}) = 2^2 = 4`,
-the 3-:math:`\sigma`-interval with :math:`\mathrm{CL} \approx 99.7\%` corresponds to
-:math:`\Delta \mathrm{NLL}(a, \bm{p}) = 3^2 = 9`,
-and so on.
-
-.. note::
-   The above formula is only correct for one dimension.
-   If the shared profile likelihood of more than one parameter is examined we will
-   need to use a different formula (see below).
-
-The profile likelihood method is very expensive in terms of computation.
-For this reason it is not the default in *kafe2*.
-Instead the default behavior is to assume that the cost function value increases like
-
-.. math::
-   \Delta \mathrm{NLL}(a, \hat{\bm{p}})
-   = \mathrm{NLL}(\hat{a}, \hat{\bm{p}}) + \left( \frac{a - \hat{a}}{\sigma_a} \right)^2,
-
-where :math:`\sigma_a` is the **parabolic parameter uncertainty** of :math:`a`.
-These are the standard parameter uncertainties provided by *kafe2* (and in fact most fitting tools).
-Because every minimum can be approximated by a parabola for sufficiently small scales
-(Taylor expansion) the parabolic parameter uncertainties are sufficiently accurate for many
-applications - but if you suspect they are not you should check the profiles of the parameters
-to make sure the result you extract is actually meaningful.
-
-The easiest way to do this is to set the flag ``asymmetric_parameter_errors = True`` when calling
-``FitBase.report()`` or ``Plot.plot()``.
+If the estimator :math:`\hat{a}` is normally distributed then the confidence intervals derived from
+the profile likelihood are the same as the ones derived from the RCF bound - if you suspect that
+this is not the case you should always check the profiles of the parameters.
+The easiest way to do this is to set the flag ``profile = True`` when calling ``kafe2.xy_fit`` or
+``kafe2.plot``.
 The parabolic parameter uncertainties are then replaced with the edges of the
-1-:math:`\sigma`-intervals of the corresponding cost function profiles.
+1-:math:`\sigma`-intervals determined from the profile likelihood.
 Because these intervals are not necessarily symmetric around the cost function minimum they are
 referred to as **asymmetric parameter errors** in *kafe2*
 (in *Minuit* they are called Minos errors).
 
 .. only:: html
 
-    Another way to check the profiles is to use the :py:obj:`~.ContoursProfiler` object.
-    It is capable of plotting the profiles of parameters (and also their contours, see below).
+    When the above flag is set *kafe2* will then also create plots of the profile likelihood in
+    addition to the regular plots.
     As an example, let us look at the profile of the parameter :math:`g`
     from the double slit example:
 
@@ -469,8 +440,8 @@ referred to as **asymmetric parameter errors** in *kafe2*
 
 .. only:: latex
 
-    Another way to check the profiles is to use the :py:obj:`~.ContoursProfiler` object.
-    It is capable of plotting the profiles of parameters (and also their contours, see below).
+    When the above flag is set *kafe2* will then also create plots of the profile likelihood in
+    addition to the regular plots.
     :numref:`003_double_slit_profile_g` shows the profile of the parameter :math:`g`
     from the double slit example:
 
@@ -481,39 +452,39 @@ referred to as **asymmetric parameter errors** in *kafe2*
        The parabolic approximation of the confidence interval is very inaccurate.
 
 The profile of this parameter is very clearly asymmetric and not even close to the
-parabolic approximation.
-If we had only looked at the parabolic parameter uncertainty our idea of the actual
-confidence intervals would be very wrong.
+parabolic approximation of a normal distribution.
+If we had only looked at the parabolic parameter error we could have unknowingly assumed confidence
+intervals that are very inaccurate.
 
 Profile Likelihood (2 parameters)
 *********************************
 
 .. only:: html
 
-    In the previous section we learned about the profiles of single fit parameters,
-    which serve as a replacement for the uncertainties of single fit parameters.
+    In the previous section we learned about the profiles of single fit parameters
+    which serve as a replacement for the parabolic errors of single fit parameters.
     In this section we will learn about so-called **contours**,
     which serve as a replacement for the covariance of two fit parameters.
-    Conceptually they are very similar.
-    A profile defines confidence intervals for a single parameter with a certain likelihood of
-    containing the true value of a parameter
-    while a contour defines a **confidence region** with a certain likelihood of containing a *pair*
-    of parameters.
+    Conceptually profiles and contours are very similar.
+    A profile can be used to define confidence intervals for a single parameter with a
+    certain probability of containing the true value of a parameter
+    while a contour defines a **confidence region** with a certain probability of containing a
+    *pair* of parameters.
     Let us start by looking at the contours produced in the double slit example:
 
     .. figure:: ../_static/img/003_double_slit_contours.png
 
 .. only:: latex
 
-    In the previous section we learned about the profiles of single fit parameters,
-    which serve as a replacement for the uncertainties of single fit parameters.
+    In the previous section we learned about the profiles of single fit parameters
+    which serve as a replacement for the parabolic errors of single fit parameters.
     In this section we will learn about so-called **contours**,
     which serve as a replacement for the covariance of two fit parameters.
-    Conceptually they are very similar.
-    A profile defines confidence intervals for a single parameter with a certain likelihood of
-    containing the true value of a parameter
-    while a contour defines a **confidence region** with a certain likelihood of containing a *pair*
-    of parameters.
+    Conceptually profiles and contours are very similar.
+    A profile can be used to define confidence intervals for a single parameter with a
+    certain probability of containing the true value of a parameter
+    while a contour defines a **confidence region** with a certain probability of containing a
+    *pair* of parameters.
     :numref:`003_double_slit_contours` shows the contours produced
     in the double slit example.
 
@@ -539,7 +510,7 @@ normal distribution over a circle with radius :math:`\sigma` around the origin:
 
 .. math::
    \mathrm{CL}(\sigma)
-   = \int_0^\sigma dr \int_0^{2 \pi} d \varphi r \frac{1}{2 \pi} e^{- \frac{r^2}{2}}
+   = \int_0^\sigma dr \int_0^{2 \pi} d \varphi \ r \frac{1}{2 \pi} e^{- \frac{r^2}{2}}
    = \int_0^\sigma dr \ r e^{- \frac{r^2}{2}}
    = \left[ -e^{-\frac{r^2}{2}} \right]_0^\sigma
    = 1 - e^{-\frac{\sigma^2}{2}}.
@@ -556,70 +527,71 @@ With this formula we now find
 .. only:: html
 
     The parabolic equivalent of a contour is to look at the parameter covariance matrix and to
-    extrapolate the correlated distribution of two parameters.
+    extrapolate the correlated distribution of two estimators.
     As with the input uncertainties the confidence region calculated this way will
     *always* be an ellipse.
-    For (nearly) linear fits such as the exponential fit from the model functions example the
-    calculated contours will then look something like this:
+    For (nearly) normally distributed estimators such as the estimators from the exponential fit
+    in the "model functions" example the calculated contours will then look something like this:
 
     .. figure:: ../_static/img/002_exponential_contours.png
 
 .. only:: latex
 
     The parabolic equivalent of a contour is to look at the parameter covariance matrix and to
-    extrapolate the correlated distribution of two parameters.
+    extrapolate the correlated distribution of two estimators.
     As with the input uncertainties the confidence region calculated this way will
     *always* be an ellipse.
-    :numref:`002_exponential_contours` shows contours for the nearly linear exponential fit
-    from the model functions example.
+    :numref:`002_exponential_contours` shows contours for the (nearly) normally distributed
+    estimators from the exponential fit in the "model functions" example the:
 
     .. _002_exponential_contours:
     .. figure:: ../_static/img/002_exponential_contours.png
 
         Parameter confidence contours for the exponential fit from the model functions example.
-        The fit is nearly linear on the scale of the uncertainty
+        The estimators are nearly normally distributed on the scale of the uncertainty
         so the confidence region is close to an ellipse.
 
-If the fit were perfectly linear the 1-:math:`\sigma`-contour would reach exactly from
-:math:`-\sigma` to :math:`+\sigma`,
+If the estimators were normally distributed the 1-:math:`\sigma`-contour would reach exactly from
+:math:`-\sigma` to :math:`+\sigma`
 while the 2-:math:`\sigma`-contour would reach exactly from :math:`-2 \sigma` to :math:`+2 \sigma`.
 As we can see the deviation from this is very small so we can probably use the parameter covariance
-matrix (or the parameter uncertainties and the parameter correlation matrix) without issue.
+matrix (or the parabolic parameter errors and the parameter correlation matrix) without issue.
 If we require highly precise confidence intervals for our parameters
 this might not be acceptable though.
 
 .. note::
    The degree to which confidence intervals/regions are distorted from their parabolic
    approximation depends on the scale at which the profile likelihood is calculated.
-   Because every function can be accurately approximated by a linear function at infinitesimally
+   Because every function minimum can be accurately approximated by a parabola at infinitesimally
    small scales (Taylor expansion) the parabolic approximation becomes more accurate
    for small parameter uncertainties.
    Conversely, for large parameter uncertainties the parabolic approximation of the profile
    likelihood becomes less accurate.
 
-Nonlinear Regression
-====================
+Nonlinear Models
+================
 
-In the previous section we discussed the profile likelihood method and how it can
+In the previous section we discussed the profile likelihood and how it can
 be used to calculate confidence intervals for our fit parameters.
-We also discussed the approximation of these confidence intervals through the use of
-parabolic uncertainties.
-In this context the term "linear" was used to describe fits where the parabolic uncertainties
-are accurate.
-This section will define more precisely what was meant by that.
+We also discussed how it is necessary to use this method if the parameter estimators are not
+normally distributed.
+What was not discussed is how to determine if an estimator is normally distributed in the first
+place.
+This is where this section comes in.
 
-Linear Regression
-*****************
+Linear Models
+*************
 
 Let us assume we have some vector of :math:`N` data points :math:`d_i` with corresponding
 constant Gaussian uncertainties :math:`\sigma_i` (that can also be correlated).
-**Linear regression** is then defined as a regression analysis (fit) using a model
-:math:`m_i(\bm{p})` that is a **linear function** of its :math:`M` parameters :math:`p_j`:
+A **linear model** is then defined as a model
+:math:`m_i(\bm{p})` that is a **multilinear function** of its :math:`M` parameters :math:`p_j`:
 
 .. math::
    m_i(\bm{p}) = b_i + \sum_{j=1}^M w_{ij} p_j,
 
-where the **weights** :math:`w_{ij}` and **biases** :math:`b_i` are simply real numbers.
+where the **weights** :math:`w_{ij}` and **biases** :math:`b_i` are simply real numbers (the biases
+here have nothing to do with the bias in the RCF bound).
 Put another way, each model value :math:`m_i` is a linear combination of the
 parameter values :math:`p_j` plus some bias :math:`b_i`.
 We can express the same relationship as above with a weight matrix :math:`\bm{W}`
@@ -630,16 +602,14 @@ and a bias vector :math:`\bm{b}`:
 
 If we now use the method of least squares (:math:`\chi^2` ) to estimate the
 optimal fit parameters :math:`\hat{\bm{p}}` we get a very useful property:
-the parabolic approximation perfectly describes the uncertainties of the optimal
-fit parameters :math:`\hat{\bm{p}}`.
+the estimators of our parameters are normally distributed.
 We can therefore skip the (relatively) expensive process of profiling the parameters!
 
-Let us look at some examples for linear regression in the context of *xy* fits since
+Let us look at some examples for linear models in the context of *xy* fits since
 those are the most common.
 Let us therefore assume that we have some *y* data :math:`\bm{d}` measured at
 *x* values :math:`\bm{x} = (0, 1, 2)^T`.
-The model function most commonly associated with linear regression is the
-first degree polynomial :math:`f(x) = a + b x`.
+For our model function we choose the first degree polynomial :math:`f(x) = a + b x`.
 We can thus express our model like this:
 
 .. math::
@@ -653,8 +623,7 @@ The upper indices of vectors are to be interpreted as powers of said vectors usi
 Hadamard/Schur product (component-wise multiplication).
 In the above equation we only have a weight matrix :math:`W = \left( \bm{x}^0, \bm{x}^1 \right)`
 but no bias vector.
-We can clearly see that using the first degree polynomial (a line) as our model function
-results in linear regression.
+We can clearly see that the first degree polynomial (a line) is a linear model.
 Let's take a look at the third degree polynomial :math:`f(x) = a + b x + c x^2 + d x^3`:
 
 .. math::
@@ -667,23 +636,22 @@ Let's take a look at the third degree polynomial :math:`f(x) = a + b x + c x^2 +
 
 Again we find that the model :math:`\bm{m}(\bm{p})` is a linear function
 of its parameters :math:`\bm{p}`.
-A fit using a third degree polynomial as its model function is therefore also linear regression.
+A third degree polynomial is therefore also a linear model.
 This is even though the model function is *not* a linear function
 of the independent variable :math:`x`.
-However, this was never required in our definition of linear regression to begin with because
+However, this was never required in our definition of linear models to begin with because
 :math:`x` is not one of our fit parameters.
-In fact, all *xy* fits using polynomials as model functions fall under linear regression.
+In fact, all polynomials are linear models.
 
-Nonlinear Regression
-********************
+Nonlinear Models
+****************
 
-Now that we have defined linear regression, the definition of **nonlinear regression** is
-rather easy: a regression analysis (fit) that is not linear regression.
-The natural consequence of this is that the parabolic approximation of the uncertainty
-of our fit parameters is no longer perfectly accurate.
-We will therefore need to resort to the profile likelihood method to calculate confidence intervals.
-The most direct example of nonlinear regression is a fit with a model function that is
-not a linear function of its parameters, e.g. :math:`f(x) = A \cdot e^{- \lambda x}`.
+Now that we have defined linear models, the definition of **nonlinear models** is
+rather easy: a model that is not a linear model.
+The natural consequence of this is that the estimators of our fit parameters are no longer
+guaranteed to be normally distributed.
+We will therefore need to resort to calculating confidence intervals from the profile likelihood.
+Let us consider an exponential model as an example: :math:`f(x) = A \cdot e^{- \lambda x}`.
 It is simply not possible to express this function using only a finite weight matrix :math:`\bm{W}`
 and a bias vector :math:`\bm{b}`.
 We would instead need an infinitely large matrix and infinitely many parameters.
@@ -711,18 +679,19 @@ With the same *x* vector :math:`\bm{x} = (0, 1, 2)^T` as before we find:
 .. note::
    We could of course just cut off the series at some point to approximate the exponential function.
    This would be equivalent to approximating the exponential function with a polynomial.
-   The parabolic uncertainties of our fit parameters would then be "accurate" but we would only be
-   moving the problem because our model would become less accurate in the process.
+   But this would not allow us to calculate an estimate for the parameter :math:`\lambda` - which is
+   very often the entire point of a physics experiment.
 
-Unfortunately, even with a linear model function the fit as a whole can become nonlinear
-if certain *kafe2* features are used.
+Unfortunately, even with a linear model function the regression problem as a whole can become
+nonlinear if certain *kafe2* features are used.
 As of right now these features are uncertainties in *x* direction for *xy* fits
 and uncertainties relative to the model.
 This is because when using those features the uncertainties that we feed to our
 negative log-likelihood are no longer constant.
 Instead they become a function of the fit parameters: :math:`\sigma_i \rightarrow \sigma_i(\bm{p})`.
-As a consequence we have to consider the full Gaussian likelihood rather
-than just :math:`\chi^2` to get an unbiased result:
+
+Another complication is that we then have to consider the full Gaussian likelihood rather
+than just :math:`\chi^2` to avoid biasing our results:
 
 .. math::
    \mathrm{NLL}(\bm{p})
@@ -808,10 +777,10 @@ data points that randomly happen to have a low absolute value a higher weight th
 with a high absolute value -
 and this bias increases for large relative uncertainties.
 
-The solution for the bias described above is to specify uncertainties relative to the model
+A better result can be achieved by specifying uncertainties relative to the model
 :math:`m_i(\bm{p})` rather than the data :math:`d_i`.
-Because the model "averages" the fluctuations in our data we no longer give a higher weight to data
-that randomly happens to have a lower absolute value.
+Because the model (ideally) converges against the true values in the large sample limit we no longer
+give a higher weight to data that randomly happens to have a lower absolute value.
 The price we pay for this is that our total uncertainty becomes a function of our model parameters
 :math:`\bm{p}` which results in an increase in computation time as described above.
 
@@ -891,8 +860,7 @@ We can associate the following cumulative distribution function (CDF)
 
 To calculate the probability :math:`P(\chi^2, \mathrm{NDF})` with which we would expect a
 :math:`\chi^2` value larger than what we got for our fit
-(i.e. the probability of our fit being worse if
-we could somehow "reroll" the deviations on our data)
+(i.e. the probability of our fit being worse if we were to repeat it with a new random dataset)
 we can now simply use:
 
 .. math::
@@ -941,8 +909,8 @@ So far, no statistically significant deviations from the standard model have bee
 which is actually a bummer for theoretical physicists.
 You see, we know for a fact that the standard model is incomplete because
 (among other things) it does not include gravity.
-If we were to find an area in which the predictions of the standard model are wrong
-(beyond the expected uncertainties) this would give theorists an important clue
+If we were to find an area in which the predictions of the standard model are incompatible with the
+measured data this would give theorists an important clue
 for a new theory that could potentially fix the problems of the standard model.
 
 Fixing And Constraining Parameters
@@ -1022,7 +990,7 @@ compare to calculate the negative log-likelihood.
    is still expected to be a continuous function of :math:`x`.
 
 A visualization of :py:obj:`~.XYFit` is fairly straightforward:
-the *xy** axes of our fix directly correspond to the axes of a plot.
+the *xy* axes of our fix directly correspond to the axes of a plot.
 
 IndexedFit
 **********
@@ -1040,7 +1008,7 @@ HistFit
 :py:obj:`~.HistFit` handles :math:`N` one-dimensional data points :math:`\bm{x}` by binning them
 according to some bin edges :math:`x_0 < ... < x_k < ... < x_K` to form our data vector
 :math:`\bm{d} \in \mathbb{R}^K`.
-The model function :math:`f(x; \bm{p})` that is fitted to these bins is a
+By default the model function :math:`f(x; \bm{p})` that is fitted to these bins is a
 **probability density function** for the observed values :math:`\bm{x}`.
 The bin heights :math:`\bm{m}(\bm{p})` predicted by our model are obtained by integrating
 :math:`f(x; \bm{p})` over a given bin and multiplying the result with :math:`N`:
@@ -1050,6 +1018,8 @@ The bin heights :math:`\bm{m}(\bm{p})` predicted by our model are obtained by in
 
 The amplitude of our distribution is therefore *not* one of the fit parameters;
 we are effectively fitting a density function to a normalized histogram.
+By setting ``density=False`` when creating the :py:obj:`~.HistFit` object an arbitrary model can
+be fit to a histogram that is not normalized.
 
 Unlike with :py:obj:`~.XYFit` or :py:obj:`~.IndexedFit` the default distribution assumed for the
 data of a :py:obj:`~.HistFit` is the Poisson distribution rather than the normal distribution.
@@ -1119,7 +1089,7 @@ For example, the number of radioactive decays in a given time interval
 follows a Poisson distribution.
 In *kafe2* such distinctions are handled via the **cost function**, the function that in one way or
 another calculates a scalar cost from the data, model, and uncertainties of a fit.
-This section describes the built-in cost functions that *kafe2** provides.
+This section describes the built-in cost functions that *kafe2* provides.
 
 :math:`\chi^2` Cost Function
 ****************************
@@ -1183,7 +1153,7 @@ from the data :math:`d_i`:
 .. math::
    \sigma_i = \sqrt{d_i}.
 
-However, as described in the previous section about nonlinear regression,
+However, as described in the previous section about linear models,
 this leads to a bias towards small model values :math:`m_i(\bm{p})`.
 In *kafe2* the uncertainties are therefore derived from the model values:
 

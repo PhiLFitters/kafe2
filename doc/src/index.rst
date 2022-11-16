@@ -22,7 +22,7 @@ Welcome to **kafe2**, the *Karlsruhe Fit Environment 2*!
 physics lab courses. It provides a *Python* toolkit for fitting
 models to data as well as visualizing the fit results.
 A quick rundown of why you'd want to use *kafe2* can be found
-`here <https://philfitters.github.io/kafe2/>`_.
+`here <https://philfitters.github.io/kafe2/>`__.
 The gist of it is that *kafe2* provides a simple, user-friendly interface for
 state-of-the-art statistical methods.
 It relies on Python packages such as :py:mod:`numpy` and :py:mod:`matplotlib`,

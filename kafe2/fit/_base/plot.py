@@ -21,6 +21,11 @@ from matplotlib import gridspec as gs
 from matplotlib.legend_handler import HandlerBase
 from matplotlib import rc_context
 
+try:
+    import typing  # help IDEs with type-hinting inside docstrings
+except ImportError:
+    pass
+
 __all__ = ["PlotAdapterBase", "Plot", "kc_plot_style"]
 
 
@@ -695,6 +700,17 @@ class Plot:
     """)
 
     def __init__(self, fit_objects, separate_figures=False):
+        """
+        :param fit_objects: which kafe2 fits to use for the plot. A positive integer is interpreted
+            as the fit with the given index that has been performed (with wrappers) since the
+            program started. A negative integer *-n* is interpreted as the last *n* fits. kafe2 fit
+            objects are used directly. If a sequence of fit objects is passed they can be displayed
+            as part of the same plot.
+        :type fit_objects: int or :py:class:`~kafe2.fit._base.FitBase`
+            or Sequence[:py:class:`~kafe2.fit._base.FitBase`]
+        :param separate_figures: whether the fits should be displayed in separate figures.
+        :type separate_figures: bool
+        """
         from kafe2.fit.tools.fit_wrapper import Fit
 
         # set the managed fit objects

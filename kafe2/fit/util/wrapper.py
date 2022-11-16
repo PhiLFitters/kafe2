@@ -173,9 +173,11 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
     Plots kafe2 fits.
 
     :param fits: which kafe2 fits to use for the plot. A positive integer is interpreted as the fit
-        with the given index that has been performed since the program started. A negative integer
-        *-n* is interpreted as the last *n* fits. kafe2 fit objects are used directly.
+        with the given index that has been performed (with wrappers) since the program started. A
+        negative integer *-n* is interpreted as the last *n* fits. kafe2 fit objects are used
+        directly.
     :type fits: int or :py:class:`~kafe2.fit._base.FitBase`
+        or Sequence[:py:class:`~kafe2.fit._base.FitBase`]
     :param x_label: the *x* axis label.
     :type x_label: str
     :param y_label: the *y* axis label.

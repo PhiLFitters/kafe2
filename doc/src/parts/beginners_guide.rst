@@ -16,10 +16,10 @@ showing examples.
 Specifically, it teaches users how to specify measurement data and uncertainties, how to specify
 model functions, and how to extract the fit results.
 
-An interactive `*Jupyter* <https://jupyter.org/>`_ Notebook teaching the usage of the *kafe2*
+An interactive `*Jupyter* <https://jupyter.org/>`__ Notebook teaching the usage of the *kafe2*
 *Python* interface is available in
-`English <https://github.com/PhiLFitters/kafe2/blob/master/examples/jupyter_tutorial_en.ipynb>`_ and
-`German <https://github.com/PhiLFitters/kafe2/blob/master/examples/jupyter_tutorial_de.ipynb>`_.
+`English <https://github.com/PhiLFitters/kafe2/blob/master/examples/jupyter_tutorial_en.ipynb>`__ and
+`German <https://github.com/PhiLFitters/kafe2/blob/master/examples/jupyter_tutorial_de.ipynb>`__.
 The use of the aforementioned *Jupyter* notebooks is recommended
 
 More detailed information for the advanced use of *kafe2* is found in the :ref:`user_guide` and
@@ -77,7 +77,7 @@ The corresponding *YAML* files can found in the same directory that contains the
 script.
 
 All example files are available on
-`GitHub <https://github.com/PhiLFitters/kafe2/tree/master/examples>`_.
+`GitHub <https://github.com/PhiLFitters/kafe2/tree/master/examples>`__.
 
 1. Line Fit
 ===========
@@ -342,7 +342,7 @@ This is also reflected by the highly distorted contours.
 kafe2go
 -------
 A *YAML* file for this example is available on
-`GitHub <https://github.com/PhiLFitters/kafe2/tree/master/examples/003_profiling>`_.
+`GitHub <https://github.com/PhiLFitters/kafe2/tree/master/examples/003_profiling>`__.
 It works perfectly fine with kafe2go, but is not edited to a compact form.
 It is in fact a direct dump from the fit object used in the python script.
 *kafe2* supports writing fits and datasets to a kafe2go compatible file with the
