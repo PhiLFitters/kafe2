@@ -94,8 +94,8 @@ class FitBase(FileIOMixin, object):
                     % (_invalid_args,))
 
         # set and validate the cost function
-        self._implicit_no_errors = cost_function == "chi2" and isinstance(data, DataContainerBase) \
-            and not data.has_errors
+        _data_has_errors = isinstance(data, DataContainerBase) and data.has_errors
+        self._implicit_no_errors = cost_function == "chi2" and not _data_has_errors
         if self._implicit_no_errors:
             cost_function = "chi2_no_errors"
         if isinstance(cost_function, CostFunction):
@@ -397,6 +397,7 @@ class FitBase(FileIOMixin, object):
             self._cost_function = _cost_function_class(**_kwargs)
             self._cost_function_pointwise = self._cost_function.pointwise_version
             self._init_cost_function(existing_behavior='replace')
+            self._fitter.parameter_to_minimize = self._cost_function.name
             self._implicit_no_errors = False
 
 

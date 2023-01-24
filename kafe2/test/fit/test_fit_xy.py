@@ -7,7 +7,8 @@ from kafe2.core.minimizers import AVAILABLE_MINIMIZERS
 
 from kafe2.config import kc
 
-from kafe2.fit import XYFit
+from kafe2.fit.xy.container import XYContainer
+from kafe2.fit.xy.fit import XYFit
 from kafe2.fit.xy.cost import XYCostFunction_Chi2
 
 from kafe2.test.fit.test_fit import AbstractTestFit
@@ -608,6 +609,30 @@ class TestXYFitWithSimpleYErrors(AbstractTestFit, unittest.TestCase):
         _errs = _fit.get_matching_errors(matching_criteria=dict(reference='model'))
         self.assertEqual(len(_errs), 1)
         self.assertIs(_fit._param_model._error_dicts['MyYModelError']['err'], _errs['MyYModelError'])
+
+    def test_fit_with_no_errors(self):
+        _fit_with_unity_errors = XYFit(
+            xy_data=self._ref_xy_data,
+            model_function=simple_xy_model,
+            minimizer=self.MINIMIZER
+        )
+        _fit_with_unity_errors.add_error("y", 1.0)
+        _fit_with_no_errors_1 = XYFit(
+            xy_data=self._ref_xy_data,
+            model_function=simple_xy_model,
+            minimizer=self.MINIMIZER
+        )
+        _fit_with_no_errors_2 = XYFit(
+            xy_data=XYContainer(self._ref_xy_data[0], self._ref_xy_data[1]),
+            model_function=simple_xy_model,
+            minimizer=self.MINIMIZER
+        )
+
+        _fit_with_unity_errors.do_fit()
+        _fit_with_no_errors_1.do_fit()
+        _fit_with_no_errors_2.do_fit()
+        self._assert_fit_results_equal(_fit_with_unity_errors, _fit_with_no_errors_1)
+        self._assert_fit_results_equal(_fit_with_unity_errors, _fit_with_no_errors_2)
 
 
 class TestXYFitWithMatrixErrors(AbstractTestFit, unittest.TestCase):
