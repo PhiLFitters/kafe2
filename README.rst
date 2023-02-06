@@ -10,9 +10,6 @@ kafe2 - Karlsruhe Fit Environment 2
     :target: https://kafe2.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-.. image:: https://travis-ci.org/dsavoiu/kafe2.svg?branch=master
-    :target: https://travis-ci.org/dsavoiu/kafe2
-
 
 *kafe2* is an open-source Python package for the likelihood-based estimation of model parameters
 from measured data.
