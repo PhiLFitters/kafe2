@@ -31,7 +31,7 @@ setup(
     long_description_content_type="text/x-rst",
     author='Daniel Savoiu',
     author_email='daniel.savoiu@cern.ch',
-    url='http://github.com/dsavoiu/kafe2',
+    url='https://github.com/PhiLFitters/kafe2',
     packages=find_packages(),
     package_data={'kafe2': ['config/*.conf', 'config/*.yaml', 'config/*.yml', 'fit/tools/kafe2go']},
     scripts=['kafe2/fit/tools/kafe2go.py', 'kafe2/fit/tools/kafe2go'],
