@@ -30,11 +30,13 @@ class TestXYPlot(unittest.TestCase):
 
     def test_warning_no_fit_performed(self):
         _fit = XYFit(xy_data=self._ref_data)
-        _fit.add_error('y', 0.1)
+        _fit.add_error("y", 0.1)
         _plot = Plot(fit_objects=_fit)
-        with self.assertWarns(Warning) as w:
-            _plot.plot()
-        self.assertIn("Did you forget to run fit.do_fit()?", str(w.warning))
+        self.assertWarnsRegex(
+            UserWarning,
+            "Did you forget to run fit.do_fit()?",
+            _plot.plot,
+        )
 
     def test_plot_with_asymmetric_errors(self):
         self.plot.plot(asymmetric_parameter_errors=True)
