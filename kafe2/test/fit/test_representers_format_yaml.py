@@ -2,14 +2,14 @@ import unittest
 
 from six import StringIO
 
-from kafe2.fit._base import ParameterFormatter, ModelFunctionFormatter
+from kafe2.fit._base import ModelFunctionFormatter, ParameterFormatter
 from kafe2.fit.indexed import IndexedModelFunctionFormatter
 from kafe2.fit.io.handle import IOStreamHandle
 from kafe2.fit.representation import (
-    ModelFunctionFormatterYamlWriter,
     ModelFunctionFormatterYamlReader,
-    ParameterFormatterYamlWriter,
+    ModelFunctionFormatterYamlWriter,
     ParameterFormatterYamlReader,
+    ParameterFormatterYamlWriter,
 )
 
 TEST_MODEL_FUNCTION_FORMATTER = """

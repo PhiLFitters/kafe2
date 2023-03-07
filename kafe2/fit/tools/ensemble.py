@@ -1,13 +1,13 @@
 from __future__ import print_function
 
 import collections
+
 import matplotlib as mpl
 import numpy as np
 import scipy.stats
 import six
 
 from ...core.error import CovMat
-
 
 __all__ = ["EnsembleVariable", "EnsembleVariableProbabilityDistribution", "EnsembleVariablePlotter"]
 

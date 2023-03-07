@@ -1,10 +1,11 @@
-import numpy as np
 import unittest
+
+import numpy as np
 from scipy.special import factorial
 
 from kafe2.core.constraint import (
-    GaussianSimpleParameterConstraint,
     GaussianMatrixParameterConstraint,
+    GaussianSimpleParameterConstraint,
 )
 from kafe2.fit._base.cost import *
 from kafe2.fit.histogram.cost import *

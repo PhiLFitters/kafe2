@@ -1,13 +1,14 @@
-import numpy as np
-from scipy.stats import norm
 import unittest
-import six
 from abc import ABCMeta
 
+import numpy as np
+import six
+from scipy.stats import norm
+
 from kafe2 import CustomFit, HistContainer, HistFit, IndexedFit, MultiFit, XYFit
-from kafe2.test.tools import calculate_expected_fit_parameters_xy
-from kafe2.test.fit.test_fit import AbstractTestFit
 from kafe2.fit.util.function_library import quadratic_model, quadratic_model_derivative
+from kafe2.test.fit.test_fit import AbstractTestFit
+from kafe2.test.tools import calculate_expected_fit_parameters_xy
 
 _cannot_import_IMinuit = False
 try:

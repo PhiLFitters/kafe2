@@ -1,7 +1,8 @@
+import unittest
 from abc import ABC, abstractmethod
+
 import numpy as np
 from scipy.optimize import minimize
-import unittest
 
 
 def fcn_1(x):

@@ -1,7 +1,15 @@
 import unittest
+
 import numpy as np
 
-from kafe2.fit import HistContainer, HistFit, IndexedContainer, IndexedFit, XYContainer, XYFit
+from kafe2.fit import (
+    HistContainer,
+    HistFit,
+    IndexedContainer,
+    IndexedFit,
+    XYContainer,
+    XYFit,
+)
 
 
 class TestParameterConstraintInHistFit(unittest.TestCase):

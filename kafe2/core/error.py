@@ -3,11 +3,11 @@ Classes for handling of uncertainties in kafe2 fits.
 """
 
 import abc
-import numpy as np
-import six
+import logging
 import warnings
 
-import logging
+import numpy as np
+import six
 
 logger = logging.getLogger(__name__)
 logging.basicConfig()

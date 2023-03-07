@@ -1,25 +1,25 @@
 import abc
+import itertools
+import os
+import textwrap
+import warnings
+from collections import OrderedDict
+from collections.abc import Iterable
+
+import matplotlib as mpl
 import numpy  # help IDEs with type-hinting inside docstrings
 import numpy as np
 import six
-import textwrap
-import warnings
-import itertools
-import matplotlib as mpl
-import os
-from collections.abc import Iterable
+from matplotlib import gridspec as gs
+from matplotlib import pyplot as plt
+from matplotlib import rc_context
+from matplotlib.legend_handler import HandlerBase
 
-from .container import DataContainerBase
-from .format import ParameterFormatter
+from ...config import ConfigError, kafe2_rc, kc
 from ..multi.fit import MultiFit
 from ..util.wrapper import _fit_history
-from ...config import kc, ConfigError, kafe2_rc
-
-from collections import OrderedDict
-from matplotlib import pyplot as plt
-from matplotlib import gridspec as gs
-from matplotlib.legend_handler import HandlerBase
-from matplotlib import rc_context
+from .container import DataContainerBase
+from .format import ParameterFormatter
 
 __all__ = ["PlotAdapterBase", "Plot", "kc_plot_style"]
 

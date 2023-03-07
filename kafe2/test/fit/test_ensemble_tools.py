@@ -1,11 +1,12 @@
 import unittest
+
 import numpy as np
 import scipy.stats
 
 from kafe2.fit.tools.ensemble import (
-    broadcast_to_shape,
     EnsembleVariable,
     EnsembleVariableProbabilityDistribution,
+    broadcast_to_shape,
 )
 
 

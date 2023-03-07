@@ -2,8 +2,8 @@ from __future__ import print_function
 
 import logging
 
-from .minimizer_base import MinimizerBase
 from ..contour import ContourFactory
+from .minimizer_base import MinimizerBase
 
 try:
     import scipy.optimize as opt
@@ -11,8 +11,8 @@ except ImportError:
     # TODO: handle importing nonexistent minimizer
     raise
 
-import numpy as np
 import numdifftools as nd
+import numpy as np
 
 
 class MinimizerScipyOptimize(MinimizerBase):

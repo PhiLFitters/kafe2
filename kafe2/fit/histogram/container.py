@@ -1,8 +1,8 @@
 import warnings
+
 import numpy as np
 
 from ..indexed import IndexedContainer
-
 
 __all__ = ["HistContainer"]
 

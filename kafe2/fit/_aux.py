@@ -1,7 +1,7 @@
 import warnings
-import numpy as np
-
 from copy import deepcopy
+
+import numpy as np
 
 
 def add_pad_to_range(data_range, pad_coeff=1.1, additional_pad=None, scale="linear"):

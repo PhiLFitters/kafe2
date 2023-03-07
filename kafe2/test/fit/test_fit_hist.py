@@ -1,12 +1,11 @@
 import unittest
+
 import numpy as np
 import six
-
 from scipy import stats
 
-from kafe2.fit import HistFit, HistContainer
+from kafe2.fit import HistContainer, HistFit
 from kafe2.fit.histogram.cost import HistCostFunction_NegLogLikelihood
-
 from kafe2.test.fit.test_fit import AbstractTestFit
 
 

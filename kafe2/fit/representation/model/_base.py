@@ -1,7 +1,6 @@
 import abc
-import six
 
-from .._base import GenericDReprBase
+import six
 
 # import ModelFunction classes
 from ..._base import ModelFunctionBase
@@ -9,6 +8,7 @@ from ...histogram import HistModelFunction, HistParametricModel
 from ...indexed import IndexedModelFunction, IndexedParametricModel
 from ...unbinned import UnbinnedParametricModel
 from ...xy import XYParametricModel
+from .._base import GenericDReprBase
 
 __all__ = ["ModelFunctionDReprBase", "ParametricModelDReprBase"]
 

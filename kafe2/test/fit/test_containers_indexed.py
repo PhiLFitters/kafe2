@@ -1,9 +1,10 @@
 import unittest
+
 import numpy as np
 
+from kafe2.core.error import cov_mat_from_float_list
 from kafe2.fit import IndexedContainer, IndexedParametricModel
 from kafe2.fit.indexed.model import IndexedModelFunction
-from kafe2.core.error import cov_mat_from_float_list
 
 
 class TestDatastoreIndexed(unittest.TestCase):

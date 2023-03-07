@@ -1,7 +1,7 @@
 from .._base import (
     CostFunction_Chi2,
-    CostFunction_NegLogLikelihood,
     CostFunction_GaussApproximation,
+    CostFunction_NegLogLikelihood,
 )
 
 __all__ = [

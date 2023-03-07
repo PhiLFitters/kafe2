@@ -1,9 +1,10 @@
 import logging
-import numpy as np
 from copy import deepcopy
 
-from .minimizer_base import MinimizerBase
+import numpy as np
+
 from ..contour import ContourFactory
+from .minimizer_base import MinimizerBase
 
 try:
     import iminuit

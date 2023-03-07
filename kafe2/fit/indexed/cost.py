@@ -1,10 +1,9 @@
 from .._base.cost import (
     CostFunction,
     CostFunction_Chi2,
-    CostFunction_NegLogLikelihood,
     CostFunction_GaussApproximation,
+    CostFunction_NegLogLikelihood,
 )
-
 
 __all__ = [
     "IndexedCostFunction",

@@ -1,8 +1,12 @@
 import abc
+
 import six
 
+from ....core.constraint import (
+    GaussianMatrixParameterConstraint,
+    GaussianSimpleParameterConstraint,
+)
 from .._base import GenericDReprBase
-from ....core.constraint import GaussianSimpleParameterConstraint, GaussianMatrixParameterConstraint
 
 __all__ = ["ConstraintDReprBase"]
 

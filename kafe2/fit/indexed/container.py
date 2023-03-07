@@ -3,7 +3,6 @@ import numpy as np
 from ...core.error import MatrixGaussianError
 from .._base import DataContainerBase
 
-
 __all__ = ["IndexedContainer"]
 
 

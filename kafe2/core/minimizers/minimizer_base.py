@@ -1,8 +1,9 @@
-from copy import copy
-import six
 from abc import ABCMeta, abstractmethod
-import numpy as np
+from copy import copy
+
 import numdifftools as nd
+import numpy as np
+import six
 from scipy.optimize import brentq
 
 from ..error import CovMat

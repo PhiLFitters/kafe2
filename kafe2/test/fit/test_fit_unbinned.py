@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import six
 
-from kafe2.fit import UnbinnedFit, UnbinnedContainer
+from kafe2.fit import UnbinnedContainer, UnbinnedFit
 from kafe2.fit.unbinned.cost import UnbinnedCostFunction_NegLogLikelihood
 from kafe2.test.fit.test_fit import AbstractTestFit
 

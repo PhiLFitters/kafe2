@@ -1,20 +1,20 @@
+import os
+import sys
+from collections.abc import Iterable
+
+import matplotlib as mpl
 import numpy as np
 import six
-import sys
-import matplotlib as mpl
-import os
+from matplotlib import gridspec as gs
+from matplotlib import pyplot as plt
+from matplotlib import rc_context, rcParams
+from matplotlib import ticker as plticker
+from matplotlib.axes import Axes
 
-from collections.abc import Iterable
 from ...config import kafe2_rc
 from ...core.confidence import ConfidenceLevel
 from .._base import FitBase
 from .._base.format import ScalarFormatter as ScalarBaseFormatter
-from matplotlib import pyplot as plt, rcParams
-from matplotlib import gridspec as gs
-from matplotlib import ticker as plticker
-from matplotlib.axes import Axes
-from matplotlib import rc_context
-
 
 __all__ = ["ContoursProfiler"]
 

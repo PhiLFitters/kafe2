@@ -1,8 +1,10 @@
-import unittest
-import numpy as np
 import os
+import unittest
+
 import matplotlib.pyplot as plt
-from kafe2 import XYFit, Plot
+import numpy as np
+
+from kafe2 import Plot, XYFit
 
 
 class TestXYPlot(unittest.TestCase):

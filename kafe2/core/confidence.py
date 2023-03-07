@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 import numpy as np
-from scipy.special import gammainccinv, gammaincc
+from scipy.special import gammaincc, gammainccinv
 
 __all__ = ["ConfidenceLevel"]
 

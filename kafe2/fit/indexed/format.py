@@ -1,7 +1,6 @@
 from .._base import FunctionFormatter
 from .._base.format import latexify_ascii
 
-
 __all__ = ["IndexedModelFunctionFormatter"]
 
 

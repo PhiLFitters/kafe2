@@ -1,4 +1,5 @@
 import unittest
+
 import numpy as np
 
 from kafe2.core.constraint import (

@@ -1,11 +1,11 @@
 import unittest
-import numpy as np
 
+import numpy as np
 from six import StringIO
 
-from kafe2.fit import IndexedContainer, XYContainer, HistContainer
-from kafe2.fit.representation import DataContainerYamlWriter, DataContainerYamlReader
+from kafe2.fit import HistContainer, IndexedContainer, XYContainer
 from kafe2.fit.io.handle import IOStreamHandle
+from kafe2.fit.representation import DataContainerYamlReader, DataContainerYamlWriter
 
 # TODO: check that exceptions are raised when appropriate...
 

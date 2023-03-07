@@ -1,5 +1,6 @@
-import numpy as np
 from types import FunctionType
+
+import numpy as np
 
 from .._base import CostFunction
 from ..util import function_library

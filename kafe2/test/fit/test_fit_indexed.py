@@ -1,10 +1,10 @@
 import unittest
+
 import numpy as np
 import six
 
 from kafe2.fit import IndexedFit
 from kafe2.fit.indexed.cost import IndexedCostFunction_Chi2
-
 from kafe2.test.fit.test_fit import AbstractTestFit
 
 

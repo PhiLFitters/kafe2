@@ -1,8 +1,8 @@
-from ._base import ModelFunctionFormatterDReprBase, ParameterFormatterDReprBase
-from .. import _AVAILABLE_REPRESENTATIONS
-from .._yaml_base import YamlReaderMixin, YamlWriterMixin
 from ..._base import ModelFunctionFormatter, ParameterFormatter
 from ...indexed import IndexedModelFunctionFormatter
+from .. import _AVAILABLE_REPRESENTATIONS
+from .._yaml_base import YamlReaderMixin, YamlWriterMixin
+from ._base import ModelFunctionFormatterDReprBase, ParameterFormatterDReprBase
 
 __all__ = [
     "ModelFunctionFormatterYamlWriter",

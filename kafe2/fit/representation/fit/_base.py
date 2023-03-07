@@ -1,14 +1,14 @@
 import abc
-import six
 
-from .._base import GenericDReprBase
+import six
 
 # import fit classes
 from ...custom import CustomFit
 from ...histogram import HistFit
 from ...indexed import IndexedFit
-from ...xy import XYFit
 from ...unbinned import UnbinnedFit
+from ...xy import XYFit
+from .._base import GenericDReprBase
 
 __all__ = ["FitDReprBase"]
 

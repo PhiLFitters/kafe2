@@ -1,7 +1,9 @@
-import six
 import sys
-from .._base import FitBase, CostFunction, ModelFunctionBase
-from ...core.fitters.nexus import Parameter, Array
+
+import six
+
+from ...core.fitters.nexus import Array, Parameter
+from .._base import CostFunction, FitBase, ModelFunctionBase
 
 
 class CustomFit(FitBase):

@@ -8,7 +8,6 @@ import numpy as np
 from ...core.error import MatrixGaussianError, SimpleGaussianError
 from ..indexed import IndexedContainer
 
-
 __all__ = ["XYContainer"]
 
 

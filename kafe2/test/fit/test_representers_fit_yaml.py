@@ -1,19 +1,21 @@
-import unittest
-import numpy as np
-from scipy.stats import norm
-import six
-from six import StringIO
 import abc
 import os
+import unittest
 
-from kafe2.fit.representation import FitYamlWriter, FitYamlReader
-from kafe2.fit.io.handle import IOStreamHandle
+import numpy as np
+import six
+from scipy.stats import norm
+from six import StringIO
+
 from kafe2.fit.custom import CustomFit
 from kafe2.fit.histogram import HistFit
+from kafe2.fit.histogram.container import HistContainer
 from kafe2.fit.indexed import IndexedFit
+from kafe2.fit.io.handle import IOStreamHandle
+from kafe2.fit.representation import FitYamlReader, FitYamlWriter
 from kafe2.fit.unbinned import UnbinnedFit
 from kafe2.fit.xy import XYFit
-from kafe2.fit.histogram.container import HistContainer
+
 from .test_fit_custom import TestCustomFitWithSimpleYErrors
 
 

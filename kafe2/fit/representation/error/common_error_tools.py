@@ -1,8 +1,9 @@
-import yaml
 import re
-import numpy as np
 
-from ....core.error import SimpleGaussianError, MatrixGaussianError
+import numpy as np
+import yaml
+
+from ....core.error import MatrixGaussianError, SimpleGaussianError
 from ...xy import XYContainer
 
 __all__ = [

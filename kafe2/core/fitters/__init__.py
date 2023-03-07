@@ -1,8 +1,10 @@
 import abc
+
 import six
+
+from ...config import kc
 from .nexus import Nexus
 from .nexus_fitter import NexusFitter
-from ...config import kc
 
 __all__ = ["get_fitter", "Nexus", "NexusFitter"]
 

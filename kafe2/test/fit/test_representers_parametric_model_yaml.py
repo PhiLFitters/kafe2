@@ -9,7 +9,10 @@ from kafe2.fit.histogram.model import HistParametricModel
 from kafe2.fit.indexed import IndexedModelFunction
 from kafe2.fit.indexed.model import IndexedParametricModel
 from kafe2.fit.io.handle import IOStreamHandle
-from kafe2.fit.representation import ParametricModelYamlWriter, ParametricModelYamlReader
+from kafe2.fit.representation import (
+    ParametricModelYamlReader,
+    ParametricModelYamlWriter,
+)
 from kafe2.fit.xy.model import XYParametricModel
 
 TEST_PARAMETRIC_MODEL_HIST = """

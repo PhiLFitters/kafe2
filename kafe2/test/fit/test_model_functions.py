@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
 import unittest
+
 import numpy as np
 
-from kafe2.fit.indexed.model import IndexedModelFunction
-from kafe2.fit.histogram.model import HistModelFunction
 from kafe2.fit._base.model import ModelFunctionBase
+from kafe2.fit.histogram.model import HistModelFunction
+from kafe2.fit.indexed.model import IndexedModelFunction
 
 
 class TestSymPy(unittest.TestCase):

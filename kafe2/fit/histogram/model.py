@@ -1,12 +1,12 @@
+from inspect import getsource
+
 import numpy as np
 import six
 from scipy import integrate
-from inspect import getsource
 
-from .._base import ParametricModelBaseMixin, ModelFunctionBase
-from .container import HistContainer
+from .._base import ModelFunctionBase, ParametricModelBaseMixin
 from ..util import function_library
-
+from .container import HistContainer
 
 if six.PY2:
     from funcsigs import signature

@@ -4,13 +4,12 @@ from copy import deepcopy
 import numpy as np
 
 from ...tools import print_dict_as_table
-from .._base import FitBase, DataContainerBase
-from .container import IndexedContainer
+from .._base import DataContainerBase, FitBase
 from .._base.cost import CostFunction_Chi2
-from .model import IndexedParametricModel, IndexedModelFunction
-from .plot import IndexedPlotAdapter
 from ..util import collect
-
+from .container import IndexedContainer
+from .model import IndexedModelFunction, IndexedParametricModel
+from .plot import IndexedPlotAdapter
 
 __all__ = ["IndexedFit"]
 
