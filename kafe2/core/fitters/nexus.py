@@ -15,81 +15,82 @@ if six.PY2:
 else:
     from inspect import signature, Parameter as SigParameter
 
-__all__ = ['Nexus', 'Alias', 'Array', 'Fallback', 'Function', 'Parameter', 'Tuple']
+__all__ = ["Nexus", "Alias", "Array", "Fallback", "Function", "Parameter", "Tuple"]
 
 # -- helpers
 
 _OPERATORS = {
     # arithmetic
-    'add': operator.add,
-    'sub': operator.sub,
-    'mul': operator.mul,
-    'truediv': operator.truediv,
-    'floordiv': operator.floordiv,
-    'mod': operator.mod,
+    "add": operator.add,
+    "sub": operator.sub,
+    "mul": operator.mul,
+    "truediv": operator.truediv,
+    "floordiv": operator.floordiv,
+    "mod": operator.mod,
 }
 
 # 'div' operator only available in Python 2
 if six.PY2:
-    _OPERATORS['div'] = operator.div
+    _OPERATORS["div"] = operator.div
 
 _OPERATORS = {
     # arithmetic
-    'add': (operator.add, True),
-    'sub': (operator.sub, True),
-    'mul': (operator.mul, True),
-    'truediv': (operator.truediv, True),
-    'floordiv': (operator.floordiv, True),
-    'mod': (operator.mod, True),
+    "add": (operator.add, True),
+    "sub": (operator.sub, True),
+    "mul": (operator.mul, True),
+    "truediv": (operator.truediv, True),
+    "floordiv": (operator.floordiv, True),
+    "mod": (operator.mod, True),
     # binary arithmetic
-    'lshift': (operator.lshift, True),
-    'rshift': (operator.rshift, True),
+    "lshift": (operator.lshift, True),
+    "rshift": (operator.rshift, True),
     # logical
-    'and': (operator.and_, True),
-    'or': (operator.or_, True),
-    'xor': (operator.xor, True),
+    "and": (operator.and_, True),
+    "or": (operator.or_, True),
+    "xor": (operator.xor, True),
     # comparison
-    #'eq': (operator.eq, False),
-    #'ne': (operator.ne, False),
-    #'lt': (operator.lt, False),
-    #'le': (operator.le, False),
-    #'gt': (operator.gt, False),
-    #'ge': (operator.ge, False),
+    # 'eq': (operator.eq, False),
+    # 'ne': (operator.ne, False),
+    # 'lt': (operator.lt, False),
+    # 'le': (operator.le, False),
+    # 'gt': (operator.gt, False),
+    # 'ge': (operator.ge, False),
     # other
-    #'getitem': (operator.getitem, False),
-    #'contains': (operator.contains, False),
+    # 'getitem': (operator.getitem, False),
+    # 'contains': (operator.contains, False),
 }
 
 _UNARY_OPERATORS = {
-    'invert': operator.invert,
-    'neg': operator.neg,
-    'pos': operator.pos,
-    'len': len,
+    "invert": operator.invert,
+    "neg": operator.neg,
+    "pos": operator.pos,
+    "len": len,
 }
 
 # 'div' operator only available in Python 2
 if six.PY2:
-    _OPERATORS['div'] = (operator.div, True)
+    _OPERATORS["div"] = (operator.div, True)
 
 # '_abs' operator only available in Python 3
 if six.PY3:
-    _UNARY_OPERATORS['abs'] = operator._abs
+    _UNARY_OPERATORS["abs"] = operator._abs
 
 
 def _add_common_operators(cls):
     """class decorator for implementing common operator methods for nodes"""
 
     for name, (op, add_reversed) in list(_OPERATORS.items()):
-        setattr(cls, '__{}__'.format(name), cls._make_binop_method(op))
+        setattr(cls, "__{}__".format(name), cls._make_binop_method(op))
         if add_reversed:
-            setattr(cls, '__r{}__'.format(name), cls._make_rbinop_method(op))
+            setattr(cls, "__r{}__".format(name), cls._make_rbinop_method(op))
     for name, op in _UNARY_OPERATORS.items():
-        setattr(cls, '__{}__'.format(name), cls._make_unaryop_method(op))
+        setattr(cls, "__{}__".format(name), cls._make_unaryop_method(op))
 
     return cls
 
 
 # -- Nodes -------------------------------------
+
 
 @six.add_metaclass(abc.ABCMeta)
 class NodeBase(object):
@@ -101,14 +102,14 @@ class NodeBase(object):
     node changes the status of any of its parents will need to be changed as well.
     """
 
-    RESERVED_PARAMETER_NAMES = ('__all__', '__real__', '__root__', '__error__')
+    RESERVED_PARAMETER_NAMES = ("__all__", "__real__", "__root__", "__error__")
 
     def __init__(self, name=None):
         """
         :param name: the name of the node
         :type name: str
         """
-        self.name = name or 'Node_' + uuid.uuid4().hex[:10]
+        self.name = name or "Node_" + uuid.uuid4().hex[:10]
 
         self._stale = True
         self._frozen = False
@@ -119,20 +120,14 @@ class NodeBase(object):
         raise TypeError("'{}' is not iterable".format(self.__class__.__name__))
 
     def __str__(self):
-        return "{}('{}')  [{}]".format(
-            self.__class__.__name__,
-            self.name, hex(id(self))
-        )
+        return "{}('{}')  [{}]".format(self.__class__.__name__, self.name, hex(id(self)))
 
     def __repr__(self):
         return self.__str__()
 
     def _pprint(self):
         """return pretty-printed version of node"""
-        return "{}('{}')".format(
-            self.__class__.__name__,
-            self.name
-        )
+        return "{}('{}')".format(self.__class__.__name__, self.name)
 
     def __eq__(self, other):
         return self is other
@@ -153,7 +148,7 @@ class NodeBase(object):
         if name in Parameter.RESERVED_PARAMETER_NAMES:
             raise ValueError("Invalid node name: '%s' is a reserved keyword!" % (name,))
         try:
-            parse('dict(%s=0.123)' % (name,))
+            parse("dict(%s=0.123)" % (name,))
         except SyntaxError:
             raise ValueError("Invalid node name '%s'. Must be Python identifier!" % (name,))
 
@@ -215,10 +210,7 @@ class NodeBase(object):
         :type node: NodeBase
         """
         if not isinstance(node, NodeBase):
-            raise TypeError(
-                "Cannot add parent: expected "
-                "node type, got {}".format(type(node))
-            )
+            raise TypeError("Cannot add parent: expected " "node type, got {}".format(type(node)))
         if self not in node.get_children():
             raise ValueError("Child must be added to parent, not the other way around!")
         self._parents.add(weakref.ref(node))
@@ -245,16 +237,9 @@ class NodeBase(object):
         :type node: NodeBase
         """
         if not isinstance(node, NodeBase):
-            raise TypeError(
-                "Cannot remove child: expected "
-                "node type, got {}".format(type(node))
-            )
+            raise TypeError("Cannot remove child: expected " "node type, got {}".format(type(node)))
         # remove all instances of the child node from root children
-        self._children = [
-            _child
-            for _child in self._children
-            if _child is not node
-        ]
+        self._children = [_child for _child in self._children if _child is not node]
 
         # remove self node from node parents
         node.remove_parent(self)
@@ -269,8 +254,7 @@ class NodeBase(object):
         """
         if not isinstance(node, NodeBase):
             raise TypeError(
-                "Cannot remove parent: expected "
-                "node type, got {}".format(type(node))
+                "Cannot remove parent: expected " "node type, got {}".format(type(node))
             )
 
         if self in node.get_children():
@@ -300,9 +284,7 @@ class NodeBase(object):
         if _out_of_scope_refs:
             logging.debug(
                 "{} parent refs went out of scope since last "
-                "call to 'iter_parents' and will be removed.".format(
-                    len(_out_of_scope_refs)
-                )
+                "call to 'iter_parents' and will be removed.".format(len(_out_of_scope_refs))
             )
         for _ref in _out_of_scope_refs:
             self._parents.remove(_ref)
@@ -399,8 +381,10 @@ class NodeBase(object):
             # wrap non-node values inside `Parameter`
             new_child = Parameter(new_child)
         if current_child not in self._children:
-            raise ValueError("Cannot replace child %s because it is not a child of %s."
-                                % (current_child.name, self.name))
+            raise ValueError(
+                "Cannot replace child %s because it is not a child of %s."
+                % (current_child.name, self.name)
+            )
         self._children = [_c if _c is not current_child else new_child for _c in self._children]
         new_child.add_parent(self)
         current_child.remove_parent(self)
@@ -420,7 +404,7 @@ class RootNode(NodeBase):
     """
 
     def __init__(self):
-        self._name = '__root__'
+        self._name = "__root__"
         self._stale = True
         self._children = []
         self._parents = set()  # root node has no parents
@@ -467,27 +451,25 @@ class ValueNode(NodeBase):
             _val = str(self.value)
         except Exception as e:
             _val = repr(e)
-        return "{}('{}') = {}  [{}]".format(
-            self.__class__.__name__,
-            self.name, _val, hex(id(self))
-        )
+        return "{}('{}') = {}  [{}]".format(self.__class__.__name__, self.name, _val, hex(id(self)))
 
     def _pprint(self):
         try:
             _val = str(self.value)
         except Exception as e:
             _val = repr(e)
-        if '\n' in _val:
-            _val = '\n' + _val
+        if "\n" in _val:
+            _val = "\n" + _val
         else:
-            _val = ' ' + _val
-        return NodeBase._pprint(self) + ' =' + _val
+            _val = " " + _val
+        return NodeBase._pprint(self) + " =" + _val
 
     @classmethod
     def _make_binop_method(cls, op):
         """
         Define binary operators for this class.
         """
+
         def _op_method(self, other):
             if not isinstance(other, NodeBase):
                 other = Parameter(other)
@@ -506,6 +488,7 @@ class ValueNode(NodeBase):
         """
         Define reverse binary operators for this class.
         """
+
         def _op_method(self, other):
             if not isinstance(other, NodeBase):
                 other = Parameter(other)
@@ -524,6 +507,7 @@ class ValueNode(NodeBase):
         """
         Define unary operators for this class.
         """
+
         def _op_method(self):
             _auto_name = "{}__{}".format(op.__name__, self.name)
 
@@ -559,39 +543,30 @@ class Empty(ValueNode):
     Should be replaced by a ValueNode in the finished graph.
     Raises an Exception if an attempt is made to set or retrieve the value.
     """
+
     def __init__(self, name=None):
         NodeBase.__init__(self, name=name)
 
     def __str__(self):
-        return "{}('{}')  [{}]".format(
-            self.__class__.__name__,
-            self.name, hex(id(self))
-        )
+        return "{}('{}')  [{}]".format(self.__class__.__name__, self.name, hex(id(self)))
 
     def _pprint(self):
         return NodeBase._pprint(self)
 
     @property
     def value(self):
-        raise TypeError(
-            "Empty node '{}' does not have a value.".format(
-                self.name
-            )
-        )
+        raise TypeError("Empty node '{}' does not have a value.".format(self.name))
 
     @value.setter
     def value(self, value):
-        raise TypeError(
-            "Cannot set value of empty node '{}'.".format(
-                self.name
-            )
-        )
+        raise TypeError("Cannot set value of empty node '{}'.".format(self.name))
 
 
 class Parameter(ValueNode):
     """
     Simple subclass of ValueNode that represents a constant value.
     """
+
     def __init__(self, value, name=None):
         ValueNode.__init__(self, value=value, name=name)
         self._stale = False
@@ -605,6 +580,7 @@ class Alias(ValueNode):
     A Node that only passes on the value of another node when evaluated.
     Used to add multiple functionally equivalent nodes with differing names to a graph.
     """
+
     def __init__(self, ref, name=None):
         ValueNode.__init__(self, value=None, name=name)
 
@@ -613,18 +589,11 @@ class Alias(ValueNode):
         self._stale = True
 
     def _pprint(self):
-        return '{} -> {}'.format(
-            NodeBase._pprint(self),
-            NodeBase._pprint(self.ref)
-        )
+        return "{} -> {}".format(NodeBase._pprint(self), NodeBase._pprint(self.ref))
 
     @ValueNode.value.setter
     def value(self, value):
-        raise TypeError(
-            "Cannot set value of alias node '{}'.".format(
-                self.name
-            )
-        )
+        raise TypeError("Cannot set value of alias node '{}'.".format(self.name))
 
     @property
     def ref(self):
@@ -715,10 +684,7 @@ class Function(ValueNode):
         for _child in self.get_children():
             if _child.stale and not _child.frozen:
                 _child.update()
-        self._par_cache = [
-            _par.value
-            for _par in self._parameters
-        ]
+        self._par_cache = [_par.value for _par in self._parameters]
         self._value = self()
         self._stale = False
 
@@ -755,7 +721,7 @@ class Fallback(ValueNode):
         self._value = None
 
         if name is None:
-            self.name = '__onfail__'.join([_n.name for _n in self.try_nodes])
+            self.name = "__onfail__".join([_n.name for _n in self.try_nodes])
 
     def __call__(self):
         for _node in self.try_nodes:
@@ -765,8 +731,7 @@ class Fallback(ValueNode):
                 pass  # function failed; try next
 
         raise RuntimeError(
-            "Error evaluating fallback node '{}': "
-            "no alternative succeeded".format(self.name)
+            "Error evaluating fallback node '{}': " "no alternative succeeded".format(self.name)
         )
 
     @property
@@ -790,6 +755,7 @@ class Tuple(ValueNode):
     """
     Node that combines several other nodes into a tuple for its own value.
     """
+
     def __init__(self, nodes, name=None):
         """
         Create a new Tuple node. Objects in nodes that are not of type NodeBase will be wrapped
@@ -804,7 +770,7 @@ class Tuple(ValueNode):
         self._value = None
 
         if name is None and self.nodes:
-            self.name = '__'.join([_n.name for _n in self.nodes])
+            self.name = "__".join([_n.name for _n in self.nodes])
 
     def __iter__(self):
         for _n in self.nodes:
@@ -834,9 +800,7 @@ class Tuple(ValueNode):
         self.set_children(nodes)
 
     def update(self):
-        self._value = tuple([
-            _node.value for _node in self.nodes
-        ])
+        self._value = tuple([_node.value for _node in self.nodes])
         self._stale = False
 
     def iter_values(self):
@@ -851,6 +815,7 @@ class Array(Tuple):
     """
     Node that combines several other nodes into a numpy array for its own value.
     """
+
     def __init__(self, nodes, name=None, dtype=None):
         """
         Create a new Array node. Objects in nodes that are not of type NodeBase will be wrapped
@@ -867,7 +832,7 @@ class Array(Tuple):
         self.nodes = nodes
 
         if name is None and self.nodes:
-            self.name = 'array_' + '__'.join([_n.name for _n in self.nodes])
+            self.name = "array_" + "__".join([_n.name for _n in self.nodes])
 
     @Tuple.nodes.setter
     def nodes(self, nodes):
@@ -886,20 +851,22 @@ class Array(Tuple):
 
 # -- Node visitors
 
+
 class NodeChildrenPrinter(object):
     """
     Visitor class that recursively prints a node and its children.
     """
+
     def __init__(self, root_node):
         self._root = root_node
 
-    def visit(self, node, indent=''):
+    def visit(self, node, indent=""):
         _s = node._pprint()
-        if '\n' in _s:
-            _s = _s.replace('\n', '\n'+indent+'    ')
-        print(indent + '+ ' + _s)
+        if "\n" in _s:
+            _s = _s.replace("\n", "\n" + indent + "    ")
+        print(indent + "+ " + _s)
 
-    def run(self, node=None, indent=''):
+    def run(self, node=None, indent=""):
         node = node if node is not None else self._root
 
         # visit current node
@@ -907,7 +874,7 @@ class NodeChildrenPrinter(object):
 
         # recursively visit children
         for _c in node.get_children():
-            self.run(_c, indent=indent + '  ')
+            self.run(_c, indent=indent + "  ")
 
 
 class NodeSubgraphGraphvizSourceProducer(object):
@@ -915,15 +882,12 @@ class NodeSubgraphGraphvizSourceProducer(object):
     Visitor class for debugging that creates a graphviz representation of a node graph
     (i.e. a Nexus). This class has **not** been unit tested.
     """
+
     _NODE_STYLE = {
-        Function: dict(
-            shape='"box"'),
-        Alias: dict(
-            shape='"cds"'),
-        Fallback: dict(
-            shape='"diamond"'),
-        Empty: dict(
-            shape='"Mcircle"'),
+        Function: dict(shape='"box"'),
+        Alias: dict(shape='"cds"'),
+        Fallback: dict(shape='"diamond"'),
+        Empty: dict(shape='"Mcircle"'),
     }
 
     def __init__(self, root_node, exclude=None):
@@ -941,18 +905,14 @@ class NodeSubgraphGraphvizSourceProducer(object):
             self._nodes.add(node)
             if node in self._exclude or _c in self._exclude:
                 continue
-            self._full_edges.add(
-                (node, _c)
-            )
+            self._full_edges.add((node, _c))
             self._nodes.add(_c)
 
         for _p in node.iter_parents():
             self._nodes.add(node)
             if node in self._exclude or _p in self._exclude:
                 continue
-            self._dashed_edges.add(
-                (_p, node)
-            )
+            self._dashed_edges.add((_p, node))
             self._nodes.add(_p)
 
     def run(self, node=None, node_chain=None, out_stream=None):
@@ -977,47 +937,47 @@ class NodeSubgraphGraphvizSourceProducer(object):
             NodeSubgraphGraphvizSourceProducer.run(self, _p, node_chain=node_chain)
 
         if _first_call:
-
             out_stream = out_stream if out_stream is not None else sys.stdout
 
             import functools
+
             _all_edges = self._full_edges.union(self._dashed_edges)
-            _connected_nodes = set(functools.reduce(
-                lambda x, y: x+y,
-                _all_edges,
-            ))
+            _connected_nodes = set(
+                functools.reduce(
+                    lambda x, y: x + y,
+                    _all_edges,
+                )
+            )
             _isolated_nodes = self._nodes - _connected_nodes
             self._exclude |= _isolated_nodes
 
-            _leaf_nodes = (
-                set([n for _, n in _all_edges])
-                -
-                set([n for n, _ in _all_edges])
-            )
+            _leaf_nodes = set([n for _, n in _all_edges]) - set([n for n, _ in _all_edges])
 
             out_stream.write("digraph {} {{\n\n".format(node.name))
             for _n in _connected_nodes:
                 if _n in self._exclude:
                     continue
                 out_stream.write(
-                    '  {0.name} [label=<<i>{0.__class__.__name__}</i>'
-                    '<br />{0.name}>, {1}]\n'.format(
+                    "  {0.name} [label=<<i>{0.__class__.__name__}</i>"
+                    "<br />{0.name}>, {1}]\n".format(
                         _n,
-                        ', '.join([
-                            "{}={}".format(_k, _v)
-                            for _k, _v
-                            in self._NODE_STYLE.get(_n.__class__, {}).items()
-                        ] + (['style=filled', 'fillcolor=yellow'] if _n in _leaf_nodes else [])),
+                        ", ".join(
+                            [
+                                "{}={}".format(_k, _v)
+                                for _k, _v in self._NODE_STYLE.get(_n.__class__, {}).items()
+                            ]
+                            + (["style=filled", "fillcolor=yellow"] if _n in _leaf_nodes else [])
+                        ),
                     )
                 )
 
-            out_stream.write('\n')
+            out_stream.write("\n")
             for _e in self._full_edges:
                 if _e[0] in self._exclude or _e[1] in self._exclude:
                     continue
                 out_stream.write("  {0.name} -> {1.name}\n".format(*_e))
 
-            out_stream.write('\n')
+            out_stream.write("\n")
             for _e in self._dashed_edges - self._full_edges:
                 if _e[0] in self._exclude or _e[1] in self._exclude:
                     continue
@@ -1030,18 +990,16 @@ class NodeSubgraphGraphvizSourceProducer(object):
 
 
 class NodeSubgraphGraphvizViewer(NodeSubgraphGraphvizSourceProducer):
-
     def run(self, node=None, node_chain=None):
         from graphviz import Source
 
         import tempfile
 
         out = six.StringIO()
-        NodeSubgraphGraphvizSourceProducer.run(
-            self, node, node_chain, out_stream=out)
+        NodeSubgraphGraphvizSourceProducer.run(self, node, node_chain, out_stream=out)
 
         out.seek(0)
-        Source(out.read()).render(tempfile.mktemp('.gv'), view=True)
+        Source(out.read()).render(tempfile.mktemp(".gv"), view=True)
 
 
 class NodeCycleChecker(object):
@@ -1049,15 +1007,16 @@ class NodeCycleChecker(object):
     Visitor class that ensures that a node graph is acyclic, i.e. that there are no cyclic
     dependencies.
     """
+
     def __init__(self, root_node):
         self._root = root_node
 
     def visit(self, node, seen):
         if node in seen:
-            _cycle = seen[seen.index(node):] + (node,)
-            raise ValueError("Dependent node cycle detected ({})".format(
-                ' -> '.join([_n.name for _n in _cycle])
-            ))
+            _cycle = seen[seen.index(node) :] + (node,)
+            raise ValueError(
+                "Dependent node cycle detected ({})".format(" -> ".join([_n.name for _n in _cycle]))
+            )
 
     def run(self, node=None, seen=None):
         node = node if node is not None else self._root
@@ -1076,24 +1035,27 @@ class NodeCycleChecker(object):
 
 # -- Nexus
 
+
 class Nexus(object):
     """
     Object representing an entire computation graph. Used in the kafe2 NexusFitter object to manage
     the caching of intermediate results for the calculation of the cost function value.
     """
 
-    _VALID_GET_DICT_ERROR_BEHAVIORS = (
-        'fail', 'none', 'exception_as_value', 'ignore', 'list')
+    _VALID_GET_DICT_ERROR_BEHAVIORS = ("fail", "none", "exception_as_value", "ignore", "list")
     _VALID_ADD_EXISTING_BEHAVIORS = (
-        'fail', 'ignore', 'replace', 'replace_if_alias', 'replace_if_empty')
+        "fail",
+        "ignore",
+        "replace",
+        "replace_if_alias",
+        "replace_if_empty",
+    )
 
     def __init__(self):
-        self._nodes = {
-            '__root__': RootNode()
-        }
-        self._root_ref = weakref.ref(self._nodes['__root__'])  # convenience
+        self._nodes = {"__root__": RootNode()}
+        self._root_ref = weakref.ref(self._nodes["__root__"])  # convenience
 
-    def add(self, node, add_children=True, existing_behavior='fail'):
+    def add(self, node, add_children=True, existing_behavior="fail"):
         """Add a node to the nexus.
 
         The `node` type should be derived from
@@ -1130,43 +1092,32 @@ class Nexus(object):
         if existing_behavior not in self._VALID_ADD_EXISTING_BEHAVIORS:
             raise ValueError(
                 "Unknown value {!r} for `existing_behavior`: "
-                "expected one of {!r}".format(
-                    existing_behavior,
-                    self._VALID_ADD_EXISTING_BEHAVIORS
-                )
+                "expected one of {!r}".format(existing_behavior, self._VALID_ADD_EXISTING_BEHAVIORS)
             )
 
         # check if node has already been added
         if node.name in self._nodes:
             # resolve behavior if node is empty
-            if existing_behavior == 'replace_if_empty':
+            if existing_behavior == "replace_if_empty":
                 existing_behavior = (
-                    'replace'
-                    if isinstance(self._nodes[node.name], Empty)
-                    else 'fail'
+                    "replace" if isinstance(self._nodes[node.name], Empty) else "fail"
                 )
-            elif existing_behavior == 'replace_if_alias':
+            elif existing_behavior == "replace_if_alias":
                 existing_behavior = (
-                    'replace'
-                    if isinstance(self._nodes[node.name], Alias)
-                    else 'fail'
+                    "replace" if isinstance(self._nodes[node.name], Alias) else "fail"
                 )
 
             # execute behavior
-            if existing_behavior == 'fail':
-                raise ValueError(
-                    "Node '{}' already exists.".format(
-                        node.name
-                    )
-                )
-            if existing_behavior == 'replace':
+            if existing_behavior == "fail":
+                raise ValueError("Node '{}' already exists.".format(node.name))
+            if existing_behavior == "replace":
                 if add_children:
                     # add all dependent children to the nexus first
                     for _child in node.get_children():
-                        self.add(_child, add_children=True, existing_behavior='ignore')
+                        self.add(_child, add_children=True, existing_behavior="ignore")
                 # replace node
                 self._nodes[node.name].replace(node)
-            elif existing_behavior == 'ignore':
+            elif existing_behavior == "ignore":
                 return  #
             else:
                 assert False  # should not get here
@@ -1176,7 +1127,7 @@ class Nexus(object):
             if add_children:
                 # add all dependent children to the nexus first
                 for _child in node.get_children():
-                    self.add(_child, add_children=True, existing_behavior='ignore')
+                    self.add(_child, add_children=True, existing_behavior="ignore")
 
             # add new node as child of root node
             self._root_ref().add_child(node)
@@ -1196,8 +1147,9 @@ class Nexus(object):
 
         return node
 
-    def add_function(self, func, func_name=None, par_names=None, add_children=True,
-                     existing_behavior='fail'):
+    def add_function(
+        self, func, func_name=None, par_names=None, add_children=True, existing_behavior="fail"
+    ):
         """Construct a `Function` node from a Python function and
         add it to the nexus.
 
@@ -1262,7 +1214,8 @@ class Nexus(object):
             ]
             return self.add(
                 Function(func, name=func_name, parameters=_par_nodes),
-                add_children=add_children, existing_behavior=existing_behavior
+                add_children=add_children,
+                existing_behavior=existing_behavior,
             )
 
         # resolve parameter names
@@ -1280,10 +1233,7 @@ class Nexus(object):
             raise ValueError(
                 "Error adding function: supplied "
                 "parameter nodes ({}) are not compatible with "
-                "function signature {!r}!".format(
-                    ', '.join(map(repr, par_names)),
-                    _sig
-                )
+                "function signature {!r}!".format(", ".join(map(repr, par_names)), _sig)
             )
 
         _args = _ba.arguments.items()
@@ -1294,22 +1244,19 @@ class Nexus(object):
         # resolve parameter nodes
         _pars = []
         for (_arg_name, _node_spec), _arg_default in zip(_args, _args_defaults):
-
             # fail on **kwargs
             if isinstance(_node_spec, dict):
                 raise ValueError(
                     "Error adding function: signature "
                     "cannot contain variable keyword arguments "
-                    "(**{})!".format(
-                        _arg_name
-                    )
+                    "(**{})!".format(_arg_name)
                 )
 
             # wrap str in a tuple (normal non-* case)
             if isinstance(_node_spec, str):
                 _node_spec = (_node_spec,)
 
-            assert(isinstance(_node_spec, tuple))
+            assert isinstance(_node_spec, tuple)
 
             # add node or nodes under *args
             for _node_name in _node_spec:
@@ -1326,33 +1273,31 @@ class Nexus(object):
 
                     # if default value provided
                     if _arg_default != SigParameter.empty:
-
                         # node is empty
                         if isinstance(_existing_node, Empty):
                             # value encountered for previously empty node -> replace
-                            _pars.append(self.add(
-                                Parameter(_arg_default, name=_existing_node.name),
-                                existing_behavior='replace'
-                            ))
+                            _pars.append(
+                                self.add(
+                                    Parameter(_arg_default, name=_existing_node.name),
+                                    existing_behavior="replace",
+                                )
+                            )
                             continue
 
                         # if node non-empty
                         else:
-
                             # new default may conflict -> warn if necessary
                             try:
-                                assert(_existing_node.value == _arg_default)
+                                assert _existing_node.value == _arg_default
                             except AssertionError:
                                 # values definitely conflict
                                 warnings.warn(
                                     "Ignoring default value {!r} for function parameter '{}': "
                                     "non-empty nexus node already exists and has conflicting "
                                     "value {!r}.".format(
-                                        _arg_default,
-                                        _node_name,
-                                        _existing_node.value
+                                        _arg_default, _node_name, _existing_node.value
                                     ),
-                                    UserWarning
+                                    UserWarning,
                                 )
 
                     # register existing node as parameter
@@ -1361,10 +1306,11 @@ class Nexus(object):
         # add function node to nexus and return it
         return self.add(
             Function(func, name=func_name, parameters=_pars),
-            add_children=add_children, existing_behavior=existing_behavior
+            add_children=add_children,
+            existing_behavior=existing_behavior,
         )
 
-    def add_alias(self, name, alias_for, existing_behavior='fail'):
+    def add_alias(self, name, alias_for, existing_behavior="fail"):
         """Add an Alias node pointing to an existing node `alias_for`.
 
         If a node with the same name as the alias node
@@ -1388,17 +1334,10 @@ class Nexus(object):
         _alias_for_node = self.get(alias_for)
         if _alias_for_node is None:
             raise ValueError(
-                "Cannot add alias for node '{}': "
-                "node does not exist in nexus!".format(alias_for)
+                "Cannot add alias for node '{}': " "node does not exist in nexus!".format(alias_for)
             )
 
-        return self.add(
-            Alias(
-                _alias_for_node,
-                name=name
-            ),
-            existing_behavior=existing_behavior
-        )
+        return self.add(Alias(_alias_for_node, name=name), existing_behavior=existing_behavior)
 
     def add_dependency(self, name, depends_on):
         """Register a dependency between nodes explicitly.
@@ -1434,8 +1373,7 @@ class Nexus(object):
 
         if _node is None:
             raise ValueError(
-                "Cannot add dependency: dependent node '{}' does "
-                "not exist!".format(name)
+                "Cannot add dependency: dependent node '{}' does " "not exist!".format(name)
             )
 
         if not isinstance(depends_on, (tuple, list)):
@@ -1446,9 +1384,7 @@ class Nexus(object):
         if _not_found:
             raise ValueError(
                 "Cannot add dependency: the following nodes passed to "
-                "`depends_on` do not exist: {}".format(
-                    ', '.join(map(repr, _not_found))
-                )
+                "`depends_on` do not exist: {}".format(", ".join(map(repr, _not_found)))
             )
 
         # add dependent node `name` as a parent of each node in `depends_on`
@@ -1468,7 +1404,7 @@ class Nexus(object):
         """
         return self._nodes.get(node_name, None)
 
-    def get_value_dict(self, node_names=None, error_behavior='fail'):
+    def get_value_dict(self, node_names=None, error_behavior="fail"):
         """Return a mapping of node names to their current values.
 
         The behavior when encountering an evaluation error can be
@@ -1495,17 +1431,14 @@ class Nexus(object):
         if error_behavior not in self._VALID_GET_DICT_ERROR_BEHAVIORS:
             raise ValueError(
                 "Unknown value {!r} for `error_behavior`: "
-                "expected one of {!r}".format(
-                    error_behavior,
-                    self._VALID_GET_DICT_ERROR_BEHAVIORS
-                )
+                "expected one of {!r}".format(error_behavior, self._VALID_GET_DICT_ERROR_BEHAVIORS)
             )
 
         # construct result dict
         _result_dict = {}
         for _name, _node in self._nodes.items():
             # skip root node (has no value anyway)
-            if _name == '__root__':
+            if _name == "__root__":
                 continue
             if node_names is not None and _name not in node_names:
                 continue
@@ -1514,20 +1447,23 @@ class Nexus(object):
             try:
                 _val = _node.value
             except Exception as e:
-                if error_behavior == 'fail':
+                if error_behavior == "fail":
                     raise e
-                if error_behavior == 'none':
+                if error_behavior == "none":
                     _val = None
-                elif error_behavior == 'exception_as_value':
+                elif error_behavior == "exception_as_value":
                     _val = e
-                elif error_behavior == 'ignore':
+                elif error_behavior == "ignore":
                     continue
-                elif error_behavior == 'list':
-                    _result_dict.setdefault('__error__', []).append(_name)
+                elif error_behavior == "list":
+                    _result_dict.setdefault("__error__", []).append(_name)
                     continue
                 else:
-                    assert False, "Something went terribly wrong. " \
-                                  "Unknown error behaviour {}".format(error_behavior)
+                    assert (
+                        False
+                    ), "Something went terribly wrong. " "Unknown error behaviour {}".format(
+                        error_behavior
+                    )
             else:
                 _result_dict[_name] = _val
 

@@ -1,18 +1,19 @@
 import numpy as np
 
-class ContourFactory():
-    
+
+class ContourFactory:
     @staticmethod
     def create_xy_contour(xy_points, sigma):
         xy_points = np.asarray(xy_points)
         _shape = xy_points.shape
         if len(_shape) != 2 or (_shape[0] != 2 and _shape[1] != 2):
             raise ValueError(
-                "Explicit contours can only be created from iterables with shape (2,n) or (n,2).")
+                "Explicit contours can only be created from iterables with shape (2,n) or (n,2)."
+            )
         if _shape[0] != 2:
             xy_points = xy_points.T
         return Contour(xy_points=xy_points, sigma=sigma)
-    
+
     @staticmethod
     def create_grid_contour(grid_x, grid_y, grid_z, sigma):
         grid_x = np.asarray(grid_x)
@@ -32,10 +33,9 @@ class ContourFactory():
         if _shape_y[0] != _shape_z[1]:
             raise ValueError("grid_z needs to be as high as grid_y is long.")
         return Contour(grid_x=grid_x, grid_y=grid_y, grid_z=grid_z, sigma=sigma)
-    
+
 
 class Contour(object):
-    
     def __init__(self, xy_points=None, grid_x=None, grid_y=None, grid_z=None, sigma=None):
         if sigma is None:
             raise ValueError("sigma must not be None.")
@@ -48,20 +48,19 @@ class Contour(object):
     @property
     def xy_points(self):
         return self._xy_points
-    
+
     @property
     def grid_x(self):
         return self._grid_x
-    
+
     @property
     def grid_y(self):
         return self._grid_y
-    
+
     @property
     def grid_z(self):
         return self._grid_z
-    
+
     @property
     def sigma(self):
         return self._sigma
-    

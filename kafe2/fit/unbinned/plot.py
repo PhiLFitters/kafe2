@@ -9,30 +9,31 @@ __all__ = ["UnbinnedPlotAdapter"]
 
 
 class UnbinnedPlotAdapter(PlotAdapterBase):
-
-    PLOT_STYLE_CONFIG_DATA_TYPE = 'unbinned'
+    PLOT_STYLE_CONFIG_DATA_TYPE = "unbinned"
 
     PLOT_SUBPLOT_TYPES = dict(
         PlotAdapterBase.PLOT_SUBPLOT_TYPES,
         model_line=dict(
-            plot_adapter_method='plot_model_line',
-            target_axes='main',
-        )
+            plot_adapter_method="plot_model_line",
+            target_axes="main",
+        ),
     )
-    PLOT_SUBPLOT_TYPES['model']['hide'] = True  # don't show "model" points
+    PLOT_SUBPLOT_TYPES["model"]["hide"] = True  # don't show "model" points
 
-    AVAILABLE_X_SCALES = ('linear', 'log')
+    AVAILABLE_X_SCALES = ("linear", "log")
 
     def __init__(self, unbinned_fit_object, from_container=False):
         """
-        Construct an :py:obj:`UnbinnedPlotAdapter` for a :py:obj:`~kafe2.fit.unbinned.UnbinnedFit` object:
+        Construct an :py:obj:`UnbinnedPlotAdapter` for a :py:obj:`~kafe2.fit.unbinned.UnbinnedFit`
+        object:
         :param unbinned_fit_object: an :py:obj:`~kafe2.fit.unbinned.UnbinnedFit` object
         :param from_container: Whether unbinned_fit_object was created ad-hoc from just a data
             container.
         :type from_container: bool
         """
         super(UnbinnedPlotAdapter, self).__init__(
-            fit_object=unbinned_fit_object, from_container=from_container)
+            fit_object=unbinned_fit_object, from_container=from_container
+        )
         self.n_plot_points = 100 if len(self.data_x) < 100 else len(self.data_x)
 
         self.x_range = add_pad_to_range(self._fit.data_range, scale=self.x_scale)
@@ -91,16 +92,21 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
     def model_line_x(self):
         """x support values for model function"""
         _xmin, _xmax = self.x_range
-        if self.x_scale == 'linear':
+        if self.x_scale == "linear":
             return np.linspace(_xmin, _xmax, self.n_plot_points)
-        if self.x_scale == 'log':
+        if self.x_scale == "log":
             try:
                 return np.geomspace(_xmin, _xmax, self.n_plot_points)
             except ValueError:
-                raise ValueError("Support point calculation failed. The plot range can't include 0 "
-                                 "when using log scale.")
-        raise ValueError("x_range has to be one of {}. Found {} instead.".format(
-            self.AVAILABLE_X_SCALES, self.x_scale))
+                raise ValueError(
+                    "Support point calculation failed. The plot range can't include 0 "
+                    "when using log scale."
+                )
+        raise ValueError(
+            "x_range has to be one of {}. Found {} instead.".format(
+                self.AVAILABLE_X_SCALES, self.x_scale
+            )
+        )
 
     @property
     def model_line_y(self):
@@ -140,50 +146,56 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
     # public methods
     def plot_data(self, target_axes, height=None, **kwargs):
         """
-        Method called by the main plot routine to plot the data points to a specified matplotlib ``Axes`` object.
+        Method called by the main plot routine to plot the data points to a specified matplotlib
+        ``Axes`` object.
 
         :param target_axes: ``matplotlib`` ``Axes`` object
         :param height: The height of the lines which represent the density
         :type height: float
         :return: plot handle(s)
         """
-        kwargs.pop('marker', None)  # pop marker keyword, as LineCollection doesn't support it
+        kwargs.pop("marker", None)  # pop marker keyword, as LineCollection doesn't support it
 
         if height is None:
-            if self.y_scale == 'linear':
-                height = self.y_range[1]/10  # set height to 1/10th of the max height of the model
-            elif self.y_scale == 'log':
-                height = 10**(np.log10(self.y_range[1])/10)
+            if self.y_scale == "linear":
+                height = self.y_range[1] / 10  # set height to 1/10th of the max height of the model
+            elif self.y_scale == "log":
+                height = 10 ** (np.log10(self.y_range[1]) / 10)
 
         data = self.data_x
-        xy_pairs = np.column_stack([np.repeat(data, 2),
-                                    np.tile([self.y_range[0], height], len(data))])
+        xy_pairs = np.column_stack(
+            [np.repeat(data, 2), np.tile([self.y_range[0], height], len(data))]
+        )
         lines = xy_pairs.reshape([len(data), 2, 2])
         line_segments = LineCollection(lines, **kwargs)
         return target_axes.add_collection(line_segments)
 
     def plot_model(self, target_axes, **kwargs):
         """
-        Method called by the main plot routine to plot the model to a specified matplotlib ``Axes`` object.
+        Method called by the main plot routine to plot the model to a specified matplotlib
+        ``Axes`` object.
 
         :param target_axes: ``matplotlib`` ``Axes`` object
-        :param kwargs: keyword arguments accepted by the :py:func:`~kafe2._aux.step_fill_between` method
+        :param kwargs: keyword arguments accepted by the :py:func:`~kafe2._aux.step_fill_between`
+            method
         :return: plot handle(s)
         """
         return target_axes.plot(self.model_x, self.model_y, **kwargs)
 
-    def plot_ratio(self, target_axes, error_contributions=('data',), **kwargs):
+    def plot_ratio(self, target_axes, error_contributions=("data",), **kwargs):
         raise TypeError("Data/model ratio cannot be plotted for unbinned fits.")
 
-    def plot_residual(self, target_axes, error_contributions=('data',), **kwargs):
+    def plot_residual(self, target_axes, error_contributions=("data",), **kwargs):
         raise TypeError("Residuals cannot be plotted for unbinned fits.")
 
     def plot_model_line(self, target_axes, **kwargs):
         """
-        Method called by the main plot routine to plot the model to a specified matplotlib ``Axes`` object.
+        Method called by the main plot routine to plot the model to a specified matplotlib
+        ``Axes`` object.
 
         :param target_axes: ``matplotlib`` ``Axes`` object
-        :param kwargs: keyword arguments accepted by the :py:func:`~kafe2._aux.step_fill_between` method
+        :param kwargs: keyword arguments accepted by the :py:func:`~kafe2._aux.step_fill_between`
+            method
         :return: plot handle(s)
         """
         return target_axes.plot(self.model_line_x, self.model_line_y, **kwargs)

@@ -1,5 +1,5 @@
-"""This submodule contains objects for handling different representations of model function formatters and argument
-formatters.
+"""This submodule contains objects for handling different representations of model function
+formatters and argument formatters.
 
 :synopsis: This submodule contains objects for handling different representations of model function
         formatters and argument formatters.

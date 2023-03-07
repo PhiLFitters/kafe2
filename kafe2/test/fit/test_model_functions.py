@@ -12,9 +12,8 @@ class TestSymPy(unittest.TestCase):
     MODEL_FUNCTION_CLASS = ModelFunctionBase
 
     def setUp(self):
-
         def model(x, a, b, c):
-            return a * x ** 2 + b * x + c
+            return a * x**2 + b * x + c
 
         self._model_1_python = model
         self._model_1_sympy = "x a b c -> a * x^2 + b * x + c"
@@ -29,11 +28,11 @@ class TestSymPy(unittest.TestCase):
             x_name="x",
             defaults=[1.0, 1.0, 1.0],
             latex_name=r"{\tt model}",
-            parameter_latex_names=["{a}", "{b}", "{c}"]
+            parameter_latex_names=["{a}", "{b}", "{c}"],
         )
         _x = self._ref_properties_1["x"]
         _pvs = self._ref_properties_1["parameter_values"]
-        self._ref_properties_1["y"] = _pvs[0] * _x ** 2 + _pvs[1] * _x + _pvs[2]
+        self._ref_properties_1["y"] = _pvs[0] * _x**2 + _pvs[1] * _x + _pvs[2]
 
         def other_model(tau, A_0=3.0, tau_0=1.0):
             return A_0 * np.exp(-tau / tau_0)
@@ -51,7 +50,7 @@ class TestSymPy(unittest.TestCase):
             x_name="tau",
             defaults=[3.0, 1.0],
             latex_name=r"{\tt other\_model}",
-            parameter_latex_names=["{A_0}", r"{\tau_0}"]
+            parameter_latex_names=["{A_0}", r"{\tau_0}"],
         )
         _x = self._ref_properties_2["x"]
         _pvs = self._ref_properties_2["parameter_values"]
@@ -59,10 +58,12 @@ class TestSymPy(unittest.TestCase):
 
     def _assert_properties_correct(self, model_function, ref_properties):
         with self.subTest("y"):
-            self.assertTrue(np.allclose(
-                model_function(ref_properties["x"], *ref_properties["parameter_values"]),
-                ref_properties["y"]
-            ))
+            self.assertTrue(
+                np.allclose(
+                    model_function(ref_properties["x"], *ref_properties["parameter_values"]),
+                    ref_properties["y"],
+                )
+            )
         with self.subTest("name"):
             self.assertEqual(model_function.name, ref_properties["name"])
         with self.subTest("parameter_names"):
@@ -82,12 +83,12 @@ class TestSymPy(unittest.TestCase):
         with self.subTest("formatter_parameter_names"):
             self.assertEqual(
                 [_pf.name for _pf in model_function.formatter.par_formatters],
-                ref_properties["parameter_names"]
+                ref_properties["parameter_names"],
             )
         with self.subTest("formatter_parameter_latex_names"):
             self.assertEqual(
                 [_pf.latex_name for _pf in model_function.formatter.par_formatters],
-                ref_properties["parameter_latex_names"]
+                ref_properties["parameter_latex_names"],
             )
 
     def test_properties_python_1(self):

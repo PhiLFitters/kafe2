@@ -3,8 +3,10 @@
 
 import os
 import yaml
+
 # WARNING! DO NOT REMOVE THE PYPLOT IMPORT, EVEN THOUGH IT IS NOT USED.
-# force pyplot import once to trigger eventual hooks for backend change, e.g. when running inside jupyter
+# force pyplot import once to trigger eventual hooks for backend change
+# e.g. when running inside jupyter
 # those hooks are not triggered when only importing matplotlib
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -12,9 +14,10 @@ from copy import deepcopy
 from tempfile import NamedTemporaryFile
 
 import logging
+
 logger = logging.getLogger(__name__)
 
-__all__ = ['ConfigLoader', 'ConfigError', 'ConfigTypeError', 'ConfigLookupError', 'kafe2_rc', 'kc']
+__all__ = ["ConfigLoader", "ConfigError", "ConfigTypeError", "ConfigLookupError", "kafe2_rc", "kc"]
 
 
 class ConfigError(Exception):
@@ -23,16 +26,22 @@ class ConfigError(Exception):
 
 class ConfigLookupError(ConfigError):
     def __init__(self, key_path, problematic_key_index):
-        self.message = "Error getting config key for '{}': no node under that path!".format(', '.join(key_path))
-        self.message = ("Error getting config key for '{}': "
-                        "cannot find config node '{}'!".format(', '.join(key_path), key_path[problematic_key_index]))
+        self.message = "Error getting config key for '{}': no node under that path!".format(
+            ", ".join(key_path)
+        )
+        self.message = "Error getting config key for '{}': " "cannot find config node '{}'!".format(
+            ", ".join(key_path), key_path[problematic_key_index]
+        )
 
 
 class ConfigTypeError(ConfigError):
     def __init__(self, key_path, problematic_key_index):
-        self.message = ("Error getting config key for '{}': "
-                        "scalar node '{}' encountered inside path!".format(', '.join(key_path),
-                                                                           key_path[problematic_key_index]))
+        self.message = (
+            "Error getting config key for '{}': "
+            "scalar node '{}' encountered inside path!".format(
+                ", ".join(key_path), key_path[problematic_key_index]
+            )
+        )
 
 
 class ConfigLoader(yaml.Loader):
@@ -47,19 +56,19 @@ class ConfigLoader(yaml.Loader):
             return yaml.load(_f, ConfigLoader)
 
 
-ConfigLoader.add_constructor('!include', ConfigLoader.include)
+ConfigLoader.add_constructor("!include", ConfigLoader.include)
 
 # -- read in default global kafe2 configuration from file
-with open(os.path.join(__path__[0], 'kafe2.yaml')) as _f:
+with open(os.path.join(__path__[0], "kafe2.yaml")) as _f:
     _kc = yaml.load(_f, ConfigLoader)
 
 # make a copy of the default configuration
 _default_kc = deepcopy(_kc)
 
 # look for local config files in order to overwrite default config
-for ext in ('yaml', 'yml'):
+for ext in ("yaml", "yml"):
     try:
-        with open(os.path.join(os.getcwd(), 'kafe2.'+ext)) as _f:
+        with open(os.path.join(os.getcwd(), "kafe2." + ext)) as _f:
             _kc.update(yaml.load(_f, ConfigLoader))
     except IOError:
         pass
@@ -86,25 +95,31 @@ def kc(*keys):
 
 kafe2_rc = None  # if mpl is only a mock module
 try:
-    if mpl.__version__.startswith('2'):
-        kafe2_rc = mpl.rc_params_from_file(os.path.join(__path__[0], 'kafe2.matplotlibrc.conf'))
+    if mpl.__version__.startswith("2"):
+        kafe2_rc = mpl.rc_params_from_file(os.path.join(__path__[0], "kafe2.matplotlibrc.conf"))
         try:  # look for local config
-            kafe2_rc.update(mpl.rc_params_from_file(os.path.join(os.getcwd(), 'kafe2.matplotlibrc.conf'),
-                                                    use_default_template=False))
+            kafe2_rc.update(
+                mpl.rc_params_from_file(
+                    os.path.join(os.getcwd(), "kafe2.matplotlibrc.conf"), use_default_template=False
+                )
+            )
         except IOError:
             pass
-    elif mpl.__version__.startswith('3'):
+    elif mpl.__version__.startswith("3"):
         _temp_file = NamedTemporaryFile(delete=False)
-        with open(os.path.join(__path__[0], 'kafe2.matplotlibrc.conf')) as _file:
+        with open(os.path.join(__path__[0], "kafe2.matplotlibrc.conf")) as _file:
             for _line in _file.readlines():
                 if _line.startswith("text.latex.unicode"):
                     continue
                 _temp_file.write(_line.encode())
-                _temp_file.write('\n'.encode())
+                _temp_file.write("\n".encode())
         kafe2_rc = mpl.rc_params_from_file(_temp_file.name)
         try:  # look for local config, assume correct mpl3 handling
-            kafe2_rc.update(mpl.rc_params_from_file(os.path.join(os.getcwd(), 'kafe2.matplotlibrc.conf'),
-                                                    use_default_template=False))
+            kafe2_rc.update(
+                mpl.rc_params_from_file(
+                    os.path.join(os.getcwd(), "kafe2.matplotlibrc.conf"), use_default_template=False
+                )
+            )
         except IOError:
             pass
         _temp_file.close()

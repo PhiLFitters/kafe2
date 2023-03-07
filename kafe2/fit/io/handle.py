@@ -4,8 +4,8 @@ import os
 
 class IOStreamHandle(object):
     """
-    Very thin wrapper around a Python `file` object, providing an interface for reading/writing to a stream,
-    while also allowing it to be used within a context.
+    Very thin wrapper around a Python `file` object, providing an interface for reading/writing to
+    a stream, while also allowing it to be used within a context.
     """
 
     def __init__(self, buffer):
@@ -82,12 +82,13 @@ class IOStreamHandle(object):
 
 class IOFileHandle(IOStreamHandle):
     """
-    This class extends `IOStreamHandle` with functionality for reading from and writing to the filesystem.
+    This class extends `IOStreamHandle` with functionality for reading from and writing to the
+    filesystem.
     The file can be read or written to either directly or by opening the handle in a context:
     `with IOFileHandle(...) as fh: fh.write(...)`
     """
 
-    _VALID_MODES = ['r', 'a']
+    _VALID_MODES = ["r", "a"]
 
     def __init__(self, filename, mode):
         super(IOFileHandle, self).__init__(buffer=None)
@@ -95,7 +96,9 @@ class IOFileHandle(IOStreamHandle):
         self.mode = mode
 
     def __repr__(self):
-        return "{}(filename={}, mode={})".format(self.__class__.__name__, repr(self.filename), repr(self.mode))
+        return "{}(filename={}, mode={})".format(
+            self.__class__.__name__, repr(self.filename), repr(self.mode)
+        )
 
     def __enter__(self):
         """for using an IOFileHandle object in a context"""
@@ -121,7 +124,11 @@ class IOFileHandle(IOStreamHandle):
     @mode.setter
     def mode(self, new_mode):
         if new_mode not in self.__class__._VALID_MODES:
-            raise ValueError("Unknown IOFileHandle mode '{}': expecting one of {}".format(new_mode, self.__class__._VALID_MODES))
+            raise ValueError(
+                "Unknown IOFileHandle mode '{}': expecting one of {}".format(
+                    new_mode, self.__class__._VALID_MODES
+                )
+            )
         self._mode = new_mode
 
     @property
@@ -153,7 +160,7 @@ class IOFileHandle(IOStreamHandle):
 
 class InputFileHandle(IOFileHandle):
     def __init__(self, filename):
-        super(InputFileHandle, self).__init__(filename, mode='r')
+        super(InputFileHandle, self).__init__(filename, mode="r")
 
     def __repr__(self):
         return "{}(filename={})".format(self.__class__.__name__, repr(self.filename))
@@ -161,9 +168,10 @@ class InputFileHandle(IOFileHandle):
     def write(self, content, truncate=False):
         raise IOError("Cannot write to 'InputFileHandle'!")
 
+
 class OutputFileHandle(IOFileHandle):
     def __init__(self, filename):
-        super(OutputFileHandle, self).__init__(filename, mode='a')
+        super(OutputFileHandle, self).__init__(filename, mode="a")
 
     def __repr__(self):
         return "{}(filename={})".format(self.__class__.__name__, repr(self.filename))
@@ -178,9 +186,11 @@ class OutputHandleMultiplexer(IOStreamHandle):
         self._open_handles = None
         for _fh in self._io_handles:
             if not isinstance(_fh, IOStreamHandle):
-                raise ValueError("Cannot initialize OutputHandleMultiplexer: "
-                                 "handle object {:r} is of type {}, expected "
-                                 "IOStreamHandle!".format(_fh, type(_fh)))
+                raise ValueError(
+                    "Cannot initialize OutputHandleMultiplexer: "
+                    "handle object {:r} is of type {}, expected "
+                    "IOStreamHandle!".format(_fh, type(_fh))
+                )
 
     def __enter__(self):
         self._open_handles = [_fh.__enter__() for _fh in self._io_handles]
@@ -230,8 +240,9 @@ class OutputHandleMultiplexer(IOStreamHandle):
 if __name__ == "__main__":
     # TODO: move this to a unit test
     import sys
+
     # test 1: IOStreamHandle
-    print('Instantiating `IOStreamHandle`...')
+    print("Instantiating `IOStreamHandle`...")
     _iosh = IOStreamHandle(sys.stdout)
     _iosh.write("1")
     with _iosh as _fh:
@@ -239,16 +250,16 @@ if __name__ == "__main__":
         _fh.write("3\n")
 
     # test 2: IOFileHandle
-    print('Instantiating `OutputFile`')
+    print("Instantiating `OutputFile`")
     _ofh = OutputFileHandle("/tmp/test_IOFileHandle.txt")
-    print('Writing...')
+    print("Writing...")
     _ofh.write("4", truncate=True)
     with _ofh as _fh:
         _fh.write("5")
         _fh.write("6\n")
-    print('...done!')
+    print("...done!")
 
-    print('Trying to read from output stream...')
+    print("Trying to read from output stream...")
     try:
         _ofh.read()
     except IOError as e:
@@ -258,21 +269,21 @@ if __name__ == "__main__":
     print("Reading from file: ")
     print(_ifh.read())
 
-    print('Trying to write to input stream...')
+    print("Trying to write to input stream...")
     try:
         _ifh.write("bla")
     except IOError as e:
         print("...OK! IOError raised:", e)
 
     # test 3: OutputHandleMultiplexer
-    print('Instantiating `OutputHandleMultiplexer`')
+    print("Instantiating `OutputHandleMultiplexer`")
     _ohm = OutputHandleMultiplexer(_iosh, _ofh)
-    print('Writing...')
+    print("Writing...")
     _ohm.write("a")
     with _ohm as _fh:
         _fh.write("b")
         _fh.write("c\n")
-    print('...done!')
+    print("...done!")
 
     print("Reading from file: ")
     print(_ifh.read())

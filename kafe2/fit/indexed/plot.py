@@ -8,8 +8,7 @@ __all__ = ["IndexedPlotAdapter"]
 
 
 class IndexedPlotAdapter(PlotAdapterBase):
-
-    PLOT_STYLE_CONFIG_DATA_TYPE = 'indexed'
+    PLOT_STYLE_CONFIG_DATA_TYPE = "indexed"
 
     PLOT_SUBPLOT_TYPES = dict(
         PlotAdapterBase.PLOT_SUBPLOT_TYPES,
@@ -17,7 +16,8 @@ class IndexedPlotAdapter(PlotAdapterBase):
 
     def __init__(self, indexed_fit_object, from_container=False):
         """
-        Construct an :py:obj:`IndexedPlotContainer` for a :py:obj:`~kafe2.fit.indexed.IndexedFit` object:
+        Construct an :py:obj:`IndexedPlotContainer` for a :py:obj:`~kafe2.fit.indexed.IndexedFit`
+        object:
 
         :param fit_object: an :py:obj:`~kafe2.fit.indexed.IndexedFit` object
         :param from_container: Whether indexed_fit_object was created ad-hoc from just a data
@@ -25,7 +25,8 @@ class IndexedPlotAdapter(PlotAdapterBase):
         :type from_container: bool
         """
         super(IndexedPlotAdapter, self).__init__(
-            fit_object=indexed_fit_object, from_container=from_container)
+            fit_object=indexed_fit_object, from_container=from_container
+        )
         self.x_range = (-0.5, self._fit.data_size - 0.5)
 
     @property
@@ -66,7 +67,7 @@ class IndexedPlotAdapter(PlotAdapterBase):
     @property
     def model_yerr(self):
         """y error bars for model: ``None`` for :py:obj:`IndexedPlotContainer`"""
-        return None #self.fit.model_error
+        return None  # self.fit.model_error
 
     # public methods
 
@@ -75,13 +76,18 @@ class IndexedPlotAdapter(PlotAdapterBase):
         Plot the measurement data to a specified ``matplotlib`` ``Axes`` object.
 
         :param target_axes: ``matplotlib`` ``Axes`` object
-        :param kwargs: keyword arguments accepted by the ``matplotlib`` methods ``errorbar`` or ``plot``
+        :param kwargs: keyword arguments accepted by the ``matplotlib`` methods ``errorbar`` or
+            ``plot``
         :return: plot handle(s)
         """
         if self._fit.has_errors:
-            _yerr = np.sqrt(self.data_yerr ** 2
-                            + self._fit._cost_function.get_uncertainty_gaussian_approximation(self.data_y) ** 2)
-            return target_axes.errorbar(self.data_x, self.data_y, xerr=self.data_xerr, yerr=_yerr, **kwargs)
+            _yerr = np.sqrt(
+                self.data_yerr**2
+                + self._fit._cost_function.get_uncertainty_gaussian_approximation(self.data_y) ** 2
+            )
+            return target_axes.errorbar(
+                self.data_x, self.data_y, xerr=self.data_xerr, yerr=_yerr, **kwargs
+            )
         _yerr = self._fit._cost_function.get_uncertainty_gaussian_approximation(self.data_y)
         if np.all(_yerr == 0):
             return target_axes.plot(self.data_x, self.data_y, **kwargs)
@@ -92,16 +98,17 @@ class IndexedPlotAdapter(PlotAdapterBase):
         Plot the model predictions to a specified matplotlib ``Axes`` object.
 
         :param target_axes: ``matplotlib`` ``Axes`` object
-        :param kwargs: keyword arguments accepted by the :py:func:`~kafe2._aux.step_fill_between` method
+        :param kwargs: keyword arguments accepted by the :py:func:`~kafe2._aux.step_fill_between`
+            method
         :return: plot handle(s)
         """
-        return step_fill_between(target_axes,
-                                 self.model_x,
-                                 self.model_y,
-                                 xerr=self.model_xerr,
-                                 yerr=self.model_yerr,
-                                 draw_central_value=True,
-                                 continuous=False,
-                                 **kwargs
-                                 )
-
+        return step_fill_between(
+            target_axes,
+            self.model_x,
+            self.model_y,
+            xerr=self.model_xerr,
+            yerr=self.model_yerr,
+            draw_central_value=True,
+            continuous=False,
+            **kwargs
+        )

@@ -18,7 +18,6 @@ __all__ = ["HistParametricModel", "HistModelFunction"]
 
 
 class HistModelFunction(ModelFunctionBase):
-
     def __init__(self, model_function=None):
         """
         Construct :py:class:`XYModelFunction` object (a wrapper for a native Python function):
@@ -27,20 +26,34 @@ class HistModelFunction(ModelFunctionBase):
         """
         # TODO: default model function
         super(HistModelFunction, self).__init__(
-            model_function=model_function, independent_argcount=1)
+            model_function=model_function, independent_argcount=1
+        )
 
 
 class HistParametricModel(ParametricModelBaseMixin, HistContainer):
     MODEL_FUNCTION_TYPE = HistModelFunction
 
-    #TODO n_bins, bin_range, bin_edges contain redundant information, should the arguments for HistParametricModel be refactored?
-    def __init__(self, n_bins, bin_range,
-                 model_density_func=function_library.normal_distribution,
-                 model_parameters=[1.0, 1.0], bin_edges=None, bin_evaluation="simpson",
-                 density=True):
+    # TODO n_bins, bin_range, bin_edges contain redundant information,
+    # should the arguments for HistParametricModel be refactored?
+    def __init__(
+        self,
+        n_bins,
+        bin_range,
+        model_density_func=function_library.normal_distribution,
+        model_parameters=[1.0, 1.0],
+        bin_edges=None,
+        bin_evaluation="simpson",
+        density=True,
+    ):
         super(HistParametricModel, self).__init__(
-            model_density_func, model_parameters, n_bins, bin_range,
-            bin_edges=bin_edges, fill_data=None, dtype=float)
+            model_density_func,
+            model_parameters,
+            n_bins,
+            bin_range,
+            bin_edges=bin_edges,
+            fill_data=None,
+            dtype=float,
+        )
         self._bin_evaluation = bin_evaluation
         if isinstance(self._bin_evaluation, str):
             self._bin_evaluation = self._bin_evaluation.lower()
@@ -66,7 +79,9 @@ class HistParametricModel(ParametricModelBaseMixin, HistContainer):
                 # raise if not string and not callable
                 raise ValueError(
                     "Cannot use {} as bin evaluation method: not a string and not callable!".format(
-                        self._bin_evaluation))
+                        self._bin_evaluation
+                    )
+                )
 
             # Retrieving source code will fail if the function was generated through exec.
             # For kafe2go self._bin_evaluation_string will be replaced.
@@ -86,11 +101,12 @@ class HistParametricModel(ParametricModelBaseMixin, HistContainer):
             if _model_func_parameters != _antider_parameters:
                 raise ValueError(
                     "Model density function and its antiderivative have different argument "
-                    "signatures: (%r vs %r)"
-                    % (_model_func_parameters, _antider_parameters))
+                    "signatures: (%r vs %r)" % (_model_func_parameters, _antider_parameters)
+                )
             self._bin_evaluation_method = self._bin_evaluation_antiderivative
 
         self._density = density
+
     # -- private methods
 
     def _recalculate(self):
@@ -109,8 +125,9 @@ class HistParametricModel(ParametricModelBaseMixin, HistContainer):
     def _bin_evaluation_simpson(self):
         _height_edges = self.eval_model_function_density(self._bin_edges)
         _height_centers = self.eval_model_function_density(self.bin_centers)
-        return self.bin_widths / 6.0 * (
-                _height_edges[:-1] + 4.0 * _height_centers + _height_edges[1:])
+        return (
+            self.bin_widths / 6.0 * (_height_edges[:-1] + 4.0 * _height_centers + _height_edges[1:])
+        )
 
     def _bin_evaluation_numerical(self):
         _integrand_func = lambda x: self.eval_model_function_density(x)
@@ -166,7 +183,8 @@ class HistParametricModel(ParametricModelBaseMixin, HistContainer):
 
         :param x: *x* values of the support points
         :type x: list of float
-        :param model_parameters: values of the model parameters (if ``None``, the current values are used)
+        :param model_parameters: values of the model parameters (if ``None``, the current values
+            are used)
         :type model_parameters: list or ``None``
         :return: value(s) of the model function for the given parameters
         :rtype: :py:obj:`numpy.ndarray`

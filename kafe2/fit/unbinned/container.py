@@ -1,6 +1,6 @@
 from ..indexed import IndexedContainer
 
-__all__ = ['UnbinnedContainer']
+__all__ = ["UnbinnedContainer"]
 
 
 class UnbinnedContainer(IndexedContainer):
@@ -8,6 +8,7 @@ class UnbinnedContainer(IndexedContainer):
     This object is a specialized data container for series of measurements.
 
     """
+
     def __init__(self, data, dtype=float):
         """
         Construct a container for indexed data:

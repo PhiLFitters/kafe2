@@ -4,13 +4,16 @@ from .._base import ParametricModelBaseMixin
 from .container import UnbinnedContainer
 from ..util import function_library
 
-__all__ = ['UnbinnedParametricModel']
+__all__ = ["UnbinnedParametricModel"]
 
 
 class UnbinnedParametricModel(ParametricModelBaseMixin, UnbinnedContainer):
-    def __init__(self, data, model_density_function=function_library.normal_distribution,
-                 model_parameters=[1.0, 1.0]):
-
+    def __init__(
+        self,
+        data,
+        model_density_function=function_library.normal_distribution,
+        model_parameters=[1.0, 1.0],
+    ):
         self.support = np.array(data)
 
         _model = model_density_function(self.support, *model_parameters)
@@ -22,7 +25,7 @@ class UnbinnedParametricModel(ParametricModelBaseMixin, UnbinnedContainer):
             model_func=model_density_function,
             model_parameters=model_parameters,
             # this gets passed to UnbinnedContainer.__init__
-            data=_model
+            data=_model,
         )
 
     # -- private methods
@@ -55,9 +58,11 @@ class UnbinnedParametricModel(ParametricModelBaseMixin, UnbinnedContainer):
         """
         Evaluate the model function.
 
-        :param support: *x* values of the support points (if ``None``, the model *support* values are used)
+        :param support: *x* values of the support points (if ``None``, the model *support* values
+            are used)
         :type support: list or ``None``
-        :param model_parameters: values of the model parameters (if ``None``, the current values are used)
+        :param model_parameters: values of the model parameters (if ``None``, the current values
+            are used)
         :type model_parameters: list or ``None``
         :return: value(s) of the model function for the given parameters
         :rtype: :py:obj:`numpy.ndarray`

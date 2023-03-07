@@ -28,11 +28,27 @@ def _get_file_index():
     return _file_index
 
 
-def xy_fit(x_data, y_data, model_function=None, p0=None, dp0=None,
-           x_error=None, y_error=None, x_error_rel=None, y_error_rel=None,
-           x_error_cor=None, y_error_cor=None, x_error_cor_rel=None, y_error_cor_rel=None,
-           errors_rel_to_model=True, limits=None, constraints=None, report=False, profile=None,
-           save=True):
+def xy_fit(
+    x_data,
+    y_data,
+    model_function=None,
+    p0=None,
+    dp0=None,
+    x_error=None,
+    y_error=None,
+    x_error_rel=None,
+    y_error_rel=None,
+    x_error_cor=None,
+    y_error_cor=None,
+    x_error_cor_rel=None,
+    y_error_cor_rel=None,
+    errors_rel_to_model=True,
+    limits=None,
+    constraints=None,
+    report=False,
+    profile=None,
+    save=True,
+):
     """
     Built-in function for fitting a model function to xy data.
 
@@ -164,11 +180,30 @@ def xy_fit(x_data, y_data, model_function=None, p0=None, dp0=None,
     return _fit_results
 
 
-def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
-         error_band_label=None, x_range=None, y_range=None, x_scale=None, y_scale=None,
-         x_ticks=None, y_ticks=None, parameter_names=None, model_name=None, model_expression=None,
-         legend=True, fit_info=True, error_band=True, profile=None, plot_profile=None, show=True,
-         save=True):
+def plot(
+    fits=-1,
+    x_label=None,
+    y_label=None,
+    data_label=None,
+    model_label=None,
+    error_band_label=None,
+    x_range=None,
+    y_range=None,
+    x_scale=None,
+    y_scale=None,
+    x_ticks=None,
+    y_ticks=None,
+    parameter_names=None,
+    model_name=None,
+    model_expression=None,
+    legend=True,
+    fit_info=True,
+    error_band=True,
+    profile=None,
+    plot_profile=None,
+    show=True,
+    save=True,
+):
     """
     Plots kafe2 fits.
 
@@ -246,16 +281,14 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
     if parameter_names is not None:
         _unused_parameter_names = deepcopy(parameter_names)
         for _f in fits:
-            _plns = {_p:_pn for _p, _pn in parameter_names.items() if _p in _f.parameter_names}
+            _plns = {_p: _pn for _p, _pn in parameter_names.items() if _p in _f.parameter_names}
             _f.assign_parameter_latex_names(**_plns)
             for _parameter_name in _f.parameter_names:
                 _unused_parameter_names.pop(_parameter_name, None)
             for _x_name in _f._model_function.x_name:
                 _unused_parameter_names.pop(_x_name, None)
         if _unused_parameter_names:
-            warnings.warn(
-                f"Unused parameter names for plot: {_unused_parameter_names}"
-            )
+            warnings.warn(f"Unused parameter names for plot: {_unused_parameter_names}")
     if model_name is not None:
         if isinstance(model_name, str):
             model_name = [model_name for _ in fits]
@@ -328,7 +361,7 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
 _plot_func = plot
 
 
-#def plot_xy_data(x_data, y_data, x_error=None, y_error=None, x_error_rel=None, y_error_rel=None,
+# def plot_xy_data(x_data, y_data, x_error=None, y_error=None, x_error_rel=None, y_error_rel=None,
 #                 x_label=None, y_label=None, data_label=None, x_range=None, y_range=None,
 #                 x_scale=None, y_scale=None, x_ticks=None, y_ticks=None, show=True, save=True):
 #    from kafe2.fit.xy.container import XYContainer
@@ -345,12 +378,38 @@ _plot_func = plot
 #         y_range=y_range, x_scale=x_scale, y_scale=y_scale, x_ticks=x_ticks, y_ticks=y_ticks,
 #         show=show, save=save)
 
-def k2Fit(func, x, y, sx=None, sy=None, srelx=None, srely=None, xabscor=None, yabscor=None,
-          xrelcor=None, yrelcor=None, ref_to_model=True, constraints=None, p0=None, dp0=None,
-          limits=None, plot=True, axis_labels=['x-data', 'y-data'], data_legend='data',
-          model_expression=None, model_name=None, model_legend='model',
-          model_band=r'$\pm 1 \sigma$', fit_info=True, plot_band=True, asym_parerrs=True,
-          plot_cor=False, showplots=True, quiet=True):
+
+def k2Fit(
+    func,
+    x,
+    y,
+    sx=None,
+    sy=None,
+    srelx=None,
+    srely=None,
+    xabscor=None,
+    yabscor=None,
+    xrelcor=None,
+    yrelcor=None,
+    ref_to_model=True,
+    constraints=None,
+    p0=None,
+    dp0=None,
+    limits=None,
+    plot=True,
+    axis_labels=["x-data", "y-data"],
+    data_legend="data",
+    model_expression=None,
+    model_name=None,
+    model_legend="model",
+    model_band=r"$\pm 1 \sigma$",
+    fit_info=True,
+    plot_band=True,
+    asym_parerrs=True,
+    plot_cor=False,
+    showplots=True,
+    quiet=True,
+):
     """
     Legacy function for backwards compatibility with *PhyPraKit*.
     **New code should not use this function.**
@@ -439,20 +498,50 @@ def k2Fit(func, x, y, sx=None, sy=None, srelx=None, srely=None, xabscor=None, ya
     :rtype: tuple
     """
     xy_fit(
-        x, y, func, p0=p0, dp0=dp0, x_error=sx, y_error=sy, x_error_rel=srelx, y_error_rel=srely,
-        x_error_cor=xabscor, y_error_cor=yabscor, x_error_cor_rel=xrelcor, y_error_cor_rel=yrelcor,
-        errors_rel_to_model=ref_to_model, limits=limits, constraints=constraints, report=not quiet,
-        profile=True
+        x,
+        y,
+        func,
+        p0=p0,
+        dp0=dp0,
+        x_error=sx,
+        y_error=sy,
+        x_error_rel=srelx,
+        y_error_rel=srely,
+        x_error_cor=xabscor,
+        y_error_cor=yabscor,
+        x_error_cor_rel=xrelcor,
+        y_error_cor_rel=yrelcor,
+        errors_rel_to_model=ref_to_model,
+        limits=limits,
+        constraints=constraints,
+        report=not quiet,
+        profile=True,
     )
     if plot:
         _plot_func(
-            x_label=axis_labels[0], y_label=axis_labels[1], data_label=data_legend,
-            model_label=model_legend, error_band_label=model_band, model_name=model_name,
-            model_expression=model_expression, legend=True, fit_info=fit_info, error_band=plot_band,
-            profile=True, plot_profile=plot_cor, show=showplots
+            x_label=axis_labels[0],
+            y_label=axis_labels[1],
+            data_label=data_legend,
+            model_label=model_legend,
+            error_band_label=model_band,
+            model_name=model_name,
+            model_expression=model_expression,
+            legend=True,
+            fit_info=fit_info,
+            error_band=plot_band,
+            profile=True,
+            plot_profile=plot_cor,
+            show=showplots,
         )
     _fit_object = _fit_history[-1]["fit"]
-    _parameter_errors = _fit_object.asymmetric_parameter_errors if asym_parerrs else \
-        np.stack([-_fit_object.parameter_errors, _fit_object.parameter_errors], axis=-1)
-    return (_fit_object.parameter_values, _parameter_errors, _fit_object.parameter_cor_mat,
-            _fit_object.goodness_of_fit)
+    _parameter_errors = (
+        _fit_object.asymmetric_parameter_errors
+        if asym_parerrs
+        else np.stack([-_fit_object.parameter_errors, _fit_object.parameter_errors], axis=-1)
+    )
+    return (
+        _fit_object.parameter_values,
+        _parameter_errors,
+        _fit_object.parameter_cor_mat,
+        _fit_object.goodness_of_fit,
+    )

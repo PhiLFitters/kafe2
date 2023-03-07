@@ -4,12 +4,14 @@ from kafe2.core.minimizers.scipy_optimize_minimizer import MinimizerScipyOptimiz
 
 
 class TestMinimizerScipyOptimize(AbstractMinimizerTest, unittest.TestCase):
-
-    def _get_minimizer(self, parameter_names, parameter_values, parameter_errors,
-                       function_to_minimize):
+    def _get_minimizer(
+        self, parameter_names, parameter_values, parameter_errors, function_to_minimize
+    ):
         return MinimizerScipyOptimize(
-            parameter_names=parameter_names, parameter_values=parameter_values,
-            parameter_errors=parameter_errors, function_to_minimize=function_to_minimize
+            parameter_names=parameter_names,
+            parameter_values=parameter_values,
+            parameter_errors=parameter_errors,
+            function_to_minimize=function_to_minimize,
         )
 
     @property

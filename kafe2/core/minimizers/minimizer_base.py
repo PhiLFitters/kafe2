@@ -10,13 +10,18 @@ from ..error import CovMat
 
 @six.add_metaclass(ABCMeta)
 class MinimizerBase(object):
-
     ERRORDEF_CHI2 = 1.0
     ERRORDEF_NLL = 0.5
 
     def __init__(
-            self, parameter_names, parameter_values, parameter_errors, function_to_minimize,
-            tolerance=1e-6, errordef=ERRORDEF_CHI2):
+        self,
+        parameter_names,
+        parameter_values,
+        parameter_errors,
+        function_to_minimize,
+        tolerance=1e-6,
+        errordef=ERRORDEF_CHI2,
+    ):
         """
         :param parameter_names: the names of the parameters to vary during minimization.
         :type parameter_names: iterable of str
@@ -61,49 +66,49 @@ class MinimizerBase(object):
         Save the state of this object including the state of the used backend, if any.
         """
         if self._par_asymm_err is None:
-            self._save_state_dict['asymmetric_parameter_error'] = self._par_asymm_err
+            self._save_state_dict["asymmetric_parameter_error"] = self._par_asymm_err
         else:
-            self._save_state_dict['asymmetric_parameter_error'] = np.array(self._par_asymm_err)
+            self._save_state_dict["asymmetric_parameter_error"] = np.array(self._par_asymm_err)
         if self._hessian is None:
-            self._save_state_dict['hessian'] = self._hessian
+            self._save_state_dict["hessian"] = self._hessian
         else:
-            self._save_state_dict['hessian'] = np.array(self._hessian)
+            self._save_state_dict["hessian"] = np.array(self._hessian)
         if self._hessian_inv is None:
-            self._save_state_dict['hessian_inv'] = self._hessian_inv
+            self._save_state_dict["hessian_inv"] = self._hessian_inv
         else:
-            self._save_state_dict['hessian_inv'] = np.array(self._hessian_inv)
+            self._save_state_dict["hessian_inv"] = np.array(self._hessian_inv)
         if self._par_cov_mat is None:
-            self._save_state_dict['par_cov_mat'] = self._par_cov_mat
+            self._save_state_dict["par_cov_mat"] = self._par_cov_mat
         else:
-            self._save_state_dict['par_cov_mat'] = np.array(self._par_cov_mat)
+            self._save_state_dict["par_cov_mat"] = np.array(self._par_cov_mat)
         if self._par_cor_mat is None:
-            self._save_state_dict['par_cor_mat'] = self._par_cor_mat
+            self._save_state_dict["par_cor_mat"] = self._par_cor_mat
         else:
-            self._save_state_dict['par_cor_mat'] = np.array(self._par_cor_mat)
-        self._save_state_dict['did_fit'] = self._did_fit
+            self._save_state_dict["par_cor_mat"] = np.array(self._par_cor_mat)
+        self._save_state_dict["did_fit"] = self._did_fit
 
     def _load_state(self):
         """
         Load the state of this object including the state of the used backend, if any.
         """
-        self._par_asymm_err = self._save_state_dict['asymmetric_parameter_error']
+        self._par_asymm_err = self._save_state_dict["asymmetric_parameter_error"]
         if self._par_asymm_err is not None:
             self._par_asymm_err = np.array(self._par_asymm_err)
-        self._hessian = self._save_state_dict['hessian']
+        self._hessian = self._save_state_dict["hessian"]
         if self._hessian is not None:
             self._hessian = np.array(self._hessian)
-        self._hessian_inv = self._save_state_dict['hessian_inv']
+        self._hessian_inv = self._save_state_dict["hessian_inv"]
         if self._hessian_inv is not None:
             self._hessian_inv = np.array(self._hessian_inv)
-        self._par_cov_mat = self._save_state_dict['par_cov_mat']
+        self._par_cov_mat = self._save_state_dict["par_cov_mat"]
         if self._par_cov_mat is not None:
             self._par_cov_mat = np.array(self._par_cov_mat)
-        self._par_cor_mat = self._save_state_dict['par_cor_mat']
+        self._par_cor_mat = self._save_state_dict["par_cor_mat"]
         if self._par_cor_mat is not None:
             self._par_cor_mat = np.array(self._par_cor_mat)
         # Write back parameter values to nexus parameter nodes:
         self._func_wrapper_unpack_args(self.parameter_values)
-        self._did_fit = self._save_state_dict['did_fit']
+        self._did_fit = self._save_state_dict["did_fit"]
 
     def _func_wrapper(self, *args):
         """
@@ -114,8 +119,10 @@ class MinimizerBase(object):
         """
         _fval = self._func_handle(*args)
         if not self._printed_inf_cost_warning and np.isinf(_fval):
-            print('Warning: the cost function has been evaluated as infinite. '
-                  'The fit might not converge correctly.')
+            print(
+                "Warning: the cost function has been evaluated as infinite. "
+                "The fit might not converge correctly."
+            )
             self._printed_inf_cost_warning = True
         return _fval
 
@@ -154,11 +161,13 @@ class MinimizerBase(object):
                 _par_err = self.parameter_errors[_par_index]
 
                 _cut_dn = self._find_cost_cut(
-                    _par_name, _par_min - 2 * _par_err, _par_min, _target_chi_2, _min_parameters)
+                    _par_name, _par_min - 2 * _par_err, _par_min, _target_chi_2, _min_parameters
+                )
                 _asymm_par_errs[_par_index, 0] = _cut_dn - _par_min
 
                 _cut_up = self._find_cost_cut(
-                    _par_name, _par_min, _par_min + 2 * _par_err, _target_chi_2, _min_parameters)
+                    _par_name, _par_min, _par_min + 2 * _par_err, _target_chi_2, _min_parameters
+                )
                 _asymm_par_errs[_par_index, 1] = _cut_up - _par_min
                 self._load_state()
         return _asymm_par_errs
@@ -199,12 +208,14 @@ class MinimizerBase(object):
         Takes a full error matrix and removes the rows and
         columns that corresponding to fixed parameters.
         """
-        assert (matrix.shape == (self.num_pars, self.num_pars))
+        assert matrix.shape == (self.num_pars, self.num_pars)
 
-        _fixed_par_indices = [_i for _i, _par_name_i in enumerate(self._par_names)
-                              if self.is_fixed(_par_name_i)]
+        _fixed_par_indices = [
+            _i for _i, _par_name_i in enumerate(self._par_names) if self.is_fixed(_par_name_i)
+        ]
         _submat = np.delete(
-            np.delete(matrix, _fixed_par_indices, axis=0), _fixed_par_indices, axis=1)
+            np.delete(matrix, _fixed_par_indices, axis=0), _fixed_par_indices, axis=1
+        )
 
         return _submat
 
@@ -216,12 +227,13 @@ class MinimizerBase(object):
         """
         _mat = submatrix
 
-        _fixed_par_indices = [_i for _i, _par_name_i in enumerate(self._par_names)
-                              if self.is_fixed(_par_name_i)]
+        _fixed_par_indices = [
+            _i for _i, _par_name_i in enumerate(self._par_names) if self.is_fixed(_par_name_i)
+        ]
         for _id in _fixed_par_indices:
-            _mat = np.insert(np.insert(_mat, _id, 0., axis=0), _id, 0., axis=1)
+            _mat = np.insert(np.insert(_mat, _id, 0.0, axis=0), _id, 0.0, axis=1)
 
-        assert (_mat.shape == (self.num_pars, self.num_pars))
+        assert _mat.shape == (self.num_pars, self.num_pars)
 
         return _mat
 
@@ -263,8 +275,10 @@ class MinimizerBase(object):
         if self._fval is None:
             self._fval = self._func_handle(*self.parameter_values)
         if not self._printed_inf_cost_warning and np.isinf(self._fval):
-            print('Warning: the cost function has been evaluated as infinite. '
-                  'The fit might not converge correctly.')
+            print(
+                "Warning: the cost function has been evaluated as infinite. "
+                "The fit might not converge correctly."
+            )
             self._printed_inf_cost_warning = True
         return self._fval
 
@@ -358,7 +372,7 @@ class MinimizerBase(object):
             return None
         if self._hessian is None:
             self._hessian = nd.Hessian(self._func_wrapper_unpack_args)(self.parameter_values)
-            assert(np.all(self._hessian == self._hessian.T))
+            assert np.all(self._hessian == self._hessian.T)
             # Write back parameter values to nexus parameter nodes:
             self._func_wrapper_unpack_args(self.parameter_values)
         return self._hessian.copy()
@@ -378,7 +392,7 @@ class MinimizerBase(object):
             self._hessian_inv = self._fill_in_zeroes_for_fixed(_subhessian_inv)
             # ensure symmetric
             self._hessian_inv = 0.5 * (self._hessian_inv + self._hessian_inv.T)
-            assert (np.all(self._hessian_inv == self._hessian_inv.T))
+            assert np.all(self._hessian_inv == self._hessian_inv.T)
         return self._hessian_inv.copy()
 
     @property

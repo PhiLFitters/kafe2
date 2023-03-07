@@ -4,8 +4,10 @@ import numpy as np
 
 from kafe2.fit.io import IOStreamHandle
 from kafe2.fit.representation import ConstraintYamlReader, ConstraintYamlWriter
-from kafe2.core.constraint import GaussianSimpleParameterConstraint, \
-    GaussianMatrixParameterConstraint
+from kafe2.core.constraint import (
+    GaussianSimpleParameterConstraint,
+    GaussianMatrixParameterConstraint,
+)
 
 TEST_SIMPLE_GAUSSIAN_CONSTRAINT_ABS = """
 type: simple
@@ -28,37 +30,50 @@ index: 3
 uncertainty: 1.2
 """
 
-TEST_SIMPLE_GAUSSIAN_CONSTRAINT_EXTRA_KEYWORD = TEST_SIMPLE_GAUSSIAN_CONSTRAINT_ABS + """
+TEST_SIMPLE_GAUSSIAN_CONSTRAINT_EXTRA_KEYWORD = (
+    TEST_SIMPLE_GAUSSIAN_CONSTRAINT_ABS
+    + """
 extra_keyword: 3.14
 """
+)
 
 
 class TestSimpleGaussianConstraintRepresenter(unittest.TestCase):
-
     def setUp(self):
         self._index = 3
         self._value = 2.0
         self._uncertainty = 1.2
-        self._constraint = GaussianSimpleParameterConstraint(index=self._index, value=self._value,
-                                                             uncertainty=self._uncertainty)
+        self._constraint = GaussianSimpleParameterConstraint(
+            index=self._index, value=self._value, uncertainty=self._uncertainty
+        )
 
         self._roundtrip_stringstream = IOStreamHandle(StringIO())
-        self._testfile_stringstream_abs = IOStreamHandle(StringIO(TEST_SIMPLE_GAUSSIAN_CONSTRAINT_ABS))
-        self._testfile_stringstream_rel = IOStreamHandle(StringIO(TEST_SIMPLE_GAUSSIAN_CONSTRAINT_REL))
+        self._testfile_stringstream_abs = IOStreamHandle(
+            StringIO(TEST_SIMPLE_GAUSSIAN_CONSTRAINT_ABS)
+        )
+        self._testfile_stringstream_rel = IOStreamHandle(
+            StringIO(TEST_SIMPLE_GAUSSIAN_CONSTRAINT_REL)
+        )
 
         self._roundtrip_streamreader = ConstraintYamlReader(self._roundtrip_stringstream)
-        self._roundtrip_streamwriter = ConstraintYamlWriter(self._constraint, self._roundtrip_stringstream)
+        self._roundtrip_streamwriter = ConstraintYamlWriter(
+            self._constraint, self._roundtrip_stringstream
+        )
         self._testfile_streamreader_abs = ConstraintYamlReader(self._testfile_stringstream_abs)
         self._testfile_streamreader_rel = ConstraintYamlReader(self._testfile_stringstream_rel)
 
         self._testfile_stringstream_missing_keyword = IOStreamHandle(
-            StringIO(TEST_SIMPLE_GAUSSIAN_CONSTRAINT_MISSING_KEYWORD))
+            StringIO(TEST_SIMPLE_GAUSSIAN_CONSTRAINT_MISSING_KEYWORD)
+        )
         self._testfile_stringstream_extra_keyword = IOStreamHandle(
-            StringIO(TEST_SIMPLE_GAUSSIAN_CONSTRAINT_EXTRA_KEYWORD))
+            StringIO(TEST_SIMPLE_GAUSSIAN_CONSTRAINT_EXTRA_KEYWORD)
+        )
         self._testfile_streamreader_missing_keyword = ConstraintYamlReader(
-            self._testfile_stringstream_missing_keyword)
+            self._testfile_stringstream_missing_keyword
+        )
         self._testfile_streamreader_extra_keyword = ConstraintYamlReader(
-            self._testfile_stringstream_extra_keyword)
+            self._testfile_stringstream_extra_keyword
+        )
 
     def _assert_constraints_equal(self, constraint_1, constraint_2):
         self.assertTrue(constraint_1.index == constraint_2.index)
@@ -133,41 +148,66 @@ values: [1.0, 10.0, 100.0]
 matrix: [[0.1, 0.1, 2.0], [0.1, 10.0, 30.0], [2.0, 30.0, 1000.0]]
 """
 
-TEST_MATRIX_GAUSSIAN_CONSTRAINT_EXTRA_KEYWORD = TEST_MATRIX_GAUSSIAN_CONSTRAINT_COV_ABS + """
+TEST_MATRIX_GAUSSIAN_CONSTRAINT_EXTRA_KEYWORD = (
+    TEST_MATRIX_GAUSSIAN_CONSTRAINT_COV_ABS
+    + """
 extra_keyword: 3.14
 """
+)
 
 
 class TestMatrixGaussianConstraintRepresenter(unittest.TestCase):
-
     def setUp(self):
         self._indices = [3, 0, 1]
         self._values = [1.0, 10.0, 100.0]
         self._cov_mat = [[0.01, 0.01, 0.2], [0.01, 1.0, 3.0], [0.2, 3.0, 100.0]]
-        self._constraint = GaussianMatrixParameterConstraint(indices=self._indices, values=self._values,
-                                                             matrix=self._cov_mat)
+        self._constraint = GaussianMatrixParameterConstraint(
+            indices=self._indices, values=self._values, matrix=self._cov_mat
+        )
 
         self._roundtrip_stringstream = IOStreamHandle(StringIO())
-        self._testfile_stringstream_cov_abs = IOStreamHandle(StringIO(TEST_MATRIX_GAUSSIAN_CONSTRAINT_COV_ABS))
-        self._testfile_stringstream_cov_rel = IOStreamHandle(StringIO(TEST_MATRIX_GAUSSIAN_CONSTRAINT_COV_REL))
-        self._testfile_stringstream_cor_abs = IOStreamHandle(StringIO(TEST_MATRIX_GAUSSIAN_CONSTRAINT_COR_ABS))
-        self._testfile_stringstream_cor_rel = IOStreamHandle(StringIO(TEST_MATRIX_GAUSSIAN_CONSTRAINT_COR_REL))
+        self._testfile_stringstream_cov_abs = IOStreamHandle(
+            StringIO(TEST_MATRIX_GAUSSIAN_CONSTRAINT_COV_ABS)
+        )
+        self._testfile_stringstream_cov_rel = IOStreamHandle(
+            StringIO(TEST_MATRIX_GAUSSIAN_CONSTRAINT_COV_REL)
+        )
+        self._testfile_stringstream_cor_abs = IOStreamHandle(
+            StringIO(TEST_MATRIX_GAUSSIAN_CONSTRAINT_COR_ABS)
+        )
+        self._testfile_stringstream_cor_rel = IOStreamHandle(
+            StringIO(TEST_MATRIX_GAUSSIAN_CONSTRAINT_COR_REL)
+        )
 
         self._roundtrip_streamreader = ConstraintYamlReader(self._roundtrip_stringstream)
-        self._roundtrip_streamwriter = ConstraintYamlWriter(self._constraint, self._roundtrip_stringstream)
-        self._testfile_streamreader_cov_abs = ConstraintYamlReader(self._testfile_stringstream_cov_abs)
-        self._testfile_streamreader_cov_rel = ConstraintYamlReader(self._testfile_stringstream_cov_rel)
-        self._testfile_streamreader_cor_abs = ConstraintYamlReader(self._testfile_stringstream_cor_abs)
-        self._testfile_streamreader_cor_rel = ConstraintYamlReader(self._testfile_stringstream_cor_rel)
+        self._roundtrip_streamwriter = ConstraintYamlWriter(
+            self._constraint, self._roundtrip_stringstream
+        )
+        self._testfile_streamreader_cov_abs = ConstraintYamlReader(
+            self._testfile_stringstream_cov_abs
+        )
+        self._testfile_streamreader_cov_rel = ConstraintYamlReader(
+            self._testfile_stringstream_cov_rel
+        )
+        self._testfile_streamreader_cor_abs = ConstraintYamlReader(
+            self._testfile_stringstream_cor_abs
+        )
+        self._testfile_streamreader_cor_rel = ConstraintYamlReader(
+            self._testfile_stringstream_cor_rel
+        )
 
         self._testfile_stringstream_missing_keyword = IOStreamHandle(
-            StringIO(TEST_MATRIX_GAUSSIAN_CONSTRAINT_MISSING_KEYWORD))
+            StringIO(TEST_MATRIX_GAUSSIAN_CONSTRAINT_MISSING_KEYWORD)
+        )
         self._testfile_stringstream_extra_keyword = IOStreamHandle(
-            StringIO(TEST_MATRIX_GAUSSIAN_CONSTRAINT_EXTRA_KEYWORD))
+            StringIO(TEST_MATRIX_GAUSSIAN_CONSTRAINT_EXTRA_KEYWORD)
+        )
         self._testfile_streamreader_missing_keyword = ConstraintYamlReader(
-            self._testfile_stringstream_missing_keyword)
+            self._testfile_stringstream_missing_keyword
+        )
         self._testfile_streamreader_extra_keyword = ConstraintYamlReader(
-            self._testfile_stringstream_extra_keyword)
+            self._testfile_stringstream_extra_keyword
+        )
 
     def _assert_constraints_equal(self, constraint_1, constraint_2):
         self.assertTrue(np.all(constraint_1.indices == constraint_2.indices))

@@ -5,33 +5,36 @@ import numpy as np
 from ....core.error import SimpleGaussianError, MatrixGaussianError
 from ...xy import XYContainer
 
-__all__ = ["add_error_to_container", "write_errors_to_yaml", "process_error_sources",
-           "MatrixYamlDumper", "MatrixYamlLoader"]
+__all__ = [
+    "add_error_to_container",
+    "write_errors_to_yaml",
+    "process_error_sources",
+    "MatrixYamlDumper",
+    "MatrixYamlLoader",
+]
 
 
-_yaml_error_section_for_axis = {0: 'x_errors',
-                                1: 'y_errors',
-                                None: 'errors'}
+_yaml_error_section_for_axis = {0: "x_errors", 1: "y_errors", None: "errors"}
 
 
 def add_error_to_container(err_type, container_obj, **kwargs):
     # TODO: check kwargs explicitly
-    if err_type == 'simple':
+    if err_type == "simple":
         container_obj.add_error(**kwargs)
-    elif err_type == 'matrix':
+    elif err_type == "matrix":
         container_obj.add_matrix_error(**kwargs)
     else:
-        raise TypeError("Unknown error type '{}'. "
-                         "Valid: {}".format(err_type, ('simple', 'matrix')))
+        raise TypeError(
+            "Unknown error type '{}'. " "Valid: {}".format(err_type, ("simple", "matrix"))
+        )
     return container_obj
 
 
 def write_errors_to_yaml(container, yaml_doc):
     # TODO: create public error retrieval interface
     for _err_name, _err_dict in container._error_dicts.items():
-
-        _err_obj = _err_dict['err']
-        _err_axis = _err_dict.get('axis', None)
+        _err_obj = _err_dict["err"]
+        _err_axis = _err_dict.get("axis", None)
 
         # get the relevant error section for the current axis, creating it if necessary
         _yaml_section = yaml_doc.setdefault(_yaml_error_section_for_axis[_err_axis], [])
@@ -52,36 +55,42 @@ def write_errors_to_yaml(container, yaml_doc):
         # -- handle different error types
         # TODO shouldn't each error be wrapped inside an 'error' namespace?
         if _err_obj.__class__ is SimpleGaussianError:
-            _yaml_section.append(dict(name=_err_name,
-                                      type='simple',
-                                      error_value=_err_val,
-                                      relative=_is_relative,
-                                      correlation_coefficient=_err_obj._corr_coeff,
-                                      # TODO: public interface for _corr_coeff!
-                                      )
-                                 )
+            _yaml_section.append(
+                dict(
+                    name=_err_name,
+                    type="simple",
+                    error_value=_err_val,
+                    relative=_is_relative,
+                    correlation_coefficient=_err_obj._corr_coeff,
+                    # TODO: public interface for _corr_coeff!
+                )
+            )
         elif _err_obj.__class__ is MatrixGaussianError:
             _mtype = _err_obj._matrix_type_at_construction  # TODO: public interface!
-            _yaml_section.append(dict(name=_err_name,
-                                      type='matrix',
-                                      matrix_type=_mtype,
-                                      relative=_is_relative,
-                                      )
-                                 )
-            if _mtype == 'covariance':
+            _yaml_section.append(
+                dict(
+                    name=_err_name,
+                    type="matrix",
+                    matrix_type=_mtype,
+                    relative=_is_relative,
+                )
+            )
+            if _mtype == "covariance":
                 if _is_relative:
-                    _yaml_section[-1]['matrix'] = _err_obj.cov_mat_rel  # .tolist()
+                    _yaml_section[-1]["matrix"] = _err_obj.cov_mat_rel  # .tolist()
                 else:
-                    _yaml_section[-1]['matrix'] = _err_obj.cov_mat  # .tolist()
-            elif _mtype == 'correlation':
-                _yaml_section[-1]['matrix'] = _err_obj.cor_mat  # .tolist()
-                _yaml_section[-1]['error_value'] = _err_val
+                    _yaml_section[-1]["matrix"] = _err_obj.cov_mat  # .tolist()
+            elif _mtype == "correlation":
+                _yaml_section[-1]["matrix"] = _err_obj.cor_mat  # .tolist()
+                _yaml_section[-1]["error_value"] = _err_val
             else:
-                raise TypeError("Unknown error matrix type '{}'. "
-                                "Valid: 'correlation' or 'covariance'.")
+                raise TypeError(
+                    "Unknown error matrix type '{}'. " "Valid: 'correlation' or 'covariance'."
+                )
         else:
-            raise TypeError("No representation for error type {} "
-                             "implemented!".format(type(_err_obj)))
+            raise TypeError(
+                "No representation for error type {} " "implemented!".format(type(_err_obj))
+            )
 
     return yaml_doc
 
@@ -91,12 +100,12 @@ def process_error_sources(container_obj, yaml_doc):
     # errors can be specified as a single float, a list of floats, or a kafe2 error object
     # lists of the above are also valid, if the error object is not a list
     if isinstance(container_obj, XYContainer):  # also applies for XYParamModel
-        _xerrs = yaml_doc.pop('x_errors', [])
+        _xerrs = yaml_doc.pop("x_errors", [])
         if isinstance(_xerrs, (int, float, str)):
             _xerrs = [_xerrs] * container_obj.size
         if len(_xerrs) > 0 and isinstance(_xerrs[0], (int, float, str)):
             _xerrs = [_xerrs]
-        _yerrs = yaml_doc.pop('y_errors', [])
+        _yerrs = yaml_doc.pop("y_errors", [])
         if not isinstance(_yerrs, list):
             _yerrs = [_yerrs] * container_obj.size
         if len(_yerrs) > 0 and isinstance(_yerrs[0], (int, float, str)):
@@ -104,7 +113,7 @@ def process_error_sources(container_obj, yaml_doc):
         _errs = _xerrs + _yerrs
         _axes = [0] * len(_xerrs) + [1] * len(_yerrs)  # 0 for 'x', 1 for 'y'
     else:
-        _errs = yaml_doc.pop('errors', [])
+        _errs = yaml_doc.pop("errors", [])
         if not isinstance(_errs, list):
             _errs = [_errs] * container_obj.size
         if len(_errs) > 0 and isinstance(_errs[0], float):
@@ -132,21 +141,19 @@ def process_error_sources(container_obj, yaml_doc):
                         raise ValueError("Cannot convert {} to error value.".format(_val))
                     _abs[i] = _val
             if _axis is not None:
-                container_obj = add_error_to_container('simple', container_obj,
-                                                       err_val=0.01 * _rel,
-                                                       relative=True,
-                                                       axis=_axis)
-                container_obj = add_error_to_container('simple', container_obj,
-                                                       err_val=_abs,
-                                                       relative=False,
-                                                       axis=_axis)
+                container_obj = add_error_to_container(
+                    "simple", container_obj, err_val=0.01 * _rel, relative=True, axis=_axis
+                )
+                container_obj = add_error_to_container(
+                    "simple", container_obj, err_val=_abs, relative=False, axis=_axis
+                )
             else:
-                container_obj = add_error_to_container('simple', container_obj,
-                                                       err_val=0.01 * _rel,
-                                                       relative=True)
-                container_obj = add_error_to_container('simple', container_obj,
-                                                       err_val=_abs,
-                                                       relative=False)
+                container_obj = add_error_to_container(
+                    "simple", container_obj, err_val=0.01 * _rel, relative=True
+                )
+                container_obj = add_error_to_container(
+                    "simple", container_obj, err_val=_abs, relative=False
+                )
             continue
         elif isinstance(_err, (float, int, str)):
             raise ValueError("Failed to read in errors: {}".format(_err))
@@ -154,27 +161,28 @@ def process_error_sources(container_obj, yaml_doc):
         _add_kwargs = dict()
         # translate and check that all required keys are present
         try:
-            _err_type = _err.get('type', 'simple')
+            _err_type = _err.get("type", "simple")
 
-            _add_kwargs['name'] = _err.get('name', None)
+            _add_kwargs["name"] = _err.get("name", None)
 
-            if _err_type == 'simple':
-                _add_kwargs['err_val'] = _err['error_value']
-                _add_kwargs['correlation'] = _err.get('correlation_coefficient', 0)
-            elif _err_type == 'matrix':
-                _add_kwargs['err_matrix'] = _err['matrix']
-                _add_kwargs['matrix_type'] = _err['matrix_type']
+            if _err_type == "simple":
+                _add_kwargs["err_val"] = _err["error_value"]
+                _add_kwargs["correlation"] = _err.get("correlation_coefficient", 0)
+            elif _err_type == "matrix":
+                _add_kwargs["err_matrix"] = _err["matrix"]
+                _add_kwargs["matrix_type"] = _err["matrix_type"]
                 # default None only mandatory for cor mats; check done later
-                _add_kwargs['err_val'] = _err.get('error_value', None)
+                _add_kwargs["err_val"] = _err.get("error_value", None)
             else:
-                raise TypeError("Unknown error type '{}'. "
-                                 "Valid: {}".format(_err_type, ('simple', 'matrix')))
+                raise TypeError(
+                    "Unknown error type '{}'. " "Valid: {}".format(_err_type, ("simple", "matrix"))
+                )
 
-            _add_kwargs['relative'] = _err.get('relative', False)
+            _add_kwargs["relative"] = _err.get("relative", False)
 
             # if needed, specify the axis (only for 'xy' containers)
             if _axis is not None:
-                _add_kwargs['axis'] = _axis
+                _add_kwargs["axis"] = _axis
         except KeyError as e:
             # KeyErrors mean the YAML is incomplete -> raise
             raise ValueError("Missing required key '%s' for error specification" % e.args[0])
@@ -199,22 +207,30 @@ class MatrixYamlDumper(yaml.Dumper):
         _is_symmetric = np.allclose(numpy_matrix, numpy_matrix.T)
 
         # remove brackets
-        _string_repr = str(numpy_matrix).replace('[[', ' [').replace(']]', '] ').replace('[', '').\
-            replace(']', '').strip()
+        _string_repr = (
+            str(numpy_matrix)
+            .replace("[[", " [")
+            .replace("]]", "] ")
+            .replace("[", "")
+            .replace("]", "")
+            .strip()
+        )
         # remove all spaces immediately after newline
         _string_repr = re.sub(self.__class__._regex_space_after_newline, "\n", _string_repr)
 
         # if symmetric, remove everything above upper diagonal
         if _is_symmetric and False:
-            _rows = _string_repr.split('\n')
+            _rows = _string_repr.split("\n")
             for _irow, _row in enumerate(_rows):
-                _rows[_irow] = re.sub(r"^((\S+\s*){{{}}}).*$".format(_irow+1), r"\1", _row).strip()
+                _rows[_irow] = re.sub(
+                    r"^((\S+\s*){{{}}}).*$".format(_irow + 1), r"\1", _row
+                ).strip()
             _string_repr = "\n".join(_rows)
             # write lower triangular matrix using the '|'-style
-            return self.represent_scalar('!symmetric_matrix', _string_repr, style='|')
+            return self.represent_scalar("!symmetric_matrix", _string_repr, style="|")
 
         # write full matrix using the '|'-style
-        return self.represent_scalar('!matrix', _string_repr, style='|')
+        return self.represent_scalar("!matrix", _string_repr, style="|")
 
 
 # representers for covariance matrices errors
@@ -226,29 +242,31 @@ class MatrixYamlLoader(yaml.Loader):
 
     def matrix(self, node):
         """construct a matrix from a tab/endline separated string"""
-        _rows = node.value.split('\n')
+        _rows = node.value.split("\n")
         _mat = [_row.split() for _row in _rows if _row]  # last row may be empty -> leave out
         return np.array(_mat, dtype=float)
 
     def symmetric_matrix(self, node):
         """construct a lower triangular matrix from a tab/endline separated string"""
-        _rows = node.value.split('\n')[:-1]  # last endline ends the matrix -> no new row
+        _rows = node.value.split("\n")[:-1]  # last endline ends the matrix -> no new row
         _mat = [_row.split() for _row in _rows]
         _np_mat = np.array(np.zeros((len(_rows), len(_rows))), dtype=float)
 
         for _i, _row in enumerate(_mat):
             # check shape -> row index must match row length
             if len(_row) != _i + 1:
-                raise ValueError("Cannot parse lower triangular matrix: "
-                                 "row #{} should have length {}, got {} "
-                                 "instead!".format(_i+1, _i+1, len(_row)))
+                raise ValueError(
+                    "Cannot parse lower triangular matrix: "
+                    "row #{} should have length {}, got {} "
+                    "instead!".format(_i + 1, _i + 1, len(_row))
+                )
             # fill matrix
-            _np_mat[_i, 0:len(_row)] = _row   # fill below diagonal
+            _np_mat[_i, 0 : len(_row)] = _row  # fill below diagonal
 
         _np_mat = _np_mat + np.tril(_np_mat, -1).T  # symmetrize
 
         return _np_mat
 
 
-MatrixYamlLoader.add_constructor('!matrix', MatrixYamlLoader.matrix)
-MatrixYamlLoader.add_constructor('!symmetric_matrix', MatrixYamlLoader.symmetric_matrix)
+MatrixYamlLoader.add_constructor("!matrix", MatrixYamlLoader.matrix)
+MatrixYamlLoader.add_constructor("!symmetric_matrix", MatrixYamlLoader.symmetric_matrix)

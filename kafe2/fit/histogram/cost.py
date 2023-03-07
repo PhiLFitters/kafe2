@@ -1,12 +1,16 @@
-from .._base.cost import CostFunction, CostFunction_Chi2, CostFunction_NegLogLikelihood, \
-    CostFunction_GaussApproximation
+from .._base.cost import (
+    CostFunction,
+    CostFunction_Chi2,
+    CostFunction_NegLogLikelihood,
+    CostFunction_GaussApproximation,
+)
 
 
 __all__ = [
     "HistCostFunction",
     "HistCostFunction_Chi2",
     "HistCostFunction_NegLogLikelihood",
-    "HistCostFunction_GaussApproximation"
+    "HistCostFunction_GaussApproximation",
 ]
 
 

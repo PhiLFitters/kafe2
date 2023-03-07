@@ -11,31 +11,33 @@ __all__ = ["HistPlotAdapter"]
 
 
 class HistPlotAdapter(PlotAdapterBase):
-
-    PLOT_STYLE_CONFIG_DATA_TYPE = 'histogram'
+    PLOT_STYLE_CONFIG_DATA_TYPE = "histogram"
 
     PLOT_SUBPLOT_TYPES = dict(
         PlotAdapterBase.PLOT_SUBPLOT_TYPES,
         model_density=dict(
-            plot_adapter_method='plot_model_density',
-            target_axes='main',
+            plot_adapter_method="plot_model_density",
+            target_axes="main",
         ),
     )
 
-    AVAILABLE_X_SCALES = ('linear', 'log')
+    AVAILABLE_X_SCALES = ("linear", "log")
 
     def __init__(self, hist_fit_object, from_container=False):
         """
-        Construct an :py:obj:`HistPlotContainer` for a :py:obj:`~kafe2.fit.histogram.HistFit` object:
+        Construct an :py:obj:`HistPlotContainer` for a :py:obj:`~kafe2.fit.histogram.HistFit`
+        object:
 
         :param fit_object: an :py:obj:`~kafe2.fit.histogram.HistFit` object
-        :param n_plot_points_model_density: number of plot points to use for plotting the model density
+        :param n_plot_points_model_density: number of plot points to use for plotting the model
+            density
         :param from_container: Whether hist_fit_object was created ad-hoc from just a data
             container.
         :type from_container: bool
         """
         super(HistPlotAdapter, self).__init__(
-            fit_object=hist_fit_object, from_container=from_container)
+            fit_object=hist_fit_object, from_container=from_container
+        )
         self.n_plot_points = 100 if len(self.data_x) < 100 else len(self.data_x)
         self.x_range = self._fit.data_container.bin_range
 
@@ -46,10 +48,14 @@ class HistPlotAdapter(PlotAdapterBase):
         # set model density label according to model label
         _model_label = self._fit.model_label
         if _model_label is None:
-            _model_label = dict(kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'model', 'plot_kwargs'))['label']
-        _density_label = dict(kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'model_density', 'plot_kwargs'))['label']
+            _model_label = dict(
+                kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, "model", "plot_kwargs")
+            )["label"]
+        _density_label = dict(
+            kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, "model_density", "plot_kwargs")
+        )["label"]
         _density_label = _density_label % dict(model_label=_model_label)
-        self.update_plot_kwargs('model_density', dict(label=_density_label))
+        self.update_plot_kwargs("model_density", dict(label=_density_label))
 
     # -- public methods
 
@@ -91,28 +97,33 @@ class HistPlotAdapter(PlotAdapterBase):
     @property
     def model_yerr(self):
         """y error bars for model: ``None`` for :py:obj:`HistPlotContainer`"""
-        return None #self._fit.model_error
+        return None  # self._fit.model_error
 
     @property
     def model_density_x(self):
         """x support points for model density plot"""
         _xmin, _xmax = self.x_range
-        if self.x_scale == 'linear':
+        if self.x_scale == "linear":
             return np.linspace(_xmin, _xmax, self.n_plot_points)
-        if self.x_scale == 'log':
+        if self.x_scale == "log":
             try:
                 return np.geomspace(_xmin, _xmax, self.n_plot_points)
             except ValueError as _e:
-                raise ValueError("Support point calculation failed. The plot range can't include 0"
-                                 "when using log scale.") from _e
-        raise ValueError("x_range has to be one of {}. Found {} instead.".format(
-            self.AVAILABLE_X_SCALES, self.x_scale))
+                raise ValueError(
+                    "Support point calculation failed. The plot range can't include 0"
+                    "when using log scale."
+                ) from _e
+        raise ValueError(
+            "x_range has to be one of {}. Found {} instead.".format(
+                self.AVAILABLE_X_SCALES, self.x_scale
+            )
+        )
 
     @property
     def model_density_y(self):
         """value of model density at the support points"""
         _hist_cont = self._fit.data_container
-        _mean_bin_size = float(_hist_cont.high - _hist_cont.low)/_hist_cont.size
+        _mean_bin_size = float(_hist_cont.high - _hist_cont.low) / _hist_cont.size
         _factor = _hist_cont.n_entries * _mean_bin_size
         if self._fit.density:
             return _factor * self._fit.eval_model_function_density(x=self.model_density_x)
@@ -130,13 +141,12 @@ class HistPlotAdapter(PlotAdapterBase):
         :return: plot handle(s)
         """
         _yerr = np.sqrt(
-            self.data_yerr ** 2 + self._fit._cost_function.get_uncertainty_gaussian_approximation(self.data_y) ** 2
+            self.data_yerr**2
+            + self._fit._cost_function.get_uncertainty_gaussian_approximation(self.data_y) ** 2
         )
-        return target_axes.errorbar(self.data_x,
-                                    self.data_y,
-                                    xerr=self.data_xerr,
-                                    yerr=_yerr,
-                                    **kwargs)
+        return target_axes.errorbar(
+            self.data_x, self.data_y, xerr=self.data_xerr, yerr=_yerr, **kwargs
+        )
 
     def plot_model(self, target_axes, **kwargs):
         """
@@ -146,22 +156,22 @@ class HistPlotAdapter(PlotAdapterBase):
         :param kwargs: keyword arguments accepted by the ``matplotlib`` method ``bar``
         :return: plot handle(s)
         """
-        #_pad = kwargs.pop('bar_width_pad')
-        _sf = kwargs.pop('bar_width_scale_factor')
+        # _pad = kwargs.pop('bar_width_pad')
+        _sf = kwargs.pop("bar_width_scale_factor")
 
         # default call signature (matplotlib >= 2)
         _call_dict = dict(
             x=self.model_x,
-            align='center',
+            align="center",
             height=self.model_y,
-            width=self.model_xerr*2.0 * _sf,
+            width=self.model_xerr * 2.0 * _sf,
             bottom=None,
             **kwargs
         )
 
         # adjust call signature for matplotlib < 2
-        if mpl.__version__.startswith('1'):
-            _call_dict['left'] = _call_dict.pop('x')
+        if mpl.__version__.startswith("1"):
+            _call_dict["left"] = _call_dict.pop("x")
 
         return target_axes.bar(**_call_dict)
 
@@ -174,6 +184,4 @@ class HistPlotAdapter(PlotAdapterBase):
         :return: plot handle(s)
         """
         # TODO: how to handle/display "error" on the model density?
-        return target_axes.plot(self.model_density_x,
-                                self.model_density_y,
-                                **kwargs)
+        return target_axes.plot(self.model_density_x, self.model_density_y, **kwargs)

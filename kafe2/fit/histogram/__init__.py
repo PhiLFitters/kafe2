@@ -1,5 +1,7 @@
-"""This submodule provides the necessary objects for parameter estimation from histograms. Currently a histogram needs
-to be filled with all individual data points. A function for setting the bin heights is available but not recommended,
+"""
+This submodule provides the necessary objects for parameter estimation from histograms.
+Currently a histogram needs to be filled with all individual data points.
+A function for setting the bin heights is available but not recommended,
 as saving and loading those to and from a file is not yet supported.
 
 :synopsis: This submodule provides the necessary objects for parameter estimation from histograms.

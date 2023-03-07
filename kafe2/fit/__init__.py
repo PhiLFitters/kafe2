@@ -164,6 +164,8 @@ from .xy import *
 from .unbinned import *
 
 from ._base.plot import Plot
-from .tools.fit_wrapper import Fit  # import after every fit to avoid import conflicts with other tools
+
+# import after every fit to avoid import conflicts with other tools
+from .tools.fit_wrapper import Fit
 
 from .util import function_library, xy_fit, plot, k2Fit

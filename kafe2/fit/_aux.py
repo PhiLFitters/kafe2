@@ -4,7 +4,7 @@ import numpy as np
 from copy import deepcopy
 
 
-def add_pad_to_range(data_range, pad_coeff=1.1, additional_pad=None, scale='linear'):
+def add_pad_to_range(data_range, pad_coeff=1.1, additional_pad=None, scale="linear"):
     """Add padding to a range, so that plots will use more space to the left and right of the
     data point range.
 
@@ -21,24 +21,31 @@ def add_pad_to_range(data_range, pad_coeff=1.1, additional_pad=None, scale='line
     """
     if additional_pad is None:
         additional_pad = (0, 0)
-    if scale == 'linear':
+    if scale == "linear":
         _min, _max = data_range
         _w = _max - _min
-        return (0.5 * (_min + _max - _w * pad_coeff) - additional_pad[0],
-                0.5 * (_min + _max + _w * pad_coeff) + additional_pad[1])
-    if scale == 'log':
+        return (
+            0.5 * (_min + _max - _w * pad_coeff) - additional_pad[0],
+            0.5 * (_min + _max + _w * pad_coeff) + additional_pad[1],
+        )
+    if scale == "log":
         _expmin, _expmax = np.log10(data_range)
         _w = _expmax - _expmin
-        return (10 ** (0.5 * (_expmin + _expmax - _w * pad_coeff) - additional_pad[0]),
-                10 ** (0.5 * (_expmin + _expmax + _w * pad_coeff) + additional_pad[1]))
-    warnings.warn("Unknown scale \"{scale}\" when calculating the additional plot padding, "
-                  "returning without additional padding.".format(scale=scale))
+        return (
+            10 ** (0.5 * (_expmin + _expmax - _w * pad_coeff) - additional_pad[0]),
+            10 ** (0.5 * (_expmin + _expmax + _w * pad_coeff) + additional_pad[1]),
+        )
+    warnings.warn(
+        'Unknown scale "{scale}" when calculating the additional plot padding, '
+        "returning without additional padding.".format(scale=scale)
+    )
     return data_range
 
 
 # represent errors in a binwise fashion as rectangles
 def step_fill_between(
-        axes, x, y, yerr=None, xerr=None, draw_central_value=False, continuous=True, **kwargs):
+    axes, x, y, yerr=None, xerr=None, draw_central_value=False, continuous=True, **kwargs
+):
     """
     Draw two step functions and fill the area in-between.
 
@@ -54,7 +61,8 @@ def step_fill_between(
     :type xerr: list of float or list of 2-tuple of float
     :param draw_central_value: if ``True``, also draw the central step function
     :type draw_central_value: bool
-    :param kwargs: keyword arguments accepted by ``matplotlib`` methods ``plot`` and ``fill_between``
+    :param kwargs: keyword arguments accepted by ``matplotlib`` methods ``plot`` and
+        ``fill_between``
     :type kwargs: dict
     :return: plot handle(s)
     """
@@ -64,9 +72,9 @@ def step_fill_between(
     _xerr = xerr
 
     if _yerr is not None:
-        if isinstance(_yerr, tuple) and len(_yerr)==1:
+        if isinstance(_yerr, tuple) and len(_yerr) == 1:
             _yerr = (yerr[0], yerr[0])
-        elif isinstance(_yerr, tuple) and len(_yerr)==2:
+        elif isinstance(_yerr, tuple) and len(_yerr) == 2:
             _yerr = (yerr[0], yerr[1])
         else:
             try:
@@ -82,9 +90,9 @@ def step_fill_between(
         draw_central_value = True  # force drawing central value, if no y errors
 
     if _xerr is not None:
-        if isinstance(_xerr, tuple) and len(_xerr)==1:
+        if isinstance(_xerr, tuple) and len(_xerr) == 1:
             _xerr = (xerr[0], xerr[0])
-        elif isinstance(_xerr, tuple) and len(_xerr)==2:
+        elif isinstance(_xerr, tuple) and len(_xerr) == 2:
             _xerr = (xerr[0], xerr[1])
         else:
             try:
@@ -106,13 +114,13 @@ def step_fill_between(
 
         if continuous:
             # interleave x and y bin boundaries
-            _x_plot = np.zeros(len(x)*2)
+            _x_plot = np.zeros(len(x) * 2)
             _x_plot[0::2] = _x_lo
             _x_plot[1::2] = _x_hi
         else:
             _x_plot = np.array([_x_lo, _x_hi])
     else:
-        raise ValueError('xerr cannot be None')
+        raise ValueError("xerr cannot be None")
 
     if draw_central_value:
         if continuous:
@@ -122,8 +130,8 @@ def step_fill_between(
         else:
             _y_plot_central = np.array([y, y])
         _modkwargs = deepcopy(kwargs)
-        _modkwargs.pop('edgecolor', None)
-        _modkwargs.pop('alpha', None)
+        _modkwargs.pop("edgecolor", None)
+        _modkwargs.pop("alpha", None)
         p_cv = axes.plot(_x_plot, _y_plot_central, **_modkwargs)
     else:
         p_cv = None
@@ -132,10 +140,10 @@ def step_fill_between(
         _y_lo = y - _yerr[0]
         _y_hi = y + _yerr[1]
 
-        _y_plot_lo = np.zeros(len(y)*2)
+        _y_plot_lo = np.zeros(len(y) * 2)
         _y_plot_lo[0::2] = _y_lo
         _y_plot_lo[1::2] = _y_lo
-        _y_plot_hi = np.zeros(len(y)*2)
+        _y_plot_hi = np.zeros(len(y) * 2)
         _y_plot_hi[0::2] = _y_hi
         _y_plot_hi[1::2] = _y_hi
 
@@ -145,10 +153,10 @@ def step_fill_between(
 
     # FIXME: (for _yerr!=None, return both artists somehow)
     if p_cv is not None and p_fb is not None:
-        #return (p_fb, p_cv)  # doesn't work!
+        # return (p_fb, p_cv)  # doesn't work!
         return p_fb
     if p_cv is None:
         return p_fb
     if p_fb is None:
-        #return p_cv  # doesn't work!
+        # return p_cv  # doesn't work!
         return p_cv[0]

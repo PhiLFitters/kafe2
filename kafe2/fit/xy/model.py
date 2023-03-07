@@ -12,13 +12,14 @@ from .container import XYContainer
 from ..util import function_library
 
 
-__all__ = ['XYParametricModel']
+__all__ = ["XYParametricModel"]
 
 
 class XYParametricModel(ParametricModelBaseMixin, XYContainer):
     # TODO why is model_function abbreviated as model_func?
-    def __init__(self, x_data, model_func=function_library.linear_model,
-                 model_parameters=(1.0, 1.0)):
+    def __init__(
+        self, x_data, model_func=function_library.linear_model, model_parameters=(1.0, 1.0)
+    ):
         """Construct an :py:obj:`XYParametricModel` object:
 
         :param x_data: 1D array containing the *x* values supporting the model
@@ -34,8 +35,9 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
         if np.isscalar(_y_data):
             _y_data = np.ones_like(_x_data_array) * _y_data
         self._pm_calculation_stale = False
-        super(XYParametricModel, self).__init__(model_func, model_parameters,
-                                                _x_data_array, _y_data)
+        super(XYParametricModel, self).__init__(
+            model_func, model_parameters, _x_data_array, _y_data
+        )
 
     # -- private methods
 
@@ -112,8 +114,9 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
             _y = np.ones_like(_x) * _y
         return _y
 
-    def eval_model_function_derivative_by_parameters(self, x=None, model_parameters=None,
-                                                     par_dx=None):
+    def eval_model_function_derivative_by_parameters(
+        self, x=None, model_parameters=None, par_dx=None
+    ):
         """Evaluate the derivative of the model function with respect to the model parameters.
 
         :param x: 1D array with length ``N`` containing the *x* values of the support points. If
@@ -132,11 +135,13 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
         _x = x if x is not None else self.x
         _pars = model_parameters if model_parameters is not None else self._model_parameters
         _pars = np.asarray(_pars)
-        _par_dxs = par_dx if par_dx is not None \
-            else 1e-2 * (np.abs(_pars) + 1.0 / (1.0 + np.abs(_pars)))
+        _par_dxs = (
+            par_dx if par_dx is not None else 1e-2 * (np.abs(_pars) + 1.0 / (1.0 + np.abs(_pars)))
+        )
 
         _ret = np.zeros((len(_pars), len(_x)))
         for _par_idx, (_par_val, _par_dx) in enumerate(zip(_pars, _par_dxs)):
+
             def _chipped_func(par):
                 _chipped_pars = _pars.copy()
                 _chipped_pars[_par_idx] = par
@@ -164,7 +169,7 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
         _x = x if x is not None else self.x
         _pars = model_parameters if model_parameters is not None else self._model_parameters
         _dxs = dx if dx is not None else np.zeros_like(_x)
-        _dxs_default = 1e-2 * (np.abs(_x) + 1.0/(1.0+np.abs(_x)))
+        _dxs_default = 1e-2 * (np.abs(_x) + 1.0 / (1.0 + np.abs(_x)))
         _dxs = np.where(_dxs == 0, _dxs_default, _dxs)  # Replace zero values with defaults
 
         _low = self._model_function_object(_x - _dxs, *_pars)

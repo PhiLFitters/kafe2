@@ -3,7 +3,6 @@ import numpy as np
 
 
 class AbstractTestFit(abc.ABC):
-
     MINIMIZER = None
 
     @abc.abstractmethod
@@ -13,13 +12,23 @@ class AbstractTestFit(abc.ABC):
     @property
     def _fit_result_attributes(self):
         return [
-            "cost_function_value", "parameter_names", "parameter_values", "parameter_errors",
-            "parameter_cov_mat"
+            "cost_function_value",
+            "parameter_names",
+            "parameter_values",
+            "parameter_errors",
+            "parameter_cov_mat",
         ]
 
     def _assert_fit_results_equal(
-            self, fit_1, fit_2, rtol=1e-3, atol=1e-6, check_cost_function_value=True,
-            fit_2_is_double_fit=False, fit_2_permutation=None):
+        self,
+        fit_1,
+        fit_2,
+        rtol=1e-3,
+        atol=1e-6,
+        check_cost_function_value=True,
+        fit_2_is_double_fit=False,
+        fit_2_permutation=None,
+    ):
         for _attr in self._fit_result_attributes:
             if not check_cost_function_value and _attr == "cost_function_value":
                 continue
@@ -44,8 +53,8 @@ class AbstractTestFit(abc.ABC):
                     elif isinstance(_attr_2, tuple):
                         _attr_2 = tuple(_attr_2_arr)
                 self._assert_values_equal(
-                    name=_attr, received_value=_attr_2, expected_value=_attr_1,
-                    rtol=rtol, atol=atol)
+                    name=_attr, received_value=_attr_2, expected_value=_attr_1, rtol=rtol, atol=atol
+                )
 
     def _assert_fit_properties(self, fit, properties, rtol=1e-3, atol=1e-6):
         for _attr, _ref_val in properties.items():
@@ -53,8 +62,12 @@ class AbstractTestFit(abc.ABC):
                 # retrieve property value
                 _attr_val = getattr(fit, _attr)
                 self._assert_values_equal(
-                    name=_attr, received_value=_attr_val, expected_value=_ref_val,
-                    rtol=rtol, atol=atol)
+                    name=_attr,
+                    received_value=_attr_val,
+                    expected_value=_ref_val,
+                    rtol=rtol,
+                    atol=atol,
+                )
 
     def _assert_values_equal(self, name, received_value, expected_value, rtol=1e-3, atol=1e-6):
         with self.subTest():
@@ -64,11 +77,12 @@ class AbstractTestFit(abc.ABC):
             # check value (almost) equal to ref
             try:
                 self.assertTrue(
-                    (np.all(np.isnan(received_value))
-                    and np.all(np.isnan(expected_value))
-                    and np.array(received_value).shape == np.array(expected_value).shape)
-                    or
-                    np.allclose(
+                    (
+                        np.all(np.isnan(received_value))
+                        and np.all(np.isnan(expected_value))
+                        and np.array(received_value).shape == np.array(expected_value).shape
+                    )
+                    or np.allclose(
                         np.asarray(received_value),
                         np.asarray(expected_value),
                         rtol=rtol,
@@ -77,18 +91,22 @@ class AbstractTestFit(abc.ABC):
                 )
             except ValueError:
                 # most likely array length mismatch
-                print("\nCheck failed: attribute {!r} "
-                    "should be:\n\t{}\nand is:\n\t{}".format(
-                    name, expected_value, received_value))
+                print(
+                    "\nCheck failed: attribute {!r} "
+                    "should be:\n\t{}\nand is:\n\t{}".format(name, expected_value, received_value)
+                )
                 raise
             except TypeError:
                 # types contained in array do not support 'allclose'
                 try:
                     self.assertEqual(received_value, expected_value)
                 except:
-                    print("\nCheck failed: attribute {!r} "
+                    print(
+                        "\nCheck failed: attribute {!r} "
                         "should be exactly:\n\t{}\nand is:\n\t{}".format(
-                        name, expected_value, received_value))
+                            name, expected_value, received_value
+                        )
+                    )
                     raise
             except:
                 _abs_diffs = np.abs(expected_value - received_value)
@@ -97,15 +115,23 @@ class AbstractTestFit(abc.ABC):
                 _rel_diffs = np.abs(received_value / expected_value - 1)
                 _min_rel_diff, _max_rel_diff = np.nanmin(_rel_diffs), np.nanmax(_rel_diffs)
 
-                print('_' * 70 +
-                    "\nCheck failed: attribute {!r} "
+                print(
+                    "_" * 70 + "\nCheck failed: attribute {!r} "
                     "should be approximately:\n\t{}\n"
                     "within:\n\t{!r}\nand is:\n\t{}\n"
                     "(abs diff between: {:g} and {:g})\n"
                     "(rel diff between: {:g} and {:g})\n".format(
-                        name, expected_value, dict(rtol=rtol, atol=atol), received_value,
-                        _min_abs_diff, _max_abs_diff,
-                        _min_rel_diff, _max_rel_diff) + '^' * 70)
+                        name,
+                        expected_value,
+                        dict(rtol=rtol, atol=atol),
+                        received_value,
+                        _min_abs_diff,
+                        _max_abs_diff,
+                        _min_rel_diff,
+                        _max_rel_diff,
+                    )
+                    + "^" * 70
+                )
                 raise
 
     def _get_test_fits(self):
@@ -122,8 +148,4 @@ class AbstractTestFit(abc.ABC):
                     call_before_fit(_fit)
 
                 # test object properties
-                self._assert_fit_properties(
-                    _fit,
-                    ref_prop_dict,
-                    **kwargs
-                )
+                self._assert_fit_properties(_fit, ref_prop_dict, **kwargs)
