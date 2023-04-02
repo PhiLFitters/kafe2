@@ -39,8 +39,9 @@ class HistFit(FitBase):
         formula. If bin_evaluation is equal to "numerical" the bin heights are evaluated by
         numerically integrating model_density_function.
 
-        :param data: a :py:class:`~kafe2.fit.hist.HistContainer` representing histogrammed data
-        :type data: :py:class:`~kafe2.fit.hist.HistContainer`
+        :param data: an encapsulated representation of the histogrammed data.
+        :type data: :py:class:`~kafe2.fit.hist.HistContainer` or two-dimensional iterable of bin
+            heights and bin edges as returned by `np.histogram`.
         :param model_function: the model (density) function
         :type model__function: :py:class:`~kafe2.fit.hist.HistModelFunction` or unwrapped
             native Python function
@@ -76,13 +77,27 @@ class HistFit(FitBase):
         )
 
     def _set_new_data(self, new_data):
-        if isinstance(new_data, self.CONTAINER_TYPE):
+        try:
+            _new_data_is_numpy_histogram = len(new_data) == 2 \
+                and len(new_data[0]) + 1 == len(new_data[1])
+        except TypeError:
+            _new_data_is_numpy_histogram = False
+        if _new_data_is_numpy_histogram:
+            self._data_container = self.CONTAINER_TYPE(
+                n_bins=len(new_data[0]), bin_range=(new_data[1][0], new_data[1][-1]),
+                bin_edges=new_data[1]
+            )
+            self._data_container.set_bins(new_data[0])
+        elif isinstance(new_data, self.CONTAINER_TYPE):
             self._data_container = deepcopy(new_data)
         elif isinstance(new_data, DataContainerBase):
             raise TypeError("Incompatible container type '{}' (expected '{}')"
                             .format(type(new_data), self.CONTAINER_TYPE))
         else:
-            raise TypeError("Fitting a histogram requires a HistContainer!")
+            raise TypeError(
+                "Fitting a histogram requires a kafe2 HistContainer or a NumPy histogram as data "
+                f"but received {new_data}"
+            )
         self._data_container._on_error_change_callback = self._on_error_change
 
         self._nexus.get('data').mark_for_update()

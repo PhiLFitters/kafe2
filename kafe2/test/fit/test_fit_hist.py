@@ -64,6 +64,8 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         self._ref_hist_cont = HistContainer(
             self._ref_n_bins, self._ref_n_bin_range, bin_edges=None, fill_data=self._ref_entries)
+        self._ref_hist_numpy = np.histogram(
+            self._ref_entries, bins=self._ref_n_bins, range=self._ref_n_bin_range)
 
 
         # reference initial values
@@ -111,7 +113,8 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
             model=self._ref_initial_model,
         )
 
-    def _get_fit(self, model_density_function=None, bin_evaluation="numerical", cost_function=None):
+    def _get_fit(self, model_density_function=None, bin_evaluation="numerical", cost_function=None,
+                 numpy_histogram=False):
         '''convenience'''
 
         model_density_function = model_density_function or hist_model_density
@@ -121,7 +124,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
             data_point_distribution='poisson')
 
         _fit = HistFit(
-            data=self._ref_hist_cont,
+            data=self._ref_hist_numpy if numpy_histogram else self._ref_hist_cont,
             model_function=model_density_function,
             bin_evaluation=bin_evaluation,
             cost_function=cost_function,
@@ -136,10 +139,10 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
             # numeric integration takes too long for testing
             #'default': \
             #    self._get_fit(),
-            'explicit_chi2': \
-                self._get_fit(cost_function=simple_chi2, bin_evaluation=hist_model_density_antideriv),
-            'model_with_antiderivative': \
-                self._get_fit(bin_evaluation=hist_model_density_antideriv),
+            'explicit_chi2': self._get_fit(
+                cost_function=simple_chi2, bin_evaluation=hist_model_density_antideriv),
+            'model_with_antiderivative': self._get_fit(bin_evaluation=hist_model_density_antideriv),
+            'numpy_histogram': self._get_fit(numpy_histogram=True)
         }
 
     def test_initial_state(self):

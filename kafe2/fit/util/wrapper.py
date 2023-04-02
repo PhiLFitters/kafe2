@@ -95,7 +95,7 @@ def hist_fit(data, n_bins=None, bin_range=None, bin_edges=None, model_function=N
 
     _data_is_kafe2_hist_container = isinstance(data, HistContainer)
     try:
-        _data_is_numpy_histogram = len(data) == 2 and len(data[0]) == len(data[1])
+        _data_is_numpy_histogram = len(data) == 2 and len(data[0]) + 1 == len(data[1])
     except TypeError:
         _data_is_numpy_histogram = False
 
