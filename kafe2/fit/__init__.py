@@ -166,4 +166,5 @@ from .unbinned import *
 from ._base.plot import Plot
 from .tools.fit_wrapper import Fit  # import after every fit to avoid import conflicts with other tools
 
-from .util import function_library, xy_fit, plot, k2Fit
+from .util import function_library, custom_fit, hist_fit, indexed_fit, unbinned_fit, xy_fit, plot, \
+    k2Fit

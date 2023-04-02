@@ -6,10 +6,10 @@ kafe2 example: Unbinned Fit
 An unbinned fit is needed, when there are too few data points to create a (good) histogram.
 If a histogram is created from too few data points, information can be lost or even changed,
 by changing the exact value of one data point to the range of a bin.
-With an unbinned likelihood fit it's still possible to fit the pdf to the data points, as the
+With an unbinned likelihood fit it's still possible to fit the PDF to the data points, as the
 likelihood of each data point is fitted.
 
-In this example the decay time of muons is calculated. Tha data was collected using the Kamiokanne
+In this example the decay time of muons is calculated. The data was collected using the Kamiokanne
 experiment (a water-Cherenkov detector with photomultiplier readout). For more information on the
 experimental setup visit https://github.com/GuenterQuast/picoCosmo.
 A visual representation of the data can be found here:
@@ -18,14 +18,15 @@ https://github.com/GuenterQuast/picoCosmo/blob/master/doc/dpFigs_Kanne.pdf
 
 from kafe2.fit import UnbinnedContainer, Fit, Plot
 from kafe2.fit.tools import ContoursProfiler
+from kafe2 import unbinned_fit, plot
 
 import numpy as np
 
 
 def pdf(t, tau=2.2, fbg=0.1, a=1., b=9.75):
     """
-    Probability density function for the decay time of a myon using the Kamiokanne-Experiment.
-    The pdf is normed for the interval (a, b).
+    Probability density function for the decay time of a muon using the Kamiokanne-Experiment.
+    The PDF is normed for the interval (a, b).
 
     :param t: decay time
     :param fbg: background

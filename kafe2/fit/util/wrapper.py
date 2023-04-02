@@ -4,6 +4,9 @@ below.
 These functions provide pre-configured pipelines for the most common use cases and do not require
 the user to manually manage objects.
 """
+
+__all__ = ["custom_fit", "hist_fit", "indexed_fit", "unbinned_fit", "xy_fit", "plot", "k2Fit"]
+
 try:
     import typing  # help IDEs with type-hinting inside docstrings
 except ImportError:
@@ -17,7 +20,6 @@ import numpy as np
 
 _fit_history = []
 
-
 def _get_file_index():
     os.makedirs("results", exist_ok=True)
     _file_index = 0
@@ -27,6 +29,124 @@ def _get_file_index():
         _globbed_files = glob(f"results/fit-{_file_index:04d}-*")
     return _file_index
 
+
+def _fit_wrapper_generic(fit, p0, dp0, limits, constraints, report, profile, save):
+    if p0 is not None:
+        fit.set_all_parameter_values(p0)
+    if dp0 is not None:
+        fit.parameter_errors = dp0
+
+    if limits is not None:
+        if not isinstance(limits[0], (list, tuple)):
+            limits = (limits,)
+        for _limit in limits:
+            fit.limit_parameter(*_limit)
+    if constraints is not None:
+        if not isinstance(constraints[0], (list, tuple)):
+            constraints = (constraints,)
+        for _constraint in constraints:
+            fit.add_parameter_constraint(*_constraint)
+
+    _fit_results = fit.do_fit(asymmetric_parameter_errors=profile)
+    _fit_results["fit"] = fit
+    if report:
+        fit.report(asymmetric_parameter_errors=profile)
+
+    if save:
+        _file_index = _get_file_index()
+        fit.save_state(f"results/fit-{_file_index:04d}-results.yml")
+        with open(f"results/fit-{_file_index:04d}-report.txt", "w", encoding="utf8") as _f:
+            fit.report(_f, asymmetric_parameter_errors=profile)
+    else:
+        _file_index = None
+
+    _fit_history.append(dict(fit=fit, profile=profile, file_index=_file_index))
+
+    return _fit_results
+
+def _add_error_to_fit_generic(fit, error, errors_rel_to_model, correlated=False, relative=False):
+    if error is None:
+        return
+    error = np.asarray(error)
+    _reference = "model" if errors_rel_to_model and relative else "data"
+    if correlated:
+        if error.ndim == 0:
+            error = np.reshape(error, (1,))
+        for _err in error:
+            fit.add_error(_err, correlation=1.0, relative=relative, reference=_reference)
+    else:
+        if error.ndim == 2:
+            fit.add_matrix_error(error, "cov", relative=relative, reference=_reference)
+        else:
+            fit.add_error(error, relative=relative, reference=_reference)
+
+def custom_fit(cost_function, p0=None, dp0=None, limits=None, constraints=None, report=False,
+           profile=True, save=True):
+    from kafe2.fit.custom.fit import CustomFit
+    _fit = CustomFit(cost_function)
+    return _fit_wrapper_generic(_fit, p0, dp0, limits, constraints, report, profile, save)
+
+def hist_fit(data, n_bins=None, bin_range=None, bin_edges=None, model_function=None, p0=None,
+             dp0=None, error=None, error_rel=None, error_cor=None, error_cor_rel=None,
+             errors_rel_to_model=True, density=True, gauss_approximation=None, limits=None,
+             constraints=None, report=False, profile=True, save=True):
+    from kafe2.fit.histogram.container import HistContainer
+    from kafe2.fit.histogram.fit import HistFit
+
+    _data_is_kafe2_hist_container = isinstance(data, HistContainer)
+    try:
+        _data_is_numpy_histogram = len(data) == 2 and len(data[0]) == len(data[1])
+    except TypeError:
+        _data_is_numpy_histogram = False
+
+    if not _data_is_kafe2_hist_container and not _data_is_numpy_histogram:
+        if (n_bins == None or bin_range == None) and bin_edges == None:
+            raise ValueError(
+                "Incorrect data format: if data is not a kafe2 HistContainer or a NumPy histogram "
+                "then either n_bins and bin_range or bin_edges must be defined!"
+            )
+        data = HistContainer(n_bins, bin_range, bin_edges, data)
+
+    if gauss_approximation is None:
+        gauss_approximation = error is not None or error_rel is not None \
+            or error_cor is not None or error_cor_rel is not None
+    _cost_function = "gauss_approximation" if gauss_approximation else "poisson"
+
+    if model_function is None:
+        _fit = HistFit(data, cost_function=_cost_function, density=density)
+    else:
+        _fit = HistFit(data, model_function, cost_function=_cost_function, density=density)
+
+    _add_error_to_fit_generic(_fit, error, errors_rel_to_model)
+    _add_error_to_fit_generic(_fit, error_cor, errors_rel_to_model, correlated=True)
+    _add_error_to_fit_generic(_fit, error_rel, errors_rel_to_model, relative=True)
+    _add_error_to_fit_generic(
+        _fit, error_cor_rel, errors_rel_to_model, correlated=True, relative=True)
+
+    return _fit_wrapper_generic(_fit, p0, dp0, limits, constraints, report, profile, save)
+
+def indexed_fit(data, model_function, p0=None, dp0=None, error=None, error_rel=None, error_cor=None,
+                error_cor_rel=None, errors_rel_to_model=True, limits=None, constraints=None,
+                report=False, profile=True, save=True):
+    from kafe2.fit.indexed import IndexedFit
+
+    _fit = IndexedFit(data, model_function)
+
+    _add_error_to_fit_generic(_fit, error, errors_rel_to_model)
+    _add_error_to_fit_generic(_fit, error_cor, errors_rel_to_model, correlated=True)
+    _add_error_to_fit_generic(_fit, error_rel, errors_rel_to_model, relative=True)
+    _add_error_to_fit_generic(
+        _fit, error_cor_rel, errors_rel_to_model, correlated=True, relative=True)
+
+    return _fit_wrapper_generic(_fit, p0, dp0, limits, constraints, report, profile, save)
+
+def unbinned_fit(data, model_function=None, p0=None, dp0=None, limits=None, constraints=None,
+                 report=False, profile=True, save=True):
+    from kafe2.fit.unbinned import UnbinnedFit
+
+    _fit = UnbinnedFit(data, model_function)
+
+    return _fit_wrapper_generic(_fit, p0, dp0, limits, constraints, report, profile, save)
 
 def xy_fit(x_data, y_data, model_function=None, p0=None, dp0=None,
            x_error=None, y_error=None, x_error_rel=None, y_error_rel=None,
@@ -102,10 +222,6 @@ def xy_fit(x_data, y_data, model_function=None, p0=None, dp0=None,
         _fit = XYFit([x_data, y_data])
     else:
         _fit = XYFit([x_data, y_data], model_function)
-    if p0 is not None:
-        _fit.set_all_parameter_values(p0)
-    if dp0 is not None:
-        _fit.parameter_errors = dp0
 
     def _add_error_to_fit(axis, error, correlated=False, relative=False):
         if error is None:
@@ -132,36 +248,10 @@ def xy_fit(x_data, y_data, model_function=None, p0=None, dp0=None,
     _add_error_to_fit("x", x_error_cor_rel, correlated=True, relative=True)
     _add_error_to_fit("y", y_error_cor_rel, correlated=True, relative=True)
 
-    if limits is not None:
-        if not isinstance(limits[0], (list, tuple)):
-            limits = (limits,)
-        for _limit in limits:
-            _fit.limit_parameter(*_limit)
-    if constraints is not None:
-        if not isinstance(constraints[0], (list, tuple)):
-            constraints = (constraints,)
-        for _constraint in constraints:
-            _fit.add_parameter_constraint(*_constraint)
-
     if profile is None:
         profile = x_error is not None or x_error_rel is not None or y_error_rel is not None
 
-    _fit_results = _fit.do_fit(asymmetric_parameter_errors=profile)
-    _fit_results["fit"] = _fit
-    if report:
-        _fit.report(asymmetric_parameter_errors=profile)
-
-    if save:
-        _file_index = _get_file_index()
-        _fit.save_state(f"results/fit-{_file_index:04d}-results.yml")
-        with open(f"results/fit-{_file_index:04d}-report.txt", "w", encoding="utf8") as _f:
-            _fit.report(_f, asymmetric_parameter_errors=profile)
-    else:
-        _file_index = None
-
-    _fit_history.append(dict(fit=_fit, profile=profile, file_index=_file_index))
-
-    return _fit_results
+    return _fit_wrapper_generic(_fit, p0, dp0, limits, constraints, report, profile, save)
 
 
 def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
@@ -226,7 +316,9 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
     :return: a *kafe2* plot object containing the relevant matplotlib plots.
     :rtype: :py:class:`~kafe2.fit._base.Plot`
     """
-    from kafe2 import Plot, ContoursProfiler
+    from kafe2 import Plot, ContoursProfiler, CustomFit
+
+    _start_index = _get_file_index()
 
     _fit_profiles = None
     _file_indices = None
@@ -245,6 +337,26 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
             iter(fits)
         except TypeError:
             fits = [fits]
+    if profile is None:
+        profile = np.any(_fit_profiles)
+
+    if plot_profile is None and _fit_profiles is not None:
+        plot_profile = _fit_profiles
+    if plot_profile is not None:
+        try:
+            iter(plot_profile)
+        except TypeError:
+            plot_profile = [plot_profile for _ in fits]
+        for _i, (_f_i, _pp_i) in enumerate(zip(fits, plot_profile)):
+            if not _pp_i:
+                continue
+            _cpf = ContoursProfiler(_f_i)
+            _cpf.plot_profiles_contours_matrix()
+            if save:
+                _file_index = _start_index + _i if _file_indices is None else _file_indices[_i]
+                _cpf.save(f"results/fit-{_file_index:04d}-profile.png", dpi=240)
+
+    fits = [_f for _f in fits if not isinstance(_f, CustomFit)]  # No sensible way to plot this.
     if parameter_names is not None:
         _unused_parameter_names = deepcopy(parameter_names)
         for _f in fits:
@@ -276,7 +388,12 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
     if data_label is not None:
         _plot.customize("data", "label", data_label)
     if model_label is not None:
-        _plot.customize("model_line", "label", model_label)
+        _plot.customize("model", "label", model_label)
+        # XYFit for some reason uses a different keyword:
+        try:
+            _plot.customize("model_line", "label", model_label)
+        except ValueError:
+            pass
     if error_band_label is not None:
         _plot.customize("model_error_band", "label", error_band_label)
     if not error_band:
@@ -296,31 +413,14 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
     if y_ticks is not None:
         _plot.y_ticks = y_ticks
 
-    if profile is None:
-        profile = np.any(_fit_profiles)
-    _plot.plot(legend=legend, fit_info=fit_info, asymmetric_parameter_errors=profile)
+    if len(fits) > 0:  # Do not plot if only CustomFit.
+        _plot.plot(legend=legend, fit_info=fit_info, asymmetric_parameter_errors=profile)
 
-    _start_index = _get_file_index()
-    if save:
-        for _i, _ in enumerate(fits):
-            _file_index = _start_index + _i if _file_indices is None else _file_indices[_i]
-            _plot.save(f"results/fit-{_file_index:04d}-plot.png", dpi=240)
-
-    if plot_profile is None and _fit_profiles is not None:
-        plot_profile = _fit_profiles
-    if plot_profile is not None:
-        try:
-            iter(plot_profile)
-        except TypeError:
-            plot_profile = [plot_profile for _ in fits]
-        for _i, (_f_i, _pp_i) in enumerate(zip(fits, plot_profile)):
-            if not _pp_i:
-                continue
-            _cpf = ContoursProfiler(_f_i)
-            _cpf.plot_profiles_contours_matrix()
-            if save:
+        if save:
+            for _i, _ in enumerate(fits):
                 _file_index = _start_index + _i if _file_indices is None else _file_indices[_i]
-                _cpf.save(f"results/fit-{_file_index:04d}-profile.png", dpi=240)
+                _plot.save(f"results/fit-{_file_index:04d}-plot.png", dpi=240)
+
     if show:
         _plot.show()
 

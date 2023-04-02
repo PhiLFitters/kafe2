@@ -6,7 +6,7 @@
 """
 
 
-from kafe2 import Fit, Plot, HistContainer, UnbinnedContainer
+from kafe2 import hist_fit, unbinned_fit, plot
 import numpy as np
 
 
@@ -32,33 +32,16 @@ def signal_plus_background(x, mu=3.0, sigma=2.0, s=0.5):
 
 # -- generate a sample of measurements: peak on flat background
 N = 200       # number of entries
-min = 0.0     # range of data, mimimum
+num_bins = 50 # number of bins for the histogram fit
+min = 0.0     # range of data, minimum
 max = 10.0    # maximum
 s = 0.8       # signal fraction
 pos = 6.66    # signal position
 width = 0.33  # signal width
 SplusB_data = generate_data(N, min, max, pos, width, s)  
 
+unbinned_fit(data=SplusB_data, model_function=signal_plus_background)
+plot(show=False)  # Set show=False so the plot for the unbinned fit is not shown until the end.
 
-# -- create the kafe data object
-unbinned_SplusB = UnbinnedContainer(SplusB_data)  
-
-# -- create the fit object and set the pdf for the fit
-unbinned_fit = Fit(data=unbinned_SplusB, model_function=signal_plus_background)
-
-# -- perform the fit
-unbinned_fit.do_fit()  
-
-# -- create a plot object
-unbinned_plot = Plot(unbinned_fit)  
-unbinned_plot.plot(asymmetric_parameter_errors=True)
-
-# compare with binned likelihood fit
-SplusB_histogram = HistContainer(n_bins=50, bin_range=(min, max), fill_data=SplusB_data)
-hist_fit = Fit(data=SplusB_histogram, model_function=signal_plus_background)
-hist_fit.do_fit()  # do the fit
-hist_plot = Plot(hist_fit)
-hist_plot.plot(asymmetric_parameter_errors=True)
-
-# - show all results
-hist_plot.show()  # Just a convenience wrapper for matplotlib.pyplot.show() .
+hist_fit(data=SplusB_data, n_bins=50, bin_range=(min, max), model_function=signal_plus_background)
+plot()
