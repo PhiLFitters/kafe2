@@ -81,6 +81,8 @@ class HistContainer(IndexedContainer):
         if not self._unprocessed_entries:
             return
         _entries_sorted = np.sort(self._unprocessed_entries)
+        if np.all(self._unprocessed_entries == np.floor(self._unprocessed_entries)):
+            warnings.warn("Histogram data is int. Make sure to consider this for your bin edges!")
 
         _current_entry_index = 0
         _current_entry_value = _entries_sorted[0]
@@ -124,8 +126,6 @@ class HistContainer(IndexedContainer):
             self._processed_entries += list(_overflow_entries)
 
         self._unprocessed_entries = []
-        if np.all(self._data == np.floor(self._data)):
-            warnings.warn("Historam data is int. Make sure to consider this for your bin edges!")
 
     def _get_error_reference(self):
         return self._data[1:-1]
