@@ -256,7 +256,8 @@ class ContoursProfiler(object):
         plt.show(*args, **kwargs)
 
 
-    def get_profile(self, parameter, points=None, bound=None, subtract_min=None):
+    def get_profile(self, parameter, low=None, high=None, sigma=None, cl=None, points=None,
+                    subtract_min=None):
         """
         Calculate and return a profile of the cost function in a parameter.
 
@@ -274,15 +275,14 @@ class ContoursProfiler(object):
         :return: two-dimensional array of *x* (parameter) values and *y* (cost function) values
         :rtype: two-dimensional array of float
         """
-        if bound is None:
-            bound = 2
+        if low is None and high is None and sigma is None and cl is None:
+            sigma = 2
         if points is None:
             points = self._profile_kwargs['points']
         if subtract_min is None:
             subtract_min = self._profile_kwargs['subtract_min']
-        _kwargs = dict(bins=points, bound=bound, args=None, subtract_min=subtract_min)
         self._fit._check_dynamic_error_compatibility()
-        return self._fit._fitter.profile(parameter, **_kwargs)  # TODO fix for single fit inside multifit
+        return self._fit._fitter.profile(parameter, low, high, sigma, cl, points, subtract_min)
 
     def get_contours(self, parameter_1, parameter_2, smoothing_sigma=None):
         """
@@ -320,14 +320,20 @@ class ContoursProfiler(object):
 
     # - plot profiles/contours
 
-    def plot_profile(self, parameter, target_axes=None,
+    def plot_profile(self,
+                     parameter,
+                     low=None,
+                     high=None,
+                     sigma=None,
+                     cl=None,
+                     target_axes=None,
                      show_parabolic=True,
                      show_grid=True,
                      show_legend=True,
                      show_fit_minimum=True,
                      show_error_span=True,
                      show_ticks=True,
-                     label_ticks_in_sigma=True,
+                     label_ticks_in_sigma=None,
                      label_fit_minimum=True):
         """
         Plot the profile cost function for a parameter.
@@ -357,6 +363,9 @@ class ContoursProfiler(object):
         :return: figure containing the plot result
         :rtype: `matplotlib.figure.Figure`
         """
+        if label_ticks_in_sigma is None:
+            label_ticks_in_sigma = low is None and high is None and cl is None
+
         with rc_context(kafe2_rc):
             if target_axes is None:
                 _fig, _gs = self._make_figure_gs(1, 1)
@@ -370,7 +379,7 @@ class ContoursProfiler(object):
             _cost_function_min = self._fit.cost_function_value
             _par_formatted_name = self._parameters_formatted_names[_par_id]
 
-            _x, _y = self.get_profile(parameter)
+            _x, _y = self.get_profile(parameter, low, high, sigma, cl)
 
             _profile_artist = self._plot_profile_xy(_axes, _x, _y,
                                                     label="profile %s" % (self._cost_function_formatted_name,))

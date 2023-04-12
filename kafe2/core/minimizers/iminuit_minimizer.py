@@ -1,5 +1,6 @@
 import logging
 import numpy as np
+from scipy.stats import norm
 from copy import deepcopy
 
 from .minimizer_base import MinimizerBase
@@ -297,14 +298,18 @@ class MinimizerIMinuit(MinimizerBase):
             return None  # failed to find any point on contour
         return ContourFactory.create_xy_contour(np.array(_contour_line), sigma)
 
-    def profile(self, parameter_name, bins=20, bound=2, subtract_min=False):
+    def profile(self, parameter_name, low=None, high=None, sigma=None, cl=None, size=20,
+                subtract_min=False):
         if not self.did_fit:
             raise RuntimeError("Need to perform a fit before calling profile()!")
-        _kwargs = dict(bound=bound, subtract_min=subtract_min)
+        _kwargs = dict(
+            bound=self._get_profile_bound(parameter_name, low, high, sigma, cl),
+            subtract_min=subtract_min
+        )
         if _IMINUIT_1:
-            _kwargs["bins"] = bins
+            _kwargs["bins"] = size
         else:
-            _kwargs["size"] = bins
+            _kwargs["size"] = size
         _bins, _vals, _statuses = self.__iminuit.mnprofile(parameter_name, **_kwargs)
         # TODO: check statuses (?)
         self.minimize()  # return to minimum

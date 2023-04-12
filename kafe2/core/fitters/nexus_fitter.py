@@ -199,13 +199,14 @@ class NexusFitter(object):
 
         return self._minimizer.contour(parameter_name_1, parameter_name_2, sigma=sigma, **kwargs)
 
-    def profile(self, parameter_name, bins=20, bound=2, args=None, subtract_min=False):
+    def profile(self, parameter_name, low=None, high=None, sigma=None, cl=None, size=20,
+                subtract_min=False):
         if not self.__state_is_from_minimizer:
             raise RuntimeError(
                 "To calculate a profile the do_fit method has to be called first."
             )
 
-        return self._minimizer.profile(parameter_name, bins=bins, bound=bound, subtract_min=subtract_min)
+        return self._minimizer.profile(parameter_name, low, high, sigma, cl, size, subtract_min)
 
     def get_fit_parameter_values(self, parameter_names=None):
         if parameter_names is None:

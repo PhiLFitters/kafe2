@@ -4,6 +4,7 @@ from abc import ABCMeta, abstractmethod
 import numpy as np
 import numdifftools as nd
 from scipy.optimize import brentq
+from scipy.stats import norm
 
 from ..error import CovMat
 
@@ -163,6 +164,35 @@ class MinimizerBase(object):
                 self._load_state()
         return _asymm_par_errs
 
+    def _get_cost_value(self, parameter_name, parameter_value, min_parameters):
+        """
+        Utility function that finds the parameter value for a single parameter at which the cost
+        function reaches a given value. The other parameters are **not** fixed. Instead the profile
+        likelihood method is used.
+        :param parameter_name: the name of the parameter to vary.
+        :param low: lower bound of the parameter.
+        :param high: upper bound of the parameter.
+        :param target_cost: cost function value to find the cut for.
+        :param min_parameters: parameter values at the cost function minimum.
+        :return: the parameter value where the cost function value has the given value.
+        :rtype: float
+        """
+        _all_pars_would_be_fixed = True
+        for _par_name in self._par_names:
+            if _par_name != parameter_name and not self.is_fixed(_par_name):
+                _all_pars_would_be_fixed = False
+                break
+
+        self.set_several(self.parameter_names, min_parameters)
+        self.set(parameter_name, parameter_value)
+        self._fval = None  # Clear fval cache
+        if not _all_pars_would_be_fixed:
+            self.fix(parameter_name)
+            self.minimize()
+            self.release(parameter_name)
+        return self.function_value
+
+
     def _find_cost_cut(self, parameter_name, low, high, target_cost, min_parameters):
         """
         Utility function that finds the parameter value for a single parameter at which the cost
@@ -193,6 +223,64 @@ class MinimizerBase(object):
             return self.function_value - target_cost
 
         return brentq(f=_profile, a=low, b=high, xtol=self.tolerance)
+
+    def _get_profile_bound(self, parameter_name, low=None, high=None, sigma=None, cl=None):
+        if sigma is not None and cl is not None:
+            raise ValueError("Sigma and cl cannot be defined simultaneously.")
+        if low is not None and high is not None and (sigma is not None or cl is not None):
+            raise ValueError("If low and high are defined then sigma and cl cannot be defined.")
+        if sigma is not None:
+            cl = norm.cdf(sigma) - norm.cdf(-sigma)
+        else:
+            if cl is None:
+                cl = 0.95
+            sigma = norm.ppf((1 + cl) / 2)
+        _parameter_index = self._par_names.index(parameter_name)
+        _parameter_error = self.parameter_errors[_parameter_index]
+        _min_cost = self.function_value
+        _min_par_vals = self.parameter_values
+        _min_par_val = _min_par_vals[_parameter_index]
+        if low is not None and low > _min_par_val:
+            raise ValueError(f"low={low} must be smaller than {parameter_name}={_min_par_val}")
+        if high is not None and high < _min_par_val:
+            raise ValueError(f"high={high} must be larger than {parameter_name}={_min_par_val}")
+
+        if low is not None and high is not None:
+            return low, high
+        if low is None and high is None:
+            return sigma
+
+        if low is not None:
+            _one_sided_cost = self._get_cost_value(parameter_name, low, _min_par_vals)
+        if high is not None:
+            _one_sided_cost = self._get_cost_value(parameter_name, high, _min_par_vals)
+        _one_sided_sigma = np.sqrt(_one_sided_cost - _min_cost)
+        _total_cl = cl + 1 - norm.cdf(_one_sided_sigma)
+        if _total_cl > 1:
+            raise ValueError(
+                f"With low={low}, high={high}, sigma={sigma}, cl={cl} "
+                "no valid confidence interval can be constructed because the total confidence "
+                f"level would be {_total_cl} > 1."
+            )
+        _target_sigma = norm.ppf(_total_cl)
+        _target_cost = _min_cost + _target_sigma ** 2
+        if low is None:
+            low = self._find_cost_cut(
+                parameter_name=parameter_name,
+                low=_min_par_val - 2 * _target_sigma,
+                high=high,
+                target_cost=_target_cost,
+                min_parameters=_min_par_vals
+            )
+        if high is None:
+            high = self._find_cost_cut(
+                parameter_name=parameter_name,
+                low=low,
+                high=_min_par_val + 2 * _target_sigma,
+                target_cost=_target_cost,
+                min_parameters=_min_par_vals
+            )
+        return low, high
 
     def _remove_zeroes_for_fixed(self, matrix):
         """
@@ -526,7 +614,8 @@ class MinimizerBase(object):
         """
 
     @abstractmethod
-    def profile(self, parameter_name, bins=20, bound=2, subtract_min=False):
+    def profile(self, parameter_name, low=None, high=None, sigma=None, cl=None, size=20,
+                subtract_min=False):
         """
         Calculate a 1D profile using the profile likelihood method: a single parameter is fixed
         while the rest are varied to minimize the cost function. The mapping of parameter value to
