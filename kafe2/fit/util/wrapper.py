@@ -86,7 +86,7 @@ def custom_fit(cost_function, p0=None, dp0=None, limits=None, constraints=None, 
     _fit = CustomFit(cost_function)
     return _fit_wrapper_generic(_fit, p0, dp0, limits, constraints, report, profile, save)
 
-def hist_fit(data, n_bins=None, bin_range=None, bin_edges=None, model_function=None, p0=None,
+def hist_fit(model_function=None, data=None, n_bins=None, bin_range=None, bin_edges=None, p0=None,
              dp0=None, error=None, error_rel=None, error_cor=None, error_cor_rel=None,
              errors_rel_to_model=True, density=True, gauss_approximation=None, limits=None,
              constraints=None, report=False, profile=True, save=True):
@@ -125,9 +125,9 @@ def hist_fit(data, n_bins=None, bin_range=None, bin_edges=None, model_function=N
 
     return _fit_wrapper_generic(_fit, p0, dp0, limits, constraints, report, profile, save)
 
-def indexed_fit(data, model_function, p0=None, dp0=None, error=None, error_rel=None, error_cor=None,
-                error_cor_rel=None, errors_rel_to_model=True, limits=None, constraints=None,
-                report=False, profile=True, save=True):
+def indexed_fit(model_function=None, data=None, p0=None, dp0=None, error=None, error_rel=None,
+                error_cor=None, error_cor_rel=None, errors_rel_to_model=True, limits=None,
+                constraints=None, report=False, profile=True, save=True):
     from kafe2.fit.indexed import IndexedFit
 
     _fit = IndexedFit(data, model_function)
@@ -140,7 +140,7 @@ def indexed_fit(data, model_function, p0=None, dp0=None, error=None, error_rel=N
 
     return _fit_wrapper_generic(_fit, p0, dp0, limits, constraints, report, profile, save)
 
-def unbinned_fit(data, model_function=None, p0=None, dp0=None, limits=None, constraints=None,
+def unbinned_fit(model_function=None, data=None, p0=None, dp0=None, limits=None, constraints=None,
                  report=False, profile=True, save=True):
     from kafe2.fit.unbinned import UnbinnedFit
 
@@ -148,7 +148,7 @@ def unbinned_fit(data, model_function=None, p0=None, dp0=None, limits=None, cons
 
     return _fit_wrapper_generic(_fit, p0, dp0, limits, constraints, report, profile, save)
 
-def xy_fit(x_data, y_data, model_function=None, p0=None, dp0=None,
+def xy_fit(model_function=None, x_data=None, y_data=None, p0=None, dp0=None,
            x_error=None, y_error=None, x_error_rel=None, y_error_rel=None,
            x_error_cor=None, y_error_cor=None, x_error_cor_rel=None, y_error_cor_rel=None,
            errors_rel_to_model=True, limits=None, constraints=None, report=False, profile=None,
@@ -541,7 +541,7 @@ def k2Fit(func, x, y, sx=None, sy=None, srelx=None, srely=None, xabscor=None, ya
     :rtype: tuple
     """
     xy_fit(
-        x, y, func, p0=p0, dp0=dp0, x_error=sx, y_error=sy, x_error_rel=srelx, y_error_rel=srely,
+        func, x, y, p0=p0, dp0=dp0, x_error=sx, y_error=sy, x_error_rel=srelx, y_error_rel=srely,
         x_error_cor=xabscor, y_error_cor=yabscor, x_error_cor_rel=xrelcor, y_error_cor_rel=yrelcor,
         errors_rel_to_model=ref_to_model, limits=limits, constraints=constraints, report=not quiet,
         profile=True

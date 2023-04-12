@@ -40,8 +40,8 @@ pos = 6.66    # signal position
 width = 0.33  # signal width
 SplusB_data = generate_data(N, min, max, pos, width, s)  
 
-unbinned_fit(data=SplusB_data, model_function=signal_plus_background)
+unbinned_fit(model_function=signal_plus_background, data=SplusB_data)
 plot(show=False)  # Set show=False so the plot for the unbinned fit is not shown until the end.
 
-hist_fit(data=SplusB_data, n_bins=50, bin_range=(min, max), model_function=signal_plus_background)
+hist_fit(model_function=signal_plus_background, data=SplusB_data, n_bins=50, bin_range=(min, max))
 plot()

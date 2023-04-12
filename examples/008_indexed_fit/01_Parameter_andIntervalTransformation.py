@@ -35,7 +35,7 @@ def cartesian_to_polar(x, y):
     return np.concatenate( (r, phi) )
 
 # Call kafe2 wrapper function to do an indexed fit:
-indexed_fit(data=pars, model_function=cartesian_to_polar, error=puncs)
+indexed_fit(model_function=cartesian_to_polar, data=pars, error=puncs)
 plot(
     data_label="Measured coordinates",
     model_label=r'$r$-$\phi$ from x-y',

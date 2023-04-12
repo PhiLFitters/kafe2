@@ -51,7 +51,7 @@ import kafe2
 x_data = [1.0, 2.0, 3.0, 4.0]
 y_data = [2.3, 4.2, 7.5, 9.4]
 
-kafe2.xy_fit(x_data, y_data, x_error=0.1, y_error=[0.40, 0.45, 0.40, 0.25],
+kafe2.xy_fit("line", x_data, y_data, x_error=0.1, y_error=[0.40, 0.45, 0.40, 0.25],
              y_error_cor_rel=0.05)
 kafe2.plot(x_label="$t$ [s]", y_label="$h$ [m]")
 ```

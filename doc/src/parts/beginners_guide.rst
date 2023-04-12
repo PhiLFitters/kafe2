@@ -57,7 +57,7 @@ The code looks something like this:
 .. code-block:: python
 
     import kafe2
-    kafe2.xy_fit(x_data, y_data, y_error=my_y_error)
+    kafe2.xy_fit("line", x_data, y_data, y_error=my_y_error)
     kafe2.plot()
 
 The mode complex object-oriented interface imports the objects from the *kafe2* module instead:

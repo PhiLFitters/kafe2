@@ -76,7 +76,7 @@ class TestWrapperCallableXY(unittest.TestCase):
             self._y_error_cor = None
 
         _result_2 = xy_fit(
-            self._x_data, self._y_data, model_function, p0, dp0,
+            model_function, self._x_data, self._y_data, p0, dp0,
             x_error=self._x_error, y_error=self._y_error,
             x_error_rel=self._x_error_rel, y_error_rel=self._y_error_rel,
             x_error_cor=self._x_error_cor, y_error_cor=self._y_error_cor,

@@ -44,8 +44,8 @@ x_error = 0.3
 y_error_rel = 0.05
 
 # kafe2.xy_fit needs to be called twice to do two fits:
-kafe2.xy_fit(x_data, y_data, model_function=linear_model, x_error=x_error, y_error_rel=y_error_rel)
-kafe2.xy_fit(x_data, y_data, model_function=exponential_model,
+kafe2.xy_fit(linear_model, x_data, y_data, x_error=x_error, y_error_rel=y_error_rel)
+kafe2.xy_fit(exponential_model, x_data, y_data,
              x_error=x_error, y_error_rel=y_error_rel, profile=True)
 # Make sure to specify profile=True whenever you use a nonlinear model function.
 # A model function is linear if it is a linear function of each of its parameters.

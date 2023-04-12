@@ -25,5 +25,5 @@ def normal_distribution(x, mu, sigma):
 data = np.random.normal(loc=0, scale=1, size=100)
 
 # Finally, do the fit and plot it:
-hist_fit(data, n_bins=10, bin_range=(-5, 5), model_function=normal_distribution)
+hist_fit(model_function=normal_distribution, data=data, n_bins=10, bin_range=(-5, 5))
 plot()

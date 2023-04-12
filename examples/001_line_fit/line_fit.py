@@ -24,8 +24,8 @@ x_error = 0.1
 y_error = 0.4
 
 # Pass the information to kafe2:
-kafe2.xy_fit(x_data, y_data, x_error=x_error, y_error=y_error)
-# Because no model function was specified a line is used by default.
+kafe2.xy_fit("line", x_data, y_data, x_error=x_error, y_error=y_error)
+# The string "line" gets mapped to a first degree polynomial for the model function.
 
 # Call another function to create a plot:
 kafe2.plot(
