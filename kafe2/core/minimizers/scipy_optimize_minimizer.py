@@ -542,26 +542,29 @@ class MinimizerScipyOptimize(MinimizerBase):
         self._x0 = _result.x
         return _result.fun
 
-    def profile(self, parameter_name, bins=21, bound=2, subtract_min=False):
+    def profile(self, parameter_name, low=None, high=None, sigma=None, cl=None, size=20,
+                subtract_min=False):
         if not self.did_fit:
             raise RuntimeError("Need to perform a fit before calling profile()!")
         _par_id = self._par_names.index(parameter_name)
         _par_err = self.parameter_errors[_par_id]
         _par_min = self._par_val[_par_id]
-        _par = np.linspace(
-            start=_par_min - bound * _par_err,
-            stop=_par_min + bound * _par_err,
-            num=bins, endpoint=True
-        )
         _y_offset = self.function_value if subtract_min else 0
+        _bound = self._get_profile_bound(parameter_name, low, high, sigma, cl)
+        if low is None and high is None:
+            low = _par_min - _bound * _par_err
+            high = _par_min + _bound * _par_err
+        else:
+            low, high = _bound
+        _par = np.linspace(start=low, stop=high, num=size, endpoint=True)
 
-        _y = np.empty(bins)
+        _y = np.zeros(size)
         self._x0 = self._par_val
-        for i in range(bins):
+        for i in range(size):
             _y[i] = self._calc_fun_with_constraints(
                 [{"type": "eq", "fun": lambda x: x[_par_id] - _par[i]}], continuous_x0=True
             )
-        self._func_wrapper_unpack_args(self._par_val)
+        self._func_wrapper_unpack_args(self._par_val)  # return to minimum
         return np.asarray([_par, _y - _y_offset])
 
     def _func_wrapper(self, *parameter_values):

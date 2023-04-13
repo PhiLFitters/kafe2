@@ -7,6 +7,7 @@ from scipy.optimize import brentq
 from scipy.stats import norm
 
 from ..error import CovMat
+from kafe2.core.confidence import ConfidenceLevel
 
 
 @six.add_metaclass(ABCMeta)
@@ -229,41 +230,42 @@ class MinimizerBase(object):
             raise ValueError("Sigma and cl cannot be defined simultaneously.")
         if low is not None and high is not None and (sigma is not None or cl is not None):
             raise ValueError("If low and high are defined then sigma and cl cannot be defined.")
-        if sigma is not None:
-            cl = norm.cdf(sigma) - norm.cdf(-sigma)
-        else:
-            if cl is None:
-                cl = 0.95
-            sigma = norm.ppf((1 + cl) / 2)
         _parameter_index = self._par_names.index(parameter_name)
         _parameter_error = self.parameter_errors[_parameter_index]
         _min_cost = self.function_value
         _min_par_vals = self.parameter_values
         _min_par_val = _min_par_vals[_parameter_index]
+
         if low is not None and low > _min_par_val:
-            raise ValueError(f"low={low} must be smaller than {parameter_name}={_min_par_val}")
+            raise ValueError(f"low={low} must be smaller than <{parameter_name}>={_min_par_val}")
         if high is not None and high < _min_par_val:
-            raise ValueError(f"high={high} must be larger than {parameter_name}={_min_par_val}")
+            raise ValueError(f"high={high} must be larger than <{parameter_name}>={_min_par_val}")
 
         if low is not None and high is not None:
             return low, high
         if low is None and high is None:
-            return sigma
+            return ConfidenceLevel(cl=cl, sigma=sigma).sigma
+
+        if sigma is None and cl is None:
+            sigma = 4
+        if sigma is not None:
+            if low is not None:
+                return low, _min_par_val + sigma * _parameter_error
+            if high is not None:
+                return _min_par_val - sigma * _parameter_error, high
 
         if low is not None:
             _one_sided_cost = self._get_cost_value(parameter_name, low, _min_par_vals)
         if high is not None:
             _one_sided_cost = self._get_cost_value(parameter_name, high, _min_par_vals)
-        _one_sided_sigma = np.sqrt(_one_sided_cost - _min_cost)
-        _total_cl = cl + 1 - norm.cdf(_one_sided_sigma)
+        _total_cl = cl + 1 - ConfidenceLevel(delta_nll=_one_sided_cost-_min_cost).cl
         if _total_cl > 1:
             raise ValueError(
-                f"With low={low}, high={high}, sigma={sigma}, cl={cl} "
+                f"With low={low}, high={high}, sigma={ConfidenceLevel(cl=cl).sigma:.3f}, cl={cl} "
                 "no valid confidence interval can be constructed because the total confidence "
-                f"level would be {_total_cl} > 1."
+                f"level would be {_total_cl:.6f} > 1."
             )
-        _target_sigma = norm.ppf(_total_cl)
-        _target_cost = _min_cost + _target_sigma ** 2
+        _target_cost = _min_cost + ConfidenceLevel(cl=_total_cl).delta_nll
         if low is None:
             low = self._find_cost_cut(
                 parameter_name=parameter_name,

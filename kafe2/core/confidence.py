@@ -10,14 +10,23 @@ class ConfidenceLevel(object):
     """
     Helper class for handling the conversion from confidence levels to sigma values and vice versa.
     """
-    def __init__(self, n_dimensions, cl=None, sigma=None):
+    def __init__(self, n_dimensions=1, cl=None, sigma=None, delta_nll=None):
         self.ndim = n_dimensions
-        if (cl is None and sigma is None) or (cl is not None and sigma is not None):
-            raise ValueError("Exactly one out of cl and sigma must be defined!")
+        _num_spec_not_none = 0
+        if cl is not None:
+            _num_spec_not_none += 1
+        if sigma is not None:
+            _num_spec_not_none += 1
+        if delta_nll is not None:
+            _num_spec_not_none += 1
+        if _num_spec_not_none != 1:
+            raise ValueError("Exactly one out of cl, sigma, and delta_nll must be defined!")
         if cl is not None:
             self.cl = cl
         if sigma is not None:
             self.sigma = sigma
+        if delta_nll is not None:
+            self.sigma = np.sqrt(delta_nll)
 
     def __str__(self):
         return "<ConfidenceLevel (d=%d): %.4g%% (%.3g-sigma)>" % (
@@ -55,6 +64,16 @@ class ConfidenceLevel(object):
             raise ValueError("Sigma value must be greater than 0! Got: %g" % (new_sigma,))
         self._sigma = float(new_sigma)
         self._cl = None
+
+    @property
+    def delta_nll(self):
+        return self.sigma ** 2
+
+    @delta_nll.setter
+    def delta_nll(self, new_delta_nll):
+        if new_delta_nll <= 0:
+            raise ValueError("delta_nll value must be greater than 0! Got: %g" % (new_sigma,))
+        self.sigma = np.sqrt(delta_nll)
 
     @property
     def ndim(self):
