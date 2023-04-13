@@ -284,6 +284,58 @@ class MinimizerBase(object):
             )
         return low, high
 
+    def _get_arrow_specs(self, parameter_name, low, high, cl, min_cost, min_par_val, par_err, min_par_vals):
+        _arrow_specs = []
+        if cl is None:
+            cl = [0.9, 0.95, 0.99]
+        try:
+            iter(cl)
+        except TypeError:
+            cl = [cl]
+        if low is not None:
+            try:
+                iter(low)
+            except TypeError:
+                low = [low]
+        if high is not None:
+            try:
+                iter(high)
+            except TypeError:
+                low = [high]
+        if low is None and high is None:
+            for _cl_i in cl:
+                _sigma_i = ConfidenceLevel(cl=cl).sigma
+                _outside_cl = (1 - cl) / 2
+                _arrow_specs.append({"side":"left", "x":-sigma_i, "y":sigma_i**2, "cl":_outside_cl})
+                _arrow_specs.append({"side":"right", "x":sigma_i, "y":sigma_i**2, "cl":_outside_cl})
+                return _arrow_specs
+        if low is None:
+            _cl_high = (1 - ConfidenceLevel(delta_nll=self._get_cost_value(
+                parameter_name, high[0], min_par_vals)-min_cost).cl) / 2
+            for _cl_i in cl:
+                _total_cl = _cl_i + _cl_high
+                if _total_cl > 1:
+                    continue
+                _sigma_i = ConfidenceLevel(cl=(1+_total_cl)/2).sigma
+                _y_i = self._get_cost_value(parameter_name, min_par_val - _sigma_i * ,min_par_vals)
+                _arrow_specs.append({"side":"left", "x":-sigma_i, "y":sigma_i**2, "cl":1-_total_cl})
+        else:
+            for _low_i in low:
+                _arrow_specs.append({
+                    "side":"left",
+                    "x":_low_i,
+                    "y":self._get_cost_value(parameter_name, _low_i, min_par_vals),
+                })
+        if high is None:
+            pass
+        else:
+            for _h in high:
+                _arrow_specs.append({
+                    "side":"right",
+                    "x":_h,
+                    "y":self._get_cost_value(parameter_name, _h, min_par_vals),
+                })
+
     def _remove_zeroes_for_fixed(self, matrix):
         """
         Takes a full error matrix and removes the rows and
