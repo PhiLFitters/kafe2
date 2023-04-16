@@ -260,7 +260,7 @@ class ParameterFormatter(FileIOMixin, object):
     def fixed(self, fixed):
         self._fixed = fixed
 
-    def get_formatted(self, with_name=False, with_value=True, with_errors=True,
+    def get_formatted(self, value=None, with_name=False, with_value=True, with_errors=True,
                       n_significant_digits=2, round_value_to_error=True, asymmetric_error=False,
                       format_as_latex=False):
         """Get a formatted string representing this model parameter.
@@ -278,6 +278,8 @@ class ParameterFormatter(FileIOMixin, object):
         :return: The string representation of the parameter.
         :rtype: str
         """
+        if value is None:
+            value = self.value
         _display_string = ""
         if with_name:
             if format_as_latex:
@@ -298,9 +300,9 @@ class ParameterFormatter(FileIOMixin, object):
                     (asymmetric_error and (
                             self.asymmetric_error is None or np.all(self.asymmetric_error == 0))):
                 if format_as_latex:
-                    _display_string += f"$%.{n_significant_digits}g$" % self.value
+                    _display_string += f"$%.{n_significant_digits}g$" % value
                 else:
-                    _display_string += f"%.{n_significant_digits}g" % self.value
+                    _display_string += f"%.{n_significant_digits}g" % value
             else:
                 if asymmetric_error:
                     _min_err = min(abs(self.error_up), abs(self.error_down))
@@ -313,7 +315,7 @@ class ParameterFormatter(FileIOMixin, object):
                 # calculate decimal precision if rounding:
                 if round_value_to_error:
                     val_formatter = ScalarFormatter(_min_err, n_significant_digits=n_significant_digits)
-                    _val = val_formatter(self.value)
+                    _val = val_formatter(value)
                     _err = "%#.{n}g".format(n=n_significant_digits) % self.error
                     if asymmetric_error:  # needed for different powers of 10 in asymmetric errs
                         if abs(self.error_down) <= abs(self.error_up):
@@ -324,7 +326,7 @@ class ParameterFormatter(FileIOMixin, object):
                             _err_u = "%#.{n}g".format(n=n_significant_digits) % abs(self.error_up)
                 # default cases if no rounding
                 else:
-                    _val = f"%.{n_significant_digits}g" % self.value
+                    _val = f"%.{n_significant_digits}g" % value
                     _err = f"%.{n_significant_digits}g" % self.error
                     if asymmetric_error:
                         _err_u = f"%.{n_significant_digits}g" % self.error_up

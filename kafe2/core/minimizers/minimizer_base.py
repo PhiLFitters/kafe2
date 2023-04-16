@@ -3,8 +3,8 @@ import six
 from abc import ABCMeta, abstractmethod
 import numpy as np
 import numdifftools as nd
-from scipy.optimize import brentq
-from scipy.stats import norm
+from scipy.optimize import root_scalar
+from typing import Sequence, Union
 
 from ..error import CovMat
 from kafe2.core.confidence import ConfidenceLevel
@@ -156,11 +156,11 @@ class MinimizerBase(object):
                 _par_err = self.parameter_errors[_par_index]
 
                 _cut_dn = self._find_cost_cut(
-                    _par_name, _par_min - 2 * _par_err, _par_min, _target_chi_2, _min_parameters)
+                    _par_name, _par_min - _par_err, _target_chi_2, _min_parameters)
                 _asymm_par_errs[_par_index, 0] = _cut_dn - _par_min
 
                 _cut_up = self._find_cost_cut(
-                    _par_name, _par_min, _par_min + 2 * _par_err, _target_chi_2, _min_parameters)
+                    _par_name, _par_min + _par_err, _target_chi_2, _min_parameters)
                 _asymm_par_errs[_par_index, 1] = _cut_up - _par_min
                 self._load_state()
         return _asymm_par_errs
@@ -194,7 +194,7 @@ class MinimizerBase(object):
         return self.function_value
 
 
-    def _find_cost_cut(self, parameter_name, low, high, target_cost, min_parameters):
+    def _find_cost_cut(self, parameter_name, guess, target_cost, min_parameters):
         """
         Utility function that finds the parameter value for a single parameter at which the cost
         function reaches a given value. The other parameters are **not** fixed. Instead the profile
@@ -223,75 +223,81 @@ class MinimizerBase(object):
                 self.release(parameter_name)
             return self.function_value - target_cost
 
-        return brentq(f=_profile, a=low, b=high, xtol=self.tolerance)
+        return root_scalar(
+            f=_profile, x0=guess, x1=min_parameters[self.parameter_names.index(parameter_name)],
+            xtol=self.tolerance, method="secant").root
 
-    def _get_profile_bound(self, parameter_name, low=None, high=None, sigma=None, cl=None):
-        if sigma is not None and cl is not None:
-            raise ValueError("Sigma and cl cannot be defined simultaneously.")
-        if low is not None and high is not None and (sigma is not None or cl is not None):
-            raise ValueError("If low and high are defined then sigma and cl cannot be defined.")
+    def _get_profile_bound(
+            self, parameter_name, low=None, high=None, sigma=None, cl=None):
+        if low is not None and high is not None and cl is not None:
+            raise ValueError("At most two out of low, high, and cl can be defined.")
         _parameter_index = self._par_names.index(parameter_name)
         _parameter_error = self.parameter_errors[_parameter_index]
         _min_cost = self.function_value
         _min_par_vals = self.parameter_values
         _min_par_val = _min_par_vals[_parameter_index]
 
-        if low is not None and low > _min_par_val:
+        if low is not None and np.max(low) > _min_par_val:
             raise ValueError(f"low={low} must be smaller than <{parameter_name}>={_min_par_val}")
-        if high is not None and high < _min_par_val:
+        if high is not None and np.min(high) < _min_par_val:
             raise ValueError(f"high={high} must be larger than <{parameter_name}>={_min_par_val}")
+        low = np.min(low)
+        high = np.max(high)
+        cl = np.max(cl)
 
         if low is not None and high is not None:
             return low, high
         if low is None and high is None:
-            return ConfidenceLevel(cl=cl, sigma=sigma).sigma
+            if cl is not None:
+                sigma = max(sigma, ConfidenceLevel(cl=cl).sigma)
+            return _min_par_val - sigma * _parameter_error, _min_par_val + sigma * _parameter_error
 
-        if sigma is None and cl is None:
-            sigma = 4
         if sigma is not None:
             if low is not None:
                 return low, _min_par_val + sigma * _parameter_error
             if high is not None:
                 return _min_par_val - sigma * _parameter_error, high
+        if cl is None:
+            cl = 0.99
 
-        if low is not None:
-            _one_sided_cost = self._get_cost_value(parameter_name, low, _min_par_vals)
-        if high is not None:
-            _one_sided_cost = self._get_cost_value(parameter_name, high, _min_par_vals)
-        _total_cl = cl + 1 - ConfidenceLevel(delta_nll=_one_sided_cost-_min_cost).cl
-        if _total_cl > 1:
-            raise ValueError(
-                f"With low={low}, high={high}, sigma={ConfidenceLevel(cl=cl).sigma:.3f}, cl={cl} "
-                "no valid confidence interval can be constructed because the total confidence "
-                f"level would be {_total_cl:.6f} > 1."
-            )
-        _target_cost = _min_cost + ConfidenceLevel(cl=_total_cl).delta_nll
+        _target_cl = ConfidenceLevel(cl=2*cl-1)
         if low is None:
             low = self._find_cost_cut(
                 parameter_name=parameter_name,
-                low=_min_par_val - 2 * _target_sigma,
-                high=high,
-                target_cost=_target_cost,
+                guess=_min_par_val - _target_cl.sigma * _parameter_error,
+                target_cost=_min_cost+_target_cl.delta_nll,
                 min_parameters=_min_par_vals
             )
         if high is None:
             high = self._find_cost_cut(
                 parameter_name=parameter_name,
-                low=low,
-                high=_min_par_val + 2 * _target_sigma,
-                target_cost=_target_cost,
+                guess=_min_par_val + _target_cl.sigma * _parameter_error,
+                target_cost=_min_cost+_target_cl.delta_nll,
                 min_parameters=_min_par_vals
             )
+
         return low, high
 
-    def _get_arrow_specs(self, parameter_name, low, high, cl, min_cost, min_par_val, par_err, min_par_vals):
+    def _get_arrow_specs(
+            self, parameter_name: str, low: Union[None, float, Sequence[float]],
+            high: Union[None, float, Sequence[float]], cl: Union[None, float, Sequence[float]],
+            subtract_min: bool, min_cost: float, min_par_val: float,
+            par_err: float, min_par_vals: Sequence[float]):
+        if low is None and high is None and cl is None:
+            return None
         _arrow_specs = []
-        if cl is None:
-            cl = [0.9, 0.95, 0.99]
-        try:
-            iter(cl)
-        except TypeError:
-            cl = [cl]
+
+        _num_defined = 0
+        if low is not None:
+            _num_defined += 1
+        if high is not None:
+            _num_defined += 1
+        if cl is not None:
+            _num_defined += 1
+        if _num_defined > 2:
+            raise ValueError("At most 2 out of low, high, and cl can be defined but received "
+                             f"low={low}, high={high}, cl={cl}")
+
         if low is not None:
             try:
                 iter(low)
@@ -302,39 +308,76 @@ class MinimizerBase(object):
                 iter(high)
             except TypeError:
                 low = [high]
-        if low is None and high is None:
-            for _cl_i in cl:
-                _sigma_i = ConfidenceLevel(cl=cl).sigma
-                _outside_cl = (1 - cl) / 2
-                _arrow_specs.append({"side":"left", "x":-sigma_i, "y":sigma_i**2, "cl":_outside_cl})
-                _arrow_specs.append({"side":"right", "x":sigma_i, "y":sigma_i**2, "cl":_outside_cl})
-                return _arrow_specs
+        if cl is None:
+            cl = [0.90, 0.95, 0.99]
+        try:
+            iter(cl)
+        except TypeError:
+            cl = [cl]
+
+        _y_offset = min_cost if subtract_min else 0
+
         if low is None:
-            _cl_high = (1 - ConfidenceLevel(delta_nll=self._get_cost_value(
-                parameter_name, high[0], min_par_vals)-min_cost).cl) / 2
             for _cl_i in cl:
-                _total_cl = _cl_i + _cl_high
-                if _total_cl > 1:
-                    continue
-                _sigma_i = ConfidenceLevel(cl=(1+_total_cl)/2).sigma
-                _y_i = self._get_cost_value(parameter_name, min_par_val - _sigma_i * ,min_par_vals)
-                _arrow_specs.append({"side":"left", "x":-sigma_i, "y":sigma_i**2, "cl":1-_total_cl})
+                if high is None:
+                    _cl_i_outside = 1 - _cl_i
+                    _cl_i = 2*_cl_i-1
+                else:
+                    _cl_i_outside = (1 - _cl_i) / 2
+                _sigma_i = ConfidenceLevel(cl=_cl_i).sigma
+                _arrow_specs.append({
+                    "side": "left",
+                    "x": self._find_cost_cut(
+                        parameter_name=parameter_name,
+                        guess=min_par_val-_sigma_i*par_err,
+                        target_cost=min_cost+_sigma_i**2,
+                        min_parameters=min_par_vals
+                    ),
+                    "y": min_cost-_y_offset+_sigma_i**2,
+                    "cl": _cl_i_outside
+                })
         else:
             for _low_i in low:
+                _cost_low = self._get_cost_value(parameter_name, _low_i, min_par_vals)
+                _cl_low = (1 - ConfidenceLevel(delta_nll=_cost_low-min_cost).cl) / 2
                 _arrow_specs.append({
-                    "side":"left",
-                    "x":_low_i,
-                    "y":self._get_cost_value(parameter_name, _low_i, min_par_vals),
+                    "side": "left",
+                    "x": _low_i,
+                    "y": _cost_low-_y_offset,
+                    "cl": _cl_low
                 })
+
         if high is None:
-            pass
-        else:
-            for _h in high:
+            for _cl_i in cl:
+                if high is None:
+                    _cl_i_outside = 1 - _cl_i
+                    _cl_i = 2*_cl_i-1
+                else:
+                    _cl_i_outside = (1 - _cl_i) / 2
+                _sigma_i = ConfidenceLevel(cl=_cl_i).sigma
                 _arrow_specs.append({
-                    "side":"right",
-                    "x":_h,
-                    "y":self._get_cost_value(parameter_name, _h, min_par_vals),
+                    "side": "right",
+                    "x": self._find_cost_cut(
+                        parameter_name=parameter_name,
+                        guess=min_par_val+_sigma_i*par_err,
+                        target_cost=min_cost+_sigma_i**2,
+                        min_parameters=min_par_vals
+                    ),
+                    "y": min_cost-_y_offset+_sigma_i**2,
+                    "cl": _cl_i_outside
                 })
+        else:
+            for _high_i in high:
+                _cost_high = self._get_cost_value(parameter_name, _high_i, min_par_vals)
+                _cl_high = (1 - ConfidenceLevel(delta_nll=_cost_high-min_cost).cl) / 2
+                _arrow_specs.append({
+                    "side": "right",
+                    "x": _high_i,
+                    "y": _cost_high-_y_offset,
+                    "cl": _cl_high
+                })
+
+        return _arrow_specs
 
     def _remove_zeroes_for_fixed(self, matrix):
         """
@@ -669,23 +712,40 @@ class MinimizerBase(object):
 
     @abstractmethod
     def profile(self, parameter_name, low=None, high=None, sigma=None, cl=None, size=20,
-                subtract_min=False):
+                subtract_min=False, arrows=False):
         """
         Calculate a 1D profile using the profile likelihood method: a single parameter is fixed
         while the rest are varied to minimize the cost function. The mapping of parameter value to
         cost function value around the minimum is the profile.
         The interval [par_min - par_err * bound, par_min + par_err * bound] is profiled by this
         method.
-        :param parameter_name: the name of the parameter to fix.
+        :param parameter_name: the name of the parameter to profile.
         :type parameter_name: str
-        :param bins: the number of points to evaluate the cost function at.
-        :type bins: int
+        :param low: Lower bound of the profiled interval. If multiple values are provided the
+            minimum value is used.
+        :param high: Upper bound of the profiled interval. If multiple values are provided the
+            maximum value is used.
+        :type high: float or Sequence[float] or None
+        :param sigma: Number of std deviations to deviate at least from the optimal value in either
+            direction if low or high aren't defined.
+        :type sigma: float
+        :param cl: Confidence level of the profiled interval. If low or high is defined then cl is
+            interpreted as the confidence level of a one-sided confidence interval. If both low
+            and high are undefined then cl is interpreted as the confidence level of a central
+            confidence interval. Cannot be defined if both high and low are defined. If multiple
+            values are provided then the maximum value is used.
+        :type cl: float or Sequence[float] or None
+        :param size: the number of points to evaluate the cost function at.
+        :type size: int
         :param bound: parameter determining the size of the interval to profile (see above).
         :type bound: float
         :param subtract_min: if True, subtract the cost function value of the minimum from the cost
         function values of the profile.
         :type subtract_min: bool
+        :param arrows: if True, calculate arrow specifications for annotating plots of the profile.
+            This can extend the profile range if necessary.
+        :type arrows: bool
         :return: the parameter values of the fixed parameter and the corresponding cost function
-        values.
-        :rtype: numpy.ndarray of shape (2, bins)
+        values and the arrow specifications.
+        :rtype: tuple of numpy.ndarray of shape (2, bins) and list
         """

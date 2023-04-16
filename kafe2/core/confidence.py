@@ -39,13 +39,13 @@ class ConfidenceLevel(object):
         self._cl = 1. - gammaincc(self.ndim/2.0, self.sigma**2/2.0)
 
     @property
-    def cl(self):
+    def cl(self) -> float:
         if self._cl is None:
             self._calc_cl_from_sigma()
         return self._cl
 
     @cl.setter
-    def cl(self, new_cl):
+    def cl(self, new_cl: float):
         if new_cl <= 0 or new_cl >= 1:
             raise ValueError(
                 "Confidence level must be greater than 0 and less than 1. Got: %g" % (new_cl,))
@@ -53,27 +53,27 @@ class ConfidenceLevel(object):
         self._sigma = None
 
     @property
-    def sigma(self):
+    def sigma(self) -> float:
         if self._sigma is None:
             self._calc_sigma_from_cl()
         return self._sigma
 
     @sigma.setter
-    def sigma(self, new_sigma):
+    def sigma(self, new_sigma: float):
         if new_sigma <= 0:
             raise ValueError("Sigma value must be greater than 0! Got: %g" % (new_sigma,))
         self._sigma = float(new_sigma)
         self._cl = None
 
     @property
-    def delta_nll(self):
+    def delta_nll(self) -> float:
         return self.sigma ** 2
 
     @delta_nll.setter
-    def delta_nll(self, new_delta_nll):
+    def delta_nll(self, new_delta_nll: float):
         if new_delta_nll <= 0:
-            raise ValueError("delta_nll value must be greater than 0! Got: %g" % (new_sigma,))
-        self.sigma = np.sqrt(delta_nll)
+            raise ValueError("delta_nll value must be greater than 0! Got: %g" % (new_delta_nll,))
+        self.sigma = np.sqrt(new_delta_nll)
 
     @property
     def ndim(self):

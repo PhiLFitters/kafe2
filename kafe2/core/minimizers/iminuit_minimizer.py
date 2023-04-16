@@ -299,13 +299,34 @@ class MinimizerIMinuit(MinimizerBase):
         return ContourFactory.create_xy_contour(np.array(_contour_line), sigma)
 
     def profile(self, parameter_name, low=None, high=None, sigma=None, cl=None, size=20,
-                subtract_min=False):
+                subtract_min=False, arrows=False):
         if not self.did_fit:
             raise RuntimeError("Need to perform a fit before calling profile()!")
-        _kwargs = dict(
-            bound=self._get_profile_bound(parameter_name, low, high, sigma, cl),
-            subtract_min=subtract_min
-        )
+        _bound_low, _bound_high = self._get_profile_bound(parameter_name, low, high, sigma, cl)
+        self.minimize()  # return to minimum
+        _arrow_specs = None
+        if arrows:
+            _parameter_index = self.parameter_names.index(parameter_name)
+            _min_par_val = self.parameter_values[_parameter_index]
+            _arrow_specs = self._get_arrow_specs(
+                parameter_name, low, high, cl, subtract_min, self.function_value,
+                _min_par_val, self.parameter_errors[_parameter_index],
+                self.parameter_values)
+            self.minimize()  # return to minimum
+            _original_bound_low = _bound_low
+            _original_bound_high = _bound_high
+            if _arrow_specs is not None:
+                for _arrow_spec in _arrow_specs:
+                    _bound_low = min(
+                        _bound_low,
+                        _arrow_spec["x"] + 0.13 * (_arrow_spec["x"] - _original_bound_high))
+                    _bound_high = max(
+                        _bound_high,
+                        _arrow_spec["x"] + 0.13 * (_arrow_spec["x"] - _original_bound_low))
+            _kwargs = dict(
+                bound=(_bound_low, _bound_high),
+                subtract_min=subtract_min
+            )
         if _IMINUIT_1:
             _kwargs["bins"] = size
         else:
@@ -313,7 +334,7 @@ class MinimizerIMinuit(MinimizerBase):
         _bins, _vals, _statuses = self.__iminuit.mnprofile(parameter_name, **_kwargs)
         # TODO: check statuses (?)
         self.minimize()  # return to minimum
-        return np.array([_bins, _vals])
+        return np.array([_bins, _vals]), _arrow_specs
 
     def set(self, parameter_name, parameter_value):
         if parameter_name not in self._minimizer_param_dict:

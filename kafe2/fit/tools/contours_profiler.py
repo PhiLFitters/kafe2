@@ -14,6 +14,7 @@ from matplotlib import gridspec as gs
 from matplotlib import ticker as plticker
 from matplotlib.axes import Axes
 from matplotlib import rc_context
+from matplotlib.patches import FancyArrowPatch, ArrowStyle
 
 
 __all__ = ["ContoursProfiler"]
@@ -128,6 +129,12 @@ class ContoursProfiler(object):
     """
 
     _DEFAULT_PLOT_PROFILE_KWARGS = dict(marker='', linewidth=2)
+    _DEFAULT_PLOT_PROFILE_ARROW_KWARGS = dict(
+        color="black", linewidth=1, shrinkA=0, shrinkB=0, horizontal_arrow_length=0.05,
+        arrowstyle=ArrowStyle("fancy", head_length=6, head_width=6, tail_width=0.01),
+        vertical_x_text=0.005, vertical_y_text=0.005, horizontal_x_text=0.015,
+        horizontal_y_text=-0.03
+    )
     _DEFAULT_PLOT_PARABOLA_KWARGS = dict(marker='', linewidth=2, linestyle='--')
     _DEFAULT_PLOT_ERROR_SPAN_ON_PROFILE_KWARGS = dict(color='gray', alpha=0.5)
     _DEFAULT_PLOT_MINIMUM_KWARGS = dict(markersize=12, marker='*', linewidth=1.5, linestyle='',
@@ -179,6 +186,18 @@ class ContoursProfiler(object):
 
         self._figures = []
 
+    def _get_profile(self, parameter, low=None, high=None, sigma=None, cl=None, points=None,
+                     subtract_min=None, arrows=False):
+        if low is None and high is None and sigma is None and cl is None:
+            sigma = 2
+        if points is None:
+            points = self._profile_kwargs['points']
+        if subtract_min is None:
+            subtract_min = self._profile_kwargs['subtract_min']
+        self._fit._check_dynamic_error_compatibility()
+        return self._fit._fitter.profile(
+            parameter, low, high, sigma, cl, points, subtract_min, arrows)
+
     def _make_figure_gs(self, nrows=1, ncols=1):
         _fig = plt.figure(figsize=(8, 8))  # defaults from matplotlibrc
 
@@ -196,6 +215,41 @@ class ContoursProfiler(object):
     def _plot_profile_xy(target_axes, x, y, label):
         _kwargs = ContoursProfiler._DEFAULT_PLOT_PROFILE_KWARGS.copy()
         return target_axes.plot(x, y, label=label, **_kwargs)
+
+    @staticmethod
+    def _plot_profile_arrow(target_axes, x_span, y_span, par_formatter, side, x, y, cl):
+        _kwargs_vertical = ContoursProfiler._DEFAULT_PLOT_PROFILE_ARROW_KWARGS.copy()
+        del _kwargs_vertical["horizontal_arrow_length"]
+        del _kwargs_vertical["horizontal_x_text"]
+        del _kwargs_vertical["horizontal_y_text"]
+        if side == "left":
+            _x_text = x + _kwargs_vertical.pop("vertical_x_text") * x_span
+            _y_text = y + _kwargs_vertical.pop("vertical_y_text") * y_span
+        elif side == "right":
+            _x_text = x - _kwargs_vertical.pop("vertical_x_text") * x_span
+            _y_text = y + _kwargs_vertical.pop("vertical_y_text") * y_span
+        target_axes.add_patch(FancyArrowPatch((x, y), (x, 0), **_kwargs_vertical))
+        _par_text = par_formatter.get_formatted(
+            value=x, with_name=True, with_errors=False, format_as_latex=True)
+        target_axes.text(_x_text, _y_text, _par_text, horizontalalignment=side)
+
+        _kwargs_horizontal = ContoursProfiler._DEFAULT_PLOT_PROFILE_ARROW_KWARGS.copy()
+        del _kwargs_horizontal["vertical_x_text"]
+        del _kwargs_horizontal["vertical_y_text"]
+        if side == "left":
+            _x_target = x - _kwargs_horizontal.pop("horizontal_arrow_length") * x_span
+            _x_text = x - _kwargs_horizontal.pop("horizontal_x_text") * x_span
+            _y_text = y + _kwargs_horizontal.pop("horizontal_y_text") * y_span
+            _alignment = "right"
+        elif side == "right":
+            _x_target = x + _kwargs_horizontal.pop("horizontal_arrow_length") * x_span
+            _x_text = x + _kwargs_horizontal.pop("horizontal_x_text") * x_span
+            _y_text = y + _kwargs_horizontal.pop("horizontal_y_text") * y_span
+            _alignment = "left"
+        else:
+            raise ValueError(f"Unknown side: {side}")
+        target_axes.add_patch(FancyArrowPatch((x, y), (_x_target, y), **_kwargs_horizontal))
+        target_axes.text(_x_text, _y_text, f"${100*cl:.2f}\%$", horizontalalignment=_alignment)
 
     @staticmethod
     def _plot_parabolic_cost(target_axes, x, quad_coeff, x_offset, y_offset, label):
@@ -263,6 +317,18 @@ class ContoursProfiler(object):
 
         :param parameter: name of the parameter to profile (referred to as *x* here).
         :type parameter: str
+        :param low: Lower bound for the profile.
+        :type low: float or None
+        :param high: Upper bound for the profile.
+        :type high: float or None
+        :param sigma: Number of std deviations to deviate at least from the optimal value in either
+            direction if low or high aren't defined.
+        :type sigma: float
+        :param cl: Confidence level of the profiled region. If low or high is defined then cl is
+            interpreted as the confidence level of a one-sided confidence interval. If both low
+            and high are undefined then cl is interpreted as the confidence level of the central
+            confidence interval. Cannot be defined if both high and low are defined.
+        :type cl: float or None
         :param points: number of equidistant points to use as *x* values
         :type points: int
         :param bound: parameter region for the profile. A single value is interpreted as a sigma
@@ -275,14 +341,8 @@ class ContoursProfiler(object):
         :return: two-dimensional array of *x* (parameter) values and *y* (cost function) values
         :rtype: two-dimensional array of float
         """
-        if low is None and high is None and sigma is None and cl is None:
-            sigma = 2
-        if points is None:
-            points = self._profile_kwargs['points']
-        if subtract_min is None:
-            subtract_min = self._profile_kwargs['subtract_min']
-        self._fit._check_dynamic_error_compatibility()
-        return self._fit._fitter.profile(parameter, low, high, sigma, cl, points, subtract_min)
+        return self._get_profile(parameter, low, high, sigma, cl, points, subtract_min,
+                                 arrows=False)[0]
 
     def get_contours(self, parameter_1, parameter_2, smoothing_sigma=None):
         """
@@ -333,13 +393,25 @@ class ContoursProfiler(object):
                      show_fit_minimum=True,
                      show_error_span=True,
                      show_ticks=True,
-                     label_ticks_in_sigma=None,
+                     label_ticks_in_sigma=True,
                      label_fit_minimum=True):
         """
         Plot the profile cost function for a parameter.
 
         :param parameter: name of the parameter to profile in
         :type parameter: str
+        :param low: Lower bound(s) at which to display confidence levels.
+        :type low: float or Sequence[float] or None
+        :param high: Upper bound(s) at which to display confidence levels.
+        :type high: float or Sequence[float] or None
+        :param sigma: Number of std deviations to deviate at least from the optimal value in either
+            direction if low or high aren't defined.
+        :type sigma: float
+        :param cl: Confidence level(s) to mark in the plot. If low or high is defined then cl is
+            interpreted as the confidence level(s) of one-sided confidence intervals. If both low
+            and high are undefined then cl is interpreted as the confidence level(s) of central
+            confidence intervals. Cannot be defined if both high and low are defined.
+        :type cl: float or Sequence[float] or None
         :param target_axes: ``Axes`` object (if ``None``, a new figure is created)
         :type target_axes: ``matplotlib`` ``Axes`` or ``None``
         :param show_parabolic: if ``True``, a parabolic approximation of the profile near the minimum is also drawn
@@ -347,9 +419,9 @@ class ContoursProfiler(object):
         :param show_grid: if ``True``, a grid is drawn
         :type show_grid: bool
         :param show_legend: if ``True``, the legend is displayed
+        :type show_legend: bool
         :param show_fit_minimum: if ``True``, the fit minumum is shown as a marker with error bars
         :type show_fit_minimum: bool
-        :type show_legend: bool
         :param show_error_span: if ``True``, the parameter error region is shaded
         :type show_error_span: bool
         :param show_ticks: if ``True``, *x* and *y* ticks are displayed
@@ -363,8 +435,6 @@ class ContoursProfiler(object):
         :return: figure containing the plot result
         :rtype: `matplotlib.figure.Figure`
         """
-        if label_ticks_in_sigma is None:
-            label_ticks_in_sigma = low is None and high is None and cl is None
 
         with rc_context(kafe2_rc):
             if target_axes is None:
@@ -379,10 +449,21 @@ class ContoursProfiler(object):
             _cost_function_min = self._fit.cost_function_value
             _par_formatted_name = self._parameters_formatted_names[_par_id]
 
-            _x, _y = self.get_profile(parameter, low, high, sigma, cl)
+            (_x, _y), _arrow_specs = self._get_profile(
+                parameter, low, high, sigma, cl,
+                arrows=True)
 
-            _profile_artist = self._plot_profile_xy(_axes, _x, _y,
-                                                    label="profile %s" % (self._cost_function_formatted_name,))
+            _profile_artist = self._plot_profile_xy(
+                _axes, _x, _y, label="profile %s" % (self._cost_function_formatted_name,))
+
+            _x_span = np.max(_x) - np.min(_x)
+            _y_span = max(np.max(_y) - np.min(_y), np.max(((_x - _par_val) / _par_err) ** 2))
+            if _arrow_specs is not None:
+                for _arrow_spec in _arrow_specs:
+                    self._plot_profile_arrow(
+                        _axes, _x_span, _y_span,
+                        self._fit._get_model_function_parameter_formatters()[_par_id],
+                        **_arrow_spec)
 
             _y_offset = _cost_function_min if not self._profile_kwargs['subtract_min'] else 0.0
 
