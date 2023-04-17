@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
+from scipy.stats import norm
 from scipy.optimize import minimize
 import unittest
 
@@ -484,14 +485,14 @@ class AbstractMinimizerTest(ABC):
     def test_profile_m3_x(self):
         self.m3.minimize()
         self.assertTrue(np.allclose(
-            self.m3.profile('x', bins=5, subtract_min=True),
+            self.m3.profile('x', size=5, subtract_min=True)[0],
             self._ref_profile_m3_x_5, atol=1e-7
         ))
 
     def test_profile_m3_x_no_subtract_min(self):
         self.m3.minimize()
         self.assertTrue(np.allclose(
-            self.m3.profile('x', bins=5, subtract_min=False),
+            self.m3.profile('x', size=5, subtract_min=False)[0],
             self._ref_profile_m3_x_5_no_subtract_min, atol=1e-7
         ))
 
@@ -499,13 +500,139 @@ class AbstractMinimizerTest(ABC):
         self.m3.fix("y")
         self.m3.minimize()
         self.assertTrue(np.allclose(
-            self.m3.profile('x', bins=5, subtract_min=True),
+            self.m3.profile('x', size=5, subtract_min=True)[0],
             self._ref_profile_m3_x_5, atol=1e-7
         ))
+
+    def test_profile_m3_x_low(self):
+        self.m3.minimize()
+        self.assertTrue(np.allclose(
+            self.m3.profile('x', low=self._ref_profile_m3_x_5[0, 0], size=5, subtract_min=True)[0],
+            self._ref_profile_m3_x_5, atol=1e-7
+        ))
+
+    def test_profile_m3_x_high(self):
+        self.m3.minimize()
+        self.assertTrue(np.allclose(
+            self.m3.profile('x', high=self._ref_profile_m3_x_5[0, -1], size=5,
+                            subtract_min=True)[0],
+            self._ref_profile_m3_x_5, atol=1e-7
+        ))
+
+    def test_profile_m3_x_low_high(self):
+        self.m3.minimize()
+        self.assertTrue(np.allclose(
+            self.m3.profile('x', low=self._ref_profile_m3_x_5[0, 0],
+                            high=self._ref_profile_m3_x_5[0, -1], size=5, subtract_min=True)[0],
+            self._ref_profile_m3_x_5, atol=1e-7
+        ))
+
+    def test_profile_m3_x_cl(self):
+        _cl = norm.cdf(2) - norm.cdf(-2)
+        self.m3.minimize()
+        self.assertTrue(np.allclose(
+            self.m3.profile('x', cl=_cl, size=5, subtract_min=True)[0],
+            self._ref_profile_m3_x_5, atol=1e-7
+        ))
+
+    def test_profile_m3_x_cl_low(self):
+        _cl = (1 + norm.cdf(2) - norm.cdf(-2)) / 2
+        self.m3.minimize()
+        self.assertTrue(np.allclose(
+            self.m3.profile('x', low=self._ref_profile_m3_x_5[0, 0],
+                            cl=_cl, size=5, subtract_min=True)[0],
+            self._ref_profile_m3_x_5, atol=1e-7
+        ))
+
+    def test_profile_m3_x_cl_high(self):
+        _cl = (1 + norm.cdf(2) - norm.cdf(-2)) / 2
+        self.m3.minimize()
+        self.assertTrue(np.allclose(
+            self.m3.profile('x', low=self._ref_profile_m3_x_5[0, 0],
+                            cl=_cl, size=5, subtract_min=True)[0],
+            self._ref_profile_m3_x_5, atol=1e-7
+        ))
+
+    def test_profile_m3_x_arrows_cl(self):
+        _cl = [norm.cdf(1) - norm.cdf(-1), norm.cdf(2) - norm.cdf(-2)]
+        self.m3.minimize()
+        _arrow_specs = self.m3.profile('x', cl=_cl, size=5, subtract_min=True, arrows=True)[1]
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[0, 1], _arrow_specs[0]['x'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[1, 1], _arrow_specs[0]['y'])
+        self.assertAlmostEqual((1-_cl[0])/2, _arrow_specs[0]['cl'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[0, 0], _arrow_specs[1]['x'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[1, 0], _arrow_specs[1]['y'])
+        self.assertAlmostEqual((1-_cl[1])/2, _arrow_specs[1]['cl'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[0, 3], _arrow_specs[2]['x'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[1, 3], _arrow_specs[2]['y'])
+        self.assertAlmostEqual((1-_cl[0])/2, _arrow_specs[2]['cl'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[0, 4], _arrow_specs[3]['x'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[1, 4], _arrow_specs[3]['y'])
+        self.assertAlmostEqual((1-_cl[1])/2, _arrow_specs[3]['cl'])
+
+    def test_profile_m3_x_arrows_low_high(self):
+        _cl = [norm.cdf(-1), norm.cdf(-2)]
+        self.m3.minimize()
+        _arrow_specs = self.m3.profile(
+            'x', low=self._ref_profile_m3_x_5[0, :2], high=self._ref_profile_m3_x_5[0, -2:],
+            size=5, subtract_min=True, arrows=True)[1]
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[0, 0], _arrow_specs[0]['x'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[1, 0], _arrow_specs[0]['y'])
+        self.assertAlmostEqual(_cl[1], _arrow_specs[0]['cl'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[0, 1], _arrow_specs[1]['x'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[1, 1], _arrow_specs[1]['y'])
+        self.assertAlmostEqual(_cl[0], _arrow_specs[1]['cl'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[0, 3], _arrow_specs[2]['x'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[1, 3], _arrow_specs[2]['y'])
+        self.assertAlmostEqual(_cl[0], _arrow_specs[2]['cl'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[0, 4], _arrow_specs[3]['x'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[1, 4], _arrow_specs[3]['y'])
+        self.assertAlmostEqual(_cl[1], _arrow_specs[3]['cl'])
+
+    def test_profile_m3_x_arrows_low_cl(self):
+        _cl = [norm.cdf(1), norm.cdf(2)]
+        self.m3.minimize()
+        _arrow_specs = self.m3.profile('x', low=self._ref_profile_m3_x_5[0, :2], cl=_cl, size=5,
+                                       subtract_min=True, arrows=True)[1]
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[0, 0], _arrow_specs[0]['x'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[1, 0], _arrow_specs[0]['y'])
+        self.assertAlmostEqual(1-_cl[1], _arrow_specs[0]['cl'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[0, 1], _arrow_specs[1]['x'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[1, 1], _arrow_specs[1]['y'])
+        self.assertAlmostEqual(1-_cl[0], _arrow_specs[1]['cl'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[0, 3], _arrow_specs[2]['x'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[1, 3], _arrow_specs[2]['y'])
+        self.assertAlmostEqual(1-_cl[0], _arrow_specs[2]['cl'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[0, 4], _arrow_specs[3]['x'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[1, 4], _arrow_specs[3]['y'])
+        self.assertAlmostEqual(1-_cl[1], _arrow_specs[3]['cl'])
+
+    def test_profile_m3_x_arrows_high_cl(self):
+        _cl = [norm.cdf(1), norm.cdf(2)]
+        self.m3.minimize()
+        _arrow_specs = self.m3.profile('x', high=self._ref_profile_m3_x_5[0, -2:], cl=_cl, size=5,
+                                       subtract_min=True, arrows=True)[1]
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[0, 1], _arrow_specs[0]['x'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[1, 1], _arrow_specs[0]['y'])
+        self.assertAlmostEqual(1-_cl[0], _arrow_specs[0]['cl'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[0, 0], _arrow_specs[1]['x'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[1, 0], _arrow_specs[1]['y'])
+        self.assertAlmostEqual(1-_cl[1], _arrow_specs[1]['cl'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[0, 3], _arrow_specs[2]['x'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[1, 3], _arrow_specs[2]['y'])
+        self.assertAlmostEqual(1-_cl[0], _arrow_specs[2]['cl'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[0, 4], _arrow_specs[3]['x'])
+        self.assertAlmostEqual(self._ref_profile_m3_x_5[1, 4], _arrow_specs[3]['y'])
+        self.assertAlmostEqual(1-_cl[1], _arrow_specs[3]['cl'])
 
     def test_profile_raise_no_fit(self):
         with self.assertRaises(RuntimeError):
             self.m3.profile("x")
+
+    def test_profile_raise_low_high_and_cl(self):
+        self.m3.minimize()
+        with self.assertRaises(ValueError):
+            self.m3.profile("x", low=0, high=4, cl=0.95)
 
     @unittest.skip("Testing contours not yet implemented!")
     def test_contour_m3_x_y(self):

@@ -245,11 +245,15 @@ class MinimizerBase(object):
         high = np.max(high)
         cl = np.max(cl)
 
+        if sigma is None and cl is None:
+            sigma = 2
+
         if low is not None and high is not None:
             return low, high
         if low is None and high is None:
             if cl is not None:
-                sigma = max(sigma, ConfidenceLevel(cl=cl).sigma)
+                _sigma_from_cl = ConfidenceLevel(cl=cl).sigma
+                sigma = _sigma_from_cl if sigma is None or _sigma_from_cl > sigma else sigma
             return _min_par_val - sigma * _parameter_error, _min_par_val + sigma * _parameter_error
 
         if sigma is not None:
@@ -257,8 +261,6 @@ class MinimizerBase(object):
                 return low, _min_par_val + sigma * _parameter_error
             if high is not None:
                 return _min_par_val - sigma * _parameter_error, high
-        if cl is None:
-            cl = 0.99
 
         _target_cl = ConfidenceLevel(cl=2*cl-1)
         if low is None:
@@ -320,10 +322,10 @@ class MinimizerBase(object):
         if low is None:
             for _cl_i in cl:
                 if high is None:
-                    _cl_i_outside = 1 - _cl_i
-                    _cl_i = 2*_cl_i-1
-                else:
                     _cl_i_outside = (1 - _cl_i) / 2
+                else:
+                    _cl_i_outside = 1 - _cl_i
+                    _cl_i = 2 * _cl_i - 1
                 _sigma_i = ConfidenceLevel(cl=_cl_i).sigma
                 _arrow_specs.append({
                     "side": "left",
@@ -349,11 +351,11 @@ class MinimizerBase(object):
 
         if high is None:
             for _cl_i in cl:
-                if high is None:
-                    _cl_i_outside = 1 - _cl_i
-                    _cl_i = 2*_cl_i-1
-                else:
+                if low is None:
                     _cl_i_outside = (1 - _cl_i) / 2
+                else:
+                    _cl_i_outside = 1 - _cl_i
+                    _cl_i = 2 * _cl_i - 1
                 _sigma_i = ConfidenceLevel(cl=_cl_i).sigma
                 _arrow_specs.append({
                     "side": "right",

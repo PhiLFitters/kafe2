@@ -323,10 +323,10 @@ class MinimizerIMinuit(MinimizerBase):
                     _bound_high = max(
                         _bound_high,
                         _arrow_spec["x"] + 0.13 * (_arrow_spec["x"] - _original_bound_low))
-            _kwargs = dict(
-                bound=(_bound_low, _bound_high),
-                subtract_min=subtract_min
-            )
+        _kwargs = dict(
+            bound=(_bound_low, _bound_high),
+            subtract_min=subtract_min
+        )
         if _IMINUIT_1:
             _kwargs["bins"] = size
         else:

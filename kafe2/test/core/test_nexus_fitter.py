@@ -240,7 +240,7 @@ class AbstractTestNexusFitter(object):
 
     def test_profile(self):
         self.fitter.do_fit()
-        p = self.fitter.profile('x', bins=20, bound=2)
+        p = self.fitter.profile('x', size=20, sigma=2)[0]
         self.assertEqual(
             p.shape,
             (2, 20)
