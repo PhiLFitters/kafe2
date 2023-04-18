@@ -16,7 +16,7 @@ showing examples.
 Specifically, it teaches users how to specify measurement data and uncertainties, how to specify
 model functions, and how to extract the fit results.
 
-An interactive `*Jupyter* <https://jupyter.org/>`__ Notebook teaching the usage of the *kafe2*
+An interactive `Jupyter <https://jupyter.org/>`__ Notebook teaching the usage of the *kafe2*
 *Python* interface is available in
 `English <https://github.com/PhiLFitters/kafe2/blob/master/examples/jupyter_tutorial_en.ipynb>`__ and
 `German <https://github.com/PhiLFitters/kafe2/blob/master/examples/jupyter_tutorial_de.ipynb>`__.
@@ -28,8 +28,9 @@ in the :ref:`user_guide_kafe2go`.
 Basic Fitting Procedure
 =======================
 
-Generally, any fit performed by *kafe2* requires the specification of some sort of data.
-This uncertainties of said data usually also need to be defined in order to calculate parameter
+Generally, any fit performed by *kafe2* requires the specification of a model
+as well as some sort of data.
+The uncertainties of said data usually also need to be defined in order to calculate parameter
 uncertainties.
 A specific model function can also be defined; depending on the data type there are defaults
 (e.g. a straight line for *xy* data).
@@ -83,7 +84,7 @@ All example files are available on
 ===========
 The simplest, and also the most common use case of a fitting framework
 is performing a line fit: A linear function of the form
-:math:`f(x) = a * x + b` is made to align with a series of *xy* data points that
+:math:`f(x) = a x + b` is made to align with a series of *xy* data points that
 have some uncertainty along the *x* axis and the *y* axis.
 This example demonstrates how to perform such a line fit in kafe2 and
 how to extract the results.

@@ -117,7 +117,11 @@ For Python 3, Fedora/RHEL/CentOS:
 Optional: Install *ROOT*
 ------------------------
 
-**Note: Starting with Ubuntu 16.10, ROOT is no longer available in the official repositories.**
+.. warning::
+
+   On recent *kafe2* versions *ROOT* is not functional as an optimization backend. Use *iminuit* instead.
+
+**Note: Starting with Ubuntu 16.10, *ROOT* is no longer available in the official repositories.**
 
 In older versions of Ubuntu (and related Linux distributions), ROOT and its Python bindings
 can be obtained via the package manager via:
@@ -151,7 +155,7 @@ Optional: Install `iminuit`
 ---------------------------
 
 *iminuit* is a Python wrapper for the Minuit minimizer which is
-independent of ROOT. This minimizer can be used instead of ROOT.
+independent of *ROOT*. This minimizer can be used instead of *ROOT*.
 
 To install the *iminuit* package for Python, the `Pip installer
 <http://www.pip-installer.org/>`_ is recommended:
@@ -235,6 +239,10 @@ directory into which you have downloaded *kafe2*:
 
 Using *kafe* with ROOT under Windows
 --------------------------------------
+
+.. warning::
+
+   On recent *kafe2* versions *ROOT* is not functional as an optimization backend. Use *iminuit* instead.
 
 If you want *kafe* to work with ROOT's ``TMinuit`` instead of using
 *iminuit*, then ROOT has to be installed. Please note that ROOT releases

@@ -18,7 +18,6 @@ https://github.com/GuenterQuast/picoCosmo/blob/master/doc/dpFigs_Kanne.pdf
 
 from kafe2.fit import UnbinnedContainer, Fit, Plot
 from kafe2.fit.tools import ContoursProfiler
-from kafe2 import unbinned_fit, plot
 
 import numpy as np
 

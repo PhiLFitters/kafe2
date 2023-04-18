@@ -16,7 +16,7 @@ applying the simple (linearized) formula for error propagation.
 """
 
 import numpy as np, matplotlib.pyplot as plt
-from kafe2 import indexed_fit, plot
+import kafe2
 
 # example of parameters: (r, phi) of a space point in polar coordinates
 pars = np.array([0.9, 0.755])
@@ -35,8 +35,8 @@ def cartesian_to_polar(x, y):
     return np.concatenate( (r, phi) )
 
 # Call kafe2 wrapper function to do an indexed fit:
-indexed_fit(model_function=cartesian_to_polar, data=pars, error=puncs)
-plot(
+kafe2.indexed_fit(model_function=cartesian_to_polar, data=pars, error=puncs)
+kafe2.plot(
     data_label="Measured coordinates",
     model_label=r'$r$-$\phi$ from x-y',
     x_label=r"Index 0=$r$, 1=$\phi$",

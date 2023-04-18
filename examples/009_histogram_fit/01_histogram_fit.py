@@ -14,7 +14,7 @@ of entries N of the histogram.
 """
 
 import numpy as np
-from kafe2 import hist_fit, plot
+import kafe2
 
 
 def normal_distribution(x, mu, sigma):
@@ -25,5 +25,5 @@ def normal_distribution(x, mu, sigma):
 data = np.random.normal(loc=0, scale=1, size=100)
 
 # Finally, do the fit and plot it:
-hist_fit(model_function=normal_distribution, data=data, n_bins=10, bin_range=(-5, 5))
-plot()
+kafe2.hist_fit(model_function=normal_distribution, data=data, n_bins=10, bin_range=(-5, 5))
+kafe2.plot()

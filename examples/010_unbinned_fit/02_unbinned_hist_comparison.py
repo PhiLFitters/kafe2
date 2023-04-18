@@ -6,7 +6,7 @@
 """
 
 
-from kafe2 import hist_fit, unbinned_fit, plot
+import kafe2
 import numpy as np
 
 
@@ -40,8 +40,8 @@ pos = 6.66    # signal position
 width = 0.33  # signal width
 SplusB_data = generate_data(N, min, max, pos, width, s)  
 
-unbinned_fit(model_function=signal_plus_background, data=SplusB_data)
-plot(show=False)  # Set show=False so the plot for the unbinned fit is not shown until the end.
+kafe2.unbinned_fit(model_function=signal_plus_background, data=SplusB_data)
+kafe2.plot(show=False)  # Set show=False so the plot for the unbinned fit is not shown until the end.
 
-hist_fit(model_function=signal_plus_background, data=SplusB_data, n_bins=50, bin_range=(min, max))
-plot()
+kafe2.hist_fit(model_function=signal_plus_background, data=SplusB_data, n_bins=50, bin_range=(min, max))
+kafe2.plot()

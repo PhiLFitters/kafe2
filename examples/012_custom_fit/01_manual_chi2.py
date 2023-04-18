@@ -14,7 +14,7 @@ profiles/contours calculated by ContoursProfiler.
 """
 
 import numpy as np
-from kafe2 import custom_fit, plot
+import kafe2
 
 x_data = np.array([1.0, 2.0, 3.0, 4.0])
 x_error = 0.1
@@ -40,5 +40,5 @@ def chi2(a, b):
     return np.sum(residuals ** 2 / xy_error_squared) + np.log(np.sum(xy_error_squared))
 
 
-custom_fit(chi2)
-plot()
+kafe2.custom_fit(chi2)
+kafe2.plot()
