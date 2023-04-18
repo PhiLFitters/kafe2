@@ -228,7 +228,7 @@ class MinimizerBase(object):
             xtol=self.tolerance, method="secant").root
 
     def _get_profile_bound(
-            self, parameter_name, low=None, high=None, sigma=None, cl=None):
+            self, parameter_name, low=None, high=None, sigma=None, cl=None, subtract_min=False, arrows=False):
         if low is not None and high is not None and cl is not None:
             raise ValueError("At most two out of low, high, and cl can be defined.")
         _parameter_index = self._par_names.index(parameter_name)
@@ -241,49 +241,41 @@ class MinimizerBase(object):
             raise ValueError(f"low={low} must be smaller than <{parameter_name}>={_min_par_val}")
         if high is not None and np.min(high) < _min_par_val:
             raise ValueError(f"high={high} must be larger than <{parameter_name}>={_min_par_val}")
+
+        _arrow_specs = self._get_arrow_specs(
+            parameter_name, low, high, cl, subtract_min, arrows, _min_cost, _min_par_val,
+            _parameter_error, _min_par_vals)
         low = np.min(low)
         high = np.max(high)
         cl = np.max(cl)
-
-        if sigma is None and cl is None:
-            sigma = 2
-
-        if low is not None and high is not None:
-            return low, high
-        if low is None and high is None:
-            if cl is not None:
-                _sigma_from_cl = ConfidenceLevel(cl=cl).sigma
-                sigma = _sigma_from_cl if sigma is None or _sigma_from_cl > sigma else sigma
-            return _min_par_val - sigma * _parameter_error, _min_par_val + sigma * _parameter_error
-
         if sigma is not None:
-            if low is not None:
-                return low, _min_par_val + sigma * _parameter_error
-            if high is not None:
-                return _min_par_val - sigma * _parameter_error, high
+            _low_sigma = _min_par_val - sigma * _parameter_error
+            low = _low_sigma if low is None else min(low, _low_sigma)
+            _high_sigma = _min_par_val + sigma * _parameter_error
+            high = _high_sigma if high is None else max(high, _high_sigma)
+        elif cl is None:
+            sigma = 2
+            if low is None:
+                low = _min_par_val - sigma * _parameter_error
+            if high is None:
+                high = _min_par_val + sigma * _parameter_error
+        if _arrow_specs is not None:
+            for _arrow_spec in _arrow_specs:
+                low = _arrow_spec["x"] if low is None else min(low, _arrow_spec["x"])
+                high = _arrow_spec["x"] if high is None else max(high, _arrow_spec["x"])
+            _original_low = low
+            _original_high = high
+            _margin = 0.13 if arrows else 0
+            for _arrow_spec in _arrow_specs:
+                low = min(low, _arrow_spec["x"] + _margin * (_arrow_spec["x"] - _original_high))
+                high = max(high, _arrow_spec["x"] + _margin * (_arrow_spec["x"] - _original_low))
 
-        _target_cl = ConfidenceLevel(cl=2*cl-1)
-        if low is None:
-            low = self._find_cost_cut(
-                parameter_name=parameter_name,
-                guess=_min_par_val - _target_cl.sigma * _parameter_error,
-                target_cost=_min_cost+_target_cl.delta_nll,
-                min_parameters=_min_par_vals
-            )
-        if high is None:
-            high = self._find_cost_cut(
-                parameter_name=parameter_name,
-                guess=_min_par_val + _target_cl.sigma * _parameter_error,
-                target_cost=_min_cost+_target_cl.delta_nll,
-                min_parameters=_min_par_vals
-            )
-
-        return low, high
+        return low, high, _arrow_specs
 
     def _get_arrow_specs(
             self, parameter_name: str, low: Union[None, float, Sequence[float]],
             high: Union[None, float, Sequence[float]], cl: Union[None, float, Sequence[float]],
-            subtract_min: bool, min_cost: float, min_par_val: float,
+            subtract_min: bool, arrows: bool, min_cost: float, min_par_val: float,
             par_err: float, min_par_vals: Sequence[float]):
         if low is None and high is None and cl is None:
             return None
@@ -309,35 +301,38 @@ class MinimizerBase(object):
             try:
                 iter(high)
             except TypeError:
-                low = [high]
+                high = [high]
         if cl is None:
-            cl = [0.90, 0.95, 0.99]
-        try:
-            iter(cl)
-        except TypeError:
-            cl = [cl]
+            if arrows:
+                cl = [0.90, 0.95, 0.99]
+        else:
+            try:
+                iter(cl)
+            except TypeError:
+                cl = [cl]
 
         _y_offset = min_cost if subtract_min else 0
 
         if low is None:
-            for _cl_i in cl:
-                if high is None:
-                    _cl_i_outside = (1 - _cl_i) / 2
-                else:
-                    _cl_i_outside = 1 - _cl_i
-                    _cl_i = 2 * _cl_i - 1
-                _sigma_i = ConfidenceLevel(cl=_cl_i).sigma
-                _arrow_specs.append({
-                    "side": "left",
-                    "x": self._find_cost_cut(
-                        parameter_name=parameter_name,
-                        guess=min_par_val-_sigma_i*par_err,
-                        target_cost=min_cost+_sigma_i**2,
-                        min_parameters=min_par_vals
-                    ),
-                    "y": min_cost-_y_offset+_sigma_i**2,
-                    "cl": _cl_i_outside
-                })
+            if cl is not None:
+                for _cl_i in cl:
+                    if high is None:
+                        _cl_i_outside = (1 - _cl_i) / 2
+                    else:
+                        _cl_i_outside = 1 - _cl_i
+                        _cl_i = 2 * _cl_i - 1
+                    _sigma_i = ConfidenceLevel(cl=_cl_i).sigma
+                    _arrow_specs.append({
+                        "side": "left",
+                        "x": self._find_cost_cut(
+                            parameter_name=parameter_name,
+                            guess=min_par_val-_sigma_i*par_err,
+                            target_cost=min_cost+_sigma_i**2,
+                            min_parameters=min_par_vals
+                        ),
+                        "y": min_cost-_y_offset+_sigma_i**2,
+                        "cl": _cl_i_outside
+                    })
         else:
             for _low_i in low:
                 _cost_low = self._get_cost_value(parameter_name, _low_i, min_par_vals)
@@ -350,24 +345,25 @@ class MinimizerBase(object):
                 })
 
         if high is None:
-            for _cl_i in cl:
-                if low is None:
-                    _cl_i_outside = (1 - _cl_i) / 2
-                else:
-                    _cl_i_outside = 1 - _cl_i
-                    _cl_i = 2 * _cl_i - 1
-                _sigma_i = ConfidenceLevel(cl=_cl_i).sigma
-                _arrow_specs.append({
-                    "side": "right",
-                    "x": self._find_cost_cut(
-                        parameter_name=parameter_name,
-                        guess=min_par_val+_sigma_i*par_err,
-                        target_cost=min_cost+_sigma_i**2,
-                        min_parameters=min_par_vals
-                    ),
-                    "y": min_cost-_y_offset+_sigma_i**2,
-                    "cl": _cl_i_outside
-                })
+            if cl is not None:
+                for _cl_i in cl:
+                    if low is None:
+                        _cl_i_outside = (1 - _cl_i) / 2
+                    else:
+                        _cl_i_outside = 1 - _cl_i
+                        _cl_i = 2 * _cl_i - 1
+                    _sigma_i = ConfidenceLevel(cl=_cl_i).sigma
+                    _arrow_specs.append({
+                        "side": "right",
+                        "x": self._find_cost_cut(
+                            parameter_name=parameter_name,
+                            guess=min_par_val+_sigma_i*par_err,
+                            target_cost=min_cost+_sigma_i**2,
+                            min_parameters=min_par_vals
+                        ),
+                        "y": min_cost-_y_offset+_sigma_i**2,
+                        "cl": _cl_i_outside
+                    })
         else:
             for _high_i in high:
                 _cost_high = self._get_cost_value(parameter_name, _high_i, min_par_vals)

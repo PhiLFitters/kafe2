@@ -553,6 +553,13 @@ class AbstractMinimizerTest(ABC):
             self._ref_profile_m3_x_5, atol=1e-7
         ))
 
+    def test_profile_m3_x_cl_sigma(self):
+        self.m3.minimize()
+        self.assertTrue(np.allclose(
+            self.m3.profile('x', sigma=3, size=7, subtract_min=True)[0][:, 1:-1],
+            self._ref_profile_m3_x_5, atol=1e-7
+        ))
+
     def test_profile_m3_x_arrows_cl(self):
         _cl = [norm.cdf(1) - norm.cdf(-1), norm.cdf(2) - norm.cdf(-2)]
         self.m3.minimize()

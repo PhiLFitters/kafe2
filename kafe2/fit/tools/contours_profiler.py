@@ -14,7 +14,6 @@ from matplotlib import gridspec as gs
 from matplotlib import ticker as plticker
 from matplotlib.axes import Axes
 from matplotlib import rc_context
-from matplotlib.patches import FancyArrowPatch, ArrowStyle
 
 
 __all__ = ["ContoursProfiler"]
@@ -131,7 +130,7 @@ class ContoursProfiler(object):
     _DEFAULT_PLOT_PROFILE_KWARGS = dict(marker='', linewidth=2)
     _DEFAULT_PLOT_PROFILE_ARROW_KWARGS = dict(
         color="black", linewidth=1, shrinkA=0, shrinkB=0, horizontal_arrow_length=0.05,
-        arrowstyle=ArrowStyle("fancy", head_length=6, head_width=6, tail_width=0.01),
+        arrowstyle=mpl.patches.ArrowStyle("fancy", head_length=6, head_width=6, tail_width=0.01),
         vertical_x_text=0.005, vertical_y_text=0.005, horizontal_x_text=0.015,
         horizontal_y_text=-0.03
     )
@@ -228,7 +227,7 @@ class ContoursProfiler(object):
         elif side == "right":
             _x_text = x - _kwargs_vertical.pop("vertical_x_text") * x_span
             _y_text = y + _kwargs_vertical.pop("vertical_y_text") * y_span
-        target_axes.add_patch(FancyArrowPatch((x, y), (x, 0), **_kwargs_vertical))
+        target_axes.add_patch(mpl.patches.FancyArrowPatch((x, y), (x, 0), **_kwargs_vertical))
         _par_text = par_formatter.get_formatted(
             value=x, with_name=True, with_errors=False, format_as_latex=True)
         target_axes.text(_x_text, _y_text, _par_text, horizontalalignment=side)
@@ -248,7 +247,8 @@ class ContoursProfiler(object):
             _alignment = "left"
         else:
             raise ValueError(f"Unknown side: {side}")
-        target_axes.add_patch(FancyArrowPatch((x, y), (_x_target, y), **_kwargs_horizontal))
+        target_axes.add_patch(mpl.patches.FancyArrowPatch(
+            (x, y), (_x_target, y), **_kwargs_horizontal))
         target_axes.text(_x_text, _y_text, f"${100*cl:.2f}\%$", horizontalalignment=_alignment)
 
     @staticmethod

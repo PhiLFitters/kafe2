@@ -546,29 +546,12 @@ class MinimizerScipyOptimize(MinimizerBase):
                 subtract_min=False, arrows=False):
         if not self.did_fit:
             raise RuntimeError("Need to perform a fit before calling profile()!")
-        _arrow_specs = None
         self._save_state()
         _par_id = self._par_names.index(parameter_name)
-        _par_err = self.parameter_errors[_par_id]
-        _par_min = self._par_val[_par_id]
         _y_offset = self.function_value if subtract_min else 0
-        _bound_low, _bound_high = self._get_profile_bound(parameter_name, low, high, sigma, cl)
+        _bound_low, _bound_high, _arrow_specs = self._get_profile_bound(
+            parameter_name, low, high, sigma, cl, arrows)
         self._load_state()
-        if arrows:
-            _arrow_specs = self._get_arrow_specs(
-                parameter_name, low, high, cl, subtract_min, self.function_value, _par_min,
-                _par_err, self.parameter_values)
-            self.minimize()  # return to minimum
-            _original_bound_low = _bound_low
-            _original_bound_high = _bound_high
-            if _arrow_specs is not None:
-                for _arrow_spec in _arrow_specs:
-                    _bound_low = min(
-                        _bound_low,
-                        _arrow_spec["x"] + 0.13 * (_arrow_spec["x"] - _original_bound_high))
-                    _bound_high = max(
-                        _bound_high,
-                        _arrow_spec["x"] + 0.13 * (_arrow_spec["x"] - _original_bound_low))
         _par = np.linspace(start=_bound_low, stop=_bound_high, num=size, endpoint=True)
 
         _y = np.zeros(size)

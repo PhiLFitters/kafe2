@@ -302,27 +302,9 @@ class MinimizerIMinuit(MinimizerBase):
                 subtract_min=False, arrows=False):
         if not self.did_fit:
             raise RuntimeError("Need to perform a fit before calling profile()!")
-        _bound_low, _bound_high = self._get_profile_bound(parameter_name, low, high, sigma, cl)
+        _bound_low, _bound_high, _arrow_specs = self._get_profile_bound(
+            parameter_name, low, high, sigma, cl, subtract_min, arrows)
         self.minimize()  # return to minimum
-        _arrow_specs = None
-        if arrows:
-            _parameter_index = self.parameter_names.index(parameter_name)
-            _min_par_val = self.parameter_values[_parameter_index]
-            _arrow_specs = self._get_arrow_specs(
-                parameter_name, low, high, cl, subtract_min, self.function_value,
-                _min_par_val, self.parameter_errors[_parameter_index],
-                self.parameter_values)
-            self.minimize()  # return to minimum
-            _original_bound_low = _bound_low
-            _original_bound_high = _bound_high
-            if _arrow_specs is not None:
-                for _arrow_spec in _arrow_specs:
-                    _bound_low = min(
-                        _bound_low,
-                        _arrow_spec["x"] + 0.13 * (_arrow_spec["x"] - _original_bound_high))
-                    _bound_high = max(
-                        _bound_high,
-                        _arrow_spec["x"] + 0.13 * (_arrow_spec["x"] - _original_bound_low))
         _kwargs = dict(
             bound=(_bound_low, _bound_high),
             subtract_min=subtract_min
