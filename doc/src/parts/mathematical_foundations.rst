@@ -396,8 +396,8 @@ For a non-Gaussian estimator the confidence intervals derived from the RCF bound
 by determining the parameter values at which
 :math:`\Delta \mathrm{NLL}(a) = \mathrm{NLL}(a) - \mathrm{NLL}(\hat{a})` is equal to the squared
 equivalent sigma value :math:`N^2`.
-In general the confidence intervals determined in this manner with what Glen Cowan calls the
-"graphical method" in his book on statistics will be asymmetrical.
+In general the confidence intervals determined in this manner with this "profile likelihood method"
+will be asymmetrical.
 In loose terms, if the cost function value increases very sharply when we move away from the cost
 function minimum then this tells us that even a small deviation from our fit result would result in
 a significantly worse fit, making large deviations unlikely.
@@ -406,10 +406,11 @@ from the cost function minimum then this tells us that a deviation from our
 fit result would result in a fit that is only slightly worse than our optimal fit result,
 making such a deviation from our fit result quite possible.
 
-The obvious problem with the graphical method described above is that in practice fits will almost
-always have more than one parameter (the additional parameters being denoted as :math:`\bm{p}`).
+The obvious problem with the profile likelihood method described above is that in practice fits
+will almost always have more than one parameter
+(the additional parameters being denoted as :math:`\bm{p}`).
 So how do we determine the values for these other parameters as we vary just one of them?
-The approach of the so-called **profile likelihood method** is to choose :math:`\bm{p}` in such a
+The solution is to choose :math:`\bm{p}` in such a
 way that :math:`\Delta \mathrm{NLL}(a, \bm{p})` becomes minimal.
 In practical terms this means that we fix :math:`a` to several values near the cost function minimum
 and then perform a fit over all other parameters for each of these values

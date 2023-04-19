@@ -144,13 +144,13 @@ minimum than the observed one.
 A higher value corresponds to a better fit.
 The :math:`\chi^2` probability of a fit is shown inside the fit info box on the right.
 
-An exponential function is a **non-linear** function!
-**Non-linear** refers to the linearity of the parameters.
+An exponential function is a *non-linear function*!
+Non-linear refers to the linearity of the parameters.
 Any polynomial like :math:`ax^2+bx+c` is a linear function of the parameters
 :math:`a`, :math:`b` and :math:`c`.
-An exponential function :math:`A_0 e^{(x/x_0)}` is **non-linear** in its parameter :math:`x_0`.
+An exponential function :math:`A_0 e^{(x/x_0)}` is non-linear in its parameter :math:`x_0`.
 Thus the profile of :math:`\chi^2` can have a non-parabolic shape.
-If that is the case, uncertainties of the form :math:`a\pm\delta_a` won't be accurate.
+If that is the case, uncertainties of the form :math:`a\pm\delta_a` may not be accurate.
 Please refer to :ref:`profiling` for more information.
 
 To see the shape of the profiles and contours, please create a contour plot of the fitted
@@ -321,7 +321,7 @@ highlighted in the code example below.
     :control_text: non_linear_fit.py
 
     .. literalinclude:: ../../../examples/003_profiling/01_non_linear_fit.py
-        :lines: 27-
+        :lines: 33-
         :emphasize-lines: 22, 26, 28-30
 
 
@@ -609,7 +609,7 @@ Then the uncertainty will be relative to the data.
 
 .. bootstrap_collapsible::
     :control_type: link
-    :control_text: relative_uncertainties.py
+    :control_text: relative_uncertainties.yml
 
     .. literalinclude:: ../../../examples/006_advanced_errors/03_relative_model_uncertainties.yml
         :language: yaml
@@ -648,10 +648,10 @@ In kafe2 this distribution can be modeled by initializing a fit object with a sp
 In previous examples when no cost function was provided a normal distribution has been assumed by
 default.
 It is important to know that for large numbers of events a poisson distribution can be approximated
-by a normal distribution (y_error = sqrt(y_data)).
+by a normal distribution :math:`\Delta y = \sqrt{y_\mathrm{data}}`.
 
 For our example on cost functions we imagine the following, admittedly a little contrived scenario:
-In some remote location on earth archeologists have found the ruins of an ancient civilization.
+In some remote location on earth archaeologists have found the ruins of an ancient civilization.
 They estimate the ruins to be about 7000 years old.
 The civilization in question seems to have known about mathematics and they even had their own
 calendar.
@@ -721,10 +721,10 @@ inside the *YAML* file.
 
 Python
 ------
-To use a histogram fit in a *Python* script, just import it with
-:python:`from kafe2 import HistContainer, HistFit`.
+To use a histogram fit in a *Python* script you can use the wrapper :python:`kafe2.hist_fit`.
+Alternatively you can use objects via :python:`from kafe2 import HistContainer, HistFit`.
 
-The creation a a histogram requires the user to set the limits of the histogram and the amount of
+The creation of a histogram requires the user to set the limits of the histogram and the amount of
 bins.
 Alternatively the bin edges for each bin can be set manually.
 
@@ -732,7 +732,7 @@ Alternatively the bin edges for each bin can be set manually.
     :control_type: link
     :control_text: histogram_fit.py
 
-    .. literalinclude:: ../../../examples/009_histogram_fit/histogram_fit.py
+    .. literalinclude:: ../../../examples/009_histogram_fit/01_histogram_fit.py
         :lines: 16-
 
 
@@ -817,7 +817,7 @@ some coefficients :math:`p_0`, :math:`p_1`, and :math:`p_2`:
 
 This model is based purely on empirical observations. The :math:`I(U)`
 dependence is more complicated, but takes the "running" of the
-resistane with the temperature into account:
+resistance with the temperature into account:
 
 .. math::
 
