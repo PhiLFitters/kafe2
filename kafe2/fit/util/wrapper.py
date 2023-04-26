@@ -30,7 +30,7 @@ def _get_file_index():
     return _file_index
 
 
-def _fit_wrapper_generic(fit, p0, dp0, limits, constraints, report, profile, save):
+def _fit_wrapper_generic(fit, p0, dp0, limits, fixed, constraints, report, profile, save):
     if p0 is not None:
         fit.set_all_parameter_values(p0)
     if dp0 is not None:
@@ -41,6 +41,11 @@ def _fit_wrapper_generic(fit, p0, dp0, limits, constraints, report, profile, sav
             limits = (limits,)
         for _limit in limits:
             fit.limit_parameter(*_limit)
+    if fixed is not None:
+        if not isinstance(fixed[0], (list, tuple)):
+            fixed = (fixed,)
+        for _fix in fixed:
+            fit.fix_parameter(*_fix)
     if constraints is not None:
         if not isinstance(constraints[0], (list, tuple)):
             constraints = (constraints,)
@@ -80,16 +85,16 @@ def _add_error_to_fit_generic(fit, error, errors_rel_to_model, correlated=False,
         else:
             fit.add_error(error, relative=relative, reference=_reference)
 
-def custom_fit(cost_function, p0=None, dp0=None, limits=None, constraints=None, report=False,
-           profile=True, save=True):
+def custom_fit(cost_function, p0=None, dp0=None, limits=None, fixed=None, constraints=None,
+               report=False, profile=True, save=True):
     from kafe2.fit.custom.fit import CustomFit
     _fit = CustomFit(cost_function)
-    return _fit_wrapper_generic(_fit, p0, dp0, limits, constraints, report, profile, save)
+    return _fit_wrapper_generic(_fit, p0, dp0, limits, fixed, constraints, report, profile, save)
 
 def hist_fit(model_function=None, data=None, n_bins=None, bin_range=None, bin_edges=None, p0=None,
              dp0=None, error=None, error_rel=None, error_cor=None, error_cor_rel=None,
              errors_rel_to_model=True, density=True, gauss_approximation=None, limits=None,
-             constraints=None, report=False, profile=True, save=True):
+             fixed=None, constraints=None, report=False, profile=True, save=True):
     from kafe2.fit.histogram.container import HistContainer
     from kafe2.fit.histogram.fit import HistFit
 
@@ -123,11 +128,11 @@ def hist_fit(model_function=None, data=None, n_bins=None, bin_range=None, bin_ed
     _add_error_to_fit_generic(
         _fit, error_cor_rel, errors_rel_to_model, correlated=True, relative=True)
 
-    return _fit_wrapper_generic(_fit, p0, dp0, limits, constraints, report, profile, save)
+    return _fit_wrapper_generic(_fit, p0, dp0, limits, fixed, constraints, report, profile, save)
 
 def indexed_fit(model_function=None, data=None, p0=None, dp0=None, error=None, error_rel=None,
                 error_cor=None, error_cor_rel=None, errors_rel_to_model=True, limits=None,
-                constraints=None, report=False, profile=True, save=True):
+                fixed=None, constraints=None, report=False, profile=True, save=True):
     from kafe2.fit.indexed import IndexedFit
 
     _fit = IndexedFit(data, model_function)
@@ -138,21 +143,21 @@ def indexed_fit(model_function=None, data=None, p0=None, dp0=None, error=None, e
     _add_error_to_fit_generic(
         _fit, error_cor_rel, errors_rel_to_model, correlated=True, relative=True)
 
-    return _fit_wrapper_generic(_fit, p0, dp0, limits, constraints, report, profile, save)
+    return _fit_wrapper_generic(_fit, p0, dp0, limits, fixed, constraints, report, profile, save)
 
-def unbinned_fit(model_function=None, data=None, p0=None, dp0=None, limits=None, constraints=None,
-                 report=False, profile=True, save=True):
+def unbinned_fit(model_function=None, data=None, p0=None, dp0=None, limits=None, fixed=None,
+                 constraints=None, report=False, profile=True, save=True):
     from kafe2.fit.unbinned import UnbinnedFit
 
     _fit = UnbinnedFit(data, model_function)
 
-    return _fit_wrapper_generic(_fit, p0, dp0, limits, constraints, report, profile, save)
+    return _fit_wrapper_generic(_fit, p0, dp0, limits, fixed, constraints, report, profile, save)
 
 def xy_fit(model_function=None, x_data=None, y_data=None, p0=None, dp0=None,
            x_error=None, y_error=None, x_error_rel=None, y_error_rel=None,
            x_error_cor=None, y_error_cor=None, x_error_cor_rel=None, y_error_cor_rel=None,
-           errors_rel_to_model=True, limits=None, constraints=None, report=False, profile=None,
-           save=True):
+           errors_rel_to_model=True, limits=None, fixed=None, constraints=None, report=False,
+           profile=None, save=True):
     """
     Built-in function for fitting a model function to xy data.
 
@@ -251,7 +256,7 @@ def xy_fit(model_function=None, x_data=None, y_data=None, p0=None, dp0=None,
     if profile is None:
         profile = x_error is not None or x_error_rel is not None or y_error_rel is not None
 
-    return _fit_wrapper_generic(_fit, p0, dp0, limits, constraints, report, profile, save)
+    return _fit_wrapper_generic(_fit, p0, dp0, limits, fixed, constraints, report, profile, save)
 
 
 def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
@@ -342,7 +347,7 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
 
     if plot_profile is None and _fit_profiles is not None:
         plot_profile = _fit_profiles
-    if plot_profile is not None:
+    if profile and plot_profile is not None:
         try:
             iter(plot_profile)
         except TypeError:

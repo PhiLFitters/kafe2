@@ -696,18 +696,22 @@ class ContoursProfiler(object):
         """
         with rc_context(kafe2_rc):
             _par_names = parameters
+            _fixed_pars = list(self._fit._fitter.fixed_parameters.keys())
             if _par_names is None:
                 _par_names = list(self._fit.parameter_name_value_dict.keys())
+                _par_names = [_pn for _pn in _par_names if _pn not in _fixed_pars]
             else:
                 # check if there are any unknown parameters
                 _unknown_parameters = set(_par_names) - set(self._fit.parameter_name_value_dict.keys())
                 if _unknown_parameters:
                     raise ValueError("Unknown parameters: {}".format(_unknown_parameters))
 
-            # # check if any parameters are fixed and exclude them from the matrix:
-            # # TODO: public interface for querying parameter status
-            # _free_pars = set(self._fit._fitter._fit_pars)
-            # _par_names = [_par for _par in _par_names if _par in _free_pars]
+                # check if any of the explicitly requested parameters are fixed
+                _fixed_pars = [_pn for _pn in _par_names if _pn in _fixed_pars]
+                if _fixed_pars:
+                    raise ValueError(
+                        "The following parameters cannot be profiled because they are fixed: "
+                        f"{_fixed_pars}")
 
             _npar = len(_par_names)
             _fig, _gs = self._make_figure_gs(_npar, _npar)
