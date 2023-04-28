@@ -10,13 +10,17 @@ User Guide
 **********
 
 For performing fits with *kafe2*, the user need to specify the data, model function and
-optionally a so-called cost function. In most cases the cost function is either the method of
-:ref:`least-squares` or the :ref:`negative-log-likelihood`. All this information is then given to
-a :py:obj:`~.FitBase`-derived object. More information is given in the :ref:`fitting`-section.
+optionally a cost function to be optimized. Mathematical details are explained
+in section :ref:`Mathematical Foundations <mathematical_foundations>`.
+In most cases the cost function defaults to a `negative-log-likelihood`
+function or, in simple cases or if explicitely requested, the `least-squares` method.
+This information is passed to a :py:obj:`~.FitBase`-derived object.
+More information can be found in the :ref:`fitting`-section below.
 
-Then there are multiple ways of displaying and using the fit results. The results can either be
-used directly inside a *Python*-script, printed to the terminal, or :ref:`plotted <plotting>`.
-For further analysis, the :ref:`contours-profiler` is a very helpful tool to display parameter
+Then there are multiple ways of displaying and using the fit results. They
+can either be used directly inside a *Python*-script, printed to the terminal,
+or :ref:`plotted <plotting>`. For further analysis, the
+:ref:`contours-profiler` is a very helpful tool to display parameter
 correlations.
 
 .. figure:: ../_static/img/kafe2_structure.png
