@@ -30,7 +30,7 @@ issue on the `kafe2 GitHub page <https://github.com/PhiLFitters/kafe2>`_.
 
 
 *kafe2* Object-Oriented Programming
-==================================
+===================================
 
 .. automodule:: kafe2.__init__
     :members:
