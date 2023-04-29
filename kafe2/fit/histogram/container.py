@@ -20,50 +20,60 @@ class HistContainer(IndexedContainer):
     ..    :parts: 1
 
     """
-    def __init__(self, n_bins, bin_range, bin_edges=None, fill_data=None, dtype=int):
+    def __init__(self, n_bins=None, bin_range=None, bin_edges=None, fill_data=None, dtype=int):
         """
         Construct a histogram:
 
-        :param n_bins: number of bins
+        :param n_bins: how many bins raw data should be split into.
         :type n_bins: int
-        :param bin_range: the lower and upper edges of the entire histogram
-        :type bin_range: tuple of floats
-        :param bin_edges: the bin edges (if ``None``, each bin will have the same width)
-        :type bin_edges: list of floats
+        :param bin_range: the lower and upper bound for the bins specified by n_bins.
+        :type bin_range: iterable[float] of length 2
+        :param bin_edges: explicit bin edges for raw data. If ``None``, each bin will have the same
+            width.
+        :type bin_edges: iterable[float]
         :param fill_data: entries to fill into the histogram
-        :type fill_data: list of floats
+        :type fill_data: iterable[float]
         :param dtype: data type of histogram entries
         :type dtype: type
         """
+        if bin_edges is None:
+            if n_bins is None or bin_range is None:
+                raise ValueError("Either n_bins and bin_range or bin_edges must be specified.")
+        else:
+            if n_bins is None:
+                n_bins = len(bin_edges) - 1
+            if n_bins != len(bin_edges) - 1 and n_bins != len(bin_edges) + 1:
+                raise ValueError(f"n_bins is {n_bins} but bin_edges implies either "
+                                 f"{len(bin_edges) - 1} or {len(bin_edges) - 1} bins")
+            if bin_range is None:
+                bin_range = (bin_edges[0], bin_edges[-1])
+            if n_bins == len(bin_edges) - 1:
+                if bin_range[0] != bin_edges[0] or bin_range[1] != bin_edges[-1]:
+                    raise ValueError(f"bin_range is {bin_range} but bin_edges implies "
+                                     f"{(bin_edges[0], bin_edges[-1])}")
+            if n_bins == len(bin_edges) + 1:
+                if bin_range[0] > bin_edges[0] or bin_range[1] < bin_edges[-1]:
+                    raise ValueError(f"bin_range is {bin_range} but does not encompass inner "
+                                     f"bin edges {(bin_edges[0], bin_edges[-1])}")
+
+        if len(bin_range) != 2:
+            raise ValueError(f"bin_range must be iterable of 2 floats but received {bin_range}")
+        low, high = tuple(bin_range)
+
         super(HistContainer, self).__init__(data=np.zeros(n_bins+2), dtype=dtype)  # underflow and overflow bins
         self._manual_heights = False
         self._processed_entries = []
         self._unprocessed_entries = []
         # TODO: think of a way to implement weights
 
-        if len(bin_range) != 2:
-            raise ValueError(
-                "Invalid bin range specification: %r! Must be tuple of 2 floats..." % (bin_range,))
-        low, high = tuple(bin_range)
-
         if bin_edges is not None:
-            # user specified bin edges -> check that these match the given 'n_bins' and 'bin_range'
-            _sz = self.size
-            if len(bin_edges) == _sz + 1:
-                # assume bin edges given including bin range
-                if not (bin_edges[0] == low and bin_edges[-1] == high):
-                    raise ValueError(
-                        "Invalid bin edge specification! First and last elements %r must match histogram bin range %r."
-                        % ((bin_edges[0], bin_edges[-1]), bin_range))
-                _bin_edges_including_low_and_high = bin_edges
-            elif len(bin_edges) == _sz - 1:
-                # <check if ordered and strictly within bin range>
-                _bin_edges_including_low_and_high = [low] + bin_edges + [high]
+            if len(bin_edges) == self.size + 1:
+                self.rebin(bin_edges)
+            elif len(bin_edges) == self.size - 1:
+                # Add low and high to edges if inner edges specified:
+                self.rebin([low] + list(bin_edges) + [high])
             else:
-                raise ValueError(
-                    "Invalid bin edge specification! Number of elements (%d) must match histogram bin number (%d) +/- 1."
-                    % (len(bin_edges), _sz))
-            self.rebin(new_bin_edges=_bin_edges_including_low_and_high)
+                assert False
         else:
             # construct own bin edges
             self._bin_edges = np.linspace(bin_range[0], bin_range[1], n_bins+1)
