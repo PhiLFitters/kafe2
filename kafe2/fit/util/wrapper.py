@@ -20,6 +20,7 @@ import numpy as np
 
 _fit_history = []
 
+
 def _get_file_index():
     os.makedirs("results", exist_ok=True)
     _file_index = 0
@@ -69,6 +70,7 @@ def _fit_wrapper_generic(fit, p0, dp0, limits, fixed, constraints, report, profi
 
     return _fit_results
 
+
 def _add_error_to_fit_generic(fit, error, errors_rel_to_model, correlated=False, relative=False):
     if error is None:
         return
@@ -85,32 +87,117 @@ def _add_error_to_fit_generic(fit, error, errors_rel_to_model, correlated=False,
         else:
             fit.add_error(error, relative=relative, reference=_reference)
 
+
 def custom_fit(cost_function, p0=None, dp0=None, limits=None, fixed=None, constraints=None,
                report=False, profile=True, save=True):
+    """
+    Built-in function for directly minimizing a cost function without any explicit model, data, or
+    errors.
+
+    :param cost_function: The cost function to be minimized as a native Python function.
+    :type cost_function: typing.Callable
+    :param p0: the initial parameter values for the fit.
+    :type p0: typing.Sequence[float]
+    :param dp0: the initial parameter step size for the fit.
+    :type dp0: typing.Sequence[float]
+    :param limits: limits to be applied to the model parameter. The expected format for each limit
+        is an iterable consisting of the parameter name, the lower bound, and then the upper bound.
+        An iterable of limits can be passed to limit multiple parameters.
+    :type limits: typing.Sequence or typing.Sequence[typing.Union[list, tuple]]
+    :param fixed: Model parameter to be fixed. The expected format for each parameter is the
+        parameter name followed by an optional value to which the parameter should be set prior to
+        fixing. An iterable of (name, value) tuples can be passed to fix multiple parameters.
+    :type fixed: typing.Sequence or typing.Sequence[typing.Union[list, tuple]]
+    :param constraints: constraints to be applied to the model parameter. The expected format for
+        each constraint is an iterable consisting of the parameter name, the parameter mean, and
+        then the parameter uncertainty. An iterable of constraints can be passed to limit multiple
+        parameters.
+    :type constraints: typing.Sequence or typing.Sequence[typing.Union[list, tuple]]
+    :param report: whether a report of the data and fit results should be printed to the console.
+    :type report: bool
+    :param profile: whether the profile likelihood method should be used for asymmetric parameter
+        errors and profile/contour plots.
+    :type profile: bool
+    :param save: whether the fit results should be saved to disk under `results`.
+    :type save: bool
+    :return: the fit results.
+    :rtype: dict
+    """
     from kafe2.fit.custom.fit import CustomFit
     _fit = CustomFit(cost_function)
     return _fit_wrapper_generic(_fit, p0, dp0, limits, fixed, constraints, report, profile, save)
+
 
 def hist_fit(model_function=None, data=None, n_bins=None, bin_range=None, bin_edges=None, p0=None,
              dp0=None, error=None, error_rel=None, error_cor=None, error_cor_rel=None,
              errors_rel_to_model=True, density=True, gauss_approximation=None, limits=None,
              fixed=None, constraints=None, report=False, profile=True, save=True):
+    """
+    Built-in function for fitting a (probability density) function to one-dimensional data by
+    binning the data. The uncertainty on the bins is assumed to follow a Poisson distribution. If
+    any errors are specified then the Poisson distribution is instead approximated by a Gaussian
+    distribution.
+
+    :param model_function: The model function as a native Python function where the first
+        argument denotes the independent *x* variable. Alternatively an already defined
+        :py:class:`~kafe2.fit.histogram.model.HistModelFunction` object. Defaults to a normal
+        distribution.
+    :type model_function: typing.Callable
+    :param data: the data for the fit. Can be either raw data, the result of `np.histogram`, or a
+        :py:`kafe2.fit.hist.container.HistContainer` object.
+    :type data: typing.Sequence[float] or :py:`kafe2.fit.hist.container.HistContainer`
+    :param n_bins: how many bins raw data should be split into.
+    :type n_bins: int
+    :param bin_range: the lower and upper bound for the bins specified by n_bins.
+    :type bin_range: typing.Sequence[float] of length 2
+    :param bin_edges: explicit bin edges for raw data. If ``None``, each bin will have the same
+        width.
+    :type bin_edges: typing.Sequence[float]
+    :param p0: the initial parameter values for the fit.
+    :type p0: typing.Sequence[float]
+    :param dp0: the initial parameter step size for the fit.
+    :type dp0: typing.Sequence[float]
+    :param error: uncorrelated absolute error on the bin heights.
+    :type error: float or typing.Sequence[float]
+    :param error_rel: uncorrelated relative error on the bin heights.
+    :type error_rel: float or typing.Sequence[float]
+    :param error_cor: correlated absolute error on the bin heights.
+    :type error_cor: float or typing.Sequence[float]
+    :param error_cor_rel: correlated relative error on the bin heights.
+    :type error_cor_rel: float or typing.Sequence[float]
+    :param errors_rel_to_model: whether the relative *y* errors should be relative to the model.
+        Otherwise they are relative to the data.
+    :type errors_rel_to_model: bool
+    :param density: whether the model is a probability density function and the data should be
+        normalized to match it.
+    :type density: bool
+    :param limits: limits to be applied to the model parameter. The expected format for each limit
+        is an iterable consisting of the parameter name, the lower bound, and then the upper bound.
+        An iterable of limits can be passed to limit multiple parameters.
+    :type limits: typing.Sequence or typing.Sequence[typing.Union[list, tuple]]
+    :param fixed: Model parameter to be fixed. The expected format for each parameter is the
+        parameter name followed by an optional value to which the parameter should be set prior to
+        fixing. An iterable of (name, value) tuples can be passed to fix multiple parameters.
+    :type fixed: typing.Sequence or typing.Sequence[typing.Union[list, tuple]]
+    :param constraints: constraints to be applied to the model parameter. The expected format for
+        each constraint is an iterable consisting of the parameter name, the parameter mean, and
+        then the parameter uncertainty. An iterable of constraints can be passed to limit multiple
+        parameters.
+    :type constraints: typing.Sequence or typing.Sequence[typing.Union[list, tuple]]
+    :param report: whether a report of the data and fit results should be printed to the console.
+    :type report: bool
+    :param profile: whether the profile likelihood method should be used for asymmetric parameter
+        errors and profile/contour plots.
+    :type profile: bool
+    :param save: whether the fit results should be saved to disk under `results`.
+    :type save: bool
+    :return: the fit results.
+    :rtype: dict
+    """
     from kafe2.fit.histogram.container import HistContainer
     from kafe2.fit.histogram.fit import HistFit
 
-    _data_is_kafe2_hist_container = isinstance(data, HistContainer)
-    try:
-        _data_is_numpy_histogram = len(data) == 2 and len(data[0]) + 1 == len(data[1])
-    except TypeError:
-        _data_is_numpy_histogram = False
-
-    if not _data_is_kafe2_hist_container and not _data_is_numpy_histogram:
-        if (n_bins == None or bin_range == None) and bin_edges == None:
-            raise ValueError(
-                "Incorrect data format: if data is not a kafe2 HistContainer or a NumPy histogram "
-                "then either n_bins and bin_range or bin_edges must be defined!"
-            )
-        data = HistContainer(n_bins, bin_range, bin_edges, data)
+    data = HistContainer(n_bins, bin_range, bin_edges, data)
 
     if gauss_approximation is None:
         gauss_approximation = error is not None or error_rel is not None \
@@ -130,6 +217,7 @@ def hist_fit(model_function=None, data=None, n_bins=None, bin_range=None, bin_ed
 
     return _fit_wrapper_generic(_fit, p0, dp0, limits, fixed, constraints, report, profile, save)
 
+
 def indexed_fit(model_function=None, data=None, p0=None, dp0=None, error=None, error_rel=None,
                 error_cor=None, error_cor_rel=None, errors_rel_to_model=True, limits=None,
                 fixed=None, constraints=None, report=False, profile=True, save=True):
@@ -145,13 +233,52 @@ def indexed_fit(model_function=None, data=None, p0=None, dp0=None, error=None, e
 
     return _fit_wrapper_generic(_fit, p0, dp0, limits, fixed, constraints, report, profile, save)
 
+
 def unbinned_fit(model_function=None, data=None, p0=None, dp0=None, limits=None, fixed=None,
                  constraints=None, report=False, profile=True, save=True):
+    """
+    Built-in function for directly fitting a probability density function to one-dimensional data
+    without binning the data.
+
+    :param model_function: The model function as a native Python function where the first
+        argument denotes the independent *x* variable. Alternatively an already defined
+        :py:class:`~kafe2.fit._base.model.ModelFunctionBase` object. Defaults to a straight line.
+    :type model_function: typing.Callable
+    :param data: the data values for the fit. Must be one-dimensional.
+    :type data: typing.Sequence[float]
+    :param p0: the initial parameter values for the fit.
+    :type p0: typing.Sequence[float]
+    :param dp0: the initial parameter step size for the fit.
+    :type dp0: typing.Sequence[float]
+    :param limits: limits to be applied to the model parameter. The expected format for each limit
+        is an iterable consisting of the parameter name, the lower bound, and then the upper bound.
+        An iterable of limits can be passed to limit multiple parameters.
+    :type limits: typing.Sequence or typing.Sequence[typing.Union[list, tuple]]
+    :param fixed: Model parameter to be fixed. The expected format for each parameter is the
+        parameter name followed by an optional value to which the parameter should be set prior to
+        fixing. An iterable of (name, value) tuples can be passed to fix multiple parameters.
+    :type fixed: typing.Sequence or typing.Sequence[typing.Union[list, tuple]]
+    :param constraints: constraints to be applied to the model parameter. The expected format for
+        each constraint is an iterable consisting of the parameter name, the parameter mean, and
+        then the parameter uncertainty. An iterable of constraints can be passed to limit multiple
+        parameters.
+    :type constraints: typing.Sequence or typing.Sequence[typing.Union[list, tuple]]
+    :param report: whether a report of the data and fit results should be printed to the console.
+    :type report: bool
+    :param profile: whether the profile likelihood method should be used for asymmetric parameter
+        errors and profile/contour plots.
+    :type profile: bool
+    :param save: whether the fit results should be saved to disk under `results`.
+    :type save: bool
+    :return: the fit results.
+    :rtype: dict
+    """
     from kafe2.fit.unbinned import UnbinnedFit
 
     _fit = UnbinnedFit(data, model_function)
 
     return _fit_wrapper_generic(_fit, p0, dp0, limits, fixed, constraints, report, profile, save)
+
 
 def xy_fit(model_function=None, x_data=None, y_data=None, p0=None, dp0=None,
            x_error=None, y_error=None, x_error_rel=None, y_error_rel=None,
@@ -171,14 +298,14 @@ def xy_fit(model_function=None, x_data=None, y_data=None, p0=None, dp0=None,
     If the input error is a one-dimensional vector then each individual value is added as
     a separate error that is being broadcast across the entire data vector.
 
+    :param model_function: The model function as a native Python function where the first
+        argument denotes the independent *x* variable. Alternatively an already defined
+        :py:class:`~kafe2.fit._base.model.ModelFunctionBase` object. Defaults to a straight line.
+    :type model_function: typing.Callable
     :param x_data: the x data values for the fit. Must be one-dimensional.
     :type x_data: typing.Sequence[float]
     :param y_data: the y data values for the fit. Must be one-dimensional.
     :type y_data: typing.Sequence[float]
-    :param model_function: The model function as a native Python function where the first
-        argument denotes the independent *x* variable. Alternatively an already defined
-        :py:class:`~kafe2.fit.xy.XYModelFunction` object. Defaults to a straight line.
-    :type model_function: typing.Callable
     :param p0: the initial parameter values for the fit.
     :type p0: typing.Sequence[float]
     :param dp0: the initial parameter step size for the fit.
@@ -206,6 +333,10 @@ def xy_fit(model_function=None, x_data=None, y_data=None, p0=None, dp0=None,
         is an iterable consisting of the parameter name, the lower bound, and then the upper bound.
         An iterable of limits can be passed to limit multiple parameters.
     :type limits: typing.Sequence or typing.Sequence[typing.Union[list, tuple]]
+    :param fixed: Model parameter to be fixed. The expected format for each parameter is the
+        parameter name followed by an optional value to which the parameter should be set prior to
+        fixing. An iterable of (name, value) tuples can be passed to fix multiple parameters.
+    :type fixed: typing.Sequence or typing.Sequence[typing.Union[list, tuple]]
     :param constraints: constraints to be applied to the model parameter. The expected format for
         each constraint is an iterable consisting of the parameter name, the parameter mean, and
         then the parameter uncertainty. An iterable of constraints can be passed to limit multiple
@@ -452,6 +583,7 @@ _plot_func = plot
 #         y_range=y_range, x_scale=x_scale, y_scale=y_scale, x_ticks=x_ticks, y_ticks=y_ticks,
 #         show=show, save=save)
 
+
 def k2Fit(func, x, y, sx=None, sy=None, srelx=None, srely=None, xabscor=None, yabscor=None,
           xrelcor=None, yrelcor=None, ref_to_model=True, constraints=None, p0=None, dp0=None,
           limits=None, plot=True, axis_labels=['x-data', 'y-data'], data_legend='data',
@@ -475,7 +607,7 @@ def k2Fit(func, x, y, sx=None, sy=None, srelx=None, srely=None, xabscor=None, ya
 
     :param func: The model function as a native Python function where the first
         argument denotes the independent *x* variable. Alternatively an already defined
-        :py:class:`~kafe2.fit.xy.XYModelFunction` object. Defaults to a straight line.
+        :py:class:`~kafe2.fit._base.model.ModelFunctionBase` object. Defaults to a straight line.
     :type func: typing.Callable
     :param x: the *x* data values for the fit. Must be one-dimensional.
     :type x: typing.Sequence[float]
