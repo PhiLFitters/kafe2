@@ -530,8 +530,19 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
             _plot.customize("model_line", "label", model_label)
         except ValueError:
             pass
+        # Apply model label to density label in plot if HistFit:
+        try:
+            _plot.customize("model_density", "label", f"{model_label} density")
+        except ValueError:
+            pass
     if error_band_label is not None:
         _plot.customize("model_error_band", "label", error_band_label)
+    if model_label is not None and error_band_label is None:
+        error_band_label = f"{model_label} $\\pm 1 \\sigma$"
+        try:
+            _plot.customize("model_error_band", "label", error_band_label)
+        except ValueError:
+            pass
     if not error_band:
         _plot.customize("model_error_band", "label", None)
         _plot.customize("model_error_band", "hide", True)
