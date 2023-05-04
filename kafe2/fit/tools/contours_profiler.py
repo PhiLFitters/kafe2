@@ -456,10 +456,15 @@ class ContoursProfiler(object):
             _profile_artist = self._plot_profile_xy(
                 _axes, _x, _y, label="profile %s" % (self._cost_function_formatted_name,))
 
+            _x_min_parabola = np.min(_x)
+            _x_max_parabola = np.max(_x)
             _x_span = np.max(_x) - np.min(_x)
             _y_span = max(np.max(_y) - np.min(_y), np.max(((_x - _par_val) / _par_err) ** 2))
             if _arrow_specs is not None:
                 for _arrow_spec in _arrow_specs:
+                    _x_margin = _arrow_spec.pop("x_margin")
+                    _x_min_parabola = min(_x_min_parabola, _x_margin)
+                    _x_max_parabola = max(_x_max_parabola, _x_margin)
                     self._plot_profile_arrow(
                         _axes, _x_span, _y_span,
                         self._fit._get_model_function_parameter_formatters()[_par_id],
@@ -469,8 +474,9 @@ class ContoursProfiler(object):
 
             _parabola_artist = None
             if show_parabolic:
+                _x_parabola = np.linspace(_x_min_parabola, _x_max_parabola, 101)
                 _parabola_artist = self._plot_parabolic_cost(_axes,
-                                                             _x,
+                                                             _x_parabola,
                                                              quad_coeff=1. / (_par_err**2),
                                                              x_offset=_par_val,
                                                              y_offset=_y_offset,

@@ -246,7 +246,9 @@ class MinimizerBase(object):
             parameter_name, low, high, cl, subtract_min, arrows, _min_cost, _min_par_val,
             _parameter_error, _min_par_vals)
         low = np.min(low)
+        _low_was_none = low is None
         high = np.max(high)
+        _high_was_none = high is None
         cl = np.max(cl)
         if sigma is not None:
             _low_sigma = _min_par_val - sigma * _parameter_error
@@ -267,8 +269,18 @@ class MinimizerBase(object):
             _original_high = high
             _margin = 0.13 if arrows else 0
             for _arrow_spec in _arrow_specs:
-                low = min(low, _arrow_spec["x"] + _margin * (_arrow_spec["x"] - _original_high))
-                high = max(high, _arrow_spec["x"] + _margin * (_arrow_spec["x"] - _original_low))
+                if _arrow_spec["side"] == "left":
+                    _arrow_spec["x_margin"] = _arrow_spec["x"] \
+                        + _margin * (_arrow_spec["x"] - _original_high)
+                    if _low_was_none:
+                        low = min(low, _arrow_spec["x_margin"])
+                elif _arrow_spec["side"] == "right":
+                    _arrow_spec["x_margin"] = _arrow_spec["x"] \
+                        + _margin * (_arrow_spec["x"] - _original_low)
+                    if _high_was_none:
+                        high = max(high, _arrow_spec["x_margin"])
+                else:
+                    assert False
 
         return low, high, _arrow_specs
 
