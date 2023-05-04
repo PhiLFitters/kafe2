@@ -1,4 +1,5 @@
-* **indexed_fit.py**: How to fit a model to indexed data (in progress).
+* **01_parameter_and_interval_transformation.py**: How to handle Gaussian measurement uncertainties on polar coordinates when for further analysis uncertainties on Cartesian coordinates are needed.
+* **02_object_oriented.py**: Same as the first example but using object-oriented programming.
 
 Other relevant examples:
 

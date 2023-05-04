@@ -10,7 +10,7 @@ will be replaced by a better example.
 """
 
 import numpy as np
-from kafe2 import hist_fit, plot
+import kafe2
 
 
 def normal_distribution(x, A, mu, sigma):
@@ -21,5 +21,5 @@ def normal_distribution(x, A, mu, sigma):
 data = np.random.normal(loc=0, scale=1, size=100)
 
 # Finally, do the fit and plot it:
-hist_fit(model_function=normal_distribution, data=data, n_bins=10, bin_range=(-5, 5), density=False)
-plot()
+kafe2.hist_fit(model_function=normal_distribution, data=data, n_bins=10, bin_range=(-5, 5), density=False)
+kafe2.plot()
