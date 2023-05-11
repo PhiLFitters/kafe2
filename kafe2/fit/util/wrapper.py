@@ -393,8 +393,8 @@ def xy_fit(model_function=None, x_data=None, y_data=None, p0=None, dp0=None,
 def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
          error_band_label=None, x_range=None, y_range=None, x_scale=None, y_scale=None,
          x_ticks=None, y_ticks=None, parameter_names=None, model_name=None, model_expression=None,
-         legend=True, fit_info=True, error_band=True, profile=None, plot_profile=None, show=True,
-         save=True):
+         font_scale=1.0, legend=True, fit_info=True, error_band=True, profile=None, plot_profile=None,
+         show=True, save=True):
     """
     Plots kafe2 fits.
 
@@ -449,6 +449,9 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
     :type show: bool
     :param save: whether the plots should be saved to disk under `results`.
     :type save: bool
+    :param font_scale: multiply font size by this amount.
+    :type font_scale: float
+
     :return: a *kafe2* plot object containing the relevant matplotlib plots.
     :rtype: :py:class:`~kafe2.fit._base.Plot`
     """
@@ -487,7 +490,7 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
             if not _pp_i:
                 continue
             _cpf = ContoursProfiler(_f_i)
-            _cpf.plot_profiles_contours_matrix()
+            _cpf.plot_profiles_contours_matrix(font_scale=font_scale)
             if save:
                 _file_index = _start_index + _i if _file_indices is None else _file_indices[_i]
                 _cpf.save(f"results/fit-{_file_index:04d}-profile.png", dpi=240)
@@ -561,7 +564,7 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
         _plot.y_ticks = y_ticks
 
     if len(fits) > 0:  # Do not plot if only CustomFit.
-        _plot.plot(legend=legend, fit_info=fit_info, asymmetric_parameter_errors=profile)
+        _plot.plot(legend=legend, fit_info=fit_info, asymmetric_parameter_errors=profile, font_scale=font_scale)
 
         if save:
             for _i, _ in enumerate(fits):

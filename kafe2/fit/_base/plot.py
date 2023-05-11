@@ -19,7 +19,7 @@ from collections import OrderedDict
 from matplotlib import pyplot as plt
 from matplotlib import gridspec as gs
 from matplotlib.legend_handler import HandlerBase
-from matplotlib import rc_context
+from matplotlib import rcParams, rc_context
 
 try:
     import typing  # help IDEs with type-hinting inside docstrings
@@ -1056,6 +1056,7 @@ class Plot:
                          mode=_mode,
                          borderaxespad=_borderaxespad,
                          ncol=_ncol,
+                         fontsize=rcParams["font.size"],
                          handler_map={'_nokey_': DummyLegendHandler()},
                          **kwargs)
             _leg.set_zorder(_zorder)
@@ -1286,7 +1287,7 @@ class Plot:
     def plot(self, legend=True, fit_info=True, asymmetric_parameter_errors=False,
              ratio=False, ratio_range=None, ratio_height_share=0.25,
              residual=False, residual_range=None, residual_height_share=0.25,
-             plot_width_share=0.5, figsize=None):
+             plot_width_share=0.5, font_scale=1.0, figsize=None):
         """
         Plot data, model (and other subplots) for all child :py:obj:`Fit` objects.
 
@@ -1303,6 +1304,8 @@ class Plot:
         :type ratio_height_share: float
         :param plot_width_share: share of the total width to be taken up by the plot(s)
         :type plot_width_share: float
+        :param font_scale: multiply font size by this amount.
+        :type font_scale: float
         :param figsize: the (*width*, *height*) of the figure (in inches) or ``None`` to use default
         :type figsize: tuple of 2 floats
 
@@ -1313,6 +1316,7 @@ class Plot:
             raise NotImplementedError("Cannot plot ratio and residual at the same time.")
 
         with rc_context(kafe2_rc):
+            rcParams["font.size"] *= font_scale
             _axes_keys = ('main',)
             _height_ratios = [1.0]
             _width_ratios = (plot_width_share, 1.0 - plot_width_share)

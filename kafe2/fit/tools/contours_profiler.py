@@ -9,11 +9,11 @@ from ...config import kafe2_rc
 from ...core.confidence import ConfidenceLevel
 from .._base import FitBase
 from .._base.format import ScalarFormatter as ScalarBaseFormatter
-from matplotlib import pyplot as plt, rcParams
+from matplotlib import pyplot as plt
 from matplotlib import gridspec as gs
 from matplotlib import ticker as plticker
 from matplotlib.axes import Axes
-from matplotlib import rc_context
+from matplotlib import rcParams, rc_context
 
 
 __all__ = ["ContoursProfiler"]
@@ -394,7 +394,8 @@ class ContoursProfiler(object):
                      show_error_span=True,
                      show_ticks=True,
                      label_ticks_in_sigma=True,
-                     label_fit_minimum=True):
+                     label_fit_minimum=True,
+                     font_scale=1.0):
         """
         Plot the profile cost function for a parameter.
 
@@ -431,12 +432,15 @@ class ContoursProfiler(object):
         :param label_fit_minimum: if ``True``, the parameter value and the 1 sigma error
             will be shown as an annotation
         :type label_fit_minimum: bool
+        :param font_scale: multiply font size by this amount.
+        :type font_scale: float
 
         :return: figure containing the plot result
         :rtype: `matplotlib.figure.Figure`
         """
 
         with rc_context(kafe2_rc):
+            rcParams["font.size"] *= font_scale
             if target_axes is None:
                 _fig, _gs = self._make_figure_gs(1, 1)
                 _axes = plt.subplot(_gs[0, 0])
@@ -521,7 +525,7 @@ class ContoursProfiler(object):
                              else '$\\Delta$%s' % self._cost_function_formatted_name)
 
             if show_legend:
-                _axes.legend(loc='center')
+                _axes.legend(loc='center', fontsize=float(rcParams["font.size"]))
 
             if show_grid:
                 _axes.grid('on')
@@ -554,7 +558,8 @@ class ContoursProfiler(object):
                       show_fit_minimum=True,
                       show_ticks=True,
                       label_ticks_in_sigma=True,
-                      naming_convention='sigma'):
+                      naming_convention='sigma',
+                      font_scale=1.0):
         """
         Plot the contour for a parameter pair.
 
@@ -577,11 +582,14 @@ class ContoursProfiler(object):
         :param naming_convention: if ``'sigma'`` the contour is labelled in sigma, if ``'cl'`` the contour is labelled
                                   in confidence level
         :type naming_convention: str
+        :param font_scale: multiply font size by this amount.
+        :type font_scale: float
 
         :return: figure containing the plot result
         :rtype: `matplotlib.figure.Figure`
         """
         with rc_context(kafe2_rc):
+            rcParams["font.size"] *= font_scale
             if target_axes is None:
                 _fig, _gs = self._make_figure_gs(1, 1)
                 _axes = plt.subplot(_gs[0, 0])
@@ -629,7 +637,7 @@ class ContoursProfiler(object):
             _axes.set_ylabel(_par_2_formatted_name)
 
             if show_legend:
-                _axes.legend(loc='best')
+                _axes.legend(loc='best', fontsize=float(rcParams["font.size"]))
 
             if show_grid:
                 _axes.grid('on')
@@ -669,7 +677,8 @@ class ContoursProfiler(object):
                                       show_error_span_profiles=False,
                                       full_matrix=False,
                                       label_ticks_in_sigma=True,
-                                      contour_naming_convention='sigma'):
+                                      contour_naming_convention='sigma',
+                                      font_scale=1.0):
         """
         Plot all profiles and contours to subplots arranges in a matrix-like fashion.
 
@@ -696,11 +705,14 @@ class ContoursProfiler(object):
         :param contour_naming_convention: if ``'sigma'`` the contour is labelled in sigma, if ``'cl'`` the contour is
                                           labelled in confidence level
         :type contour_naming_convention: str
+        :param font_scale: multiply font size by this amount.
+        :type font_scale: float
 
         :return: figure containing the plot result
         :rtype: `matplotlib.figure.Figure`
         """
         with rc_context(kafe2_rc):
+            rcParams["font.size"] *= font_scale
             _par_names = parameters
             _fixed_pars = list(self._fit._fitter.fixed_parameters.keys())
             if _par_names is None:
@@ -756,7 +768,8 @@ class ContoursProfiler(object):
                                   show_fit_minimum=_show_minimum_profiles,
                                   show_error_span=show_error_span_profiles,
                                   label_ticks_in_sigma=label_ticks_in_sigma,
-                                  show_ticks=_show_ticks_profiles)
+                                  show_ticks=_show_ticks_profiles,
+                                  font_scale=font_scale)
 
                 if show_legend:
                     _hs, _ls = _axes.get_legend_handles_labels()
@@ -774,7 +787,8 @@ class ContoursProfiler(object):
                                        show_fit_minimum=_show_minimum_contours,
                                        show_ticks=_show_ticks_contours,
                                        label_ticks_in_sigma=label_ticks_in_sigma,
-                                       naming_convention=contour_naming_convention)
+                                       naming_convention=contour_naming_convention,
+                                       font_scale=font_scale)
 
                     if show_legend:
                         _hs, _ls = _axes.get_legend_handles_labels()
@@ -873,7 +887,8 @@ class ContoursProfiler(object):
                         _hs, _ls,
                         loc='upper right',
                         borderpad=0,
-                        borderaxespad=0
+                        borderaxespad=0,
+                        fontsize=float(rcParams["font.size"])
                     )
                     # patch legend bbox to correspond to axes
                     _leg._bbox_to_anchor = _ax_for_legend.bbox
