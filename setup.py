@@ -42,6 +42,7 @@ setup(
     license='GPL3',
     #TODO requirement versions
     install_requires=[
+        'iminuit',
         'NumPy',
         'Numdifftools',
         'Scipy',
