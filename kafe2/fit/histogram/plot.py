@@ -1,17 +1,13 @@
 import matplotlib as mpl
 import numpy as np
-import six
 
 from .._base import PlotAdapterBase
 from .._base.plot import kc_plot_style
-
-from ..xy.plot import XYPlotAdapter
 
 __all__ = ["HistPlotAdapter"]
 
 
 class HistPlotAdapter(PlotAdapterBase):
-
     PLOT_STYLE_CONFIG_DATA_TYPE = 'histogram'
 
     PLOT_SUBPLOT_TYPES = dict(
@@ -46,8 +42,12 @@ class HistPlotAdapter(PlotAdapterBase):
         # set model density label according to model label
         _model_label = self._fit.model_label
         if _model_label is None:
-            _model_label = dict(kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'model', 'plot_kwargs'))['label']
-        _density_label = dict(kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'model_density', 'plot_kwargs'))['label']
+            _model_label = \
+                dict(kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'model', 'plot_kwargs'))[
+                    'label']
+        _density_label = \
+            dict(kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, 'model_density', 'plot_kwargs'))[
+                'label']
         _density_label = _density_label % dict(model_label=_model_label)
         self.update_plot_kwargs('model_density', dict(label=_density_label))
 
@@ -91,7 +91,7 @@ class HistPlotAdapter(PlotAdapterBase):
     @property
     def model_yerr(self):
         """y error bars for model: ``None`` for :py:obj:`HistPlotContainer`"""
-        return None #self._fit.model_error
+        return None  # self._fit.model_error
 
     @property
     def model_density_x(self):
@@ -112,7 +112,7 @@ class HistPlotAdapter(PlotAdapterBase):
     def model_density_y(self):
         """value of model density at the support points"""
         _hist_cont = self._fit.data_container
-        _mean_bin_size = float(_hist_cont.high - _hist_cont.low)/_hist_cont.size
+        _mean_bin_size = float(_hist_cont.high - _hist_cont.low) / _hist_cont.size
         _factor = _hist_cont.n_entries * _mean_bin_size
         if self._fit.density:
             return _factor * self._fit.eval_model_function_density(x=self.model_density_x)
@@ -130,7 +130,8 @@ class HistPlotAdapter(PlotAdapterBase):
         :return: plot handle(s)
         """
         _yerr = np.sqrt(
-            self.data_yerr ** 2 + self._fit._cost_function.get_uncertainty_gaussian_approximation(self.data_y) ** 2
+            self.data_yerr ** 2 + self._fit._cost_function.get_uncertainty_gaussian_approximation(
+                self.data_y) ** 2
         )
         return target_axes.errorbar(self.data_x,
                                     self.data_y,
@@ -146,7 +147,7 @@ class HistPlotAdapter(PlotAdapterBase):
         :param kwargs: keyword arguments accepted by the ``matplotlib`` method ``bar``
         :return: plot handle(s)
         """
-        #_pad = kwargs.pop('bar_width_pad')
+        # _pad = kwargs.pop('bar_width_pad')
         _sf = kwargs.pop('bar_width_scale_factor')
 
         # default call signature (matplotlib >= 2)
@@ -154,7 +155,7 @@ class HistPlotAdapter(PlotAdapterBase):
             x=self.model_x,
             align='center',
             height=self.model_y,
-            width=self.model_xerr*2.0 * _sf,
+            width=self.model_xerr * 2.0 * _sf,
             bottom=None,
             **kwargs
         )

@@ -1,14 +1,12 @@
 import numpy as np
 
-from .._base import PlotAdapterBase
 from .._aux import step_fill_between
-
+from .._base import PlotAdapterBase
 
 __all__ = ["IndexedPlotAdapter"]
 
 
 class IndexedPlotAdapter(PlotAdapterBase):
-
     PLOT_STYLE_CONFIG_DATA_TYPE = 'indexed'
 
     PLOT_SUBPLOT_TYPES = dict(
@@ -66,7 +64,7 @@ class IndexedPlotAdapter(PlotAdapterBase):
     @property
     def model_yerr(self):
         """y error bars for model: ``None`` for :py:obj:`IndexedPlotContainer`"""
-        return None #self.fit.model_error
+        return None  # self.fit.model_error
 
     # public methods
 
@@ -80,8 +78,10 @@ class IndexedPlotAdapter(PlotAdapterBase):
         """
         if self._fit.has_errors:
             _yerr = np.sqrt(self.data_yerr ** 2
-                            + self._fit._cost_function.get_uncertainty_gaussian_approximation(self.data_y) ** 2)
-            return target_axes.errorbar(self.data_x, self.data_y, xerr=self.data_xerr, yerr=_yerr, **kwargs)
+                            + self._fit._cost_function.get_uncertainty_gaussian_approximation(
+                self.data_y) ** 2)
+            return target_axes.errorbar(self.data_x, self.data_y, xerr=self.data_xerr, yerr=_yerr,
+                                        **kwargs)
         _yerr = self._fit._cost_function.get_uncertainty_gaussian_approximation(self.data_y)
         if np.all(_yerr == 0):
             return target_axes.plot(self.data_x, self.data_y, **kwargs)
@@ -104,4 +104,3 @@ class IndexedPlotAdapter(PlotAdapterBase):
                                  continuous=False,
                                  **kwargs
                                  )
-
