@@ -144,8 +144,8 @@ def hist_fit(model_function=None, data=None, n_bins=None, bin_range=None, bin_ed
         distribution.
     :type model_function: typing.Callable
     :param data: the data for the fit. Can be either raw data, the result of `np.histogram`, or a
-        :py:`kafe2.fit.hist.container.HistContainer` object.
-    :type data: typing.Sequence[float] or :py:`kafe2.fit.hist.container.HistContainer`
+        :py:class:`kafe2.fit.hist.container.HistContainer` object.
+    :type data: typing.Sequence[float] or :py:class:`kafe2.fit.hist.container.HistContainer`
     :param n_bins: how many bins raw data should be split into.
     :type n_bins: int
     :param bin_range: the lower and upper bound for the bins specified by n_bins.
