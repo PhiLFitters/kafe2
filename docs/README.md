@@ -58,7 +58,7 @@ kafe2.plot(x_label="$t$ [s]", y_label="$h$ [m]")
 
 With just two function calls we get the following plot:
 
-![Example kafe2 plot](kafe_graph1.png)
+![Example kafe2 plot](kafe_graph1.png){width=100%}
 
 Ignoring imports and variable definitions the example consists of just two function calls
 but a lot is happening under the hood:
@@ -84,7 +84,7 @@ but a lot is happening under the hood:
 5. Because the regression problem is nonlinear _kafe2_ by default also produces plots of the confidence intervals
    of single model parameters as well as plots of the confidence regions of pairs of parameters:
    
-![Example kafe2 plot of confidence intervals/regions](kafe_graph2.png)
+![Example kafe2 plot of confidence intervals/regions](kafe_graph2.png){width=100%}
 
 The above example is of course highly configurable:
 among other things users can define arbitrarily complex _Python_ functions to model the data,
