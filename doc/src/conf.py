@@ -14,6 +14,7 @@
 
 import sys
 import os
+from datetime import datetime
 
 # Mock modules: when building the documentation using autodoc, Sphinx
 # imports the entire Python code, which can in turn import other packages.
@@ -104,7 +105,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'kafe2'
-copyright = u'2019-2020, J. Gäßler, C. Verstege, D. Savoiu and G. Quast'
+copyright = f'2019-{datetime.now().year}, J. Gäßler, C. Verstege, D. Savoiu and G. Quast'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
