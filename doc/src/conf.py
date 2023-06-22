@@ -105,7 +105,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'kafe2'
-copyright = u'2019-{datetime.now().year}, J. Gäßler, C. Verstege, D. Savoiu and G. Quast'
+copyright = f'2019-{datetime.now().year}, J. Gäßler, C. Verstege, D. Savoiu and G. Quast'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
