@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kafe2"
+description = "Karlsruhe Fit Environment 2: a package for fitting and elementary data analysis"
+authors = [
+	{ name="Daniel Savoiu", email="daniel.savoiu@cern.ch" },
+]
+readme = "README.rst"
+requires-python= ">=3.7" # don't know wether this is right but python 3.8 is the lowest in the classifiers mentioned
+keywords = ["kafe2", "kit", "karlsruhe", "data", "analysis", "lab", "laboratory", "practical courses", "education", "university", "students", "physics", "fitting", "minimization", "minimisation", "regression", "parametric", "parameter", "estimation", "optimization", "optimisation"]
+
+license = {text = "GPL3"}
+classifiers = [
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Education",
+        "Intended Audience :: Science/Research",
+        "Topic :: Education",
+        "Topic :: Scientific/Engineering",
+        "Topic :: Scientific/Engineering :: Physics",
+        "Topic :: Scientific/Engineering :: Information Analysis",
+        "Topic :: Scientific/Engineering :: Visualization",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+]
+#TODO dependency versions
+dependencies = [
+        "iminuit",
+        "NumPy",
+        "Numdifftools",
+        "Scipy",
+        "tabulate",
+        "matplotlib",
+        "PyYaml",
+        "six",
+        "funcsigs",
+        "SymPy",
+]
+dynamic = ["version"]
+
+[tool.setuptools.dynamic]
+version = {attr = "kafe2._version_info.__version__"}	# todo: check wether this works
+
+[project.urls]
+"Homepage" = "https://github.com/PhiLFitters/kafe2"
+"Repository" = "https://github.com/PhiLFitters/kafe2"
+
+[tool.setuptools.packages.find]
+include = ["kafe2*"]
+
+[project.scripts]
+kafe2go = "kafe2.fit.tools.kafe2go:kafe2go"
+
+[tool.setuptools.package-data]
+kafe2 = ["config/*.conf", "config/*.yaml", "config/*.yml", "fit/tools/kafe2go"]
+
