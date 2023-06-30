@@ -47,6 +47,10 @@ customized_fit.assign_parameter_latex_names(x='t', a='\\alpha', b='\\beta')
 customized_fit.assign_model_function_latex_name('\\theta')
 customized_fit.assign_model_function_latex_expression('{a} \\cdot {x} + {b}')
 
+# Labels can be set for a fit.
+# These labels are then used by all Plots created from said fit.
+# If a Plot object also defines labels those labels override the fit labels.
+
 # The labels displayed in the info box:
 customized_fit.data_container.label = "data label"
 customized_fit.model_label = "model label"

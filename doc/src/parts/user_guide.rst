@@ -441,68 +441,34 @@ accessed via the :py:attr:`~.Plot.figures` and :py:attr:`~.Plot.axes` properties
 Customize the Plot
 ------------------
 
+Model and parameter labels
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The model and parameter labels that appear in the plot info box can be set like this:
+.. code-block:: python
+    # Assign the LaTeX-names that are used in the plot info box (legend):
+    fit.assign_parameter_latex_names(x='t', a='\\alpha', b='\\beta')
+    fit.assign_model_function_latex_name('\\theta')
+    fit.assign_model_function_latex_expression('{a} \\cdot {x} + {b}')
+
+Labels can be set for a fit.
+These labels are then used by all Plots created from said fit.
+If a Plot object also defines labels those labels override the fit labels.
+.. code-block:: python
+    # The labels displayed in the info box:
+    fit.data_container.label = "data label"
+    fit.model_label = "model label"
+
+    # The labels displayed on the x- and y-axis:
+    fit.data_container.axis_labels = ["x label", "y label"]
+
+Plot Style
+^^^^^^^^^^
+
 .. note::
 
     The :py:meth:`~.Plot.plot` method must be called after all customization is done. Otherwise
     not all customizations will appear in the plot.
-
-Axis Range
-^^^^^^^^^^
-
-The plot range can be set via the :py:attr:`~.Plot.x_range` and :py:attr:`~.Plot.y_range`
-properties:
-
-.. code-block:: python
-
-    # set the same range for all plots
-    p.x_range = (0, 10)
-    p.y_range = (-5, 25)
-    # set different ranges for each plot, the length must match the number of fits handled by the
-    # plot object.
-    p.x_range = [(0, 10), (-5, 5)]
-    p.y_range = [(-5, 25), (10, 100)]
-    p.plot()  # plot method must come after the customization
-
-Axis Scale
-^^^^^^^^^^
-
-Additionally the axis scale can be changed to logarithmic. When changing between a linear and
-logarithmic x-axis scale, the supporting points for plotting the model function will be updated
-and evenly spaced on a linear or logarithmic scale.
-
-.. code-block:: python
-
-    # set the same scale for all fits in this plot object
-    p.x_scale = "log"
-    p.y_scale = "linear
-    # or change the scale for each fit individually
-    # only use this when `separate_figures=True` is set in the Plot constructor
-    p.x_scale = ["linear", "log"]
-    p.y_scale = ["log", "log"]
-    p.plot()  # plot method must come after the customization
-
-Axis Labels
-^^^^^^^^^^^
-
-By default, the plot will use the labels specified for each dataset (see :ref:`container-labels`).
-If multiple fits are plotted to the same figure, the axis labels from the data containers are
-concatenated while skipping duplicates.
-
-Alternatively the axis labels can be overwritten for each fit. Again if multiple fits are plotted
-to the same figure, all labels will be concatenated while skipping duplicates.
-
-.. code-block:: python
-
-    # set the same axis labels for all fits in this plot object
-    p.x_label = "My $x$-label"
-    p.y_label = "Voltage [mV]"
-    # set different labels for each fit, the length must match the number of fits
-    p.x_label = ["$x_1$", "My other label for $x_2$"]
-    p.y_label = ["$Y_1$", "$y_2$"]
-    p.plot()  # plot method must come after the customization
-
-Plot Style
-^^^^^^^^^^
 
 Each graphic element has it's own plotting method and can be customized individually. Available
 *plot_types* for XYFits are
@@ -514,45 +480,90 @@ The currently set keywords can be obtained with the :py:meth:`~.Plot.get_keyword
 With :py:meth:`~.Plot.customize` new values can be added or existing values can
 be modified. Using :code:`'__del__'` will delete the keyword and :code:`'__default__'` will reset
 it.
-
-Hiding specific elements from the plot (e.g. the uncertainty band) is done like this:
-
 .. code-block:: python
+    plot.customize('data', 'marker', 'X')  # Set the data marker shape
+    plot.customize('data', 'markersize', 10)  # Set the data marker size
+    plot.customize('data', 'color', '#600E8F')  # Set the data marker color
+    plot.customize('data', 'ecolor', '#8F0BDB')  # Set the errorbar color
+    plot.customize('data', 'label', 'data label')  # Overwrite the data label in the info box
 
-    # the array length must match the amount of fits handled by this plot object.
-    p.customize('model_error_band', 'hide', [True])
+    plot.customize('model_line', 'linestyle', ':')  # Set the linestyle for the model line
+    plot.customize('model_line', 'linewidth', 2)  # Set the line width for the model line
+    plot.customize('model_line', 'color', '#8F1B0E')  # Set the color of the model line
+    plot.customize('model_line', 'label', 'model line label')  # Overwrite the model label in the info box
 
-In order to change the name for the data set and suppress the second output, use the following call:
+    plot.customize('model_error_band', 'alpha', 0.2)  # Set the alpha value (transparency) for the error band
+    plot.customize('model_error_band', 'linestyle', '--')  # Set the linestyle for the border of the error band
+    plot.customize('model_error_band', 'linewidth', 3)  # Set the linewidth for the border of the error band
+    plot.customize('model_error_band', 'color', '#DB1F0B')  # Set the color of the error band
+    plot.customize('model_error_band', 'label', 'model error band label')  # Set the label for the error band
 
-.. code-block:: python
+    # Analogous to data: set the appearance for the residual
+    plot.customize('residual', 'marker', 'X')
+    plot.customize('residual', 'markersize', 10)
+    plot.customize('residual', 'color', '#600E8F')
+    plot.customize('residual', 'ecolor', '#8F0BDB')
 
-    p.customize('data', 'label', [(0, "test data"), (1, '__del__')])
+    # Analogous to model error band: set the appearance for the residual error band
+    plot.customize('residual_error_band', 'alpha', 0.2)
+    plot.customize('residual_error_band', 'linestyle', '--')
+    plot.customize('residual_error_band', 'linewidth', 3)
+    plot.customize('residual_error_band', 'color', '#DB1F0B')
 
-Marker type, size and color of the marker and error bars can also be customized:
+To hide entries in the info box you can do this:
+.. code-block::python
+    plot.customize('data', 'label', None)
 
-.. code-block:: python
-
-    p.customize('data', 'marker', [(0, 'o'), (1,'o')])
-    p.customize('data', 'markersize', [(0, 5), (1, 5)])
-    p.customize('data', 'color', [(0, 'blue'), (1,'blue')]) # note: although 2nd label is suppressed
-    p.customize('data', 'ecolor', [(0, 'blue'), (1, 'blue')]) # note: although 2nd label is suppressed
-
-The corresponding values for the model function can also be customized:
-
-.. code-block:: python
-
-    p.customize('model_line', 'color', [(0, 'orange'), (1, 'lightgreen')])
-    p.customize('model_error_band', 'label', [(0, r'$\pm 1 \sigma$'), (1, r'$\pm 1 \sigma$')])
-    p.customize('model_error_band', 'color', [(0, 'orange'), (1, 'lightgreen')])
+To hide specific elements of the plot (e.g. error bands) you can do this:
+.. code-block::python
+    plot.customize('model_error_band', 'hide', True)
 
 Additionally it is possible to change parameters using matplotlib functions.
 Changing the size of the axis labels is done with the following calls:
-
 .. code-block:: python
-
     import matplotlib as mpl
     mpl.rc('axes', labelsize=20, titlesize=25)
 
+Axis Range
+^^^^^^^^^^
+
+The plot range can be set via the :py:attr:`~.Plot.x_range` and :py:attr:`~.Plot.y_range` properties:
+.. code-block:: python
+    plot.x_range = (0.5, 4.5)  # Set the range of the x-axis
+    plot.y_range = (2, 10)  # Set the range of the y-axis
+
+Axis Labels
+^^^^^^^^^^^
+
+By default, the plot will use the labels specified for each dataset (see :ref:'container-labels').
+If multiple fits are plotted to the same figure, the axis labels from the data containers are concatenated while skipping duplicates.
+Alternatively the axis labels can be overwritten for each fit.
+Again if multiple fits are plotted to the same figure, all labels will be concatenated while skipping duplicates.
+.. code-block::python
+    plot.x_label = 'x label'  # Overwrite the label of the x-axis
+    plot.y_label = 'y label'  # Overwrite the label of the y-axis
+
+Axis Scale
+^^^^^^^^^^
+
+Additionally the axis scale can be changed to logarithmic.
+When changing between a linear and logarithmic x-axis scale, the supporting points for plotting the model function will be updated and evenly spaced on a linear or logarithmic scale.
+.. code-block::python
+    plot.x_scale = 'linear'  # Set the scale of the x-axis to linear (default)
+    plot.y_scale = 'log'  # Set the scale of the y-axis to logarithmic
+
+The resulting plot will look like this:
+.. figure::doc/src/_static/img/005_customize_customized_plot.png
+    :alt: The customized plot
+
+If you want to plot multiple plot_objects you have to pass a list of matching length as the attribute:
+.. code-block:: python
+    # if all plots will have the same attribute you can waive the list an d just pass the attribute
+    plot.customize('model_error_band', 'hide', [True, False])
+
+In order to change the name for the data set and suppress the second output, use the following call:
+.. code-block:: python
+    plot.customize('data', 'label', [(0, "test data"), (1, '__del__')])
 
 .. _contours-profiler:
 
