@@ -18,7 +18,7 @@ line_fit.do_fit()
 
 # Non-LaTeX names are used in reports and other text-based output:
 line_fit.assign_parameter_names(x='t', a='alpha', b='beta')
-line_fit.assign_model_function_expression('theta')
+line_fit.assign_model_function_name('theta')
 line_fit.assign_model_function_expression("{a} * {x} + {b}")
 # Note: the model function expression is formatted as a Python string.
 #    The names of parameters in curly brackets will be replaced with the specified latex names.
