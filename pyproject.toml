@@ -9,7 +9,7 @@ authors = [
 	{ name="Daniel Savoiu", email="daniel.savoiu@cern.ch" },
 ]
 readme = "README.rst"
-requires-python= ">=3.7" # don't know wether this is right but python 3.8 is the lowest in the classifiers mentioned
+requires-python= ">=3.6" # don't know wether this is right but python 3.8 is the lowest in the classifiers mentioned
 keywords = ["kafe2", "kit", "karlsruhe", "data", "analysis", "lab", "laboratory", "practical courses", "education", "university", "students", "physics", "fitting", "minimization", "minimisation", "regression", "parametric", "parameter", "estimation", "optimization", "optimisation"]
 
 license = {text = "GPL3"}
