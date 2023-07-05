@@ -12,7 +12,7 @@ authors = [
 	{ name="Günter Quast", email="G.Quast@kit.edu" },
 ]
 readme = "README.rst"
-requires-python= ">=3.6" # don't know wether this is right but python 3.8 is the lowest in the classifiers mentioned
+requires-python= ">=3.6"
 keywords = ["kafe2", "kit", "karlsruhe", "data", "analysis", "lab", "laboratory", "practical courses", "education", "university", "students", "physics", "fitting", "minimization", "minimisation", "regression", "parametric", "parameter", "estimation", "optimization", "optimisation"]
 
 license = {text = "GPL3"}
@@ -46,8 +46,15 @@ dependencies = [
 ]
 dynamic = ["version"]
 
+[project.optional-dependencies]
+dev = [
+    "pylint ~=2.14.0",
+    "toml ~=0.10.2",
+    "yapf ~=0.32.0",
+]
+
 [tool.setuptools.dynamic]
-version = {attr = "kafe2._version_info.__version__"}	# todo: check wether this works
+version = {attr = "kafe2._version_info.__version__"}
 
 [project.urls]
 "Homepage" = "https://github.com/PhiLFitters/kafe2"
