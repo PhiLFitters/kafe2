@@ -9,6 +9,7 @@
 /examples/*/fit_?.png
 /examples/*/results
 /build
+/dist
 *.ipynb_checkpoints
 *.mypy_cache
 *.pyc
