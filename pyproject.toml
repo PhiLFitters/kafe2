@@ -46,13 +46,6 @@ dependencies = [
 ]
 dynamic = ["version"]
 
-[project.optional-dependencies]
-dev = [
-    "pylint ~=2.14.0",
-    "toml ~=0.10.2",
-    "yapf ~=0.32.0",
-]
-
 [tool.setuptools.dynamic]
 version = {attr = "kafe2._version_info.__version__"}
 

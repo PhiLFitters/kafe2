@@ -17,8 +17,8 @@ jobs:
 
       - name: Set up Python
         uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
+        with:
+          python-version: '3.x'
 
     - name: Setup build environment 
       run: |
@@ -33,4 +33,4 @@ jobs:
       env:
         TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-      run: twine upload dist/*
+      run: twine upload --verbose dist/*
