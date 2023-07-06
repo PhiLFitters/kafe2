@@ -27,6 +27,8 @@ classifiers = [
         "Topic :: Scientific/Engineering :: Visualization",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
@@ -43,18 +45,24 @@ dependencies = [
         "six",
         "funcsigs",
         "SymPy",
-        "coverage",
-        "sphinx",
-        "sphinx_bootstrap_theme",
-        "mock",
 ]
 dynamic = ["version"]
 
 [tool.setuptools.dynamic]
 version = {attr = "kafe2._version_info.__version__"}
 
+[project.optional-dependencies]
+dev = [
+    "coverage",
+    "sphinx",
+    "sphinx_bootstrap_theme",
+    "mock",
+    "pytest",
+    "flake8"
+]
+
 [project.urls]
-"Homepage" = "https://github.com/PhiLFitters/kafe2"
+"Homepage" = "https://philfitters.github.io/kafe2/"
 "Repository" = "https://github.com/PhiLFitters/kafe2"
 
 [tool.setuptools.packages.find]
