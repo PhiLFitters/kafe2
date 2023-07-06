@@ -546,7 +546,7 @@ Again if multiple fits are plotted to the same figure, all labels will be concat
 Axis Scale
 ^^^^^^^^^^
 
-Additionally the axis scale can be changed to logarithmic.
+Additionally the axis scale can be set as logarithmic (base 10) rather than linear.
 When changing between a linear and logarithmic x-axis scale, the supporting points for plotting the model function will be updated and evenly spaced on a linear or logarithmic scale.
 .. code-block::python
     plot.x_scale = 'linear'  # Set the scale of the x-axis to linear (default)
