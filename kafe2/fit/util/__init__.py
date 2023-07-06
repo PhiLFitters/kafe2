@@ -2,7 +2,7 @@ r"""This submodule provides utility functions for other modules.
 
 :synopsis: This submodule provides utility functions for other modules.
 
-.. moduleauthor:: Johannes Gaessler <johannes.gaessler@student.kit.edu>
+.. moduleauthor:: Johannes Gäßler <johannes.gaessler@cern.ch>
 """
 
 import warnings

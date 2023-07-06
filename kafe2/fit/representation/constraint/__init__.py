@@ -2,7 +2,7 @@
 
 :synopsis: This submodule contains objects for handling different representations of fit objects.
 
-.. moduleauthor:: Johannes Gaessler <johannes.gaessler@student.kit.edu>
+.. moduleauthor:: Johannes Gäßler <johannes.gaessler@cern.ch>
 """
 
 from ._base import *
