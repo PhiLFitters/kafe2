@@ -7,7 +7,7 @@ name = "kafe2"
 description = "Karlsruhe Fit Environment 2: a package for fitting and elementary data analysis"
 authors = [
 	{ name="Daniel Savoiu", email="daniel.savoiu@cern.ch" },
-	{ name="Johannes Gäßler", email="johannesg@5d6.de" },
+	{ name="Johannes Gäßler", email="johannes.gaessler@cern.ch" },
 	{ name="Cedric Verstege", email="cedric.verstege@cern.ch" },
 	{ name="Günter Quast", email="G.Quast@kit.edu" },
 ]
