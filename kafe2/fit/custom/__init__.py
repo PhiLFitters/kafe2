@@ -5,7 +5,7 @@ parameter profiles and contours can still be created.
 :synopsis: This submodule provides the necessary objects for parameter estimation using only a cost
 function without explicit data and model.
 
-.. moduleauthor:: Johannes Gaessler <johannes.gaessler@student.kit.edu>
+.. moduleauthor:: Johannes Gäßler <johannes.gaessler@cern.ch>
 """
 
 from .fit import *
