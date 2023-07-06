@@ -519,7 +519,7 @@ To hide specific elements of the plot (e.g. error bands) you can do this:
     plot.customize('model_error_band', 'hide', True)
 
 Additionally it is possible to change parameters using matplotlib functions.
-Changing the size of the axis labels is done with the following calls:
+For example, the size of the axis labels can be changed with the following calls:
 .. code-block:: python
     import matplotlib as mpl
     mpl.rc('axes', labelsize=20, titlesize=25)
