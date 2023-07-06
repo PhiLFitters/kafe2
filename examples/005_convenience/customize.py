@@ -35,7 +35,7 @@ customized_fit.do_fit()
 
 # Non-LaTeX names are used in reports and other text-based output:
 customized_fit.assign_parameter_names(x='t', a='alpha', b='beta')
-customized_fit.assign_model_function_expression('theta')
+customized_fit.assign_model_function_name('theta')
 customized_fit.assign_model_function_expression("{a} * {x} + {b}")
 # Note: the model function expression is formatted as a Python string.
 # The names of parameters in curly brackets will be replaced with the specified names.
