@@ -43,6 +43,10 @@ dependencies = [
         "six",
         "funcsigs",
         "SymPy",
+        "coverage",
+        "sphinx",
+        "sphinx_bootstrap_theme",
+        "mock",
 ]
 dynamic = ["version"]
 
