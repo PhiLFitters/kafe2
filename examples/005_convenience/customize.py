@@ -55,7 +55,7 @@ customized_fit.assign_model_function_latex_expression('{a} \\cdot {x} + {b}')
 customized_fit.data_container.label = "data label"
 customized_fit.model_label = "model label"
 
-# The labels displayed on the x- and y-axis:
+# The labels displayed on the x and y axis:
 customized_fit.data_container.axis_labels = ["x label", "y label"]
 
 # We also create a new Plot object to demonstrate the customizability:
