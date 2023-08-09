@@ -4,8 +4,10 @@ SHELL := /bin/bash
 .SILENT: clean
 .IGNORE: clean
 
-build:	clean
+# build the package from the source
+build:
 	python -m build
+	twine check --strict dist/*
 
 clean:
 	rm -rf build/
@@ -13,15 +15,15 @@ clean:
 	rm -rf kafe2.egg-info/
 	rm -rf venv/
 	rm -rf `find . -type d -name __pycache__`
-	#cd docs && $(MAKE) clean
+	cd doc && $(MAKE) clean
 
-upload: build
-	twine upload dist/*
-
-venv:	build #docs
+# create a development environment
+devenv:	build 
 	python -m venv venv/
-	. venv/bin/activate; pip install dist/kafe2*.tar.gz
-	. venv/bin/activate; pip install ptpython
+	. venv/bin/activate; pip install -e .[dev]
 
-#docs:	build
-	#cd docs && $(MAKE) html
+docs:	build devenv
+	. venv/bin/activate; cd doc && $(MAKE) html 
+
+publish: build docs
+	twine upload ./dist/*
