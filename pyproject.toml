@@ -74,3 +74,6 @@ kafe2go = "kafe2.fit.tools.kafe2go:kafe2go"
 [tool.setuptools.package-data]
 kafe2 = ["config/*.conf", "config/*.yaml", "config/*.yml", "fit/tools/kafe2go"]
 
+[tool.pytest.ini_options]
+testpaths = "kafe2/test"
+python_files = "test*.py"
