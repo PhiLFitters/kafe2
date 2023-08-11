@@ -78,3 +78,14 @@ kafe2 = ["config/*.conf", "config/*.yaml", "config/*.yml", "fit/tools/kafe2go"]
 [tool.pytest.ini_options]
 testpaths = "kafe2/test"
 python_files = "test*.py"
+
+[tool.coverage.run]
+source = [
+	"kafe2",
+]
+omit = [
+	"kafe2/test/*",
+]
+command_line= '-m unittest discover -v -s kafe2/test -p "*.py"'
+
+
