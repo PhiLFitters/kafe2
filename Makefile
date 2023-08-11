@@ -16,6 +16,7 @@ clean:
 	rm -rf venv/
 	rm -rf `find . -type d -name __pycache__`
 	cd doc && $(MAKE) clean
+	rm -f test-*.yml
 
 # create a development environment
 devenv:	build 
@@ -27,3 +28,6 @@ docs:	build devenv
 
 publish: build docs
 	twine upload ./dist/*
+
+test: build
+	pytest
