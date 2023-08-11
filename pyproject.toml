@@ -10,6 +10,7 @@ authors = [
 	{ name="Johannes Gäßler", email="johannes.gaessler@cern.ch" },
 	{ name="Cedric Verstege", email="cedric.verstege@cern.ch" },
 	{ name="Günter Quast", email="G.Quast@kit.edu" },
+	{ name="Michael Hohenstein", email="michael@hohenste.in" },
 ]
 readme = "README.rst"
 requires-python= ">=3.6"
