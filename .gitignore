@@ -51,7 +51,7 @@ coverage.xml
 .pytest_cache/
 cover/
 
-# pytest output files
+# files generated during test to check the write to and load from file feature including kafe2go
 test-*.yml
 
 # Translations
