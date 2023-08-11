@@ -31,3 +31,4 @@ publish: build docs
 
 test: build
 	pytest
+	coverage run
