@@ -45,7 +45,7 @@ Indexed data
 
 Compared to *xy* data indexed data no longer has an explicit *x* axis.
 The data simply appears as an indexed list of data points.
-As a consequence the model function does not expect an indendent variable.
+As a consequence the model function does not expect an independent variable.
 
 The following objects are provided for handling indexed data, as described above:
 
