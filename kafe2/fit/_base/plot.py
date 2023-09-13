@@ -1,25 +1,25 @@
 import abc
+import itertools
+import os
+import textwrap
+import warnings
+from collections import OrderedDict
+from collections.abc import Iterable
+
+import matplotlib as mpl
 import numpy  # help IDEs with type-hinting inside docstrings
 import numpy as np
 import six
-import textwrap
-import warnings
-import itertools
-import matplotlib as mpl
-import os
-from collections.abc import Iterable
+from matplotlib import gridspec as gs
+from matplotlib import pyplot as plt
+from matplotlib import rcParams, rc_context
+from matplotlib.legend_handler import HandlerBase
 
 from .container import DataContainerBase
 from .format import ParameterFormatter
 from ..multi.fit import MultiFit
 from ..util.wrapper import _fit_history
 from ...config import kc, ConfigError, kafe2_rc
-
-from collections import OrderedDict
-from matplotlib import pyplot as plt
-from matplotlib import gridspec as gs
-from matplotlib.legend_handler import HandlerBase
-from matplotlib import rcParams, rc_context
 
 try:
     import typing  # help IDEs with type-hinting inside docstrings
@@ -71,7 +71,7 @@ class Cycler(object):
         self._prop_val_sizes = np.array(_pv_sizes, dtype=int)
         self._counter_divisors = np.ones_like(self._prop_val_sizes, dtype=int)
         for i in range(1, self._dim):
-            self._counter_divisors[i] = self._counter_divisors[i-1] * self._prop_val_sizes[i-1]
+            self._counter_divisors[i] = self._counter_divisors[i - 1] * self._prop_val_sizes[i - 1]
         self._cycle_counter = 0
 
     # public properties
@@ -83,7 +83,7 @@ class Cycler(object):
     # public methods
 
     def get(self, cycle_position):
-        _prop_positions = [(cycle_position//self._counter_divisors[i]) % self._prop_val_sizes[i]
+        _prop_positions = [(cycle_position // self._counter_divisors[i]) % self._prop_val_sizes[i]
                            for i in six.moves.range(self._dim)]
         _ps = {}
         for _i, _content in enumerate(self._props):
@@ -120,6 +120,7 @@ class Cycler(object):
 
 class DummyLegendHandler(HandlerBase):
     """Dummy legend handler (nothing is drawn)"""
+
     def legend_artist(self, *args, **kwargs):
         return None
 
@@ -164,6 +165,11 @@ class PlotAdapterBase:
             plot_style_as='data',
             plot_adapter_method='plot_residual',
             target_axes='residual',
+        ),
+        pull=dict(
+            plot_style_as='data',
+            plot_adapter_method='plot_pull',
+            target_axes='pull',
         ),
     )
 
@@ -261,7 +267,8 @@ class PlotAdapterBase:
                     self.update_plot_kwargs(plot_model_name, dict(label=self._fit.model_label))
                 except ValueError:
                     pass  # no model plot function available
-            _model_error_name = kc('fit', 'plot', 'error_label') % dict(model_label=self._fit.model_label) \
+            _model_error_name = kc('fit', 'plot', 'error_label') % dict(
+                model_label=self._fit.model_label) \
                 if self._fit.model_label != '__del__' else '__del__'
             try:
                 self.update_plot_kwargs('model_error_band', dict(label=_model_error_name))
@@ -283,10 +290,12 @@ class PlotAdapterBase:
         _plot_style_as = _subplots[plot_type].get('plot_style_as', plot_type)
 
         # retrieve default plot keywords from style config
-        _kwargs = dict(kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, _plot_style_as, 'plot_kwargs'))
+        _kwargs = dict(
+            kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, _plot_style_as, 'plot_kwargs'))
 
         # initialize property cycler from style config and commit keywords
-        _prop_cycler_args = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, _plot_style_as, 'property_cycler')
+        _prop_cycler_args = kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, _plot_style_as,
+                                          'property_cycler')
         _prop_cycler = Cycler(*_prop_cycler_args)
         _kwargs.update(**_prop_cycler.get(plot_index))
 
@@ -295,7 +304,7 @@ class PlotAdapterBase:
 
         # remove keywords set to the special value '__del__'
         _kwargs = {
-            _k : _v
+            _k: _v
             for _k, _v in six.iteritems(_kwargs)
             if _v != '__del__'
         }
@@ -309,7 +318,8 @@ class PlotAdapterBase:
         # calculate zorder if not explicitly given
         _n_defined_plot_types = len(_subplots)
         if 'zorder' not in _kwargs:
-            _kwargs['zorder'] = plot_index * _n_defined_plot_types + list(_subplots).index(plot_type)
+            _kwargs['zorder'] = plot_index * _n_defined_plot_types + list(_subplots).index(
+                plot_type)
 
         _container_valid = _subplots[plot_type].get("container_valid", None)
         if _container_valid is not None:
@@ -659,6 +669,25 @@ class PlotAdapterBase:
             **kwargs
         )
 
+    def plot_pull(self, target_axes, error_contributions=('data',), **kwargs):
+        """Plot the pull to a :py:obj:`matplotlib.axes.Axes` object.
+
+        :param matplotlib.axes.Axes target_axes: The :py:obj:`matplotlib` axes used for plotting.
+        :param error_contributions: Which error contributions to include when plotting the data.
+            Can either be ``data``, ``'model'`` or both.
+        :type error_contributions: str or Tuple[str]
+        :param dict kwargs: Keyword arguments accepted by :py:obj:`matplotlib.pyplot.errorbar`.
+        :return: plot handle(s)
+        """
+        # TODO: how to handle case when x and y error/model differ?
+        return target_axes.errorbar(
+            self.data_x,
+            (self.data_y - self.model_y) / self._get_total_error(error_contributions),
+            xerr=self.data_xerr,
+            yerr=self._get_total_error(error_contributions),
+            **kwargs
+        )
+
     # Overridden by multi plot adapters
     def get_formatted_model_function(self, **kwargs):
         """return model function string"""
@@ -669,6 +698,7 @@ class PlotAdapterBase:
     def model_function_parameter_formatters(self):
         """The model function parameter formatters, excluding the independent variable."""
         return self._fit.model_function.formatter.par_formatters
+
 
 # -- must come last!
 
@@ -769,11 +799,12 @@ class Plot:
 
         # create named axes
         self._current_axes = self._figure_dicts[-1]['axes'] = {
-            _k : self._current_figure.add_subplot(_plot_axes_gs[_i, 0])
+            _k: self._current_figure.add_subplot(_plot_axes_gs[_i, 0])
             for _i, _k in enumerate(axes_keys)
         }
         # create a fake axes for the legend
-        self._current_axes['__legendfakeaxes__'] = self._current_figure.add_subplot(_plot_axes_gs[:, 1])
+        self._current_axes['__legendfakeaxes__'] = self._current_figure.add_subplot(
+            _plot_axes_gs[:, 1])
         self._current_axes['__legendfakeaxes__'].set_visible(False)
 
         # make all axes share the 'x' axis of the first axes
@@ -810,11 +841,11 @@ class Plot:
                 if not _plot_adapter._fit.did_fit and not _plot_adapter.from_container:
                     warnings.warn(
                         "No fit has been performed for {}. Did you forget to run fit.do_fit()?"
-                            .format(_plot_adapter._fit))
+                        .format(_plot_adapter._fit))
         elif not self._multifit.did_fit:
             warnings.warn(
                 "No fit has been performed for {}. Did you forget to run fit.do_fit()?"
-                    .format(self._multifit))
+                .format(self._multifit))
 
         _plots = {}
         for _i_pdc, _pdc in zip(plot_indices, _plot_adapters):
@@ -836,7 +867,7 @@ class Plot:
                 _plot_kwargs = _pdc._get_subplot_kwargs(_i_pdc, _pt)
                 if 'zorder' not in _plot_kwargs:
                     _plot_kwargs['zorder'] = 0
-                _plot_kwargs['zorder'] = _plot_kwargs['zorder'] - 10*_i_pdc
+                _plot_kwargs['zorder'] = _plot_kwargs['zorder'] - 10 * _i_pdc
 
                 _artist = _pdc.call_plot_method(_pt,
                                                 target_axes=self._get_axes(_axes_key),
@@ -844,10 +875,10 @@ class Plot:
                                                 )
 
                 _axes_plots.append({
-                    'type' : _pt,
-                    'fit_index' : _i_pdc,
-                    'adapter' : _pdc,
-                    'artist' : _artist,
+                    'type': _pt,
+                    'fit_index': _i_pdc,
+                    'adapter': _pdc,
+                    'artist': _artist,
                 })
 
                 if _pdc.x_range is not None:
@@ -975,7 +1006,8 @@ class Plot:
             _info_text += _template.format(**_multi_info_dict)
         return _info_text
 
-    def _render_legend(self, plot_results, axes_keys, fit_info=True, asymmetric_parameter_errors=False, **kwargs):
+    def _render_legend(self, plot_results, axes_keys, fit_info=True,
+                       asymmetric_parameter_errors=False, **kwargs):
         """render the legend for axes `axes_keys`"""
         for _axes_key in axes_keys:
             _axes = self._get_axes(_axes_key)
@@ -1053,12 +1085,12 @@ class Plot:
             # and produce undesirable layouts
 
             _leg = _axes.get_figure().legend(_hs_sorted, _ls_sorted,
-                         mode=_mode,
-                         borderaxespad=_borderaxespad,
-                         ncol=_ncol,
-                         fontsize=rcParams["font.size"],
-                         handler_map={'_nokey_': DummyLegendHandler()},
-                         **kwargs)
+                                             mode=_mode,
+                                             borderaxespad=_borderaxespad,
+                                             ncol=_ncol,
+                                             fontsize=rcParams["font.size"],
+                                             handler_map={'_nokey_': DummyLegendHandler()},
+                                             **kwargs)
             _leg.set_zorder(_zorder)
 
             # manually change bbox from figure to axes
@@ -1283,11 +1315,12 @@ class Plot:
         """Convenience wrapper for matplotlib.pyplot.show()"""
         plt.show(*args, **kwargs)
 
-
     def plot(self, legend=True, fit_info=True, asymmetric_parameter_errors=False,
              ratio=False, ratio_range=None, ratio_height_share=0.25,
              residual=False, residual_range=None, residual_height_share=0.25,
-             plot_width_share=0.5, font_scale=1.0, figsize=None):
+             pull=False, pull_range=None, pull_height_share=0.25,
+             plot_width_share=0.5, figsize=None,
+             font_scale=1.0):
         """
         Plot data, model (and other subplots) for all child :py:obj:`Fit` objects.
 
@@ -1312,8 +1345,9 @@ class Plot:
         :return: dictionary containing information about the plotted objects
         :rtype: dict
         """
-        if ratio and residual:
-            raise NotImplementedError("Cannot plot ratio and residual at the same time.")
+        if sum([ratio, residual, pull]) > 1:
+            raise NotImplementedError(
+                "Cannot plot more than one of ratio, residual and pull at the same time.")
 
         with rc_context(kafe2_rc):
             rcParams["font.size"] *= font_scale
@@ -1329,6 +1363,10 @@ class Plot:
                 _axes_keys += ('residual',)
                 _height_ratios[0] -= residual_height_share
                 _height_ratios.append(residual_height_share)
+            elif pull:
+                _axes_keys += ('pull',)
+                _height_ratios[0] -= pull_height_share
+                _height_ratios.append(pull_height_share)
 
             _all_plot_results = []
             for i in range(len(self._fits) if self._separate_figs else 1):
@@ -1339,14 +1377,16 @@ class Plot:
                     figsize=figsize,
                 )
 
-                _plot_results = self._plot_and_get_results(plot_indices=(i,) if self._separate_figs else None)
+                _plot_results = self._plot_and_get_results(
+                    plot_indices=(i,) if self._separate_figs else None)
 
                 # set axis scales for the main plot, x-axis is shared with ratio plot
                 self._get_axes('main').set_xscale(self.x_scale[i])
                 self._get_axes('main').set_yscale(self.y_scale[i])
 
                 if legend:
-                    self._render_legend(plot_results=_plot_results, axes_keys=('main',), fit_info=fit_info,
+                    self._render_legend(plot_results=_plot_results, axes_keys=('main',),
+                                        fit_info=fit_info,
                                         asymmetric_parameter_errors=asymmetric_parameter_errors)
 
                 self._adjust_plot_ranges(_plot_results)
@@ -1362,14 +1402,14 @@ class Plot:
                     _ratio_label = kc('fit', 'plot', 'ratio_label')
                     _axis.set_ylabel(_ratio_label)
                     if ratio_range is None:
-                        _plot_adapters = (self._get_plot_adapters()[i:i+1] if self._separate_figs
+                        _plot_adapters = (self._get_plot_adapters()[i:i + 1] if self._separate_figs
                                           else self._get_plot_adapters())
                         _max_abs_deviation = 0
                         for _plot_adapter in _plot_adapters:
                             _max_abs_deviation = max(_max_abs_deviation, np.max(
                                 (
-                                    np.abs(_plot_adapter.data_yerr)
-                                    + np.abs(_plot_adapter.data_y - _plot_adapter.model_y)
+                                        np.abs(_plot_adapter.data_yerr)
+                                        + np.abs(_plot_adapter.data_y - _plot_adapter.model_y)
                                 ) / np.abs(_plot_adapter.model_y)
                             ))
                         # Small gap between highest error bar and plot border:
@@ -1378,12 +1418,13 @@ class Plot:
                         _axis.set_ylim((_low, _high))
                     else:
                         _axis.set_ylim(ratio_range)
+
                 if residual:
                     _axis = self._current_axes['residual']
                     _residual_label = kc('fit', 'plot', 'residual_label')
                     _axis.set_ylabel(_residual_label)
                     if residual_range is None:
-                        _plot_adapters = (self._get_plot_adapters()[i:i+1] if self._separate_figs
+                        _plot_adapters = (self._get_plot_adapters()[i:i + 1] if self._separate_figs
                                           else self._get_plot_adapters())
                         _max_abs_deviation = 0
                         for _plot_adapter in _plot_adapters:
@@ -1397,6 +1438,27 @@ class Plot:
                         _axis.set_ylim((_low, _high))
                     else:
                         _axis.set_ylim(residual_range)
+
+                    if pull:
+                        _axis = self._current_axes['pull']
+                        _pull_label = kc('fit', 'plot', 'pull_label')
+                        _axis.set_ylabel(_pull_label)
+                        if pull_range is None:
+                            _plot_adapters = (
+                                self._get_plot_adapters()[i:i + 1] if self._separate_figs
+                                else self._get_plot_adapters())
+                            _max_abs_deviation = 0
+                            for _plot_adapter in _plot_adapters:
+                                _max_abs_deviation = max(_max_abs_deviation, np.max(
+                                    np.abs(_plot_adapter.data_yerr)
+                                    + np.abs(_plot_adapter.data_y - _plot_adapter.model_y)
+                                ))
+                            # Small gap between highest error bar and plot border:
+                            _low = -_max_abs_deviation * 1.05
+                            _high = _max_abs_deviation * 1.05
+                            _axis.set_ylim((_low, _high))
+                        else:
+                            _axis.set_ylim(pull_range)
 
                 _all_plot_results.append(_plot_results)
 

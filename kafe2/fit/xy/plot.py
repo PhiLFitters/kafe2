@@ -1,15 +1,14 @@
 import numpy  # help IDEs with type-hinting inside docstrings
 
-from .._base import PlotAdapterBase
 from .._aux import add_pad_to_range
-np = numpy
+from .._base import PlotAdapterBase
 
+np = numpy
 
 __all__ = ["XYPlotAdapter"]
 
 
 class XYPlotAdapter(PlotAdapterBase):
-
     PLOT_STYLE_CONFIG_DATA_TYPE = 'xy'
     PLOT_SUBPLOT_TYPES = dict(
         PlotAdapterBase.PLOT_SUBPLOT_TYPES,
@@ -31,6 +30,11 @@ class XYPlotAdapter(PlotAdapterBase):
             plot_adapter_method='plot_residual_error_band',
             target_axes='residual'
         ),
+        pull_error_band=dict(
+            plot_style_as='model_error_band',
+            plot_adapter_method='plot_pull_error_band',
+            target_axes='pull'
+        ),
     )
 
     AVAILABLE_X_SCALES = ('linear', 'log')
@@ -45,7 +49,7 @@ class XYPlotAdapter(PlotAdapterBase):
         """
         self._fit = xy_fit_object  # needed for type hinting to work correctly
         super(XYPlotAdapter, self).__init__(fit_object=xy_fit_object, from_container=from_container)
-        self.n_plot_points = max(200, 4*len(self.data_x))
+        self.n_plot_points = max(200, 4 * len(self.data_x))
         self.x_range = add_pad_to_range(self._fit.x_range, scale=self.x_scale)
 
     # -- public properties
@@ -206,11 +210,30 @@ class XYPlotAdapter(PlotAdapterBase):
             _y = self.model_line_y
             return target_axes.fill_between(
                 self.model_line_x,
-                1 - _band_y/_y, 1 + _band_y/_y,
+                1 - _band_y / _y, 1 + _band_y / _y,
                 **kwargs)
         return None  # don't plot error band if fitter input data has no errors...
 
     def plot_residual_error_band(self, target_axes, **kwargs):
+        # FIXME: Description is wrong
+        """Plot model error band around the data/model ratio to specified
+        :py:obj:`matplotlib.axes.Axes` object.
+
+        :param matplotlib.axes.Axes target_axes: The :py:obj:`matplotlib` axes used for plotting.
+        :param dict kwargs: Keyword arguments accepted by :py:obj:`matplotlib.pyplot.fill_between`.
+        :return: plot handle(s)
+        """
+        if self._fit.did_fit and (
+                self._fit.has_errors or not self._fit._cost_function.needs_errors):
+            _band_y = self.y_error_band
+            return target_axes.fill_between(
+                self.model_line_x,
+                -_band_y, _band_y,
+                **kwargs)
+        return None  # don't plot error band if fitter input data has no errors...
+
+    def plot_pull_error_band(self, target_axes, **kwargs):
+        # FIXME: Description is wrong
         """Plot model error band around the data/model ratio to specified
         :py:obj:`matplotlib.axes.Axes` object.
 
@@ -231,7 +254,9 @@ class XYPlotAdapter(PlotAdapterBase):
         # update ratio kwargs as well, when corresponding plot_types are updated
         # can be overwritten by the user by explicitly setting the ratio kwargs last
         if plot_type == 'data':
-            super(XYPlotAdapter, self).update_plot_kwargs(plot_type='ratio', plot_kwargs=plot_kwargs)
+            super(XYPlotAdapter, self).update_plot_kwargs(plot_type='ratio',
+                                                          plot_kwargs=plot_kwargs)
         elif plot_type == 'model_error_band':
-            super(XYPlotAdapter, self).update_plot_kwargs(plot_type='ratio_error_band', plot_kwargs=plot_kwargs)
+            super(XYPlotAdapter, self).update_plot_kwargs(plot_type='ratio_error_band',
+                                                          plot_kwargs=plot_kwargs)
         super(XYPlotAdapter, self).update_plot_kwargs(plot_type=plot_type, plot_kwargs=plot_kwargs)

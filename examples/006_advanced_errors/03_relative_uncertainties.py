@@ -10,7 +10,7 @@ Instead, the option reference='model' allows the uncertainties to be dependent o
 - still not completely correct, but much better.
 """
 
-from kafe2 import XYContainer, Fit, Plot, ContoursProfiler
+from kafe2 import XYContainer, Fit, Plot
 
 x = [19.8, 3.0, 5.1, 16.1, 8.2,  11.7, 6.2, 10.1]
 y = [23.2, 3.2, 4.5, 19.9, 7.1, 12.5, 4.5, 7.2]
@@ -42,12 +42,13 @@ plot.customize('data', 'ecolor', ('red', 'grey'))
 plot.customize('model_line', 'color', ('orange', 'mistyrose'))
 plot.customize('model_error_band', 'label', (r'$\pm 1 \sigma$', r'$\pm 1 \sigma$'))
 plot.customize('model_error_band', 'color', ('orange', 'mistyrose'))
-plot.plot(ratio=True)
+# Test for pull plot
+plot.plot(pull=True)
 
-cpf1 = ContoursProfiler(linear_fit1)
-cpf1.plot_profiles_contours_matrix(show_grid_for='contours')
-
-cpf2 = ContoursProfiler(linear_fit2)
-cpf2.plot_profiles_contours_matrix(show_grid_for='contours')
+# cpf1 = ContoursProfiler(linear_fit1)
+# cpf1.plot_profiles_contours_matrix(show_grid_for='contours')
+#
+# cpf2 = ContoursProfiler(linear_fit2)
+# cpf2.plot_profiles_contours_matrix(show_grid_for='contours')
 
 plot.show()

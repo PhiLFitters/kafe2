@@ -1,15 +1,13 @@
 import numpy as np
 from matplotlib.collections import LineCollection
 
-from .._base import PlotAdapterBase
 from .._aux import add_pad_to_range
-
+from .._base import PlotAdapterBase
 
 __all__ = ["UnbinnedPlotAdapter"]
 
 
 class UnbinnedPlotAdapter(PlotAdapterBase):
-
     PLOT_STYLE_CONFIG_DATA_TYPE = 'unbinned'
 
     PLOT_SUBPLOT_TYPES = dict(
@@ -151,9 +149,9 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
 
         if height is None:
             if self.y_scale == 'linear':
-                height = self.y_range[1]/10  # set height to 1/10th of the max height of the model
+                height = self.y_range[1] / 10  # set height to 1/10th of the max height of the model
             elif self.y_scale == 'log':
-                height = 10**(np.log10(self.y_range[1])/10)
+                height = 10 ** (np.log10(self.y_range[1]) / 10)
 
         data = self.data_x
         xy_pairs = np.column_stack([np.repeat(data, 2),
@@ -177,6 +175,9 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
 
     def plot_residual(self, target_axes, error_contributions=('data',), **kwargs):
         raise TypeError("Residuals cannot be plotted for unbinned fits.")
+
+    def plot_pull(self, target_axes, error_contributions=('data',), **kwargs):
+        raise TypeError("Pull cannot be plotted for unbinned fits.")
 
     def plot_model_line(self, target_axes, **kwargs):
         """
