@@ -4,7 +4,6 @@ import numpy as np
 
 from ...config import kc
 from ..minimizers import get_minimizer
-
 from .nexus import Nexus
 
 
