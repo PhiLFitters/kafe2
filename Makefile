@@ -1,8 +1,13 @@
 
 SHELL := /bin/bash
 
-.SILENT: clean
+.SILENT: clean lint
 .IGNORE: clean
+
+BLUE:=\033[0;34m
+NC:=\033[0m # No Color
+BOLD:=$(tput bold)
+NORM:=$(tput sgr0)
 
 # build the package from the source
 build:
@@ -19,12 +24,12 @@ clean:
 	rm -f test-*.yml
 
 # create a development environment
-devenv:	build 
+devenv:	build
 	python -m venv venv/
 	. venv/bin/activate; pip install -e .[dev]
 
 docs:	build devenv
-	. venv/bin/activate; cd doc && $(MAKE) html 
+	. venv/bin/activate; cd doc && $(MAKE) html
 
 publish: build docs
 	twine upload ./dist/*
@@ -32,3 +37,15 @@ publish: build docs
 test: build
 	pytest
 	coverage run
+
+lint:
+# $make devenv must be called before this and the venv has to be activated.
+# Otherwise the packages isort, black and flake8 might be missing.
+	echo -e "$(BLUE)${BOLD}ISORT${NC}$(NORM)"
+	isort --check --diff ./kafe2
+
+	echo -e "$(BLUE)${BOLD}BLACK${NC}$(NORM)"
+	black --check --diff ./kafe2
+
+	echo -e "$(BLUE)${BOLD}FLAKE8${NC}$(NORM)"
+	flake8 --config .flake8 ./kafe2

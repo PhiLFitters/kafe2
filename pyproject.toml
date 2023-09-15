@@ -41,7 +41,7 @@ dependencies = [
         "Numdifftools",
         "Scipy",
         "tabulate",
-        "matplotlib",
+        "matplotlib < 3.8",
         "PyYaml",
         "six",
         "funcsigs",
@@ -59,7 +59,11 @@ dev = [
     "sphinx_bootstrap_theme",
     "mock",
     "pytest",
-    "flake8"
+    "flake8",
+    "black",
+    "isort",
+    "build",
+    "twine", 
 ]
 
 [project.urls]
@@ -88,4 +92,9 @@ omit = [
 ]
 command_line= '-m unittest discover -v -s kafe2/test -p "*.py"'
 
+[tool.black]
+line-length = 100
+
+[tool.isort]
+profile = "black"
 
