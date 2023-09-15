@@ -4,7 +4,7 @@ import numpy as np
 
 from ..indexed import IndexedContainer
 
-__all__ = ['HistContainer']
+__all__ = ["HistContainer"]
 
 
 class HistContainer(IndexedContainer):
@@ -20,6 +20,7 @@ class HistContainer(IndexedContainer):
     ..    :parts: 1
 
     """
+
     def __init__(self, n_bins=None, bin_range=None, bin_edges=None, fill_data=None, dtype=int):
         """
         Construct a histogram:
@@ -43,24 +44,32 @@ class HistContainer(IndexedContainer):
             if n_bins is None:
                 n_bins = len(bin_edges) - 1
             if n_bins != len(bin_edges) - 1 and n_bins != len(bin_edges) + 1:
-                raise ValueError(f"n_bins is {n_bins} but bin_edges implies either "
-                                 f"{len(bin_edges) - 1} or {len(bin_edges) - 1} bins")
+                raise ValueError(
+                    f"n_bins is {n_bins} but bin_edges implies either "
+                    f"{len(bin_edges) - 1} or {len(bin_edges) - 1} bins"
+                )
             if bin_range is None:
                 bin_range = (bin_edges[0], bin_edges[-1])
             if n_bins == len(bin_edges) - 1:
                 if bin_range[0] != bin_edges[0] or bin_range[1] != bin_edges[-1]:
-                    raise ValueError(f"bin_range is {bin_range} but bin_edges implies "
-                                     f"{(bin_edges[0], bin_edges[-1])}")
+                    raise ValueError(
+                        f"bin_range is {bin_range} but bin_edges implies "
+                        f"{(bin_edges[0], bin_edges[-1])}"
+                    )
             if n_bins == len(bin_edges) + 1:
                 if bin_range[0] > bin_edges[0] or bin_range[1] < bin_edges[-1]:
-                    raise ValueError(f"bin_range is {bin_range} but does not encompass inner "
-                                     f"bin edges {(bin_edges[0], bin_edges[-1])}")
+                    raise ValueError(
+                        f"bin_range is {bin_range} but does not encompass inner "
+                        f"bin edges {(bin_edges[0], bin_edges[-1])}"
+                    )
 
         if len(bin_range) != 2:
             raise ValueError(f"bin_range must be iterable of 2 floats but received {bin_range}")
         low, high = tuple(bin_range)
 
-        super(HistContainer, self).__init__(data=np.zeros(n_bins+2), dtype=dtype)  # underflow and overflow bins
+        super(HistContainer, self).__init__(
+            data=np.zeros(n_bins + 2), dtype=dtype
+        )  # underflow and overflow bins
         self._manual_heights = False
         self._processed_entries = []
         self._unprocessed_entries = []
@@ -76,7 +85,7 @@ class HistContainer(IndexedContainer):
                 assert False
         else:
             # construct own bin edges
-            self._bin_edges = np.linspace(bin_range[0], bin_range[1], n_bins+1)
+            self._bin_edges = np.linspace(bin_range[0], bin_range[1], n_bins + 1)
 
         if fill_data is not None:
             self.fill(fill_data)
@@ -86,8 +95,10 @@ class HistContainer(IndexedContainer):
     def _fill_unprocessed(self):
         """fill any entries marked as unprocessed into the histogram"""
         if self._manual_heights:
-            raise RuntimeError("The bin heights have been set manually. Filling entries is not "
-                               "available anymore. Please construct a new HistContainer!")
+            raise RuntimeError(
+                "The bin heights have been set manually. Filling entries is not "
+                "available anymore. Please construct a new HistContainer!"
+            )
         if not self._unprocessed_entries:
             return
         _entries_sorted = np.sort(self._unprocessed_entries)
@@ -121,13 +132,12 @@ class HistContainer(IndexedContainer):
             self._processed_entries.append(_current_entry_value)
             self._data[_current_bin_index] += 1
             _current_entry_index += 1
-            if _current_entry_index >= len(_entries_sorted):    # important BUGFIX!!!!!!!!!!
+            if _current_entry_index >= len(_entries_sorted):  # important BUGFIX!!!!!!!!!!
                 break
             _current_entry_value = _entries_sorted[_current_entry_index]
 
         # any remaining entries are overflows
-        if _current_entry_index < len(_entries_sorted):    # important BUGFIX!!!!!!!!!!
-
+        if _current_entry_index < len(_entries_sorted):  # important BUGFIX!!!!!!!!!!
             _overflow_entries = _entries_sorted[_current_entry_index:]
             self._data[-1] += len(_overflow_entries)
             # print "Bin %d (of): add %d entries" % (_current_bin_index+1, len(_overflow_entries))
@@ -162,7 +172,9 @@ class HistContainer(IndexedContainer):
 
     @data.setter
     def data(self, data):
-        raise TypeError("Changing histogram data directly is not allowed! Use fill() or set_bins().")
+        raise TypeError(
+            "Changing histogram data directly is not allowed! Use fill() or set_bins()."
+        )
 
     @property
     def raw_data(self):
@@ -209,13 +221,13 @@ class HistContainer(IndexedContainer):
     def bin_widths(self):
         """a list of the bin widths"""
         _be = self._bin_edges
-        return (_be[1:] - _be[:-1])
+        return _be[1:] - _be[:-1]
 
     @property
     def bin_centers(self):
         """a list of the (geometrical) bin centers"""
         _be = self._bin_edges
-        return 0.5*(_be[1:] + _be[:-1])
+        return 0.5 * (_be[1:] + _be[:-1])
 
     # -- public methods
 
@@ -227,11 +239,15 @@ class HistContainer(IndexedContainer):
         :type entries: list of floats
         """
         if self._manual_heights:
-            raise RuntimeError("The bin heights have been set manually. Filling additional data is not "
-                               "possible anymore. Please construct a new HistContainer!")
+            raise RuntimeError(
+                "The bin heights have been set manually. Filling additional data is not "
+                "possible anymore. Please construct a new HistContainer!"
+            )
         if np.asarray(entries).ndim > 1:
-            raise ValueError("Fill data must be scalar or one-dimensional "
-                             f"but received fill data with {np.asarray(entries).ndim} dimensions.")
+            raise ValueError(
+                "Fill data must be scalar or one-dimensional "
+                f"but received fill data with {np.asarray(entries).ndim} dimensions."
+            )
         try:
             self._unprocessed_entries += list(entries)
         except TypeError:
@@ -245,13 +261,16 @@ class HistContainer(IndexedContainer):
         :type new_bin_edges: list of float
         """
         if self._manual_heights:
-            raise RuntimeError("The bin heights have been set manually. Rebinning is not possible "
-                               "anymore. Please construct a new HistContainer!")
+            raise RuntimeError(
+                "The bin heights have been set manually. Rebinning is not possible "
+                "anymore. Please construct a new HistContainer!"
+            )
         _new_bin_edges = np.asarray(new_bin_edges, dtype=float)
         # check if list is sorted
         if not (np.diff(_new_bin_edges) >= 0).all():
             raise ValueError(
-                "Invalid bin edge specification! Edge sequence must be sorted in ascending order!")
+                "Invalid bin edge specification! Edge sequence must be sorted in ascending order!"
+            )
         self._bin_edges = _new_bin_edges
         self._data = np.zeros(len(self._bin_edges) - 1 + 2)
 
@@ -272,12 +291,16 @@ class HistContainer(IndexedContainer):
         self._manual_heights = True
         _new_data = np.array(bin_heights)
         if _new_data.ndim != 1:
-            raise ValueError('Invalid dimensions for bin heights. '
-                             f'Got {_new_data.ndim}-d array, expected 1-d array')
+            raise ValueError(
+                "Invalid dimensions for bin heights. "
+                f"Got {_new_data.ndim}-d array, expected 1-d array"
+            )
         _new_data = np.append(np.insert(_new_data, 0, underflow), overflow)
         if len(_new_data) != len(self._data):
-            raise ValueError('Length of bin entries does not match binning. '
-                             'Got {}, expected {}'.format(len(_new_data)-2, len(self._data)-2))
+            raise ValueError(
+                "Length of bin entries does not match binning. "
+                "Got {}, expected {}".format(len(_new_data) - 2, len(self._data) - 2)
+            )
         self._data = _new_data
         self._processed_entries = []
         self._unprocessed_entries = []

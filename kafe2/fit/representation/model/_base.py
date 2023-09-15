@@ -15,19 +15,19 @@ __all__ = ["ModelFunctionDReprBase", "ParametricModelDReprBase"]
 
 @six.add_metaclass(abc.ABCMeta)
 class ModelFunctionDReprBase(GenericDReprBase):
-    BASE_OBJECT_TYPE_NAME = 'model_function'
+    BASE_OBJECT_TYPE_NAME = "model_function"
 
     _CLASS_TO_OBJECT_TYPE_NAME = {
-        HistModelFunction: 'histogram',
-        IndexedModelFunction: 'indexed',
-        ModelFunctionBase: 'base'
+        HistModelFunction: "histogram",
+        IndexedModelFunction: "indexed",
+        ModelFunctionBase: "base",
     }
     _OBJECT_TYPE_NAME_TO_CLASS = {
-        'histogram': HistModelFunction,
-        'indexed': IndexedModelFunction,
-        'unbinned': ModelFunctionBase,
-        'xy': ModelFunctionBase,  # type from fit is passed to model function, needs to be resolved
-        'base': ModelFunctionBase
+        "histogram": HistModelFunction,
+        "indexed": IndexedModelFunction,
+        "unbinned": ModelFunctionBase,
+        "xy": ModelFunctionBase,  # type from fit is passed to model function, needs to be resolved
+        "base": ModelFunctionBase,
     }
 
     def __init__(self, model_function=None):
@@ -37,19 +37,19 @@ class ModelFunctionDReprBase(GenericDReprBase):
 
 @six.add_metaclass(abc.ABCMeta)
 class ParametricModelDReprBase(GenericDReprBase):
-    BASE_OBJECT_TYPE_NAME = 'model'
+    BASE_OBJECT_TYPE_NAME = "model"
 
     _CLASS_TO_OBJECT_TYPE_NAME = {
-        HistParametricModel: 'histogram',
-        IndexedParametricModel: 'indexed',
-        UnbinnedParametricModel: 'unbinned',
-        XYParametricModel: 'xy'
+        HistParametricModel: "histogram",
+        IndexedParametricModel: "indexed",
+        UnbinnedParametricModel: "unbinned",
+        XYParametricModel: "xy",
     }
     _OBJECT_TYPE_NAME_TO_CLASS = {
-        'histogram': HistParametricModel,
-        'indexed': IndexedParametricModel,
-        'unbinned': UnbinnedParametricModel,
-        'xy': XYParametricModel
+        "histogram": HistParametricModel,
+        "indexed": IndexedParametricModel,
+        "unbinned": UnbinnedParametricModel,
+        "xy": XYParametricModel,
     }
 
     def __init__(self, parametric_model=None):

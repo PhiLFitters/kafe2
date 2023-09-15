@@ -5,8 +5,11 @@ import six
 
 from ..fit.io.file import FileIOMixin
 
-__all__ = ['ParameterConstraint', 'GaussianSimpleParameterConstraint',
-           'GaussianMatrixParameterConstraint']
+__all__ = [
+    "ParameterConstraint",
+    "GaussianSimpleParameterConstraint",
+    "GaussianMatrixParameterConstraint",
+]
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -30,7 +33,7 @@ class ParameterConstraint(FileIOMixin, object):
         return ParameterConstraint
 
     def _get_object_type_name(self):
-        return 'parameter_constraint'
+        return "parameter_constraint"
 
     def cost(self, parameter_values):
         """
@@ -45,7 +48,6 @@ class ParameterConstraint(FileIOMixin, object):
 
 
 class GaussianSimpleParameterConstraint(ParameterConstraint):
-
     def __init__(self, index, value, uncertainty, relative=False):
         """
         Simple class for applying a gaussian constraint to a single parameter of a fit.
@@ -119,8 +121,9 @@ class GaussianSimpleParameterConstraint(ParameterConstraint):
 
 
 class GaussianMatrixParameterConstraint(ParameterConstraint):
-
-    def __init__(self, indices, values, matrix, matrix_type='cov', uncertainties=None, relative=False):
+    def __init__(
+        self, indices, values, matrix, matrix_type="cov", uncertainties=None, relative=False
+    ):
         """
         Advanced class for applying correlated constraints to several parameters of a fit.
         The order of ``indices``, ``values``, ``matrix``, and ``uncertainties`` must be aligned.
@@ -146,24 +149,27 @@ class GaussianMatrixParameterConstraint(ParameterConstraint):
 
         _matrix_array = np.array(matrix)
         if not np.array_equal(_matrix_array, _matrix_array.T):
-            raise ValueError('The matrix for parameter constraints must be symmetric!')
+            raise ValueError("The matrix for parameter constraints must be symmetric!")
         if len(self._values.shape) != 1 or self._values.shape * 2 != _matrix_array.shape:
             raise ValueError(
-                'Expected values and cov_mat to be of shapes (N, ), (N, N) but received shapes %s, %s instead!'
-                % (self._values.shape, _matrix_array.shape))
-        if matrix_type == 'cov':
+                "Expected values and cov_mat to be of shapes (N, ), (N, N) but received shapes %s, %s instead!"
+                % (self._values.shape, _matrix_array.shape)
+            )
+        if matrix_type == "cov":
             pass
-        elif matrix_type == 'cor':
+        elif matrix_type == "cor":
             if np.any(np.diag(_matrix_array) != 1.0):
-                raise ValueError('The correlation matrix has diagonal elements that aren\'t equal to 1!')
-            if np.any(_matrix_array> 1.0):
-                raise ValueError('The correlation matrix has elements greater than 1!')
+                raise ValueError(
+                    "The correlation matrix has diagonal elements that aren't equal to 1!"
+                )
+            if np.any(_matrix_array > 1.0):
+                raise ValueError("The correlation matrix has elements greater than 1!")
             if np.any(_matrix_array < -1.0):
-                raise ValueError('The correlation matrix has elements smaller than -1!')
+                raise ValueError("The correlation matrix has elements smaller than -1!")
         else:
-            raise ValueError('Unknown matrix_type: %s, must be either cov or cor!' % matrix_type)
+            raise ValueError("Unknown matrix_type: %s, must be either cov or cor!" % matrix_type)
 
-        if matrix_type == 'cov':
+        if matrix_type == "cov":
             if relative:
                 self._cov_mat_abs = None
                 self._cov_mat_rel = _matrix_array
@@ -174,7 +180,7 @@ class GaussianMatrixParameterConstraint(ParameterConstraint):
                 self._cor_mat = None
 
             if uncertainties is not None:
-                raise ValueError('Uncertainties can only be specified if matrix_type is cov!')
+                raise ValueError("Uncertainties can only be specified if matrix_type is cov!")
             self._uncertainties_abs = None
             self._uncertainties_rel = None
         else:
@@ -182,7 +188,7 @@ class GaussianMatrixParameterConstraint(ParameterConstraint):
             self._cov_mat_rel = None
             self._cor_mat = _matrix_array
             if uncertainties is None:
-                raise ValueError('If matrix_type is cor uncertainties must be specified!')
+                raise ValueError("If matrix_type is cor uncertainties must be specified!")
             if relative:
                 self._uncertainties_abs = None
                 self._uncertainties_rel = uncertainties
@@ -210,7 +216,7 @@ class GaussianMatrixParameterConstraint(ParameterConstraint):
     def cov_mat(self):
         """the absolute covariance matrix between the parameter uncertainties"""
         if self._cov_mat_abs is None:
-            if self.matrix_type == 'cov':
+            if self.matrix_type == "cov":
                 self._cov_mat_abs = self._cov_mat_rel * np.outer(self.values, self.values)
             else:
                 self._cov_mat_abs = self._cor_mat * np.outer(self.uncertainties, self.uncertainties)
@@ -220,10 +226,12 @@ class GaussianMatrixParameterConstraint(ParameterConstraint):
     def cov_mat_rel(self):
         """the covariance matrix between the parameter uncertainties relative to ``self.values``"""
         if self._cov_mat_rel is None:
-            if self.matrix_type == 'cov':
+            if self.matrix_type == "cov":
                 self._cov_mat_rel = self._cov_mat_abs / np.outer(self.values, self.values)
             else:
-                self._cov_mat_rel = self._cor_mat * np.outer(self.uncertainties_rel, self.uncertainties_rel)
+                self._cov_mat_rel = self._cor_mat * np.outer(
+                    self.uncertainties_rel, self.uncertainties_rel
+                )
         return self._cov_mat_rel
 
     @property
@@ -232,7 +240,9 @@ class GaussianMatrixParameterConstraint(ParameterConstraint):
         if self._cor_mat is None:
             # if the originally specified cov mat was relative, calculate the cor mat based on that
             if self._relative:
-                self._cor_mat = self.cov_mat_rel / np.outer(self.uncertainties_rel, self.uncertainties_rel)
+                self._cor_mat = self.cov_mat_rel / np.outer(
+                    self.uncertainties_rel, self.uncertainties_rel
+                )
             else:
                 self._cor_mat = self.cov_mat / np.outer(self.uncertainties, self.uncertainties)
         return self._cor_mat
@@ -241,7 +251,7 @@ class GaussianMatrixParameterConstraint(ParameterConstraint):
     def uncertainties(self):
         """the uncorrelated, absolute uncertainties for the parameters to be constrained to"""
         if self._uncertainties_abs is None:
-            if self.matrix_type == 'cov':
+            if self.matrix_type == "cov":
                 self._uncertainties_abs = np.sqrt(np.diag(self.cov_mat))
             else:
                 self._uncertainties_abs = self.uncertainties_rel * self.values
@@ -251,7 +261,7 @@ class GaussianMatrixParameterConstraint(ParameterConstraint):
     def uncertainties_rel(self):
         """the uncorrelated uncertainties for the parameters to be constrained to relative to ``self.values``"""
         if self._uncertainties_rel is None:
-            if self.matrix_type == 'cov':
+            if self.matrix_type == "cov":
                 self._uncertainties_rel = np.sqrt(np.diag(self.cov_mat_rel))
             else:
                 self._uncertainties_rel = self.uncertainties / self.values

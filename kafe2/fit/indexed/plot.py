@@ -7,8 +7,7 @@ __all__ = ["IndexedPlotAdapter"]
 
 
 class IndexedPlotAdapter(PlotAdapterBase):
-
-    PLOT_STYLE_CONFIG_DATA_TYPE = 'indexed'
+    PLOT_STYLE_CONFIG_DATA_TYPE = "indexed"
 
     PLOT_SUBPLOT_TYPES = dict(
         PlotAdapterBase.PLOT_SUBPLOT_TYPES,
@@ -24,7 +23,8 @@ class IndexedPlotAdapter(PlotAdapterBase):
         :type from_container: bool
         """
         super(IndexedPlotAdapter, self).__init__(
-            fit_object=indexed_fit_object, from_container=from_container)
+            fit_object=indexed_fit_object, from_container=from_container
+        )
         self.x_range = (-0.5, self._fit.data_size - 0.5)
 
     @property
@@ -65,7 +65,7 @@ class IndexedPlotAdapter(PlotAdapterBase):
     @property
     def model_yerr(self):
         """y error bars for model: ``None`` for :py:obj:`IndexedPlotContainer`"""
-        return None #self.fit.model_error
+        return None  # self.fit.model_error
 
     # public methods
 
@@ -78,9 +78,13 @@ class IndexedPlotAdapter(PlotAdapterBase):
         :return: plot handle(s)
         """
         if self._fit.has_errors:
-            _yerr = np.sqrt(self.data_yerr ** 2
-                            + self._fit._cost_function.get_uncertainty_gaussian_approximation(self.data_y) ** 2)
-            return target_axes.errorbar(self.data_x, self.data_y, xerr=self.data_xerr, yerr=_yerr, **kwargs)
+            _yerr = np.sqrt(
+                self.data_yerr**2
+                + self._fit._cost_function.get_uncertainty_gaussian_approximation(self.data_y) ** 2
+            )
+            return target_axes.errorbar(
+                self.data_x, self.data_y, xerr=self.data_xerr, yerr=_yerr, **kwargs
+            )
         _yerr = self._fit._cost_function.get_uncertainty_gaussian_approximation(self.data_y)
         if np.all(_yerr == 0):
             return target_axes.plot(self.data_x, self.data_y, **kwargs)
@@ -94,13 +98,13 @@ class IndexedPlotAdapter(PlotAdapterBase):
         :param kwargs: keyword arguments accepted by the :py:func:`~kafe2._aux.step_fill_between` method
         :return: plot handle(s)
         """
-        return step_fill_between(target_axes,
-                                 self.model_x,
-                                 self.model_y,
-                                 xerr=self.model_xerr,
-                                 yerr=self.model_yerr,
-                                 draw_central_value=True,
-                                 continuous=False,
-                                 **kwargs
-                                 )
-
+        return step_fill_between(
+            target_axes,
+            self.model_x,
+            self.model_y,
+            xerr=self.model_xerr,
+            yerr=self.model_yerr,
+            draw_central_value=True,
+            continuous=False,
+            **kwargs,
+        )

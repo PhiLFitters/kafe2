@@ -12,18 +12,18 @@ __all__ = ["ModelFunctionFormatterDReprBase", "ParameterFormatterDReprBase"]
 
 @six.add_metaclass(abc.ABCMeta)
 class ModelFunctionFormatterDReprBase(GenericDReprBase):
-    BASE_OBJECT_TYPE_NAME = 'model_function_formatter'
+    BASE_OBJECT_TYPE_NAME = "model_function_formatter"
 
     _CLASS_TO_OBJECT_TYPE_NAME = {
-        ModelFunctionFormatter: 'base',
-        IndexedModelFunctionFormatter: 'indexed'
+        ModelFunctionFormatter: "base",
+        IndexedModelFunctionFormatter: "indexed",
     }
     _OBJECT_TYPE_NAME_TO_CLASS = {
-        'base': ModelFunctionFormatter,
-        'histogram': ModelFunctionFormatter,
-        'indexed': IndexedModelFunctionFormatter,
-        'unbinned': ModelFunctionFormatter,
-        'xy': ModelFunctionFormatter,
+        "base": ModelFunctionFormatter,
+        "histogram": ModelFunctionFormatter,
+        "indexed": IndexedModelFunctionFormatter,
+        "unbinned": ModelFunctionFormatter,
+        "xy": ModelFunctionFormatter,
     }
 
     def __init__(self, model_function_formatter=None):
@@ -33,7 +33,7 @@ class ModelFunctionFormatterDReprBase(GenericDReprBase):
 
 @six.add_metaclass(abc.ABCMeta)
 class ParameterFormatterDReprBase(GenericDReprBase):
-    BASE_OBJECT_TYPE_NAME = 'parameter_formatter'
+    BASE_OBJECT_TYPE_NAME = "parameter_formatter"
 
     def __init__(self, model_parameter_formatter=None):
         self._kafe_object = model_parameter_formatter

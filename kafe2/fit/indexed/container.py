@@ -3,7 +3,7 @@ import numpy as np
 from ...core.error import MatrixGaussianError
 from .._base import DataContainerBase
 
-__all__ = ['IndexedContainer']
+__all__ = ["IndexedContainer"]
 
 
 class IndexedContainer(DataContainerBase):
@@ -11,6 +11,7 @@ class IndexedContainer(DataContainerBase):
     This object is a specialized data container for series of indexed measurements.
 
     """
+
     def __init__(self, data, dtype=float):
         """
         Construct a container for indexed data:
@@ -23,8 +24,10 @@ class IndexedContainer(DataContainerBase):
         super(IndexedContainer, self).__init__()
         self._data = np.array(data, dtype=dtype)
         if self._data.ndim != 1:
-            raise ValueError("Input data must be one-dimensional but received"
-                             f" data with {self._data.ndim} dimensions.")
+            raise ValueError(
+                "Input data must be one-dimensional but received"
+                f" data with {self._data.ndim} dimensions."
+            )
 
     # -- private methods
 
@@ -32,11 +35,11 @@ class IndexedContainer(DataContainerBase):
         _sz = self.size
         _tmp_cov_mat = np.zeros((_sz, _sz))
         for _err_dict in self._error_dicts.values():
-            if not _err_dict['enabled']:
+            if not _err_dict["enabled"]:
                 continue
-            _tmp_cov_mat += _err_dict['err'].cov_mat
+            _tmp_cov_mat += _err_dict["err"].cov_mat
 
-        _total_err = MatrixGaussianError(_tmp_cov_mat, 'cov', relative=False, reference=self.data)
+        _total_err = MatrixGaussianError(_tmp_cov_mat, "cov", relative=False, reference=self.data)
         self._total_error = _total_err
 
     def _clear_total_error_cache(self):
@@ -61,12 +64,14 @@ class IndexedContainer(DataContainerBase):
     def data(self, data):
         _data = np.squeeze(np.array(data, dtype=float))
         if len(_data.shape) > 1:
-            raise ValueError("IndexedContainer data must be 1-d array of floats! Got shape: %r..."
-                             % (_data.shape,))
+            raise ValueError(
+                "IndexedContainer data must be 1-d array of floats! Got shape: %r..."
+                % (_data.shape,)
+            )
         self._data[:] = _data
         # reset member error references to the new data values
         for _err_dict in self._error_dicts.values():
-            _err_dict['err'].reference = self._data
+            _err_dict["err"].reference = self._data
         self._clear_total_error_cache()
 
     @property
@@ -100,11 +105,9 @@ class IndexedContainer(DataContainerBase):
         """
         return np.amin(self.data), np.amax(self.data)
 
-
     # -- public methods
 
-    def add_error(self, err_val,
-                  name=None, correlation=0, relative=False):
+    def add_error(self, err_val, name=None, correlation=0, relative=False):
         """
         Add an uncertainty source to the data container.
         Returns an error id which uniquely identifies the created error source.
@@ -126,11 +129,10 @@ class IndexedContainer(DataContainerBase):
             name=name,
             correlation=correlation,
             relative=relative,
-            reference=self._get_error_reference
+            reference=self._get_error_reference,
         )
 
-    def add_matrix_error(self, err_matrix, matrix_type,
-                         name=None, err_val=None, relative=False):
+    def add_matrix_error(self, err_matrix, matrix_type, name=None, err_val=None, relative=False):
         """
         Add a matrix uncertainty source to the data container.
         Returns an error id which uniquely identifies the created error source.
@@ -155,5 +157,5 @@ class IndexedContainer(DataContainerBase):
             name=name,
             err_val=err_val,
             relative=relative,
-            reference=self._get_error_reference
+            reference=self._get_error_reference,
         )

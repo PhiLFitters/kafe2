@@ -4,7 +4,6 @@ from kafe2.core.confidence import ConfidenceLevel
 
 
 class TestConfidence(unittest.TestCase):
-
     def setUp(self):
         self._sigma = [1.0, 2.0, 3.0]
         self._cl_1d = [0.6827, 0.9545, 0.9973]
@@ -13,25 +12,17 @@ class TestConfidence(unittest.TestCase):
     def test_one_way_conversion(self):
         for _sigma, _cl_1d in zip(self._sigma, self._cl_1d):
             self.assertAlmostEqual(
-                _cl_1d,
-                ConfidenceLevel(n_dimensions=1, sigma=_sigma).cl,
-                places=4
+                _cl_1d, ConfidenceLevel(n_dimensions=1, sigma=_sigma).cl, places=4
             )
             self.assertAlmostEqual(
-                _sigma,
-                ConfidenceLevel(n_dimensions=1, cl=_cl_1d).sigma,
-                places=3
+                _sigma, ConfidenceLevel(n_dimensions=1, cl=_cl_1d).sigma, places=3
             )
         for _sigma, _cl_2d in zip(self._sigma, self._cl_2d):
             self.assertAlmostEqual(
-                _cl_2d,
-                ConfidenceLevel(n_dimensions=2, sigma=_sigma).cl,
-                places=4
+                _cl_2d, ConfidenceLevel(n_dimensions=2, sigma=_sigma).cl, places=4
             )
             self.assertAlmostEqual(
-                _sigma,
-                ConfidenceLevel(n_dimensions=2, cl=_cl_2d).sigma,
-                places=3
+                _sigma, ConfidenceLevel(n_dimensions=2, cl=_cl_2d).sigma, places=3
             )
 
     def test_round_trip(self):
@@ -41,22 +32,16 @@ class TestConfidence(unittest.TestCase):
                     _sigma,
                     ConfidenceLevel(
                         n_dimensions=_n_dimensions,
-                        cl=ConfidenceLevel(
-                            n_dimensions=_n_dimensions,
-                            sigma=_sigma
-                        ).cl
-                    ).sigma
+                        cl=ConfidenceLevel(n_dimensions=_n_dimensions, sigma=_sigma).cl,
+                    ).sigma,
                 )
             for _cl in [0.12, 0.34, 0.56, 0.78, 0.99]:
                 self.assertAlmostEqual(
                     _cl,
                     ConfidenceLevel(
                         n_dimensions=_n_dimensions,
-                        sigma=ConfidenceLevel(
-                            n_dimensions=_n_dimensions,
-                            cl=_cl
-                        ).sigma
-                    ).cl
+                        sigma=ConfidenceLevel(n_dimensions=_n_dimensions, cl=_cl).sigma,
+                    ).cl,
                 )
 
     def test_constructor_raise(self):

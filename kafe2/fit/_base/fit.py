@@ -54,8 +54,14 @@ class FitBase(FileIOMixin, object):
     _MODEL_ERROR_NODE_NAMES = ["model_error", "model_cov_mat"]
 
     def __init__(
-            self, data, model_function, cost_function, minimizer=None, minimizer_kwargs=None,
-            dynamic_error_algorithm="nonlinear"):
+        self,
+        data,
+        model_function,
+        cost_function,
+        minimizer=None,
+        minimizer_kwargs=None,
+        dynamic_error_algorithm="nonlinear",
+    ):
         """This is a purely abstract class implementing the minimal interface required by all
         types of fits.
 
@@ -86,7 +92,8 @@ class FitBase(FileIOMixin, object):
         if self.MODEL_FUNCTION_TYPE is None:
             if model_function is not None:
                 raise ValueError(
-                    "Model function must be None if subclass does not define MODEL_FUNCTION_TYPE.")
+                    "Model function must be None if subclass does not define MODEL_FUNCTION_TYPE."
+                )
             self._model_function = model_function
         else:
             if isinstance(model_function, self.MODEL_FUNCTION_TYPE):
@@ -96,12 +103,15 @@ class FitBase(FileIOMixin, object):
 
             # Disallow using reserved keywords as model function arguments:
             if not self.RESERVED_NODE_NAMES.isdisjoint(
-                    set(self._model_function.signature.parameters)):
+                set(self._model_function.signature.parameters)
+            ):
                 _invalid_args = self.RESERVED_NODE_NAMES.intersection(
-                    set(self._model_function.signature.parameters))
+                    set(self._model_function.signature.parameters)
+                )
                 raise ValueError(
                     "The following names are reserved and cannot be used as model function arguments: %r"
-                    % (_invalid_args,))
+                    % (_invalid_args,)
+                )
 
         # set and validate the cost function
         _data_has_errors = isinstance(data, DataContainerBase) and data.has_errors
@@ -114,7 +124,7 @@ class FitBase(FileIOMixin, object):
             try:
                 _cost_function_class, _kwargs = self._STRING_TO_COST_FUNCTION[cost_function]
             except KeyError:
-                raise ValueError('Unknown cost function: %s' % cost_function)
+                raise ValueError("Unknown cost function: %s" % cost_function)
             self._cost_function = _cost_function_class(**_kwargs)
         elif cost_function is not None:
             self._cost_function = CostFunction(cost_function)
@@ -122,8 +132,9 @@ class FitBase(FileIOMixin, object):
             # TODO: validate user-defined cost function? how?
         else:
             self._cost_function = None
-        self._cost_function_pointwise = None if self._cost_function is None \
-            else self._cost_function.pointwise_version
+        self._cost_function_pointwise = (
+            None if self._cost_function is None else self._cost_function.pointwise_version
+        )
 
         # initialize the Nexus
         self._init_nexus()
@@ -141,9 +152,7 @@ class FitBase(FileIOMixin, object):
         """register a property of this object in the nexus as a function node"""
         obj = obj if obj is not None else self
         _node = self._nexus.add_function(
-            partial(getattr(obj.__class__, prop).fget, obj),
-            func_name=name or prop,
-            par_names=[]
+            partial(getattr(obj.__class__, prop).fget, obj), func_name=name or prop, par_names=[]
         )
         if depends_on is not None:
             self._nexus.add_dependency(name=_node.name, depends_on=depends_on)
@@ -155,7 +164,7 @@ class FitBase(FileIOMixin, object):
 
     @classmethod
     def _get_object_type_name(cls):
-        return 'fit'
+        return "fit"
 
     def _init_nexus(self):
         self._nexus = Nexus()
@@ -172,8 +181,9 @@ class FitBase(FileIOMixin, object):
                 self._fit_param_names.append(_par_name)
 
         self._nexus.add(Array(_parameter_nodes, name="parameter_values"))
-        self._nexus.add_function(lambda: self.parameter_constraints,
-                                 func_name='parameter_constraints', par_names=[])
+        self._nexus.add_function(
+            lambda: self.parameter_constraints, func_name="parameter_constraints", par_names=[]
+        )
 
         # -- errors
 
@@ -181,18 +191,27 @@ class FitBase(FileIOMixin, object):
             _error_names = []
             _mat_names = []
             for _type in ("model", "data", "total"):
-                _name = '_'.join((_axis, _type)) if _axis is not None else _type
-                _error_name = '_'.join((_axis, _type, 'error')) if _axis is not None \
-                    else '_'.join((_type, 'error'))
-                _mat_name = '_'.join((_axis, _type, "cov_mat")) if _axis is not None \
-                    else '_'.join((_type, "cov_mat"))
+                _name = "_".join((_axis, _type)) if _axis is not None else _type
+                _error_name = (
+                    "_".join((_axis, _type, "error"))
+                    if _axis is not None
+                    else "_".join((_type, "error"))
+                )
+                _mat_name = (
+                    "_".join((_axis, _type, "cov_mat"))
+                    if _axis is not None
+                    else "_".join((_type, "cov_mat"))
+                )
                 if _type == "total":
                     # Performance optimization: calculate total foo in Nexus
                     self._nexus.add_function(
-                        lambda m, d: np.sqrt(m ** 2 + d ** 2),
-                        func_name=_error_name, par_names=_error_names)
+                        lambda m, d: np.sqrt(m**2 + d**2),
+                        func_name=_error_name,
+                        par_names=_error_names,
+                    )
                     self._nexus.add_function(
-                        lambda m, d: m + d, func_name=_mat_name, par_names=_mat_names)
+                        lambda m, d: m + d, func_name=_mat_name, par_names=_mat_names
+                    )
                 else:
                     self._add_property_to_nexus(_name)
                     self._add_property_to_nexus(_error_name)
@@ -204,14 +223,18 @@ class FitBase(FileIOMixin, object):
                 if _mat_name in self._MODEL_ERROR_NODE_NAMES:
                     self._nexus.add_dependency(_mat_name, depends_on="parameter_values")
                 self._add_property_to_nexus(_mat_name + "_inverse", depends_on=_mat_name)
-                self._nexus.add_function(cholesky_decomposition, func_name=_mat_name + "_cholesky",
-                                         par_names=[_mat_name])
-                self._nexus.add_function(log_determinant, func_name=_mat_name + "_log_determinant",
-                                         par_names=[_mat_name + "_cholesky"])
+                self._nexus.add_function(
+                    cholesky_decomposition, func_name=_mat_name + "_cholesky", par_names=[_mat_name]
+                )
+                self._nexus.add_function(
+                    log_determinant,
+                    func_name=_mat_name + "_log_determinant",
+                    par_names=[_mat_name + "_cholesky"],
+                )
                 self._nexus.add_function(
                     log_determinant_pointwise,
                     func_name=_error_name + "_squared_log_sum",
-                    par_names=[_error_name]
+                    par_names=[_error_name],
                 )
 
         if self._model_function is not None:
@@ -222,34 +245,36 @@ class FitBase(FileIOMixin, object):
                 pass  # allow 'model' as function name for model
         self._init_cost_function()
 
-
-    def _init_cost_function(self, existing_behavior='fail'):
+    def _init_cost_function(self, existing_behavior="fail"):
         if self._cost_function is not None:
             # the cost function (the function to be minimized)
             _cost_node = self._nexus.add_function(
                 self._cost_function,
                 par_names=self._cost_function.arg_names,
                 func_name=self._cost_function.name,
-                existing_behavior=existing_behavior
+                existing_behavior=existing_behavior,
             )
 
             if self._cost_function.name != "cost":
                 _cost_alias = self._nexus.add_alias(
-                    'cost', alias_for=self._cost_function.name, existing_behavior=existing_behavior)
+                    "cost", alias_for=self._cost_function.name, existing_behavior=existing_behavior
+                )
         if self._cost_function_pointwise is not None:
             self._nexus.add_function(
                 self._cost_function_pointwise,
                 par_names=self._cost_function_pointwise.arg_names,
                 func_name=self._cost_function_pointwise.name,
-                existing_behavior=existing_behavior
+                existing_behavior=existing_behavior,
             )
 
     def _initialize_fitter(self):
-        self._fitter = NexusFitter(nexus=self._nexus,
-                                   parameters_to_fit=self._fit_param_names,
-                                   parameter_to_minimize=self._cost_function.name,
-                                   minimizer=self._minimizer,
-                                   minimizer_kwargs=self._minimizer_kwargs)
+        self._fitter = NexusFitter(
+            nexus=self._nexus,
+            parameters_to_fit=self._fit_param_names,
+            parameter_to_minimize=self._cost_function.name,
+            minimizer=self._minimizer,
+            minimizer_kwargs=self._minimizer_kwargs,
+        )
 
     @abc.abstractmethod
     def _set_new_data(self, new_data):
@@ -286,16 +311,18 @@ class FitBase(FileIOMixin, object):
         :param str indent: The string to use when indenting lines.
         :param int indentation_level: How many times the indent str should be placed before each line.
         """
-        output_stream.write(indent * indentation_level + '#########\n')
-        output_stream.write(indent * indentation_level + '# Model #\n')
-        output_stream.write(indent * indentation_level + '#########\n\n')
+        output_stream.write(indent * indentation_level + "#########\n")
+        output_stream.write(indent * indentation_level + "# Model #\n")
+        output_stream.write(indent * indentation_level + "#########\n\n")
         output_stream.write(indent * (indentation_level + 1) + "Model Function\n")
         output_stream.write(indent * (indentation_level + 1) + "==============\n\n")
         output_stream.write(indent * (indentation_level + 2))
         output_stream.write(self._model_function.formatter.get_formatted(with_expression=True))
-        output_stream.write('\n\n')
+        output_stream.write("\n\n")
 
-    def _report_fit_results(self, output_stream, indent, indentation_level, asymmetric_parameter_errors):
+    def _report_fit_results(
+        self, output_stream, indent, indentation_level, asymmetric_parameter_errors
+    ):
         """Report the fit results
 
         :param io.TextIOBase output_stream: The output stream to which the report should be printed.
@@ -304,13 +331,15 @@ class FitBase(FileIOMixin, object):
         :param bool asymmetric_parameter_errors: If asymmetric parameter uncertainties should be used instead of
             symmetric uncertainties.
         """
-        output_stream.write(indent * indentation_level + '###############\n')
-        output_stream.write(indent * indentation_level + '# Fit Results #\n')
-        output_stream.write(indent * indentation_level + '###############\n\n')
+        output_stream.write(indent * indentation_level + "###############\n")
+        output_stream.write(indent * indentation_level + "# Fit Results #\n")
+        output_stream.write(indent * indentation_level + "###############\n\n")
 
         if not self.did_fit:
-            output_stream.write(indent * (indentation_level + 1) +
-                                'WARNING: No fit has been performed as of yet. Did you forget to run fit.do_fit()?\n\n')
+            output_stream.write(
+                indent * (indentation_level + 1)
+                + "WARNING: No fit has been performed as of yet. Did you forget to run fit.do_fit()?\n\n"
+            )
 
         output_stream.write(indent * (indentation_level + 1) + "Model Parameters\n")
         output_stream.write(indent * (indentation_level + 1) + "================\n\n")
@@ -319,64 +348,72 @@ class FitBase(FileIOMixin, object):
         for _pf in self._get_model_function_parameter_formatters():
             output_stream.write(indent * (indentation_level + 2))
             output_stream.write(
-                _pf.get_formatted(with_name=True,
-                                  with_value=True,
-                                  with_errors=self.errors_valid,
-                                  format_as_latex=False,
-                                  asymmetric_error=asymmetric_parameter_errors)
+                _pf.get_formatted(
+                    with_name=True,
+                    with_value=True,
+                    with_errors=self.errors_valid,
+                    format_as_latex=False,
+                    asymmetric_error=asymmetric_parameter_errors,
+                )
             )
-            output_stream.write('\n')
-        output_stream.write('\n')
+            output_stream.write("\n")
+        output_stream.write("\n")
 
         if self.errors_valid:
             output_stream.write(indent * (indentation_level + 1) + "Model Parameter Correlations\n")
-            output_stream.write(indent * (indentation_level + 1)
-                                + "============================\n\n")
+            output_stream.write(
+                indent * (indentation_level + 1) + "============================\n\n"
+            )
 
             _cor_mat_content = self.parameter_cor_mat
             if _cor_mat_content is not None:
-                par_display_names = [_pf.name for _pf in
-                                    self._get_model_function_parameter_formatters()]
+                par_display_names = [
+                    _pf.name for _pf in self._get_model_function_parameter_formatters()
+                ]
                 _cor_mat_as_dict = OrderedDict()
-                _cor_mat_as_dict['_invisible_first_column'] = par_display_names
+                _cor_mat_as_dict["_invisible_first_column"] = par_display_names
                 for _par_name, _row in zip(par_display_names, self.parameter_cor_mat.T):
                     _cor_mat_as_dict[_par_name] = np.atleast_1d(np.squeeze(np.asarray(_row)))
 
                 print_dict_as_table(_cor_mat_as_dict, output_stream=output_stream, indent_level=2)
             else:
-                output_stream.write(indent * (indentation_level + 2) + '<not available>\n')
-            output_stream.write('\n')
+                output_stream.write(indent * (indentation_level + 2) + "<not available>\n")
+            output_stream.write("\n")
 
         output_stream.write(indent * (indentation_level + 1) + "Cost Function\n")
         output_stream.write(indent * (indentation_level + 1) + "=============\n\n")
 
         _pf = self._cost_function.formatter
         output_stream.write(
-            indent * (indentation_level + 2) + "Cost function: {}\n\n".format(_pf.description))
+            indent * (indentation_level + 2) + "Cost function: {}\n\n".format(_pf.description)
+        )
         _gof_value = self.goodness_of_fit
         output_stream.write(indent * (indentation_level + 2))
         if _gof_value is None or not self.errors_valid:
             output_stream.write("Cost = ")
-            output_stream.write(_pf.get_formatted(
-                value=self.cost_function_value,
-                with_name=False,
-                format_as_latex=False
-            ))
+            output_stream.write(
+                _pf.get_formatted(
+                    value=self.cost_function_value, with_name=False, format_as_latex=False
+                )
+            )
         else:
             _gof_string = "chi2 / ndf = " if self._cost_function.is_chi2 else "GoF / ndf = "
             output_stream.write(_gof_string)
-            output_stream.write(_pf.get_formatted(
-                value=_gof_value,
-                n_degrees_of_freedom=self.ndf,
-                with_name=False,
-                with_value_per_ndf=True,
-                format_as_latex=False
-            ))
-        output_stream.write('\n\n')
+            output_stream.write(
+                _pf.get_formatted(
+                    value=_gof_value,
+                    n_degrees_of_freedom=self.ndf,
+                    with_name=False,
+                    with_value_per_ndf=True,
+                    format_as_latex=False,
+                )
+            )
+        output_stream.write("\n\n")
         _chi2_prob = self.chi2_probability
         if _chi2_prob is not None and self.errors_valid:
-            output_stream.write("%schi2 probability = %#.3g\n\n" % (
-                indent * (indentation_level + 2), _chi2_prob))
+            output_stream.write(
+                "%schi2 probability = %#.3g\n\n" % (indent * (indentation_level + 2), _chi2_prob)
+            )
 
     def _update_parameter_formatters(self, update_asymmetric_errors=False):
         """Update all parameter formatters with the current values and uncertainties.
@@ -384,7 +421,10 @@ class FitBase(FileIOMixin, object):
         :param bool update_asymmetric_errors: If the asymmetric parameter uncertainties should be updated as well.
         """
         for _fpf, _pv, _pe in zip(
-                self._get_model_function_parameter_formatters(), self.parameter_values, self.parameter_errors):
+            self._get_model_function_parameter_formatters(),
+            self.parameter_values,
+            self.parameter_errors,
+        ):
             _fpf.value = _pv
             _fpf.error = _pe
         if update_asymmetric_errors:
@@ -392,9 +432,11 @@ class FitBase(FileIOMixin, object):
             _asymmetric_parameter_errors = self.asymmetric_parameter_errors
             if _asymmetric_parameter_errors is None:
                 _asymmetric_parameter_errors = np.stack(
-                    [-self.parameter_errors, self.parameter_errors], axis=1)
-            for _fpf, _ape in zip(self._get_model_function_parameter_formatters(),
-                                  _asymmetric_parameter_errors):
+                    [-self.parameter_errors, self.parameter_errors], axis=1
+                )
+            for _fpf, _ape in zip(
+                self._get_model_function_parameter_formatters(), _asymmetric_parameter_errors
+            ):
                 _fpf.asymmetric_error = _ape
 
     def _on_error_change(self):
@@ -406,10 +448,9 @@ class FitBase(FileIOMixin, object):
             _cost_function_class, _kwargs = self._STRING_TO_COST_FUNCTION["chi2_covariance"]
             self._cost_function = _cost_function_class(**_kwargs)
             self._cost_function_pointwise = self._cost_function.pointwise_version
-            self._init_cost_function(existing_behavior='replace')
+            self._init_cost_function(existing_behavior="replace")
             self._fitter.parameter_to_minimize = self._cost_function.name
             self._implicit_no_errors = False
-
 
     def _set_data_as_model_ref(self):
         for _err in self._param_model.get_matching_errors({"relative": True}).values():
@@ -417,16 +458,23 @@ class FitBase(FileIOMixin, object):
             _err.reference = self._data_container.data
 
     def _iterative_fits_needed(self):
-        return bool(self._param_model.get_matching_errors({"relative": True})) \
-               and self._dynamic_error_algorithm == "iterative"
+        return (
+            bool(self._param_model.get_matching_errors({"relative": True}))
+            and self._dynamic_error_algorithm == "iterative"
+        )
 
     def _second_fit_needed(self):
-        return bool(self._param_model.get_matching_errors({"relative": True})) \
-               and self._dynamic_error_algorithm == "nonlinear"
+        return (
+            bool(self._param_model.get_matching_errors({"relative": True}))
+            and self._dynamic_error_algorithm == "nonlinear"
+        )
 
     def _get_node_names_to_freeze(self, first_fit):
-        if first_fit or not self._param_model.get_matching_errors({"relative": True}) \
-                or self._dynamic_error_algorithm == "iterative":
+        if (
+            first_fit
+            or not self._param_model.get_matching_errors({"relative": True})
+            or self._dynamic_error_algorithm == "iterative"
+        ):
             return self._MODEL_ERROR_NODE_NAMES
         else:
             return []
@@ -448,9 +496,9 @@ class FitBase(FileIOMixin, object):
         if not self._dynamic_error_warning_printed and self._iterative_fits_needed():
             warnings.warn(
                 "Asymmetric parameter errors, parameter profiles, and contours cannot be "
-                "calculated with iterative dynamic errors. Used nonlinear errors instead.")
+                "calculated with iterative dynamic errors. Used nonlinear errors instead."
+            )
             self._dynamic_error_warning_printed = True
-
 
     def _get_default_x_ticks(self):
         return []
@@ -468,7 +516,7 @@ class FitBase(FileIOMixin, object):
         # validate cost function
         _data_and_cost_compatible, _reason = self._cost_function.is_data_compatible(self.data)
         if not _data_and_cost_compatible:
-            raise ValueError('Fit data and cost function are not compatible: %s' % _reason)
+            raise ValueError("Fit data and cost function are not compatible: %s" % _reason)
         self._set_new_parametric_model()
         self._param_model._on_error_change_callbacks = [self._on_error_change]
 
@@ -598,7 +646,7 @@ class FitBase(FileIOMixin, object):
         :rtype: numpy.ndarray[float]
         """
         if self._loaded_result_dict is not None:
-            return self._loaded_result_dict['parameter_errors']
+            return self._loaded_result_dict["parameter_errors"]
         return self._fitter.fit_parameter_errors
 
     @parameter_errors.setter
@@ -612,7 +660,7 @@ class FitBase(FileIOMixin, object):
         :rtype: None or numpy.ndarray[numpy.ndarray[float]]
         """
         if self._loaded_result_dict is not None:
-            return self._loaded_result_dict['parameter_cov_mat']
+            return self._loaded_result_dict["parameter_cov_mat"]
         return self._fitter.fit_parameter_cov_mat
 
     @property
@@ -622,7 +670,7 @@ class FitBase(FileIOMixin, object):
         :rtype: None or numpy.ndarray[numpy.ndarray[float]]
         """
         if self._loaded_result_dict is not None:
-            return self._loaded_result_dict['parameter_cor_mat']
+            return self._loaded_result_dict["parameter_cor_mat"]
         return self._fitter.fit_parameter_cor_mat
 
     @property
@@ -631,8 +679,11 @@ class FitBase(FileIOMixin, object):
 
         :rtype: numpy.ndarray[numpy.ndarray[float, float]]
         """
-        if self._loaded_result_dict is not None and self._loaded_result_dict['asymmetric_parameter_errors'] is not None:
-            return self._loaded_result_dict['asymmetric_parameter_errors']
+        if (
+            self._loaded_result_dict is not None
+            and self._loaded_result_dict["asymmetric_parameter_errors"] is not None
+        ):
+            return self._loaded_result_dict["asymmetric_parameter_errors"]
         self._check_dynamic_error_compatibility()
         return self._fitter.asymmetric_fit_parameter_errors
 
@@ -708,7 +759,7 @@ class FitBase(FileIOMixin, object):
         :rtype: bool
         """
         if self._loaded_result_dict is not None:
-            return self._loaded_result_dict['did_fit']
+            return self._loaded_result_dict["did_fit"]
         return self._fitter.state_is_from_minimizer
 
     @property
@@ -729,7 +780,8 @@ class FitBase(FileIOMixin, object):
         else:
             _cost_function = self._cost_function
         return _cost_function.goodness_of_fit(
-            *[self._nexus.get(_node_name).value for _node_name in _cost_function.arg_names])
+            *[self._nexus.get(_node_name).value for _node_name in _cost_function.arg_names]
+        )
 
     @property
     def dynamic_error_algorithm(self):
@@ -743,8 +795,8 @@ class FitBase(FileIOMixin, object):
         _valid_deas = ["nonlinear", "iterative"]
         if new_dea not in _valid_deas:
             raise ValueError(
-                "Unknown dynamic error algorithm: %s. Valid algorithms: %s" % (
-                    new_dea, _valid_deas))
+                "Unknown dynamic error algorithm: %s. Valid algorithms: %s" % (new_dea, _valid_deas)
+            )
         self._dynamic_error_algorithm = new_dea
 
     @property
@@ -757,8 +809,12 @@ class FitBase(FileIOMixin, object):
 
     @property
     def errors_valid(self):
-        return self._cost_function.errors_valid and self.did_fit and (
-            self.has_errors or not self._cost_function.needs_errors)
+        return (
+            self._cost_function.errors_valid
+            and self.did_fit
+            and (self.has_errors or not self._cost_function.needs_errors)
+        )
+
     # public methods
 
     def set_parameter_values(self, **param_name_value_dict):
@@ -817,8 +873,12 @@ class FitBase(FileIOMixin, object):
                 assert _lim is None or float(_lim) == _lim
             except (TypeError, ValueError, AssertionError):
                 six.raise_from(
-                    TypeError("Expecting `None` or numeric value for parameter limit, got {}: {}".format(type(_lim), repr(_lim))),
-                    None
+                    TypeError(
+                        "Expecting `None` or numeric value for parameter limit, got {}: {}".format(
+                            type(_lim), repr(_lim)
+                        )
+                    ),
+                    None,
                 )
 
         self._fitter.limit_parameter(name=name, limits=(lower, upper))
@@ -830,8 +890,9 @@ class FitBase(FileIOMixin, object):
         """
         self._fitter.unlimit_parameter(name=name)
 
-    def add_matrix_parameter_constraint(self, names, values, matrix, matrix_type='cov', uncertainties=None,
-                                        relative=False):
+    def add_matrix_parameter_constraint(
+        self, names, values, matrix, matrix_type="cov", uncertainties=None, relative=False
+    ):
         """Advanced class for applying correlated constraints to several parameters of a fit.
         The order of **names**, **values**, **matrix**, and **uncertainties** must be aligned.
         In other words the first index must belong to the first value, the first row/column in the matrix, etc.
@@ -858,17 +919,24 @@ class FitBase(FileIOMixin, object):
         """
         if len(names) != len(values):
             raise ValueError(
-                'Lengths of names and values are different: %s <-> %s' % (len(names), len(values)))
+                "Lengths of names and values are different: %s <-> %s" % (len(names), len(values))
+            )
         _par_indices = []
         for _name in names:
             try:
                 _par_indices.append(self.parameter_names.index(_name))
             except ValueError as _e:
-                raise ValueError('Unknown parameter name: %s' % _name) from _e
-        self._fit_param_constraints.append(GaussianMatrixParameterConstraint(
-            indices=_par_indices, values=values, matrix=matrix, matrix_type=matrix_type, uncertainties=uncertainties,
-            relative=relative
-        ))
+                raise ValueError("Unknown parameter name: %s" % _name) from _e
+        self._fit_param_constraints.append(
+            GaussianMatrixParameterConstraint(
+                indices=_par_indices,
+                values=values,
+                matrix=matrix,
+                matrix_type=matrix_type,
+                uncertainties=uncertainties,
+                relative=relative,
+            )
+        )
 
     def add_parameter_constraint(self, name, value, uncertainty, relative=False):
         """Apply a simple gaussian constraint to a single fit parameter.
@@ -881,12 +949,14 @@ class FitBase(FileIOMixin, object):
         try:
             _index = self.parameter_names.index(name)
         except ValueError as _e:
-            raise ValueError('Unknown parameter name: %s' % name) from _e
-        self._fit_param_constraints.append(GaussianSimpleParameterConstraint(
-            index=_index, value=value, uncertainty=uncertainty, relative=relative
-        ))
+            raise ValueError("Unknown parameter name: %s" % name) from _e
+        self._fit_param_constraints.append(
+            GaussianSimpleParameterConstraint(
+                index=_index, value=value, uncertainty=uncertainty, relative=relative
+            )
+        )
 
-    def get_matching_errors(self, matching_criteria=None, matching_type='equal'):
+    def get_matching_errors(self, matching_criteria=None, matching_type="equal"):
         """Return a list of uncertainty objects fulfilling the specified matching criteria.
 
         Valid keys for **matching_criteria**:
@@ -916,28 +986,42 @@ class FitBase(FileIOMixin, object):
         :rtype: dict[str, kafe2.core.error.GaussianErrorBase]
         """
         if matching_criteria is not None:
-            _crit_ref_value = matching_criteria.pop('reference', None)
-            if _crit_ref_value == 'data':
-                return self._data_container.get_matching_errors(matching_criteria, matching_type=matching_type)
-            if _crit_ref_value == 'model':
-                return self._param_model.get_matching_errors(matching_criteria, matching_type=matching_type)
+            _crit_ref_value = matching_criteria.pop("reference", None)
+            if _crit_ref_value == "data":
+                return self._data_container.get_matching_errors(
+                    matching_criteria, matching_type=matching_type
+                )
+            if _crit_ref_value == "model":
+                return self._param_model.get_matching_errors(
+                    matching_criteria, matching_type=matching_type
+                )
             if _crit_ref_value is None:
                 pass  # don't raise, continue evaluation below
             else:
-                raise ValueError("Unknown value '{}' for matching "
-                                 "criterion 'reference'. Valid: 'data', 'model' or None".format(_crit_ref_value))
+                raise ValueError(
+                    "Unknown value '{}' for matching "
+                    "criterion 'reference'. Valid: 'data', 'model' or None".format(_crit_ref_value)
+                )
 
-        _result = self._data_container.get_matching_errors(matching_criteria, matching_type=matching_type)
-        _result_model = self._param_model.get_matching_errors(matching_criteria, matching_type=matching_type)
+        _result = self._data_container.get_matching_errors(
+            matching_criteria, matching_type=matching_type
+        )
+        _result_model = self._param_model.get_matching_errors(
+            matching_criteria, matching_type=matching_type
+        )
 
         # be paranoid about collisions
         for _k in _result_model:
-            assert _k not in _result  # FATAL: there is an error with the same name in the data and model containers
+            assert (
+                _k not in _result
+            )  # FATAL: there is an error with the same name in the data and model containers
             _result[_k] = _result_model[_k]
 
         return _result
 
-    def add_error(self, err_val, name=None, correlation=0, relative=False, reference='data', **kwargs):
+    def add_error(
+        self, err_val, name=None, correlation=0, relative=False, reference="data", **kwargs
+    ):
         """Add an uncertainty source to the fit.
 
         :param err_val: Pointwise uncertainty/uncertainties for all data points.
@@ -955,23 +1039,34 @@ class FitBase(FileIOMixin, object):
         :return: An error id which uniquely identifies the created error source.
         :rtype: str
         """
-        if reference == 'data':
+        if reference == "data":
             # delegate to data container
             _reference_object = self._data_container
-        elif reference == 'model':
+        elif reference == "model":
             # delegate to model container
             _reference_object = self._param_model
         else:
-            raise ValueError("Cannot add error: unknown reference specification '{}',"
-                             "expected one of: 'data', 'model'...".format(reference))
+            raise ValueError(
+                "Cannot add error: unknown reference specification '{}',"
+                "expected one of: 'data', 'model'...".format(reference)
+            )
 
-        _ret = _reference_object.add_error(err_val=err_val,
-                                           name=name, correlation=correlation, relative=relative, **kwargs)
+        _ret = _reference_object.add_error(
+            err_val=err_val, name=name, correlation=correlation, relative=relative, **kwargs
+        )
 
         return _ret
 
-    def add_matrix_error(self, err_matrix, matrix_type,
-                         name=None, err_val=None, relative=False, reference='data', **kwargs):
+    def add_matrix_error(
+        self,
+        err_matrix,
+        matrix_type,
+        name=None,
+        err_val=None,
+        relative=False,
+        reference="data",
+        **kwargs,
+    ):
         """Add a matrix uncertainty source for use in the fit.
 
         :param err_matrix: covariance or correlation matrix
@@ -991,20 +1086,28 @@ class FitBase(FileIOMixin, object):
         :return: An error id which uniquely identifies the created error source.
         :rtype: str
         """
-        if reference == 'data':
+        if reference == "data":
             # delegate to data container
             _reference_object = self._data_container
-        elif reference == 'model':
+        elif reference == "model":
             # delegate to model container
             _reference_object = self._param_model
             if relative:
                 raise NotImplementedError("Errors relative to model not implemented!")
         else:
-            raise ValueError("Cannot add matrix error: unknown reference "
-                               "specification '{}', expected one of: 'data', 'model'...".format(reference))
+            raise ValueError(
+                "Cannot add matrix error: unknown reference "
+                "specification '{}', expected one of: 'data', 'model'...".format(reference)
+            )
 
-        _ret = _reference_object.add_matrix_error(err_matrix=err_matrix, matrix_type=matrix_type,
-                                                  name=name, err_val=err_val, relative=relative, **kwargs)
+        _ret = _reference_object.add_matrix_error(
+            err_matrix=err_matrix,
+            matrix_type=matrix_type,
+            name=name,
+            err_val=err_val,
+            relative=relative,
+            **kwargs,
+        )
 
         return _ret
 
@@ -1015,10 +1118,14 @@ class FitBase(FileIOMixin, object):
         """
         try:
             # try to find error in data container
-            _ret = self._data_container.disable_error(err_id)  # TODO: this call does not return anything
+            _ret = self._data_container.disable_error(
+                err_id
+            )  # TODO: this call does not return anything
         except ValueError:
             # try to find error in model container
-            _ret = self._param_model.disable_error(err_id)  # TODO: this call does not return anything
+            _ret = self._param_model.disable_error(
+                err_id
+            )  # TODO: this call does not return anything
         return _ret
 
     def enable_error(self, err_id):
@@ -1028,10 +1135,14 @@ class FitBase(FileIOMixin, object):
         """
         try:
             # try to find error in data container
-            _ret = self._data_container.enable_error(err_id)  # TODO: this call does not return anything
+            _ret = self._data_container.enable_error(
+                err_id
+            )  # TODO: this call does not return anything
         except ValueError:
             # try to find error in model container
-            _ret = self._param_model.enable_error(err_id)  # TODO: this call does not return anything
+            _ret = self._param_model.enable_error(
+                err_id
+            )  # TODO: this call does not return anything
         return _ret
 
     def do_fit(self, asymmetric_parameter_errors=False):
@@ -1045,7 +1156,8 @@ class FitBase(FileIOMixin, object):
             warnings.warn("Cost function expects errors but no errors were specified.")
         if self._implicit_no_errors:
             warnings.warn(
-                "No data/model errors were specified. Parameter errors cannot be calculated.")
+                "No data/model errors were specified. Parameter errors cannot be calculated."
+            )
 
         if self._cost_function_pointwise is not None:
             if is_diagonal(self.total_cov_mat):
@@ -1107,8 +1219,9 @@ class FitBase(FileIOMixin, object):
             if _an is not None:
                 _af.name = _an
         if par_names_dict:
-            warnings.warn("Could not assign all names to a parameter."
-                          "Leftover: {}".format(par_names_dict))
+            warnings.warn(
+                "Could not assign all names to a parameter." "Leftover: {}".format(par_names_dict)
+            )
 
     def assign_model_function_latex_name(self, latex_name):
         """Assign a LaTeX-formatted string to be the model function name.
@@ -1124,8 +1237,9 @@ class FitBase(FileIOMixin, object):
             will be replaced automatically with the corresponding LaTeX names for the given
             parameter. These can be set with :py:meth:`~assign_parameter_latex_names`.
         """
-        self._model_function.formatter.latex_expression_format_string = \
+        self._model_function.formatter.latex_expression_format_string = (
             latex_expression_format_string
+        )
 
     def assign_parameter_latex_names(self, **par_latex_names_dict):
         """Assign LaTeX-formatted strings to all model function arguments.
@@ -1137,8 +1251,10 @@ class FitBase(FileIOMixin, object):
             if _aln is not None:
                 _af.latex_name = _aln
         if par_latex_names_dict:
-            warnings.warn("Could not assign all latex names to a parameter."
-                          "Leftover: {}".format(par_latex_names_dict))
+            warnings.warn(
+                "Could not assign all latex names to a parameter."
+                "Leftover: {}".format(par_latex_names_dict)
+            )
 
     def get_result_dict(self, asymmetric_parameter_errors=False):
         """Return a dictionary of the fit results.
@@ -1149,30 +1265,35 @@ class FitBase(FileIOMixin, object):
         """
         _result_dict = dict()
 
-        _result_dict['did_fit'] = self.did_fit
-        _cost = float(self.cost_function_value)  # convert numpy scalar to float for yaml representation
+        _result_dict["did_fit"] = self.did_fit
+        _cost = float(
+            self.cost_function_value
+        )  # convert numpy scalar to float for yaml representation
         _ndf = self.ndf
-        _result_dict['cost'] = _cost
-        _result_dict['ndf'] = _ndf
+        _result_dict["cost"] = _cost
+        _result_dict["ndf"] = _ndf
         _gof = self.goodness_of_fit
-        _result_dict['goodness_of_fit'] = _gof
-        _result_dict['gof/ndf'] = _gof / _ndf if _gof is not None else _gof
-        _result_dict['chi2_probability'] = self.chi2_probability
-        _result_dict['parameter_values'] = self.parameter_name_value_dict
-        if _result_dict['did_fit']:
-            _result_dict['parameter_cov_mat'] = self.parameter_cov_mat
+        _result_dict["goodness_of_fit"] = _gof
+        _result_dict["gof/ndf"] = _gof / _ndf if _gof is not None else _gof
+        _result_dict["chi2_probability"] = self.chi2_probability
+        _result_dict["parameter_values"] = self.parameter_name_value_dict
+        if _result_dict["did_fit"]:
+            _result_dict["parameter_cov_mat"] = self.parameter_cov_mat
             _parameter_errors = OrderedDict()
             for _pn, _pe in zip(self.parameter_names, self.parameter_errors):
                 _parameter_errors[_pn] = _pe
-            _result_dict['parameter_errors'] = _parameter_errors
-            _result_dict['parameter_cor_mat'] = self.parameter_cor_mat
+            _result_dict["parameter_errors"] = _parameter_errors
+            _result_dict["parameter_cor_mat"] = self.parameter_cor_mat
         else:
-            _result_dict['parameter_cov_mat'] = None
-            _result_dict['parameter_errors'] = None
-            _result_dict['parameter_cor_mat'] = None
+            _result_dict["parameter_cov_mat"] = None
+            _result_dict["parameter_errors"] = None
+            _result_dict["parameter_cor_mat"] = None
 
-        if self._loaded_result_dict is not None and self._loaded_result_dict['asymmetric_parameter_errors'] is not None:
-            _asymm_errs = self._loaded_result_dict['asymmetric_parameter_errors']
+        if (
+            self._loaded_result_dict is not None
+            and self._loaded_result_dict["asymmetric_parameter_errors"] is not None
+        ):
+            _asymm_errs = self._loaded_result_dict["asymmetric_parameter_errors"]
         elif asymmetric_parameter_errors:
             self._check_dynamic_error_compatibility()
             _asymm_errs = self.asymmetric_parameter_errors
@@ -1183,12 +1304,18 @@ class FitBase(FileIOMixin, object):
             for _pn, _ape in zip(self.parameter_names, _asymm_errs):
                 _asymm_errs_dict[_pn] = _ape
             _asymm_errs = _asymm_errs_dict
-        _result_dict['asymmetric_parameter_errors'] = _asymm_errs
+        _result_dict["asymmetric_parameter_errors"] = _asymm_errs
 
         return _result_dict
 
-    def report(self, output_stream=sys.stdout, show_data=True, show_model=True, show_fit_results=True,
-               asymmetric_parameter_errors=False):
+    def report(
+        self,
+        output_stream=sys.stdout,
+        show_data=True,
+        show_model=True,
+        show_fit_results=True,
+        asymmetric_parameter_errors=False,
+    ):
         """Print a summary of the fit state and/or results.
 
         :param output_stream: The output stream to which the report should be printed.
@@ -1204,14 +1331,18 @@ class FitBase(FileIOMixin, object):
         :type asymmetric_parameter_errors: bool
         """
 
-        _indent = ' ' * 4
+        _indent = " " * 4
         if show_data:
             self._report_data(output_stream=output_stream, indent=_indent, indentation_level=0)
         if show_model:
             self._report_model(output_stream=output_stream, indent=_indent, indentation_level=0)
         if show_fit_results:
-            self._report_fit_results(output_stream=output_stream, indent=_indent, indentation_level=0,
-                                     asymmetric_parameter_errors=asymmetric_parameter_errors)
+            self._report_fit_results(
+                output_stream=output_stream,
+                indent=_indent,
+                indentation_level=0,
+                asymmetric_parameter_errors=asymmetric_parameter_errors,
+            )
 
     def to_file(self, filename, file_format=None, calculate_asymmetric_errors=False):
         """Write kafe2 object to file
@@ -1224,12 +1355,17 @@ class FitBase(FileIOMixin, object):
         :type calculate_asymmetric_errors: bool
         """
         if calculate_asymmetric_errors:
-            _ = self.asymmetric_parameter_errors  # force calculation of asymmetric errors if not calculated yet
+            _ = (
+                self.asymmetric_parameter_errors
+            )  # force calculation of asymmetric errors if not calculated yet
         super(FitBase, self).to_file(filename=filename, file_format=file_format)
 
     def save_state(
-            self, filename: str, file_format: Optional[str] = None,
-            calculate_asymmetric_errors: bool = False):
+        self,
+        filename: str,
+        file_format: Optional[str] = None,
+        calculate_asymmetric_errors: bool = False,
+    ):
         """Write current state of the fit to file.
         Unlike to `to_file` this does not contain information regarding how the fit is constructed -
         this is because for complex fit objects a reconstruction from e.g. YAML may not work.

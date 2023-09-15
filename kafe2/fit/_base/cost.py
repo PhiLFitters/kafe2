@@ -15,8 +15,12 @@ else:
     from inspect import signature
 
 
-__all__ = ["CostFunction", "CostFunction_Chi2", "CostFunction_NegLogLikelihood",
-           "CostFunction_GaussApproximation"]
+__all__ = [
+    "CostFunction",
+    "CostFunction_Chi2",
+    "CostFunction_NegLogLikelihood",
+    "CostFunction_GaussApproximation",
+]
 
 
 class CostFunction(FileIOMixin, object):
@@ -44,8 +48,8 @@ class CostFunction(FileIOMixin, object):
     _ERROR_NAME = "total_error"
 
     def __init__(
-            self, cost_function, arg_names=None, add_constraint_cost=True,
-            add_determinant_cost=False):
+        self, cost_function, arg_names=None, add_constraint_cost=True, add_determinant_cost=False
+    ):
         """
         Construct :py:class:`CostFunction` object (a wrapper for a native Python function):
 
@@ -67,23 +71,32 @@ class CostFunction(FileIOMixin, object):
                     raise ValueError(
                         "Cost function '{}' with variable number of positional arguments "
                         "(*{}) needs explicit argument names.".format(
-                            self._cost_function_handle.__name__, _par.name))
+                            self._cost_function_handle.__name__, _par.name
+                        )
+                    )
         else:
             self._arg_names = list(arg_names)
         if "cost" in self._arg_names:
             raise ValueError(
                 "The alias 'cost' for the cost function value cannot be used as a name for one of"
-                "the cost function arguments!")
+                "the cost function arguments!"
+            )
         for _par in _signature.parameters.values():
             if _par.kind == _par.VAR_KEYWORD:
-                raise ValueError("Cost function '{}' with variable number of keyword arguments "
-                                 "(**{}) is not supported.".format(
-                                     self._cost_function_handle.__name__, _par.name, ))
+                raise ValueError(
+                    "Cost function '{}' with variable number of keyword arguments "
+                    "(**{}) is not supported.".format(
+                        self._cost_function_handle.__name__,
+                        _par.name,
+                    )
+                )
         self._arg_count = len(self._arg_names)
         self._formatter = CostFunctionFormatter(
             name=self.name,
-            arg_formatters=[ParameterFormatter(_arg_name, value=0, error=None)
-                            for _arg_name in self._arg_names])
+            arg_formatters=[
+                ParameterFormatter(_arg_name, value=0, error=None) for _arg_name in self._arg_names
+            ],
+        )
 
         self._add_constraint_cost = add_constraint_cost
         if self._add_constraint_cost:
@@ -110,7 +123,7 @@ class CostFunction(FileIOMixin, object):
 
     @classmethod
     def _get_object_type_name(cls):
-        return 'cost_function'
+        return "cost_function"
 
     def __call__(self, *args):
         additional_cost = 0.0
@@ -244,8 +257,12 @@ class CostFunction(FileIOMixin, object):
 
 class CostFunction_Chi2(CostFunction):
     def __init__(
-            self, errors_to_use='covariance', fallback_on_singular=True, add_constraint_cost=True,
-            add_determinant_cost=True):
+        self,
+        errors_to_use="covariance",
+        fallback_on_singular=True,
+        add_constraint_cost=True,
+        add_determinant_cost=True,
+    ):
         """Base class for built-in least-squares cost function.
 
         :param errors_to_use: Which errors to use when calculating :math:`\\chi^2`.
@@ -267,13 +284,13 @@ class CostFunction_Chi2(CostFunction):
             self._fail_on_no_matrix = False
             self._fail_on_no_errors = False
             _cost_function_description += " (no uncertainties)"
-        elif errors_to_use.lower() == 'covariance':
+        elif errors_to_use.lower() == "covariance":
             _chi2_func = self.chi2_covariance
             _arg_names = [self._DATA_NAME, self._MODEL_NAME, self._COV_MAT_CHOLESKY_NAME]
             self._fail_on_no_matrix = not fallback_on_singular
             self._fail_on_no_errors = True
             _cost_function_description += " (with covariance matrix)"
-        elif errors_to_use.lower() == 'pointwise':
+        elif errors_to_use.lower() == "pointwise":
             _chi2_func = self.chi2_pointwise_errors
             _arg_names = [self._DATA_NAME, self._MODEL_NAME, self._ERROR_NAME]
             self._fail_on_no_matrix = False
@@ -282,13 +299,14 @@ class CostFunction_Chi2(CostFunction):
         else:
             raise ValueError(
                 "Unknown value '%s' for 'errors_to_use': must be one of "
-                "('covariance', 'pointwise', None)")
+                "('covariance', 'pointwise', None)"
+            )
 
         super(CostFunction_Chi2, self).__init__(
             cost_function=_chi2_func,
             arg_names=_arg_names,
             add_constraint_cost=add_constraint_cost,
-            add_determinant_cost=add_determinant_cost
+            add_determinant_cost=add_determinant_cost,
         )
 
         self._formatter.latex_name = "\\chi^2"
@@ -306,9 +324,10 @@ class CostFunction_Chi2(CostFunction):
         if model.shape != data.shape:
             raise ValueError(
                 "'data' and 'model' must have the same shape! Got %r and %r..."
-                % (data.shape, model.shape))
+                % (data.shape, model.shape)
+            )
 
-        _res = (data - model)
+        _res = data - model
 
         # if a covariance matrix inverse is given, use it
         if cov_mat_cholesky is not None:
@@ -427,14 +446,14 @@ class CostFunction_Chi2(CostFunction):
                 errors_to_use="pointwise",
                 fallback_on_singular=not self._fail_on_no_matrix,
                 add_constraint_cost=self._add_constraint_cost,
-                add_determinant_cost=self._add_determinant_cost
+                add_determinant_cost=self._add_determinant_cost,
             )
         else:
             return None
 
 
 class CostFunction_NegLogLikelihood(CostFunction):
-    def __init__(self, data_point_distribution='poisson', ratio=False):
+    def __init__(self, data_point_distribution="poisson", ratio=False):
         r"""
         Base class for built-in negative log-likelihood cost function.
 
@@ -475,13 +494,13 @@ class CostFunction_NegLogLikelihood(CostFunction):
             _cost_function_description += " (Poisson uncertainties)"
             _arg_names = [self._DATA_NAME, self._MODEL_NAME]
         else:
-            raise ValueError("Unknown value '%s' for 'data_point_distribution': "
-                             "must be one of ('gaussian', 'poisson')!")
+            raise ValueError(
+                "Unknown value '%s' for 'data_point_distribution': "
+                "must be one of ('gaussian', 'poisson')!"
+            )
 
         super(CostFunction_NegLogLikelihood, self).__init__(
-            cost_function=_nll_func,
-            arg_names=_arg_names,
-            add_determinant_cost=False
+            cost_function=_nll_func, arg_names=_arg_names, add_determinant_cost=False
         )
 
         if ratio:
@@ -588,8 +607,9 @@ class CostFunction_NegLogLikelihood(CostFunction):
         return -2.0 * _log_likelihood_ratio
 
     def is_data_compatible(self, data):
-        if self._cost_function_handle in [self.nll_poisson, self.nllr_poisson] \
-                and (np.count_nonzero(data % 1) > 0 or np.any(data < 0)):
+        if self._cost_function_handle in [self.nll_poisson, self.nllr_poisson] and (
+            np.count_nonzero(data % 1) > 0 or np.any(data < 0)
+        ):
             return False, "poisson distribution can only have non-negative integers as y data."
         return True, None
 
@@ -601,7 +621,8 @@ class CostFunction_NegLogLikelihood(CostFunction):
 
 class CostFunction_GaussApproximation(CostFunction):
     def __init__(
-            self, errors_to_use='covariance', add_constraint_cost=True, add_determinant_cost=True):
+        self, errors_to_use="covariance", add_constraint_cost=True, add_determinant_cost=True
+    ):
         """
         Base class for built-in Gaussian approximation of the Poisson negative log-likelihood cost
         function.
@@ -617,24 +638,25 @@ class CostFunction_GaussApproximation(CostFunction):
         """
 
         _cost_function_description = "Gaussian approximation of Poisson NLL"
-        if errors_to_use.lower() == 'covariance':
+        if errors_to_use.lower() == "covariance":
             _cost_function = self.gaussian_approximation_covariance
             _arg_names = [self._DATA_NAME, self._MODEL_NAME, self._COV_MAT_CHOLESKY_NAME]
             _cost_function_description += " (with covariance matrix)"
-        elif errors_to_use.lower() == 'pointwise':
+        elif errors_to_use.lower() == "pointwise":
             _cost_function = self.gaussian_approximation_pointwise_errors
             _arg_names = [self._DATA_NAME, self._MODEL_NAME, self._ERROR_NAME]
             _cost_function_description += " (with pointwise errors)"
         else:
             raise ValueError(
                 "Unknown value '%s' for 'errors_to_use': must be one of "
-                "('covariance', 'pointwise')")
+                "('covariance', 'pointwise')"
+            )
 
         super().__init__(
             cost_function=_cost_function,
             arg_names=_arg_names,
             add_constraint_cost=add_constraint_cost,
-            add_determinant_cost=False
+            add_determinant_cost=False,
         )
         self._add_determinant_cost_ga = add_determinant_cost
 
@@ -713,7 +735,7 @@ class CostFunction_GaussApproximation(CostFunction):
         _residuals = model - data
         if np.all(_residuals == 0):
             return 0
-        _variances = model + total_error ** 2
+        _variances = model + total_error**2
         _cost = np.sum(np.square(_residuals) / _variances)
         if self._add_determinant_cost_ga:
             _cost += np.sum(np.log(_variances))
@@ -731,7 +753,7 @@ class CostFunction_GaussApproximation(CostFunction):
             return type(self)(
                 errors_to_use="pointwise",
                 add_constraint_cost=self._add_constraint_cost,
-                add_determinant_cost=self._add_determinant_cost
+                add_determinant_cost=self._add_determinant_cost,
             )
         else:
             return None
@@ -748,52 +770,84 @@ class CostFunction_GaussApproximation(CostFunction):
 
 
 STRING_TO_COST_FUNCTION = {
-    'chi2': (CostFunction_Chi2, {}),
-    'chi_2': (CostFunction_Chi2, {}),
-    'chisquared': (CostFunction_Chi2, {}),
-    'chi_squared': (CostFunction_Chi2, {}),
-    'chi2_no_errors': (CostFunction_Chi2, {"errors_to_use": None, "add_determinant_cost": False}),
-    'chi2_pointwise': (CostFunction_Chi2, {"errors_to_use": "pointwise"}),
-    'chi2_pointwise_errors': (CostFunction_Chi2, {"errors_to_use": "pointwise"}),
-    'chi2_covariance': (CostFunction_Chi2, {"errors_to_use": "covariance"}),
-    'nll': (CostFunction_NegLogLikelihood, {"ratio": False}),
-    'poisson': (CostFunction_NegLogLikelihood,
-                {"data_point_distribution": "poisson", "ratio": False}),
-    'nll-poisson': (CostFunction_NegLogLikelihood,
-                    {"data_point_distribution": "poisson", "ratio": False}),
-    'nll_poisson': (CostFunction_NegLogLikelihood,
-                    {"data_point_distribution": "poisson", "ratio": False}),
-    'nllpoisson': (CostFunction_NegLogLikelihood,
-                    {"data_point_distribution": "poisson", "ratio": False}),
-    'nll-gaussian': (CostFunction_NegLogLikelihood,
-                    {"data_point_distribution": "gaussian", "ratio": False}),
-    'nll_gaussian': (CostFunction_NegLogLikelihood,
-                    {"data_point_distribution": "gaussian", "ratio": False}),
-    'nllgaussiann': (CostFunction_NegLogLikelihood,
-                    {"data_point_distribution": "gaussian", "ratio": False}),
-    'negloglikelihood': (CostFunction_NegLogLikelihood, {"ratio": False}),
-    'neg_log_likelihood': (CostFunction_NegLogLikelihood, {"ratio": False}),
-    'nllr': (CostFunction_NegLogLikelihood, {"ratio": True}),
-    'nllr-poisson': (CostFunction_NegLogLikelihood,
-                    {"data_point_distribution": "poisson", "ratio": True}),
-    'nllr_poisson': (CostFunction_NegLogLikelihood,
-                    {"data_point_distribution": "poisson", "ratio": True}),
-    'nllrpoisson': (CostFunction_NegLogLikelihood,
-                    {"data_point_distribution": "poisson", "ratio": True}),
-    'nllr-gaussian': (CostFunction_NegLogLikelihood,
-                    {"data_point_distribution": "gaussian", "ratio": True}),
-    'nllr_gaussian': (CostFunction_NegLogLikelihood,
-                    {"data_point_distribution": "gaussian", "ratio": True}),
-    'nllrgaussian': (CostFunction_NegLogLikelihood,
-                    {"data_point_distribution": "gaussian", "ratio": True}),
-    'negloglikelihoodratio': (CostFunction_NegLogLikelihood, {"ratio": True}),
-    'neg_log_likelihood_ratio': (CostFunction_NegLogLikelihood, {"ratio": True}),
-    'gauss-approximation': (CostFunction_GaussApproximation, {}),
-    'gauss_approximation': (CostFunction_GaussApproximation, {}),
-    'gauss_approximation_covariance': (
-        CostFunction_GaussApproximation, {"errors_to_use": "covariance"}),
-    'gauss_approximation_pointwise': (
-        CostFunction_GaussApproximation, {"errors_to_use": "pointwise"}),
-    'gauss_approximation_pointwise_errors': (
-        CostFunction_GaussApproximation, {"errors_to_use": "pointwise"}),
+    "chi2": (CostFunction_Chi2, {}),
+    "chi_2": (CostFunction_Chi2, {}),
+    "chisquared": (CostFunction_Chi2, {}),
+    "chi_squared": (CostFunction_Chi2, {}),
+    "chi2_no_errors": (CostFunction_Chi2, {"errors_to_use": None, "add_determinant_cost": False}),
+    "chi2_pointwise": (CostFunction_Chi2, {"errors_to_use": "pointwise"}),
+    "chi2_pointwise_errors": (CostFunction_Chi2, {"errors_to_use": "pointwise"}),
+    "chi2_covariance": (CostFunction_Chi2, {"errors_to_use": "covariance"}),
+    "nll": (CostFunction_NegLogLikelihood, {"ratio": False}),
+    "poisson": (
+        CostFunction_NegLogLikelihood,
+        {"data_point_distribution": "poisson", "ratio": False},
+    ),
+    "nll-poisson": (
+        CostFunction_NegLogLikelihood,
+        {"data_point_distribution": "poisson", "ratio": False},
+    ),
+    "nll_poisson": (
+        CostFunction_NegLogLikelihood,
+        {"data_point_distribution": "poisson", "ratio": False},
+    ),
+    "nllpoisson": (
+        CostFunction_NegLogLikelihood,
+        {"data_point_distribution": "poisson", "ratio": False},
+    ),
+    "nll-gaussian": (
+        CostFunction_NegLogLikelihood,
+        {"data_point_distribution": "gaussian", "ratio": False},
+    ),
+    "nll_gaussian": (
+        CostFunction_NegLogLikelihood,
+        {"data_point_distribution": "gaussian", "ratio": False},
+    ),
+    "nllgaussiann": (
+        CostFunction_NegLogLikelihood,
+        {"data_point_distribution": "gaussian", "ratio": False},
+    ),
+    "negloglikelihood": (CostFunction_NegLogLikelihood, {"ratio": False}),
+    "neg_log_likelihood": (CostFunction_NegLogLikelihood, {"ratio": False}),
+    "nllr": (CostFunction_NegLogLikelihood, {"ratio": True}),
+    "nllr-poisson": (
+        CostFunction_NegLogLikelihood,
+        {"data_point_distribution": "poisson", "ratio": True},
+    ),
+    "nllr_poisson": (
+        CostFunction_NegLogLikelihood,
+        {"data_point_distribution": "poisson", "ratio": True},
+    ),
+    "nllrpoisson": (
+        CostFunction_NegLogLikelihood,
+        {"data_point_distribution": "poisson", "ratio": True},
+    ),
+    "nllr-gaussian": (
+        CostFunction_NegLogLikelihood,
+        {"data_point_distribution": "gaussian", "ratio": True},
+    ),
+    "nllr_gaussian": (
+        CostFunction_NegLogLikelihood,
+        {"data_point_distribution": "gaussian", "ratio": True},
+    ),
+    "nllrgaussian": (
+        CostFunction_NegLogLikelihood,
+        {"data_point_distribution": "gaussian", "ratio": True},
+    ),
+    "negloglikelihoodratio": (CostFunction_NegLogLikelihood, {"ratio": True}),
+    "neg_log_likelihood_ratio": (CostFunction_NegLogLikelihood, {"ratio": True}),
+    "gauss-approximation": (CostFunction_GaussApproximation, {}),
+    "gauss_approximation": (CostFunction_GaussApproximation, {}),
+    "gauss_approximation_covariance": (
+        CostFunction_GaussApproximation,
+        {"errors_to_use": "covariance"},
+    ),
+    "gauss_approximation_pointwise": (
+        CostFunction_GaussApproximation,
+        {"errors_to_use": "pointwise"},
+    ),
+    "gauss_approximation_pointwise_errors": (
+        CostFunction_GaussApproximation,
+        {"errors_to_use": "pointwise"},
+    ),
 }

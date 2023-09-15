@@ -3,8 +3,15 @@ from scipy.optimize import minimize
 
 
 def calculate_expected_fit_parameters_xy(
-        x_data, y_data, model_function, y_error, initial_parameter_values, x_error=None,
-        model_function_derivative=None, relative_model_y_error=False):
+    x_data,
+    y_data,
+    model_function,
+    y_error,
+    initial_parameter_values,
+    x_error=None,
+    model_function_derivative=None,
+    relative_model_y_error=False,
+):
     x_data = np.array(x_data)
     y_data = np.array(y_data)
     y_error = np.array(y_error)
@@ -12,17 +19,20 @@ def calculate_expected_fit_parameters_xy(
 
     def chi2(parameter_values):
         _residuals = y_data - model_function(x_data, *parameter_values)
-        return np.sum((_residuals / y_error) ** 2) + np.sum(np.log(y_error ** 2))
+        return np.sum((_residuals / y_error) ** 2) + np.sum(np.log(y_error**2))
 
     def chi2_dynamic_error(parameter_values):
         _model = model_function(x_data, *parameter_values)
         _residuals = y_data - _model
-        _x_error = x_error * model_function_derivative(x_data, *parameter_values) \
-            if x_error is not None else 0
+        _x_error = (
+            x_error * model_function_derivative(x_data, *parameter_values)
+            if x_error is not None
+            else 0
+        )
         _x_error = 0
         _y_error = y_error if not relative_model_y_error else y_error * _model
-        _xy_error_squared = _x_error ** 2 + _y_error ** 2
-        return np.sum(_residuals ** 2 / _xy_error_squared) + np.sum(np.log(_xy_error_squared))
+        _xy_error_squared = _x_error**2 + _y_error**2
+        return np.sum(_residuals**2 / _xy_error_squared) + np.sum(np.log(_xy_error_squared))
 
     _result = minimize(fun=chi2, x0=initial_parameter_values)
     print(1, _result.x)
@@ -34,9 +44,19 @@ def calculate_expected_fit_parameters_xy(
 
 
 def calculate_expected_multi_xy_chi2_cost(
-        y_data_1, y_data_2, y_model_1, y_model_2, y_cov_mat_1, y_cov_mat_2, y_cov_mat_shared,
-        x_cov_mat_1, x_cov_mat_2, x_cov_mat_shared, derivatives_1, derivatives_2):
-
+    y_data_1,
+    y_data_2,
+    y_model_1,
+    y_model_2,
+    y_cov_mat_1,
+    y_cov_mat_2,
+    y_cov_mat_shared,
+    x_cov_mat_1,
+    x_cov_mat_2,
+    x_cov_mat_shared,
+    derivatives_1,
+    derivatives_2,
+):
     assert y_data_1.ndim == 1
     _shape_1d = y_data_1.shape
     _middle = _shape_1d[0]

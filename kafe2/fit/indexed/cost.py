@@ -9,7 +9,7 @@ __all__ = [
     "IndexedCostFunction",
     "IndexedCostFunction_Chi2",
     "IndexedCostFunction_NegLogLikelihood",
-    "IndexedCostFunction_GaussApproximation"
+    "IndexedCostFunction_GaussApproximation",
 ]
 
 

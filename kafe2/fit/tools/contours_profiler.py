@@ -38,15 +38,15 @@ def _linear_range_transform(range_, factor, asymmetry=0.0):
 
     _m = 0.5 * (range_[1] + range_[0])
     _d = 0.5 * (range_[1] - range_[0])
-    _asymm_factor = (1.0 + asymmetry)
+    _asymm_factor = 1.0 + asymmetry
 
-    return _m - factor*(2.0 - _asymm_factor) * _d, _m + factor*_asymm_factor*_d
+    return _m - factor * (2.0 - _asymm_factor) * _d, _m + factor * _asymm_factor * _d
 
 
 def _maybe_set_tight_layout(figure):
     """Enable 'tight_layout' for a figure if the matplotlib version is high enough."""
     # older versions of matplotlib cause problems with 'tight_layout'
-    if not mpl.__version__.startswith('1'):
+    if not mpl.__version__.startswith("1"):
         figure.set_tight_layout(True)
 
 
@@ -55,6 +55,7 @@ class SigmaLocator(plticker.Locator):
     Create ticks at evenly spaced offsets from a central value.
     The offsets are integer multiples of a fixed value ('sigma')
     """
+
     def __init__(self, central_value, sigma):
         self._cval = central_value
         self._sigma = sigma
@@ -65,10 +66,11 @@ class SigmaLocator(plticker.Locator):
         return self.tick_values(_vmin, _vmax)
 
     def tick_values(self, vmin, vmax):
-        _n_sigma_dn = int((vmin - self._cval)/self._sigma)
-        _n_sigma_up = int((vmax - self._cval)/self._sigma)
+        _n_sigma_dn = int((vmin - self._cval) / self._sigma)
+        _n_sigma_up = int((vmax - self._cval) / self._sigma)
         return self.raise_if_exceeds(
-            np.arange(_n_sigma_dn, _n_sigma_up+1, 1) * self._sigma + self._cval)
+            np.arange(_n_sigma_dn, _n_sigma_up + 1, 1) * self._sigma + self._cval
+        )
 
 
 class SigmaFormatter(plticker.Formatter):
@@ -76,6 +78,7 @@ class SigmaFormatter(plticker.Formatter):
     Set the tick labels to indicate the distance to the
     central value, in intervals
     """
+
     def __init__(self, central_value, sigma):
         """set the tick labels to correspond to sigma"""
         self._cval = central_value
@@ -84,18 +87,18 @@ class SigmaFormatter(plticker.Formatter):
     def __call__(self, x, pos=None):
         """Return the format for tick val *x* at position *pos*"""
         # _vmin, _vmax = self.axis.get_data_interval()
-        _numeric_label = (x - self._cval)/self._sigma
+        _numeric_label = (x - self._cval) / self._sigma
         _str_label = r"%.2g$\sigma$" % (_numeric_label,)
         return _str_label
 
     def format_data_short(self, value):
         """Short version of format string for tick"""
-        return '{:g}'.format(value)
+        return "{:g}".format(value)
 
 
 class ScalarFormatter(plticker.Formatter):
-    """Format the tick labels to a specified precision.
-    """
+    """Format the tick labels to a specified precision."""
+
     def __init__(self, sigma, n_significant_digits=2):
         """Format the tick label to a specified precision, according to the uncertainty.
 
@@ -127,24 +130,47 @@ class ContoursProfiler(object):
     This object offers a means of calculating both profiles and contours
     """
 
-    _DEFAULT_PLOT_PROFILE_KWARGS = dict(marker='', linewidth=2)
+    _DEFAULT_PLOT_PROFILE_KWARGS = dict(marker="", linewidth=2)
     _DEFAULT_PLOT_PROFILE_ARROW_KWARGS = dict(
-        color="black", linewidth=1, shrinkA=0, shrinkB=0, horizontal_arrow_length=0.05,
+        color="black",
+        linewidth=1,
+        shrinkA=0,
+        shrinkB=0,
+        horizontal_arrow_length=0.05,
         arrowstyle=mpl.patches.ArrowStyle("fancy", head_length=6, head_width=6, tail_width=0.01),
-        vertical_x_text=0.005, vertical_y_text=0.005, horizontal_x_text=0.015,
-        horizontal_y_text=-0.03
+        vertical_x_text=0.005,
+        vertical_y_text=0.005,
+        horizontal_x_text=0.015,
+        horizontal_y_text=-0.03,
     )
-    _DEFAULT_PLOT_PARABOLA_KWARGS = dict(marker='', linewidth=2, linestyle='--')
-    _DEFAULT_PLOT_ERROR_SPAN_ON_PROFILE_KWARGS = dict(color='gray', alpha=0.5)
-    _DEFAULT_PLOT_MINIMUM_KWARGS = dict(markersize=12, marker='*', linewidth=1.5, linestyle='',
-                                        capsize=4, color='green', ecolor='green', elinewidth=1.5)
-    _DEFAULT_PLOT_MINIMUM_HVLINES_KWARGS = dict(linewidth=1.0, linestyle='--', color='green', marker='')
+    _DEFAULT_PLOT_PARABOLA_KWARGS = dict(marker="", linewidth=2, linestyle="--")
+    _DEFAULT_PLOT_ERROR_SPAN_ON_PROFILE_KWARGS = dict(color="gray", alpha=0.5)
+    _DEFAULT_PLOT_MINIMUM_KWARGS = dict(
+        markersize=12,
+        marker="*",
+        linewidth=1.5,
+        linestyle="",
+        capsize=4,
+        color="green",
+        ecolor="green",
+        elinewidth=1.5,
+    )
+    _DEFAULT_PLOT_MINIMUM_HVLINES_KWARGS = dict(
+        linewidth=1.0, linestyle="--", color="green", marker=""
+    )
     _DEFAULT_PLOT_FILL_CONTOUR_KWARGS = dict(alpha=0.3, linewidth=2)
 
-    def __init__(self, fit_object,
-                 profile_points=100, profile_subtract_min=True, profile_bound=2.45,
-                 contour_points=100, contour_sigma_values=(1.0, 2.0), contour_smoothing_sigma=0.0,
-                 contour_method_kwargs=None):
+    def __init__(
+        self,
+        fit_object,
+        profile_points=100,
+        profile_subtract_min=True,
+        profile_bound=2.45,
+        contour_points=100,
+        contour_sigma_values=(1.0, 2.0),
+        contour_smoothing_sigma=0.0,
+        contour_method_kwargs=None,
+    ):
         """
         Construct a :py:obj:`~kafe2.fit._base.profile.ContoursProfiler` object:
 
@@ -168,39 +194,58 @@ class ContoursProfiler(object):
         if not isinstance(fit_object, FitBase):
             raise TypeError("Object %r is not a fit object!" % (fit_object,))
 
-        _contour_confidence_levels = [ConfidenceLevel(n_dimensions=2, sigma=_sigma)
-                                      for _sigma in contour_sigma_values]
+        _contour_confidence_levels = [
+            ConfidenceLevel(n_dimensions=2, sigma=_sigma) for _sigma in contour_sigma_values
+        ]
 
         self._fit = fit_object
-        self._profile_kwargs = dict(points=profile_points, subtract_min=profile_subtract_min, bound=profile_bound)
-        self._contour_kwargs = dict(points=contour_points,
-                                    confidence_levels=_contour_confidence_levels,
-                                    smoothing_sigma=contour_smoothing_sigma,
-                                    method_kwargs=contour_method_kwargs)
+        self._profile_kwargs = dict(
+            points=profile_points, subtract_min=profile_subtract_min, bound=profile_bound
+        )
+        self._contour_kwargs = dict(
+            points=contour_points,
+            confidence_levels=_contour_confidence_levels,
+            smoothing_sigma=contour_smoothing_sigma,
+            method_kwargs=contour_method_kwargs,
+        )
 
-        self._cost_function_formatted_name = "${}$".format(self._fit._cost_function.formatter.latex_name)
+        self._cost_function_formatted_name = "${}$".format(
+            self._fit._cost_function.formatter.latex_name
+        )
         # FIXME MultiFit does not have an internal _model_function field
-        self._parameters_formatted_names = ["${}$".format(pf.latex_name)
-                                            for pf in self._fit._get_model_function_parameter_formatters()]
+        self._parameters_formatted_names = [
+            "${}$".format(pf.latex_name)
+            for pf in self._fit._get_model_function_parameter_formatters()
+        ]
 
         self._figures = []
 
-    def _get_profile(self, parameter, low=None, high=None, sigma=None, cl=None, points=None,
-                     subtract_min=None, arrows=False):
+    def _get_profile(
+        self,
+        parameter,
+        low=None,
+        high=None,
+        sigma=None,
+        cl=None,
+        points=None,
+        subtract_min=None,
+        arrows=False,
+    ):
         if low is None and high is None and sigma is None and cl is None:
             sigma = 2
         if points is None:
-            points = self._profile_kwargs['points']
+            points = self._profile_kwargs["points"]
         if subtract_min is None:
-            subtract_min = self._profile_kwargs['subtract_min']
+            subtract_min = self._profile_kwargs["subtract_min"]
         self._fit._check_dynamic_error_compatibility()
         return self._fit._fitter.profile(
-            parameter, low, high, sigma, cl, points, subtract_min, arrows)
+            parameter, low, high, sigma, cl, points, subtract_min, arrows
+        )
 
     def _make_figure_gs(self, nrows=1, ncols=1):
         _fig = plt.figure(figsize=(8, 8))  # defaults from matplotlibrc
 
-        if mpl.__version__.startswith('1'):
+        if mpl.__version__.startswith("1"):
             # old API does not support passing 'figure'
             _gs = gs.GridSpec(nrows=nrows, ncols=ncols)
         else:
@@ -229,7 +274,8 @@ class ContoursProfiler(object):
             _y_text = y + _kwargs_vertical.pop("vertical_y_text") * y_span
         target_axes.add_patch(mpl.patches.FancyArrowPatch((x, y), (x, 0), **_kwargs_vertical))
         _par_text = par_formatter.get_formatted(
-            value=x, with_name=True, with_errors=False, format_as_latex=True)
+            value=x, with_name=True, with_errors=False, format_as_latex=True
+        )
         target_axes.text(_x_text, _y_text, _par_text, horizontalalignment=side)
 
         _kwargs_horizontal = ContoursProfiler._DEFAULT_PLOT_PROFILE_ARROW_KWARGS.copy()
@@ -247,8 +293,9 @@ class ContoursProfiler(object):
             _alignment = "left"
         else:
             raise ValueError(f"Unknown side: {side}")
-        target_axes.add_patch(mpl.patches.FancyArrowPatch(
-            (x, y), (_x_target, y), **_kwargs_horizontal))
+        target_axes.add_patch(
+            mpl.patches.FancyArrowPatch((x, y), (_x_target, y), **_kwargs_horizontal)
+        )
         target_axes.text(_x_text, _y_text, f"${100*cl:.2f}\%$", horizontalalignment=_alignment)
 
     @staticmethod
@@ -274,12 +321,11 @@ class ContoursProfiler(object):
         # make error bar caps have the same line width as the error bars
         _cap_artists = _min_pt_artists[1]
         for _cap in _cap_artists:
-            _cap.set_markeredgewidth(_kwargs.get('elinewidth', 1.5))
+            _cap.set_markeredgewidth(_kwargs.get("elinewidth", 1.5))
 
         _kwargs = ContoursProfiler._DEFAULT_PLOT_MINIMUM_HVLINES_KWARGS.copy()
 
-        _min_lines_artists = (target_axes.axvline(x, **_kwargs),
-                              target_axes.axhline(y, **_kwargs))
+        _min_lines_artists = (target_axes.axvline(x, **_kwargs), target_axes.axhline(y, **_kwargs))
 
         return _min_pt_artists, _min_lines_artists
 
@@ -287,11 +333,28 @@ class ContoursProfiler(object):
     def _plot_contour_xy(target_axes, contour, label, contour_color):
         _kwargs = ContoursProfiler._DEFAULT_PLOT_FILL_CONTOUR_KWARGS.copy()
         if contour.xy_points is not None:
-            return [target_axes.fill(contour.xy_points[0], contour.xy_points[1], label=label, **_kwargs)]
-        return [target_axes.contour(contour.grid_x, contour.grid_y, contour.grid_z.T, levels=[0, contour.sigma],
-                                    colors="gray", **_kwargs),
-                target_axes.contourf(contour.grid_x, contour.grid_y, contour.grid_z.T, levels=[0, contour.sigma],
-                                     colors=contour_color, label=label, **_kwargs)]
+            return [
+                target_axes.fill(contour.xy_points[0], contour.xy_points[1], label=label, **_kwargs)
+            ]
+        return [
+            target_axes.contour(
+                contour.grid_x,
+                contour.grid_y,
+                contour.grid_z.T,
+                levels=[0, contour.sigma],
+                colors="gray",
+                **_kwargs,
+            ),
+            target_axes.contourf(
+                contour.grid_x,
+                contour.grid_y,
+                contour.grid_z.T,
+                levels=[0, contour.sigma],
+                colors=contour_color,
+                label=label,
+                **_kwargs,
+            ),
+        ]
 
     # -- public properties
 
@@ -309,9 +372,9 @@ class ContoursProfiler(object):
         """Convenience wrapper for matplotlib.pyplot.show()"""
         plt.show(*args, **kwargs)
 
-
-    def get_profile(self, parameter, low=None, high=None, sigma=None, cl=None, points=None,
-                    subtract_min=None):
+    def get_profile(
+        self, parameter, low=None, high=None, sigma=None, cl=None, points=None, subtract_min=None
+    ):
         """
         Calculate and return a profile of the cost function in a parameter.
 
@@ -341,8 +404,9 @@ class ContoursProfiler(object):
         :return: two-dimensional array of *x* (parameter) values and *y* (cost function) values
         :rtype: two-dimensional array of float
         """
-        return self._get_profile(parameter, low, high, sigma, cl, points, subtract_min,
-                                 arrows=False)[0]
+        return self._get_profile(
+            parameter, low, high, sigma, cl, points, subtract_min, arrows=False
+        )[0]
 
     def get_contours(self, parameter_1, parameter_2, smoothing_sigma=None):
         """
@@ -358,21 +422,23 @@ class ContoursProfiler(object):
         :rtype: list of 2-tuples of float and 2d-array
         """
         if smoothing_sigma is None:
-            smoothing_sigma = self._contour_kwargs['smoothing_sigma']
+            smoothing_sigma = self._contour_kwargs["smoothing_sigma"]
         _contours = []
-        for _cl_obj in self._contour_kwargs['confidence_levels']:
-            _contour_method_kwargs = self._contour_kwargs.get('method_kwargs', dict())
+        for _cl_obj in self._contour_kwargs["confidence_levels"]:
+            _contour_method_kwargs = self._contour_kwargs.get("method_kwargs", dict())
             if _contour_method_kwargs is None:
                 _contour_method_kwargs = dict()
             # TODO fix for single fit inside multifit
-            _cont = self._fit._fitter.contour(parameter_1, parameter_2, sigma=_cl_obj.sigma,
-                                              **_contour_method_kwargs)
+            _cont = self._fit._fitter.contour(
+                parameter_1, parameter_2, sigma=_cl_obj.sigma, **_contour_method_kwargs
+            )
 
             # smooth contours if requested
             if smoothing_sigma > 0 and _cont is not None:
                 from scipy.ndimage.filters import gaussian_filter
-                _cont[0] = gaussian_filter(_cont[0], smoothing_sigma, mode='wrap')
-                _cont[1] = gaussian_filter(_cont[1], smoothing_sigma, mode='wrap')
+
+                _cont[0] = gaussian_filter(_cont[0], smoothing_sigma, mode="wrap")
+                _cont[1] = gaussian_filter(_cont[1], smoothing_sigma, mode="wrap")
 
             _contours.append((_cl_obj, _cont))
         self._fit._check_dynamic_error_compatibility()
@@ -380,22 +446,24 @@ class ContoursProfiler(object):
 
     # - plot profiles/contours
 
-    def plot_profile(self,
-                     parameter,
-                     low=None,
-                     high=None,
-                     sigma=None,
-                     cl=None,
-                     target_axes=None,
-                     show_parabolic=True,
-                     show_grid=True,
-                     show_legend=True,
-                     show_fit_minimum=True,
-                     show_error_span=True,
-                     show_ticks=True,
-                     label_ticks_in_sigma=True,
-                     label_fit_minimum=True,
-                     font_scale=1.0):
+    def plot_profile(
+        self,
+        parameter,
+        low=None,
+        high=None,
+        sigma=None,
+        cl=None,
+        target_axes=None,
+        show_parabolic=True,
+        show_grid=True,
+        show_legend=True,
+        show_fit_minimum=True,
+        show_error_span=True,
+        show_ticks=True,
+        label_ticks_in_sigma=True,
+        label_fit_minimum=True,
+        font_scale=1.0,
+    ):
         """
         Plot the profile cost function for a parameter.
 
@@ -453,12 +521,11 @@ class ContoursProfiler(object):
             _cost_function_min = self._fit.cost_function_value
             _par_formatted_name = self._parameters_formatted_names[_par_id]
 
-            (_x, _y), _arrow_specs = self._get_profile(
-                parameter, low, high, sigma, cl,
-                arrows=True)
+            (_x, _y), _arrow_specs = self._get_profile(parameter, low, high, sigma, cl, arrows=True)
 
             _profile_artist = self._plot_profile_xy(
-                _axes, _x, _y, label="profile %s" % (self._cost_function_formatted_name,))
+                _axes, _x, _y, label="profile %s" % (self._cost_function_formatted_name,)
+            )
 
             _x_min_parabola = np.min(_x)
             _x_max_parabola = np.max(_x)
@@ -470,65 +537,72 @@ class ContoursProfiler(object):
                     _x_min_parabola = min(_x_min_parabola, _x_margin)
                     _x_max_parabola = max(_x_max_parabola, _x_margin)
                     self._plot_profile_arrow(
-                        _axes, _x_span, _y_span,
+                        _axes,
+                        _x_span,
+                        _y_span,
                         self._fit._get_model_function_parameter_formatters()[_par_id],
-                        **_arrow_spec)
+                        **_arrow_spec,
+                    )
 
-            _y_offset = _cost_function_min if not self._profile_kwargs['subtract_min'] else 0.0
+            _y_offset = _cost_function_min if not self._profile_kwargs["subtract_min"] else 0.0
 
             _parabola_artist = None
             if show_parabolic:
                 _x_parabola = np.linspace(_x_min_parabola, _x_max_parabola, 101)
-                _parabola_artist = self._plot_parabolic_cost(_axes,
-                                                             _x_parabola,
-                                                             quad_coeff=1. / (_par_err**2),
-                                                             x_offset=_par_val,
-                                                             y_offset=_y_offset,
-                                                             label="parabolic approximation")
+                _parabola_artist = self._plot_parabolic_cost(
+                    _axes,
+                    _x_parabola,
+                    quad_coeff=1.0 / (_par_err**2),
+                    x_offset=_par_val,
+                    y_offset=_y_offset,
+                    label="parabolic approximation",
+                )
 
             _minimum_artist = None
             if show_fit_minimum:
-                _minimum_artist = self._plot_minimum(_axes,
-                                                     x=_par_val,
-                                                     y=_y_offset,
-                                                     xerr=_par_err, yerr=None,
-                                                     label="fit minimum")
+                _minimum_artist = self._plot_minimum(
+                    _axes, x=_par_val, y=_y_offset, xerr=_par_err, yerr=None, label="fit minimum"
+                )
 
             if label_fit_minimum:
                 sigma_str = r"$\sigma_{{{}}} = {:%s}$" % _float_template
                 _axes.annotate(
-                    '\n'.join([
-                        r"$\langle {}\rangle = {}$".format(
-                            _par_formatted_name.strip('$'),
-                            ScalarBaseFormatter(_par_err, n_significant_digits=2)(_par_val)
-                        ),
-                        sigma_str.format(
-                            _par_formatted_name.strip('$'),
-                            _par_err
-                        )]),
+                    "\n".join(
+                        [
+                            r"$\langle {}\rangle = {}$".format(
+                                _par_formatted_name.strip("$"),
+                                ScalarBaseFormatter(_par_err, n_significant_digits=2)(_par_val),
+                            ),
+                            sigma_str.format(_par_formatted_name.strip("$"), _par_err),
+                        ]
+                    ),
                     xy=(_par_val, 1),
-                    xycoords=('data', 'axes fraction'),
+                    xycoords=("data", "axes fraction"),
                     xytext=(0, -10),
-                    textcoords='offset points',
-                    ha='center',
-                    va='top'
+                    textcoords="offset points",
+                    ha="center",
+                    va="top",
                 )
 
             _err_span_artist = None
             if show_error_span:
-                _xmin, _xmax = _par_val-_par_err, _par_val+_par_err
-                _err_span_artist = self._plot_error_span_on_profile(_axes, xmin=_xmin, xmax=_xmax,
-                                                                    label="parameter error")
+                _xmin, _xmax = _par_val - _par_err, _par_val + _par_err
+                _err_span_artist = self._plot_error_span_on_profile(
+                    _axes, xmin=_xmin, xmax=_xmax, label="parameter error"
+                )
 
             _axes.set_xlabel(_par_formatted_name)
-            _axes.set_ylabel(self._cost_function_formatted_name if not self._profile_kwargs['subtract_min']
-                             else '$\\Delta$%s' % self._cost_function_formatted_name)
+            _axes.set_ylabel(
+                self._cost_function_formatted_name
+                if not self._profile_kwargs["subtract_min"]
+                else "$\\Delta$%s" % self._cost_function_formatted_name
+            )
 
             if show_legend:
-                _axes.legend(loc='center', fontsize=float(rcParams["font.size"]))
+                _axes.legend(loc="center", fontsize=float(rcParams["font.size"]))
 
             if show_grid:
-                _axes.grid('on')
+                _axes.grid("on")
 
             if show_ticks:
                 _loc_x = SigmaLocator(central_value=_par_val, sigma=_par_err)
@@ -552,14 +626,19 @@ class ContoursProfiler(object):
 
             return _axes.get_figure()
 
-    def plot_contours(self, parameter_1, parameter_2, target_axes=None,
-                      show_grid=True,
-                      show_legend=True,
-                      show_fit_minimum=True,
-                      show_ticks=True,
-                      label_ticks_in_sigma=True,
-                      naming_convention='sigma',
-                      font_scale=1.0):
+    def plot_contours(
+        self,
+        parameter_1,
+        parameter_2,
+        target_axes=None,
+        show_grid=True,
+        show_legend=True,
+        show_fit_minimum=True,
+        show_ticks=True,
+        label_ticks_in_sigma=True,
+        naming_convention="sigma",
+        font_scale=1.0,
+    ):
         """
         Plot the contour for a parameter pair.
 
@@ -601,25 +680,31 @@ class ContoursProfiler(object):
             _par_1_formatted_name = self._parameters_formatted_names[_par_1_id]
             _par_2_formatted_name = self._parameters_formatted_names[_par_2_id]
 
-            if naming_convention.lower() == 'cl':
+            if naming_convention.lower() == "cl":
                 _use_cl_in_label = True
-            elif naming_convention.lower() == 'sigma':
+            elif naming_convention.lower() == "sigma":
                 _use_cl_in_label = False
             else:
-                raise ValueError("Unknown contour naming convention '%s'! "
-                                                "Must be one of: ('cl', 'sigma')"
-                                                % (naming_convention,))
+                raise ValueError(
+                    "Unknown contour naming convention '%s'! "
+                    "Must be one of: ('cl', 'sigma')" % (naming_convention,)
+                )
 
             _cl_contour_pairs = self.get_contours(parameter_1, parameter_2)
 
             _contour_artists = []
-            for _cl_contour_pair, _prop_cycler in zip(_cl_contour_pairs, rcParams["axes.prop_cycle"]):
+            for _cl_contour_pair, _prop_cycler in zip(
+                _cl_contour_pairs, rcParams["axes.prop_cycle"]
+            ):
                 _cl, _contour_xy = _cl_contour_pair
                 _artists = []
                 if _contour_xy is not None:
-                    _label = "%s contour" % (_cl.cl_latex_string if _use_cl_in_label else _cl.sigma_latex_string)
-                    _artists = self._plot_contour_xy(_axes, _contour_xy, label=_label,
-                                                     contour_color=_prop_cycler["color"])
+                    _label = "%s contour" % (
+                        _cl.cl_latex_string if _use_cl_in_label else _cl.sigma_latex_string
+                    )
+                    _artists = self._plot_contour_xy(
+                        _axes, _contour_xy, label=_label, contour_color=_prop_cycler["color"]
+                    )
                 _contour_artists += _artists
 
             _par_1_val = self._fit.parameter_name_value_dict[parameter_1]
@@ -629,18 +714,23 @@ class ContoursProfiler(object):
 
             _minimum_artist = None
             if show_fit_minimum:
-                _minimum_artist = self._plot_minimum(_axes, x=_par_1_val, y=_par_2_val,
-                                                     xerr=_par_1_err, yerr=_par_2_err,
-                                                     label="fit minimum")
+                _minimum_artist = self._plot_minimum(
+                    _axes,
+                    x=_par_1_val,
+                    y=_par_2_val,
+                    xerr=_par_1_err,
+                    yerr=_par_2_err,
+                    label="fit minimum",
+                )
 
             _axes.set_xlabel(_par_1_formatted_name)
             _axes.set_ylabel(_par_2_formatted_name)
 
             if show_legend:
-                _axes.legend(loc='best', fontsize=float(rcParams["font.size"]))
+                _axes.legend(loc="best", fontsize=float(rcParams["font.size"]))
 
             if show_grid:
-                _axes.grid('on')
+                _axes.grid("on")
 
             if show_ticks:
                 _loc_x = SigmaLocator(central_value=_par_1_val, sigma=_par_1_err)
@@ -667,18 +757,20 @@ class ContoursProfiler(object):
 
             return _axes.get_figure()
 
-    def plot_profiles_contours_matrix(self,
-                                      parameters=None,
-                                      show_grid_for=None,
-                                      show_ticks_for='all',
-                                      show_fit_minimum_for='contours',
-                                      show_legend=True,
-                                      show_parabolic_profiles=True,
-                                      show_error_span_profiles=False,
-                                      full_matrix=False,
-                                      label_ticks_in_sigma=True,
-                                      contour_naming_convention='sigma',
-                                      font_scale=1.0):
+    def plot_profiles_contours_matrix(
+        self,
+        parameters=None,
+        show_grid_for=None,
+        show_ticks_for="all",
+        show_fit_minimum_for="contours",
+        show_legend=True,
+        show_parabolic_profiles=True,
+        show_error_span_profiles=False,
+        full_matrix=False,
+        label_ticks_in_sigma=True,
+        contour_naming_convention="sigma",
+        font_scale=1.0,
+    ):
         """
         Plot all profiles and contours to subplots arranges in a matrix-like fashion.
 
@@ -720,7 +812,9 @@ class ContoursProfiler(object):
                 _par_names = [_pn for _pn in _par_names if _pn not in _fixed_pars]
             else:
                 # check if there are any unknown parameters
-                _unknown_parameters = set(_par_names) - set(self._fit.parameter_name_value_dict.keys())
+                _unknown_parameters = set(_par_names) - set(
+                    self._fit.parameter_name_value_dict.keys()
+                )
                 if _unknown_parameters:
                     raise ValueError("Unknown parameters: {}".format(_unknown_parameters))
 
@@ -729,30 +823,37 @@ class ContoursProfiler(object):
                 if _fixed_pars:
                     raise ValueError(
                         "The following parameters cannot be profiled because they are fixed: "
-                        f"{_fixed_pars}")
+                        f"{_fixed_pars}"
+                    )
 
             _npar = len(_par_names)
             _fig, _gs = self._make_figure_gs(_npar, _npar)
 
-            _show_spec_options = ('all', 'profiles', 'contours')
+            _show_spec_options = ("all", "profiles", "contours")
 
             if show_grid_for is not None and show_grid_for not in _show_spec_options:
-                raise ValueError("Unknown specification '%s' for 'show_grid_for'. "
-                                 "Expected: one of %r" % (show_grid_for, _show_spec_options))
+                raise ValueError(
+                    "Unknown specification '%s' for 'show_grid_for'. "
+                    "Expected: one of %r" % (show_grid_for, _show_spec_options)
+                )
             if show_ticks_for is not None and show_ticks_for not in _show_spec_options:
-                raise ValueError("Unknown specification '%s' for 'show_ticks_for'. "
-                                 "Expected: one of %r" % (show_ticks_for, _show_spec_options))
+                raise ValueError(
+                    "Unknown specification '%s' for 'show_ticks_for'. "
+                    "Expected: one of %r" % (show_ticks_for, _show_spec_options)
+                )
             if show_fit_minimum_for is not None and show_fit_minimum_for not in _show_spec_options:
-                raise ValueError("Unknown specification '%s' for 'show_fit_minimum_for'. "
-                                 "Expected: one of %r" % (show_fit_minimum_for, _show_spec_options))
+                raise ValueError(
+                    "Unknown specification '%s' for 'show_fit_minimum_for'. "
+                    "Expected: one of %r" % (show_fit_minimum_for, _show_spec_options)
+                )
 
             # determine which plot elements to show for each subplot type
-            _show_grid_profiles = show_grid_for in ('all', 'profiles')
-            _show_grid_contours = show_grid_for in ('all', 'contours')
-            _show_ticks_profiles = show_ticks_for in ('all', 'profiles')
-            _show_ticks_contours = show_ticks_for in ('all', 'contours')
-            _show_minimum_profiles = show_fit_minimum_for in ('all', 'profiles')
-            _show_minimum_contours = show_fit_minimum_for in ('all', 'contours')
+            _show_grid_profiles = show_grid_for in ("all", "profiles")
+            _show_grid_contours = show_grid_for in ("all", "contours")
+            _show_ticks_profiles = show_ticks_for in ("all", "profiles")
+            _show_ticks_contours = show_ticks_for in ("all", "contours")
+            _show_minimum_profiles = show_fit_minimum_for in ("all", "profiles")
+            _show_minimum_contours = show_fit_minimum_for in ("all", "contours")
 
             _all_legend_handles = tuple()
             _all_legend_labels = tuple()
@@ -761,15 +862,18 @@ class ContoursProfiler(object):
             _subplots = np.empty((_npar, _npar), dtype=Axes)  # store subplot system in numpy array
             for row in six.moves.range(_npar):
                 _axes = _subplots[row, row] = _fig.add_subplot(_gs[row, row])
-                self.plot_profile(_par_names[row], target_axes=_axes,
-                                  show_parabolic=show_parabolic_profiles,
-                                  show_grid=_show_grid_profiles,
-                                  show_legend=False,
-                                  show_fit_minimum=_show_minimum_profiles,
-                                  show_error_span=show_error_span_profiles,
-                                  label_ticks_in_sigma=label_ticks_in_sigma,
-                                  show_ticks=_show_ticks_profiles,
-                                  font_scale=font_scale)
+                self.plot_profile(
+                    _par_names[row],
+                    target_axes=_axes,
+                    show_parabolic=show_parabolic_profiles,
+                    show_grid=_show_grid_profiles,
+                    show_legend=False,
+                    show_fit_minimum=_show_minimum_profiles,
+                    show_error_span=show_error_span_profiles,
+                    label_ticks_in_sigma=label_ticks_in_sigma,
+                    show_ticks=_show_ticks_profiles,
+                    font_scale=font_scale,
+                )
 
                 if show_legend:
                     _hs, _ls = _axes.get_legend_handles_labels()
@@ -780,15 +884,18 @@ class ContoursProfiler(object):
             for row in six.moves.range(_npar):
                 for col in six.moves.range(row):
                     _axes = _subplots[row, col] = _fig.add_subplot(_gs[row, col])
-                    self.plot_contours(_par_names[col], _par_names[row],
-                                       target_axes=_axes,
-                                       show_grid=_show_grid_contours,
-                                       show_legend=False,
-                                       show_fit_minimum=_show_minimum_contours,
-                                       show_ticks=_show_ticks_contours,
-                                       label_ticks_in_sigma=label_ticks_in_sigma,
-                                       naming_convention=contour_naming_convention,
-                                       font_scale=font_scale)
+                    self.plot_contours(
+                        _par_names[col],
+                        _par_names[row],
+                        target_axes=_axes,
+                        show_grid=_show_grid_contours,
+                        show_legend=False,
+                        show_fit_minimum=_show_minimum_contours,
+                        show_ticks=_show_ticks_contours,
+                        label_ticks_in_sigma=label_ticks_in_sigma,
+                        naming_convention=contour_naming_convention,
+                        font_scale=font_scale,
+                    )
 
                     if show_legend:
                         _hs, _ls = _axes.get_legend_handles_labels()
@@ -797,16 +904,18 @@ class ContoursProfiler(object):
 
                     if full_matrix:
                         _axes = _subplots[col, row] = _fig.add_subplot(_gs[col, row])
-                        self.plot_contours(_par_names[row], _par_names[col],
-                                           target_axes=_axes,
-                                           show_grid=_show_grid_contours,
-                                           show_legend=False,
-                                           show_fit_minimum=_show_minimum_contours,
-                                           show_ticks=_show_ticks_contours,
-                                           label_ticks_in_sigma=label_ticks_in_sigma,
-                                           naming_convention=contour_naming_convention)
+                        self.plot_contours(
+                            _par_names[row],
+                            _par_names[col],
+                            target_axes=_axes,
+                            show_grid=_show_grid_contours,
+                            show_legend=False,
+                            show_fit_minimum=_show_minimum_contours,
+                            show_ticks=_show_ticks_contours,
+                            label_ticks_in_sigma=label_ticks_in_sigma,
+                            naming_convention=contour_naming_convention,
+                        )
 
-            # post-processing: adjust axis and tick labels
             for row, _row_plots in enumerate(_subplots):
                 for col, _plot in enumerate(_row_plots):
                     # skip empty plots
@@ -821,11 +930,15 @@ class ContoursProfiler(object):
                         _x_lim = _plot.get_xlim()
                         _x_min = self._fit.parameter_values[col]
                         _y_min = self._fit.parameter_values[row]
-                        _y_over_x_err_ratio = self._fit.parameter_errors[row]/self._fit.parameter_errors[col]
-                        _plot.set_ylim((
-                            _y_min + (_x_lim[0] - _x_min)*_y_over_x_err_ratio,
-                            _y_min + (_x_lim[1] - _x_min)*_y_over_x_err_ratio
-                        ))
+                        _y_over_x_err_ratio = (
+                            self._fit.parameter_errors[row] / self._fit.parameter_errors[col]
+                        )
+                        _plot.set_ylim(
+                            (
+                                _y_min + (_x_lim[0] - _x_min) * _y_over_x_err_ratio,
+                                _y_min + (_x_lim[1] - _x_min) * _y_over_x_err_ratio,
+                            )
+                        )
 
                     # hide tick labels except for outer plots
                     if col != 0 and col != row:
@@ -868,11 +981,12 @@ class ContoursProfiler(object):
                     _ax_for_legend = _fig.add_subplot(_gs[0, _npar - 1])
                     _ax_for_legend.set_visible(False)
                     _leg = _fig.legend(
-                        _hs, _ls,
-                        loc='upper right',
+                        _hs,
+                        _ls,
+                        loc="upper right",
                         borderpad=0,
                         borderaxespad=0,
-                        fontsize=float(rcParams["font.size"])
+                        fontsize=float(rcParams["font.size"]),
                     )
                     # patch legend bbox to correspond to axes
                     _leg._bbox_to_anchor = _ax_for_legend.bbox
@@ -880,11 +994,12 @@ class ContoursProfiler(object):
                     # place legend outside regular Axes in top right corner
                     _ax_for_legend = _subplots[0, _npar - 1]
                     _leg = _ax_for_legend.legend(
-                        _hs, _ls,
-                        loc='upper left',
+                        _hs,
+                        _ls,
+                        loc="upper left",
                         bbox_to_anchor=(1.1, 0, 1, 1),
                         borderpad=0,
-                        borderaxespad=0
+                        borderaxespad=0,
                     )
 
             # old versions cause problems with 'tight_layout'
@@ -892,7 +1007,7 @@ class ContoursProfiler(object):
 
             return _fig
 
-    def save(self, fname=None, figures='all', *args, **kwargs):
+    def save(self, fname=None, figures="all", *args, **kwargs):
         """
         Saves the profile figures to files.
         args and kwargs are passed on to matplotlib.Figure.savefig() .
@@ -903,25 +1018,27 @@ class ContoursProfiler(object):
         :param figures: Which figures to save.
         :type figures: 'all' or int or iterable of int
         """
-        if figures == 'all':
+        if figures == "all":
             _figure_indices = range(len(self._figures))
         elif isinstance(figures, int):
             _figure_indices = [figures]
         else:
-            raise TypeError(f"figures must be either 'all', int or iterable of int, but received type"
-                            f"{type(figures)}")
+            raise TypeError(
+                f"figures must be either 'all', int or iterable of int, but received type"
+                f"{type(figures)}"
+            )
         _file_name_list = fname
         if fname is None:
             if len(self._figures) == 1:
-                _file_name_list = ['profile.png']
+                _file_name_list = ["profile.png"]
             else:
-                _file_name_list = [f'profile_{_i}.png' for _i in _figure_indices]
+                _file_name_list = [f"profile_{_i}.png" for _i in _figure_indices]
         elif isinstance(fname, str):
             if len(_figure_indices) == 1:
                 _file_name_list = [fname]
             else:
                 name, extension = os.path.splitext(fname)
-                _file_name_list = [f'{name}_{_i}{extension}' for _i in _figure_indices]
+                _file_name_list = [f"{name}_{_i}{extension}" for _i in _figure_indices]
         elif isinstance(fname, Iterable):
             _file_name_list = fname
         else:
@@ -931,8 +1048,8 @@ class ContoursProfiler(object):
             )
         if len(_file_name_list) != len(_figure_indices):
             raise ValueError(
-                f'Received {len(_file_name_list)} file names for {len(_figure_indices)} figures.'
-                'Must be the same!'
+                f"Received {len(_file_name_list)} file names for {len(_figure_indices)} figures."
+                "Must be the same!"
             )
         for _figure_index, _file_name in zip(_figure_indices, _file_name_list):
             self._figures[_figure_index].savefig(_file_name, *args, **kwargs)

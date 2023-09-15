@@ -17,10 +17,16 @@ _IMINUIT_1 = int(iminuit.__version__[0]) < 2
 
 
 class MinimizerIMinuit(MinimizerBase):
-    def __init__(self,
-                 parameter_names, parameter_values, parameter_errors,
-                 function_to_minimize, tolerance=1e-2, errordef=iminuit.Minuit.LEAST_SQUARES,
-                 strategy=1):
+    def __init__(
+        self,
+        parameter_names,
+        parameter_values,
+        parameter_errors,
+        function_to_minimize,
+        tolerance=1e-2,
+        errordef=iminuit.Minuit.LEAST_SQUARES,
+        strategy=1,
+    ):
         self._strategy = strategy
 
         # initialize the minimizer parameter specification
@@ -31,9 +37,12 @@ class MinimizerIMinuit(MinimizerBase):
 
         self.reset()  # sets self.__iminuit and caches to None
         super(MinimizerIMinuit, self).__init__(
-            parameter_names=parameter_names, parameter_values=parameter_values,
-            parameter_errors=parameter_errors, function_to_minimize=function_to_minimize,
-            tolerance=tolerance, errordef=errordef
+            parameter_names=parameter_names,
+            parameter_values=parameter_values,
+            parameter_errors=parameter_errors,
+            function_to_minimize=function_to_minimize,
+            tolerance=tolerance,
+            errordef=errordef,
         )
 
     # -- private methods
@@ -54,8 +63,8 @@ class MinimizerIMinuit(MinimizerBase):
         else:
             self._save_state_dict["par_err"] = np.array(self._par_err)
         self._save_state_dict["fmin_struct"] = deepcopy(self._fmin_struct)
-        self._save_state_dict['minimizer_param_dict'] = self._minimizer_param_dict
-        self._save_state_dict['iminuit'] = self.__iminuit
+        self._save_state_dict["minimizer_param_dict"] = self._minimizer_param_dict
+        self._save_state_dict["iminuit"] = self.__iminuit
         super(MinimizerIMinuit, self)._save_state()
 
     def _load_state(self):
@@ -67,9 +76,11 @@ class MinimizerIMinuit(MinimizerBase):
         if self._par_err is not None:
             self._par_err = np.array(self._par_err)
         self._fmin_struct = deepcopy(self._save_state_dict["fmin_struct"])
-        self._minimizer_param_dict = self._save_state_dict['minimizer_param_dict']
-        self.__iminuit = self._save_state_dict['iminuit']
-        self._func_handle(*self.parameter_values)  # call the function to propagate the changes to the nexus
+        self._minimizer_param_dict = self._save_state_dict["minimizer_param_dict"]
+        self.__iminuit = self._save_state_dict["iminuit"]
+        self._func_handle(
+            *self.parameter_values
+        )  # call the function to propagate the changes to the nexus
         super(MinimizerIMinuit, self)._load_state()
 
     def _get_fmin_struct(self):
@@ -80,16 +91,18 @@ class MinimizerIMinuit(MinimizerBase):
     def _get_iminuit(self):
         if self.__iminuit is None:
             if _IMINUIT_1:
-                self.__iminuit = iminuit.Minuit(self._func_wrapper,
-                                                forced_parameters=self.parameter_names,
-                                                errordef=self.errordef,
-                                                **self._minimizer_param_dict)
+                self.__iminuit = iminuit.Minuit(
+                    self._func_wrapper,
+                    forced_parameters=self.parameter_names,
+                    errordef=self.errordef,
+                    **self._minimizer_param_dict,
+                )
             else:
                 _parameter_values = [
-                    self._minimizer_param_dict[_pn] for _pn in self.parameter_names]
+                    self._minimizer_param_dict[_pn] for _pn in self.parameter_names
+                ]
                 self.__iminuit = iminuit.Minuit(
-                    self._func_wrapper, *_parameter_values,
-                    name=self.parameter_names
+                    self._func_wrapper, *_parameter_values, name=self.parameter_names
                 )
                 for _i, _par_name_i in enumerate(self.parameter_names):
                     self.__iminuit.fixed[_i] = self._minimizer_param_dict["fix_" + _par_name_i]
@@ -127,8 +140,8 @@ class MinimizerIMinuit(MinimizerBase):
                 _asymm_par_errs[_par_index, :] = 0.0
             else:
                 if _IMINUIT_1:
-                    _asymm_par_errs[_par_index, 0] = _minos_result[_par_name]['lower']
-                    _asymm_par_errs[_par_index, 1] = _minos_result[_par_name]['upper']
+                    _asymm_par_errs[_par_index, 0] = _minos_result[_par_name]["lower"]
+                    _asymm_par_errs[_par_index, 1] = _minos_result[_par_name]["upper"]
                 else:
                     _par_index_free = _par_names_free.index(_par_name)
                     _asymm_par_errs[_par_index, 0] = _minos_result[_par_index_free].lower
@@ -208,7 +221,10 @@ class MinimizerIMinuit(MinimizerBase):
 
     @parameter_values.setter
     def parameter_values(self, new_values):
-        for _pn, _pv, in zip(self._par_names, new_values):
+        for (
+            _pn,
+            _pv,
+        ) in zip(self._par_names, new_values):
             self._minimizer_param_dict[_pn] = _pv
         self.reset()
 
@@ -221,14 +237,17 @@ class MinimizerIMinuit(MinimizerBase):
                     # if the fit has been performed at least once
                     _param_struct = _m.get_param_states()
                     self._par_err = np.array(
-                        [_par.error if not self.is_fixed(_par_name) else 0.0
-                         for _par, _par_name in zip(_param_struct, self.parameter_names)])
+                        [
+                            _par.error if not self.is_fixed(_par_name) else 0.0
+                            for _par, _par_name in zip(_param_struct, self.parameter_names)
+                        ]
+                    )
                 else:
                     # need to hack to get initial parameter errors
                     _e = _m.errors
                     self._par_err = np.array(
-                        [_e[_par_name] if not self.is_fixed(_par_name) else 0.0
-                         for _par_name in _e])
+                        [_e[_par_name] if not self.is_fixed(_par_name) else 0.0 for _par_name in _e]
+                    )
             else:
                 self._par_err = np.array(_m.errors)
                 # Explicitly set errors of fixed parameters to 0:
@@ -284,32 +303,44 @@ class MinimizerIMinuit(MinimizerBase):
         _numpoints = minimizer_contour_kwargs.pop("numpoints", 100)
         if minimizer_contour_kwargs:
             raise ValueError(
-                "Unknown keyword arguments for contour(): {}".format(minimizer_contour_kwargs.keys()))
+                "Unknown keyword arguments for contour(): {}".format(
+                    minimizer_contour_kwargs.keys()
+                )
+            )
         if _IMINUIT_1:
             _x_errs, _y_errs, _contour_line = self._get_iminuit().mncontour(
-                parameter_name_1, parameter_name_2, numpoints=_numpoints, sigma=sigma)
+                parameter_name_1, parameter_name_2, numpoints=_numpoints, sigma=sigma
+            )
         else:
             # The following conversion is derived by integrating the two-dimensional standard
             # normal distribution over a circle of radius sigma centered on (0, 0).
-            _cl = 1.0 - np.exp(-0.5 * sigma ** 2)
+            _cl = 1.0 - np.exp(-0.5 * sigma**2)
             _contour_line = self._get_iminuit().mncontour(
-                parameter_name_1, parameter_name_2, size=_numpoints, cl=_cl)
+                parameter_name_1, parameter_name_2, size=_numpoints, cl=_cl
+            )
         self.minimize()  # return to minimum
         if len(_contour_line) == 0:
             return None  # failed to find any point on contour
         return ContourFactory.create_xy_contour(np.array(_contour_line), sigma)
 
-    def profile(self, parameter_name, low=None, high=None, sigma=None, cl=None, size=20,
-                subtract_min=False, arrows=False):
+    def profile(
+        self,
+        parameter_name,
+        low=None,
+        high=None,
+        sigma=None,
+        cl=None,
+        size=20,
+        subtract_min=False,
+        arrows=False,
+    ):
         if not self.did_fit:
             raise RuntimeError("Need to perform a fit before calling profile()!")
         _bound_low, _bound_high, _arrow_specs = self._get_profile_bound(
-            parameter_name, low, high, sigma, cl, subtract_min, arrows)
-        self.minimize()  # return to minimum
-        _kwargs = dict(
-            bound=(_bound_low, _bound_high),
-            subtract_min=subtract_min
+            parameter_name, low, high, sigma, cl, subtract_min, arrows
         )
+        self.minimize()  # return to minimum
+        _kwargs = dict(bound=(_bound_low, _bound_high), subtract_min=subtract_min)
         if _IMINUIT_1:
             _kwargs["bins"] = size
         else:
@@ -349,7 +380,10 @@ class MinimizerIMinuit(MinimizerBase):
 
     def limit(self, parameter_name, parameter_bounds):
         assert len(parameter_bounds) == 2
-        self._minimizer_param_dict["limit_" + parameter_name] = (parameter_bounds[0], parameter_bounds[1])
+        self._minimizer_param_dict["limit_" + parameter_name] = (
+            parameter_bounds[0],
+            parameter_bounds[1],
+        )
         self.reset()
 
     def unlimit(self, parameter_name):
@@ -362,8 +396,9 @@ class MinimizerIMinuit(MinimizerBase):
 
         self._get_iminuit().migrad(ncall=max_calls)
 
-        for (_pn, _pv, _pe) in zip(
-                self.parameter_names, self.parameter_values, self.parameter_errors):
+        for _pn, _pv, _pe in zip(
+            self.parameter_names, self.parameter_values, self.parameter_errors
+        ):
             self._minimizer_param_dict[_pn] = _pv
             self._minimizer_param_dict["error_" + _pn] = _pe
 
