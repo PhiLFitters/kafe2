@@ -1,10 +1,10 @@
 import unittest
+
 import numpy as np
 
+from kafe2.core.error import cov_mat_from_float_list
 from kafe2.fit import XYContainer, XYParametricModel
 from kafe2.fit._base import ModelFunctionBase
-from kafe2.core.error import cov_mat_from_float_list
-
 
 
 class TestDatastoreXY(unittest.TestCase):

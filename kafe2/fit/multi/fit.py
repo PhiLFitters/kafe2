@@ -5,13 +5,13 @@ from copy import copy
 
 import numpy as np
 
-from .cost import SharedCostFunction, MultiCostFunction
-from .._base import FitBase
+from ...core.error import CovMat, MatrixGaussianError, SimpleGaussianError
 from ...core.fitters import NexusFitter
-from ...core.error import SimpleGaussianError, MatrixGaussianError, CovMat
-from ...core.fitters.nexus import Alias, Function, Array, Parameter
+from ...core.fitters.nexus import Alias, Array, Function, Parameter
 from ...tools import random_alphanumeric
-from ..util import cholesky_decomposition, log_determinant, invert_matrix
+from .._base import FitBase
+from ..util import cholesky_decomposition, invert_matrix, log_determinant
+from .cost import MultiCostFunction, SharedCostFunction
 
 __all__ = ['MultiFit']
 

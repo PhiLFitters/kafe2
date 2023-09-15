@@ -1,16 +1,14 @@
 import abc
 import unittest
+
 import numpy as np
 import six
 
-from kafe2.core.minimizers import AVAILABLE_MINIMIZERS
-
 from kafe2.config import kc
-
+from kafe2.core.minimizers import AVAILABLE_MINIMIZERS
 from kafe2.fit.xy.container import XYContainer
-from kafe2.fit.xy.fit import XYFit
 from kafe2.fit.xy.cost import XYCostFunction_Chi2
-
+from kafe2.fit.xy.fit import XYFit
 from kafe2.test.fit.test_fit import AbstractTestFit
 
 

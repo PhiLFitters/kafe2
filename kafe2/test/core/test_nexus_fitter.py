@@ -1,10 +1,11 @@
-import numpy as np
-import six
 import unittest
 
-from kafe2.core.minimizers import AVAILABLE_MINIMIZERS
-from kafe2.core.fitters.nexus import Nexus, Parameter, Function
+import numpy as np
+import six
+
+from kafe2.core.fitters.nexus import Function, Nexus, Parameter
 from kafe2.core.fitters.nexus_fitter import NexusFitter
+from kafe2.core.minimizers import AVAILABLE_MINIMIZERS
 
 
 class AbstractTestNexusFitter(object):

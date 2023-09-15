@@ -1,11 +1,11 @@
 from __future__ import print_function
 
 import contextlib
+import sys
+from string import ascii_letters
+
 import numpy as np
 import six
-import sys
-
-from string import ascii_letters
 
 
 @contextlib.contextmanager

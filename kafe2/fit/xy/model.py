@@ -4,13 +4,11 @@ except ImportError:
     pass
 import numpy  # help IDEs with type-hinting inside docstrings
 import numpy as np
-
 from scipy.misc import derivative
 
 from .._base import ParametricModelBaseMixin
-from .container import XYContainer
 from ..util import function_library
-
+from .container import XYContainer
 
 __all__ = ['XYParametricModel']
 

@@ -12,10 +12,11 @@ try:
 except ImportError:
     pass
 
-import warnings
 import os
+import warnings
 from copy import deepcopy
 from glob import glob
+
 import numpy as np
 
 _fit_history = []
@@ -455,7 +456,7 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
     :return: a *kafe2* plot object containing the relevant matplotlib plots.
     :rtype: :py:class:`~kafe2.fit._base.Plot`
     """
-    from kafe2 import Plot, ContoursProfiler, CustomFit
+    from kafe2 import ContoursProfiler, CustomFit, Plot
 
     _start_index = _get_file_index()
 

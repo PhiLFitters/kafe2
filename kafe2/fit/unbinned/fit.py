@@ -1,13 +1,12 @@
+import sys
 from copy import deepcopy
 
-import sys
-
-from .._base import FitBase, DataContainerBase, ModelFunctionBase
+from .._base import DataContainerBase, FitBase, ModelFunctionBase
+from ..util import collect
 from .container import UnbinnedContainer
-from .cost import UnbinnedCostFunction_NegLogLikelihood, STRING_TO_COST_FUNCTION
+from .cost import STRING_TO_COST_FUNCTION, UnbinnedCostFunction_NegLogLikelihood
 from .model import UnbinnedParametricModel
 from .plot import UnbinnedPlotAdapter
-from ..util import collect
 
 __all__ = ['UnbinnedFit']
 

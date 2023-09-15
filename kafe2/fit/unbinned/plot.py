@@ -1,9 +1,8 @@
 import numpy as np
 from matplotlib.collections import LineCollection
 
-from .._base import PlotAdapterBase
 from .._aux import add_pad_to_range
-
+from .._base import PlotAdapterBase
 
 __all__ = ["UnbinnedPlotAdapter"]
 

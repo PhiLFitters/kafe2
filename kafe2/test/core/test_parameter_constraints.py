@@ -1,7 +1,11 @@
 import unittest
+
 import numpy as np
 
-from kafe2.core.constraint import GaussianMatrixParameterConstraint, GaussianSimpleParameterConstraint
+from kafe2.core.constraint import (
+    GaussianMatrixParameterConstraint,
+    GaussianSimpleParameterConstraint,
+)
 
 
 class TestMatrixParameterConstraintDirect(unittest.TestCase):

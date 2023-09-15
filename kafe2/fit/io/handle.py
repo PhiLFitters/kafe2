@@ -1,4 +1,5 @@
 from __future__ import print_function
+
 import os
 
 
@@ -230,6 +231,7 @@ class OutputHandleMultiplexer(IOStreamHandle):
 if __name__ == "__main__":
     # TODO: move this to a unit test
     import sys
+
     # test 1: IOStreamHandle
     print('Instantiating `IOStreamHandle`...')
     _iosh = IOStreamHandle(sys.stdout)

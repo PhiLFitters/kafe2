@@ -1,7 +1,10 @@
-from .._yaml_base import YamlWriterMixin, YamlReaderMixin
-from ._base import ConstraintDReprBase
+from ....core.constraint import (
+    GaussianMatrixParameterConstraint,
+    GaussianSimpleParameterConstraint,
+)
 from .. import _AVAILABLE_REPRESENTATIONS
-from ....core.constraint import GaussianSimpleParameterConstraint, GaussianMatrixParameterConstraint
+from .._yaml_base import YamlReaderMixin, YamlWriterMixin
+from ._base import ConstraintDReprBase
 
 __all__ = ['ConstraintYamlWriter', 'ConstraintYamlReader']
 

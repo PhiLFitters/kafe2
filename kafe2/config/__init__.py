@@ -1,17 +1,19 @@
 """Handle global kafe2 configuration.
 """
 
+import logging
 import os
-import yaml
+from copy import deepcopy
+from tempfile import NamedTemporaryFile
+
+import matplotlib as mpl
+
 # WARNING! DO NOT REMOVE THE PYPLOT IMPORT, EVEN THOUGH IT IS NOT USED.
 # force pyplot import once to trigger eventual hooks for backend change, e.g. when running inside jupyter
 # those hooks are not triggered when only importing matplotlib
 import matplotlib.pyplot as plt
-import matplotlib as mpl
-from copy import deepcopy
-from tempfile import NamedTemporaryFile
+import yaml
 
-import logging
 logger = logging.getLogger(__name__)
 
 __all__ = ['ConfigLoader', 'ConfigError', 'ConfigTypeError', 'ConfigLookupError', 'kafe2_rc', 'kc']

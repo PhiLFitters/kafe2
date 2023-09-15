@@ -1,6 +1,6 @@
 import abc
-import sys
 import os
+import sys
 import warnings
 from collections import OrderedDict
 from functools import partial
@@ -10,17 +10,27 @@ import numpy as np
 import six
 import yaml
 
-from .container import DataContainerBase
-from ..io.file import FileIOMixin
 from ...config import kc
-from ...core.fitters.nexus import Nexus, Parameter, Array
-from ...core.fitters.nexus_fitter import NexusFitter
-from ...core.constraint import GaussianMatrixParameterConstraint, GaussianSimpleParameterConstraint
+from ...core.constraint import (
+    GaussianMatrixParameterConstraint,
+    GaussianSimpleParameterConstraint,
+)
 from ...core.error import CovMat
+from ...core.fitters.nexus import Array, Nexus, Parameter
+from ...core.fitters.nexus_fitter import NexusFitter
 from ...tools import print_dict_as_table
-from .._base.cost import CostFunction, STRING_TO_COST_FUNCTION
-from ..util import invert_matrix, is_diagonal, cholesky_decomposition, log_determinant, \
-    log_determinant_pointwise, to_python_types, to_numpy_arrays
+from .._base.cost import STRING_TO_COST_FUNCTION, CostFunction
+from ..io.file import FileIOMixin
+from ..util import (
+    cholesky_decomposition,
+    invert_matrix,
+    is_diagonal,
+    log_determinant,
+    log_determinant_pointwise,
+    to_numpy_arrays,
+    to_python_types,
+)
+from .container import DataContainerBase
 
 __all__ = ["FitBase"]
 

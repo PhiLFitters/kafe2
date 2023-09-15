@@ -1,12 +1,13 @@
 import abc
+
 import six
 
-from .._base import GenericDReprBase
 # import data container classes
 from ...histogram import HistContainer
 from ...indexed import IndexedContainer
 from ...unbinned import UnbinnedContainer
 from ...xy import XYContainer
+from .._base import GenericDReprBase
 
 __all__ = ["DataContainerDReprBase"]
 

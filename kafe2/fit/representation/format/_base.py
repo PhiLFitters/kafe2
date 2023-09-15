@@ -1,10 +1,11 @@
 import abc
+
 import six
 
-from .._base import GenericDReprBase
 # import formatter classes
 from ..._base.format import ModelFunctionFormatter
 from ...indexed import IndexedModelFunctionFormatter
+from .._base import GenericDReprBase
 
 __all__ = ["ModelFunctionFormatterDReprBase", "ParameterFormatterDReprBase"]
 

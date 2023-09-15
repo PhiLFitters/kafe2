@@ -1,8 +1,7 @@
 import numpy as np
 
-from .._base import PlotAdapterBase
 from .._aux import step_fill_between
-
+from .._base import PlotAdapterBase
 
 __all__ = ["IndexedPlotAdapter"]
 

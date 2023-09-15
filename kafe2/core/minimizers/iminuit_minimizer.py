@@ -1,10 +1,11 @@
 import logging
-import numpy as np
-from scipy.stats import norm
 from copy import deepcopy
 
-from .minimizer_base import MinimizerBase
+import numpy as np
+from scipy.stats import norm
+
 from ..contour import ContourFactory
+from .minimizer_base import MinimizerBase
 
 try:
     import iminuit

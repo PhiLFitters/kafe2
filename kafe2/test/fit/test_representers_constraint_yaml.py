@@ -1,11 +1,14 @@
 import unittest
-from six import StringIO
-import numpy as np
 
+import numpy as np
+from six import StringIO
+
+from kafe2.core.constraint import (
+    GaussianMatrixParameterConstraint,
+    GaussianSimpleParameterConstraint,
+)
 from kafe2.fit.io import IOStreamHandle
 from kafe2.fit.representation import ConstraintYamlReader, ConstraintYamlWriter
-from kafe2.core.constraint import GaussianSimpleParameterConstraint, \
-    GaussianMatrixParameterConstraint
 
 TEST_SIMPLE_GAUSSIAN_CONSTRAINT_ABS = """
 type: simple
