@@ -1,19 +1,21 @@
 import abc
-import numpy as np
+import logging
 import operator
-import six
 import sys
 import uuid
-import logging
 import warnings
 import weakref
-
 from ast import parse
 
+import numpy as np
+import six
+
 if six.PY2:
-    from funcsigs import signature, Parameter as SigParameter
+    from funcsigs import Parameter as SigParameter
+    from funcsigs import signature
 else:
-    from inspect import signature, Parameter as SigParameter
+    from inspect import Parameter as SigParameter
+    from inspect import signature
 
 __all__ = ['Nexus', 'Alias', 'Array', 'Fallback', 'Function', 'Parameter', 'Tuple']
 
@@ -1032,9 +1034,9 @@ class NodeSubgraphGraphvizSourceProducer(object):
 class NodeSubgraphGraphvizViewer(NodeSubgraphGraphvizSourceProducer):
 
     def run(self, node=None, node_chain=None):
-        from graphviz import Source
-
         import tempfile
+
+        from graphviz import Source
 
         out = six.StringIO()
         NodeSubgraphGraphvizSourceProducer.run(

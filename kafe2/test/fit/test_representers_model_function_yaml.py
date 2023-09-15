@@ -1,12 +1,13 @@
 import unittest
+
 import numpy as np
 from six import StringIO
 
-from kafe2.fit._base import ModelFunctionFormatter, ModelFunctionBase
+from kafe2.fit._base import ModelFunctionBase, ModelFunctionFormatter
 from kafe2.fit.histogram import HistModelFunction
 from kafe2.fit.indexed import IndexedModelFunction, IndexedModelFunctionFormatter
-from kafe2.fit.representation import ModelFunctionYamlWriter, ModelFunctionYamlReader
 from kafe2.fit.io.handle import IOStreamHandle
+from kafe2.fit.representation import ModelFunctionYamlReader, ModelFunctionYamlWriter
 
 TEST_MODEL_FUNCTION_HIST = """
 type: histogram

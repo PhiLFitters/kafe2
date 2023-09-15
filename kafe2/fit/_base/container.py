@@ -6,9 +6,11 @@ from copy import copy
 import numpy as np
 import six
 
+from ...core.error import MatrixGaussianError, SimpleGaussianError
+from ...tools import (
+    random_alphanumeric,  # relative import of kafe2.tools not kafe2.fit.tools
+)
 from ..io.file import FileIOMixin
-from ...core.error import SimpleGaussianError, MatrixGaussianError
-from ...tools import random_alphanumeric  # relative import of kafe2.tools not kafe2.fit.tools
 
 __all__ = ["DataContainerBase"]
 

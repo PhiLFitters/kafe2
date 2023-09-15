@@ -1,24 +1,24 @@
 import abc
 import inspect
+from collections import OrderedDict
+
 import numpy as np
 import six
-from collections import OrderedDict
 
 try:
     import sympy as sp
 except ModuleNotFoundError:
     sp = None
 
-from .format import ParameterFormatter, ModelFunctionFormatter, latexify_ascii
+from ...config import kc
 from ..io.file import FileIOMixin
 from ..util import function_library
-from ...config import kc
-
+from .format import ModelFunctionFormatter, ParameterFormatter, latexify_ascii
 
 if six.PY2:
-    from funcsigs import signature, Signature, Parameter
+    from funcsigs import Parameter, Signature, signature
 else:
-    from inspect import signature, Signature, Parameter
+    from inspect import Parameter, Signature, signature
 
 
 __all__ = ["ParametricModelBaseMixin", "ModelFunctionBase"]

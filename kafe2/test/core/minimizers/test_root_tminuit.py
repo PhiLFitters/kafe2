@@ -1,10 +1,13 @@
 import unittest
+
 from kafe2.test.core.minimizers._base import AbstractMinimizerTest
 
 _cannot_import_ROOT = False
 try:
-    from kafe2.core.minimizers.root_tminuit_minimizer import \
-        MinimizerROOTTMinuit, MinimizerROOTTMinuitException
+    from kafe2.core.minimizers.root_tminuit_minimizer import (
+        MinimizerROOTTMinuit,
+        MinimizerROOTTMinuitException,
+    )
 except ImportError:
     _cannot_import_ROOT = True
 

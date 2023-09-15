@@ -2,19 +2,17 @@ try:
     import typing  # help IDEs with type-hinting inside docstrings
 except ImportError:
     pass
+import matplotlib as mpl
 import numpy as np
 import scipy.stats
 import six
+from matplotlib import gridspec as gs
+from matplotlib import pyplot as plt
 
 from .._base import FitEnsembleBase, FitEnsembleException
 from ..tools.ensemble import EnsembleVariable, EnsembleVariablePlotter
 from .cost import XYCostFunction_Chi2
 from .fit import XYFit
-
-import matplotlib as mpl
-from matplotlib import pyplot as plt
-from matplotlib import gridspec as gs
-
 
 __all__ = ["XYFitEnsemble"]
 

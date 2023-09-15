@@ -1,5 +1,8 @@
-from .._base import CostFunction_Chi2, CostFunction_NegLogLikelihood, \
-    CostFunction_GaussApproximation
+from .._base import (
+    CostFunction_Chi2,
+    CostFunction_GaussApproximation,
+    CostFunction_NegLogLikelihood,
+)
 
 __all__ = [
     "XYCostFunction_Chi2",

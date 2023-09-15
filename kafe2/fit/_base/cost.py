@@ -1,12 +1,13 @@
-import numpy as np
-import six
 import warnings
 
-from scipy.stats import poisson, norm, chi2
+import numpy as np
+import six
 from scipy.linalg import solve_triangular
+from scipy.stats import chi2, norm, poisson
+
 from ..io.file import FileIOMixin
-from .format import ParameterFormatter, CostFunctionFormatter
 from ..util import cholesky_decomposition, log_determinant
+from .format import CostFunctionFormatter, ParameterFormatter
 
 if six.PY2:
     from funcsigs import signature

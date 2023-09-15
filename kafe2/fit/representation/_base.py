@@ -1,6 +1,7 @@
 import abc
-import getpass
 import datetime
+import getpass
+
 import six
 
 

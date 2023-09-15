@@ -1,19 +1,15 @@
 import abc
 import unittest
+
 import numpy as np
 import six
-
 from scipy import stats
 
-from kafe2.core.minimizers import AVAILABLE_MINIMIZERS
-
 from kafe2.config import kc
-
-from kafe2.fit import UnbinnedFit, UnbinnedContainer
+from kafe2.core.minimizers import AVAILABLE_MINIMIZERS
+from kafe2.fit import UnbinnedContainer, UnbinnedFit
 from kafe2.fit.unbinned.cost import UnbinnedCostFunction_NegLogLikelihood
-
 from kafe2.test.fit.test_fit import AbstractTestFit
-
 
 
 def unbinned_model_density(x, tau=2.2, fbg=0.1):

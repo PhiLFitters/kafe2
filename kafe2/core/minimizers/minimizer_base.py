@@ -1,13 +1,15 @@
-from copy import copy
-import six
 from abc import ABCMeta, abstractmethod
-import numpy as np
-import numdifftools as nd
-from scipy.optimize import root_scalar
+from copy import copy
 from typing import Sequence, Union
 
-from ..error import CovMat
+import numdifftools as nd
+import numpy as np
+import six
+from scipy.optimize import root_scalar
+
 from kafe2.core.confidence import ConfidenceLevel
+
+from ..error import CovMat
 
 
 @six.add_metaclass(ABCMeta)

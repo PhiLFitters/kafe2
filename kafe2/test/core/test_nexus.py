@@ -1,17 +1,22 @@
-import numpy as np
 import unittest
 
+import numpy as np
+
 from kafe2.core.fitters.nexus import (
+    _OPERATORS,
+    _UNARY_OPERATORS,
+    Alias,
+    Array,
+    Empty,
+    Fallback,
+    Function,
+    Nexus,
     NodeBase,
-    Parameter, Alias,
-    Function, Empty,
-    Fallback, Tuple, Array, RootNode,
-
-    NodeChildrenPrinter, NodeCycleChecker,
-
-    _OPERATORS, _UNARY_OPERATORS,
-
-    Nexus
+    NodeChildrenPrinter,
+    NodeCycleChecker,
+    Parameter,
+    RootNode,
+    Tuple,
 )
 
 

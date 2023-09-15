@@ -1,11 +1,15 @@
 from __future__ import print_function
-import six
+
 import ctypes
-from .minimizer_base import MinimizerBase
+
+import six
+
 from ..contour import ContourFactory
+from .minimizer_base import MinimizerBase
+
 try:
-    from ROOT import TMinuit, Double, Long
     from ROOT import TMath  # for using ROOT's chi2prob function
+    from ROOT import Double, Long, TMinuit
 except ImportError:
     # TODO: handle importing nonexistent minimizer
     raise

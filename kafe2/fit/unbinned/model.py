@@ -1,8 +1,8 @@
 import numpy as np
 
 from .._base import ParametricModelBaseMixin
-from .container import UnbinnedContainer
 from ..util import function_library
+from .container import UnbinnedContainer
 
 __all__ = ['UnbinnedParametricModel']
 

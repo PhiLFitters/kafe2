@@ -2,20 +2,20 @@ try:
     import typing  # help IDEs with type-hinting inside docstrings
 except ImportError:
     pass
-import numpy  # help IDEs with type-hinting inside docstrings
 from collections import OrderedDict
 from copy import deepcopy
+
+import numpy  # help IDEs with type-hinting inside docstrings
 import numpy as np
 
 from ...core.error import CovMat
 from ...tools import print_dict_as_table
-from .._base import FitBase, DataContainerBase, ModelFunctionBase
+from .._base import DataContainerBase, FitBase, ModelFunctionBase
+from ..util import add_in_quadrature, function_library, invert_matrix
 from .container import XYContainer
-from .cost import XYCostFunction_Chi2, STRING_TO_COST_FUNCTION
+from .cost import STRING_TO_COST_FUNCTION, XYCostFunction_Chi2
 from .model import XYParametricModel
 from .plot import XYPlotAdapter
-from ..util import function_library, add_in_quadrature, invert_matrix
-
 
 __all__ = ['XYFit']
 

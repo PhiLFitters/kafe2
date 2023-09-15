@@ -1,8 +1,9 @@
-from abc import ABC, abstractmethod
-import numpy as np
-from scipy.stats import norm
-from scipy.optimize import minimize
 import unittest
+from abc import ABC, abstractmethod
+
+import numpy as np
+from scipy.optimize import minimize
+from scipy.stats import norm
 
 
 def fcn_1(x):

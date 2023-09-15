@@ -1,9 +1,10 @@
 import unittest
+
 import numpy as np
 
 from kafe2.fit import CustomFit
-
 from kafe2.test.fit.test_fit import AbstractTestFit
+
 
 class TestCustomFitWithSimpleYErrors(AbstractTestFit, unittest.TestCase):
 

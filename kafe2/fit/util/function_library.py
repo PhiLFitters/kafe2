@@ -1,4 +1,5 @@
 import numpy as np
+
 #TODO documentation
 
 __all__ = ['linear_model', 'linear_model_derivative', 'quadratic_model', 'quadratic_model_derivative',

@@ -1,10 +1,14 @@
 import unittest
+
 import numpy as np
 import scipy.stats
 
-from kafe2.fit.tools.ensemble import (broadcast_to_shape,
-                                     EnsembleVariable, EnsembleVariableProbabilityDistribution,
-                                     EnsembleError)
+from kafe2.fit.tools.ensemble import (
+    EnsembleError,
+    EnsembleVariable,
+    EnsembleVariableProbabilityDistribution,
+    broadcast_to_shape,
+)
 
 
 class TestCustomBroadcast(unittest.TestCase):

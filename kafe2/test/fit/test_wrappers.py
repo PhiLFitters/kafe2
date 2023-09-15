@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
-import unittest
-import numpy as np
 import os
 import shutil
+import unittest
 
-from kafe2 import XYFit, xy_fit, function_library
+import numpy as np
+
+from kafe2 import XYFit, function_library, xy_fit
 
 
 class TestWrapperCallableXY(unittest.TestCase):

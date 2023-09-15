@@ -1,11 +1,9 @@
 import numpy as np
-
 from scipy.misc import derivative
 
-from .._base import ParametricModelBaseMixin, ModelFunctionBase
+from .._base import ModelFunctionBase, ParametricModelBaseMixin
 from .container import IndexedContainer
 from .format import IndexedModelFunctionFormatter
-
 
 __all__ = ["IndexedParametricModel", "IndexedModelFunction"]
 

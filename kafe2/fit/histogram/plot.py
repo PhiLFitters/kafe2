@@ -4,7 +4,6 @@ import six
 
 from .._base import PlotAdapterBase
 from .._base.plot import kc_plot_style
-
 from ..xy.plot import XYPlotAdapter
 
 __all__ = ["HistPlotAdapter"]

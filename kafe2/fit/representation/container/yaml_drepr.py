@@ -1,8 +1,8 @@
-from ....fit import HistContainer, IndexedContainer, XYContainer, UnbinnedContainer
+from ....fit import HistContainer, IndexedContainer, UnbinnedContainer, XYContainer
 from .. import _AVAILABLE_REPRESENTATIONS
-from ._base import DataContainerDReprBase
-from .._yaml_base import YamlWriterMixin, YamlReaderMixin
+from .._yaml_base import YamlReaderMixin, YamlWriterMixin
 from ..error import common_error_tools
+from ._base import DataContainerDReprBase
 
 __all__ = ["DataContainerYamlReader", "DataContainerYamlWriter"]
 

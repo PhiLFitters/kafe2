@@ -4,15 +4,21 @@ import tokenize
 import numpy as np
 import six
 
-from ._base import ModelFunctionDReprBase, ParametricModelDReprBase
+from ....fit import (
+    HistModelFunction,
+    HistParametricModel,
+    IndexedModelFunction,
+    IndexedParametricModel,
+    UnbinnedParametricModel,
+    XYParametricModel,
+)
+from ....fit.util import function_library
+from ..._base import ModelFunctionBase
 from .. import _AVAILABLE_REPRESENTATIONS
 from .._yaml_base import YamlReaderMixin, YamlWriterMixin
 from ..error import common_error_tools
 from ..format import ModelFunctionFormatterYamlReader, ModelFunctionFormatterYamlWriter
-from ..._base import ModelFunctionBase
-from ....fit import HistModelFunction, HistParametricModel, IndexedModelFunction, \
-    IndexedParametricModel, UnbinnedParametricModel, XYParametricModel
-from ....fit.util import function_library
+from ._base import ModelFunctionDReprBase, ParametricModelDReprBase
 
 __all__ = ['ModelFunctionYamlWriter', 'ModelFunctionYamlReader', 'ParametricModelYamlWriter',
            'ParametricModelYamlReader']

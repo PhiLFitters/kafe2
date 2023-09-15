@@ -1,11 +1,11 @@
 from copy import deepcopy
 
-from .._base import FitBase, DataContainerBase
-from .container import HistContainer
+from .._base import DataContainerBase, FitBase
 from .._base.cost import CostFunction_NegLogLikelihood
-from .model import HistParametricModel, HistModelFunction
+from ..util import collect, function_library
+from .container import HistContainer
+from .model import HistModelFunction, HistParametricModel
 from .plot import HistPlotAdapter
-from ..util import function_library, collect
 
 __all__ = ['HistFit']
 

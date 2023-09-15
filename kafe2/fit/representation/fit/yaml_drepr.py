@@ -1,20 +1,25 @@
 import inspect
+
 import numpy as np
 
-from ._base import FitDReprBase
-from .. import _AVAILABLE_REPRESENTATIONS
-from .._yaml_base import YamlWriterMixin, YamlReaderMixin
-from ..constraint.yaml_drepr import ConstraintYamlReader, ConstraintYamlWriter
-from ..container.yaml_drepr import DataContainerYamlReader, DataContainerYamlWriter
-from ..model.yaml_drepr import ParametricModelYamlReader, ParametricModelYamlWriter, \
-    _process_function_code_for_dump, _parse_function
 from ....fit import CustomFit, HistFit, IndexedFit, UnbinnedFit, XYFit
+from ....tools import get_compact_representation
 from ..._base.cost import STRING_TO_COST_FUNCTION
 from ..._base.format import ParameterFormatter
-from ...xy.cost import STRING_TO_COST_FUNCTION as STRING_TO_COST_FUNCTION_XY
-from ...util import to_python_types, to_numpy_arrays
 from ...unbinned.cost import STRING_TO_COST_FUNCTION as STRING_TO_COST_FUNCTION_UNBINNED
-from ....tools import get_compact_representation
+from ...util import to_numpy_arrays, to_python_types
+from ...xy.cost import STRING_TO_COST_FUNCTION as STRING_TO_COST_FUNCTION_XY
+from .. import _AVAILABLE_REPRESENTATIONS
+from .._yaml_base import YamlReaderMixin, YamlWriterMixin
+from ..constraint.yaml_drepr import ConstraintYamlReader, ConstraintYamlWriter
+from ..container.yaml_drepr import DataContainerYamlReader, DataContainerYamlWriter
+from ..model.yaml_drepr import (
+    ParametricModelYamlReader,
+    ParametricModelYamlWriter,
+    _parse_function,
+    _process_function_code_for_dump,
+)
+from ._base import FitDReprBase
 
 __all__ = ['FitYamlWriter', 'FitYamlReader']
 

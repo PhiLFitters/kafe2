@@ -1,6 +1,6 @@
 import abc
-import six
 
+import six
 
 __all__ = ["FitEnsembleBase", "FitEnsembleException"]
 
