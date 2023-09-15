@@ -4,13 +4,16 @@ from .._base import ParametricModelBaseMixin
 from ..util import function_library
 from .container import UnbinnedContainer
 
-__all__ = ['UnbinnedParametricModel']
+__all__ = ["UnbinnedParametricModel"]
 
 
 class UnbinnedParametricModel(ParametricModelBaseMixin, UnbinnedContainer):
-    def __init__(self, data, model_density_function=function_library.normal_distribution,
-                 model_parameters=[1.0, 1.0]):
-
+    def __init__(
+        self,
+        data,
+        model_density_function=function_library.normal_distribution,
+        model_parameters=[1.0, 1.0],
+    ):
         self.support = np.array(data)
 
         _model = model_density_function(self.support, *model_parameters)
@@ -22,7 +25,7 @@ class UnbinnedParametricModel(ParametricModelBaseMixin, UnbinnedContainer):
             model_func=model_density_function,
             model_parameters=model_parameters,
             # this gets passed to UnbinnedContainer.__init__
-            data=_model
+            data=_model,
         )
 
     # -- private methods

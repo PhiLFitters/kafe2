@@ -89,8 +89,17 @@ def _add_error_to_fit_generic(fit, error, errors_rel_to_model, correlated=False,
             fit.add_error(error, relative=relative, reference=_reference)
 
 
-def custom_fit(cost_function, p0=None, dp0=None, limits=None, fixed=None, constraints=None,
-               report=False, profile=True, save=True):
+def custom_fit(
+    cost_function,
+    p0=None,
+    dp0=None,
+    limits=None,
+    fixed=None,
+    constraints=None,
+    report=False,
+    profile=True,
+    save=True,
+):
     """
     Built-in function for directly minimizing a cost function without any explicit model, data, or
     errors.
@@ -125,14 +134,33 @@ def custom_fit(cost_function, p0=None, dp0=None, limits=None, fixed=None, constr
     :rtype: dict
     """
     from kafe2.fit.custom.fit import CustomFit
+
     _fit = CustomFit(cost_function)
     return _fit_wrapper_generic(_fit, p0, dp0, limits, fixed, constraints, report, profile, save)
 
 
-def hist_fit(model_function=None, data=None, n_bins=None, bin_range=None, bin_edges=None, p0=None,
-             dp0=None, error=None, error_rel=None, error_cor=None, error_cor_rel=None,
-             errors_rel_to_model=True, density=True, gauss_approximation=None, limits=None,
-             fixed=None, constraints=None, report=False, profile=True, save=True):
+def hist_fit(
+    model_function=None,
+    data=None,
+    n_bins=None,
+    bin_range=None,
+    bin_edges=None,
+    p0=None,
+    dp0=None,
+    error=None,
+    error_rel=None,
+    error_cor=None,
+    error_cor_rel=None,
+    errors_rel_to_model=True,
+    density=True,
+    gauss_approximation=None,
+    limits=None,
+    fixed=None,
+    constraints=None,
+    report=False,
+    profile=True,
+    save=True,
+):
     """
     Built-in function for fitting a (probability density) function to one-dimensional data by
     binning the data. The uncertainty on the bins is assumed to follow a Poisson distribution. If
@@ -201,8 +229,12 @@ def hist_fit(model_function=None, data=None, n_bins=None, bin_range=None, bin_ed
     data = HistContainer(n_bins, bin_range, bin_edges, data)
 
     if gauss_approximation is None:
-        gauss_approximation = error is not None or error_rel is not None \
-            or error_cor is not None or error_cor_rel is not None
+        gauss_approximation = (
+            error is not None
+            or error_rel is not None
+            or error_cor is not None
+            or error_cor_rel is not None
+        )
     _cost_function = "gauss_approximation" if gauss_approximation else "poisson"
 
     if model_function is None:
@@ -214,14 +246,29 @@ def hist_fit(model_function=None, data=None, n_bins=None, bin_range=None, bin_ed
     _add_error_to_fit_generic(_fit, error_cor, errors_rel_to_model, correlated=True)
     _add_error_to_fit_generic(_fit, error_rel, errors_rel_to_model, relative=True)
     _add_error_to_fit_generic(
-        _fit, error_cor_rel, errors_rel_to_model, correlated=True, relative=True)
+        _fit, error_cor_rel, errors_rel_to_model, correlated=True, relative=True
+    )
 
     return _fit_wrapper_generic(_fit, p0, dp0, limits, fixed, constraints, report, profile, save)
 
 
-def indexed_fit(model_function=None, data=None, p0=None, dp0=None, error=None, error_rel=None,
-                error_cor=None, error_cor_rel=None, errors_rel_to_model=True, limits=None,
-                fixed=None, constraints=None, report=False, profile=True, save=True):
+def indexed_fit(
+    model_function=None,
+    data=None,
+    p0=None,
+    dp0=None,
+    error=None,
+    error_rel=None,
+    error_cor=None,
+    error_cor_rel=None,
+    errors_rel_to_model=True,
+    limits=None,
+    fixed=None,
+    constraints=None,
+    report=False,
+    profile=True,
+    save=True,
+):
     from kafe2.fit.indexed import IndexedFit
 
     _fit = IndexedFit(data, model_function)
@@ -230,13 +277,24 @@ def indexed_fit(model_function=None, data=None, p0=None, dp0=None, error=None, e
     _add_error_to_fit_generic(_fit, error_cor, errors_rel_to_model, correlated=True)
     _add_error_to_fit_generic(_fit, error_rel, errors_rel_to_model, relative=True)
     _add_error_to_fit_generic(
-        _fit, error_cor_rel, errors_rel_to_model, correlated=True, relative=True)
+        _fit, error_cor_rel, errors_rel_to_model, correlated=True, relative=True
+    )
 
     return _fit_wrapper_generic(_fit, p0, dp0, limits, fixed, constraints, report, profile, save)
 
 
-def unbinned_fit(model_function=None, data=None, p0=None, dp0=None, limits=None, fixed=None,
-                 constraints=None, report=False, profile=True, save=True):
+def unbinned_fit(
+    model_function=None,
+    data=None,
+    p0=None,
+    dp0=None,
+    limits=None,
+    fixed=None,
+    constraints=None,
+    report=False,
+    profile=True,
+    save=True,
+):
     """
     Built-in function for directly fitting a probability density function to one-dimensional data
     without binning the data.
@@ -281,11 +339,28 @@ def unbinned_fit(model_function=None, data=None, p0=None, dp0=None, limits=None,
     return _fit_wrapper_generic(_fit, p0, dp0, limits, fixed, constraints, report, profile, save)
 
 
-def xy_fit(model_function=None, x_data=None, y_data=None, p0=None, dp0=None,
-           x_error=None, y_error=None, x_error_rel=None, y_error_rel=None,
-           x_error_cor=None, y_error_cor=None, x_error_cor_rel=None, y_error_cor_rel=None,
-           errors_rel_to_model=True, limits=None, fixed=None, constraints=None, report=False,
-           profile=None, save=True):
+def xy_fit(
+    model_function=None,
+    x_data=None,
+    y_data=None,
+    p0=None,
+    dp0=None,
+    x_error=None,
+    y_error=None,
+    x_error_rel=None,
+    y_error_rel=None,
+    x_error_cor=None,
+    y_error_cor=None,
+    x_error_cor_rel=None,
+    y_error_cor_rel=None,
+    errors_rel_to_model=True,
+    limits=None,
+    fixed=None,
+    constraints=None,
+    report=False,
+    profile=None,
+    save=True,
+):
     """
     Built-in function for fitting a model function to xy data.
 
@@ -391,11 +466,31 @@ def xy_fit(model_function=None, x_data=None, y_data=None, p0=None, dp0=None,
     return _fit_wrapper_generic(_fit, p0, dp0, limits, fixed, constraints, report, profile, save)
 
 
-def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
-         error_band_label=None, x_range=None, y_range=None, x_scale=None, y_scale=None,
-         x_ticks=None, y_ticks=None, parameter_names=None, model_name=None, model_expression=None,
-         font_scale=1.0, legend=True, fit_info=True, error_band=True, profile=None, plot_profile=None,
-         show=True, save=True):
+def plot(
+    fits=-1,
+    x_label=None,
+    y_label=None,
+    data_label=None,
+    model_label=None,
+    error_band_label=None,
+    x_range=None,
+    y_range=None,
+    x_scale=None,
+    y_scale=None,
+    x_ticks=None,
+    y_ticks=None,
+    parameter_names=None,
+    model_name=None,
+    model_expression=None,
+    font_scale=1.0,
+    legend=True,
+    fit_info=True,
+    error_band=True,
+    profile=None,
+    plot_profile=None,
+    show=True,
+    save=True,
+):
     """
     Plots kafe2 fits.
 
@@ -500,16 +595,14 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
     if parameter_names is not None:
         _unused_parameter_names = deepcopy(parameter_names)
         for _f in fits:
-            _plns = {_p:_pn for _p, _pn in parameter_names.items() if _p in _f.parameter_names}
+            _plns = {_p: _pn for _p, _pn in parameter_names.items() if _p in _f.parameter_names}
             _f.assign_parameter_latex_names(**_plns)
             for _parameter_name in _f.parameter_names:
                 _unused_parameter_names.pop(_parameter_name, None)
             for _x_name in _f._model_function.x_name:
                 _unused_parameter_names.pop(_x_name, None)
         if _unused_parameter_names:
-            warnings.warn(
-                f"Unused parameter names for plot: {_unused_parameter_names}"
-            )
+            warnings.warn(f"Unused parameter names for plot: {_unused_parameter_names}")
     if model_name is not None:
         if isinstance(model_name, str):
             model_name = [model_name for _ in fits]
@@ -565,7 +658,12 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
         _plot.y_ticks = y_ticks
 
     if len(fits) > 0:  # Do not plot if only CustomFit.
-        _plot.plot(legend=legend, fit_info=fit_info, asymmetric_parameter_errors=profile, font_scale=font_scale)
+        _plot.plot(
+            legend=legend,
+            fit_info=fit_info,
+            asymmetric_parameter_errors=profile,
+            font_scale=font_scale,
+        )
 
         if save:
             for _i, _ in enumerate(fits):
@@ -581,7 +679,7 @@ def plot(fits=-1, x_label=None, y_label=None, data_label=None, model_label=None,
 _plot_func = plot
 
 
-#def plot_xy_data(x_data, y_data, x_error=None, y_error=None, x_error_rel=None, y_error_rel=None,
+# def plot_xy_data(x_data, y_data, x_error=None, y_error=None, x_error_rel=None, y_error_rel=None,
 #                 x_label=None, y_label=None, data_label=None, x_range=None, y_range=None,
 #                 x_scale=None, y_scale=None, x_ticks=None, y_ticks=None, show=True, save=True):
 #    from kafe2.fit.xy.container import XYContainer
@@ -599,12 +697,37 @@ _plot_func = plot
 #         show=show, save=save)
 
 
-def k2Fit(func, x, y, sx=None, sy=None, srelx=None, srely=None, xabscor=None, yabscor=None,
-          xrelcor=None, yrelcor=None, ref_to_model=True, constraints=None, p0=None, dp0=None,
-          limits=None, plot=True, axis_labels=['x-data', 'y-data'], data_legend='data',
-          model_expression=None, model_name=None, model_legend='model',
-          model_band=r'$\pm 1 \sigma$', fit_info=True, plot_band=True, asym_parerrs=True,
-          plot_cor=False, showplots=True, quiet=True):
+def k2Fit(
+    func,
+    x,
+    y,
+    sx=None,
+    sy=None,
+    srelx=None,
+    srely=None,
+    xabscor=None,
+    yabscor=None,
+    xrelcor=None,
+    yrelcor=None,
+    ref_to_model=True,
+    constraints=None,
+    p0=None,
+    dp0=None,
+    limits=None,
+    plot=True,
+    axis_labels=["x-data", "y-data"],
+    data_legend="data",
+    model_expression=None,
+    model_name=None,
+    model_legend="model",
+    model_band=r"$\pm 1 \sigma$",
+    fit_info=True,
+    plot_band=True,
+    asym_parerrs=True,
+    plot_cor=False,
+    showplots=True,
+    quiet=True,
+):
     """
     Legacy function for backwards compatibility with *PhyPraKit*.
     **New code should not use this function.**
@@ -693,20 +816,50 @@ def k2Fit(func, x, y, sx=None, sy=None, srelx=None, srely=None, xabscor=None, ya
     :rtype: tuple
     """
     xy_fit(
-        func, x, y, p0=p0, dp0=dp0, x_error=sx, y_error=sy, x_error_rel=srelx, y_error_rel=srely,
-        x_error_cor=xabscor, y_error_cor=yabscor, x_error_cor_rel=xrelcor, y_error_cor_rel=yrelcor,
-        errors_rel_to_model=ref_to_model, limits=limits, constraints=constraints, report=not quiet,
-        profile=True
+        func,
+        x,
+        y,
+        p0=p0,
+        dp0=dp0,
+        x_error=sx,
+        y_error=sy,
+        x_error_rel=srelx,
+        y_error_rel=srely,
+        x_error_cor=xabscor,
+        y_error_cor=yabscor,
+        x_error_cor_rel=xrelcor,
+        y_error_cor_rel=yrelcor,
+        errors_rel_to_model=ref_to_model,
+        limits=limits,
+        constraints=constraints,
+        report=not quiet,
+        profile=True,
     )
     if plot:
         _plot_func(
-            x_label=axis_labels[0], y_label=axis_labels[1], data_label=data_legend,
-            model_label=model_legend, error_band_label=model_band, model_name=model_name,
-            model_expression=model_expression, legend=True, fit_info=fit_info, error_band=plot_band,
-            profile=True, plot_profile=plot_cor, show=showplots
+            x_label=axis_labels[0],
+            y_label=axis_labels[1],
+            data_label=data_legend,
+            model_label=model_legend,
+            error_band_label=model_band,
+            model_name=model_name,
+            model_expression=model_expression,
+            legend=True,
+            fit_info=fit_info,
+            error_band=plot_band,
+            profile=True,
+            plot_profile=plot_cor,
+            show=showplots,
         )
     _fit_object = _fit_history[-1]["fit"]
-    _parameter_errors = _fit_object.asymmetric_parameter_errors if asym_parerrs else \
-        np.stack([-_fit_object.parameter_errors, _fit_object.parameter_errors], axis=-1)
-    return (_fit_object.parameter_values, _parameter_errors, _fit_object.parameter_cor_mat,
-            _fit_object.goodness_of_fit)
+    _parameter_errors = (
+        _fit_object.asymmetric_parameter_errors
+        if asym_parerrs
+        else np.stack([-_fit_object.parameter_errors, _fit_object.parameter_errors], axis=-1)
+    )
+    return (
+        _fit_object.parameter_values,
+        _parameter_errors,
+        _fit_object.parameter_cor_mat,
+        _fit_object.goodness_of_fit,
+    )

@@ -5,13 +5,13 @@ import numpy as np
 from ...config import kc
 from ..minimizers import get_minimizer
 
-from.nexus import Nexus
+from .nexus import Nexus
 
 
 class NexusFitter(object):
-
-    def __init__(self, nexus, parameters_to_fit, parameter_to_minimize, minimizer=None,
-                 minimizer_kwargs=None):
+    def __init__(
+        self, nexus, parameters_to_fit, parameter_to_minimize, minimizer=None, minimizer_kwargs=None
+    ):
         """Handles the minimizer and interfacing of the data to it.
 
         :param Nexus nexus: A kafe2 nexus object used to manage the caching of intermediate
@@ -40,9 +40,9 @@ class NexusFitter(object):
         self._minimizer = _minimizer_class(
             parameters_to_fit,
             _par_values,
-            [0.1 if _v == 0 else 0.1*_v for _v in np.abs(_par_values)],
+            [0.1 if _v == 0 else 0.1 * _v for _v in np.abs(_par_values)],
             self._fcn_wrapper,
-            **minimizer_kwargs
+            **minimizer_kwargs,
         )
 
         self._fixed_pars = dict()
@@ -66,18 +66,14 @@ class NexusFitter(object):
                 _pars.append(_par)
 
         if _not_found:
-            raise ValueError(
-                "Parameters not registered in Nexus: {}".format(
-                    ', '.join(_not_found)
-                )
-            )
+            raise ValueError("Parameters not registered in Nexus: {}".format(", ".join(_not_found)))
         return _pars
 
     def _minimize(self, max_calls=None):
         """run minimizer"""
 
         if max_calls is None:
-            max_calls = kc('core', 'fitters', 'nexus_fitter', 'max_calls')
+            max_calls = kc("core", "fitters", "nexus_fitter", "max_calls")
 
         self.__minimizing = True
         self._minimizer.minimize(max_calls=max_calls)
@@ -92,7 +88,7 @@ class NexusFitter(object):
 
     def _fcn_wrapper(self, *fit_par_value_list):
         # set fit parameter values
-        assert(len(fit_par_value_list) == len(self._fit_pars))
+        assert len(fit_par_value_list) == len(self._fit_pars)
         for _par, _new_value in zip(self._fit_pars, fit_par_value_list):
             _par.value = _new_value
 
@@ -120,8 +116,7 @@ class NexusFitter(object):
 
     @parameter_to_minimize.setter
     def parameter_to_minimize(self, parameter_to_minimize):
-        self._min_par = \
-            self._get_pars_from_nexus([parameter_to_minimize])[0]
+        self._min_par = self._get_pars_from_nexus([parameter_to_minimize])[0]
         self._min_par_name = parameter_to_minimize
 
     @property
@@ -195,28 +190,31 @@ class NexusFitter(object):
 
     def contour(self, parameter_name_1, parameter_name_2, sigma=1.0, **kwargs):
         if not self.__state_is_from_minimizer:
-            raise RuntimeError(
-                "To calculate a contour the do_fit method has to be called first."
-            )
+            raise RuntimeError("To calculate a contour the do_fit method has to be called first.")
 
         return self._minimizer.contour(parameter_name_1, parameter_name_2, sigma=sigma, **kwargs)
 
-    def profile(self, parameter_name, low=None, high=None, sigma=None, cl=None, size=20,
-                subtract_min=False, arrows=False):
+    def profile(
+        self,
+        parameter_name,
+        low=None,
+        high=None,
+        sigma=None,
+        cl=None,
+        size=20,
+        subtract_min=False,
+        arrows=False,
+    ):
         if not self.__state_is_from_minimizer:
-            raise RuntimeError(
-                "To calculate a profile the do_fit method has to be called first."
-            )
+            raise RuntimeError("To calculate a profile the do_fit method has to be called first.")
         return self._minimizer.profile(
-            parameter_name, low, high, sigma, cl, size, subtract_min, arrows)
+            parameter_name, low, high, sigma, cl, size, subtract_min, arrows
+        )
 
     def get_fit_parameter_values(self, parameter_names=None):
         if parameter_names is None:
             parameter_names = self._fit_par_names
-        return OrderedDict([
-            (_pn, self._nx.get(_pn).value)
-            for _pn in parameter_names
-        ])
+        return OrderedDict([(_pn, self._nx.get(_pn).value) for _pn in parameter_names])
 
     def set_fit_parameter_values(self, **parameter_value_dict):
         _dict_key_set = set(parameter_value_dict.keys())
@@ -225,8 +223,10 @@ class NexusFitter(object):
         # test parameter names
         if not _dict_key_set.issubset(_par_name_set):
             _unknown_par_names = _dict_key_set - _par_name_set
-            raise ValueError("Cannot set fit parameter values: Unknown fit parameters: %r!"
-                                       % (_unknown_par_names,))
+            raise ValueError(
+                "Cannot set fit parameter values: Unknown fit parameters: %r!"
+                % (_unknown_par_names,)
+            )
 
         # set values in nexus
         for _par_name, _new_value in parameter_value_dict.items():
@@ -242,14 +242,13 @@ class NexusFitter(object):
             raise ValueError(
                 "Cannot set all fit parameter values: "
                 "{} fit parameters declared, "
-                "but {} provided!".format(
-                    self.n_fit_par,
-                    len(fit_par_value_list)
-                )
+                "but {} provided!".format(self.n_fit_par, len(fit_par_value_list))
             )
 
         # set values in nexus and minimizer
-        for _par_name, _par, _new_value in zip(self._fit_par_names, self._fit_pars, fit_par_value_list):
+        for _par_name, _par, _new_value in zip(
+            self._fit_par_names, self._fit_pars, fit_par_value_list
+        ):
             _par.value = _new_value
             self._minimizer.set(_par_name, _new_value)
 

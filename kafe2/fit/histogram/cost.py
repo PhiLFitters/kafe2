@@ -9,7 +9,7 @@ __all__ = [
     "HistCostFunction",
     "HistCostFunction_Chi2",
     "HistCostFunction_NegLogLikelihood",
-    "HistCostFunction_GaussApproximation"
+    "HistCostFunction_GaussApproximation",
 ]
 
 

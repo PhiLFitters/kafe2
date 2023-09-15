@@ -3,13 +3,14 @@ from __future__ import print_function
 import numpy as np
 from scipy.special import gammaincc, gammainccinv
 
-__all__ = ['ConfidenceLevel']
+__all__ = ["ConfidenceLevel"]
 
 
 class ConfidenceLevel(object):
     """
     Helper class for handling the conversion from confidence levels to sigma values and vice versa.
     """
+
     def __init__(self, n_dimensions=1, cl=None, sigma=None, delta_nll=None):
         self.ndim = n_dimensions
         _num_spec_not_none = 0
@@ -30,13 +31,16 @@ class ConfidenceLevel(object):
 
     def __str__(self):
         return "<ConfidenceLevel (d=%d): %.4g%% (%.3g-sigma)>" % (
-            self.ndim, self.cl*100., self.sigma)
+            self.ndim,
+            self.cl * 100.0,
+            self.sigma,
+        )
 
     def _calc_sigma_from_cl(self):
-        self._sigma = np.sqrt(2 * gammainccinv(self.ndim/2.0, 1.0 - self.cl))
+        self._sigma = np.sqrt(2 * gammainccinv(self.ndim / 2.0, 1.0 - self.cl))
 
     def _calc_cl_from_sigma(self):
-        self._cl = 1. - gammaincc(self.ndim/2.0, self.sigma**2/2.0)
+        self._cl = 1.0 - gammaincc(self.ndim / 2.0, self.sigma**2 / 2.0)
 
     @property
     def cl(self) -> float:
@@ -48,7 +52,8 @@ class ConfidenceLevel(object):
     def cl(self, new_cl: float):
         if new_cl <= 0 or new_cl >= 1:
             raise ValueError(
-                "Confidence level must be greater than 0 and less than 1. Got: %g" % (new_cl,))
+                "Confidence level must be greater than 0 and less than 1. Got: %g" % (new_cl,)
+            )
         self._cl = float(new_cl)
         self._sigma = None
 
@@ -67,7 +72,7 @@ class ConfidenceLevel(object):
 
     @property
     def delta_nll(self) -> float:
-        return self.sigma ** 2
+        return self.sigma**2
 
     @delta_nll.setter
     def delta_nll(self, new_delta_nll: float):
@@ -83,11 +88,10 @@ class ConfidenceLevel(object):
     def ndim(self, new_ndim):
         if not isinstance(new_ndim, int):
             raise ValueError(
-                "Number of dimensions must be of type int! Received type: %s" % type(new_ndim))
-        if new_ndim <= 0:
-            raise ValueError(
-                "Number of dimensions must be greater 0! Received: %d" % (new_ndim,)
+                "Number of dimensions must be of type int! Received type: %s" % type(new_ndim)
             )
+        if new_ndim <= 0:
+            raise ValueError("Number of dimensions must be greater 0! Received: %d" % (new_ndim,))
         self._ndim = new_ndim
 
     @property
@@ -100,8 +104,8 @@ class ConfidenceLevel(object):
 
     @property
     def cl_string(self):
-        return "%.4g%% CL" % (self.cl*100,)
+        return "%.4g%% CL" % (self.cl * 100,)
 
     @property
     def cl_latex_string(self):
-        return r"$%.4g\%%$ CL" % (self.cl*100,)
+        return r"$%.4g\%%$ CL" % (self.cl * 100,)

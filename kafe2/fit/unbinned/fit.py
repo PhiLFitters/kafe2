@@ -8,7 +8,7 @@ from .cost import STRING_TO_COST_FUNCTION, UnbinnedCostFunction_NegLogLikelihood
 from .model import UnbinnedParametricModel
 from .plot import UnbinnedPlotAdapter
 
-__all__ = ['UnbinnedFit']
+__all__ = ["UnbinnedFit"]
 
 
 class UnbinnedFit(FitBase):
@@ -16,16 +16,18 @@ class UnbinnedFit(FitBase):
     MODEL_TYPE = UnbinnedParametricModel
     MODEL_FUNCTION_TYPE = ModelFunctionBase
     PLOT_ADAPTER_TYPE = UnbinnedPlotAdapter
-    RESERVED_NODE_NAMES = {'data', 'model', 'cost', 'parameter_values', 'parameter_constraints'}
+    RESERVED_NODE_NAMES = {"data", "model", "cost", "parameter_values", "parameter_constraints"}
 
     _STRING_TO_COST_FUNCTION = STRING_TO_COST_FUNCTION
 
-    def __init__(self,
-                 data,
-                 model_function='normal_distribution',
-                 cost_function=UnbinnedCostFunction_NegLogLikelihood(),
-                 minimizer=None,
-                 minimizer_kwargs=None):
+    def __init__(
+        self,
+        data,
+        model_function="normal_distribution",
+        cost_function=UnbinnedCostFunction_NegLogLikelihood(),
+        minimizer=None,
+        minimizer_kwargs=None,
+    ):
         """
         Construct a fit to a model of *unbinned* data.
 
@@ -39,8 +41,12 @@ class UnbinnedFit(FitBase):
         :type minimizer_kwargs: dict
         """
         super(UnbinnedFit, self).__init__(
-            data=data, model_function=model_function, cost_function=cost_function,
-            minimizer=minimizer, minimizer_kwargs=minimizer_kwargs)
+            data=data,
+            model_function=model_function,
+            cost_function=cost_function,
+            minimizer=minimizer,
+            minimizer_kwargs=minimizer_kwargs,
+        )
 
     # private methods
 
@@ -48,14 +54,9 @@ class UnbinnedFit(FitBase):
         super(UnbinnedFit, self)._init_nexus()
 
         # add 'x' as an alias of 'data'
-        self._nexus.add_alias('x', alias_for='data')
+        self._nexus.add_alias("x", alias_for="data")
 
-        self._nexus.add_dependency(
-            'model',
-            depends_on=(
-                'parameter_values'
-            )
-        )
+        self._nexus.add_dependency("model", depends_on=("parameter_values"))
 
     # -- private methods
 
@@ -63,21 +64,23 @@ class UnbinnedFit(FitBase):
         if isinstance(new_data, self.CONTAINER_TYPE):
             self._data_container = deepcopy(new_data)
         elif isinstance(new_data, DataContainerBase):
-            raise TypeError("Incompatible container type '%s' (expected '%s')"
-                                       % (type(new_data), self.CONTAINER_TYPE))
+            raise TypeError(
+                "Incompatible container type '%s' (expected '%s')"
+                % (type(new_data), self.CONTAINER_TYPE)
+            )
         else:
             self._data_container = UnbinnedContainer(new_data, dtype=float)
         self._data_container._on_error_change_callback = self._on_error_change
 
-        self._nexus.get('x').mark_for_update()
+        self._nexus.get("x").mark_for_update()
         # TODO: make 'Alias' nodes pass on 'mark_for_update'
-        self._nexus.get('data').mark_for_update()
+        self._nexus.get("data").mark_for_update()
 
     def _set_new_parametric_model(self):
         self._param_model = UnbinnedParametricModel(
             data=self.data,
             model_density_function=self._model_function,
-            model_parameters=self.parameter_values
+            model_parameters=self.parameter_values,
         )
 
     @property
@@ -111,5 +114,6 @@ class UnbinnedFit(FitBase):
         return self._param_model.eval_model_function(support=x, model_parameters=model_parameters)
 
     def report(self, output_stream=sys.stdout, asymmetric_parameter_errors=False):
-        super(UnbinnedFit, self).report(output_stream=output_stream,
-                                        asymmetric_parameter_errors=asymmetric_parameter_errors)
+        super(UnbinnedFit, self).report(
+            output_stream=output_stream, asymmetric_parameter_errors=asymmetric_parameter_errors
+        )

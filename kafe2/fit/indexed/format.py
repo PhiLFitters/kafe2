@@ -5,8 +5,16 @@ __all__ = ["IndexedModelFunctionFormatter"]
 
 
 class IndexedModelFunctionFormatter(FunctionFormatter):
-    def __init__(self, name, latex_name=None, index_name='i', latex_index_name='i',
-                 arg_formatters=None, expression_string=None, latex_expression_string=None):
+    def __init__(
+        self,
+        name,
+        latex_name=None,
+        index_name="i",
+        latex_index_name="i",
+        arg_formatters=None,
+        expression_string=None,
+        latex_expression_string=None,
+    ):
         """
         Construct a :py:obj:`Formatter` for a model function for *indexed* data:
 
@@ -21,9 +29,13 @@ class IndexedModelFunctionFormatter(FunctionFormatter):
         """
         self.index_name = index_name
         self.latex_index_name = latex_index_name
-        super(IndexedModelFunctionFormatter, self).__init__(name, latex_name=latex_name, arg_formatters=arg_formatters,
-                                                            expression_string=expression_string,
-                                                            latex_expression_string=latex_expression_string)
+        super(IndexedModelFunctionFormatter, self).__init__(
+            name,
+            latex_name=latex_name,
+            arg_formatters=arg_formatters,
+            expression_string=expression_string,
+            latex_expression_string=latex_expression_string,
+        )
 
     def _get_format_kwargs(self, format_as_latex=False):
         """Create a dictionary containing argument name and format pairs.
@@ -62,13 +74,18 @@ class IndexedModelFunctionFormatter(FunctionFormatter):
     def latex_index_name(self, latex_index_name):
         if latex_index_name is None:
             self._latex_index_name = latexify_ascii(self.index_name)
-        elif latex_index_name.startswith('{') and latex_index_name.endswith('}'):
+        elif latex_index_name.startswith("{") and latex_index_name.endswith("}"):
             self._latex_index_name = latex_index_name
         else:
-            self._latex_index_name = '{'+latex_index_name+'}'
+            self._latex_index_name = "{" + latex_index_name + "}"
 
-    def get_formatted(self, with_par_values=False, n_significant_digits=2, format_as_latex=False,
-                      with_expression=False):
+    def get_formatted(
+        self,
+        with_par_values=False,
+        n_significant_digits=2,
+        format_as_latex=False,
+        with_expression=False,
+    ):
         """
         Get a formatted string representing this model function.
 
@@ -80,15 +97,21 @@ class IndexedModelFunctionFormatter(FunctionFormatter):
         :param with_expression: if ``True``, the returned string will include the expression assigned to the function
         :return: string
         """
-        _par_strings = self._get_formatted_pars(with_par_values=with_par_values,
-                                                n_significant_digits=n_significant_digits,
-                                                format_as_latex=format_as_latex)
+        _par_strings = self._get_formatted_pars(
+            with_par_values=with_par_values,
+            n_significant_digits=n_significant_digits,
+            format_as_latex=format_as_latex,
+        )
         _par_expr_string = ""
         if with_expression:
             _par_expr_string = self._get_formatted_expression(format_as_latex=format_as_latex)
 
         if format_as_latex:
-            _out_string = r"{%s}_{%s}\left(%s\right)" % (self._latex_name, self.latex_index_name, ", ".join(_par_strings))
+            _out_string = r"{%s}_{%s}\left(%s\right)" % (
+                self._latex_name,
+                self.latex_index_name,
+                ", ".join(_par_strings),
+            )
             if _par_expr_string:
                 _out_string += " = " + _par_expr_string
             _out_string = "$%s$" % (_out_string,)

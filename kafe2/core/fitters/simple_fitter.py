@@ -2,7 +2,9 @@ from ..minimizers import MinimizerIMinuit
 
 
 class SimpleFitter(object):
-    def __init__(self, nexus, parameters_to_fit, parameter_to_minimize, minimizer_class=MinimizerIMinuit):
+    def __init__(
+        self, nexus, parameters_to_fit, parameter_to_minimize, minimizer_class=MinimizerIMinuit
+    ):
         self._nx = nexus
         self.parameters_to_fit = parameters_to_fit
         self.parameter_to_minimize = parameter_to_minimize
@@ -14,23 +16,29 @@ class SimpleFitter(object):
         self.__cache_parameter_to_minimize_value = None
 
         _par_name_val_map = self.fit_parameter_values
-        self._minimizer = minimizer_class(parameters_to_fit,
-                                          _par_name_val_map.values(),
-                                          [0.1 if _v==0 else 0.1*_v for _v in _par_name_val_map.values()],
-                                          self._fcn_wrapper)
+        self._minimizer = minimizer_class(
+            parameters_to_fit,
+            _par_name_val_map.values(),
+            [0.1 if _v == 0 else 0.1 * _v for _v in _par_name_val_map.values()],
+            self._fcn_wrapper,
+        )
 
     # -- private methods
 
     def _check_parnames_in_par_space_raise(self, fit_pars):
         for _pn in fit_pars:
             if self._nx.get_by_name(_pn) is None:
-                raise ValueError("No parameter with name '%s' registered in ParameterSpace (%r)!"
-                                 % (_pn, self._nx))
+                raise ValueError(
+                    "No parameter with name '%s' registered in ParameterSpace (%r)!"
+                    % (_pn, self._nx)
+                )
 
     def _renew_par_cache(self):
         _fpns = self.parameters_to_fit
         _apnvd = self.__cache_all_parameters_name_value_dict = self._nx.parameter_values_dict
-        self.__cache_fit_parameters_name_value_dict = OrderedDict([(_pn, _apnvd[_pn]) for _pn in _fpns])
+        self.__cache_fit_parameters_name_value_dict = OrderedDict(
+            [(_pn, _apnvd[_pn]) for _pn in _fpns]
+        )
         self.__cache_parameter_to_minimize_value = _apnvd[self.parameter_to_minimize]
 
     def _minimize(self, max_calls=6000):
@@ -44,7 +52,6 @@ class SimpleFitter(object):
         #              callback=None,
         #              options=None)
         self.__cache_stale = True
-
 
     def _fcn_wrapper(self, *fit_par_value_list):
         # # set parameters to current values

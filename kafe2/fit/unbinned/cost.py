@@ -22,7 +22,8 @@ class UnbinnedCostFunction_NegLogLikelihood(CostFunction):
         product of the individual likelihoods of the data points.
         """
         super(UnbinnedCostFunction_NegLogLikelihood, self).__init__(
-            cost_function=self.nll, add_determinant_cost=False)
+            cost_function=self.nll, add_determinant_cost=False
+        )
         self._needs_errors = False
         self._formatter.latex_name = "-2\\ln\\mathcal{L}"
         self._formatter.name = "nll"
@@ -40,7 +41,7 @@ class UnbinnedCostFunction_NegLogLikelihood(CostFunction):
 
 
 STRING_TO_COST_FUNCTION = {
-    'nll': (UnbinnedCostFunction_NegLogLikelihood, {}),
-    'negloglikelihood': (UnbinnedCostFunction_NegLogLikelihood, {}),
-    'neg_log_likelihood': (UnbinnedCostFunction_NegLogLikelihood, {}),
+    "nll": (UnbinnedCostFunction_NegLogLikelihood, {}),
+    "negloglikelihood": (UnbinnedCostFunction_NegLogLikelihood, {}),
+    "neg_log_likelihood": (UnbinnedCostFunction_NegLogLikelihood, {}),
 }

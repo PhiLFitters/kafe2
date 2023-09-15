@@ -5,7 +5,7 @@ from ..indexed import IndexedContainer, IndexedFit
 from ..unbinned import UnbinnedContainer, UnbinnedFit
 from ..xy import XYContainer, XYFit
 
-__all__ = ['Fit']
+__all__ = ["Fit"]
 
 
 def Fit(data=None, model_function=None, minimizer=None, **kwargs):
@@ -22,17 +22,21 @@ def Fit(data=None, model_function=None, minimizer=None, **kwargs):
     :param kwargs: Any further keyword arguments for the according fit types. For more information, refer to their
         respective documentation.
     """
-    container_to_fit = {IndexedContainer: IndexedFit,
-                        HistContainer: HistFit,
-                        UnbinnedContainer: UnbinnedFit,
-                        XYContainer: XYFit,
-                        list: XYFit,
-                        np.ndarray: XYFit}
+    container_to_fit = {
+        IndexedContainer: IndexedFit,
+        HistContainer: HistFit,
+        UnbinnedContainer: UnbinnedFit,
+        XYContainer: XYFit,
+        list: XYFit,
+        np.ndarray: XYFit,
+    }
     try:
         fit_class = container_to_fit[type(data)]
     except KeyError:
-        raise TypeError("Unknown or unsupported data container type {}."
-                        "Supported types are {}".format(type(data), container_to_fit.keys()))
+        raise TypeError(
+            "Unknown or unsupported data container type {}."
+            "Supported types are {}".format(type(data), container_to_fit.keys())
+        )
     # other errors will raise during creation of the fit object
     if model_function is None:
         return fit_class(data, minimizer=minimizer, **kwargs)  # use default model function

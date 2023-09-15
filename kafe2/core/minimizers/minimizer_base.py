@@ -14,13 +14,18 @@ from ..error import CovMat
 
 @six.add_metaclass(ABCMeta)
 class MinimizerBase(object):
-
     ERRORDEF_CHI2 = 1.0
     ERRORDEF_NLL = 0.5
 
     def __init__(
-            self, parameter_names, parameter_values, parameter_errors, function_to_minimize,
-            tolerance=1e-6, errordef=ERRORDEF_CHI2):
+        self,
+        parameter_names,
+        parameter_values,
+        parameter_errors,
+        function_to_minimize,
+        tolerance=1e-6,
+        errordef=ERRORDEF_CHI2,
+    ):
         """
         :param parameter_names: the names of the parameters to vary during minimization.
         :type parameter_names: iterable of str
@@ -65,49 +70,49 @@ class MinimizerBase(object):
         Save the state of this object including the state of the used backend, if any.
         """
         if self._par_asymm_err is None:
-            self._save_state_dict['asymmetric_parameter_error'] = self._par_asymm_err
+            self._save_state_dict["asymmetric_parameter_error"] = self._par_asymm_err
         else:
-            self._save_state_dict['asymmetric_parameter_error'] = np.array(self._par_asymm_err)
+            self._save_state_dict["asymmetric_parameter_error"] = np.array(self._par_asymm_err)
         if self._hessian is None:
-            self._save_state_dict['hessian'] = self._hessian
+            self._save_state_dict["hessian"] = self._hessian
         else:
-            self._save_state_dict['hessian'] = np.array(self._hessian)
+            self._save_state_dict["hessian"] = np.array(self._hessian)
         if self._hessian_inv is None:
-            self._save_state_dict['hessian_inv'] = self._hessian_inv
+            self._save_state_dict["hessian_inv"] = self._hessian_inv
         else:
-            self._save_state_dict['hessian_inv'] = np.array(self._hessian_inv)
+            self._save_state_dict["hessian_inv"] = np.array(self._hessian_inv)
         if self._par_cov_mat is None:
-            self._save_state_dict['par_cov_mat'] = self._par_cov_mat
+            self._save_state_dict["par_cov_mat"] = self._par_cov_mat
         else:
-            self._save_state_dict['par_cov_mat'] = np.array(self._par_cov_mat)
+            self._save_state_dict["par_cov_mat"] = np.array(self._par_cov_mat)
         if self._par_cor_mat is None:
-            self._save_state_dict['par_cor_mat'] = self._par_cor_mat
+            self._save_state_dict["par_cor_mat"] = self._par_cor_mat
         else:
-            self._save_state_dict['par_cor_mat'] = np.array(self._par_cor_mat)
-        self._save_state_dict['did_fit'] = self._did_fit
+            self._save_state_dict["par_cor_mat"] = np.array(self._par_cor_mat)
+        self._save_state_dict["did_fit"] = self._did_fit
 
     def _load_state(self):
         """
         Load the state of this object including the state of the used backend, if any.
         """
-        self._par_asymm_err = self._save_state_dict['asymmetric_parameter_error']
+        self._par_asymm_err = self._save_state_dict["asymmetric_parameter_error"]
         if self._par_asymm_err is not None:
             self._par_asymm_err = np.array(self._par_asymm_err)
-        self._hessian = self._save_state_dict['hessian']
+        self._hessian = self._save_state_dict["hessian"]
         if self._hessian is not None:
             self._hessian = np.array(self._hessian)
-        self._hessian_inv = self._save_state_dict['hessian_inv']
+        self._hessian_inv = self._save_state_dict["hessian_inv"]
         if self._hessian_inv is not None:
             self._hessian_inv = np.array(self._hessian_inv)
-        self._par_cov_mat = self._save_state_dict['par_cov_mat']
+        self._par_cov_mat = self._save_state_dict["par_cov_mat"]
         if self._par_cov_mat is not None:
             self._par_cov_mat = np.array(self._par_cov_mat)
-        self._par_cor_mat = self._save_state_dict['par_cor_mat']
+        self._par_cor_mat = self._save_state_dict["par_cor_mat"]
         if self._par_cor_mat is not None:
             self._par_cor_mat = np.array(self._par_cor_mat)
         # Write back parameter values to nexus parameter nodes:
         self._func_wrapper_unpack_args(self.parameter_values)
-        self._did_fit = self._save_state_dict['did_fit']
+        self._did_fit = self._save_state_dict["did_fit"]
 
     def _func_wrapper(self, *args):
         """
@@ -118,8 +123,10 @@ class MinimizerBase(object):
         """
         _fval = self._func_handle(*args)
         if not self._printed_inf_cost_warning and np.isinf(_fval):
-            print('Warning: the cost function has been evaluated as infinite. '
-                  'The fit might not converge correctly.')
+            print(
+                "Warning: the cost function has been evaluated as infinite. "
+                "The fit might not converge correctly."
+            )
             self._printed_inf_cost_warning = True
         return _fval
 
@@ -158,11 +165,13 @@ class MinimizerBase(object):
                 _par_err = self.parameter_errors[_par_index]
 
                 _cut_dn = self._find_cost_cut(
-                    _par_name, _par_min - _par_err, _target_chi_2, _min_parameters)
+                    _par_name, _par_min - _par_err, _target_chi_2, _min_parameters
+                )
                 _asymm_par_errs[_par_index, 0] = _cut_dn - _par_min
 
                 _cut_up = self._find_cost_cut(
-                    _par_name, _par_min + _par_err, _target_chi_2, _min_parameters)
+                    _par_name, _par_min + _par_err, _target_chi_2, _min_parameters
+                )
                 _asymm_par_errs[_par_index, 1] = _cut_up - _par_min
                 self._load_state()
         return _asymm_par_errs
@@ -195,7 +204,6 @@ class MinimizerBase(object):
             self.release(parameter_name)
         return self.function_value
 
-
     def _find_cost_cut(self, parameter_name, guess, target_cost, min_parameters):
         """
         Utility function that finds the parameter value for a single parameter at which the cost
@@ -226,11 +234,23 @@ class MinimizerBase(object):
             return self.function_value - target_cost
 
         return root_scalar(
-            f=_profile, x0=guess, x1=min_parameters[self.parameter_names.index(parameter_name)],
-            xtol=self.tolerance, method="secant").root
+            f=_profile,
+            x0=guess,
+            x1=min_parameters[self.parameter_names.index(parameter_name)],
+            xtol=self.tolerance,
+            method="secant",
+        ).root
 
     def _get_profile_bound(
-            self, parameter_name, low=None, high=None, sigma=None, cl=None, subtract_min=False, arrows=False):
+        self,
+        parameter_name,
+        low=None,
+        high=None,
+        sigma=None,
+        cl=None,
+        subtract_min=False,
+        arrows=False,
+    ):
         if low is not None and high is not None and cl is not None:
             raise ValueError("At most two out of low, high, and cl can be defined.")
         _parameter_index = self._par_names.index(parameter_name)
@@ -245,8 +265,17 @@ class MinimizerBase(object):
             raise ValueError(f"high={high} must be larger than <{parameter_name}>={_min_par_val}")
 
         _arrow_specs = self._get_arrow_specs(
-            parameter_name, low, high, cl, subtract_min, arrows, _min_cost, _min_par_val,
-            _parameter_error, _min_par_vals)
+            parameter_name,
+            low,
+            high,
+            cl,
+            subtract_min,
+            arrows,
+            _min_cost,
+            _min_par_val,
+            _parameter_error,
+            _min_par_vals,
+        )
         low = np.min(low)
         _low_was_none = low is None
         high = np.max(high)
@@ -272,13 +301,15 @@ class MinimizerBase(object):
             _margin = 0.13 if arrows else 0
             for _arrow_spec in _arrow_specs:
                 if _arrow_spec["side"] == "left":
-                    _arrow_spec["x_margin"] = _arrow_spec["x"] \
-                        + _margin * (_arrow_spec["x"] - _original_high)
+                    _arrow_spec["x_margin"] = _arrow_spec["x"] + _margin * (
+                        _arrow_spec["x"] - _original_high
+                    )
                     if _low_was_none:
                         low = min(low, _arrow_spec["x_margin"])
                 elif _arrow_spec["side"] == "right":
-                    _arrow_spec["x_margin"] = _arrow_spec["x"] \
-                        + _margin * (_arrow_spec["x"] - _original_low)
+                    _arrow_spec["x_margin"] = _arrow_spec["x"] + _margin * (
+                        _arrow_spec["x"] - _original_low
+                    )
                     if _high_was_none:
                         high = max(high, _arrow_spec["x_margin"])
                 else:
@@ -287,10 +318,18 @@ class MinimizerBase(object):
         return low, high, _arrow_specs
 
     def _get_arrow_specs(
-            self, parameter_name: str, low: Union[None, float, Sequence[float]],
-            high: Union[None, float, Sequence[float]], cl: Union[None, float, Sequence[float]],
-            subtract_min: bool, arrows: bool, min_cost: float, min_par_val: float,
-            par_err: float, min_par_vals: Sequence[float]):
+        self,
+        parameter_name: str,
+        low: Union[None, float, Sequence[float]],
+        high: Union[None, float, Sequence[float]],
+        cl: Union[None, float, Sequence[float]],
+        subtract_min: bool,
+        arrows: bool,
+        min_cost: float,
+        min_par_val: float,
+        par_err: float,
+        min_par_vals: Sequence[float],
+    ):
         if low is None and high is None and cl is None:
             return None
         _arrow_specs = []
@@ -303,8 +342,10 @@ class MinimizerBase(object):
         if cl is not None:
             _num_defined += 1
         if _num_defined > 2:
-            raise ValueError("At most 2 out of low, high, and cl can be defined but received "
-                             f"low={low}, high={high}, cl={cl}")
+            raise ValueError(
+                "At most 2 out of low, high, and cl can be defined but received "
+                f"low={low}, high={high}, cl={cl}"
+            )
 
         if low is not None:
             try:
@@ -336,27 +377,26 @@ class MinimizerBase(object):
                         _cl_i_outside = 1 - _cl_i
                         _cl_i = 2 * _cl_i - 1
                     _sigma_i = ConfidenceLevel(cl=_cl_i).sigma
-                    _arrow_specs.append({
-                        "side": "left",
-                        "x": self._find_cost_cut(
-                            parameter_name=parameter_name,
-                            guess=min_par_val-_sigma_i*par_err,
-                            target_cost=min_cost+_sigma_i**2,
-                            min_parameters=min_par_vals
-                        ),
-                        "y": min_cost-_y_offset+_sigma_i**2,
-                        "cl": _cl_i_outside
-                    })
+                    _arrow_specs.append(
+                        {
+                            "side": "left",
+                            "x": self._find_cost_cut(
+                                parameter_name=parameter_name,
+                                guess=min_par_val - _sigma_i * par_err,
+                                target_cost=min_cost + _sigma_i**2,
+                                min_parameters=min_par_vals,
+                            ),
+                            "y": min_cost - _y_offset + _sigma_i**2,
+                            "cl": _cl_i_outside,
+                        }
+                    )
         else:
             for _low_i in low:
                 _cost_low = self._get_cost_value(parameter_name, _low_i, min_par_vals)
-                _cl_low = (1 - ConfidenceLevel(delta_nll=_cost_low-min_cost).cl) / 2
-                _arrow_specs.append({
-                    "side": "left",
-                    "x": _low_i,
-                    "y": _cost_low-_y_offset,
-                    "cl": _cl_low
-                })
+                _cl_low = (1 - ConfidenceLevel(delta_nll=_cost_low - min_cost).cl) / 2
+                _arrow_specs.append(
+                    {"side": "left", "x": _low_i, "y": _cost_low - _y_offset, "cl": _cl_low}
+                )
 
         if high is None:
             if cl is not None:
@@ -367,27 +407,26 @@ class MinimizerBase(object):
                         _cl_i_outside = 1 - _cl_i
                         _cl_i = 2 * _cl_i - 1
                     _sigma_i = ConfidenceLevel(cl=_cl_i).sigma
-                    _arrow_specs.append({
-                        "side": "right",
-                        "x": self._find_cost_cut(
-                            parameter_name=parameter_name,
-                            guess=min_par_val+_sigma_i*par_err,
-                            target_cost=min_cost+_sigma_i**2,
-                            min_parameters=min_par_vals
-                        ),
-                        "y": min_cost-_y_offset+_sigma_i**2,
-                        "cl": _cl_i_outside
-                    })
+                    _arrow_specs.append(
+                        {
+                            "side": "right",
+                            "x": self._find_cost_cut(
+                                parameter_name=parameter_name,
+                                guess=min_par_val + _sigma_i * par_err,
+                                target_cost=min_cost + _sigma_i**2,
+                                min_parameters=min_par_vals,
+                            ),
+                            "y": min_cost - _y_offset + _sigma_i**2,
+                            "cl": _cl_i_outside,
+                        }
+                    )
         else:
             for _high_i in high:
                 _cost_high = self._get_cost_value(parameter_name, _high_i, min_par_vals)
-                _cl_high = (1 - ConfidenceLevel(delta_nll=_cost_high-min_cost).cl) / 2
-                _arrow_specs.append({
-                    "side": "right",
-                    "x": _high_i,
-                    "y": _cost_high-_y_offset,
-                    "cl": _cl_high
-                })
+                _cl_high = (1 - ConfidenceLevel(delta_nll=_cost_high - min_cost).cl) / 2
+                _arrow_specs.append(
+                    {"side": "right", "x": _high_i, "y": _cost_high - _y_offset, "cl": _cl_high}
+                )
 
         return _arrow_specs
 
@@ -396,12 +435,14 @@ class MinimizerBase(object):
         Takes a full error matrix and removes the rows and
         columns that corresponding to fixed parameters.
         """
-        assert (matrix.shape == (self.num_pars, self.num_pars))
+        assert matrix.shape == (self.num_pars, self.num_pars)
 
-        _fixed_par_indices = [_i for _i, _par_name_i in enumerate(self._par_names)
-                              if self.is_fixed(_par_name_i)]
+        _fixed_par_indices = [
+            _i for _i, _par_name_i in enumerate(self._par_names) if self.is_fixed(_par_name_i)
+        ]
         _submat = np.delete(
-            np.delete(matrix, _fixed_par_indices, axis=0), _fixed_par_indices, axis=1)
+            np.delete(matrix, _fixed_par_indices, axis=0), _fixed_par_indices, axis=1
+        )
 
         return _submat
 
@@ -413,12 +454,13 @@ class MinimizerBase(object):
         """
         _mat = submatrix
 
-        _fixed_par_indices = [_i for _i, _par_name_i in enumerate(self._par_names)
-                              if self.is_fixed(_par_name_i)]
+        _fixed_par_indices = [
+            _i for _i, _par_name_i in enumerate(self._par_names) if self.is_fixed(_par_name_i)
+        ]
         for _id in _fixed_par_indices:
-            _mat = np.insert(np.insert(_mat, _id, 0., axis=0), _id, 0., axis=1)
+            _mat = np.insert(np.insert(_mat, _id, 0.0, axis=0), _id, 0.0, axis=1)
 
-        assert (_mat.shape == (self.num_pars, self.num_pars))
+        assert _mat.shape == (self.num_pars, self.num_pars)
 
         return _mat
 
@@ -460,8 +502,10 @@ class MinimizerBase(object):
         if self._fval is None:
             self._fval = self._func_handle(*self.parameter_values)
         if not self._printed_inf_cost_warning and np.isinf(self._fval):
-            print('Warning: the cost function has been evaluated as infinite. '
-                  'The fit might not converge correctly.')
+            print(
+                "Warning: the cost function has been evaluated as infinite. "
+                "The fit might not converge correctly."
+            )
             self._printed_inf_cost_warning = True
         return self._fval
 
@@ -555,7 +599,7 @@ class MinimizerBase(object):
             return None
         if self._hessian is None:
             self._hessian = nd.Hessian(self._func_wrapper_unpack_args)(self.parameter_values)
-            assert(np.all(self._hessian == self._hessian.T))
+            assert np.all(self._hessian == self._hessian.T)
             # Write back parameter values to nexus parameter nodes:
             self._func_wrapper_unpack_args(self.parameter_values)
         return self._hessian.copy()
@@ -575,7 +619,7 @@ class MinimizerBase(object):
             self._hessian_inv = self._fill_in_zeroes_for_fixed(_subhessian_inv)
             # ensure symmetric
             self._hessian_inv = 0.5 * (self._hessian_inv + self._hessian_inv.T)
-            assert (np.all(self._hessian_inv == self._hessian_inv.T))
+            assert np.all(self._hessian_inv == self._hessian_inv.T)
         return self._hessian_inv.copy()
 
     @property
@@ -723,8 +767,17 @@ class MinimizerBase(object):
         """
 
     @abstractmethod
-    def profile(self, parameter_name, low=None, high=None, sigma=None, cl=None, size=20,
-                subtract_min=False, arrows=False):
+    def profile(
+        self,
+        parameter_name,
+        low=None,
+        high=None,
+        sigma=None,
+        cl=None,
+        size=20,
+        subtract_min=False,
+        arrows=False,
+    ):
         """
         Calculate a 1D profile using the profile likelihood method: a single parameter is fixed
         while the rest are varied to minimize the cost function. The mapping of parameter value to

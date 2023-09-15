@@ -6,9 +6,9 @@ from ...config import kc
 from .nexus import Nexus
 from .nexus_fitter import NexusFitter
 
-__all__ = ['get_fitter', 'Nexus', 'NexusFitter']
+__all__ = ["get_fitter", "Nexus", "NexusFitter"]
 
-AVAILABLE_FITTERS = {'nexus_fitter': NexusFitter}
+AVAILABLE_FITTERS = {"nexus_fitter": NexusFitter}
 
 
 # try:
@@ -27,13 +27,15 @@ def get_fitter(fitter_spec):
 
     # for 'None', return the default fitter
     if fitter_spec is None:
-        _fitter = AVAILABLE_FITTERS.get(kc['core']['fitters']['default_fitter'], None)
+        _fitter = AVAILABLE_FITTERS.get(kc["core"]["fitters"]["default_fitter"], None)
     else:
         fitter_spec = fitter_spec.lower()
         _fitter = AVAILABLE_FITTERS.get(fitter_spec, None)
 
     if _fitter is None:
-        raise ValueError("Unknown fitter '{}'! Available: {}".format(fitter_spec, AVAILABLE_FITTERS.keys()))
+        raise ValueError(
+            "Unknown fitter '{}'! Available: {}".format(fitter_spec, AVAILABLE_FITTERS.keys())
+        )
 
     return _fitter
 

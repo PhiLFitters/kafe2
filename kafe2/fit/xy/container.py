@@ -8,7 +8,7 @@ import numpy as np
 from ...core.error import MatrixGaussianError, SimpleGaussianError
 from ..indexed import IndexedContainer
 
-__all__ = ['XYContainer']
+__all__ = ["XYContainer"]
 
 
 class XYContainer(IndexedContainer):
@@ -16,8 +16,9 @@ class XYContainer(IndexedContainer):
     This object is a specialized data container for *xy* data.
 
     """
-    _AXIS_SPEC_DICT = {0: 0, 1: 1, '0': 0, '1': 1, 'x': 0, 'y': 1}
-    
+
+    _AXIS_SPEC_DICT = {0: 0, 1: 1, "0": 0, "1": 1, "x": 0, "y": 1}
+
     # TODO Why does the XYContainer constructor require data while
     #      HistContainer and IndexedContainer don't?
     def __init__(self, x_data, y_data, dtype=float):
@@ -34,14 +35,20 @@ class XYContainer(IndexedContainer):
         x_data = np.asarray(x_data)
         y_data = np.asarray(y_data)
         if x_data.ndim > 1:
-            raise ValueError("x_data must be scalar or one-dimensional "
-                             f"but received data with {x_data.ndim} dimensions.")
+            raise ValueError(
+                "x_data must be scalar or one-dimensional "
+                f"but received data with {x_data.ndim} dimensions."
+            )
         if y_data.ndim > 1:
-            raise ValueError("y_data must be scalar or one-dimensional "
-                             f"but received data with {y_data.ndim} dimensions.")
+            raise ValueError(
+                "y_data must be scalar or one-dimensional "
+                f"but received data with {y_data.ndim} dimensions."
+            )
         if x_data.shape != y_data.shape:
-            raise ValueError("x_data and y_data must have the same shape but received "
-                             f"{x_data.shape} for x_data and {y_data.shape} for y_data.")
+            raise ValueError(
+                "x_data and y_data must have the same shape but received "
+                f"{x_data.shape} for x_data and {y_data.shape} for y_data."
+            )
         # super constructor doesn't allow 2D arrays
         super(XYContainer, self).__init__(np.zeros(len(x_data)))
         self._data = np.array([x_data, y_data], dtype=dtype)  # overwrite internal data storage
@@ -71,16 +78,16 @@ class XYContainer(IndexedContainer):
         _tmp_cov_mat_x = np.zeros((_sz, _sz))
         _tmp_cov_mat_y = np.zeros((_sz, _sz))
         for _err_dict in self._error_dicts.values():
-            if not _err_dict['enabled']:
+            if not _err_dict["enabled"]:
                 continue
-            assert _err_dict['axis'] in (0, 1)
-            if _err_dict['axis'] == 0:
-                _tmp_cov_mat_x += _err_dict['err'].cov_mat
-            elif _err_dict['axis'] == 1:
-                _tmp_cov_mat_y += _err_dict['err'].cov_mat
+            assert _err_dict["axis"] in (0, 1)
+            if _err_dict["axis"] == 0:
+                _tmp_cov_mat_x += _err_dict["err"].cov_mat
+            elif _err_dict["axis"] == 1:
+                _tmp_cov_mat_y += _err_dict["err"].cov_mat
 
-        _total_err_x = MatrixGaussianError(_tmp_cov_mat_x, 'cov', relative=False, reference=self.x)
-        _total_err_y = MatrixGaussianError(_tmp_cov_mat_y, 'cov', relative=False, reference=self.y)
+        _total_err_x = MatrixGaussianError(_tmp_cov_mat_x, "cov", relative=False, reference=self.x)
+        _total_err_y = MatrixGaussianError(_tmp_cov_mat_y, "cov", relative=False, reference=self.y)
         self._total_error = [_total_err_x, _total_err_y]
 
     def _clear_total_error_cache(self):
@@ -110,15 +117,19 @@ class XYContainer(IndexedContainer):
     def data(self, new_data):
         _new_data = np.asarray(new_data)
         if _new_data.ndim != 2:
-            raise ValueError("XYContainer data must be 2-d array of floats! "
-                             "Got shape: %r..." % (_new_data.shape,))
+            raise ValueError(
+                "XYContainer data must be 2-d array of floats! "
+                "Got shape: %r..." % (_new_data.shape,)
+            )
         if _new_data.shape[0] == 2:
             self._data = _new_data.copy()
         elif _new_data.shape[1] == 2:
             self._data = _new_data.T.copy()
         else:
-            raise ValueError("XYContainer data length must be 2 in at least one axis! "
-                             "Got shape: %r..." % (_new_data.shape,))
+            raise ValueError(
+                "XYContainer data length must be 2 in at least one axis! "
+                "Got shape: %r..." % (_new_data.shape,)
+            )
         self._clear_total_error_cache()
 
     @property
@@ -133,12 +144,14 @@ class XYContainer(IndexedContainer):
     def x(self, new_x):
         _new_x_data = np.squeeze(np.array(new_x))
         if len(_new_x_data.shape) > 1:
-            raise ValueError("XYContainer 'x' data must be 1-d array of floats! "
-                             "Got shape: %r..." % (_new_x_data.shape,))
+            raise ValueError(
+                "XYContainer 'x' data must be 1-d array of floats! "
+                "Got shape: %r..." % (_new_x_data.shape,)
+            )
         self._data[0, :] = new_x
         for _err_dict in self._error_dicts.values():
-            if _err_dict['axis'] == 0:
-                _err_dict['err'].reference = self._get_data_for_axis(0)
+            if _err_dict["axis"] == 0:
+                _err_dict["err"].reference = self._get_data_for_axis(0)
         self._clear_total_error_cache()
 
     @property
@@ -189,12 +202,14 @@ class XYContainer(IndexedContainer):
     def y(self, new_y):
         _new_y_data = np.squeeze(np.array(new_y))
         if len(_new_y_data.shape) > 1:
-            raise ValueError("XYContainer 'y' data must be 1-d array of floats! "
-                             "Got shape: %r..." % (_new_y_data.shape,))
+            raise ValueError(
+                "XYContainer 'y' data must be 1-d array of floats! "
+                "Got shape: %r..." % (_new_y_data.shape,)
+            )
         self._data[1, :] = new_y
         for _err_dict in self._error_dicts.values():
-            if _err_dict['axis'] == 1:
-                _err_dict['err'].reference = self._get_data_for_axis(1)
+            if _err_dict["axis"] == 1:
+                _err_dict["err"].reference = self._get_data_for_axis(1)
         self._clear_total_error_cache()
 
     @property
@@ -280,13 +295,17 @@ class XYContainer(IndexedContainer):
             err_val = np.ones(self.size) * err_val
 
         _err = SimpleGaussianError(
-            err_val=err_val, corr_coeff=correlation, relative=relative,
-            reference=lambda: self._get_error_reference(_axis)
+            err_val=err_val,
+            corr_coeff=correlation,
+            relative=relative,
+            reference=lambda: self._get_error_reference(_axis),
         )
         _name = self._add_error_object(name=name, error_object=_err, axis=_axis)
         return _name
 
-    def add_matrix_error(self, axis, err_matrix, matrix_type, name=None, err_val=None, relative=False):
+    def add_matrix_error(
+        self, axis, err_matrix, matrix_type, name=None, err_val=None, relative=False
+    ):
         """Add a matrix uncertainty source for an axis to the data container.
 
         :param axis: ``'x'``/``0`` or ``'y'``/``1``
@@ -310,8 +329,11 @@ class XYContainer(IndexedContainer):
         """
         _axis = self._find_axis_raise(axis)
         _err = MatrixGaussianError(
-            err_matrix=err_matrix, matrix_type=matrix_type, err_val=err_val,
-            relative=relative, reference=lambda: self._get_error_reference(axis)
+            err_matrix=err_matrix,
+            matrix_type=matrix_type,
+            err_val=err_val,
+            relative=relative,
+            reference=lambda: self._get_error_reference(axis),
         )
         _err.check_cov_mat_symmetry()
         _name = self._add_error_object(name=name, error_object=_err, axis=_axis)
@@ -337,7 +359,7 @@ class XYContainer(IndexedContainer):
         :rtype: bool
         """
         for _err_dict in self._error_dicts.values():
-            if _err_dict['axis'] == 0:
+            if _err_dict["axis"] == 0:
                 return True
         return False
 
@@ -349,7 +371,7 @@ class XYContainer(IndexedContainer):
         :rtype: bool
         """
         for _err_dict in self._error_dicts.values():
-            if _err_dict['axis'] == 0 and _err_dict['err'].corr_coeff != 1.0:
+            if _err_dict["axis"] == 0 and _err_dict["err"].corr_coeff != 1.0:
                 return True
         return False
 
@@ -360,6 +382,6 @@ class XYContainer(IndexedContainer):
         :rtype: bool
         """
         for _err_dict in self._error_dicts.values():
-            if _err_dict['axis'] == 1:
+            if _err_dict["axis"] == 1:
                 return True
         return False

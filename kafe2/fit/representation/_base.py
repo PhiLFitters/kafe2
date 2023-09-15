@@ -19,8 +19,7 @@ class GenericDReprBase(object):
 
 
 class DReprWriterMixin(object):
-    
-    DREPR_ROLE_NAME = 'writer'
+    DREPR_ROLE_NAME = "writer"
 
     """
     A "mixin" class for creating a data representation writer.
@@ -31,6 +30,7 @@ class DReprWriterMixin(object):
     Derived classes should inherit from :py:class:`DReprWriterMixin` and the
     relevant ``DRepr`` class (in that order).
     """
+
     def __init__(self, output_io_handle, *args, **kwargs):
         """
         Mixin constructor: sets the output handle
@@ -48,11 +48,11 @@ class DReprWriterMixin(object):
         pass
 
     def _get_preface_comment(self):
-        return '# kafe2 %s %s representation written by %s on %s.\n' % (
+        return "# kafe2 %s %s representation written by %s on %s.\n" % (
             self._kafe_object.__class__.__name__,
             self.DREPR_FLAVOR_NAME,
             getpass.getuser(),
-            datetime.datetime.now().strftime('%d.%m.%Y, %H:%M')
+            datetime.datetime.now().strftime("%d.%m.%Y, %H:%M"),
         )
 
     def write(self):
@@ -63,9 +63,8 @@ class DReprWriterMixin(object):
 
 
 class DReprReaderMixin(object):
-    
-    DREPR_ROLE_NAME = 'reader'
-    
+    DREPR_ROLE_NAME = "reader"
+
     """
     A "mixin" class for creating a data representation writer.
     Inheriting from this class in addition to a DRepr class for
@@ -75,6 +74,7 @@ class DReprReaderMixin(object):
     Derived classes should inherit from :py:class:`DReprReaderMixin` and the
     relevant ``DRepr`` class (in that order).
     """
+
     def __init__(self, input_io_handle, *args, **kwargs):
         """
         Mixin constructor: sets the input handle

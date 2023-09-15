@@ -38,7 +38,7 @@ class DataContainerBase(FileIOMixin):
 
     @classmethod
     def _get_object_type_name(cls):
-        return 'container'
+        return "container"
 
     @abc.abstractmethod
     def _calculate_total_error(self):
@@ -52,17 +52,23 @@ class DataContainerBase(FileIOMixin):
         """create a new entry <name> under self._error_dicts,
         with keys err=<ErrorObject> and arbitrary additional keys"""
         if error_object.error.shape[0] != self.size:
-            raise ValueError(f"Error must have size {self.size} but"
-                             f"received error with size {error_object.error.shape[0]}")
+            raise ValueError(
+                f"Error must have size {self.size} but"
+                f"received error with size {error_object.error.shape[0]}"
+            )
         _name = name
         if _name is not None and _name in self._error_dicts:
-            raise ValueError("Cannot create error source with name '{}': there is already an error "
-                             "source registered under that name!".format(_name))
+            raise ValueError(
+                "Cannot create error source with name '{}': there is already an error "
+                "source registered under that name!".format(_name)
+            )
         # be paranoid about name collisions
         while _name is None or _name in self._error_dicts:
             _name = random_alphanumeric(size=8)
 
-        additional_error_dict_keys.setdefault('enabled', True)  # enable error source, unless explicitly disabled
+        additional_error_dict_keys.setdefault(
+            "enabled", True
+        )  # enable error source, unless explicitly disabled
 
         axis = additional_error_dict_keys.get("axis", None)
         if axis is not None:
@@ -219,14 +225,16 @@ class DataContainerBase(FileIOMixin):
         if err_val.ndim == 0:  # if dimensionless numpy array (i.e. float64), add a dimension
             err_val = np.ones(self.size) * err_val
 
-        _err = SimpleGaussianError(err_val=err_val, corr_coeff=correlation,
-                                   relative=relative, reference=reference)
+        _err = SimpleGaussianError(
+            err_val=err_val, corr_coeff=correlation, relative=relative, reference=reference
+        )
 
         _name = self._add_error_object(name=name, error_object=_err)
         return _name
 
-    def add_matrix_error(self, err_matrix, matrix_type,
-                         name=None, err_val=None, relative=False, reference=None):
+    def add_matrix_error(
+        self, err_matrix, matrix_type, name=None, err_val=None, relative=False, reference=None
+    ):
         """Add a matrix uncertainty source to the data container.
 
         :param err_matrix: Covariance or correlation matrix.
@@ -245,8 +253,13 @@ class DataContainerBase(FileIOMixin):
         :return: An error id which uniquely identifies the created error source.
         :rtype: str
         """
-        _err = MatrixGaussianError(err_matrix=err_matrix, matrix_type=matrix_type, err_val=err_val,
-                                   relative=relative, reference=reference)
+        _err = MatrixGaussianError(
+            err_matrix=err_matrix,
+            matrix_type=matrix_type,
+            err_val=err_val,
+            relative=relative,
+            reference=reference,
+        )
         _err.check_cov_mat_symmetry()
 
         _name = self._add_error_object(name=name, error_object=_err)
@@ -259,7 +272,7 @@ class DataContainerBase(FileIOMixin):
         :type error_name: str
         """
         _err_dict = self._get_error_by_name_raise(error_name)
-        _err_dict['enabled'] = False
+        _err_dict["enabled"] = False
         self._on_error_change()
 
     def enable_error(self, error_name):
@@ -269,10 +282,10 @@ class DataContainerBase(FileIOMixin):
         :type error_name: str
         """
         _err_dict = self._get_error_by_name_raise(error_name)
-        _err_dict['enabled'] = True
+        _err_dict["enabled"] = True
         self._on_error_change()
 
-    def get_matching_errors(self, matching_criteria=None, matching_type='equal'):
+    def get_matching_errors(self, matching_criteria=None, matching_type="equal"):
         """Return a list of uncertainty objects fulfilling the specified matching criteria.
 
         Valid keys for **matching_criteria**:
@@ -306,32 +319,34 @@ class DataContainerBase(FileIOMixin):
         if matching_criteria is None:
             matching_criteria = dict()
 
-        if matching_type == 'regex':
+        if matching_type == "regex":
             raise NotImplementedError("Matching type 'regex' not yet implemented!")
-        if matching_type != 'equal':
-            raise NotImplementedError("Unknown matching type: '{}'! "
-                                      "Available: ['equals']".format(matching_type))
+        if matching_type != "equal":
+            raise NotImplementedError(
+                "Unknown matching type: '{}'! " "Available: ['equals']".format(matching_type)
+            )
 
         for _crit_key, _crit_value in six.iteritems(matching_criteria):
             # go through all errors, removing those that don't match
             for _error_name, _error_dict in list(_result.items()):  # do not use an iterator!
-                if _crit_key == 'name' and _error_name == _crit_value:
+                if _crit_key == "name" and _error_name == _crit_value:
                     continue
-                elif _crit_key == 'type':
+                elif _crit_key == "type":
                     # type 'simple'
-                    _err_obj = _error_dict['err']
-                    if ((_crit_value == 'simple' and isinstance(_err_obj, SimpleGaussianError)) or
-                            (_crit_value == 'matrix' and isinstance(_err_obj, MatrixGaussianError))):
+                    _err_obj = _error_dict["err"]
+                    if (_crit_value == "simple" and isinstance(_err_obj, SimpleGaussianError)) or (
+                        _crit_value == "matrix" and isinstance(_err_obj, MatrixGaussianError)
+                    ):
                         continue
-                elif _crit_key == 'correlated':
-                    _err_obj = _error_dict['err']
+                elif _crit_key == "correlated":
+                    _err_obj = _error_dict["err"]
                     try:
                         if _crit_value == bool(_err_obj.corr_coeff != 0):
                             continue
                     except AttributeError:
                         pass  # error is a MatrixGaussianError and will not be matched
-                elif _crit_key == 'relative':
-                    _err_obj = _error_dict['err']
+                elif _crit_key == "relative":
+                    _err_obj = _error_dict["err"]
                     if _err_obj.relative == _crit_value:
                         continue
                 else:
@@ -351,7 +366,7 @@ class DataContainerBase(FileIOMixin):
             if not _result:
                 break
 
-        return {_name: _entry['err'] for _name, _entry in six.iteritems(_result)}
+        return {_name: _entry["err"] for _name, _entry in six.iteritems(_result)}
 
     def get_error(self, error_name):
         """Return the uncertainty object holding the uncertainty.
