@@ -22,7 +22,7 @@ arg_formatters:
   b: B
   c: C
 expression_string: '{0} * {x} ** 2 + {1} * {x} + {2}'
-latex_expression_string: '{0}{x}^2 + {1}{x} + {2}' 
+latex_expression_string: '{0}{x}^2 + {1}{x} + {2}'
 """
 
 TEST_MODEL_FUNCTION_FORMATTER_MISSING_KEYWORD = """
@@ -34,7 +34,7 @@ arg_formatters:
   b: B
   c: C
 expression_string: '{0} * {x} ** 2 + {1} * {x} + {2}'
-latex_expression_string: '{0}{x}^2 + {1}{x} + {2}' 
+latex_expression_string: '{0}{x}^2 + {1}{x} + {2}'
 """
 
 TEST_MODEL_FUNCTION_FORMATTER_EXTRA_KEYWORD = (
@@ -134,7 +134,7 @@ arg_formatters:
   b: B
   c: C
 expression_string: '{0} * {x} ** 2 + {1} * {x} + {2}'
-latex_expression_string: '{0}{x}^2 + {1}{x} + {2}' 
+latex_expression_string: '{0}{x}^2 + {1}{x} + {2}'
 """
 
 TEST_MODEL_FUNCTION_FORMATTER_INDEXED_MISSING_KEYWORD = """
@@ -148,7 +148,7 @@ arg_formatters:
   b: B
   c: C
 expression_string: '{0} * {x} ** 2 + {1} * {x} + {2}'
-latex_expression_string: '{0}{x}^2 + {1}{x} + {2}' 
+latex_expression_string: '{0}{x}^2 + {1}{x} + {2}'
 """
 
 TEST_MODEL_FUNCTION_FORMATTER_INDEXED_EXTRA_KEYWORD = (
