@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import scipy.stats
 
-from kafe2.fit.tools.ensemble import (
+from kafe2.fit.tools.ensemble import (  # noqa: F401 (unused import)
     EnsembleError,
     EnsembleVariable,
     EnsembleVariableProbabilityDistribution,

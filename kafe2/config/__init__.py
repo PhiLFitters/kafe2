@@ -8,10 +8,10 @@ from tempfile import NamedTemporaryFile
 
 import matplotlib as mpl
 
-# WARNING! DO NOT REMOVE THE PYPLOT IMPORT, EVEN THOUGH IT IS NOT USED.
+# WARNING! DO NOT REMOVE THE PYPLOT IMPORT, EVEN THOUGH IT IS NOT USED. (noqa)
 # force pyplot import once to trigger eventual hooks for backend change, e.g. when running inside jupyter
 # those hooks are not triggered when only importing matplotlib
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # noqa: F401
 import yaml
 
 logger = logging.getLogger(__name__)

@@ -8,8 +8,12 @@ from ..contour import ContourFactory
 from .minimizer_base import MinimizerBase
 
 try:
-    from ROOT import TMath  # for using ROOT's chi2prob function
-    from ROOT import Double, Long, TMinuit
+    from ROOT import (  # for using ROOT's chi2prob function  # noqa: F401 (unused import)
+        Double,
+        Long,
+        TMath,
+        TMinuit,
+    )
 except ImportError:
     # TODO: handle importing nonexistent minimizer
     raise

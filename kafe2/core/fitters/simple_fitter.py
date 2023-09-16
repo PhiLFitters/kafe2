@@ -36,7 +36,7 @@ class SimpleFitter(object):
     def _renew_par_cache(self):
         _fpns = self.parameters_to_fit
         _apnvd = self.__cache_all_parameters_name_value_dict = self._nx.parameter_values_dict
-        self.__cache_fit_parameters_name_value_dict = OrderedDict(
+        self.__cache_fit_parameters_name_value_dict = OrderedDict(  # noqa: F821 (undefined name)
             [(_pn, _apnvd[_pn]) for _pn in _fpns]
         )
         self.__cache_parameter_to_minimize_value = _apnvd[self.parameter_to_minimize]

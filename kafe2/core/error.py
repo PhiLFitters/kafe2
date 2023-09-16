@@ -119,7 +119,7 @@ class CovMat(object):
         return self._cor_mat
 
     @property
-    def I(self):
+    def I(self):  # noqa: E743 (ambiguous function name)
         """
         Inverse of the covariance matrix. Returns ``None`` if matrix is singular.
         """
@@ -203,7 +203,7 @@ class GaussianErrorBase(object):
     @reference.setter
     def reference(self, reference):
         if reference is None:
-            ##self._reference = np.ones_like(self._err_val)
+            ##self._reference = np.ones_like(self._err_val)  # noqa: E265
             self._reference = None
         elif callable(reference):
             self._reference = reference

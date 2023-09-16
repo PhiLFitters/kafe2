@@ -1,3 +1,5 @@
+# flake8: noqa F401 (imported but unused)
+
 import matplotlib as mpl
 import numpy as np
 import six

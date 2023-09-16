@@ -496,7 +496,7 @@ class MinimizerScipyOptimize(MinimizerBase):
 
         _termination_distance = (sigma * CONTOUR_STRETCHING * beacon_size) ** 2
 
-        _meta_cost_function = lambda z: (
+        _meta_cost_function = lambda z: (  # noqa: E731 (do not assign labda)
             _contour_fun
             - self._calc_fun_with_constraints(
                 [
@@ -585,19 +585,21 @@ class MinimizerScipyOptimize(MinimizerBase):
         return _rotated_xy_values
 
     def _calculate_tangential_angle(self, coords, ids):
-        _meta_cost_function_gradient = lambda pars: self._calc_fun_with_constraints(
-            [
-                {
-                    "type": "eq",
-                    "fun": lambda x: x[ids[0]]
-                    - (self._par_val[ids[0]] + self._par_err[ids[0]] * pars[0]),
-                },
-                {
-                    "type": "eq",
-                    "fun": lambda x: x[ids[1]]
-                    - (self._par_val[ids[1]] + self._par_err[ids[1]] * pars[1]),
-                },
-            ]
+        _meta_cost_function_gradient = (
+            lambda pars: self._calc_fun_with_constraints(  # noqa: E731 (do not assign labda)
+                [
+                    {
+                        "type": "eq",
+                        "fun": lambda x: x[ids[0]]
+                        - (self._par_val[ids[0]] + self._par_err[ids[0]] * pars[0]),
+                    },
+                    {
+                        "type": "eq",
+                        "fun": lambda x: x[ids[1]]
+                        - (self._par_val[ids[1]] + self._par_err[ids[1]] * pars[1]),
+                    },
+                ]
+            )
         )
         _grad = nd.Gradient(_meta_cost_function_gradient)(coords)
         return np.arctan2(_grad[0], _grad[1]) + np.pi / 2

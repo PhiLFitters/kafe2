@@ -37,7 +37,7 @@ class CustomFit(FitBase):
         self._initialize_fitter()
         """
         Construct a fit without explicit data and model from only a cost function.
-        
+
         :param cost_function: the function to minimize.
         :type cost_function: callable
         :param minimizer: Name of the minimizer to use.

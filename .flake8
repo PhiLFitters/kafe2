@@ -2,6 +2,8 @@
 exclude =
     __pycache__,
     *.pyc,
-extend-ignore = E203, E501
-max_line_length = 100
-max_doc_length = 100
+extend-ignore = E203, E501, W605, F841
+# W605: invalid escape sequence, this interferes with strings which contain LaTeX directives
+# F841: local variable assigned but never used, this happens a lot of times in the code
+max_line_length = 150
+max_doc_length = 150

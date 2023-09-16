@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from kafe2.core.fitters.nexus import (
+from kafe2.core.fitters.nexus import (  # noqa: F401 (unused import)
     _OPERATORS,
     _UNARY_OPERATORS,
     Alias,

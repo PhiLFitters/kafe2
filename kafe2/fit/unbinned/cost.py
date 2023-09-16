@@ -1,3 +1,4 @@
+# flake8: noqa F401 (imported but unused)
 from types import FunctionType
 
 import numpy as np

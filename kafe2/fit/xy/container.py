@@ -1,5 +1,5 @@
 try:
-    import typing  # help IDEs with type-hinting inside docstrings
+    import typing  # help IDEs with type-hinting inside docstrings  # noqa: F401 (unused import)
 except ImportError:
     pass
 import numpy  # help IDEs with type-hinting inside docstrings

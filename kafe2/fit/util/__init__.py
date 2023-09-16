@@ -5,6 +5,8 @@ r"""This submodule provides utility functions for other modules.
 .. moduleauthor:: Johannes Gäßler <johannes.gaessler@cern.ch>
 """
 
+# flake8: noqa F401, F403 (imported but unused, used but unable to detect undefined names)
+
 import warnings
 from collections import OrderedDict
 from typing import List, Optional

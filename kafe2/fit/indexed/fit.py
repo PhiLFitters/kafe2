@@ -1,3 +1,4 @@
+# flake8: noqa F401 (imported but unused)
 from collections import OrderedDict
 from copy import deepcopy
 

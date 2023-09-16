@@ -1,3 +1,4 @@
+# flake8: noqa F401 (imported but unused)
 try:
     import typing  # help IDEs with type-hinting inside docstrings
 except ImportError:

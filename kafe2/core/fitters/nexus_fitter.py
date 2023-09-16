@@ -4,7 +4,7 @@ import numpy as np
 
 from ...config import kc
 from ..minimizers import get_minimizer
-from .nexus import Nexus
+from .nexus import Nexus  # noqa: F401 (unused import)
 
 
 class NexusFitter(object):

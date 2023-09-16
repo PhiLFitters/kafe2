@@ -22,7 +22,7 @@ from .container import DataContainerBase
 from .format import ParameterFormatter
 
 try:
-    import typing  # help IDEs with type-hinting inside docstrings
+    import typing  # help IDEs with type-hinting inside docstrings  # noqa: F401 (unused import)
 except ImportError:
     pass
 
