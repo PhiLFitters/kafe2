@@ -40,7 +40,7 @@ model_function_formatter:
         name: beta
         latex_name: \beta
     expression_string: '{0} * {x} + {1}'
-    latex_expression_string: '{0}{x} + {1}' 
+    latex_expression_string: '{0}{x} + {1}'
 """
 )
 
@@ -199,7 +199,7 @@ model_function_formatter:
         name: beta
         latex_name: \beta
     expression_string: '{0} * {r} + {1}'
-    latex_expression_string: '{0}{r} + {1}' 
+    latex_expression_string: '{0}{r} + {1}'
 """
 )
 
@@ -351,7 +351,7 @@ model_function_formatter:
         name: beta
         latex_name: \beta
     expression_string: '{0} * {x} + {1}'
-    latex_expression_string: '{0}{x} + {1}' 
+    latex_expression_string: '{0}{x} + {1}'
 """
 )
 

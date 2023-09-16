@@ -10,7 +10,7 @@ class YamlWriterMixin(DReprWriterMixin):
     """
     A "mixin" class for creating a *yaml* representation writer.
     Inheriting from this class in addition to a DRepr class for
-    a particular object type adds methods for writing a yaml document 
+    a particular object type adds methods for writing a yaml document
     to an output stream.
 
     Derived classes should inherit from :py:class:`YamlWriterMixin` and the
