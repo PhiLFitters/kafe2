@@ -50,7 +50,7 @@ dependencies = [
 dynamic = ["version"]
 
 [tool.setuptools.dynamic]
-version = {attr = "kafe2._version_info.__version__"}
+version = {attr = "kafe2.__version__"}
 
 [project.optional-dependencies]
 dev = [
