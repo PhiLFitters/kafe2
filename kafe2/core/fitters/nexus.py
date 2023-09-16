@@ -51,6 +51,7 @@ _OPERATORS = {
     "or": (operator.or_, True),
     "xor": (operator.xor, True),
     # comparison
+    # flake8: noqa E265 (linter is complaining about the block comment which should start with """
     #'eq': (operator.eq, False),
     #'ne': (operator.ne, False),
     #'lt': (operator.lt, False),

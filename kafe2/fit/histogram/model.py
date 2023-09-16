@@ -129,6 +129,7 @@ class HistParametricModel(ParametricModelBaseMixin, HistContainer):
         )
 
     def _bin_evaluation_numerical(self):
+        # flake8: noqa: E731 (lambda expression)
         _integrand_func = lambda x: self.eval_model_function_density(x)
         _int_val = np.zeros(self.size)
         for _i, (_a, _b) in enumerate(zip(self._bin_edges[:-1], self._bin_edges[1:])):

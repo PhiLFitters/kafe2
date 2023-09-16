@@ -1,3 +1,4 @@
+# flake8: noqa F401 (imported but unused)
 import sys
 import warnings
 from collections import OrderedDict

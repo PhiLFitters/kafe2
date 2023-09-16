@@ -2,7 +2,10 @@ from copy import deepcopy
 
 from .._base import DataContainerBase, FitBase
 from .._base.cost import CostFunction_NegLogLikelihood
-from ..util import collect, function_library
+from ..util import (  # noqa: F401 (collect imported but not used)
+    collect,
+    function_library,
+)
 from .container import HistContainer
 from .model import HistModelFunction, HistParametricModel
 from .plot import HistPlotAdapter
@@ -150,7 +153,7 @@ class HistFit(FitBase):
 
     # -- public methods
 
-    ## add_error... methods inherited from FitBase ##
+    # add_error... methods inherited from FitBase ##
 
     def eval_model_function_density(self, x, model_parameters=None):
         """

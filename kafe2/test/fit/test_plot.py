@@ -1,5 +1,5 @@
 import os
-import sys
+import sys  # noqa: F401 (imported but not used)
 import unittest
 
 import matplotlib.pyplot as plt

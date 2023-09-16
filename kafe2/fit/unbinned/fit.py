@@ -2,7 +2,7 @@ import sys
 from copy import deepcopy
 
 from .._base import DataContainerBase, FitBase, ModelFunctionBase
-from ..util import collect
+from ..util import collect  # noqa: F401 (unused import)
 from .container import UnbinnedContainer
 from .cost import STRING_TO_COST_FUNCTION, UnbinnedCostFunction_NegLogLikelihood
 from .model import UnbinnedParametricModel

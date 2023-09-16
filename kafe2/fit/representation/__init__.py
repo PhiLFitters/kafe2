@@ -13,6 +13,7 @@ _AVAILABLE_REPRESENTATIONS = dict()
 # register different aliases (i.e. file extensions) for file formats
 _FILE_FORMAT_ALIAS_RESOLVDICT = dict(yml="yaml")
 
+# flake8: noqa F401, F403 (imported but unused, used but unable to detect undefined names)
 
 from .constraint import *
 from .container import *

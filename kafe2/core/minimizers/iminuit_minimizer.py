@@ -2,7 +2,7 @@ import logging
 from copy import deepcopy
 
 import numpy as np
-from scipy.stats import norm
+from scipy.stats import norm  # noqa: F401 (unused import)
 
 from ..contour import ContourFactory
 from .minimizer_base import MinimizerBase

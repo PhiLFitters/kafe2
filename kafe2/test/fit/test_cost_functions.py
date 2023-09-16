@@ -12,6 +12,10 @@ from kafe2.fit.histogram.cost import *
 from kafe2.fit.indexed.cost import *
 from kafe2.fit.xy.cost import *
 
+# flake8: noqa F405
+# function may be undefined or defined from ...
+# this applies to nearly each cost function in this document.
+
 
 class TestCostBuiltin(unittest.TestCase):
     CHI2_COST_FUNCTION = CostFunction_Chi2

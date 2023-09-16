@@ -12,7 +12,9 @@ from kafe2.test.tools import calculate_expected_fit_parameters_xy
 
 _cannot_import_IMinuit = False
 try:
-    from kafe2.core.minimizers.iminuit_minimizer import MinimizerIMinuit
+    from kafe2.core.minimizers.iminuit_minimizer import (  # noqa: F401 (imported but unused)
+        MinimizerIMinuit,
+    )
 except (ImportError, SyntaxError):
     _cannot_import_IMinuit = True
 

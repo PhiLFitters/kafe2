@@ -7,6 +7,8 @@ as saving and loading those to and from a file is not yet supported.
 .. moduleauthor:: Daniel Savoiu <daniel.savoiu@cern.ch>
 """
 
+# flake8: noqa F401, F403 (imported but unused, used but unable to detect undefined names)
+
 from .container import *
 from .cost import *
 from .fit import *

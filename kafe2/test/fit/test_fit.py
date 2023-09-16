@@ -101,7 +101,7 @@ class AbstractTestFit(abc.ABC):
                 # types contained in array do not support 'allclose'
                 try:
                     self.assertEqual(received_value, expected_value)
-                except:
+                except:  # noqa: E722 (bare except)
                     print(
                         "\nCheck failed: attribute {!r} "
                         "should be exactly:\n\t{}\nand is:\n\t{}".format(
@@ -109,7 +109,7 @@ class AbstractTestFit(abc.ABC):
                         )
                     )
                     raise
-            except:
+            except:  # noqa: E722 (bare except)
                 _abs_diffs = np.abs(expected_value - received_value)
                 _min_abs_diff, _max_abs_diff = np.min(_abs_diffs), np.max(_abs_diffs)
 

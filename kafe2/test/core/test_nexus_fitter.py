@@ -1,3 +1,4 @@
+# flake8: noqa F401 (imported but not used)
 import unittest
 
 import numpy as np

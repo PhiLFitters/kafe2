@@ -8,6 +8,8 @@ unbinned fit can take much longer than a histogram fit, where each bin is consid
 .. moduleauthor:: Cedric Verstege <cedric.verstege@student.kit.edu>
 """
 
+# flake8: noqa F401, F403 (imported but unused, used but unable to detect undefined names)
+
 from .container import *
 from .cost import *
 from .fit import *

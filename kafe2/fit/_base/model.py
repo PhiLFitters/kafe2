@@ -170,7 +170,7 @@ class ModelFunctionBase(FileIOMixin, object):
         # require at least one parameter to fit
         if self._model_function_parcount < 1:
             raise ValueError(
-                "Model function {0!r} needs at least one parameter besides the "
+                "Model function {0!r} needs at least one parameter besides the "  # noqa: F523 (unused argument in format string)
                 "first {0!s} independent variable(s)!".format(
                     self._model_function_handle, self._independent_argcount
                 )

@@ -8,7 +8,7 @@ the user to manually manage objects.
 __all__ = ["custom_fit", "hist_fit", "indexed_fit", "unbinned_fit", "xy_fit", "plot", "k2Fit"]
 
 try:
-    import typing  # help IDEs with type-hinting inside docstrings
+    import typing  # help IDEs with type-hinting inside docstrings  # noqa: F401 (unused import)
 except ImportError:
     pass
 

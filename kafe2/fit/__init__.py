@@ -154,6 +154,7 @@ one or more plots accordingly using `matplotlib`.
 
 # public interface of submodule 'kafe2.fit'
 
+# flake8: noqa F401, F403 (imported but unused, used but unable to detect undefined names)
 
 from ._base.plot import Plot
 from .custom import *
