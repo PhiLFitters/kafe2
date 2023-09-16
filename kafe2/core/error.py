@@ -203,7 +203,7 @@ class GaussianErrorBase(object):
     @reference.setter
     def reference(self, reference):
         if reference is None:
-            ##self._reference = np.ones_like(self._err_val)  # noqa: E265
+            # self._reference = np.ones_like(self._err_val)
             self._reference = None
         elif callable(reference):
             self._reference = reference
