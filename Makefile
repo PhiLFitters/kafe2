@@ -24,7 +24,7 @@ clean:
 	rm -f test-*.yml
 
 # create a development environment
-devenv:	build
+devenv:
 	python -m venv venv/
 	. venv/bin/activate; pip install -e .[dev]
 
@@ -38,14 +38,14 @@ test: build
 	pytest
 	coverage run
 
-lint:
+lint: devenv
 # $make devenv must be called before this and the venv has to be activated.
 # Otherwise the packages isort, black and flake8 might be missing.
 	echo -e "$(BLUE)${BOLD}ISORT${NC}$(NORM)"
-	isort --check --diff ./kafe2
+	. venv/bin/activate; isort --check --diff ./kafe2
 
 	echo -e "$(BLUE)${BOLD}BLACK${NC}$(NORM)"
-	black --check --diff ./kafe2
+	. venv/bin/activate; black --check --diff ./kafe2
 
 	echo -e "$(BLUE)${BOLD}FLAKE8${NC}$(NORM)"
-	flake8 --config .flake8 ./kafe2
+	. venv/bin/activate; flake8 --config .flake8 ./kafe2
