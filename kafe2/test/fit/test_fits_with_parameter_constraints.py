@@ -42,7 +42,15 @@ class TestParameterConstraintInHistFit(unittest.TestCase):
 
     def setUp(self):
         _bin_edges = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
-        _data = [0.5, 1.5, 1.5, 2.5, 2.5, 2.5, 3.5, 3.5, 3.5, 3.5, 4.5, 4.5, 4.5, 4.5, 4.5]
+        # fmt: off
+        _data = [
+            0.5,
+            1.5, 1.5,
+            2.5, 2.5, 2.5,
+            3.5, 3.5, 3.5, 3.5,
+            4.5, 4.5, 4.5, 4.5, 4.5
+        ]
+        # fmt: on
         self._means = np.array([3.654, 7.789])
         self._vars = np.array([2.467, 1.543])
         self._cov_mat_uncor = np.array([[self._vars[0], 0.0], [0.0, self._vars[1]]])

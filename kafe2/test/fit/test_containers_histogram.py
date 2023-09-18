@@ -15,97 +15,27 @@ class TestDatastoreHistogram(unittest.TestCase):
         self._ref_n_bins_manual = 10
         self._ref_n_bin_range = (0.0, 10.0)
 
+        # fmt: off
         self._ref_bin_edges_manual_equalspacing = np.linspace(0, 10, self._ref_n_bins_manual + 1)
-        # [0 , 1 , 2 , 3 , 4 , 5 , 6 , 7 , 8 , 9 , 10]
-        self._ref_data_manual_equalspacing = np.array([0, 0, 1, 1, 0, 1, 0, 0, 1, 0])
-        self._ref_bin_heights_manual = np.array([5, 4, 10, 3, 0, 15, 7, 4, 20, 1])
+                                                    # [0 , 1 , 2 , 3 , 4 , 5 , 6 , 7 , 8 , 9 , 10]
+        self._ref_data_manual_equalspacing = np.array([  0,  0,  1,  1,  0,  1,  0,  0,  1,  0])
+        self._ref_bin_heights_manual =       np.array([  5,  4, 10,  3,  0, 15,  7,  4, 20,  1])
 
-        self._ref_bin_edges_manual_variablespacing = [0, 2, 3, 3.1, 3.2, 3.3, 3.4, 7, 8.5, 9, 10]
-        self._ref_data_manual_variablespacing = np.array([0, 1, 0, 0, 0, 1, 1, 0, 1, 0])
+        self._ref_bin_edges_manual_variablespacing =   [0 , 2 , 3 , 3.1 , 3.2 , 3.3 , 3.4 , 7 , 8.5 , 9 , 10]
+        self._ref_data_manual_variablespacing = np.array([  0,  1,  0,    0,    0,    1,    1,  0,    1,  0])
 
-        self._ref_data_auto = np.array(
-            [0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]
-        )
+        self._ref_data_auto = np.array([0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0])
 
         # test rebinning functionality
-        self._probe_bin_edges_variablespacing_withedges = [
-            0,
-            2,
-            3,
-            3.1,
-            3.2,
-            3.3,
-            3.4,
-            7,
-            8.5,
-            9,
-            10,
-        ]  # OK
-        self._probe_bin_edges_variablespacing_noedges = [2, 3, 3.1, 3.2, 3.3, 3.4, 7, 8.5, 9]  # OK
-        self._probe_bin_edges_variablespacing_wrongedges1 = [
-            0,
-            2,
-            3,
-            3.1,
-            3.2,
-            3.3,
-            3.4,
-            7,
-            8.5,
-            9,
-            12.3,
-        ]  # fail
-        self._probe_bin_edges_variablespacing_wrongedges2 = [
-            -9,
-            2,
-            3,
-            3.1,
-            3.2,
-            3.3,
-            3.4,
-            7,
-            8.5,
-            9,
-            10,
-        ]  # fail
-        self._probe_bin_edges_variablespacing_wrongedges3 = [
-            -3,
-            2,
-            3,
-            3.1,
-            3.2,
-            3.3,
-            3.4,
-            7,
-            8.5,
-            9,
-            22,
-        ]  # fail
-        self._probe_bin_edges_variablespacing_wrongnumber = [
-            0,
-            2,
-            3,
-            3.1,
-            3.2,
-            3.3,
-            3.4,
-            7,
-            8.5,
-            10,
-        ]  # fail
-        self._probe_bin_edges_variablespacing_unsorted = [
-            0,
-            2,
-            3,
-            8.5,
-            3.2,
-            3.3,
-            3.4,
-            7,
-            3.1,
-            9,
-            10,
-        ]  # fail
+        # flake8: noqa E222, E201 (multiple whitespaces after operator, whitespace after '[')
+        self._probe_bin_edges_variablespacing_withedges =    [0,  2, 3, 3.1, 3.2, 3.3, 3.4, 7, 8.5, 9, 10]    # OK
+        self._probe_bin_edges_variablespacing_noedges =      [    2, 3, 3.1, 3.2, 3.3, 3.4, 7, 8.5, 9]        # OK
+        self._probe_bin_edges_variablespacing_wrongedges1 =  [0,  2, 3, 3.1, 3.2, 3.3, 3.4, 7, 8.5, 9, 12.3]  # fail
+        self._probe_bin_edges_variablespacing_wrongedges2 =  [-9, 2, 3, 3.1, 3.2, 3.3, 3.4, 7, 8.5, 9, 10]   # fail
+        self._probe_bin_edges_variablespacing_wrongedges3 =  [-3, 2, 3, 3.1, 3.2, 3.3, 3.4, 7, 8.5, 9, 22]   # fail
+        self._probe_bin_edges_variablespacing_wrongnumber =  [0,  2, 3, 3.1, 3.2, 3.3, 3.4, 7, 8.5, 10]       # fail
+        self._probe_bin_edges_variablespacing_unsorted =     [0,  2, 3, 8.5, 3.2, 3.3, 3.4, 7, 3.1, 9, 10]    # fail
+        # fmt: on
 
         self.hist_cont_binedges_auto = HistContainer(
             self._ref_n_bins_auto, self._ref_n_bin_range, bin_edges=None
