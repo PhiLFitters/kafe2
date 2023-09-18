@@ -154,26 +154,22 @@ one or more plots accordingly using `matplotlib`.
 
 # public interface of submodule 'kafe2.fit'
 
-# flake8: noqa F401, F403 (imported but unused, used but unable to detect undefined names)
-
-from ._base.plot import Plot
+# WARNING: Changing the order of these imports might break the kafe2 interface
+# flake8: noqa F401, F403 (unused import, unable to detect undefined names from '*' import)
+# fmt: off
+# isort: off
 from .custom import *
-from .histogram import *
 from .indexed import *
+from .histogram import *
 from .multi import *
 from .tools import *
-from .tools.fit_wrapper import (
-    Fit,  # import after every fit to avoid import conflicts with other tools
-)
-from .unbinned import *
-from .util import (
-    custom_fit,
-    function_library,
-    hist_fit,
-    indexed_fit,
-    k2Fit,
-    plot,
-    unbinned_fit,
-    xy_fit,
-)
 from .xy import *
+from .unbinned import *
+
+from ._base.plot import Plot
+from .tools.fit_wrapper import Fit  # import after every fit to avoid import conflicts with other tools
+
+from .util import function_library, custom_fit, hist_fit, indexed_fit, unbinned_fit, xy_fit, plot, \
+    k2Fit
+# fmt: on
+# isort: on
