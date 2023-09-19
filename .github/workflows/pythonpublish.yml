@@ -21,9 +21,6 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Setup build environment 
-        run: python -m pip install --upgrade build twine
-  
       - name: Build source and wheel distributions
         run: make build
   
