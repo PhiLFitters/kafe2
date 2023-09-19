@@ -1,7 +1,7 @@
 
 SHELL := /bin/bash
 
-.SILENT: clean lint
+.SILENT: build clean devenv docs publish test lint
 .IGNORE: clean
 
 BLUE:=\033[0;34m
@@ -9,10 +9,14 @@ NC:=\033[0m # No Color
 BOLD:=$(tput bold)
 NORM:=$(tput sgr0)
 
+# the location of this file.
+DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+
 # build the package from the source
-build:
-	python -m build
-	twine check --strict dist/*
+build: devenv
+	. venv/bin/activate; \
+		python -m build; \
+		twine check --strict dist/*
 
 clean:
 	rm -rf build/
@@ -23,29 +27,36 @@ clean:
 	cd doc && $(MAKE) clean
 	rm -f test-*.yml
 
-# create a development environment
 devenv:
-	python -m venv venv/
-	. venv/bin/activate; pip install -e .[dev]
+	if [ ! -d "$(DIR)/venv" ]; then \
+		echo "Creating venv"; \
+		python -m venv venv/; \
+	fi
+	@if ! venv/bin/python -c "import kafe2" 2>/dev/null; then \
+		echo "Installing kafe2 in editable mode"; \
+		. venv/bin/activate; \
+		pip install --upgrade -e .[dev]; \
+	fi
 
-docs:	build devenv
+docs:	devenv
+	echo "Generating Docs"
 	. venv/bin/activate; cd doc && $(MAKE) html
 
-publish: build docs
-	twine upload ./dist/*
+publish: build
+	echo "uploading build to PyPI"
+	. venv/bin/activate; twine upload ./dist/*
 
-test: build
-	pytest
-	coverage run
+test: devenv
+	echo "Running Pytest and Coverage"
+	. venv/bin/activate; \
+		pytest; \
+		coverage run
 
 lint: devenv
-# $make devenv must be called before this and the venv has to be activated.
-# Otherwise the packages isort, black and flake8 might be missing.
-	echo -e "$(BLUE)${BOLD}ISORT${NC}$(NORM)"
-	. venv/bin/activate; isort --check --diff ./kafe2
-
-	echo -e "$(BLUE)${BOLD}BLACK${NC}$(NORM)"
-	. venv/bin/activate; black --check --diff ./kafe2
-
-	echo -e "$(BLUE)${BOLD}FLAKE8${NC}$(NORM)"
-	. venv/bin/activate; flake8 --config .flake8 ./kafe2
+	. venv/bin/activate; \
+		echo -e "$(BLUE)${BOLD}ISORT${NC}$(NORM)"; \
+		isort --check --diff ./kafe2; \
+		echo -e "$(BLUE)${BOLD}BLACK${NC}$(NORM)"; \
+		black --check --diff ./kafe2; \
+		echo -e "$(BLUE)${BOLD}FLAKE8${NC}$(NORM)"; \
+		flake8 --config .flake8 ./kafe2;

@@ -12,8 +12,5 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Install dependencies
-        run: pip install -e .[dev]
-
       - name: Code quality checks
         run: make lint
