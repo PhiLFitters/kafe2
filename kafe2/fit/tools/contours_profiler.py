@@ -806,23 +806,7 @@ class ContoursProfiler(object):
                                            label_ticks_in_sigma=label_ticks_in_sigma,
                                            naming_convention=contour_naming_convention)
 
-            # post-processing: join column x axes and row y axes (where applicable)
-            for i in six.moves.range(_npar):
-                _pf_axes = _subplots[i, i]
-
-                _ct_axes_col = np.concatenate([_subplots[:i, i], _subplots[i+1:, i]])
-                _ct_axes_col = [_ax for _ax in _ct_axes_col if _ax is not None]
-
-                _pf_axes.get_shared_x_axes().join(_pf_axes, *_ct_axes_col)
-                _pf_axes.autoscale()
-
-                _ct_axes_row = np.concatenate([_subplots[i, :i], _subplots[i, i+1:]])
-                _ct_axes_row = [_ax for _ax in _ct_axes_row if _ax is not None]
-                if len(_ct_axes_row) > 1:
-                    _ct_axes_row[0].get_shared_y_axes().join(_ct_axes_row[0], *_ct_axes_row[1:])
-                    _ct_axes_row[0].autoscale()
-
-            # more post-processing: adjust axis and tick labels
+            # post-processing: adjust axis and tick labels
             for row, _row_plots in enumerate(_subplots):
                 for col, _plot in enumerate(_row_plots):
                     # skip empty plots
