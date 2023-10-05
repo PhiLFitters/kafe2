@@ -30,6 +30,7 @@ The Python package *iminuit* which *kafe2* uses internally for numerical optimiz
 While *iminuit* is strictly speaking not required its use is heavily recommended.
 **Make sure to read the pip installation log.**
 As of *kafe2* v2.4.0 only Python 3 is supported.
+*kafe2* works with matplotlib version 3.4 and newer.
 
 The documentation under `kafe2.readthedocs.io <https://kafe2.readthedocs.io/>`__
 has more detailed installation instructions.
