@@ -34,9 +34,7 @@ class HistPlotAdapter(PlotAdapterBase):
             container.
         :type from_container: bool
         """
-        super(HistPlotAdapter, self).__init__(
-            fit_object=hist_fit_object, from_container=from_container
-        )
+        super(HistPlotAdapter, self).__init__(fit_object=hist_fit_object, from_container=from_container)
         self.n_plot_points = 100 if len(self.data_x) < 100 else len(self.data_x)
         self.x_range = self._fit.data_container.bin_range
 
@@ -47,12 +45,8 @@ class HistPlotAdapter(PlotAdapterBase):
         # set model density label according to model label
         _model_label = self._fit.model_label
         if _model_label is None:
-            _model_label = dict(
-                kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, "model", "plot_kwargs")
-            )["label"]
-        _density_label = dict(
-            kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, "model_density", "plot_kwargs")
-        )["label"]
+            _model_label = dict(kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, "model", "plot_kwargs"))["label"]
+        _density_label = dict(kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, "model_density", "plot_kwargs"))["label"]
         _density_label = _density_label % dict(model_label=_model_label)
         self.update_plot_kwargs("model_density", dict(label=_density_label))
 
@@ -108,15 +102,8 @@ class HistPlotAdapter(PlotAdapterBase):
             try:
                 return np.geomspace(_xmin, _xmax, self.n_plot_points)
             except ValueError as _e:
-                raise ValueError(
-                    "Support point calculation failed. The plot range can't include 0"
-                    "when using log scale."
-                ) from _e
-        raise ValueError(
-            "x_range has to be one of {}. Found {} instead.".format(
-                self.AVAILABLE_X_SCALES, self.x_scale
-            )
-        )
+                raise ValueError("Support point calculation failed. The plot range can't include 0" "when using log scale.") from _e
+        raise ValueError("x_range has to be one of {}. Found {} instead.".format(self.AVAILABLE_X_SCALES, self.x_scale))
 
     @property
     def model_density_y(self):
@@ -139,13 +126,8 @@ class HistPlotAdapter(PlotAdapterBase):
         :param kwargs: keyword arguments accepted by the ``matplotlib`` method ``errorbar``
         :return: plot handle(s)
         """
-        _yerr = np.sqrt(
-            self.data_yerr**2
-            + self._fit._cost_function.get_uncertainty_gaussian_approximation(self.data_y) ** 2
-        )
-        return target_axes.errorbar(
-            self.data_x, self.data_y, xerr=self.data_xerr, yerr=_yerr, **kwargs
-        )
+        _yerr = np.sqrt(self.data_yerr**2 + self._fit._cost_function.get_uncertainty_gaussian_approximation(self.data_y) ** 2)
+        return target_axes.errorbar(self.data_x, self.data_y, xerr=self.data_xerr, yerr=_yerr, **kwargs)
 
     def plot_model(self, target_axes, **kwargs):
         """

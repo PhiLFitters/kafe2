@@ -37,26 +37,18 @@ class TestMatrixGaussianError(unittest.TestCase):
         self.ref_err_val_rel = np.array([3.16227766, 0.70710678, 1.91494125])
 
         # construct error from cov mat with reference (absolute error)
-        self.ge_cov_wref = MatrixGaussianError(
-            self.ref_cov_mat, "cov", reference=self.ref_reference
-        )
+        self.ge_cov_wref = MatrixGaussianError(self.ref_cov_mat, "cov", reference=self.ref_reference)
         # construct error from cor mat and error array, with reference (absolute error)
-        self.ge_cor_wref = MatrixGaussianError(
-            self.ref_cor_mat, "cor", err_val=self.ref_err_val, reference=self.ref_reference
-        )
+        self.ge_cor_wref = MatrixGaussianError(self.ref_cor_mat, "cor", err_val=self.ref_err_val, reference=self.ref_reference)
 
         # -- relative errors
 
         # construct error from cov mat with no reference (relative error)
         self.ge_cov_rel_noref = MatrixGaussianError(self.ref_cov_mat_rel, "cov", relative=True)
         # construct error from cor mat and error array, with no reference (relative error)
-        self.ge_cor_rel_noref = MatrixGaussianError(
-            self.ref_cor_mat, "cor", err_val=self.ref_err_val_rel, relative=True
-        )
+        self.ge_cor_rel_noref = MatrixGaussianError(self.ref_cor_mat, "cor", err_val=self.ref_err_val_rel, relative=True)
         # construct error from cov mat with reference (relative error)
-        self.ge_cov_rel_wref = MatrixGaussianError(
-            self.ref_cov_mat_rel, "cov", relative=True, reference=self.ref_reference
-        )
+        self.ge_cov_rel_wref = MatrixGaussianError(self.ref_cov_mat_rel, "cov", relative=True, reference=self.ref_reference)
         # construct error from cor mat and error array, with reference (relative error)
         self.ge_cor_rel_wref = MatrixGaussianError(
             self.ref_cor_mat,
@@ -85,65 +77,49 @@ class TestMatrixGaussianError(unittest.TestCase):
         self.assertTrue(np.allclose(self.ge_cov_wref.cov_mat, self.ref_cov_mat, atol=1e-3))
 
     def test_compare_cov_rel_from_cov_rel_wref(self):
-        self.assertTrue(
-            np.allclose(self.ge_cov_rel_wref.cov_mat_rel, self.ref_cov_mat_rel, atol=1e-3)
-        )
+        self.assertTrue(np.allclose(self.ge_cov_rel_wref.cov_mat_rel, self.ref_cov_mat_rel, atol=1e-3))
 
     def test_compare_cov_from_cor_wref(self):
         self.assertTrue(np.allclose(self.ge_cor_wref.cov_mat, self.ref_cov_mat, atol=1e-3))
 
     def test_compare_cov_rel_from_cor_rel_wref(self):
-        self.assertTrue(
-            np.allclose(self.ge_cor_rel_wref.cov_mat_rel, self.ref_cov_mat_rel, atol=1e-3)
-        )
+        self.assertTrue(np.allclose(self.ge_cor_rel_wref.cov_mat_rel, self.ref_cov_mat_rel, atol=1e-3))
 
     def test_compare_error_from_cov_wref(self):
         self.assertTrue(np.allclose(self.ge_cov_wref.error, self.ref_err_val, atol=1e-3))
 
     def test_compare_error_rel_from_cov_rel_wref(self):
-        self.assertTrue(
-            np.allclose(self.ge_cov_rel_wref.error_rel, self.ref_err_val_rel, atol=1e-3)
-        )
+        self.assertTrue(np.allclose(self.ge_cov_rel_wref.error_rel, self.ref_err_val_rel, atol=1e-3))
 
     def test_compare_error_from_cor_wref(self):
         self.assertTrue(np.allclose(self.ge_cor_wref.error, self.ref_err_val, atol=1e-3))
 
     def test_compare_error_rel_from_cor_rel_wref(self):
-        self.assertTrue(
-            np.allclose(self.ge_cor_rel_wref.error_rel, self.ref_err_val_rel, atol=1e-3)
-        )
+        self.assertTrue(np.allclose(self.ge_cor_rel_wref.error_rel, self.ref_err_val_rel, atol=1e-3))
 
     def test_compare_cov_from_cov_noref(self):
         self.assertTrue(np.allclose(self.ge_cov_noref.cov_mat, self.ref_cov_mat, atol=1e-3))
 
     def test_compare_cov_rel_from_cov_rel_noref(self):
-        self.assertTrue(
-            np.allclose(self.ge_cov_rel_noref.cov_mat_rel, self.ref_cov_mat_rel, atol=1e-3)
-        )
+        self.assertTrue(np.allclose(self.ge_cov_rel_noref.cov_mat_rel, self.ref_cov_mat_rel, atol=1e-3))
 
     def test_compare_cov_from_cor_noref(self):
         self.assertTrue(np.allclose(self.ge_cor_noref.cov_mat, self.ref_cov_mat, atol=1e-3))
 
     def test_compare_cov_rel_from_cor_rel_noref(self):
-        self.assertTrue(
-            np.allclose(self.ge_cor_rel_noref.cov_mat_rel, self.ref_cov_mat_rel, atol=1e-3)
-        )
+        self.assertTrue(np.allclose(self.ge_cor_rel_noref.cov_mat_rel, self.ref_cov_mat_rel, atol=1e-3))
 
     def test_compare_error_from_cov_noref(self):
         self.assertTrue(np.allclose(self.ge_cov_noref.error, self.ref_err_val, atol=1e-3))
 
     def test_compare_error_rel_from_cov_rel_noref(self):
-        self.assertTrue(
-            np.allclose(self.ge_cov_rel_noref.error_rel, self.ref_err_val_rel, atol=1e-3)
-        )
+        self.assertTrue(np.allclose(self.ge_cov_rel_noref.error_rel, self.ref_err_val_rel, atol=1e-3))
 
     def test_compare_error_from_cor_noref(self):
         self.assertTrue(np.allclose(self.ge_cor_noref.error, self.ref_err_val, atol=1e-3))
 
     def test_compare_error_rel_from_cor_rel_noref(self):
-        self.assertTrue(
-            np.allclose(self.ge_cor_rel_noref.error_rel, self.ref_err_val_rel, atol=1e-3)
-        )
+        self.assertTrue(np.allclose(self.ge_cor_rel_noref.error_rel, self.ref_err_val_rel, atol=1e-3))
 
     def test_compare_cov_mat_inverse(self):
         self.assertTrue(np.allclose(self.ge_cov_noref.cov_mat_inverse, self.ref_cov_mat_inverse))
@@ -218,9 +194,7 @@ class TestMatrixGaussianError(unittest.TestCase):
 
     def test_raise_build_from_wrong_cov_mat_asymm(self):
         with self.assertWarns(UserWarning):
-            _err = MatrixGaussianError(
-                self.wrong_cov_mat_asymm, "cov", err_val=None, reference=self.ref_reference
-            )
+            _err = MatrixGaussianError(self.wrong_cov_mat_asymm, "cov", err_val=None, reference=self.ref_reference)
             _err.check_cov_mat_symmetry()
 
     def test_raise_build_from_wrong_cor_mat_asymm(self):
@@ -302,9 +276,7 @@ class TestSimpleGaussianError(unittest.TestCase):
 
         # -- errors with no reference
 
-        self.sge_abs_noref = SimpleGaussianError(
-            err_val=self.ref_error, corr_coeff=self.ref_corr_coeff, relative=False, reference=None
-        )
+        self.sge_abs_noref = SimpleGaussianError(err_val=self.ref_error, corr_coeff=self.ref_corr_coeff, relative=False, reference=None)
         self.sge_abs_wref = SimpleGaussianError(
             err_val=self.ref_error,
             corr_coeff=self.ref_corr_coeff,
@@ -383,40 +355,28 @@ class TestSimpleGaussianError(unittest.TestCase):
 
     def test_compare_cov_cor_uncor_from_abs_wref(self):
         self.assertTrue(np.allclose(self.sge_abs_wref.cov_mat_cor, self.ref_cov_mat_cor, atol=1e-3))
-        self.assertTrue(
-            np.allclose(self.sge_abs_wref.cov_mat_uncor, self.ref_cov_mat_uncor, atol=1e-3)
-        )
+        self.assertTrue(np.allclose(self.sge_abs_wref.cov_mat_uncor, self.ref_cov_mat_uncor, atol=1e-3))
 
     def test_compare_cov_rel_from_abs_wref(self):
         self.assertTrue(np.allclose(self.sge_abs_wref.cov_mat_rel, self.ref_cov_mat_rel, atol=1e-3))
 
     def test_compare_cov_rel_cor_uncor_from_abs_wref(self):
-        self.assertTrue(
-            np.allclose(self.sge_abs_wref.cov_mat_rel_cor, self.ref_cov_mat_rel_cor, atol=1e-3)
-        )
-        self.assertTrue(
-            np.allclose(self.sge_abs_wref.cov_mat_rel_uncor, self.ref_cov_mat_rel_uncor, atol=1e-3)
-        )
+        self.assertTrue(np.allclose(self.sge_abs_wref.cov_mat_rel_cor, self.ref_cov_mat_rel_cor, atol=1e-3))
+        self.assertTrue(np.allclose(self.sge_abs_wref.cov_mat_rel_uncor, self.ref_cov_mat_rel_uncor, atol=1e-3))
 
     def test_compare_cov_from_rel_wref(self):
         self.assertTrue(np.allclose(self.sge_rel_wref.cov_mat, self.ref_cov_mat, atol=1e-3))
 
     def test_compare_cov_cor_uncor_from_rel_wref(self):
         self.assertTrue(np.allclose(self.sge_rel_wref.cov_mat_cor, self.ref_cov_mat_cor, atol=1e-3))
-        self.assertTrue(
-            np.allclose(self.sge_rel_wref.cov_mat_uncor, self.ref_cov_mat_uncor, atol=1e-3)
-        )
+        self.assertTrue(np.allclose(self.sge_rel_wref.cov_mat_uncor, self.ref_cov_mat_uncor, atol=1e-3))
 
     def test_compare_cov_rel_from_rel_wref(self):
         self.assertTrue(np.allclose(self.sge_rel_wref.cov_mat_rel, self.ref_cov_mat_rel, atol=1e-3))
 
     def test_compare_cov_rel_cor_uncor_from_rel_wref(self):
-        self.assertTrue(
-            np.allclose(self.sge_rel_wref.cov_mat_rel_uncor, self.ref_cov_mat_rel_uncor, atol=1e-3)
-        )
-        self.assertTrue(
-            np.allclose(self.sge_rel_wref.cov_mat_rel_cor, self.ref_cov_mat_rel_cor, atol=1e-3)
-        )
+        self.assertTrue(np.allclose(self.sge_rel_wref.cov_mat_rel_uncor, self.ref_cov_mat_rel_uncor, atol=1e-3))
+        self.assertTrue(np.allclose(self.sge_rel_wref.cov_mat_rel_cor, self.ref_cov_mat_rel_cor, atol=1e-3))
 
     # --- test error vectors
     def test_compare_error_from_abs_wref(self):
@@ -430,12 +390,8 @@ class TestSimpleGaussianError(unittest.TestCase):
         self.assertTrue(np.allclose(self.sge_abs_wref.error_rel, self.ref_error_rel, atol=1e-3))
 
     def test_compare_error_rel_cor_uncor_from_abs_wref(self):
-        self.assertTrue(
-            np.allclose(self.sge_abs_wref.error_rel_cor, self.ref_error_rel_cor, atol=1e-3)
-        )
-        self.assertTrue(
-            np.allclose(self.sge_abs_wref.error_rel_uncor, self.ref_error_rel_uncor, atol=1e-3)
-        )
+        self.assertTrue(np.allclose(self.sge_abs_wref.error_rel_cor, self.ref_error_rel_cor, atol=1e-3))
+        self.assertTrue(np.allclose(self.sge_abs_wref.error_rel_uncor, self.ref_error_rel_uncor, atol=1e-3))
 
     def test_compare_error_from_rel_wref(self):
         self.assertTrue(np.allclose(self.sge_rel_wref.error, self.ref_error, atol=1e-3))
@@ -448,12 +404,8 @@ class TestSimpleGaussianError(unittest.TestCase):
         self.assertTrue(np.allclose(self.sge_rel_wref.error_rel, self.ref_error_rel, atol=1e-3))
 
     def test_compare_error_rel_cor_uncor_from_rel_wref(self):
-        self.assertTrue(
-            np.allclose(self.sge_rel_wref.error_rel_cor, self.ref_error_rel_cor, atol=1e-3)
-        )
-        self.assertTrue(
-            np.allclose(self.sge_rel_wref.error_rel_uncor, self.ref_error_rel_uncor, atol=1e-3)
-        )
+        self.assertTrue(np.allclose(self.sge_rel_wref.error_rel_cor, self.ref_error_rel_cor, atol=1e-3))
+        self.assertTrue(np.allclose(self.sge_rel_wref.error_rel_uncor, self.ref_error_rel_uncor, atol=1e-3))
 
     def test_negative_reference(self):
         self.assertTrue(np.allclose(self.sge_abs_neg_ref.error, self.ref_error))
@@ -467,9 +419,7 @@ class TestSimpleGaussianError(unittest.TestCase):
         self.assertTrue(np.allclose(self.sge_abs_noref.cov_mat, self.ref_cov_mat, atol=1e-3))
 
     def test_compare_cov_rel_from_rel_noref(self):
-        self.assertTrue(
-            np.allclose(self.sge_rel_noref.cov_mat_rel, self.ref_cov_mat_rel, atol=1e-3)
-        )
+        self.assertTrue(np.allclose(self.sge_rel_noref.cov_mat_rel, self.ref_cov_mat_rel, atol=1e-3))
 
     def test_compare_error_from_abs_noref(self):
         self.assertTrue(np.allclose(self.sge_abs_noref.error, self.ref_error, atol=1e-3))
@@ -497,25 +447,15 @@ class TestSimpleGaussianError(unittest.TestCase):
         self.assertTrue(np.allclose(self.sge_abs_noref.cov_mat_inverse, self.ref_cov_mat_inverse))
         self.assertTrue(np.allclose(self.sge_abs_wref.cov_mat_inverse, self.ref_cov_mat_inverse))
         with self.assertRaises(AttributeError):
-            self.assertTrue(
-                np.allclose(self.sge_rel_noref.cov_mat_inverse, self.ref_cov_mat_inverse)
-            )
+            self.assertTrue(np.allclose(self.sge_rel_noref.cov_mat_inverse, self.ref_cov_mat_inverse))
         self.assertTrue(np.allclose(self.sge_rel_wref.cov_mat_inverse, self.ref_cov_mat_inverse))
 
     def test_compare_cov_mat_rel_inverse(self):
         with self.assertRaises(AttributeError):
-            self.assertTrue(
-                np.allclose(self.sge_abs_noref.cov_mat_rel_inverse, self.ref_cov_mat_rel_inverse)
-            )
-        self.assertTrue(
-            np.allclose(self.sge_abs_wref.cov_mat_rel_inverse, self.ref_cov_mat_rel_inverse)
-        )
-        self.assertTrue(
-            np.allclose(self.sge_rel_noref.cov_mat_rel_inverse, self.ref_cov_mat_rel_inverse)
-        )
-        self.assertTrue(
-            np.allclose(self.sge_rel_wref.cov_mat_rel_inverse, self.ref_cov_mat_rel_inverse)
-        )
+            self.assertTrue(np.allclose(self.sge_abs_noref.cov_mat_rel_inverse, self.ref_cov_mat_rel_inverse))
+        self.assertTrue(np.allclose(self.sge_abs_wref.cov_mat_rel_inverse, self.ref_cov_mat_rel_inverse))
+        self.assertTrue(np.allclose(self.sge_rel_noref.cov_mat_rel_inverse, self.ref_cov_mat_rel_inverse))
+        self.assertTrue(np.allclose(self.sge_rel_wref.cov_mat_rel_inverse, self.ref_cov_mat_rel_inverse))
 
     def test_compare_cor_mat(self):
         self.assertTrue(np.allclose(self.sge_abs_noref.cor_mat, self.ref_cor_mat))

@@ -2,9 +2,7 @@ from ..minimizers import MinimizerIMinuit
 
 
 class SimpleFitter(object):
-    def __init__(
-        self, nexus, parameters_to_fit, parameter_to_minimize, minimizer_class=MinimizerIMinuit
-    ):
+    def __init__(self, nexus, parameters_to_fit, parameter_to_minimize, minimizer_class=MinimizerIMinuit):
         self._nx = nexus
         self.parameters_to_fit = parameters_to_fit
         self.parameter_to_minimize = parameter_to_minimize
@@ -28,17 +26,12 @@ class SimpleFitter(object):
     def _check_parnames_in_par_space_raise(self, fit_pars):
         for _pn in fit_pars:
             if self._nx.get_by_name(_pn) is None:
-                raise ValueError(
-                    "No parameter with name '%s' registered in ParameterSpace (%r)!"
-                    % (_pn, self._nx)
-                )
+                raise ValueError("No parameter with name '%s' registered in ParameterSpace (%r)!" % (_pn, self._nx))
 
     def _renew_par_cache(self):
         _fpns = self.parameters_to_fit
         _apnvd = self.__cache_all_parameters_name_value_dict = self._nx.parameter_values_dict
-        self.__cache_fit_parameters_name_value_dict = OrderedDict(  # noqa: F821 (undefined name)
-            [(_pn, _apnvd[_pn]) for _pn in _fpns]
-        )
+        self.__cache_fit_parameters_name_value_dict = OrderedDict([(_pn, _apnvd[_pn]) for _pn in _fpns])  # noqa: F821 (undefined name)
         self.__cache_parameter_to_minimize_value = _apnvd[self.parameter_to_minimize]
 
     def _minimize(self, max_calls=6000):

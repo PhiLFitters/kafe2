@@ -92,9 +92,7 @@ class HistFit(FitBase):
 
     def _set_new_data(self, new_data):
         try:
-            _new_data_is_numpy_histogram = len(new_data) == 2 and len(new_data[0]) + 1 == len(
-                new_data[1]
-            )
+            _new_data_is_numpy_histogram = len(new_data) == 2 and len(new_data[0]) + 1 == len(new_data[1])
         except TypeError:
             _new_data_is_numpy_histogram = False
         if _new_data_is_numpy_histogram:
@@ -107,16 +105,9 @@ class HistFit(FitBase):
         elif isinstance(new_data, self.CONTAINER_TYPE):
             self._data_container = deepcopy(new_data)
         elif isinstance(new_data, DataContainerBase):
-            raise TypeError(
-                "Incompatible container type '{}' (expected '{}')".format(
-                    type(new_data), self.CONTAINER_TYPE
-                )
-            )
+            raise TypeError("Incompatible container type '{}' (expected '{}')".format(type(new_data), self.CONTAINER_TYPE))
         else:
-            raise TypeError(
-                "Fitting a histogram requires a kafe2 HistContainer or a NumPy histogram as data "
-                f"but received {new_data}"
-            )
+            raise TypeError("Fitting a histogram requires a kafe2 HistContainer or a NumPy histogram as data " f"but received {new_data}")
         self._data_container._on_error_change_callback = self._on_error_change
 
         self._nexus.get("data").mark_for_update()

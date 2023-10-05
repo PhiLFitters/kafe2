@@ -36,16 +36,13 @@ def add_pad_to_range(data_range, pad_coeff=1.1, additional_pad=None, scale="line
             10 ** (0.5 * (_expmin + _expmax + _w * pad_coeff) + additional_pad[1]),
         )
     warnings.warn(
-        'Unknown scale "{scale}" when calculating the additional plot padding, '
-        "returning without additional padding.".format(scale=scale)
+        'Unknown scale "{scale}" when calculating the additional plot padding, ' "returning without additional padding.".format(scale=scale)
     )
     return data_range
 
 
 # represent errors in a binwise fashion as rectangles
-def step_fill_between(
-    axes, x, y, yerr=None, xerr=None, draw_central_value=False, continuous=True, **kwargs
-):
+def step_fill_between(axes, x, y, yerr=None, xerr=None, draw_central_value=False, continuous=True, **kwargs):
     """
     Draw two step functions and fill the area in-between.
 

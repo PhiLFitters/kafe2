@@ -24,10 +24,7 @@ class IndexedContainer(DataContainerBase):
         super(IndexedContainer, self).__init__()
         self._data = np.array(data, dtype=dtype)
         if self._data.ndim != 1:
-            raise ValueError(
-                "Input data must be one-dimensional but received"
-                f" data with {self._data.ndim} dimensions."
-            )
+            raise ValueError("Input data must be one-dimensional but received" f" data with {self._data.ndim} dimensions.")
 
     # -- private methods
 
@@ -64,10 +61,7 @@ class IndexedContainer(DataContainerBase):
     def data(self, data):
         _data = np.squeeze(np.array(data, dtype=float))
         if len(_data.shape) > 1:
-            raise ValueError(
-                "IndexedContainer data must be 1-d array of floats! Got shape: %r..."
-                % (_data.shape,)
-            )
+            raise ValueError("IndexedContainer data must be 1-d array of floats! Got shape: %r..." % (_data.shape,))
         self._data[:] = _data
         # reset member error references to the new data values
         for _err_dict in self._error_dicts.values():

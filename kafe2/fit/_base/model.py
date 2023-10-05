@@ -57,14 +57,10 @@ class ModelFunctionBase(FileIOMixin, object):
 
         # determine library function from string specification
         if isinstance(model_function, str):
-            self._model_function_handle = function_library.STRING_TO_FUNCTION.get(
-                model_function, None
-            )
+            self._model_function_handle = function_library.STRING_TO_FUNCTION.get(model_function, None)
             if self._model_function_handle is None and "->" in model_function:
                 if sp is None:
-                    raise ModuleNotFoundError(
-                        "SymPy is not installed so it cannot be used to define model functions."
-                    )
+                    raise ModuleNotFoundError("SymPy is not installed so it cannot be used to define model functions.")
                 _symbol_string, _function_string = model_function.split("->")
                 _latex_name = None
                 if ":" in _symbol_string:
@@ -108,16 +104,12 @@ class ModelFunctionBase(FileIOMixin, object):
 
         # raise if not callable
         else:
-            raise TypeError(
-                "Cannot use {} as model function: object not callable!".format(model_function)
-            )
+            raise TypeError("Cannot use {} as model function: object not callable!".format(model_function))
 
         if self._name is None:
             self._name = self._model_function_handle.__name__
 
-        assert (
-            int(independent_argcount) >= 0
-        ), "The number of independent parameters must be greater than 0"
+        assert int(independent_argcount) >= 0, "The number of independent parameters must be greater than 0"
         self._independent_argcount = int(independent_argcount)
         self._assign_model_function_signature_and_argcount(_custom_defaults)
         self._validate_model_function_raise()
@@ -143,10 +135,7 @@ class ModelFunctionBase(FileIOMixin, object):
         # remove the amount of independent variables from the parameter count
         self._model_function_parcount = self._model_function_argcount - self._independent_argcount
         if custom_defaults:
-            self.defaults = [
-                custom_defaults.get(_p_name, _p_val)
-                for _p_name, _p_val in self.defaults_dict.items()
-            ]
+            self.defaults = [custom_defaults.get(_p_name, _p_val) for _p_name, _p_val in self.defaults_dict.items()]
 
     def _validate_model_function_raise(self):
         # evaluate general model function requirements
@@ -171,18 +160,14 @@ class ModelFunctionBase(FileIOMixin, object):
         if self._model_function_parcount < 1:
             raise ValueError(
                 "Model function {0!r} needs at least one parameter besides the "  # noqa: F523 (unused argument in format string)
-                "first {0!s} independent variable(s)!".format(
-                    self._model_function_handle, self._independent_argcount
-                )
+                "first {0!s} independent variable(s)!".format(self._model_function_handle, self._independent_argcount)
             )
 
     def _get_argument_formatters(self):
         return [ParameterFormatter(_arg_name) for _arg_name in self.signature.parameters.keys()]
 
     def _assign_function_formatter(self):
-        self._formatter = self.__class__.FORMATTER_TYPE(
-            self.name, arg_formatters=self._get_argument_formatters()
-        )
+        self._formatter = self.__class__.FORMATTER_TYPE(self.name, arg_formatters=self._get_argument_formatters())
         try:
             _latex_name = self._model_function_handle.latex_name
             if _latex_name is not None:
@@ -190,15 +175,11 @@ class ModelFunctionBase(FileIOMixin, object):
         except AttributeError:
             pass
         try:
-            self._formatter.expression_format_string = (
-                self._model_function_handle.expression_format_string
-            )
+            self._formatter.expression_format_string = self._model_function_handle.expression_format_string
         except AttributeError:
             pass
         try:
-            self._formatter.latex_expression_format_string = (
-                self._model_function_handle.latex_expression_format_string
-            )
+            self._formatter.latex_expression_format_string = self._model_function_handle.latex_expression_format_string
         except AttributeError:
             pass
 
@@ -259,13 +240,8 @@ class ModelFunctionBase(FileIOMixin, object):
 
     @defaults.setter
     def defaults(self, new_defaults):
-        if self.parcount != len(
-            new_defaults
-        ):  # first arg is independent variable, but not a parameter
-            raise ValueError(
-                "Expected %s parameter defaults (1 per parameter), but received %s"
-                % (self.parcount, len(new_defaults))
-            )
+        if self.parcount != len(new_defaults):  # first arg is independent variable, but not a parameter
+            raise ValueError("Expected %s parameter defaults (1 per parameter), but received %s" % (self.parcount, len(new_defaults)))
 
         # pad defaults with empties for 'x'
         new_defaults = [Parameter.empty] * (self.argcount - self.parcount) + new_defaults

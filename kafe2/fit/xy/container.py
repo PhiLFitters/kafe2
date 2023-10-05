@@ -35,20 +35,11 @@ class XYContainer(IndexedContainer):
         x_data = np.asarray(x_data)
         y_data = np.asarray(y_data)
         if x_data.ndim > 1:
-            raise ValueError(
-                "x_data must be scalar or one-dimensional "
-                f"but received data with {x_data.ndim} dimensions."
-            )
+            raise ValueError("x_data must be scalar or one-dimensional " f"but received data with {x_data.ndim} dimensions.")
         if y_data.ndim > 1:
-            raise ValueError(
-                "y_data must be scalar or one-dimensional "
-                f"but received data with {y_data.ndim} dimensions."
-            )
+            raise ValueError("y_data must be scalar or one-dimensional " f"but received data with {y_data.ndim} dimensions.")
         if x_data.shape != y_data.shape:
-            raise ValueError(
-                "x_data and y_data must have the same shape but received "
-                f"{x_data.shape} for x_data and {y_data.shape} for y_data."
-            )
+            raise ValueError("x_data and y_data must have the same shape but received " f"{x_data.shape} for x_data and {y_data.shape} for y_data.")
         # super constructor doesn't allow 2D arrays
         super(XYContainer, self).__init__(np.zeros(len(x_data)))
         self._data = np.array([x_data, y_data], dtype=dtype)  # overwrite internal data storage
@@ -117,19 +108,13 @@ class XYContainer(IndexedContainer):
     def data(self, new_data):
         _new_data = np.asarray(new_data)
         if _new_data.ndim != 2:
-            raise ValueError(
-                "XYContainer data must be 2-d array of floats! "
-                "Got shape: %r..." % (_new_data.shape,)
-            )
+            raise ValueError("XYContainer data must be 2-d array of floats! " "Got shape: %r..." % (_new_data.shape,))
         if _new_data.shape[0] == 2:
             self._data = _new_data.copy()
         elif _new_data.shape[1] == 2:
             self._data = _new_data.T.copy()
         else:
-            raise ValueError(
-                "XYContainer data length must be 2 in at least one axis! "
-                "Got shape: %r..." % (_new_data.shape,)
-            )
+            raise ValueError("XYContainer data length must be 2 in at least one axis! " "Got shape: %r..." % (_new_data.shape,))
         self._clear_total_error_cache()
 
     @property
@@ -144,10 +129,7 @@ class XYContainer(IndexedContainer):
     def x(self, new_x):
         _new_x_data = np.squeeze(np.array(new_x))
         if len(_new_x_data.shape) > 1:
-            raise ValueError(
-                "XYContainer 'x' data must be 1-d array of floats! "
-                "Got shape: %r..." % (_new_x_data.shape,)
-            )
+            raise ValueError("XYContainer 'x' data must be 1-d array of floats! " "Got shape: %r..." % (_new_x_data.shape,))
         self._data[0, :] = new_x
         for _err_dict in self._error_dicts.values():
             if _err_dict["axis"] == 0:
@@ -202,10 +184,7 @@ class XYContainer(IndexedContainer):
     def y(self, new_y):
         _new_y_data = np.squeeze(np.array(new_y))
         if len(_new_y_data.shape) > 1:
-            raise ValueError(
-                "XYContainer 'y' data must be 1-d array of floats! "
-                "Got shape: %r..." % (_new_y_data.shape,)
-            )
+            raise ValueError("XYContainer 'y' data must be 1-d array of floats! " "Got shape: %r..." % (_new_y_data.shape,))
         self._data[1, :] = new_y
         for _err_dict in self._error_dicts.values():
             if _err_dict["axis"] == 1:
@@ -303,9 +282,7 @@ class XYContainer(IndexedContainer):
         _name = self._add_error_object(name=name, error_object=_err, axis=_axis)
         return _name
 
-    def add_matrix_error(
-        self, axis, err_matrix, matrix_type, name=None, err_val=None, relative=False
-    ):
+    def add_matrix_error(self, axis, err_matrix, matrix_type, name=None, err_val=None, relative=False):
         """Add a matrix uncertainty source for an axis to the data container.
 
         :param axis: ``'x'``/``0`` or ``'y'``/``1``

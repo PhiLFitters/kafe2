@@ -8,9 +8,7 @@ from .nexus import Nexus  # noqa: F401 (unused import)
 
 
 class NexusFitter(object):
-    def __init__(
-        self, nexus, parameters_to_fit, parameter_to_minimize, minimizer=None, minimizer_kwargs=None
-    ):
+    def __init__(self, nexus, parameters_to_fit, parameter_to_minimize, minimizer=None, minimizer_kwargs=None):
         """Handles the minimizer and interfacing of the data to it.
 
         :param Nexus nexus: A kafe2 nexus object used to manage the caching of intermediate
@@ -206,9 +204,7 @@ class NexusFitter(object):
     ):
         if not self.__state_is_from_minimizer:
             raise RuntimeError("To calculate a profile the do_fit method has to be called first.")
-        return self._minimizer.profile(
-            parameter_name, low, high, sigma, cl, size, subtract_min, arrows
-        )
+        return self._minimizer.profile(parameter_name, low, high, sigma, cl, size, subtract_min, arrows)
 
     def get_fit_parameter_values(self, parameter_names=None):
         if parameter_names is None:
@@ -222,10 +218,7 @@ class NexusFitter(object):
         # test parameter names
         if not _dict_key_set.issubset(_par_name_set):
             _unknown_par_names = _dict_key_set - _par_name_set
-            raise ValueError(
-                "Cannot set fit parameter values: Unknown fit parameters: %r!"
-                % (_unknown_par_names,)
-            )
+            raise ValueError("Cannot set fit parameter values: Unknown fit parameters: %r!" % (_unknown_par_names,))
 
         # set values in nexus
         for _par_name, _new_value in parameter_value_dict.items():
@@ -245,9 +238,7 @@ class NexusFitter(object):
             )
 
         # set values in nexus and minimizer
-        for _par_name, _par, _new_value in zip(
-            self._fit_par_names, self._fit_pars, fit_par_value_list
-        ):
+        for _par_name, _par, _new_value in zip(self._fit_par_names, self._fit_pars, fit_par_value_list):
             _par.value = _new_value
             self._minimizer.set(_par_name, _new_value)
 

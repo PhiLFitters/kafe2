@@ -36,12 +36,8 @@ class TestDatastoreXY(unittest.TestCase):
             relative=False,
         )
 
-        self._ref_x_cov_mat = cov_mat_from_float_list(
-            self._ref_x_err_abs_valuearray, correlation=self._ref_x_err_corr_coeff
-        ).mat
-        self._ref_y_cov_mat = cov_mat_from_float_list(
-            self._ref_y_err_abs_valuearray, correlation=self._ref_y_err_corr_coeff
-        ).mat
+        self._ref_x_cov_mat = cov_mat_from_float_list(self._ref_x_err_abs_valuearray, correlation=self._ref_x_err_corr_coeff).mat
+        self._ref_y_cov_mat = cov_mat_from_float_list(self._ref_y_err_abs_valuearray, correlation=self._ref_y_err_corr_coeff).mat
 
     def test_get_matching_error_all_empty_dict(self):
         _errs = self.data_xy.get_matching_errors(matching_criteria=dict())
@@ -249,9 +245,7 @@ class TestDatastoreXYParametricModel(unittest.TestCase):
     def test_deriv_by_par(self):
         _dp = [self._ref_model_func_deriv_by_pars(x, *self._ref_params) for x in self._ref_x]
         _dp = np.array(_dp).T
-        self.assertTrue(
-            np.allclose(self.xy_param_model.eval_model_function_derivative_by_parameters(), _dp)
-        )
+        self.assertTrue(np.allclose(self.xy_param_model.eval_model_function_derivative_by_parameters(), _dp))
 
     def test_change_parameters_test_data(self):
         self.xy_param_model.parameters = self._test_params

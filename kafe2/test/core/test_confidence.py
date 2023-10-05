@@ -11,19 +11,11 @@ class TestConfidence(unittest.TestCase):
 
     def test_one_way_conversion(self):
         for _sigma, _cl_1d in zip(self._sigma, self._cl_1d):
-            self.assertAlmostEqual(
-                _cl_1d, ConfidenceLevel(n_dimensions=1, sigma=_sigma).cl, places=4
-            )
-            self.assertAlmostEqual(
-                _sigma, ConfidenceLevel(n_dimensions=1, cl=_cl_1d).sigma, places=3
-            )
+            self.assertAlmostEqual(_cl_1d, ConfidenceLevel(n_dimensions=1, sigma=_sigma).cl, places=4)
+            self.assertAlmostEqual(_sigma, ConfidenceLevel(n_dimensions=1, cl=_cl_1d).sigma, places=3)
         for _sigma, _cl_2d in zip(self._sigma, self._cl_2d):
-            self.assertAlmostEqual(
-                _cl_2d, ConfidenceLevel(n_dimensions=2, sigma=_sigma).cl, places=4
-            )
-            self.assertAlmostEqual(
-                _sigma, ConfidenceLevel(n_dimensions=2, cl=_cl_2d).sigma, places=3
-            )
+            self.assertAlmostEqual(_cl_2d, ConfidenceLevel(n_dimensions=2, sigma=_sigma).cl, places=4)
+            self.assertAlmostEqual(_sigma, ConfidenceLevel(n_dimensions=2, cl=_cl_2d).sigma, places=3)
 
     def test_round_trip(self):
         for _n_dimensions in range(1, 10):

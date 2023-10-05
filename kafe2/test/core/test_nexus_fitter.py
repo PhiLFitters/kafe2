@@ -52,14 +52,10 @@ class AbstractTestNexusFitter(object):
         xy_val = xy_val or self._ref_xy
 
         for _par_name, _val in zip(("x", "y"), xy_val):
-            self.assertAlmostEqual(
-                self.fitter.get_fit_parameter_values()[_par_name], _val, places=3
-            )
+            self.assertAlmostEqual(self.fitter.get_fit_parameter_values()[_par_name], _val, places=3)
 
         _slsq_args = tuple(xy_val) + self._ref_xy_1 + self._ref_xy_2
-        self.assertAlmostEqual(
-            self.fitter.parameter_to_minimize_value, self.slsq(*_slsq_args), places=2
-        )
+        self.assertAlmostEqual(self.fitter.parameter_to_minimize_value, self.slsq(*_slsq_args), places=2)
 
     # -- init
 
@@ -140,12 +136,8 @@ class AbstractTestNexusFitter(object):
 
     def test_asymmetric_fit_parameter_errors(self):
         self.fitter.do_fit()
-        self.assertAlmostEqual(
-            self.fitter.asymmetric_fit_parameter_errors[0][0], -1.0 / np.sqrt(2), places=4
-        )
-        self.assertAlmostEqual(
-            self.fitter.asymmetric_fit_parameter_errors[0][1], 1.0 / np.sqrt(2), places=4
-        )
+        self.assertAlmostEqual(self.fitter.asymmetric_fit_parameter_errors[0][0], -1.0 / np.sqrt(2), places=4)
+        self.assertAlmostEqual(self.fitter.asymmetric_fit_parameter_errors[0][1], 1.0 / np.sqrt(2), places=4)
 
     def test_asymmetric_fit_parameter_errors_if_calculated(self):
         self.fitter.do_fit()

@@ -51,9 +51,7 @@ class ConfidenceLevel(object):
     @cl.setter
     def cl(self, new_cl: float):
         if new_cl <= 0 or new_cl >= 1:
-            raise ValueError(
-                "Confidence level must be greater than 0 and less than 1. Got: %g" % (new_cl,)
-            )
+            raise ValueError("Confidence level must be greater than 0 and less than 1. Got: %g" % (new_cl,))
         self._cl = float(new_cl)
         self._sigma = None
 
@@ -87,9 +85,7 @@ class ConfidenceLevel(object):
     @ndim.setter
     def ndim(self, new_ndim):
         if not isinstance(new_ndim, int):
-            raise ValueError(
-                "Number of dimensions must be of type int! Received type: %s" % type(new_ndim)
-            )
+            raise ValueError("Number of dimensions must be of type int! Received type: %s" % type(new_ndim))
         if new_ndim <= 0:
             raise ValueError("Number of dimensions must be greater 0! Received: %d" % (new_ndim,))
         self._ndim = new_ndim

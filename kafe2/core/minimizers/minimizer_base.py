@@ -123,10 +123,7 @@ class MinimizerBase(object):
         """
         _fval = self._func_handle(*args)
         if not self._printed_inf_cost_warning and np.isinf(_fval):
-            print(
-                "Warning: the cost function has been evaluated as infinite. "
-                "The fit might not converge correctly."
-            )
+            print("Warning: the cost function has been evaluated as infinite. " "The fit might not converge correctly.")
             self._printed_inf_cost_warning = True
         return _fval
 
@@ -164,14 +161,10 @@ class MinimizerBase(object):
                 _par_min = self.parameter_values[_par_index]
                 _par_err = self.parameter_errors[_par_index]
 
-                _cut_dn = self._find_cost_cut(
-                    _par_name, _par_min - _par_err, _target_chi_2, _min_parameters
-                )
+                _cut_dn = self._find_cost_cut(_par_name, _par_min - _par_err, _target_chi_2, _min_parameters)
                 _asymm_par_errs[_par_index, 0] = _cut_dn - _par_min
 
-                _cut_up = self._find_cost_cut(
-                    _par_name, _par_min + _par_err, _target_chi_2, _min_parameters
-                )
+                _cut_up = self._find_cost_cut(_par_name, _par_min + _par_err, _target_chi_2, _min_parameters)
                 _asymm_par_errs[_par_index, 1] = _cut_up - _par_min
                 self._load_state()
         return _asymm_par_errs
@@ -301,15 +294,11 @@ class MinimizerBase(object):
             _margin = 0.13 if arrows else 0
             for _arrow_spec in _arrow_specs:
                 if _arrow_spec["side"] == "left":
-                    _arrow_spec["x_margin"] = _arrow_spec["x"] + _margin * (
-                        _arrow_spec["x"] - _original_high
-                    )
+                    _arrow_spec["x_margin"] = _arrow_spec["x"] + _margin * (_arrow_spec["x"] - _original_high)
                     if _low_was_none:
                         low = min(low, _arrow_spec["x_margin"])
                 elif _arrow_spec["side"] == "right":
-                    _arrow_spec["x_margin"] = _arrow_spec["x"] + _margin * (
-                        _arrow_spec["x"] - _original_low
-                    )
+                    _arrow_spec["x_margin"] = _arrow_spec["x"] + _margin * (_arrow_spec["x"] - _original_low)
                     if _high_was_none:
                         high = max(high, _arrow_spec["x_margin"])
                 else:
@@ -342,10 +331,7 @@ class MinimizerBase(object):
         if cl is not None:
             _num_defined += 1
         if _num_defined > 2:
-            raise ValueError(
-                "At most 2 out of low, high, and cl can be defined but received "
-                f"low={low}, high={high}, cl={cl}"
-            )
+            raise ValueError("At most 2 out of low, high, and cl can be defined but received " f"low={low}, high={high}, cl={cl}")
 
         if low is not None:
             try:
@@ -394,9 +380,7 @@ class MinimizerBase(object):
             for _low_i in low:
                 _cost_low = self._get_cost_value(parameter_name, _low_i, min_par_vals)
                 _cl_low = (1 - ConfidenceLevel(delta_nll=_cost_low - min_cost).cl) / 2
-                _arrow_specs.append(
-                    {"side": "left", "x": _low_i, "y": _cost_low - _y_offset, "cl": _cl_low}
-                )
+                _arrow_specs.append({"side": "left", "x": _low_i, "y": _cost_low - _y_offset, "cl": _cl_low})
 
         if high is None:
             if cl is not None:
@@ -424,9 +408,7 @@ class MinimizerBase(object):
             for _high_i in high:
                 _cost_high = self._get_cost_value(parameter_name, _high_i, min_par_vals)
                 _cl_high = (1 - ConfidenceLevel(delta_nll=_cost_high - min_cost).cl) / 2
-                _arrow_specs.append(
-                    {"side": "right", "x": _high_i, "y": _cost_high - _y_offset, "cl": _cl_high}
-                )
+                _arrow_specs.append({"side": "right", "x": _high_i, "y": _cost_high - _y_offset, "cl": _cl_high})
 
         return _arrow_specs
 
@@ -437,12 +419,8 @@ class MinimizerBase(object):
         """
         assert matrix.shape == (self.num_pars, self.num_pars)
 
-        _fixed_par_indices = [
-            _i for _i, _par_name_i in enumerate(self._par_names) if self.is_fixed(_par_name_i)
-        ]
-        _submat = np.delete(
-            np.delete(matrix, _fixed_par_indices, axis=0), _fixed_par_indices, axis=1
-        )
+        _fixed_par_indices = [_i for _i, _par_name_i in enumerate(self._par_names) if self.is_fixed(_par_name_i)]
+        _submat = np.delete(np.delete(matrix, _fixed_par_indices, axis=0), _fixed_par_indices, axis=1)
 
         return _submat
 
@@ -454,9 +432,7 @@ class MinimizerBase(object):
         """
         _mat = submatrix
 
-        _fixed_par_indices = [
-            _i for _i, _par_name_i in enumerate(self._par_names) if self.is_fixed(_par_name_i)
-        ]
+        _fixed_par_indices = [_i for _i, _par_name_i in enumerate(self._par_names) if self.is_fixed(_par_name_i)]
         for _id in _fixed_par_indices:
             _mat = np.insert(np.insert(_mat, _id, 0.0, axis=0), _id, 0.0, axis=1)
 
@@ -502,10 +478,7 @@ class MinimizerBase(object):
         if self._fval is None:
             self._fval = self._func_handle(*self.parameter_values)
         if not self._printed_inf_cost_warning and np.isinf(self._fval):
-            print(
-                "Warning: the cost function has been evaluated as infinite. "
-                "The fit might not converge correctly."
-            )
+            print("Warning: the cost function has been evaluated as infinite. " "The fit might not converge correctly.")
             self._printed_inf_cost_warning = True
         return self._fval
 

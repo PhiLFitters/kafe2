@@ -78,9 +78,7 @@ class MinimizerIMinuit(MinimizerBase):
         self._fmin_struct = deepcopy(self._save_state_dict["fmin_struct"])
         self._minimizer_param_dict = self._save_state_dict["minimizer_param_dict"]
         self.__iminuit = self._save_state_dict["iminuit"]
-        self._func_handle(
-            *self.parameter_values
-        )  # call the function to propagate the changes to the nexus
+        self._func_handle(*self.parameter_values)  # call the function to propagate the changes to the nexus
         super(MinimizerIMinuit, self)._load_state()
 
     def _get_fmin_struct(self):
@@ -98,12 +96,8 @@ class MinimizerIMinuit(MinimizerBase):
                     **self._minimizer_param_dict,
                 )
             else:
-                _parameter_values = [
-                    self._minimizer_param_dict[_pn] for _pn in self.parameter_names
-                ]
-                self.__iminuit = iminuit.Minuit(
-                    self._func_wrapper, *_parameter_values, name=self.parameter_names
-                )
+                _parameter_values = [self._minimizer_param_dict[_pn] for _pn in self.parameter_names]
+                self.__iminuit = iminuit.Minuit(self._func_wrapper, *_parameter_values, name=self.parameter_names)
                 for _i, _par_name_i in enumerate(self.parameter_names):
                     self.__iminuit.fixed[_i] = self._minimizer_param_dict["fix_" + _par_name_i]
                     self.__iminuit.limits[_i] = self._minimizer_param_dict["limit_" + _par_name_i]
@@ -237,17 +231,12 @@ class MinimizerIMinuit(MinimizerBase):
                     # if the fit has been performed at least once
                     _param_struct = _m.get_param_states()
                     self._par_err = np.array(
-                        [
-                            _par.error if not self.is_fixed(_par_name) else 0.0
-                            for _par, _par_name in zip(_param_struct, self.parameter_names)
-                        ]
+                        [_par.error if not self.is_fixed(_par_name) else 0.0 for _par, _par_name in zip(_param_struct, self.parameter_names)]
                     )
                 else:
                     # need to hack to get initial parameter errors
                     _e = _m.errors
-                    self._par_err = np.array(
-                        [_e[_par_name] if not self.is_fixed(_par_name) else 0.0 for _par_name in _e]
-                    )
+                    self._par_err = np.array([_e[_par_name] if not self.is_fixed(_par_name) else 0.0 for _par_name in _e])
             else:
                 self._par_err = np.array(_m.errors)
                 # Explicitly set errors of fixed parameters to 0:
@@ -302,22 +291,14 @@ class MinimizerIMinuit(MinimizerBase):
             raise RuntimeError("Need to perform a fit before calling contour()!")
         _numpoints = minimizer_contour_kwargs.pop("numpoints", 100)
         if minimizer_contour_kwargs:
-            raise ValueError(
-                "Unknown keyword arguments for contour(): {}".format(
-                    minimizer_contour_kwargs.keys()
-                )
-            )
+            raise ValueError("Unknown keyword arguments for contour(): {}".format(minimizer_contour_kwargs.keys()))
         if _IMINUIT_1:
-            _x_errs, _y_errs, _contour_line = self._get_iminuit().mncontour(
-                parameter_name_1, parameter_name_2, numpoints=_numpoints, sigma=sigma
-            )
+            _x_errs, _y_errs, _contour_line = self._get_iminuit().mncontour(parameter_name_1, parameter_name_2, numpoints=_numpoints, sigma=sigma)
         else:
             # The following conversion is derived by integrating the two-dimensional standard
             # normal distribution over a circle of radius sigma centered on (0, 0).
             _cl = 1.0 - np.exp(-0.5 * sigma**2)
-            _contour_line = self._get_iminuit().mncontour(
-                parameter_name_1, parameter_name_2, size=_numpoints, cl=_cl
-            )
+            _contour_line = self._get_iminuit().mncontour(parameter_name_1, parameter_name_2, size=_numpoints, cl=_cl)
         self.minimize()  # return to minimum
         if len(_contour_line) == 0:
             return None  # failed to find any point on contour
@@ -336,9 +317,7 @@ class MinimizerIMinuit(MinimizerBase):
     ):
         if not self.did_fit:
             raise RuntimeError("Need to perform a fit before calling profile()!")
-        _bound_low, _bound_high, _arrow_specs = self._get_profile_bound(
-            parameter_name, low, high, sigma, cl, subtract_min, arrows
-        )
+        _bound_low, _bound_high, _arrow_specs = self._get_profile_bound(parameter_name, low, high, sigma, cl, subtract_min, arrows)
         self.minimize()  # return to minimum
         _kwargs = dict(bound=(_bound_low, _bound_high), subtract_min=subtract_min)
         if _IMINUIT_1:
@@ -396,9 +375,7 @@ class MinimizerIMinuit(MinimizerBase):
 
         self._get_iminuit().migrad(ncall=max_calls)
 
-        for _pn, _pv, _pe in zip(
-            self.parameter_names, self.parameter_values, self.parameter_errors
-        ):
+        for _pn, _pv, _pe in zip(self.parameter_names, self.parameter_values, self.parameter_errors):
             self._minimizer_param_dict[_pn] = _pv
             self._minimizer_param_dict["error_" + _pn] = _pe
 

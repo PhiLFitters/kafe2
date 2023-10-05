@@ -24,9 +24,7 @@ class TestDatastoreIndexed(unittest.TestCase):
             relative=False,
         )
 
-        self._ref_cov_mat = cov_mat_from_float_list(
-            self._ref_err_abs_valuearray, correlation=self._ref_err_corr_coeff
-        ).mat
+        self._ref_cov_mat = cov_mat_from_float_list(self._ref_err_abs_valuearray, correlation=self._ref_err_corr_coeff).mat
 
     def test_get_matching_error_all_empty_dict(self):
         _errs = self.idx_cont.get_matching_errors(matching_criteria=dict())
@@ -155,9 +153,7 @@ class TestDatastoreIndexedParametricModel(unittest.TestCase):
         self._ref_params = (1.2, 3.3)
         self._ref_data = self._ref_model_func(*self._ref_params)
 
-        self.idx_param_model = IndexedParametricModel(
-            model_func=IndexedModelFunction(self._ref_model_func), model_parameters=self._ref_params
-        )
+        self.idx_param_model = IndexedParametricModel(model_func=IndexedModelFunction(self._ref_model_func), model_parameters=self._ref_params)
 
         self._test_params = (3.4, -5.23)
         self._ref_test_data = self._ref_model_func(*self._test_params)

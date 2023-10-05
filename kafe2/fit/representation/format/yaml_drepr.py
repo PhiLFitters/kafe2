@@ -14,9 +14,7 @@ __all__ = [
 
 class ModelFunctionFormatterYamlWriter(YamlWriterMixin, ModelFunctionFormatterDReprBase):
     def __init__(self, model_function_formatter, output_io_handle):
-        super(ModelFunctionFormatterYamlWriter, self).__init__(
-            output_io_handle=output_io_handle, model_function_formatter=model_function_formatter
-        )
+        super(ModelFunctionFormatterYamlWriter, self).__init__(output_io_handle=output_io_handle, model_function_formatter=model_function_formatter)
 
     @classmethod
     def _make_representation(cls, model_function_formatter):
@@ -47,9 +45,7 @@ class ModelFunctionFormatterYamlWriter(YamlWriterMixin, ModelFunctionFormatterDR
         _yaml_doc["latex_name"] = model_function_formatter.latex_name
 
         _yaml_doc["expression_string"] = model_function_formatter.expression_format_string
-        _yaml_doc[
-            "latex_expression_string"
-        ] = model_function_formatter.latex_expression_format_string
+        _yaml_doc["latex_expression_string"] = model_function_formatter.latex_expression_format_string
 
         _arg_formatters_dict = dict()
         for _arg_formatter in model_function_formatter.arg_formatters:
@@ -59,17 +55,13 @@ class ModelFunctionFormatterYamlWriter(YamlWriterMixin, ModelFunctionFormatterDR
         # This is needed when saving a formatter without a model function object in order to
         # know the correct order of the arguments. This is because writing and then reading a yaml
         # file in Py2 will change the order of a dict or OrderedDict. This is not necessary for Py3!
-        _yaml_doc["signature"] = [
-            _arg_formatter.name for _arg_formatter in model_function_formatter.arg_formatters
-        ]
+        _yaml_doc["signature"] = [_arg_formatter.name for _arg_formatter in model_function_formatter.arg_formatters]
         return _yaml_doc
 
 
 class ModelFunctionFormatterYamlReader(YamlReaderMixin, ModelFunctionFormatterDReprBase):
     def __init__(self, input_io_handle):
-        super(ModelFunctionFormatterYamlReader, self).__init__(
-            input_io_handle=input_io_handle, model_function_formatter=None
-        )
+        super(ModelFunctionFormatterYamlReader, self).__init__(input_io_handle=input_io_handle, model_function_formatter=None)
 
     @classmethod
     def _modify_yaml_doc(cls, yaml_doc, kafe_object_class, name=None, signature=None):
@@ -120,9 +112,7 @@ class ModelFunctionFormatterYamlReader(YamlReaderMixin, ModelFunctionFormatterDR
 
 class ParameterFormatterYamlWriter(YamlWriterMixin, ParameterFormatterDReprBase):
     def __init__(self, model_parameter_formatter, output_io_handle):
-        super(ParameterFormatterYamlWriter, self).__init__(
-            output_io_handle=output_io_handle, model_parameter_formatter=model_parameter_formatter
-        )
+        super(ParameterFormatterYamlWriter, self).__init__(output_io_handle=output_io_handle, model_parameter_formatter=model_parameter_formatter)
 
     @classmethod
     def _make_representation(cls, model_parameter_formatter):
@@ -138,9 +128,7 @@ class ParameterFormatterYamlWriter(YamlWriterMixin, ParameterFormatterDReprBase)
 
 class ParameterFormatterYamlReader(YamlReaderMixin, ParameterFormatterDReprBase):
     def __init__(self, input_io_handle):
-        super(ParameterFormatterYamlReader, self).__init__(
-            input_io_handle=input_io_handle, model_parameter_formatter=None
-        )
+        super(ParameterFormatterYamlReader, self).__init__(input_io_handle=input_io_handle, model_parameter_formatter=None)
 
     @classmethod
     def _type_required(cls):
@@ -157,9 +145,7 @@ class ParameterFormatterYamlReader(YamlReaderMixin, ParameterFormatterDReprBase)
         _id = yaml_doc.pop("id")
         _name = yaml_doc.pop("name", None)
         _latex_name = yaml_doc.pop("latex_name", None)
-        _model_parameter_formatter_object = ParameterFormatter(
-            _id, name=_name, latex_name=_latex_name
-        )
+        _model_parameter_formatter_object = ParameterFormatter(_id, name=_name, latex_name=_latex_name)
         return _model_parameter_formatter_object, yaml_doc
 
 

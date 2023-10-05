@@ -559,9 +559,7 @@ class TestNodes(unittest.TestCase):
 
     def test_array_iter_values(self):
         array_a = Array(self.array_content)
-        self.assertTrue(
-            np.all(array_a.value == np.array([value for value in array_a.iter_values()]))
-        )
+        self.assertTrue(np.all(array_a.value == np.array([value for value in array_a.iter_values()])))
 
 
 class TestNodeVisitors(unittest.TestCase):

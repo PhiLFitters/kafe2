@@ -49,9 +49,7 @@ class TestUnbinnedFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
         # reference fit result values
         self._nominal_fit_result_pars = np.array([2.12812181, 0.11117378])
-        self._nominal_fit_result_model = unbinned_model_density(
-            self._ref_data, *self._nominal_fit_result_pars
-        )
+        self._nominal_fit_result_model = unbinned_model_density(self._ref_data, *self._nominal_fit_result_pars)
 
         self._nominal_fit_result_cost = -2 * np.sum(np.log(self._nominal_fit_result_model))
 

@@ -49,9 +49,7 @@ def invert_matrix(mat):
     try:
         return np.linalg.inv(mat)
     except np.linalg.LinAlgError:
-        warnings.warn(
-            "Singular covariance matrix. Are the errors for some data points equal to zero?"
-        )
+        warnings.warn("Singular covariance matrix. Are the errors for some data points equal to zero?")
         return None
 
 
@@ -64,9 +62,7 @@ def cholesky_decomposition(mat):
         return np.linalg.cholesky(mat)
     except np.linalg.LinAlgError:
         if np.all(np.isfinite(mat)):
-            warnings.warn(
-                "Singular covariance matrix. Are the errors for some data points equal to zero?"
-            )
+            warnings.warn("Singular covariance matrix. Are the errors for some data points equal to zero?")
         return None
 
 
@@ -109,10 +105,7 @@ def to_python_types(yaml_dict: Optional[dict]):
         elif isinstance(_value, np.ndarray):
             _value = _value.tolist()
         elif isinstance(_value, OrderedDict):
-            _value = [
-                float(_v) if not isinstance(_v, np.ndarray) else _v.tolist()
-                for _v in _value.values()
-            ]
+            _value = [float(_v) if not isinstance(_v, np.ndarray) else _v.tolist() for _v in _value.values()]
         _new_dict[_key] = _value
     return _new_dict
 

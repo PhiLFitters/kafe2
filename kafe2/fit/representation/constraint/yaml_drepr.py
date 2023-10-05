@@ -11,9 +11,7 @@ __all__ = ["ConstraintYamlWriter", "ConstraintYamlReader"]
 
 class ConstraintYamlWriter(YamlWriterMixin, ConstraintDReprBase):
     def __init__(self, constraint, output_io_handle):
-        super(ConstraintYamlWriter, self).__init__(
-            output_io_handle=output_io_handle, constraint=constraint
-        )
+        super(ConstraintYamlWriter, self).__init__(output_io_handle=output_io_handle, constraint=constraint)
 
     @classmethod
     def _make_representation(cls, constraint):

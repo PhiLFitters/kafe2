@@ -32,8 +32,7 @@ def kafe2go():
         "-s",
         "--saveplot",
         action="store_true",
-        help="Save plot(s) to file(s). The plot(s) will be saved in the current "
-        "working directory.",
+        help="Save plot(s) to file(s). The plot(s) will be saved in the current " "working directory.",
     )
     _parser.add_argument(
         "-pf",
@@ -43,12 +42,8 @@ def kafe2go():
         help="Graphics output file format. E.g. pdf, png, svg, ... " "The default format is pdf.",
     )
     _parser.add_argument("-n", "--noplot", action="store_true", help="Don't show plots on screen.")
-    _parser.add_argument(
-        "-r", "--ratio", action="store_true", help="Show data/model ratio below the main plot."
-    )
-    _parser.add_argument(
-        "-R", "--residual", action="store_true", help="Show residuals below the main plot."
-    )
+    _parser.add_argument("-r", "--ratio", action="store_true", help="Show data/model ratio below the main plot.")
+    _parser.add_argument("-R", "--residual", action="store_true", help="Show residuals below the main plot.")
     _parser.add_argument(
         "-a",
         "--asymmetric",
@@ -57,26 +52,20 @@ def kafe2go():
         "information. This affects the fit report to the terminal as well as "
         "the information box of the plot.",
     )
-    _parser.add_argument(
-        "-c", "--contours", action="store_true", help="Plot contours and profiles."
-    )
+    _parser.add_argument("-c", "--contours", action="store_true", help="Plot contours and profiles.")
     _parser.add_argument(
         "--grid",
         type=str,
         nargs=1,
         default=[None],
-        help="Add a grid to the contour profiles. Available options are either "
-        "all, contours or profiles.",
+        help="Add a grid to the contour profiles. Available options are either " "all, contours or profiles.",
     )
     _parser.add_argument(
         "--noband",
         action="store_true",
-        help="Don't draw the 1-sigma band around the fitted function. "
-        "This will only affect plots of XY-fits.",
+        help="Don't draw the 1-sigma band around the fitted function. " "This will only affect plots of XY-fits.",
     )
-    _parser.add_argument(
-        "--noinfobox", action="store_true", help="Don't add the model info boxes to the plot(s)."
-    )
+    _parser.add_argument("--noinfobox", action="store_true", help="Don't add the model info boxes to the plot(s).")
     _parser.add_argument(
         "--separate",
         action="store_true",
@@ -121,9 +110,7 @@ def kafe2go():
         XYPlotAdapter.PLOT_SUBPLOT_TYPES.pop("model_error_band")
 
     _plot = Plot(fit_objects=_fits, separate_figures=_separate)
-    _plot.plot(
-        fit_info=_infobox, asymmetric_parameter_errors=_asymmetric, ratio=_ratio, residual=_residual
-    )
+    _plot.plot(fit_info=_infobox, asymmetric_parameter_errors=_asymmetric, ratio=_ratio, residual=_residual)
 
     _basenames = [name.rsplit(".", 1)[0] for name in _filenames]
 
@@ -141,9 +128,7 @@ def kafe2go():
             _profiler.plot_profiles_contours_matrix(show_grid_for=_grid)
             if _save_plot:
                 for i, fig in enumerate(_profiler.figures):
-                    fig.savefig(
-                        fname="{}_contours_{}.{}".format(name, i, _plot_format), format=_plot_format
-                    )
+                    fig.savefig(fname="{}_contours_{}.{}".format(name, i, _plot_format), format=_plot_format)
 
     if _show_plot:
         plt.show()

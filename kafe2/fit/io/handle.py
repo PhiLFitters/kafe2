@@ -96,9 +96,7 @@ class IOFileHandle(IOStreamHandle):
         self.mode = mode
 
     def __repr__(self):
-        return "{}(filename={}, mode={})".format(
-            self.__class__.__name__, repr(self.filename), repr(self.mode)
-        )
+        return "{}(filename={}, mode={})".format(self.__class__.__name__, repr(self.filename), repr(self.mode))
 
     def __enter__(self):
         """for using an IOFileHandle object in a context"""
@@ -124,11 +122,7 @@ class IOFileHandle(IOStreamHandle):
     @mode.setter
     def mode(self, new_mode):
         if new_mode not in self.__class__._VALID_MODES:
-            raise ValueError(
-                "Unknown IOFileHandle mode '{}': expecting one of {}".format(
-                    new_mode, self.__class__._VALID_MODES
-                )
-            )
+            raise ValueError("Unknown IOFileHandle mode '{}': expecting one of {}".format(new_mode, self.__class__._VALID_MODES))
         self._mode = new_mode
 
     @property

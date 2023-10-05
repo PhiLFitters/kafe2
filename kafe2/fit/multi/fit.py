@@ -27,9 +27,7 @@ class MultiFit(FitBase):
     _AXES = ()
     _MODEL_ERROR_NODE_NAMES = []
 
-    def __init__(
-        self, fit_list, minimizer=None, minimizer_kwargs=None, dynamic_error_algorithm="nonlinear"
-    ):
+    def __init__(self, fit_list, minimizer=None, minimizer_kwargs=None, dynamic_error_algorithm="nonlinear"):
         """
         :param fit_list: List or Iterable of the individual fits from which to create the MultiFit.
         :type fit_list: collections.Iterable[FitBase]
@@ -84,10 +82,7 @@ class MultiFit(FitBase):
         pass
 
     def _get_parameter_indices(self, singular_fit):
-        return [
-            self.parameter_names.index(_parameter_name)
-            for _parameter_name in singular_fit.parameter_names
-        ]
+        return [self.parameter_names.index(_parameter_name) for _parameter_name in singular_fit.parameter_names]
 
     def _update_parameter_formatters(self, update_asymmetric_errors=False):
         if update_asymmetric_errors:
@@ -99,9 +94,7 @@ class MultiFit(FitBase):
         _parameter_name_value_dict = self.parameter_name_value_dict
         for _fit in self._fits:
             _parameter_indices = self._get_parameter_indices(singular_fit=_fit)
-            _asymmetric_parameter_errors = (
-                self._fitter.asymmetric_fit_parameter_errors_if_calculated
-            )
+            _asymmetric_parameter_errors = self._fitter.asymmetric_fit_parameter_errors_if_calculated
             if _asymmetric_parameter_errors is not None:
                 _asymmetric_parameter_errors = _asymmetric_parameter_errors[_parameter_indices]
             _par_cor_mat = self.parameter_cor_mat
@@ -169,9 +162,7 @@ class MultiFit(FitBase):
 
         _cost_functions = [_fit._cost_function for _fit in self._fits]
         _cost_names = ["cost%s" % _i for _i in range(len(self._fits))]
-        self._cost_function = MultiCostFunction(
-            singular_cost_functions=_cost_functions, cost_function_names=_cost_names
-        )
+        self._cost_function = MultiCostFunction(singular_cost_functions=_cost_functions, cost_function_names=_cost_names)
         _cost_function_node = self._nexus.add_function(
             func=self._cost_function,
             func_name=self._cost_function.name,
@@ -213,9 +204,7 @@ class MultiFit(FitBase):
                     # use the same fit.
                     def _get_derivatives_func(fit):
                         return lambda: (
-                            fit._param_model.eval_model_function_derivative_by_x(
-                                model_parameters=fit.parameter_values, dx=0.01 * self._min_x_error
-                            )
+                            fit._param_model.eval_model_function_derivative_by_x(model_parameters=fit.parameter_values, dx=0.01 * self._min_x_error)
                             if self._min_x_error is not None
                             else np.zeros(fit.data_size)
                         )
@@ -224,25 +213,17 @@ class MultiFit(FitBase):
                         Function(func=_get_derivatives_func(_fit_i), name=_derivatives_name),
                         add_children=False,
                     )
-                    self._nexus.add_dependency(
-                        name=_derivatives_name, depends_on="parameter_values"
-                    )
+                    self._nexus.add_dependency(name=_derivatives_name, depends_on="parameter_values")
                 else:
                     self._nexus.add(Parameter(np.zeros(_fit_i.data_size), name=_derivatives_name))
-                    self._nexus.add(
-                        Parameter(
-                            np.zeros((_fit_i.data_size, _fit_i.data_size)), name=_x_cov_mat_name
-                        )
-                    )
+                    self._nexus.add(Parameter(np.zeros((_fit_i.data_size, _fit_i.data_size)), name=_x_cov_mat_name))
                 _x_cov_mat_names.append(_x_cov_mat_name)
                 _derivative_names.append(_derivatives_name)
 
                 _y_data_names.append("y_data%s" % _i)
 
                 _y_model_name = "y_model%s" % _i
-                self._nexus.add(
-                    Alias(ref=_fit_i._nexus.get("y_model"), name=_y_model_name), add_children=False
-                )
+                self._nexus.add(Alias(ref=_fit_i._nexus.get("y_model"), name=_y_model_name), add_children=False)
                 _y_model_names.append(_y_model_name)
 
                 _y_cov_mat_name = "y_cov_mat%s" % _i
@@ -346,9 +327,7 @@ class MultiFit(FitBase):
         )
         _cost_functions.append(self._shared_cost_function)
         _cost_names.append(self._shared_cost_function.name)
-        self._cost_function = MultiCostFunction(
-            singular_cost_functions=_cost_functions, cost_function_names=_cost_names
-        )
+        self._cost_function = MultiCostFunction(singular_cost_functions=_cost_functions, cost_function_names=_cost_names)
         self._nexus.add_function(
             func=self._cost_function,
             func_name=self._cost_function.name,
@@ -375,26 +354,17 @@ class MultiFit(FitBase):
         _data_size_0 = self._fits[error_object.fit_indices[0]].data_size
         for _fit_index in error_object.fit_indices:
             if not self._fits[_fit_index]._cost_function.is_chi2:
-                raise ValueError(
-                    "Cannot add shared error because cost function of fit %s is not chi2!"
-                    % _fit_index
-                )
+                raise ValueError("Cannot add shared error because cost function of fit %s is not chi2!" % _fit_index)
             if isinstance(self._fits[_fit_index], XYFit) and axis is None:
                 raise ValueError("axis=None is ambiguous for fit %s because it is an XYFit!" % axis)
             if isinstance(self._fits[_fit_index], IndexedFit) and axis == "x":
-                raise ValueError(
-                    "axis='x' is incompatible with fit %s because it is an IndexedFit!" % _fit_index
-                )
+                raise ValueError("axis='x' is incompatible with fit %s because it is an IndexedFit!" % _fit_index)
             if self._fits[_fit_index].data_size != _data_size_0:
-                raise ValueError(
-                    "Fit %s data_size not the same as data_size of Fit 0!" % _fit_index
-                )
+                raise ValueError("Fit %s data_size not the same as data_size of Fit 0!" % _fit_index)
 
         if error_object.relative:
             if reference not in ("data", "model"):
-                raise ValueError(
-                    "Error reference must be either 'model' or 'data' but received %s" % reference
-                )
+                raise ValueError("Error reference must be either 'model' or 'data' but received %s" % reference)
             if axis == "x" and reference == "data":
                 _node_name = "x_data%s"
             elif axis == "y" and reference == "data":
@@ -415,12 +385,9 @@ class MultiFit(FitBase):
                     _first_index = _fit_index
                 else:
                     _other_reference_value = self._nexus.get(_node_name % _fit_index).value
-                    if _reference_value.shape != _other_reference_value.shape or np.any(
-                        (_reference_value - _other_reference_value) != 0
-                    ):
+                    if _reference_value.shape != _other_reference_value.shape or np.any((_reference_value - _other_reference_value) != 0):
                         raise ValueError(
-                            "Cannot add a relative error for fits %s and %s because they have "
-                            "conflicting references." % (_first_index, _fit_index)
+                            "Cannot add a relative error for fits %s and %s because they have " "conflicting references." % (_first_index, _fit_index)
                         )
             error_object.reference = _reference_value
 
@@ -648,11 +615,7 @@ class MultiFit(FitBase):
         if _data_size is None:
             return None
         else:
-            return (
-                self.data_size
-                - len(self._combined_parameter_node_dict.keys())
-                + len(self._fitter.fixed_parameters)
-            )
+            return self.data_size - len(self._combined_parameter_node_dict.keys()) + len(self._fitter.fixed_parameters)
 
     @property
     def goodness_of_fit(self):
@@ -666,10 +629,7 @@ class MultiFit(FitBase):
             _gof_sum += _gof
         if self._shared_error_nodes_initialized:
             _gof_sum += self._shared_cost_function.goodness_of_fit(
-                *[
-                    self._nexus.get(_node_name).value
-                    for _node_name in self._shared_cost_function.arg_names
-                ]
+                *[self._nexus.get(_node_name).value for _node_name in self._shared_cost_function.arg_names]
             )
         return _gof_sum
 
@@ -681,9 +641,7 @@ class MultiFit(FitBase):
             _cost -= self._nexus.get("total_cov_mat_log_determinant").value
         for _fit in self._fits:
             _cost_func = _fit._cost_function
-            if _cost_func.add_determinant_cost and not (
-                self._shared_error_nodes_initialized and _cost_func.is_chi2
-            ):
+            if _cost_func.add_determinant_cost and not (self._shared_error_nodes_initialized and _cost_func.is_chi2):
                 _cost -= _fit._nexus.get("total_cov_mat_log_determinant").value
         return self._cost_function.chi2_probability(_cost, self.ndf)
 
@@ -748,9 +706,7 @@ class MultiFit(FitBase):
                 fit_indices=fits,
             )
             _matrix_error.check_cov_mat_symmetry()
-            return self._add_error_object(
-                error_object=_matrix_error, reference=reference, name=name, axis=axis
-            )
+            return self._add_error_object(error_object=_matrix_error, reference=reference, name=name, axis=axis)
 
     def add_error(
         self,
@@ -806,12 +762,8 @@ class MultiFit(FitBase):
             if err_val.ndim == 0:  # if dimensionless numpy array (i.e. float64), add a dimension
                 err_val = np.ones(self._fits[fits[0]].data_size) * err_val
                 # Consistent data size is checked later.
-            _simple_error = SimpleGaussianError(
-                err_val=err_val, corr_coeff=correlation, relative=relative, fit_indices=fits
-            )
-            return self._add_error_object(
-                error_object=_simple_error, reference=reference, name=name, axis=axis
-            )
+            _simple_error = SimpleGaussianError(err_val=err_val, corr_coeff=correlation, relative=relative, fit_indices=fits)
+            return self._add_error_object(error_object=_simple_error, reference=reference, name=name, axis=axis)
 
     def assign_model_function_expression(self, expression_format_string, fit_index=None):
         """Assign a plain-text-formatted expression string to the model function of one of the individual fits.
@@ -823,13 +775,9 @@ class MultiFit(FitBase):
         """
         if fit_index is None:
             for _fit in self._fits:
-                _fit.assign_model_function_expression(
-                    expression_format_string=expression_format_string
-                )
+                _fit.assign_model_function_expression(expression_format_string=expression_format_string)
         else:
-            self._fits[fit_index].assign_model_function_expression(
-                expression_format_string=expression_format_string
-            )
+            self._fits[fit_index].assign_model_function_expression(expression_format_string=expression_format_string)
 
     def assign_model_function_latex_name(self, latex_name, fit_index=None):
         """Assign a LaTeX-formatted string to be the model function name of one of the individual fits.
@@ -845,9 +793,7 @@ class MultiFit(FitBase):
         else:
             self._fits[fit_index].assign_model_function_latex_name(latex_name=latex_name)
 
-    def assign_model_function_latex_expression(
-        self, latex_expression_format_string, fit_index=None
-    ):
+    def assign_model_function_latex_expression(self, latex_expression_format_string, fit_index=None):
         """Assign a LaTeX-formatted expression string to the model function of one of the individual fits.
         Elements like ``'{par_name}'`` will be replaced automatically with the corresponding LaTeX names for the
         given parameter. These can be set with :py:meth:`~assign_parameter_latex_names`.
@@ -859,13 +805,9 @@ class MultiFit(FitBase):
         """
         if fit_index is None:
             for _fit in self._fits:
-                _fit.assign_model_function_latex_expression(
-                    latex_expression_format_string=latex_expression_format_string
-                )
+                _fit.assign_model_function_latex_expression(latex_expression_format_string=latex_expression_format_string)
         else:
-            self._fits[fit_index].assign_model_function_latex_expression(
-                latex_expression_format_string=latex_expression_format_string
-            )
+            self._fits[fit_index].assign_model_function_latex_expression(latex_expression_format_string=latex_expression_format_string)
 
     def assign_parameter_latex_names(self, **par_latex_names_dict):
         _keys = list(par_latex_names_dict.keys())
@@ -879,11 +821,7 @@ class MultiFit(FitBase):
                     except ValueError:
                         pass
         if _keys:
-            warnings.warn(
-                "Could not assign all parameter latex names to single fits. Leftover: {}".format(
-                    _keys
-                )
-            )
+            warnings.warn("Could not assign all parameter latex names to single fits. Leftover: {}".format(_keys))
 
     def disable_error(self, err_id):
         for _fit in self._fits:
@@ -896,9 +834,7 @@ class MultiFit(FitBase):
         for fit in self._fits:
             if name not in fit.parameter_names:
                 continue  # skip if sub fit is not dependent on the given par
-            fit.fix_parameter(
-                name, _val
-            )  # default values might not have been overwritten, use _val
+            fit.fix_parameter(name, _val)  # default values might not have been overwritten, use _val
 
     def release_parameter(self, name):
         self._fitter.release_parameter(name)
@@ -908,9 +844,7 @@ class MultiFit(FitBase):
             fit.release_parameter(name)
 
     def do_fit(self, asymmetric_parameter_errors=False):
-        _fit_result = super(MultiFit, self).do_fit(
-            asymmetric_parameter_errors=asymmetric_parameter_errors
-        )
+        _fit_result = super(MultiFit, self).do_fit(asymmetric_parameter_errors=asymmetric_parameter_errors)
         self._update_singular_fits()
         return _fit_result
 
@@ -949,17 +883,13 @@ class MultiFit(FitBase):
         if fit_index is None:
             _combined_matching_errors = dict()
             for _fit in self._fits:
-                _matching_errors = _fit.get_matching_errors(
-                    matching_criteria=matching_criteria, matching_type=matching_type
-                )
+                _matching_errors = _fit.get_matching_errors(matching_criteria=matching_criteria, matching_type=matching_type)
                 for _key in _matching_errors:
                     # FATAL: there is an error with the same name in separate fits
                     assert _key not in _combined_matching_errors
                     _combined_matching_errors[_key] = _matching_errors[_key]
             return _combined_matching_errors
-        return self._fits[fit_index].get_matching_errors(
-            matching_criteria=matching_criteria, matching_type=matching_type
-        )
+        return self._fits[fit_index].get_matching_errors(matching_criteria=matching_criteria, matching_type=matching_type)
 
     def report(
         self,

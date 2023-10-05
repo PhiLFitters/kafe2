@@ -29,10 +29,7 @@ class FileIOMixin(object):
             _basename, _ext = _basename_ext[0], None
 
         if file_format is None and _ext is None:
-            raise ValueError(
-                "Cannot detect file format from "
-                "filename '{}' and no format specified!".format(filename)
-            )
+            raise ValueError("Cannot detect file format from " "filename '{}' and no format specified!".format(filename))
         return file_format or _ext  # choose 'format' if specified, otherwise use filename extension
 
     @classmethod

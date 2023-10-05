@@ -31,9 +31,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
     def setUp(self):
         self._ref_n_bins = 11
         self._ref_n_bin_range = (-3, 25)
-        self._ref_bin_edges = np.linspace(
-            self._ref_n_bin_range[0], self._ref_n_bin_range[1], self._ref_n_bins + 1
-        )
+        self._ref_bin_edges = np.linspace(self._ref_n_bin_range[0], self._ref_n_bin_range[1], self._ref_n_bins + 1)
 
         # fmt: off
         self._ref_entries = np.array([11.47195963,   9.96715403,  19.90275216,  13.65225802,
@@ -63,12 +61,8 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
                                       14.56823312,  14.46093346,  13.34031129,  14.14203599])
         # fmt: on
 
-        self._ref_hist_cont = HistContainer(
-            self._ref_n_bins, self._ref_n_bin_range, bin_edges=None, fill_data=self._ref_entries
-        )
-        self._ref_hist_numpy = np.histogram(
-            self._ref_entries, bins=self._ref_n_bins, range=self._ref_n_bin_range
-        )
+        self._ref_hist_cont = HistContainer(self._ref_n_bins, self._ref_n_bin_range, bin_edges=None, fill_data=self._ref_entries)
+        self._ref_hist_numpy = np.histogram(self._ref_entries, bins=self._ref_n_bins, range=self._ref_n_bin_range)
 
         # reference initial values
         self._ref_initial_pars = np.array([14.0, 3.0])
@@ -78,14 +72,10 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         ) * len(self._ref_entries)
 
         # fit data
-        self._ref_data, _ = np.histogram(
-            self._ref_entries, bins=self._ref_n_bins, range=self._ref_n_bin_range
-        )
+        self._ref_data, _ = np.histogram(self._ref_entries, bins=self._ref_n_bins, range=self._ref_n_bin_range)
 
         # pre-fit cost value
-        self._ref_initial_cost_nll = -2 * np.sum(
-            stats.poisson.logpmf(self._ref_data, self._ref_initial_model)
-        )
+        self._ref_initial_cost_nll = -2 * np.sum(stats.poisson.logpmf(self._ref_data, self._ref_initial_model))
         self._ref_initial_cost_chi2 = simple_chi2(self._ref_data, self._ref_initial_model)
 
         # reference fit result values
@@ -93,28 +83,16 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         self._nominal_fit_result_pars_chi2 = np.array([13.82779489, 2.62746457])
 
         self._nominal_fit_result_model_nll = (
-            hist_model_density_antideriv(
-                self._ref_bin_edges[1:], *self._nominal_fit_result_pars_nll
-            )
-            - hist_model_density_antideriv(
-                self._ref_bin_edges[:-1], *self._nominal_fit_result_pars_nll
-            )
+            hist_model_density_antideriv(self._ref_bin_edges[1:], *self._nominal_fit_result_pars_nll)
+            - hist_model_density_antideriv(self._ref_bin_edges[:-1], *self._nominal_fit_result_pars_nll)
         ) * len(self._ref_entries)
         self._nominal_fit_result_model_chi2 = (
-            hist_model_density_antideriv(
-                self._ref_bin_edges[1:], *self._nominal_fit_result_pars_chi2
-            )
-            - hist_model_density_antideriv(
-                self._ref_bin_edges[:-1], *self._nominal_fit_result_pars_chi2
-            )
+            hist_model_density_antideriv(self._ref_bin_edges[1:], *self._nominal_fit_result_pars_chi2)
+            - hist_model_density_antideriv(self._ref_bin_edges[:-1], *self._nominal_fit_result_pars_chi2)
         ) * len(self._ref_entries)
 
-        self._nominal_fit_result_cost_nll = -2 * np.sum(
-            stats.poisson.logpmf(self._ref_data, self._nominal_fit_result_model_nll)
-        )
-        self._nominal_fit_result_cost_chi2 = simple_chi2(
-            self._ref_data, self._nominal_fit_result_model_chi2
-        )
+        self._nominal_fit_result_cost_nll = -2 * np.sum(stats.poisson.logpmf(self._ref_data, self._nominal_fit_result_model_nll))
+        self._nominal_fit_result_cost_chi2 = simple_chi2(self._ref_data, self._nominal_fit_result_model_chi2)
 
         # helper dict with all reference property values
         self._ref_prop_dict = dict(
@@ -138,9 +116,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
         model_density_function = model_density_function or hist_model_density
 
         # TODO: fix default
-        cost_function = cost_function or HistCostFunction_NegLogLikelihood(
-            data_point_distribution="poisson"
-        )
+        cost_function = cost_function or HistCostFunction_NegLogLikelihood(data_point_distribution="poisson")
 
         _fit = HistFit(
             data=self._ref_hist_numpy if numpy_histogram else self._ref_hist_cont,
@@ -158,9 +134,7 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
             # numeric integration takes too long for testing
             #'default': \
             #    self._get_fit(),
-            "explicit_chi2": self._get_fit(
-                cost_function=simple_chi2, bin_evaluation=hist_model_density_antideriv
-            ),
+            "explicit_chi2": self._get_fit(cost_function=simple_chi2, bin_evaluation=hist_model_density_antideriv),
             "model_with_antiderivative": self._get_fit(bin_evaluation=hist_model_density_antideriv),
             "numpy_histogram": self._get_fit(numpy_histogram=True),
         }

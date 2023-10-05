@@ -7,9 +7,7 @@ class ContourFactory:
         xy_points = np.asarray(xy_points)
         _shape = xy_points.shape
         if len(_shape) != 2 or (_shape[0] != 2 and _shape[1] != 2):
-            raise ValueError(
-                "Explicit contours can only be created from iterables with shape (2,n) or (n,2)."
-            )
+            raise ValueError("Explicit contours can only be created from iterables with shape (2,n) or (n,2).")
         if _shape[0] != 2:
             xy_points = xy_points.T
         return Contour(xy_points=xy_points, sigma=sigma)

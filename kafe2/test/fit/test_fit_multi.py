@@ -20,9 +20,7 @@ except (ImportError, SyntaxError):
 
 
 class TestSharedErrorLogic(AbstractTestFit, unittest.TestCase):
-    def _get_multifit(
-        self, hist_fit=True, xy_fit_1=True, indexed_fit=True, xy_fit_2=True, reverse=False
-    ):
+    def _get_multifit(self, hist_fit=True, xy_fit_1=True, indexed_fit=True, xy_fit_2=True, reverse=False):
         _fits = []
         if hist_fit:
             _hist_container = HistContainer(n_bins=10, bin_range=(-5, 5), fill_data=self._hist_data)
@@ -33,9 +31,7 @@ class TestSharedErrorLogic(AbstractTestFit, unittest.TestCase):
             _xy_fit_1.add_error("y", 1.0)
             _fits.append(_xy_fit_1)
         if indexed_fit:
-            _indexed_fit = IndexedFit(
-                self._indexed_data, TestSharedErrorLogic.indexed_model_function
-            )
+            _indexed_fit = IndexedFit(self._indexed_data, TestSharedErrorLogic.indexed_model_function)
             _indexed_fit.add_error(1.0)
             _fits.append(_indexed_fit)
         if xy_fit_2:
@@ -85,9 +81,7 @@ class TestSharedErrorLogic(AbstractTestFit, unittest.TestCase):
             _multifit_hist.parameter_cov_mat[2:, 2:],
             _multifit_no_hist.parameter_cov_mat,
         )
-        self.assertTrue(
-            _multifit_hist.cost_function_value - _multifit_no_hist.cost_function_value > 10.0
-        )
+        self.assertTrue(_multifit_hist.cost_function_value - _multifit_no_hist.cost_function_value > 10.0)
 
     def test_reversed_same_result(self):
         _multifit = self._get_multifit(reverse=False)
@@ -100,9 +94,7 @@ class TestSharedErrorLogic(AbstractTestFit, unittest.TestCase):
         _multifit_reversed.add_error(err_val=0.1, fits=[0, 2], axis="x")
         _multifit_reversed.do_fit()
 
-        self._assert_fit_results_equal(
-            _multifit, _multifit_reversed, fit_2_permutation=[2, 3, 0, 1]
-        )
+        self._assert_fit_results_equal(_multifit, _multifit_reversed, fit_2_permutation=[2, 3, 0, 1])
 
     def test_different_error_order_same_result(self):
         _multifit = self._get_multifit()
@@ -139,17 +131,11 @@ class TestSharedErrorLogic(AbstractTestFit, unittest.TestCase):
         with self.assertRaises(ValueError):
             _multifit.add_error(err_val=1.0, fits=[1, 3], axis=None)
         with self.assertRaises(ValueError):
-            _multifit.add_error(
-                err_val=1.0, fits=[1, 3], axis="y", relative=True, reference="modata"
-            )
+            _multifit.add_error(err_val=1.0, fits=[1, 3], axis="y", relative=True, reference="modata")
         with self.assertRaises(ValueError):
-            _multifit.add_error(
-                err_val=1.0, fits=[1, 3], axis="x", relative=True, reference="model"
-            )
+            _multifit.add_error(err_val=1.0, fits=[1, 3], axis="x", relative=True, reference="model")
         with self.assertRaises(ValueError):
-            _multifit.add_error(
-                err_val=1.0, fits=[1, 3], axis="y", relative=True, reference="model"
-            )
+            _multifit.add_error(err_val=1.0, fits=[1, 3], axis="y", relative=True, reference="model")
         with self.assertRaises(ValueError):
             _multifit.add_error(err_val=1.0, fits=[1, 3], axis="y", relative=True, reference="data")
 
@@ -175,9 +161,7 @@ class TestMultiFit(AbstractTestFit, unittest.TestCase):
             return data[:, _split_indices_1], data[:, _split_indices_2]
         raise Exception()
 
-    def _assert_fits_valid_and_equal(
-        self, _fit_1, _fit_2, atol=5e-3, rtol=2e-4, check_cost_function_value=True
-    ):
+    def _assert_fits_valid_and_equal(self, _fit_1, _fit_2, atol=5e-3, rtol=2e-4, check_cost_function_value=True):
         with self.subTest("parameter_names"):
             assert len(_fit_1.parameter_names) == len(_fit_2.parameter_names)
             for _par_name_1, _par_name_2 in zip(_fit_1.parameter_names, _fit_2.parameter_names):
@@ -206,14 +190,10 @@ class TestMultiFit(AbstractTestFit, unittest.TestCase):
             check_cost_function_value=check_cost_function_value,
         )
 
-    def _assert_fits_valid_and_equal_double(
-        self, regular_fit, double_fit, atol=5e-3, rtol=2e-4, check_cost_function_value=False
-    ):
+    def _assert_fits_valid_and_equal_double(self, regular_fit, double_fit, atol=5e-3, rtol=2e-4, check_cost_function_value=False):
         with self.subTest("parameter_names"):
             assert len(regular_fit.parameter_names) == len(double_fit.parameter_names)
-            for _par_name_1, _par_name_2 in zip(
-                regular_fit.parameter_names, double_fit.parameter_names
-            ):
+            for _par_name_1, _par_name_2 in zip(regular_fit.parameter_names, double_fit.parameter_names):
                 assert _par_name_1 == _par_name_2
         self._assert_fit_results_equal(
             regular_fit,
@@ -348,9 +328,7 @@ class TestMultiFit(AbstractTestFit, unittest.TestCase):
         self._fit_custom_split_1_multi = MultiFit([self._get_custom_fit(self._split_data_1)])
         self._fit_custom_split_2 = self._get_custom_fit(self._split_data_2)
         self._fit_custom_split_2_multi = MultiFit([self._get_custom_fit(self._split_data_2)])
-        self._fit_custom_all_double = MultiFit(
-            [self._get_custom_fit(self._xy_data), self._get_custom_fit(self._xy_data)]
-        )
+        self._fit_custom_all_double = MultiFit([self._get_custom_fit(self._xy_data), self._get_custom_fit(self._xy_data)])
 
     @staticmethod
     def _get_hist_data(loc=2.5, scale=0.5):
@@ -408,11 +386,7 @@ class TestMultiFit(AbstractTestFit, unittest.TestCase):
         return quadratic_model(_x, a, b, c)
 
     def _get_indexed_fit(self, data, model_function):
-        _err = (
-            dict(err_val=0.1, relative=True, reference="model")
-            if self._relative_model_error
-            else dict(err_val=0.1)
-        )
+        _err = dict(err_val=0.1, relative=True, reference="model") if self._relative_model_error else dict(err_val=0.1)
         _indexed_fit = IndexedFit(
             data=data,
             model_function=model_function,
@@ -424,32 +398,20 @@ class TestMultiFit(AbstractTestFit, unittest.TestCase):
 
     def _set_indexed_fits(self):
         _data = TestMultiFit._get_indexed_data()
-        self._fit_indexed_all = self._get_indexed_fit(
-            _data, TestMultiFit.quadratic_model_indexed_all
-        )
+        self._fit_indexed_all = self._get_indexed_fit(_data, TestMultiFit.quadratic_model_indexed_all)
         _split_data_1 = _data[:50]
         _split_data_2 = _data[50:]
-        self._fit_indexed_all_multi = MultiFit(
-            [self._get_indexed_fit(_data, TestMultiFit.quadratic_model_indexed_all)]
-        )
+        self._fit_indexed_all_multi = MultiFit([self._get_indexed_fit(_data, TestMultiFit.quadratic_model_indexed_all)])
         self._fit_indexed_split_multi = MultiFit(
             fit_list=[
                 self._get_indexed_fit(_split_data_1, TestMultiFit.quadratic_model_indexed_split_1),
                 self._get_indexed_fit(_split_data_2, TestMultiFit.quadratic_model_indexed_split_2),
             ]
         )
-        self._fit_indexed_split_1 = self._get_indexed_fit(
-            _split_data_1, TestMultiFit.quadratic_model_indexed_split_1
-        )
-        self._fit_indexed_split_1_multi = MultiFit(
-            [self._get_indexed_fit(_split_data_1, TestMultiFit.quadratic_model_indexed_split_1)]
-        )
-        self._fit_indexed_split_2 = self._get_indexed_fit(
-            _split_data_2, TestMultiFit.quadratic_model_indexed_split_2
-        )
-        self._fit_indexed_split_2_multi = MultiFit(
-            [self._get_indexed_fit(_split_data_2, TestMultiFit.quadratic_model_indexed_split_2)]
-        )
+        self._fit_indexed_split_1 = self._get_indexed_fit(_split_data_1, TestMultiFit.quadratic_model_indexed_split_1)
+        self._fit_indexed_split_1_multi = MultiFit([self._get_indexed_fit(_split_data_1, TestMultiFit.quadratic_model_indexed_split_1)])
+        self._fit_indexed_split_2 = self._get_indexed_fit(_split_data_2, TestMultiFit.quadratic_model_indexed_split_2)
+        self._fit_indexed_split_2_multi = MultiFit([self._get_indexed_fit(_split_data_2, TestMultiFit.quadratic_model_indexed_split_2)])
 
     @staticmethod
     def _get_xy_data(err_x=0.01, err_y=0.01, a=0.2, b=2.3, c=13.4, relative_model_error=False):
@@ -496,16 +458,12 @@ class TestMultiFit(AbstractTestFit, unittest.TestCase):
         self._fit_xy_all = self._get_xy_fit(self._xy_data)
         self._split_data_1, self._split_data_2 = TestMultiFit._split_data(self._xy_data, axis=1)
         self._fit_xy_all_multi = MultiFit([self._get_xy_fit(self._xy_data)])
-        self._fit_xy_split_multi = MultiFit(
-            fit_list=[self._get_xy_fit(self._split_data_1), self._get_xy_fit(self._split_data_2)]
-        )
+        self._fit_xy_split_multi = MultiFit(fit_list=[self._get_xy_fit(self._split_data_1), self._get_xy_fit(self._split_data_2)])
         self._fit_xy_split_1 = self._get_xy_fit(self._split_data_1)
         self._fit_xy_split_1_multi = MultiFit([self._get_xy_fit(self._split_data_1)])
         self._fit_xy_split_2 = self._get_xy_fit(self._split_data_2)
         self._fit_xy_split_2_multi = MultiFit([self._get_xy_fit(self._split_data_2)])
-        self._fit_xy_all_double = MultiFit(
-            [self._get_xy_fit(self._xy_data), self._get_xy_fit(self._xy_data)]
-        )
+        self._fit_xy_all_double = MultiFit([self._get_xy_fit(self._xy_data), self._get_xy_fit(self._xy_data)])
 
     def _set_expected_xy_par_values(self):
         _x_err_val = 0.01 if self._x_error is not None else None
@@ -656,9 +614,7 @@ class TestMultiFitIntegrityHist(TestMultiFit):
 
     def test_split_fit_vs_regular_fit_scipy(self):
         self._set_hist_fits()
-        self._assert_fits_valid_and_equal(
-            self._fit_hist_all, self._fit_hist_split_multi, check_cost_function_value=False
-        )
+        self._assert_fits_valid_and_equal(self._fit_hist_all, self._fit_hist_split_multi, check_cost_function_value=False)
 
 
 class TestMultiFitIntegrityIndexed(TestMultiFit):
@@ -672,12 +628,8 @@ class TestMultiFitIntegrityIndexed(TestMultiFit):
     def test_split_fit_integrity_simple_scipy(self):
         self._set_indexed_fits()
         self._assert_fits_valid_and_equal(self._fit_indexed_all, self._fit_indexed_all_multi)
-        self._assert_fits_valid_and_equal(
-            self._fit_indexed_split_1, self._fit_indexed_split_1_multi
-        )
-        self._assert_fits_valid_and_equal(
-            self._fit_indexed_split_2, self._fit_indexed_split_2_multi
-        )
+        self._assert_fits_valid_and_equal(self._fit_indexed_split_1, self._fit_indexed_split_1_multi)
+        self._assert_fits_valid_and_equal(self._fit_indexed_split_2, self._fit_indexed_split_2_multi)
 
     def test_split_fit_vs_regular_fit_scipy(self):
         self._set_indexed_fits()
@@ -687,12 +639,8 @@ class TestMultiFitIntegrityIndexed(TestMultiFit):
         self._relative_model_error = True
         self._set_indexed_fits()
         self._assert_fits_valid_and_equal(self._fit_indexed_all, self._fit_indexed_all_multi)
-        self._assert_fits_valid_and_equal(
-            self._fit_indexed_split_1, self._fit_indexed_split_1_multi
-        )
-        self._assert_fits_valid_and_equal(
-            self._fit_indexed_split_2, self._fit_indexed_split_2_multi
-        )
+        self._assert_fits_valid_and_equal(self._fit_indexed_split_1, self._fit_indexed_split_1_multi)
+        self._assert_fits_valid_and_equal(self._fit_indexed_split_2, self._fit_indexed_split_2_multi)
 
     def test_split_fit_vs_regular_fit_scipy_with_relative_error(self):
         self._relative_model_error = True

@@ -33,10 +33,7 @@ def Fit(data=None, model_function=None, minimizer=None, **kwargs):
     try:
         fit_class = container_to_fit[type(data)]
     except KeyError:
-        raise TypeError(
-            "Unknown or unsupported data container type {}."
-            "Supported types are {}".format(type(data), container_to_fit.keys())
-        )
+        raise TypeError("Unknown or unsupported data container type {}." "Supported types are {}".format(type(data), container_to_fit.keys()))
     # other errors will raise during creation of the fit object
     if model_function is None:
         return fit_class(data, minimizer=minimizer, **kwargs)  # use default model function

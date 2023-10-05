@@ -60,31 +60,17 @@ class TestHistModelFunctionYamlRepresenter(unittest.TestCase):
 
         self._roundtrip_stringstream = IOStreamHandle(StringIO())
         self._testfile_stringstream = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_HIST))
-        self._testfile_stringstream_with_formatter = IOStreamHandle(
-            StringIO(TEST_MODEL_FUNCTION_HIST_WITH_FORMATTER)
-        )
+        self._testfile_stringstream_with_formatter = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_HIST_WITH_FORMATTER))
 
         self._roundtrip_streamreader = ModelFunctionYamlReader(self._roundtrip_stringstream)
-        self._roundtrip_streamwriter = ModelFunctionYamlWriter(
-            self._model_function, self._roundtrip_stringstream
-        )
+        self._roundtrip_streamwriter = ModelFunctionYamlWriter(self._model_function, self._roundtrip_stringstream)
         self._testfile_streamreader = ModelFunctionYamlReader(self._testfile_stringstream)
-        self._testfile_streamreader_with_formatter = ModelFunctionYamlReader(
-            self._testfile_stringstream_with_formatter
-        )
+        self._testfile_streamreader_with_formatter = ModelFunctionYamlReader(self._testfile_stringstream_with_formatter)
 
-        self._testfile_stringstream_missing_keyword = IOStreamHandle(
-            StringIO(TEST_MODEL_FUNCTION_HIST_MISSING_KEYWORD)
-        )
-        self._testfile_stringstream_extra_keyword = IOStreamHandle(
-            StringIO(TEST_MODEL_FUNCTION_HIST_EXTRA_KEYWORD)
-        )
-        self._testfile_streamreader_missing_keyword = ModelFunctionYamlReader(
-            self._testfile_stringstream_missing_keyword
-        )
-        self._testfile_streamreader_extra_keyword = ModelFunctionYamlReader(
-            self._testfile_stringstream_extra_keyword
-        )
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_HIST_MISSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_HIST_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = ModelFunctionYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = ModelFunctionYamlReader(self._testfile_stringstream_extra_keyword)
 
     def test_write_to_roundtrip_stringstream(self):
         self._roundtrip_streamwriter.write()
@@ -92,11 +78,7 @@ class TestHistModelFunctionYamlRepresenter(unittest.TestCase):
     def test_read_from_testfile_stream(self):
         _read_model_function = self._testfile_streamreader.read()
         self.assertTrue(isinstance(_read_model_function, HistModelFunction))
-        self.assertTrue(
-            np.allclose(
-                _read_model_function.func(self._test_x, self._test_a, self._test_b), self._test_y
-            )
-        )
+        self.assertTrue(np.allclose(_read_model_function.func(self._test_x, self._test_a, self._test_b), self._test_y))
 
     def test_read_from_testfile_stream_missing_keyword(self):
         with self.assertRaises(ValueError):
@@ -109,11 +91,7 @@ class TestHistModelFunctionYamlRepresenter(unittest.TestCase):
     def test_read_from_testfile_stream_with_formatter(self):
         _read_model_function = self._testfile_streamreader_with_formatter.read()
         self.assertTrue(isinstance(_read_model_function, HistModelFunction))
-        self.assertTrue(
-            np.allclose(
-                _read_model_function.func(self._test_x, self._test_a, self._test_b), self._test_y
-            )
-        )
+        self.assertTrue(np.allclose(_read_model_function.func(self._test_x, self._test_a, self._test_b), self._test_y))
         _read_formatter = _read_model_function.formatter
         self.assertTrue(isinstance(_read_formatter, ModelFunctionFormatter))
         _read_arg_formatters = _read_formatter.arg_formatters
@@ -134,11 +112,7 @@ class TestHistModelFunctionYamlRepresenter(unittest.TestCase):
         _read_model_function = self._roundtrip_streamreader.read()
         self.assertTrue(isinstance(_read_model_function, HistModelFunction))
 
-        self.assertTrue(
-            np.allclose(
-                self._test_y, _read_model_function.func(self._test_x, self._test_a, self._test_b)
-            )
-        )
+        self.assertTrue(np.allclose(self._test_y, _read_model_function.func(self._test_x, self._test_a, self._test_b)))
 
         _given_formatter = self._model_function.formatter
         _read_formatter = _read_model_function.formatter
@@ -156,13 +130,8 @@ class TestHistModelFunctionYamlRepresenter(unittest.TestCase):
         self.assertTrue(_read_arg_formatters[1].latex_name == _given_arg_formatters[1].latex_name)
         self.assertTrue(_read_arg_formatters[2].name == _given_arg_formatters[2].name)
         self.assertTrue(_read_arg_formatters[2].latex_name == _given_arg_formatters[2].latex_name)
-        self.assertTrue(
-            _read_formatter.expression_format_string == _given_formatter.expression_format_string
-        )
-        self.assertTrue(
-            _read_formatter.latex_expression_format_string
-            == _given_formatter.latex_expression_format_string
-        )
+        self.assertTrue(_read_formatter.expression_format_string == _given_formatter.expression_format_string)
+        self.assertTrue(_read_formatter.latex_expression_format_string == _given_formatter.latex_expression_format_string)
 
 
 TEST_MODEL_FUNCTION_INDEXED = """
@@ -222,31 +191,17 @@ class TestIndexedModelFunctionYamlRepresenter(unittest.TestCase):
 
         self._roundtrip_stringstream = IOStreamHandle(StringIO())
         self._testfile_stringstream = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_INDEXED))
-        self._testfile_stringstream_with_formatter = IOStreamHandle(
-            StringIO(TEST_MODEL_FUNCTION_INDEXED_WITH_FORMATTER)
-        )
+        self._testfile_stringstream_with_formatter = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_INDEXED_WITH_FORMATTER))
 
         self._roundtrip_streamreader = ModelFunctionYamlReader(self._roundtrip_stringstream)
-        self._roundtrip_streamwriter = ModelFunctionYamlWriter(
-            self._model_function, self._roundtrip_stringstream
-        )
+        self._roundtrip_streamwriter = ModelFunctionYamlWriter(self._model_function, self._roundtrip_stringstream)
         self._testfile_streamreader = ModelFunctionYamlReader(self._testfile_stringstream)
-        self._testfile_streamreader_with_formatter = ModelFunctionYamlReader(
-            self._testfile_stringstream_with_formatter
-        )
+        self._testfile_streamreader_with_formatter = ModelFunctionYamlReader(self._testfile_stringstream_with_formatter)
 
-        self._testfile_stringstream_missing_keyword = IOStreamHandle(
-            StringIO(TEST_MODEL_FUNCTION_INDEXED_MISSING_KEYWORD)
-        )
-        self._testfile_stringstream_extra_keyword = IOStreamHandle(
-            StringIO(TEST_MODEL_FUNCTION_INDEXED_EXTRA_KEYWORD)
-        )
-        self._testfile_streamreader_missing_keyword = ModelFunctionYamlReader(
-            self._testfile_stringstream_missing_keyword
-        )
-        self._testfile_streamreader_extra_keyword = ModelFunctionYamlReader(
-            self._testfile_stringstream_extra_keyword
-        )
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_INDEXED_MISSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_INDEXED_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = ModelFunctionYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = ModelFunctionYamlReader(self._testfile_stringstream_extra_keyword)
 
     def test_write_to_roundtrip_stringstream(self):
         self._roundtrip_streamwriter.write()
@@ -254,9 +209,7 @@ class TestIndexedModelFunctionYamlRepresenter(unittest.TestCase):
     def test_read_from_testfile_stream(self):
         _read_model_function = self._testfile_streamreader.read()
         self.assertTrue(isinstance(_read_model_function, IndexedModelFunction))
-        self.assertTrue(
-            np.allclose(_read_model_function.func(self._test_a, self._test_b), self._test_y)
-        )
+        self.assertTrue(np.allclose(_read_model_function.func(self._test_a, self._test_b), self._test_y))
 
     def test_read_from_testfile_stream_missing_keyword(self):
         with self.assertRaises(ValueError):
@@ -269,9 +222,7 @@ class TestIndexedModelFunctionYamlRepresenter(unittest.TestCase):
     def test_read_from_testfile_stream_with_formatter(self):
         _read_model_function = self._testfile_streamreader_with_formatter.read()
         self.assertTrue(isinstance(_read_model_function, IndexedModelFunction))
-        self.assertTrue(
-            np.allclose(_read_model_function.func(self._test_a, self._test_b), self._test_y)
-        )
+        self.assertTrue(np.allclose(_read_model_function.func(self._test_a, self._test_b), self._test_y))
         _read_formatter = _read_model_function.formatter
         self.assertTrue(isinstance(_read_formatter, IndexedModelFunctionFormatter))
         _read_arg_formatters = _read_formatter.arg_formatters
@@ -292,9 +243,7 @@ class TestIndexedModelFunctionYamlRepresenter(unittest.TestCase):
         _read_model_function = self._roundtrip_streamreader.read()
         self.assertTrue(isinstance(_read_model_function, IndexedModelFunction))
 
-        self.assertTrue(
-            np.allclose(self._test_y, _read_model_function.func(self._test_a, self._test_b))
-        )
+        self.assertTrue(np.allclose(self._test_y, _read_model_function.func(self._test_a, self._test_b)))
 
         _given_formatter = self._model_function.formatter
         _read_formatter = _read_model_function.formatter
@@ -312,13 +261,8 @@ class TestIndexedModelFunctionYamlRepresenter(unittest.TestCase):
         self.assertTrue(_read_arg_formatters[0].latex_name == _given_arg_formatters[0].latex_name)
         self.assertTrue(_read_arg_formatters[1].name == _given_arg_formatters[1].name)
         self.assertTrue(_read_arg_formatters[1].latex_name == _given_arg_formatters[1].latex_name)
-        self.assertTrue(
-            _read_formatter.expression_format_string == _given_formatter.expression_format_string
-        )
-        self.assertTrue(
-            _read_formatter.latex_expression_format_string
-            == _given_formatter.latex_expression_format_string
-        )
+        self.assertTrue(_read_formatter.expression_format_string == _given_formatter.expression_format_string)
+        self.assertTrue(_read_formatter.latex_expression_format_string == _given_formatter.latex_expression_format_string)
 
 
 TEST_MODEL_FUNCTION_BASE = """
@@ -371,31 +315,17 @@ class TestModelFunctionBaseYamlRepresenter(unittest.TestCase):
 
         self._roundtrip_stringstream = IOStreamHandle(StringIO())
         self._testfile_stringstream = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_BASE))
-        self._testfile_stringstream_with_formatter = IOStreamHandle(
-            StringIO(TEST_MODEL_FUNCTION_XY_WITH_FORMATTER)
-        )
+        self._testfile_stringstream_with_formatter = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_XY_WITH_FORMATTER))
 
         self._roundtrip_streamreader = ModelFunctionYamlReader(self._roundtrip_stringstream)
-        self._roundtrip_streamwriter = ModelFunctionYamlWriter(
-            self._model_function, self._roundtrip_stringstream
-        )
+        self._roundtrip_streamwriter = ModelFunctionYamlWriter(self._model_function, self._roundtrip_stringstream)
         self._testfile_streamreader = ModelFunctionYamlReader(self._testfile_stringstream)
-        self._testfile_streamreader_with_formatter = ModelFunctionYamlReader(
-            self._testfile_stringstream_with_formatter
-        )
+        self._testfile_streamreader_with_formatter = ModelFunctionYamlReader(self._testfile_stringstream_with_formatter)
 
-        self._testfile_stringstream_missing_keyword = IOStreamHandle(
-            StringIO(TEST_MODEL_FUNCTION_BASE_MISSING_KEYWORD)
-        )
-        self._testfile_stringstream_extra_keyword = IOStreamHandle(
-            StringIO(TEST_MODEL_FUNCTION_XY_EXTRA_KEYWORD)
-        )
-        self._testfile_streamreader_missing_keyword = ModelFunctionYamlReader(
-            self._testfile_stringstream_missing_keyword
-        )
-        self._testfile_streamreader_extra_keyword = ModelFunctionYamlReader(
-            self._testfile_stringstream_extra_keyword
-        )
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_BASE_MISSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(TEST_MODEL_FUNCTION_XY_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = ModelFunctionYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = ModelFunctionYamlReader(self._testfile_stringstream_extra_keyword)
 
     def test_write_to_roundtrip_stringstream(self):
         self._roundtrip_streamwriter.write()
@@ -403,11 +333,7 @@ class TestModelFunctionBaseYamlRepresenter(unittest.TestCase):
     def test_read_from_testfile_stream(self):
         _read_model_function = self._testfile_streamreader.read()
         self.assertTrue(isinstance(_read_model_function, ModelFunctionBase))
-        self.assertTrue(
-            np.allclose(
-                _read_model_function.func(self._test_x, self._test_a, self._test_b), self._test_y
-            )
-        )
+        self.assertTrue(np.allclose(_read_model_function.func(self._test_x, self._test_a, self._test_b), self._test_y))
 
     def test_read_from_testfile_stream_missing_keyword(self):
         with self.assertRaises(ValueError):
@@ -420,11 +346,7 @@ class TestModelFunctionBaseYamlRepresenter(unittest.TestCase):
     def test_read_from_testfile_stream_with_formatter(self):
         _read_model_function = self._testfile_streamreader_with_formatter.read()
         self.assertTrue(isinstance(_read_model_function, ModelFunctionBase))
-        self.assertTrue(
-            np.allclose(
-                _read_model_function.func(self._test_x, self._test_a, self._test_b), self._test_y
-            )
-        )
+        self.assertTrue(np.allclose(_read_model_function.func(self._test_x, self._test_a, self._test_b), self._test_y))
         _read_formatter = _read_model_function.formatter
         self.assertTrue(isinstance(_read_formatter, ModelFunctionFormatter))
         _read_arg_formatters = _read_formatter.arg_formatters
@@ -445,11 +367,7 @@ class TestModelFunctionBaseYamlRepresenter(unittest.TestCase):
         _read_model_function = self._roundtrip_streamreader.read()
         self.assertTrue(isinstance(_read_model_function, ModelFunctionBase))
 
-        self.assertTrue(
-            np.allclose(
-                self._test_y, _read_model_function.func(self._test_x, self._test_a, self._test_b)
-            )
-        )
+        self.assertTrue(np.allclose(self._test_y, _read_model_function.func(self._test_x, self._test_a, self._test_b)))
 
         _given_formatter = self._model_function.formatter
         _read_formatter = _read_model_function.formatter
@@ -465,10 +383,5 @@ class TestModelFunctionBaseYamlRepresenter(unittest.TestCase):
         self.assertTrue(_read_arg_formatters[0].latex_name == _given_arg_formatters[0].latex_name)
         self.assertTrue(_read_arg_formatters[1].name == _given_arg_formatters[1].name)
         self.assertTrue(_read_arg_formatters[1].latex_name == _given_arg_formatters[1].latex_name)
-        self.assertTrue(
-            _read_formatter.expression_format_string == _given_formatter.expression_format_string
-        )
-        self.assertTrue(
-            _read_formatter.latex_expression_format_string
-            == _given_formatter.latex_expression_format_string
-        )
+        self.assertTrue(_read_formatter.expression_format_string == _given_formatter.expression_format_string)
+        self.assertTrue(_read_formatter.latex_expression_format_string == _given_formatter.latex_expression_format_string)

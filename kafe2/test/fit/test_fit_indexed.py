@@ -31,14 +31,7 @@ def line_indexed_model(a=3.0, b=0.0):
 
 
 def analytic_solution(des_mat, cov_mat_inv, data):
-    return np.squeeze(
-        np.asarray(
-            np.linalg.inv(des_mat.T.dot(cov_mat_inv).dot(des_mat))
-            .dot(des_mat.T)
-            .dot(cov_mat_inv)
-            .dot(data)
-        )
-    )
+    return np.squeeze(np.asarray(np.linalg.inv(des_mat.T.dot(cov_mat_inv).dot(des_mat)).dot(des_mat.T).dot(cov_mat_inv).dot(data)))
 
 
 class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
@@ -120,9 +113,7 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
             total_cor_mat=self._ref_matrix_eye,
         )
 
-    def _get_fit(
-        self, model_function=None, cost_function=None, errors=None, dynamic_error_algorithm=None
-    ):
+    def _get_fit(self, model_function=None, cost_function=None, errors=None, dynamic_error_algorithm=None):
         """convenience"""
         model_function = model_function or simple_indexed_model
         # TODO: fix default
@@ -147,9 +138,7 @@ class TestIndexedFitBasicInterface(AbstractTestFit, unittest.TestCase):
             "default": self._get_fit(),
             "explicit": self._get_fit(cost_function=simple_chi2),
             "explicit_model": self._get_fit(cost_function=simple_chi2_explicit_model_name),
-            "relative_errors_data": self._get_fit(
-                errors=[dict(err_val=1.0 / self._ref_data, relative=True, reference="data")]
-            ),
+            "relative_errors_data": self._get_fit(errors=[dict(err_val=1.0 / self._ref_data, relative=True, reference="data")]),
         }
 
     def test_initial_state(self):
@@ -389,9 +378,7 @@ class TestIndexedFitWithSimpleErrors(AbstractTestFit, unittest.TestCase):
     def _get_test_fits(self):
         return {
             "default": self._get_fit(),
-            "two_errors": self._get_fit(
-                errors=[dict(err_val=1.0 / np.sqrt(2)), dict(err_val=1.0 / np.sqrt(2))]
-            ),
+            "two_errors": self._get_fit(errors=[dict(err_val=1.0 / np.sqrt(2)), dict(err_val=1.0 / np.sqrt(2))]),
             "named_errors": self._get_fit(
                 errors=[
                     dict(
@@ -437,12 +424,8 @@ class TestIndexedFitWithSimpleErrors(AbstractTestFit, unittest.TestCase):
         for _mc in (None, dict()):
             _errs = _fit.get_matching_errors(matching_criteria=_mc)
             self.assertEqual(len(_errs), 2)
-            self.assertIs(
-                _fit.data_container._error_dicts["MyDataError"]["err"], _errs["MyDataError"]
-            )
-            self.assertIs(
-                _fit._param_model._error_dicts["MyModelError"]["err"], _errs["MyModelError"]
-            )
+            self.assertIs(_fit.data_container._error_dicts["MyDataError"]["err"], _errs["MyDataError"])
+            self.assertIs(_fit._param_model._error_dicts["MyModelError"]["err"], _errs["MyModelError"])
 
     def test_get_matching_error_name(self):
         _fit = self._get_test_fits()["named_errors"]
@@ -517,9 +500,7 @@ class TestIndexedFitWithMatrixErrors(AbstractTestFit, unittest.TestCase):
     def _get_test_fits(self):
         return {
             "default": self._get_fit(),
-            "cor_matrix_and_error_vector": self._get_fit(
-                errors=[dict(err_matrix=np.eye(self._n_points), matrix_type="cor", err_val=1.0)]
-            ),
+            "cor_matrix_and_error_vector": self._get_fit(errors=[dict(err_matrix=np.eye(self._n_points), matrix_type="cor", err_val=1.0)]),
             "two_matrix_errors": self._get_fit(
                 errors=[
                     dict(err_matrix=np.eye(self._n_points) / 2, matrix_type="cov"),
@@ -622,31 +603,21 @@ class TestIndexedFitWithMatrixErrors(AbstractTestFit, unittest.TestCase):
         _fit = self._get_test_fits()["named_errors"]
         _errs = _fit.get_matching_errors(matching_criteria=dict(name="MySimpleDataError"))
         self.assertEqual(len(_errs), 1)
-        self.assertIs(
-            _fit.data_container._error_dicts["MySimpleDataError"]["err"], _errs["MySimpleDataError"]
-        )
+        self.assertIs(_fit.data_container._error_dicts["MySimpleDataError"]["err"], _errs["MySimpleDataError"])
 
     def test_get_matching_error_type_simple(self):
         _fit = self._get_test_fits()["named_errors"]
         _errs = _fit.get_matching_errors(matching_criteria=dict(type="simple"))
         self.assertEqual(len(_errs), 2)
-        self.assertIs(
-            _fit.data_container._error_dicts["MySimpleDataError"]["err"], _errs["MySimpleDataError"]
-        )
-        self.assertIs(
-            _fit._param_model._error_dicts["MySimpleModelError"]["err"], _errs["MySimpleModelError"]
-        )
+        self.assertIs(_fit.data_container._error_dicts["MySimpleDataError"]["err"], _errs["MySimpleDataError"])
+        self.assertIs(_fit._param_model._error_dicts["MySimpleModelError"]["err"], _errs["MySimpleModelError"])
 
     def test_get_matching_error_type_matrix(self):
         _fit = self._get_test_fits()["named_errors"]
         _errs = _fit.get_matching_errors(matching_criteria=dict(type="matrix"))
         self.assertEqual(len(_errs), 2)
-        self.assertIs(
-            _fit.data_container._error_dicts["MyMatrixDataError"]["err"], _errs["MyMatrixDataError"]
-        )
-        self.assertIs(
-            _fit._param_model._error_dicts["MyMatrixModelError"]["err"], _errs["MyMatrixModelError"]
-        )
+        self.assertIs(_fit.data_container._error_dicts["MyMatrixDataError"]["err"], _errs["MyMatrixDataError"])
+        self.assertIs(_fit._param_model._error_dicts["MyMatrixModelError"]["err"], _errs["MyMatrixModelError"])
 
     def test_get_matching_error_uncorrelated(self):
         _fit = self._get_test_fits()["named_errors"]
@@ -658,31 +629,19 @@ class TestIndexedFitWithMatrixErrors(AbstractTestFit, unittest.TestCase):
         _errs = _fit.get_matching_errors(matching_criteria=dict(correlated=False))
         # NOTE: passing 'correlated' only matches 'matrix' errors, irrespective of 'True'/'False' value passed
         self.assertEqual(len(_errs), 2)
-        self.assertIs(
-            _fit.data_container._error_dicts["MySimpleDataError"]["err"], _errs["MySimpleDataError"]
-        )
-        self.assertIs(
-            _fit._param_model._error_dicts["MySimpleModelError"]["err"], _errs["MySimpleModelError"]
-        )
+        self.assertIs(_fit.data_container._error_dicts["MySimpleDataError"]["err"], _errs["MySimpleDataError"])
+        self.assertIs(_fit._param_model._error_dicts["MySimpleModelError"]["err"], _errs["MySimpleModelError"])
 
     def test_get_matching_error_reference_data(self):
         _fit = self._get_test_fits()["named_errors"]
         _errs = _fit.get_matching_errors(matching_criteria=dict(reference="data"))
         self.assertEqual(len(_errs), 2)
-        self.assertIs(
-            _fit.data_container._error_dicts["MySimpleDataError"]["err"], _errs["MySimpleDataError"]
-        )
-        self.assertIs(
-            _fit.data_container._error_dicts["MyMatrixDataError"]["err"], _errs["MyMatrixDataError"]
-        )
+        self.assertIs(_fit.data_container._error_dicts["MySimpleDataError"]["err"], _errs["MySimpleDataError"])
+        self.assertIs(_fit.data_container._error_dicts["MyMatrixDataError"]["err"], _errs["MyMatrixDataError"])
 
     def test_get_matching_error_reference_model(self):
         _fit = self._get_test_fits()["named_errors"]
         _errs = _fit.get_matching_errors(matching_criteria=dict(reference="model"))
         self.assertEqual(len(_errs), 2)
-        self.assertIs(
-            _fit._param_model._error_dicts["MySimpleModelError"]["err"], _errs["MySimpleModelError"]
-        )
-        self.assertIs(
-            _fit._param_model._error_dicts["MyMatrixModelError"]["err"], _errs["MyMatrixModelError"]
-        )
+        self.assertIs(_fit._param_model._error_dicts["MySimpleModelError"]["err"], _errs["MySimpleModelError"])
+        self.assertIs(_fit._param_model._error_dicts["MyMatrixModelError"]["err"], _errs["MyMatrixModelError"])

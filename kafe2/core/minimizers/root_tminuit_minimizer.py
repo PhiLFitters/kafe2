@@ -100,9 +100,7 @@ class MinimizerROOTTMinuit(MinimizerBase):
         for _par_id, _pb in enumerate(self._par_bounds):
             if _pb is not None:
                 _lo_lim, _up_lim = _pb
-                self.__gMinuit.mnexcm(
-                    "SET LIM", arr("d", [_par_id + 1, _lo_lim, _up_lim]), 3, error_code
-                )
+                self.__gMinuit.mnexcm("SET LIM", arr("d", [_par_id + 1, _lo_lim, _up_lim]), 3, error_code)
 
     def _get_gMinuit(self):
         if self.__gMinuit is None:
@@ -224,9 +222,7 @@ class MinimizerROOTTMinuit(MinimizerBase):
             # get parameter covariance matrix from TMinuit
             self._get_gMinuit().mnemat(_tmp_mat_array, _n_pars_total)
             # reshape into 2D array
-            _sub_cov_mat = np.asarray(
-                np.reshape(_tmp_mat_array, (_n_pars_total, _n_pars_total)), dtype=np.float
-            )
+            _sub_cov_mat = np.asarray(np.reshape(_tmp_mat_array, (_n_pars_total, _n_pars_total)), dtype=np.float)
             _num_pars_free = np.sum(np.invert(self._par_fixed))
             _sub_cov_mat = _sub_cov_mat[:_num_pars_free, :_num_pars_free]
             self._par_cov_mat = self._fill_in_zeroes_for_fixed(_sub_cov_mat)
@@ -310,9 +306,7 @@ class MinimizerROOTTMinuit(MinimizerBase):
     def limit(self, parameter_name, parameter_bounds):
         assert len(parameter_bounds) == 2
         if parameter_bounds[0] is None or parameter_bounds[1] is None:
-            raise RuntimeError(
-                "Cannot define one-sided parameter limits when using the ROOT TMinuit Minimizer."
-            )
+            raise RuntimeError("Cannot define one-sided parameter limits when using the ROOT TMinuit Minimizer.")
         # set local flag
         _par_id = self.parameter_names.index(parameter_name)
         if self._par_bounds[_par_id] == parameter_bounds:
@@ -326,9 +320,7 @@ class MinimizerROOTTMinuit(MinimizerBase):
             _lo_lim, _up_lim = self._par_bounds[_par_id]
             # also update Minuit instance
             error_code = ctypes.c_int(0)
-            self.__gMinuit.mnexcm(
-                "SET LIM", arr("d", [_par_id + 1, _lo_lim, _up_lim]), 3, error_code
-            )
+            self.__gMinuit.mnexcm("SET LIM", arr("d", [_par_id + 1, _lo_lim, _up_lim]), 3, error_code)
             self._did_fit = False
         self._invalidate_cache()
 
@@ -408,9 +400,7 @@ class MinimizerROOTTMinuit(MinimizerBase):
         _y = np.zeros(bins)
         for i in range(bins):
             self.__gMinuit.mnexcm("SET PAR", arr("d", [_minuit_id, Double(_x[i])]), 2, _error_code)
-            self.__gMinuit.mnexcm(
-                "MIGRAD", arr("d", [MAX_ITERATIONS, self.tolerance]), 2, _error_code
-            )
+            self.__gMinuit.mnexcm("MIGRAD", arr("d", [MAX_ITERATIONS, self.tolerance]), 2, _error_code)
             _y[i] = self._get_fit_info("fcn")
 
         self.__gMinuit.mnexcm("RELEASE", arr("d", [_minuit_id]), 1, _error_code)

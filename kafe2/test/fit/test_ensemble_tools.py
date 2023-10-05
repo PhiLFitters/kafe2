@@ -83,9 +83,7 @@ class TestCustomBroadcast(unittest.TestCase):
         _array = np.empty(_array_shape)
         _target_shape = (4, 6, 2, 9)
         _result_shape = (1, 1, 2, 9, 3)
-        _broadcasted_array = broadcast_to_shape(
-            _array, _target_shape, scheme="expand_left_successive"
-        )
+        _broadcasted_array = broadcast_to_shape(_array, _target_shape, scheme="expand_left_successive")
         self.assertEqual(_broadcasted_array.shape, _result_shape)
 
     def test_compare_shape_scheme_expand_right_successive(self):
@@ -100,9 +98,7 @@ class TestCustomBroadcast(unittest.TestCase):
         _array = np.empty(_array_shape)
         _target_shape = (4, 6, 2, 9)
         _result_shape = (7, 4, 6, 1, 1)
-        _broadcasted_array = broadcast_to_shape(
-            _array, _target_shape, scheme="expand_right_successive"
-        )
+        _broadcasted_array = broadcast_to_shape(_array, _target_shape, scheme="expand_right_successive")
         self.assertEqual(_broadcasted_array.shape, _result_shape)
 
 
@@ -120,14 +116,10 @@ class TestEnsembleVariable(unittest.TestCase):
         np.random.seed(123456)
 
         _total_entries = np.prod(self._ref_total_shape)
-        self._ref_array = np.random.normal(
-            loc=self._ref_loc, scale=self._ref_scale, size=_total_entries
-        )
+        self._ref_array = np.random.normal(loc=self._ref_loc, scale=self._ref_scale, size=_total_entries)
         self._ref_array = self._ref_array.reshape(self._ref_total_shape)
 
-        self.ev_no_dist = EnsembleVariable(
-            ensemble_array=self._ref_array, distribution=None, distribution_parameters=None
-        )
+        self.ev_no_dist = EnsembleVariable(ensemble_array=self._ref_array, distribution=None, distribution_parameters=None)
         self.ev_with_dist = EnsembleVariable(
             ensemble_array=self._ref_array,
             distribution=scipy.stats.norm,
@@ -174,13 +166,9 @@ class TestEnsembleVariable(unittest.TestCase):
         self.assertTrue(np.allclose(_eval_y_compare, self._ref_pdf_frozen.pdf(0)))
 
     def test_compare_dist_eval_pdf_vector_x(self):
-        _eval_y_compare = self.ev_with_dist.dist.eval(
-            self._ref_pdf_eval_x, x_contains_var_shape=False
-        )
+        _eval_y_compare = self.ev_with_dist.dist.eval(self._ref_pdf_eval_x, x_contains_var_shape=False)
         self.assertTrue(np.allclose(self._ref_pdf_eval_y, _eval_y_compare))
 
     def test_compare_dist_eval_pdf_in_shape(self):
-        _eval_y_compare = self.ev_with_dist.dist.eval(
-            self._ref_pdf_eval_x_in_shape, x_contains_var_shape=True
-        )
+        _eval_y_compare = self.ev_with_dist.dist.eval(self._ref_pdf_eval_x_in_shape, x_contains_var_shape=True)
         self.assertTrue(np.allclose(self._ref_pdf_eval_y_in_shape, _eval_y_compare))

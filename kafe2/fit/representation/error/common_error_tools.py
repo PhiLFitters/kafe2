@@ -25,9 +25,7 @@ def add_error_to_container(err_type, container_obj, **kwargs):
     elif err_type == "matrix":
         container_obj.add_matrix_error(**kwargs)
     else:
-        raise TypeError(
-            "Unknown error type '{}'. " "Valid: {}".format(err_type, ("simple", "matrix"))
-        )
+        raise TypeError("Unknown error type '{}'. " "Valid: {}".format(err_type, ("simple", "matrix")))
     return container_obj
 
 
@@ -85,13 +83,9 @@ def write_errors_to_yaml(container, yaml_doc):
                 _yaml_section[-1]["matrix"] = _err_obj.cor_mat  # .tolist()
                 _yaml_section[-1]["error_value"] = _err_val
             else:
-                raise TypeError(
-                    "Unknown error matrix type '{}'. " "Valid: 'correlation' or 'covariance'."
-                )
+                raise TypeError("Unknown error matrix type '{}'. " "Valid: 'correlation' or 'covariance'.")
         else:
-            raise TypeError(
-                "No representation for error type {} " "implemented!".format(type(_err_obj))
-            )
+            raise TypeError("No representation for error type {} " "implemented!".format(type(_err_obj)))
 
     return yaml_doc
 
@@ -142,19 +136,11 @@ def process_error_sources(container_obj, yaml_doc):
                         raise ValueError("Cannot convert {} to error value.".format(_val))
                     _abs[i] = _val
             if _axis is not None:
-                container_obj = add_error_to_container(
-                    "simple", container_obj, err_val=0.01 * _rel, relative=True, axis=_axis
-                )
-                container_obj = add_error_to_container(
-                    "simple", container_obj, err_val=_abs, relative=False, axis=_axis
-                )
+                container_obj = add_error_to_container("simple", container_obj, err_val=0.01 * _rel, relative=True, axis=_axis)
+                container_obj = add_error_to_container("simple", container_obj, err_val=_abs, relative=False, axis=_axis)
             else:
-                container_obj = add_error_to_container(
-                    "simple", container_obj, err_val=0.01 * _rel, relative=True
-                )
-                container_obj = add_error_to_container(
-                    "simple", container_obj, err_val=_abs, relative=False
-                )
+                container_obj = add_error_to_container("simple", container_obj, err_val=0.01 * _rel, relative=True)
+                container_obj = add_error_to_container("simple", container_obj, err_val=_abs, relative=False)
             continue
         elif isinstance(_err, (float, int, str)):
             raise ValueError("Failed to read in errors: {}".format(_err))
@@ -175,9 +161,7 @@ def process_error_sources(container_obj, yaml_doc):
                 # default None only mandatory for cor mats; check done later
                 _add_kwargs["err_val"] = _err.get("error_value", None)
             else:
-                raise TypeError(
-                    "Unknown error type '{}'. " "Valid: {}".format(_err_type, ("simple", "matrix"))
-                )
+                raise TypeError("Unknown error type '{}'. " "Valid: {}".format(_err_type, ("simple", "matrix")))
 
             _add_kwargs["relative"] = _err.get("relative", False)
 
@@ -208,14 +192,7 @@ class MatrixYamlDumper(yaml.Dumper):
         _is_symmetric = np.allclose(numpy_matrix, numpy_matrix.T)
 
         # remove brackets
-        _string_repr = (
-            str(numpy_matrix)
-            .replace("[[", " [")
-            .replace("]]", "] ")
-            .replace("[", "")
-            .replace("]", "")
-            .strip()
-        )
+        _string_repr = str(numpy_matrix).replace("[[", " [").replace("]]", "] ").replace("[", "").replace("]", "").strip()
         # remove all spaces immediately after newline
         _string_repr = re.sub(self.__class__._regex_space_after_newline, "\n", _string_repr)
 
@@ -223,9 +200,7 @@ class MatrixYamlDumper(yaml.Dumper):
         if _is_symmetric and False:
             _rows = _string_repr.split("\n")
             for _irow, _row in enumerate(_rows):
-                _rows[_irow] = re.sub(
-                    r"^((\S+\s*){{{}}}).*$".format(_irow + 1), r"\1", _row
-                ).strip()
+                _rows[_irow] = re.sub(r"^((\S+\s*){{{}}}).*$".format(_irow + 1), r"\1", _row).strip()
             _string_repr = "\n".join(_rows)
             # write lower triangular matrix using the '|'-style
             return self.represent_scalar("!symmetric_matrix", _string_repr, style="|")
@@ -257,9 +232,7 @@ class MatrixYamlLoader(yaml.Loader):
             # check shape -> row index must match row length
             if len(_row) != _i + 1:
                 raise ValueError(
-                    "Cannot parse lower triangular matrix: "
-                    "row #{} should have length {}, got {} "
-                    "instead!".format(_i + 1, _i + 1, len(_row))
+                    "Cannot parse lower triangular matrix: " "row #{} should have length {}, got {} " "instead!".format(_i + 1, _i + 1, len(_row))
                 )
             # fill matrix
             _np_mat[_i, 0 : len(_row)] = _row  # fill below diagonal

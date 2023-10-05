@@ -33,8 +33,7 @@ def _get_representer(object_type_name, role, file_format):
     _d_fileformats = _d_roles.get(role, None)
     if _d_fileformats is None:
         raise TypeError(
-            "No representers with role '{}' found for object type '{}'! "
-            "Available roles are: {}".format(role, object_type_name, _d_roles.keys())
+            "No representers with role '{}' found for object type '{}'! " "Available roles are: {}".format(role, object_type_name, _d_roles.keys())
         )
 
     _file_format_resolve_alias = _FILE_FORMAT_ALIAS_RESOLVDICT.get(file_format, file_format)
@@ -42,9 +41,7 @@ def _get_representer(object_type_name, role, file_format):
     if _representer is None:
         raise TypeError(
             "No representer with role '{}' found for of object type '{}' and file format '{}'! "
-            "Available file formats are: {}".format(
-                file_format, role, object_type_name, _d_fileformats.keys()
-            )
+            "Available file formats are: {}".format(file_format, role, object_type_name, _d_fileformats.keys())
         )
 
     return _representer
@@ -54,12 +51,8 @@ def _get_representer(object_type_name, role, file_format):
 
 
 def get_reader(object_type_name, file_format):
-    return _get_representer(
-        object_type_name=object_type_name, role="reader", file_format=file_format
-    )
+    return _get_representer(object_type_name=object_type_name, role="reader", file_format=file_format)
 
 
 def get_writer(object_type_name, file_format):
-    return _get_representer(
-        object_type_name=object_type_name, role="writer", file_format=file_format
-    )
+    return _get_representer(object_type_name=object_type_name, role="writer", file_format=file_format)

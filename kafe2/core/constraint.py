@@ -121,9 +121,7 @@ class GaussianSimpleParameterConstraint(ParameterConstraint):
 
 
 class GaussianMatrixParameterConstraint(ParameterConstraint):
-    def __init__(
-        self, indices, values, matrix, matrix_type="cov", uncertainties=None, relative=False
-    ):
+    def __init__(self, indices, values, matrix, matrix_type="cov", uncertainties=None, relative=False):
         """
         Advanced class for applying correlated constraints to several parameters of a fit.
         The order of ``indices``, ``values``, ``matrix``, and ``uncertainties`` must be aligned.
@@ -159,9 +157,7 @@ class GaussianMatrixParameterConstraint(ParameterConstraint):
             pass
         elif matrix_type == "cor":
             if np.any(np.diag(_matrix_array) != 1.0):
-                raise ValueError(
-                    "The correlation matrix has diagonal elements that aren't equal to 1!"
-                )
+                raise ValueError("The correlation matrix has diagonal elements that aren't equal to 1!")
             if np.any(_matrix_array > 1.0):
                 raise ValueError("The correlation matrix has elements greater than 1!")
             if np.any(_matrix_array < -1.0):
@@ -229,9 +225,7 @@ class GaussianMatrixParameterConstraint(ParameterConstraint):
             if self.matrix_type == "cov":
                 self._cov_mat_rel = self._cov_mat_abs / np.outer(self.values, self.values)
             else:
-                self._cov_mat_rel = self._cor_mat * np.outer(
-                    self.uncertainties_rel, self.uncertainties_rel
-                )
+                self._cov_mat_rel = self._cor_mat * np.outer(self.uncertainties_rel, self.uncertainties_rel)
         return self._cov_mat_rel
 
     @property
@@ -240,9 +234,7 @@ class GaussianMatrixParameterConstraint(ParameterConstraint):
         if self._cor_mat is None:
             # if the originally specified cov mat was relative, calculate the cor mat based on that
             if self._relative:
-                self._cor_mat = self.cov_mat_rel / np.outer(
-                    self.uncertainties_rel, self.uncertainties_rel
-                )
+                self._cor_mat = self.cov_mat_rel / np.outer(self.uncertainties_rel, self.uncertainties_rel)
             else:
                 self._cor_mat = self.cov_mat / np.outer(self.uncertainties, self.uncertainties)
         return self._cor_mat
