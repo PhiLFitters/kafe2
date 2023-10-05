@@ -45,18 +45,10 @@ class AbstractTestFitRepresenter(object):
         self._roundtrip_streamreader = FitYamlReader(self._roundtrip_stringstream)
         self._roundtrip_streamwriter = FitYamlWriter(self._fit, self._roundtrip_stringstream)
 
-        self._testfile_stringstream_missing_keyword = IOStreamHandle(
-            StringIO(self.TEST_FIT_MISSING_KEYWORD)
-        )
-        self._testfile_stringstream_extra_keyword = IOStreamHandle(
-            StringIO(self.TEST_FIT_EXTRA_KEYWORD)
-        )
-        self._testfile_streamreader_missing_keyword = FitYamlReader(
-            self._testfile_stringstream_missing_keyword
-        )
-        self._testfile_streamreader_extra_keyword = FitYamlReader(
-            self._testfile_stringstream_extra_keyword
-        )
+        self._testfile_stringstream_missing_keyword = IOStreamHandle(StringIO(self.TEST_FIT_MISSING_KEYWORD))
+        self._testfile_stringstream_extra_keyword = IOStreamHandle(StringIO(self.TEST_FIT_EXTRA_KEYWORD))
+        self._testfile_streamreader_missing_keyword = FitYamlReader(self._testfile_stringstream_missing_keyword)
+        self._testfile_streamreader_extra_keyword = FitYamlReader(self._testfile_stringstream_extra_keyword)
 
     def test_write_to_roundtrip_stringstream(self):
         self._roundtrip_streamwriter.write()
@@ -153,9 +145,7 @@ class TestCustomFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter
         self._test_parameters = np.array([2.0, -1.0])
         self._test_parameters_default = np.array([1.5, -0.5])
         self._test_parameters_do_fit = np.array([2.0115580399995032, -1.0889949779758534])
-        self._test_y_default = (
-            self._test_parameters_default[0] * np.arange(10) + self._test_parameters_default[1]
-        )
+        self._test_y_default = self._test_parameters_default[0] * np.arange(10) + self._test_parameters_default[1]
         self._test_y_do_fit = [
             -1.08899498,
             0.92256306,
@@ -173,21 +163,14 @@ class TestCustomFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter
         self._fit.assign_parameter_names(a="alpha", b="beta")
         self._fit.add_parameter_constraint(name="a", value=2.0, uncertainty=1.0)
         self._fit.add_parameter_constraint(name="b", value=-1.0, uncertainty=0.5)
-        self._fit.add_matrix_parameter_constraint(
-            names=["a", "b"], values=[2.05, -0.95], matrix=[[1.1, 0.1], [0.1, 2.4]]
-        )
+        self._fit.add_matrix_parameter_constraint(names=["a", "b"], values=[2.05, -0.95], matrix=[[1.1, 0.1], [0.1, 2.4]])
         self.setup_streams()
 
     def test_read_from_testfile_stream(self):
         _read_fit = self._testfile_streamreader.read()
         self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
         for _pf in _read_fit._parameter_formatters:
-            self.assertTrue(
-                _pf.arg_name == "a"
-                and _pf.name == "alpha"
-                or _pf.arg_name == "b"
-                and _pf.name == "beta"
-            )
+            self.assertTrue(_pf.arg_name == "a" and _pf.name == "alpha" or _pf.arg_name == "b" and _pf.name == "beta")
         self.assertTrue(np.allclose(self._test_parameters_default, _read_fit.parameter_values))
 
         _read_fit.do_fit()
@@ -200,12 +183,7 @@ class TestCustomFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter
         _read_fit = self._roundtrip_streamreader.read()
         self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
         for _pf in _read_fit._parameter_formatters:
-            self.assertTrue(
-                _pf.arg_name == "a"
-                and _pf.name == "alpha"
-                or _pf.arg_name == "b"
-                and _pf.name == "beta"
-            )
+            self.assertTrue(_pf.arg_name == "a" and _pf.name == "alpha" or _pf.arg_name == "b" and _pf.name == "beta")
 
         self.assertTrue(np.allclose(self._test_parameters_default, _read_fit.parameter_values))
 
@@ -354,31 +332,17 @@ class TestHistFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
         self._test_parameters_do_fit = np.array([0.20292002, 0.50108339])
         self._test_parameters_do_fit_simple = np.array([0.20032218, 0.49665461])
         self._test_x = np.array([-2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0])
-        self._test_density_default = self.hist_model_density(
-            self._test_x, *self._test_parameters_default
-        )
-        self._test_density_default_simple = self.hist_model_density(
-            self._test_x, *self._test_parameters_default_simple
-        )
-        self._test_density_do_fit = self.hist_model_density(
-            self._test_x, *self._test_parameters_do_fit
-        )
-        self._test_density_do_fit_simple = self.hist_model_density(
-            self._test_x, *self._test_parameters_do_fit_simple
-        )
+        self._test_density_default = self.hist_model_density(self._test_x, *self._test_parameters_default)
+        self._test_density_default_simple = self.hist_model_density(self._test_x, *self._test_parameters_default_simple)
+        self._test_density_do_fit = self.hist_model_density(self._test_x, *self._test_parameters_do_fit)
+        self._test_density_do_fit_simple = self.hist_model_density(self._test_x, *self._test_parameters_do_fit_simple)
 
-        _data = HistContainer(
-            n_bins=self._test_n_bins, bin_range=self._test_bin_range, fill_data=self._test_raw_data
-        )
-        self._fit = HistFit(
-            data=_data, model_function=TestHistFitYamlRepresenter.hist_model_density
-        )
+        _data = HistContainer(n_bins=self._test_n_bins, bin_range=self._test_bin_range, fill_data=self._test_raw_data)
+        self._fit = HistFit(data=_data, model_function=TestHistFitYamlRepresenter.hist_model_density)
         self._fit.add_error(err_val=0.1)
         self._fit.add_parameter_constraint("mu", 0.1, 1.0)
         self._fit.add_parameter_constraint("sigma", 1.0, 0.5)
-        self._fit.add_matrix_parameter_constraint(
-            ["sigma", "mu"], [1.3, 2.5], [[1.1, 0.1], [0.1, 2.4]]
-        )
+        self._fit.add_matrix_parameter_constraint(["sigma", "mu"], [1.3, 2.5], [[1.1, 0.1], [0.1, 2.4]])
 
         self.setup_streams()
 
@@ -386,26 +350,16 @@ class TestHistFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
         _read_fit = self._testfile_streamreader.read()
         self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
         self.assertTrue(np.allclose(self._test_parameters_default, _read_fit.parameter_values))
-        self.assertTrue(
-            np.allclose(
-                self._test_density_default, _read_fit.eval_model_function_density(self._test_x)
-            )
-        )
+        self.assertTrue(np.allclose(self._test_density_default, _read_fit.eval_model_function_density(self._test_x)))
 
         _read_fit.do_fit()
         self.assertTrue(np.allclose(self._test_parameters_do_fit, _read_fit.parameter_values))
-        self.assertTrue(
-            np.allclose(
-                self._test_density_do_fit, _read_fit.eval_model_function_density(self._test_x)
-            )
-        )
+        self.assertTrue(np.allclose(self._test_density_do_fit, _read_fit.eval_model_function_density(self._test_x)))
 
     def test_read_from_testfile_stream_simple(self):
         _read_fit = self._testfile_streamreader_simple.read()
         self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
-        self.assertTrue(
-            np.allclose(self._test_parameters_default_simple, _read_fit.parameter_values)
-        )
+        self.assertTrue(np.allclose(self._test_parameters_default_simple, _read_fit.parameter_values))
         self.assertTrue(
             np.allclose(
                 self._test_density_default_simple,
@@ -415,9 +369,7 @@ class TestHistFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
 
         _read_fit.do_fit()
 
-        self.assertTrue(
-            np.allclose(self._test_parameters_do_fit_simple, _read_fit.parameter_values)
-        )
+        self.assertTrue(np.allclose(self._test_parameters_do_fit_simple, _read_fit.parameter_values))
         self.assertTrue(
             np.allclose(
                 self._test_density_do_fit_simple,
@@ -432,20 +384,12 @@ class TestHistFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
         self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
 
         self.assertTrue(np.allclose(self._test_parameters_default, _read_fit.parameter_values))
-        self.assertTrue(
-            np.allclose(
-                self._test_density_default, _read_fit.eval_model_function_density(self._test_x)
-            )
-        )
+        self.assertTrue(np.allclose(self._test_density_default, _read_fit.eval_model_function_density(self._test_x)))
 
         _read_fit.do_fit()
 
         self.assertTrue(np.allclose(self._test_parameters_do_fit, _read_fit.parameter_values))
-        self.assertTrue(
-            np.allclose(
-                self._test_density_do_fit, _read_fit.eval_model_function_density(self._test_x)
-            )
-        )
+        self.assertTrue(np.allclose(self._test_density_do_fit, _read_fit.eval_model_function_density(self._test_x)))
 
 
 TEST_FIT_INDEXED = """
@@ -571,16 +515,12 @@ class TestIndexedFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresente
             17.01561766,
         ]
 
-        self._fit = IndexedFit(
-            data=self._test_y, model_function=TestIndexedFitYamlRepresenter.linear_model
-        )
+        self._fit = IndexedFit(data=self._test_y, model_function=TestIndexedFitYamlRepresenter.linear_model)
         self._fit.set_all_parameter_values(self._test_parameters_default)
         self._fit.add_error(err_val=0.1)
         self._fit.add_parameter_constraint(name="a", value=2.0, uncertainty=1.0)
         self._fit.add_parameter_constraint(name="b", value=-1.0, uncertainty=0.5)
-        self._fit.add_matrix_parameter_constraint(
-            names=["a", "b"], values=[2.05, -0.95], matrix=[[1.1, 0.1], [0.1, 2.4]]
-        )
+        self._fit.add_matrix_parameter_constraint(names=["a", "b"], values=[2.05, -0.95], matrix=[[1.1, 0.1], [0.1, 2.4]])
 
         self.setup_streams()
 
@@ -598,16 +538,12 @@ class TestIndexedFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresente
     def test_read_from_testfile_stream_simple(self):
         _read_fit = self._testfile_streamreader_simple.read()
         self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
-        self.assertTrue(
-            np.allclose(self._test_parameters_default_simple, _read_fit.parameter_values)
-        )
+        self.assertTrue(np.allclose(self._test_parameters_default_simple, _read_fit.parameter_values))
         self.assertTrue(np.allclose(self._test_y_default_simple, _read_fit.model))
 
         _read_fit.do_fit()
 
-        self.assertTrue(
-            np.allclose(self._test_parameters_do_fit_simple, _read_fit.parameter_values)
-        )
+        self.assertTrue(np.allclose(self._test_parameters_do_fit_simple, _read_fit.parameter_values))
         self.assertTrue(np.allclose(self._test_y_do_fit_simple, _read_fit.model))
 
     def test_round_trip_with_stringstream(self):
@@ -738,9 +674,7 @@ class TestXYFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
             16.94404467,
         ]
         self._test_y_default = self.linear_model(self._test_x, *self._test_parameters_default)
-        self._test_y_default_simple = self.linear_model(
-            self._test_x, *self._test_parameters_default_simple
-        )
+        self._test_y_default_simple = self.linear_model(self._test_x, *self._test_parameters_default_simple)
         self._test_y_do_fit = [
             -1.08899498,
             0.92256306,
@@ -786,16 +720,12 @@ class TestXYFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
         self._fit.add_error(axis="y", err_val=0.1)
         self._fit.add_parameter_constraint(name="a", value=2.0, uncertainty=1.0)
         self._fit.add_parameter_constraint(name="b", value=-1.0, uncertainty=0.5)
-        self._fit.add_matrix_parameter_constraint(
-            names=["a", "b"], values=[2.05, -0.95], matrix=[[1.1, 0.1], [0.1, 2.4]]
-        )
+        self._fit.add_matrix_parameter_constraint(names=["a", "b"], values=[2.05, -0.95], matrix=[[1.1, 0.1], [0.1, 2.4]])
 
         self.setup_streams()
         self._testfile_stringstream_relative = IOStreamHandle(StringIO(TEST_FIT_XY_RELATIVE_ERROR))
         self._testfile_streamreader_relative = FitYamlReader(self._testfile_stringstream_relative)
-        self._testfile_stringstream_mixed = IOStreamHandle(
-            StringIO(TEST_FIT_XY_RELATIVE_ERROR_MIXED)
-        )
+        self._testfile_stringstream_mixed = IOStreamHandle(StringIO(TEST_FIT_XY_RELATIVE_ERROR_MIXED))
         self._testfile_streamreader_mixed = FitYamlReader(self._testfile_stringstream_mixed)
 
     def test_read_from_testfile_stream(self):
@@ -812,39 +742,29 @@ class TestXYFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
     def test_read_from_testfile_stream_simple(self):
         _read_fit = self._testfile_streamreader_simple.read()
         self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
-        self.assertTrue(
-            np.allclose(self._test_parameters_default_simple, _read_fit.parameter_values)
-        )
+        self.assertTrue(np.allclose(self._test_parameters_default_simple, _read_fit.parameter_values))
         self.assertTrue(np.allclose(self._test_y_default_simple, _read_fit.y_model))
 
         _read_fit.do_fit()
 
-        self.assertTrue(
-            np.allclose(self._test_parameters_do_fit_simple, _read_fit.parameter_values)
-        )
+        self.assertTrue(np.allclose(self._test_parameters_do_fit_simple, _read_fit.parameter_values))
         self.assertTrue(np.allclose(self._test_y_do_fit_simple, _read_fit.y_model))
 
     def test_read_from_testfile_stream_relative(self):
         _read_fit = self._testfile_streamreader_relative.read()
         self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
-        self.assertTrue(
-            np.allclose(self._test_parameters_default_simple, _read_fit.parameter_values)
-        )
+        self.assertTrue(np.allclose(self._test_parameters_default_simple, _read_fit.parameter_values))
         self.assertTrue(np.allclose(self._test_y_default_simple, _read_fit.y_model))
 
         _read_fit.do_fit()
 
-        self.assertTrue(
-            np.allclose(self._test_parameters_do_fit_relative, _read_fit.parameter_values)
-        )
+        self.assertTrue(np.allclose(self._test_parameters_do_fit_relative, _read_fit.parameter_values))
         self.assertTrue(np.allclose(self._test_y_do_fit_relative, _read_fit.y_model))
 
     def test_read_from_testfile_stream_relative_mixed(self):
         _read_fit = self._testfile_streamreader_mixed.read()
         self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
-        self.assertTrue(
-            np.allclose(self._test_parameters_default_simple, _read_fit.parameter_values)
-        )
+        self.assertTrue(np.allclose(self._test_parameters_default_simple, _read_fit.parameter_values))
         self.assertTrue(np.allclose(self._test_y_default_simple, _read_fit.y_model))
 
         _read_fit.do_fit()
@@ -852,9 +772,7 @@ class TestXYFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
         print(_read_fit.x_total_error)
         print(_read_fit.y_total_error)
 
-        self.assertTrue(
-            np.allclose(self._test_parameters_do_fit_relative, _read_fit.parameter_values)
-        )
+        self.assertTrue(np.allclose(self._test_parameters_do_fit_relative, _read_fit.parameter_values))
         self.assertTrue(np.allclose(self._test_y_do_fit_relative, _read_fit.y_model))
 
     def test_round_trip_with_stringstream(self):
@@ -1001,13 +919,9 @@ class TestUnbinnedFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresent
         _read_fit = self._testfile_streamreader_simple.read()
 
         self.assertTrue(isinstance(_read_fit, self.FIT_CLASS))
-        self.assertTrue(
-            np.allclose(self._test_parameters_default_simple, _read_fit.parameter_values)
-        )
+        self.assertTrue(np.allclose(self._test_parameters_default_simple, _read_fit.parameter_values))
         _read_fit.do_fit()
-        self.assertTrue(
-            np.allclose(self._test_parameters_do_fit_simple, _read_fit.parameter_values)
-        )
+        self.assertTrue(np.allclose(self._test_parameters_do_fit_simple, _read_fit.parameter_values))
 
     def test_round_trip_with_stringstream(self):
         self._roundtrip_streamwriter.write()

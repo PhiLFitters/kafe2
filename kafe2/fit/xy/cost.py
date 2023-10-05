@@ -61,9 +61,7 @@ class XYCostFunction_NegLogLikelihood(CostFunction_NegLogLikelihood):
             self._ERROR_NAME = "total_error"
         else:
             raise ValueError("Unknown value '%s' for 'axes_to_use': must be one of ('xy', 'y')")
-        super(XYCostFunction_NegLogLikelihood, self).__init__(
-            data_point_distribution=data_point_distribution, ratio=ratio
-        )
+        super(XYCostFunction_NegLogLikelihood, self).__init__(data_point_distribution=data_point_distribution, ratio=ratio)
 
 
 class XYCostFunction_GaussApproximation(CostFunction_GaussApproximation):

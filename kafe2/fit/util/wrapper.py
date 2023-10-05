@@ -229,12 +229,7 @@ def hist_fit(
     data = HistContainer(n_bins, bin_range, bin_edges, data)
 
     if gauss_approximation is None:
-        gauss_approximation = (
-            error is not None
-            or error_rel is not None
-            or error_cor is not None
-            or error_cor_rel is not None
-        )
+        gauss_approximation = error is not None or error_rel is not None or error_cor is not None or error_cor_rel is not None
     _cost_function = "gauss_approximation" if gauss_approximation else "poisson"
 
     if model_function is None:
@@ -245,9 +240,7 @@ def hist_fit(
     _add_error_to_fit_generic(_fit, error, errors_rel_to_model)
     _add_error_to_fit_generic(_fit, error_cor, errors_rel_to_model, correlated=True)
     _add_error_to_fit_generic(_fit, error_rel, errors_rel_to_model, relative=True)
-    _add_error_to_fit_generic(
-        _fit, error_cor_rel, errors_rel_to_model, correlated=True, relative=True
-    )
+    _add_error_to_fit_generic(_fit, error_cor_rel, errors_rel_to_model, correlated=True, relative=True)
 
     return _fit_wrapper_generic(_fit, p0, dp0, limits, fixed, constraints, report, profile, save)
 
@@ -276,9 +269,7 @@ def indexed_fit(
     _add_error_to_fit_generic(_fit, error, errors_rel_to_model)
     _add_error_to_fit_generic(_fit, error_cor, errors_rel_to_model, correlated=True)
     _add_error_to_fit_generic(_fit, error_rel, errors_rel_to_model, relative=True)
-    _add_error_to_fit_generic(
-        _fit, error_cor_rel, errors_rel_to_model, correlated=True, relative=True
-    )
+    _add_error_to_fit_generic(_fit, error_cor_rel, errors_rel_to_model, correlated=True, relative=True)
 
     return _fit_wrapper_generic(_fit, p0, dp0, limits, fixed, constraints, report, profile, save)
 
@@ -853,9 +844,7 @@ def k2Fit(
         )
     _fit_object = _fit_history[-1]["fit"]
     _parameter_errors = (
-        _fit_object.asymmetric_parameter_errors
-        if asym_parerrs
-        else np.stack([-_fit_object.parameter_errors, _fit_object.parameter_errors], axis=-1)
+        _fit_object.asymmetric_parameter_errors if asym_parerrs else np.stack([-_fit_object.parameter_errors, _fit_object.parameter_errors], axis=-1)
     )
     return (
         _fit_object.parameter_values,

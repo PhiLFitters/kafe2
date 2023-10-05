@@ -29,9 +29,7 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
             container.
         :type from_container: bool
         """
-        super(UnbinnedPlotAdapter, self).__init__(
-            fit_object=unbinned_fit_object, from_container=from_container
-        )
+        super(UnbinnedPlotAdapter, self).__init__(fit_object=unbinned_fit_object, from_container=from_container)
         self.n_plot_points = 100 if len(self.data_x) < 100 else len(self.data_x)
 
         self.x_range = add_pad_to_range(self._fit.data_range, scale=self.x_scale)
@@ -96,15 +94,8 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
             try:
                 return np.geomspace(_xmin, _xmax, self.n_plot_points)
             except ValueError:
-                raise ValueError(
-                    "Support point calculation failed. The plot range can't include 0 "
-                    "when using log scale."
-                )
-        raise ValueError(
-            "x_range has to be one of {}. Found {} instead.".format(
-                self.AVAILABLE_X_SCALES, self.x_scale
-            )
-        )
+                raise ValueError("Support point calculation failed. The plot range can't include 0 " "when using log scale.")
+        raise ValueError("x_range has to be one of {}. Found {} instead.".format(self.AVAILABLE_X_SCALES, self.x_scale))
 
     @property
     def model_line_y(self):
@@ -160,9 +151,7 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
                 height = 10 ** (np.log10(self.y_range[1]) / 10)
 
         data = self.data_x
-        xy_pairs = np.column_stack(
-            [np.repeat(data, 2), np.tile([self.y_range[0], height], len(data))]
-        )
+        xy_pairs = np.column_stack([np.repeat(data, 2), np.tile([self.y_range[0], height], len(data))])
         lines = xy_pairs.reshape([len(data), 2, 2])
         line_segments = LineCollection(lines, **kwargs)
         return target_axes.add_collection(line_segments)

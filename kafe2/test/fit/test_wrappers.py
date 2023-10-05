@@ -29,12 +29,8 @@ class TestWrapperCallableXY(unittest.TestCase):
                 list(results_2["parameter_errors"].values()),
             )
         )
-        self.assertTrue(
-            np.allclose(results_1["parameter_cor_mat"], results_2["parameter_cor_mat"], rtol=1e-4)
-        )
-        self.assertTrue(
-            np.allclose(results_1["parameter_cov_mat"], results_2["parameter_cov_mat"], rtol=1e-4)
-        )
+        self.assertTrue(np.allclose(results_1["parameter_cor_mat"], results_2["parameter_cor_mat"], rtol=1e-4))
+        self.assertTrue(np.allclose(results_1["parameter_cov_mat"], results_2["parameter_cov_mat"], rtol=1e-4))
         try:
             self.assertTrue(
                 np.allclose(
@@ -73,9 +69,7 @@ class TestWrapperCallableXY(unittest.TestCase):
         _fit.add_error("y", self._y_error_cor[1], correlation=1.0)
         _fit.add_error("x", self._x_error_cor_rel[0], correlation=1.0, relative=True)
         _fit.add_error("x", self._x_error_cor_rel[1], correlation=1.0, relative=True)
-        _fit.add_error(
-            "y", self._y_error_cor_rel, correlation=1.0, relative=True, reference=_error_ref
-        )
+        _fit.add_error("y", self._y_error_cor_rel, correlation=1.0, relative=True, reference=_error_ref)
         if limits is not None:
             _limits_manual = [limits] if isinstance(limits[0], str) else limits
             for _limit in _limits_manual:
@@ -131,9 +125,7 @@ class TestWrapperCallableXY(unittest.TestCase):
         self._y_error_cor_rel = 0.01
 
         self._x_data = np.arange(10)
-        self._y_data = function_library.linear_model(
-            self._x_data + 0.2 * np.random.randn(10), *self._true_pars
-        ) + 0.5 * np.random.randn(10)
+        self._y_data = function_library.linear_model(self._x_data + 0.2 * np.random.randn(10), *self._true_pars) + 0.5 * np.random.randn(10)
 
     def tearDown(self):
         if os.path.exists("results"):
@@ -146,9 +138,7 @@ class TestWrapperCallableXY(unittest.TestCase):
         self._assert_wrapper_equal(function_library.quadratic_model)
 
     def test_set_p0(self):
-        self._assert_wrapper_equal(
-            function_library.exponential_model, p0=[2.0, 2.0], dp0=[0.01, 0.01]
-        )
+        self._assert_wrapper_equal(function_library.exponential_model, p0=[2.0, 2.0], dp0=[0.01, 0.01])
 
     def test_rel_to_data(self):
         self._assert_wrapper_equal(rel_to_model=False)

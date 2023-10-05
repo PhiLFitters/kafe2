@@ -66,12 +66,9 @@ def normal_distribution(x, mu, sigma):
     return np.exp(-0.5 * ((x - mu) / sigma) ** 2) / np.sqrt(2.0 * np.pi * sigma**2)
 
 
-normal_distribution.expression_format_string = (
-    "1 / sqrt(2 * pi * {sigma}) * exp(-0.5 * (({x} - {mu}) / {sigma}) ** 2)"
-)
+normal_distribution.expression_format_string = "1 / sqrt(2 * pi * {sigma}) * exp(-0.5 * (({x} - {mu}) / {sigma}) ** 2)"
 normal_distribution.latex_expression_format_string = (
-    r"\frac{{1}}{{2 \pi {sigma}}} e^{{- \frac{{1}}{{2}}"
-    r"\left( \frac{{{x} - {mu}}}{{{sigma}}} \right)^2 }}"
+    r"\frac{{1}}{{2 \pi {sigma}}} e^{{- \frac{{1}}{{2}}" r"\left( \frac{{{x} - {mu}}}{{{sigma}}} \right)^2 }}"
 )
 
 normal_distribution_pdf = normal_distribution  # Backwards compatibility

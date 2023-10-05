@@ -110,9 +110,7 @@ class ScalarFormatter(object):
         self._n_significant_digits = n_significant_digits
         _sig = int(-np.floor(np.log10(self._sigma))) + self._n_significant_digits - 1
         # inner rounding needed for errors like 0.9999999 -> 1.0 (shift in decimal place)
-        self._sig = (
-            int(-np.floor(np.log10(np.around(self._sigma, _sig)))) + self._n_significant_digits - 1
-        )
+        self._sig = int(-np.floor(np.log10(np.around(self._sigma, _sig)))) + self._n_significant_digits - 1
 
     def __call__(self, x):
         """Format the input to the precision given by the uncertainty.
@@ -147,9 +145,7 @@ class ParameterFormatter(FileIOMixin, object):
     The formatted string is obtained by calling the :py:meth:`~.get_formatted` method.
     """
 
-    def __init__(
-        self, arg_name, value=None, error=None, asymmetric_error=None, name=None, latex_name=None
-    ):
+    def __init__(self, arg_name, value=None, error=None, asymmetric_error=None, name=None, latex_name=None):
         """Construct a Parameter Formatter.
 
         :param str arg_name: A plain string indicating the parameter's signature inside the
@@ -348,10 +344,7 @@ class ParameterFormatter(FileIOMixin, object):
             elif (
                 not with_errors
                 or (not asymmetric_error and self.error in (None, 0))
-                or (
-                    asymmetric_error
-                    and (self.asymmetric_error is None or np.all(self.asymmetric_error == 0))
-                )
+                or (asymmetric_error and (self.asymmetric_error is None or np.all(self.asymmetric_error == 0)))
             ):
                 if format_as_latex:
                     _display_string += f"$%.{n_significant_digits}g$" % value
@@ -368,9 +361,7 @@ class ParameterFormatter(FileIOMixin, object):
 
                 # calculate decimal precision if rounding:
                 if round_value_to_error:
-                    val_formatter = ScalarFormatter(
-                        _min_err, n_significant_digits=n_significant_digits
-                    )
+                    val_formatter = ScalarFormatter(_min_err, n_significant_digits=n_significant_digits)
                     _val = val_formatter(value)
                     _err = "%#.{n}g".format(n=n_significant_digits) % self.error
                     if asymmetric_error:  # needed for different powers of 10 in asymmetric errs
@@ -401,9 +392,7 @@ class ParameterFormatter(FileIOMixin, object):
 
             # replace scientific notation with power of ten (LaTeX only)
             if format_as_latex:
-                _display_string = re.sub(
-                    r"(-?\d*\.?\d+?)0*e\+?(-?[0-9]*[1-9]?)", r"\1\\times10^{\2}", _display_string
-                )
+                _display_string = re.sub(r"(-?\d*\.?\d+?)0*e\+?(-?[0-9]*[1-9]?)", r"\1\\times10^{\2}", _display_string)
         return _display_string
 
 
@@ -491,9 +480,7 @@ class FunctionFormatter(FileIOMixin, object):
             return self._latex_name
         return self._name
 
-    def _get_formatted_pars(
-        self, with_par_values=True, n_significant_digits=2, format_as_latex=False
-    ):
+    def _get_formatted_pars(self, with_par_values=True, n_significant_digits=2, format_as_latex=False):
         """Get a list of the formatted parameters including their values. This can be turned off.
 
         :param bool with_par_values: If the strings should contain the parameter values.
@@ -533,13 +520,9 @@ class FunctionFormatter(FileIOMixin, object):
         _kwargs = self._get_format_kwargs(format_as_latex=format_as_latex)
         if format_as_latex and self._latex_expr_string is not None:
             # use all arguments to format the expression string
-            _par_expr_string = self._latex_expr_string.format(
-                *[_af.latex_name for _af in self.arg_formatters], **_kwargs
-            )
+            _par_expr_string = self._latex_expr_string.format(*[_af.latex_name for _af in self.arg_formatters], **_kwargs)
         elif not format_as_latex and self._expr_string is not None:
-            _par_expr_string = self._expr_string.format(
-                *[_af.name for _af in self.arg_formatters], **_kwargs
-            )
+            _par_expr_string = self._expr_string.format(*[_af.name for _af in self.arg_formatters], **_kwargs)
         elif format_as_latex and self._latex_expr_string is None:
             _par_expr_string = self.DEFAULT_LATEX_EXPRESSION_STRING
         else:
@@ -563,13 +546,8 @@ class FunctionFormatter(FileIOMixin, object):
         try:
             self._get_formatted_expression(format_as_latex=False)
         except LookupError:  # fetch key and index errors. Other Errors have other causes.
-            _af_arg_names = (
-                [_af.arg_name for _af in self.arg_formatters] if self.arg_formatters else None
-            )
-            raise ValueError(
-                "Expression string %s does not match argument structure %s"
-                % (expression_format_string, _af_arg_names)
-            )
+            _af_arg_names = [_af.arg_name for _af in self.arg_formatters] if self.arg_formatters else None
+            raise ValueError("Expression string %s does not match argument structure %s" % (expression_format_string, _af_arg_names))
 
     @property
     def latex_expression_format_string(self):
@@ -594,12 +572,9 @@ class FunctionFormatter(FileIOMixin, object):
         try:
             self._get_formatted_expression(format_as_latex=True)
         except LookupError as _e:  # fetch key and index errors. Other Errors have other causes.
-            _af_arg_names = (
-                [_af.arg_name for _af in self.arg_formatters] if self.arg_formatters else None
-            )
+            _af_arg_names = [_af.arg_name for _af in self.arg_formatters] if self.arg_formatters else None
             raise ValueError(
-                "LaTeX expression string %s does not match argument structure %s"
-                % (latex_expression_format_string, _af_arg_names)
+                "LaTeX expression string %s does not match argument structure %s" % (latex_expression_format_string, _af_arg_names)
             ) from _e
 
     @property
@@ -741,11 +716,7 @@ class CostFunctionFormatter(FunctionFormatter):
 
         :rtype: str
         """
-        return (
-            self._latex_name_saturated
-            if self._latex_name_saturated is not None
-            else self.latex_name
-        )
+        return self._latex_name_saturated if self._latex_name_saturated is not None else self.latex_name
 
     @latex_name_saturated.setter
     def latex_name_saturated(self, latex_name_saturated):
@@ -800,9 +771,7 @@ class CostFunctionFormatter(FunctionFormatter):
                     )
         if format_as_latex:
             # replace scientific notation with power of ten (LaTeX only)
-            _value_string = re.sub(
-                r"(-?\d*\.?\d+?)0*e\+?(-?[0-9]*[1-9]?)", r"\1\\times10^{\2}", _value_string
-            )
+            _value_string = re.sub(r"(-?\d*\.?\d+?)0*e\+?(-?[0-9]*[1-9]?)", r"\1\\times10^{\2}", _value_string)
 
         if with_name:
             _out_string = "%s = %s" % (_name_string, _value_string)

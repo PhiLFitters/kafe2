@@ -37,9 +37,7 @@ class TestDatastoreHistogram(unittest.TestCase):
         self._probe_bin_edges_variablespacing_unsorted =     [0,  2, 3, 8.5, 3.2, 3.3, 3.4, 7, 3.1, 9, 10]    # fail
         # fmt: on
 
-        self.hist_cont_binedges_auto = HistContainer(
-            self._ref_n_bins_auto, self._ref_n_bin_range, bin_edges=None
-        )
+        self.hist_cont_binedges_auto = HistContainer(self._ref_n_bins_auto, self._ref_n_bin_range, bin_edges=None)
         self.hist_cont_binedges_manual_equal = HistContainer(
             self._ref_n_bins_manual,
             self._ref_n_bin_range,
@@ -72,39 +70,25 @@ class TestDatastoreHistogram(unittest.TestCase):
 
     def test_fill_empty_binedges_manual_equal_compare_data(self):
         self.hist_cont_binedges_manual_equal.fill(self._ref_entries)
-        self.assertTrue(
-            np.allclose(
-                self.hist_cont_binedges_manual_equal.data, self._ref_data_manual_equalspacing
-            )
-        )
+        self.assertTrue(np.allclose(self.hist_cont_binedges_manual_equal.data, self._ref_data_manual_equalspacing))
 
     def test_fill_empty_binedges_manual_variable_compare_data(self):
         self.hist_cont_binedges_manual_variable.fill(self._ref_entries)
-        self.assertTrue(
-            np.allclose(
-                self.hist_cont_binedges_manual_variable.data, self._ref_data_manual_variablespacing
-            )
-        )
+        self.assertTrue(np.allclose(self.hist_cont_binedges_manual_variable.data, self._ref_data_manual_variablespacing))
 
     def test_fill_empty_binedges_auto_rebin_manual_equal_compare_data(self):
         self.hist_cont_binedges_auto.fill(self._ref_entries)
         self.hist_cont_binedges_auto.rebin(self._ref_bin_edges_manual_equalspacing)
-        self.assertTrue(
-            np.allclose(self.hist_cont_binedges_auto.data, self._ref_data_manual_equalspacing)
-        )
+        self.assertTrue(np.allclose(self.hist_cont_binedges_auto.data, self._ref_data_manual_equalspacing))
 
     def test_fill_empty_binedges_auto_rebin_manual_variable_compare_data(self):
         self.hist_cont_binedges_auto.fill(self._ref_entries)
         self.hist_cont_binedges_auto.rebin(self._ref_bin_edges_manual_variablespacing)
-        self.assertTrue(
-            np.allclose(self.hist_cont_binedges_auto.data, self._ref_data_manual_variablespacing)
-        )
+        self.assertTrue(np.allclose(self.hist_cont_binedges_auto.data, self._ref_data_manual_variablespacing))
 
     def test_manual_bin_height(self):
         self.hist_cont_binedges_manual_equal.set_bins(self._ref_bin_heights_manual)
-        self.assertTrue(
-            np.alltrue(self.hist_cont_binedges_manual_equal.data == self._ref_bin_heights_manual)
-        )
+        self.assertTrue(np.alltrue(self.hist_cont_binedges_manual_equal.data == self._ref_bin_heights_manual))
         self.assertTrue(self.hist_cont_binedges_manual_equal._manual_heights)
 
     def test_construct_bin_edges_variablespacing_withedges(self):
@@ -162,13 +146,9 @@ class TestDatastoreHistogram(unittest.TestCase):
             )
 
     def test_raise_add_same_error_name_twice(self):
-        self.hist_cont_binedges_auto.add_error(
-            0.1, name="MyNewError", correlation=0, relative=False
-        )
+        self.hist_cont_binedges_auto.add_error(0.1, name="MyNewError", correlation=0, relative=False)
         with self.assertRaises(ValueError):
-            self.hist_cont_binedges_auto.add_error(
-                0.1, name="MyNewError", correlation=0, relative=False
-            )
+            self.hist_cont_binedges_auto.add_error(0.1, name="MyNewError", correlation=0, relative=False)
 
     def test_raise_get_inexistent_error(self):
         with self.assertRaises(ValueError):
@@ -217,14 +197,12 @@ class TestDatastoreHistParametricModel(unittest.TestCase):
 
         self._ref_n_bins = 11
         self._ref_n_bin_range = (-3, 25)
-        self._ref_bin_edges = np.linspace(
-            self._ref_n_bin_range[0], self._ref_n_bin_range[1], self._ref_n_bins + 1
-        )
+        self._ref_bin_edges = np.linspace(self._ref_n_bin_range[0], self._ref_n_bin_range[1], self._ref_n_bins + 1)
 
         self._ref_params = (14.0, 3.0)
-        self._ref_data = self._ref_model_func_antider(
-            self._ref_bin_edges[1:], *self._ref_params
-        ) - self._ref_model_func_antider(self._ref_bin_edges[:-1], *self._ref_params)
+        self._ref_data = self._ref_model_func_antider(self._ref_bin_edges[1:], *self._ref_params) - self._ref_model_func_antider(
+            self._ref_bin_edges[:-1], *self._ref_params
+        )
 
         self.hist_param_model_numerical = HistParametricModel(
             n_bins=self._ref_n_bins,
@@ -254,9 +232,9 @@ class TestDatastoreHistParametricModel(unittest.TestCase):
         )
 
         self._test_params = (20.0, 5.0)
-        self._ref_test_data = self._ref_model_func_antider(
-            self._ref_bin_edges[1:], *self._test_params
-        ) - self._ref_model_func_antider(self._ref_bin_edges[:-1], *self._test_params)
+        self._ref_test_data = self._ref_model_func_antider(self._ref_bin_edges[1:], *self._test_params) - self._ref_model_func_antider(
+            self._ref_bin_edges[:-1], *self._test_params
+        )
 
     def test_compare_hist_model_no_antider_ref_data(self):
         self.assertTrue(np.allclose(self.hist_param_model_numerical.data, self._ref_data))
@@ -338,17 +316,9 @@ class TestQuadrature(unittest.TestCase):
             _quadratic_model_limit_rectangle,
             _sinus_model_limit_rectangle,
         ) = TestQuadrature._get_models("rectangle")
-        self.assertTrue(
-            np.allclose(self._linear_model_numerical.data, _linear_model_rectangle.data)
-        )
-        self.assertTrue(
-            np.allclose(
-                self._quadratic_model_limit_numerical.data, _quadratic_model_limit_rectangle.data
-            )
-        )
-        self.assertTrue(
-            np.allclose(self._sinus_model_limit_numerical.data, _sinus_model_limit_rectangle.data)
-        )
+        self.assertTrue(np.allclose(self._linear_model_numerical.data, _linear_model_rectangle.data))
+        self.assertTrue(np.allclose(self._quadratic_model_limit_numerical.data, _quadratic_model_limit_rectangle.data))
+        self.assertTrue(np.allclose(self._sinus_model_limit_numerical.data, _sinus_model_limit_rectangle.data))
 
     def test_trapezoid(self):
         (
@@ -357,17 +327,9 @@ class TestQuadrature(unittest.TestCase):
             _quadratic_model_limit_trapezoid,
             _sinus_model_limit_rectangle,
         ) = TestQuadrature._get_models("trapezoid")
-        self.assertTrue(
-            np.allclose(self._linear_model_numerical.data, _linear_model_trapezoid.data)
-        )
-        self.assertTrue(
-            np.allclose(
-                self._quadratic_model_limit_numerical.data, _quadratic_model_limit_trapezoid.data
-            )
-        )
-        self.assertTrue(
-            np.allclose(self._sinus_model_limit_numerical.data, _sinus_model_limit_rectangle.data)
-        )
+        self.assertTrue(np.allclose(self._linear_model_numerical.data, _linear_model_trapezoid.data))
+        self.assertTrue(np.allclose(self._quadratic_model_limit_numerical.data, _quadratic_model_limit_trapezoid.data))
+        self.assertTrue(np.allclose(self._sinus_model_limit_numerical.data, _sinus_model_limit_rectangle.data))
 
     def test_simpson(self):
         (
@@ -377,14 +339,6 @@ class TestQuadrature(unittest.TestCase):
             _sinus_model_limit_simpson,
         ) = TestQuadrature._get_models("simpson")
         self.assertTrue(np.allclose(self._linear_model_numerical.data, _linear_model_simpson.data))
-        self.assertTrue(
-            np.allclose(self._quadratic_model_numerical.data, _quadratic_model_simpson.data)
-        )
-        self.assertTrue(
-            np.allclose(
-                self._quadratic_model_limit_numerical.data, _quadratic_model_limit_simpson.data
-            )
-        )
-        self.assertTrue(
-            np.allclose(self._sinus_model_limit_numerical.data, _sinus_model_limit_simpson.data)
-        )
+        self.assertTrue(np.allclose(self._quadratic_model_numerical.data, _quadratic_model_simpson.data))
+        self.assertTrue(np.allclose(self._quadratic_model_limit_numerical.data, _quadratic_model_limit_simpson.data))
+        self.assertTrue(np.allclose(self._sinus_model_limit_numerical.data, _sinus_model_limit_simpson.data))

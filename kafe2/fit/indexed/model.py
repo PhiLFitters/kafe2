@@ -18,9 +18,7 @@ class IndexedModelFunction(ModelFunctionBase):
         :param model_function: function handle
         """
         # Indexed Fit Functions don't have independent arguments. They solely consist of parameters to be fitted.
-        super(IndexedModelFunction, self).__init__(
-            model_function=model_function, independent_argcount=0
-        )
+        super(IndexedModelFunction, self).__init__(model_function=model_function, independent_argcount=0)
 
 
 class IndexedParametricModel(ParametricModelBaseMixin, IndexedContainer):
@@ -41,9 +39,7 @@ class IndexedParametricModel(ParametricModelBaseMixin, IndexedContainer):
                 _data[:] = model_func(*model_parameters)
             except ValueError as _e:
                 raise ValueError(
-                    "Indexed Data and Function must have the same shape! Got {} and {}".format(
-                        len(_data), len(model_func(*model_parameters))
-                    )
+                    "Indexed Data and Function must have the same shape! Got {} and {}".format(len(_data), len(model_func(*model_parameters)))
                 ) from _e
         else:
             _data = model_func(*model_parameters)
@@ -102,9 +98,7 @@ class IndexedParametricModel(ParametricModelBaseMixin, IndexedContainer):
         """
         _pars = model_parameters if model_parameters is not None else self._model_parameters
         _pars = np.asarray(_pars)
-        _par_dxs = (
-            par_dx if par_dx is not None else 1e-2 * (np.abs(_pars) + 1.0 / (1.0 + np.abs(_pars)))
-        )
+        _par_dxs = par_dx if par_dx is not None else 1e-2 * (np.abs(_pars) + 1.0 / (1.0 + np.abs(_pars)))
 
         _ret = []
         for _par_idx, (_par_val, _par_dx) in enumerate(zip(_pars, _par_dxs)):

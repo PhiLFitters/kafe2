@@ -11,9 +11,7 @@ class CustomFit(FitBase):
 
     def __init__(self, cost_function, minimizer=None, minimizer_kwargs=None):
         if not isinstance(cost_function, CostFunction):
-            cost_function = CostFunction(
-                cost_function, add_constraint_cost=True, add_determinant_cost=False
-            )
+            cost_function = CostFunction(cost_function, add_constraint_cost=True, add_determinant_cost=False)
             cost_function._needs_errors = False
         super().__init__(
             data=None,
@@ -26,13 +24,9 @@ class CustomFit(FitBase):
         _dummy_model_function = ModelFunctionBase(cost_function.func, independent_argcount=0)
         _parameter_nodes = []
         for _par_name, _par_value in six.iteritems(_dummy_model_function.defaults_dict):
-            _parameter_nodes.append(
-                self._nexus.add(Parameter(_par_value, name=_par_name), existing_behavior="replace")
-            )
+            _parameter_nodes.append(self._nexus.add(Parameter(_par_value, name=_par_name), existing_behavior="replace"))
             self._fit_param_names.append(_par_name)
-        self._nexus.add(
-            Array(_parameter_nodes, name="parameter_values"), existing_behavior="replace"
-        )
+        self._nexus.add(Array(_parameter_nodes, name="parameter_values"), existing_behavior="replace")
         self._parameter_formatters = _dummy_model_function.formatter.arg_formatters
         self._initialize_fitter()
         """

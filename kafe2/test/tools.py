@@ -24,11 +24,7 @@ def calculate_expected_fit_parameters_xy(
     def chi2_dynamic_error(parameter_values):
         _model = model_function(x_data, *parameter_values)
         _residuals = y_data - _model
-        _x_error = (
-            x_error * model_function_derivative(x_data, *parameter_values)
-            if x_error is not None
-            else 0
-        )
+        _x_error = x_error * model_function_derivative(x_data, *parameter_values) if x_error is not None else 0
         _x_error = 0
         _y_error = y_error if not relative_model_y_error else y_error * _model
         _xy_error_squared = _x_error**2 + _y_error**2

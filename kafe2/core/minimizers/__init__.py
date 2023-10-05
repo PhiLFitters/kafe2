@@ -37,10 +37,7 @@ try:
         }
     )
 except _catch_error_class:
-    warnings.warn(
-        "iminuit is not installed. While not strictly needed its use is "
-        "heavily recommended for better performance and convergence."
-    )
+    warnings.warn("iminuit is not installed. While not strictly needed its use is " "heavily recommended for better performance and convergence.")
 except SyntaxError:  # Newer versions of iminuit do not support Python 2.
     pass
 
@@ -92,8 +89,7 @@ def get_minimizer(minimizer_spec=None):
                 return _minimizer
 
         raise ValueError(
-            "Could not find any minimizer in default list: {}! "
-            "Available: {}".format(_minimizer_specs, list(AVAILABLE_MINIMIZERS.keys()))
+            "Could not find any minimizer in default list: {}! " "Available: {}".format(_minimizer_specs, list(AVAILABLE_MINIMIZERS.keys()))
         )
     _minimizer_spec = minimizer_spec.lower()
     _minimizer_spec = _MINIMIZER_NAME_ALIASES.get(_minimizer_spec, _minimizer_spec)
@@ -101,7 +97,4 @@ def get_minimizer(minimizer_spec=None):
     if _minimizer is not None:
         return _minimizer
 
-    raise ValueError(
-        "Unknown minimizer '{}'! "
-        "Available: {}".format(minimizer_spec, list(AVAILABLE_MINIMIZERS.keys()))
-    )
+    raise ValueError("Unknown minimizer '{}'! " "Available: {}".format(minimizer_spec, list(AVAILABLE_MINIMIZERS.keys())))

@@ -96,15 +96,8 @@ class XYPlotAdapter(PlotAdapterBase):
             try:
                 return np.geomspace(_xmin, _xmax, self.n_plot_points)
             except ValueError as _e:
-                raise ValueError(
-                    "Support point calculation failed. "
-                    "The plot range can't include 0 when using log scale."
-                ) from _e
-        raise ValueError(
-            "x_range has to be one of {}. Found {} instead.".format(
-                self.AVAILABLE_X_SCALES, self.x_scale
-            )
-        )
+                raise ValueError("Support point calculation failed. " "The plot range can't include 0 when using log scale.") from _e
+        raise ValueError("x_range has to be one of {}. Found {} instead.".format(self.AVAILABLE_X_SCALES, self.x_scale))
 
     @property
     def model_line_y(self):
@@ -138,9 +131,7 @@ class XYPlotAdapter(PlotAdapterBase):
 
         _yerr = self._get_total_error(error_contributions)
 
-        return target_axes.errorbar(
-            self.data_x, self.data_y, xerr=self.data_xerr, yerr=_yerr, **kwargs
-        )
+        return target_axes.errorbar(self.data_x, self.data_y, xerr=self.data_xerr, yerr=_yerr, **kwargs)
 
     def plot_model(self, target_axes, error_contributions=("model",), **kwargs):
         """Plot the model data to a specified :py:obj:`matplotlib.axes.Axes` object.
@@ -155,9 +146,7 @@ class XYPlotAdapter(PlotAdapterBase):
 
         _yerr = self._get_total_error(error_contributions)
 
-        return target_axes.errorbar(
-            self.model_x, self.model_y, xerr=self.data_xerr, yerr=_yerr, **kwargs
-        )
+        return target_axes.errorbar(self.model_x, self.model_y, xerr=self.data_xerr, yerr=_yerr, **kwargs)
 
     def plot_model_line(self, target_axes, **kwargs):
         """Plot the model function to a specified :py:obj:`matplotlib.axes.Axes` object.
@@ -190,14 +179,10 @@ class XYPlotAdapter(PlotAdapterBase):
         :param dict kwargs: Keyword arguments accepted by :py:obj:`matplotlib.pyplot.fill_between`.
         :return: plot handle(s)
         """
-        if self._fit.did_fit and (
-            self._fit.has_errors or not self._fit._cost_function.needs_errors
-        ):
+        if self._fit.did_fit and (self._fit.has_errors or not self._fit._cost_function.needs_errors):
             _band_y = self.y_error_band
             _y = self.model_line_y
-            return target_axes.fill_between(
-                self.model_line_x, 1 - _band_y / _y, 1 + _band_y / _y, **kwargs
-            )
+            return target_axes.fill_between(self.model_line_x, 1 - _band_y / _y, 1 + _band_y / _y, **kwargs)
         return None  # don't plot error band if fitter input data has no errors...
 
     def plot_residual_error_band(self, target_axes, **kwargs):
@@ -208,9 +193,7 @@ class XYPlotAdapter(PlotAdapterBase):
         :param dict kwargs: Keyword arguments accepted by :py:obj:`matplotlib.pyplot.fill_between`.
         :return: plot handle(s)
         """
-        if self._fit.did_fit and (
-            self._fit.has_errors or not self._fit._cost_function.needs_errors
-        ):
+        if self._fit.did_fit and (self._fit.has_errors or not self._fit._cost_function.needs_errors):
             _band_y = self.y_error_band
             return target_axes.fill_between(self.model_line_x, -_band_y, _band_y, **kwargs)
         return None  # don't plot error band if fitter input data has no errors...
@@ -219,11 +202,7 @@ class XYPlotAdapter(PlotAdapterBase):
         # update ratio kwargs as well, when corresponding plot_types are updated
         # can be overwritten by the user by explicitly setting the ratio kwargs last
         if plot_type == "data":
-            super(XYPlotAdapter, self).update_plot_kwargs(
-                plot_type="ratio", plot_kwargs=plot_kwargs
-            )
+            super(XYPlotAdapter, self).update_plot_kwargs(plot_type="ratio", plot_kwargs=plot_kwargs)
         elif plot_type == "model_error_band":
-            super(XYPlotAdapter, self).update_plot_kwargs(
-                plot_type="ratio_error_band", plot_kwargs=plot_kwargs
-            )
+            super(XYPlotAdapter, self).update_plot_kwargs(plot_type="ratio_error_band", plot_kwargs=plot_kwargs)
         super(XYPlotAdapter, self).update_plot_kwargs(plot_type=plot_type, plot_kwargs=plot_kwargs)

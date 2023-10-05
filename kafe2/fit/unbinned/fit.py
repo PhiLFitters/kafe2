@@ -64,10 +64,7 @@ class UnbinnedFit(FitBase):
         if isinstance(new_data, self.CONTAINER_TYPE):
             self._data_container = deepcopy(new_data)
         elif isinstance(new_data, DataContainerBase):
-            raise TypeError(
-                "Incompatible container type '%s' (expected '%s')"
-                % (type(new_data), self.CONTAINER_TYPE)
-            )
+            raise TypeError("Incompatible container type '%s' (expected '%s')" % (type(new_data), self.CONTAINER_TYPE))
         else:
             self._data_container = UnbinnedContainer(new_data, dtype=float)
         self._data_container._on_error_change_callback = self._on_error_change
@@ -114,6 +111,4 @@ class UnbinnedFit(FitBase):
         return self._param_model.eval_model_function(support=x, model_parameters=model_parameters)
 
     def report(self, output_stream=sys.stdout, asymmetric_parameter_errors=False):
-        super(UnbinnedFit, self).report(
-            output_stream=output_stream, asymmetric_parameter_errors=asymmetric_parameter_errors
-        )
+        super(UnbinnedFit, self).report(output_stream=output_stream, asymmetric_parameter_errors=asymmetric_parameter_errors)

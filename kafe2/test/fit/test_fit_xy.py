@@ -30,14 +30,7 @@ def line_xy_model(x, a=3.0, b=0.0):
 
 
 def analytic_solution(des_mat, cov_mat_inv, y_data):
-    return np.squeeze(
-        np.asarray(
-            np.linalg.inv(des_mat.T.dot(cov_mat_inv).dot(des_mat))
-            .dot(des_mat.T)
-            .dot(cov_mat_inv)
-            .dot(y_data)
-        )
-    )
+    return np.squeeze(np.asarray(np.linalg.inv(des_mat.T.dot(cov_mat_inv).dot(des_mat)).dot(des_mat.T).dot(cov_mat_inv).dot(y_data)))
 
 
 class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
@@ -73,9 +66,7 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         self._ref_y_data = self._ref_initial_y_model + self._y_jitter
         self._ref_xy_data = np.array([self._ref_x, self._ref_y_data])
 
-        self._linear_design_matrix = np.array(
-            [self._ref_x**2, self._ref_x, np.ones_like(self._ref_x)]
-        ).T
+        self._linear_design_matrix = np.array([self._ref_x**2, self._ref_x, np.ones_like(self._ref_x)]).T
 
         # pre-fit cost value
         self._ref_initial_cost = simple_chi2(
@@ -95,12 +86,8 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
             self._ref_y_data,
         )
 
-        self._nominal_fit_result_y_model = simple_xy_model(
-            self._ref_x, *self._nominal_fit_result_pars
-        )
-        self._nominal_fit_result_xy_model = np.array(
-            [self._ref_x, self._nominal_fit_result_y_model]
-        )
+        self._nominal_fit_result_y_model = simple_xy_model(self._ref_x, *self._nominal_fit_result_pars)
+        self._nominal_fit_result_xy_model = np.array([self._ref_x, self._nominal_fit_result_y_model])
         self._nominal_fit_result_cost = simple_chi2(
             y_data=self._ref_y_data,
             y_model=self._nominal_fit_result_y_model,
@@ -157,15 +144,11 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
             total_cor_mat=self._ref_matrix_eye,
         )
 
-    def _get_fit(
-        self, model_function=None, cost_function=None, errors=None, dynamic_error_algorithm=None
-    ):
+    def _get_fit(self, model_function=None, cost_function=None, errors=None, dynamic_error_algorithm=None):
         """convenience"""
         model_function = model_function or simple_xy_model
         # TODO: fix default
-        cost_function = cost_function or XYCostFunction_Chi2(
-            axes_to_use="xy", errors_to_use="covariance"
-        )
+        cost_function = cost_function or XYCostFunction_Chi2(axes_to_use="xy", errors_to_use="covariance")
         errors = errors or [dict(axis="y", err_val=1.0)]
         dynamic_error_algorithm = dynamic_error_algorithm or "nonlinear"
 
@@ -186,11 +169,7 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
             "default": self._get_fit(),
             "explicit": self._get_fit(cost_function=simple_chi2),
             "explicit_model": self._get_fit(cost_function=simple_chi2_explicit_model_name),
-            "relative_errors_data": self._get_fit(
-                errors=[
-                    dict(axis="y", err_val=1.0 / self._ref_y_data, relative=True, reference="data")
-                ]
-            ),
+            "relative_errors_data": self._get_fit(errors=[dict(axis="y", err_val=1.0 / self._ref_y_data, relative=True, reference="data")]),
         }
 
     def test_initial_state(self):
@@ -268,27 +247,19 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
         _fit.add_parameter_constraint("c", 1.0, 1.0)
         _constraint_cost = (self._ref_initial_pars[2] - 1.0) ** 2
 
-        self._assert_fit_properties(
-            _fit, dict(cost_function_value=np.float64(self._ref_initial_cost + _constraint_cost))
-        )
+        self._assert_fit_properties(_fit, dict(cost_function_value=np.float64(self._ref_initial_cost + _constraint_cost)))
 
     def test_add_matrix_parameter_constraint(self):
         _fit = self._get_fit()
 
         _fit.add_matrix_parameter_constraint(("a", "c"), np.ones(2), np.eye(2))
-        _constraint_cost = (self._ref_initial_pars[0] - 1.0) ** 2 + (
-            self._ref_initial_pars[2] - 1.0
-        ) ** 2
+        _constraint_cost = (self._ref_initial_pars[0] - 1.0) ** 2 + (self._ref_initial_pars[2] - 1.0) ** 2
 
-        self._assert_fit_properties(
-            _fit, dict(cost_function_value=np.float64(self._ref_initial_cost + _constraint_cost))
-        )
+        self._assert_fit_properties(_fit, dict(cost_function_value=np.float64(self._ref_initial_cost + _constraint_cost)))
 
     def test_eval_model_function(self):
         _fit = self._get_fit()
-        self.assertTrue(
-            np.allclose(_fit.eval_model_function(self._ref_x), self._ref_initial_y_model)
-        )
+        self.assertTrue(np.allclose(_fit.eval_model_function(self._ref_x), self._ref_initial_y_model))
 
     def test_update_data(self):
         _fit = self._get_fit()
@@ -572,31 +543,21 @@ class TestXYFitWithSimpleYErrors(AbstractTestFit, unittest.TestCase):
         for _mc in (None, dict()):
             _errs = _fit.get_matching_errors(matching_criteria=_mc)
             self.assertEqual(len(_errs), 2)
-            self.assertIs(
-                _fit.data_container._error_dicts["MyYDataError"]["err"], _errs["MyYDataError"]
-            )
-            self.assertIs(
-                _fit._param_model._error_dicts["MyYModelError"]["err"], _errs["MyYModelError"]
-            )
+            self.assertIs(_fit.data_container._error_dicts["MyYDataError"]["err"], _errs["MyYDataError"])
+            self.assertIs(_fit._param_model._error_dicts["MyYModelError"]["err"], _errs["MyYModelError"])
 
     def test_get_matching_error_name(self):
         _fit = self._get_test_fits()["named_errors"]
         _errs = _fit.get_matching_errors(matching_criteria=dict(name="MyYDataError"))
         self.assertEqual(len(_errs), 1)
-        self.assertIs(
-            _fit.data_container._error_dicts["MyYDataError"]["err"], _errs["MyYDataError"]
-        )
+        self.assertIs(_fit.data_container._error_dicts["MyYDataError"]["err"], _errs["MyYDataError"])
 
     def test_get_matching_error_type_simple(self):
         _fit = self._get_test_fits()["named_errors"]
         _errs = _fit.get_matching_errors(matching_criteria=dict(type="simple"))
         self.assertEqual(len(_errs), 2)
-        self.assertIs(
-            _fit.data_container._error_dicts["MyYDataError"]["err"], _errs["MyYDataError"]
-        )
-        self.assertIs(
-            _fit._param_model._error_dicts["MyYModelError"]["err"], _errs["MyYModelError"]
-        )
+        self.assertIs(_fit.data_container._error_dicts["MyYDataError"]["err"], _errs["MyYDataError"])
+        self.assertIs(_fit._param_model._error_dicts["MyYModelError"]["err"], _errs["MyYModelError"])
 
     def test_get_matching_error_type_matrix(self):
         _fit = self._get_test_fits()["named_errors"]
@@ -612,37 +573,25 @@ class TestXYFitWithSimpleYErrors(AbstractTestFit, unittest.TestCase):
         _fit = self._get_test_fits()["named_errors"]
         _errs = _fit.get_matching_errors(matching_criteria=dict(correlated=False))
         self.assertEqual(len(_errs), 2)
-        self.assertIs(
-            _fit.data_container._error_dicts["MyYDataError"]["err"], _errs["MyYDataError"]
-        )
-        self.assertIs(
-            _fit._param_model._error_dicts["MyYModelError"]["err"], _errs["MyYModelError"]
-        )
+        self.assertIs(_fit.data_container._error_dicts["MyYDataError"]["err"], _errs["MyYDataError"])
+        self.assertIs(_fit._param_model._error_dicts["MyYModelError"]["err"], _errs["MyYModelError"])
 
     def test_get_matching_error_reference_data(self):
         _fit = self._get_test_fits()["named_errors"]
         _errs = _fit.get_matching_errors(matching_criteria=dict(reference="data"))
         self.assertEqual(len(_errs), 1)
-        self.assertIs(
-            _fit.data_container._error_dicts["MyYDataError"]["err"], _errs["MyYDataError"]
-        )
+        self.assertIs(_fit.data_container._error_dicts["MyYDataError"]["err"], _errs["MyYDataError"])
 
     def test_get_matching_error_reference_model(self):
         _fit = self._get_test_fits()["named_errors"]
         _errs = _fit.get_matching_errors(matching_criteria=dict(reference="model"))
         self.assertEqual(len(_errs), 1)
-        self.assertIs(
-            _fit._param_model._error_dicts["MyYModelError"]["err"], _errs["MyYModelError"]
-        )
+        self.assertIs(_fit._param_model._error_dicts["MyYModelError"]["err"], _errs["MyYModelError"])
 
     def test_fit_with_no_errors(self):
-        _fit_with_unity_errors = XYFit(
-            xy_data=self._ref_xy_data, model_function=simple_xy_model, minimizer=self.MINIMIZER
-        )
+        _fit_with_unity_errors = XYFit(xy_data=self._ref_xy_data, model_function=simple_xy_model, minimizer=self.MINIMIZER)
         _fit_with_unity_errors.add_error("y", 1.0)
-        _fit_with_no_errors_1 = XYFit(
-            xy_data=self._ref_xy_data, model_function=simple_xy_model, minimizer=self.MINIMIZER
-        )
+        _fit_with_no_errors_1 = XYFit(xy_data=self._ref_xy_data, model_function=simple_xy_model, minimizer=self.MINIMIZER)
         _fit_with_no_errors_2 = XYFit(
             xy_data=XYContainer(self._ref_xy_data[0], self._ref_xy_data[1]),
             model_function=simple_xy_model,
@@ -686,13 +635,7 @@ class TestXYFitWithMatrixErrors(AbstractTestFit, unittest.TestCase):
     def _get_test_fits(self):
         return {
             "default": self._get_fit(),
-            "cor_matrix_and_error_vector": self._get_fit(
-                errors=[
-                    dict(
-                        axis="y", err_matrix=np.eye(self._n_points), matrix_type="cor", err_val=1.0
-                    )
-                ]
-            ),
+            "cor_matrix_and_error_vector": self._get_fit(errors=[dict(axis="y", err_matrix=np.eye(self._n_points), matrix_type="cor", err_val=1.0)]),
             "two_matrix_errors": self._get_fit(
                 errors=[
                     dict(axis="y", err_matrix=np.eye(self._n_points) / 2, matrix_type="cov"),
@@ -800,31 +743,21 @@ class TestXYFitWithMatrixErrors(AbstractTestFit, unittest.TestCase):
         _fit = self._get_test_fits()["named_errors"]
         _errs = _fit.get_matching_errors(matching_criteria=dict(name="MySimpleDataError"))
         self.assertEqual(len(_errs), 1)
-        self.assertIs(
-            _fit.data_container._error_dicts["MySimpleDataError"]["err"], _errs["MySimpleDataError"]
-        )
+        self.assertIs(_fit.data_container._error_dicts["MySimpleDataError"]["err"], _errs["MySimpleDataError"])
 
     def test_get_matching_error_type_simple(self):
         _fit = self._get_test_fits()["named_errors"]
         _errs = _fit.get_matching_errors(matching_criteria=dict(type="simple"))
         self.assertEqual(len(_errs), 2)
-        self.assertIs(
-            _fit.data_container._error_dicts["MySimpleDataError"]["err"], _errs["MySimpleDataError"]
-        )
-        self.assertIs(
-            _fit._param_model._error_dicts["MySimpleModelError"]["err"], _errs["MySimpleModelError"]
-        )
+        self.assertIs(_fit.data_container._error_dicts["MySimpleDataError"]["err"], _errs["MySimpleDataError"])
+        self.assertIs(_fit._param_model._error_dicts["MySimpleModelError"]["err"], _errs["MySimpleModelError"])
 
     def test_get_matching_error_type_matrix(self):
         _fit = self._get_test_fits()["named_errors"]
         _errs = _fit.get_matching_errors(matching_criteria=dict(type="matrix"))
         self.assertEqual(len(_errs), 2)
-        self.assertIs(
-            _fit.data_container._error_dicts["MyMatrixDataError"]["err"], _errs["MyMatrixDataError"]
-        )
-        self.assertIs(
-            _fit._param_model._error_dicts["MyMatrixModelError"]["err"], _errs["MyMatrixModelError"]
-        )
+        self.assertIs(_fit.data_container._error_dicts["MyMatrixDataError"]["err"], _errs["MyMatrixDataError"])
+        self.assertIs(_fit._param_model._error_dicts["MyMatrixModelError"]["err"], _errs["MyMatrixModelError"])
 
     def test_get_matching_error_uncorrelated(self):
         _fit = self._get_test_fits()["named_errors"]
@@ -836,34 +769,22 @@ class TestXYFitWithMatrixErrors(AbstractTestFit, unittest.TestCase):
         _errs = _fit.get_matching_errors(matching_criteria=dict(correlated=False))
         # NOTE: passing 'correlated' only matches 'matrix' errors, irrespective of 'True'/'False' value passed
         self.assertEqual(len(_errs), 2)
-        self.assertIs(
-            _fit.data_container._error_dicts["MySimpleDataError"]["err"], _errs["MySimpleDataError"]
-        )
-        self.assertIs(
-            _fit._param_model._error_dicts["MySimpleModelError"]["err"], _errs["MySimpleModelError"]
-        )
+        self.assertIs(_fit.data_container._error_dicts["MySimpleDataError"]["err"], _errs["MySimpleDataError"])
+        self.assertIs(_fit._param_model._error_dicts["MySimpleModelError"]["err"], _errs["MySimpleModelError"])
 
     def test_get_matching_error_reference_data(self):
         _fit = self._get_test_fits()["named_errors"]
         _errs = _fit.get_matching_errors(matching_criteria=dict(reference="data"))
         self.assertEqual(len(_errs), 2)
-        self.assertIs(
-            _fit.data_container._error_dicts["MySimpleDataError"]["err"], _errs["MySimpleDataError"]
-        )
-        self.assertIs(
-            _fit.data_container._error_dicts["MyMatrixDataError"]["err"], _errs["MyMatrixDataError"]
-        )
+        self.assertIs(_fit.data_container._error_dicts["MySimpleDataError"]["err"], _errs["MySimpleDataError"])
+        self.assertIs(_fit.data_container._error_dicts["MyMatrixDataError"]["err"], _errs["MyMatrixDataError"])
 
     def test_get_matching_error_reference_model(self):
         _fit = self._get_test_fits()["named_errors"]
         _errs = _fit.get_matching_errors(matching_criteria=dict(reference="model"))
         self.assertEqual(len(_errs), 2)
-        self.assertIs(
-            _fit._param_model._error_dicts["MySimpleModelError"]["err"], _errs["MySimpleModelError"]
-        )
-        self.assertIs(
-            _fit._param_model._error_dicts["MyMatrixModelError"]["err"], _errs["MyMatrixModelError"]
-        )
+        self.assertIs(_fit._param_model._error_dicts["MySimpleModelError"]["err"], _errs["MySimpleModelError"])
+        self.assertIs(_fit._param_model._error_dicts["MyMatrixModelError"]["err"], _errs["MyMatrixModelError"])
 
 
 class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
@@ -877,9 +798,7 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
         self._n_points = 16
         self._x_error = 0.1
         self._y_error = 0.1
-        self._default_cost_function = XYCostFunction_Chi2(
-            axes_to_use="xy", errors_to_use="covariance"
-        )
+        self._default_cost_function = XYCostFunction_Chi2(axes_to_use="xy", errors_to_use="covariance")
 
         # "jitter" for data smearing
         np.random.seed(0)
@@ -904,13 +823,9 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
             return a
 
         _fp = line_xy_model_derivative(self._ref_x_data, *self._ref_initial_pars)
-        self._ref_projected_xy_matrix = (
-            self._ref_y_error_matrix + self._ref_x_error_matrix * np.outer(_fp, _fp)
-        )
+        self._ref_projected_xy_matrix = self._ref_y_error_matrix + self._ref_x_error_matrix * np.outer(_fp, _fp)
         self._ref_projected_xy_errors = np.diag(np.sqrt(self._ref_projected_xy_matrix))
-        self._ref_projected_xy_log_determinant = np.log(
-            np.linalg.det(self._ref_projected_xy_matrix)
-        )
+        self._ref_projected_xy_log_determinant = np.log(np.linalg.det(self._ref_projected_xy_matrix))
 
         # fit data
         self._ref_y_data = line_xy_model(self._ref_x_data, *self._ref_initial_pars) + self._y_jitter
@@ -929,22 +844,12 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
         # reference fit result values
         self._nominal_fit_result_pars = np.array([1.00441642, 0.48645824])
 
-        self._nominal_fit_result_y_model = line_xy_model(
-            self._ref_x_data, *self._nominal_fit_result_pars
-        )
-        self._nominal_fit_result_xy_model = np.array(
-            [self._ref_x_data, self._nominal_fit_result_y_model]
-        )
+        self._nominal_fit_result_y_model = line_xy_model(self._ref_x_data, *self._nominal_fit_result_pars)
+        self._nominal_fit_result_xy_model = np.array([self._ref_x_data, self._nominal_fit_result_y_model])
 
-        self._nominal_fit_result_projected_xy_matrix = (
-            self._ref_y_error_matrix + self._nominal_fit_result_pars[0] * self._ref_x_error_matrix
-        )
-        self._nominal_fit_result_projected_xy_errors = np.diag(
-            np.sqrt(self._nominal_fit_result_projected_xy_matrix)
-        )
-        self._nominal_fit_result_projected_xy_log_determinant = np.log(
-            np.linalg.det(self._nominal_fit_result_projected_xy_matrix)
-        )
+        self._nominal_fit_result_projected_xy_matrix = self._ref_y_error_matrix + self._nominal_fit_result_pars[0] * self._ref_x_error_matrix
+        self._nominal_fit_result_projected_xy_errors = np.diag(np.sqrt(self._nominal_fit_result_projected_xy_matrix))
+        self._nominal_fit_result_projected_xy_log_determinant = np.log(np.linalg.det(self._nominal_fit_result_projected_xy_matrix))
 
         self._nominal_fit_result_cost = self._default_cost_function(
             self._ref_y_data,
@@ -1064,44 +969,24 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
             dict(axis="y", err_val=1.0, relative=False, reference="data"),
             dict(axis="y", err_val=0.1, relative=True, reference="model"),
         ]
-        _fit_rel_data_nonlinear = self._get_fit(
-            errors=_errors_rel_data, constraints=_constraints, dynamic_error_algorithm="nonlinear"
-        )
-        _fit_rel_data_iterative = self._get_fit(
-            errors=_errors_rel_data, constraints=_constraints, dynamic_error_algorithm="iterative"
-        )
-        _fit_rel_model_nonlinear = self._get_fit(
-            errors=_errors_rel_model, constraints=_constraints, dynamic_error_algorithm="nonlinear"
-        )
-        _fit_rel_model_iterative = self._get_fit(
-            errors=_errors_rel_model, constraints=_constraints, dynamic_error_algorithm="iterative"
-        )
+        _fit_rel_data_nonlinear = self._get_fit(errors=_errors_rel_data, constraints=_constraints, dynamic_error_algorithm="nonlinear")
+        _fit_rel_data_iterative = self._get_fit(errors=_errors_rel_data, constraints=_constraints, dynamic_error_algorithm="iterative")
+        _fit_rel_model_nonlinear = self._get_fit(errors=_errors_rel_model, constraints=_constraints, dynamic_error_algorithm="nonlinear")
+        _fit_rel_model_iterative = self._get_fit(errors=_errors_rel_model, constraints=_constraints, dynamic_error_algorithm="iterative")
         _fit_rel_data_nonlinear.do_fit()
         _fit_rel_data_iterative.do_fit()
         _fit_rel_model_nonlinear.do_fit()
         _fit_rel_model_iterative.do_fit()
 
         print("============ rel data nonlinear vs rel data iterative ==========\n")
-        self._assert_fit_results_equal(
-            _fit_rel_data_nonlinear, _fit_rel_data_iterative, rtol=1.25e-2, atol=5e-5
-        )
+        self._assert_fit_results_equal(_fit_rel_data_nonlinear, _fit_rel_data_iterative, rtol=1.25e-2, atol=5e-5)
         print("============ rel data nonlinear vs rel model nonlinear ==========\n")
-        self._assert_fit_results_equal(
-            _fit_rel_data_nonlinear, _fit_rel_model_nonlinear, rtol=1.25e-2, atol=5e-5
-        )
+        self._assert_fit_results_equal(_fit_rel_data_nonlinear, _fit_rel_model_nonlinear, rtol=1.25e-2, atol=5e-5)
         print("============ rel data nonlinear vs rel model iterative ==========\n")
-        self._assert_fit_results_equal(
-            _fit_rel_data_nonlinear, _fit_rel_model_iterative, rtol=1.25e-2, atol=5e-5
-        )
+        self._assert_fit_results_equal(_fit_rel_data_nonlinear, _fit_rel_model_iterative, rtol=1.25e-2, atol=5e-5)
         print("============ rel model nonlinear vs rel model iterative ==========\n")
-        self._assert_fit_results_equal(
-            _fit_rel_model_nonlinear, _fit_rel_model_iterative, rtol=1.25e-2, atol=5e-5
-        )
+        self._assert_fit_results_equal(_fit_rel_model_nonlinear, _fit_rel_model_iterative, rtol=1.25e-2, atol=5e-5)
         print("============ rel data iterative vs rel model iterative ==========\n")
-        self._assert_fit_results_equal(
-            _fit_rel_data_iterative, _fit_rel_model_iterative, rtol=1.25e-2, atol=5e-5
-        )
+        self._assert_fit_results_equal(_fit_rel_data_iterative, _fit_rel_model_iterative, rtol=1.25e-2, atol=5e-5)
         print("============ rel data iterative vs rel model nonlinear ==========\n")
-        self._assert_fit_results_equal(
-            _fit_rel_data_iterative, _fit_rel_model_nonlinear, rtol=1.25e-2, atol=5e-5
-        )
+        self._assert_fit_results_equal(_fit_rel_data_iterative, _fit_rel_model_nonlinear, rtol=1.25e-2, atol=5e-5)

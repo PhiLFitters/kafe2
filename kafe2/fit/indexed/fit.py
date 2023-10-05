@@ -91,9 +91,7 @@ class IndexedFit(FitBase):
             _data_table_dict["Data Error"] = self.data_error
             _data_table_dict["Data Correlation Matrix"] = self.data_cor_mat
 
-        print_dict_as_table(
-            _data_table_dict, output_stream=output_stream, indent_level=indentation_level + 1
-        )
+        print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=indentation_level + 1)
         output_stream.write("\n")
 
     def _report_model(self, output_stream, indent, indentation_level):
@@ -106,16 +104,12 @@ class IndexedFit(FitBase):
             _model_table_dict["Model Error"] = self.model_error
             _model_table_dict["Model Correlation Matrix"] = self.model_cor_mat
 
-        print_dict_as_table(
-            _model_table_dict, output_stream=output_stream, indent_level=indentation_level + 1
-        )
+        print_dict_as_table(_model_table_dict, output_stream=output_stream, indent_level=indentation_level + 1)
         output_stream.write("\n")
 
         if self._param_model.get_matching_errors({"relative": True}):
             output_stream.write(indent * (indentation_level + 1))
-            output_stream.write(
-                "Model covariance matrix was calculated dynamically relative to y model values.\n"
-            )
+            output_stream.write("Model covariance matrix was calculated dynamically relative to y model values.\n")
             output_stream.write("\n")
 
     # -- public properties
@@ -124,10 +118,7 @@ class IndexedFit(FitBase):
         if isinstance(new_data, self.CONTAINER_TYPE):
             self._data_container = deepcopy(new_data)
         elif isinstance(new_data, DataContainerBase):
-            raise TypeError(
-                "Incompatible container type '%s' (expected '%s')"
-                % (type(new_data), self.CONTAINER_TYPE)
-            )
+            raise TypeError("Incompatible container type '%s' (expected '%s')" % (type(new_data), self.CONTAINER_TYPE))
         else:
             self._data_container = IndexedContainer(new_data, dtype=float)
         self._data_container._on_error_change_callback = self._on_error_change
@@ -135,9 +126,7 @@ class IndexedFit(FitBase):
         self._nexus.get("data").mark_for_update()
 
     def _set_new_parametric_model(self):
-        self._param_model = IndexedParametricModel(
-            self._model_function, self.parameter_values, shape_like=self.data
-        )
+        self._param_model = IndexedParametricModel(self._model_function, self.parameter_values, shape_like=self.data)
 
     def _get_default_x_ticks(self):
         if self.data_size <= 10:

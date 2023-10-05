@@ -25,9 +25,7 @@ class HistModelFunction(ModelFunctionBase):
         :param model_function: function handle
         """
         # TODO: default model function
-        super(HistModelFunction, self).__init__(
-            model_function=model_function, independent_argcount=1
-        )
+        super(HistModelFunction, self).__init__(model_function=model_function, independent_argcount=1)
 
 
 class HistParametricModel(ParametricModelBaseMixin, HistContainer):
@@ -76,11 +74,7 @@ class HistParametricModel(ParametricModelBaseMixin, HistContainer):
                 _antiderivative_function_handle = self._bin_evaluation
             else:
                 # raise if not string and not callable
-                raise ValueError(
-                    "Cannot use {} as bin evaluation method: not a string and not callable!".format(
-                        self._bin_evaluation
-                    )
-                )
+                raise ValueError("Cannot use {} as bin evaluation method: not a string and not callable!".format(self._bin_evaluation))
 
             # Retrieving source code will fail if the function was generated through exec.
             # For kafe2go self._bin_evaluation_string will be replaced.
@@ -124,9 +118,7 @@ class HistParametricModel(ParametricModelBaseMixin, HistContainer):
     def _bin_evaluation_simpson(self):
         _height_edges = self.eval_model_function_density(self._bin_edges)
         _height_centers = self.eval_model_function_density(self.bin_centers)
-        return (
-            self.bin_widths / 6.0 * (_height_edges[:-1] + 4.0 * _height_centers + _height_edges[1:])
-        )
+        return self.bin_widths / 6.0 * (_height_edges[:-1] + 4.0 * _height_centers + _height_edges[1:])
 
     def _bin_evaluation_numerical(self):
         # flake8: noqa: E731 (lambda expression)

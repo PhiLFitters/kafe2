@@ -11,9 +11,7 @@ class DataContainerYamlWriter(YamlWriterMixin, DataContainerDReprBase):
     DUMPER = common_error_tools.MatrixYamlDumper
 
     def __init__(self, data_container, output_io_handle):
-        super(DataContainerYamlWriter, self).__init__(
-            output_io_handle=output_io_handle, data_container=data_container
-        )
+        super(DataContainerYamlWriter, self).__init__(output_io_handle=output_io_handle, data_container=data_container)
 
     @classmethod
     def _make_representation(cls, container):
@@ -68,9 +66,7 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
     LOADER = common_error_tools.MatrixYamlLoader
 
     def __init__(self, input_io_handle):
-        super(DataContainerYamlReader, self).__init__(
-            input_io_handle=input_io_handle, data_container=None
-        )
+        super(DataContainerYamlReader, self).__init__(input_io_handle=input_io_handle, data_container=None)
 
     @classmethod
     def _get_required_keywords(cls, yaml_doc, container_class):
@@ -94,29 +90,19 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
             _n_bins = yaml_doc.pop("n_bins", None)
             _bin_range = yaml_doc.pop("bin_range", None)
             if not _bin_edges and not (_n_bins and _bin_range):
-                raise ValueError(
-                    "When reading in a histogram dataset either "
-                    "bin_edges or n_bins and bin_range has to be specified!"
-                )
+                raise ValueError("When reading in a histogram dataset either " "bin_edges or n_bins and bin_range has to be specified!")
             if _bin_edges:
                 _n_bins = len(_bin_edges) - 1
                 _bin_range = (_bin_edges[0], _bin_edges[-1])
             _raw_data = yaml_doc.pop("raw_data", None)
             _bin_heights = yaml_doc.pop("bin_heights", None)
             if _raw_data and _bin_heights:
-                raise ValueError(
-                    "When reading in a histogram dataset only one out of "
-                    "raw_data and bin_heights can be specified!"
-                )
-            _container_obj = HistContainer(
-                n_bins=_n_bins, bin_range=_bin_range, bin_edges=_bin_edges, fill_data=_raw_data
-            )
+                raise ValueError("When reading in a histogram dataset only one out of " "raw_data and bin_heights can be specified!")
+            _container_obj = HistContainer(n_bins=_n_bins, bin_range=_bin_range, bin_edges=_bin_edges, fill_data=_raw_data)
             if _bin_heights:
                 _underflow = yaml_doc.pop("underflow", 0)
                 _overflow = yaml_doc.pop("overflow", 0)
-                _container_obj.set_bins(
-                    bin_heights=_bin_heights, underflow=_underflow, overflow=_overflow
-                )
+                _container_obj.set_bins(bin_heights=_bin_heights, underflow=_underflow, overflow=_overflow)
         elif _class is IndexedContainer:
             _data = yaml_doc.pop("data")
             _container_obj = IndexedContainer(_data)
@@ -135,9 +121,7 @@ class DataContainerYamlReader(YamlReaderMixin, DataContainerDReprBase):
         _container_obj.axis_labels = (yaml_doc.pop("x_label", None), yaml_doc.pop("y_label", None))
 
         # -- process error sources
-        _container_obj, yaml_doc = common_error_tools.process_error_sources(
-            container_obj=_container_obj, yaml_doc=yaml_doc
-        )
+        _container_obj, yaml_doc = common_error_tools.process_error_sources(container_obj=_container_obj, yaml_doc=yaml_doc)
 
         return _container_obj, yaml_doc
 

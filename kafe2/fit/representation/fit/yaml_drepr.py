@@ -32,17 +32,11 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
         _preface_comment = super(FitYamlWriter, self)._get_preface_comment()
         _did_fit = self._kafe_object.did_fit
         if not _did_fit:
-            _preface_comment += (
-                "\n# WARNING: No fit has been performed as of yet. "
-                "Did you forget to run fit.do_fit()?\n"
-            )
+            _preface_comment += "\n# WARNING: No fit has been performed as of yet. " "Did you forget to run fit.do_fit()?\n"
         _preface_comment += "\n"
         if self._kafe_object.model_count == 1:
-            _preface_comment += (
-                "# Model function: %s\n"
-                % self._kafe_object._model_function.formatter.get_formatted(
-                    format_as_latex=False, with_expression=True, with_par_values=False
-                )
+            _preface_comment += "# Model function: %s\n" % self._kafe_object._model_function.formatter.get_formatted(
+                format_as_latex=False, with_expression=True, with_par_values=False
             )
         else:
             for _i in range(self._kafe_object.model_count):
@@ -67,9 +61,7 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
                 _preface_comment += "# Cost: %s\n" % _rounded_cost
             else:
                 _preface_comment += "# %s: %s\n" % (_gof_name, _gof)
-                _round_gof_per_ndf_sig = max(
-                    2, int(-np.floor(np.log(np.abs(_gof) / _ndf) / np.log(10))) + 1
-                )
+                _round_gof_per_ndf_sig = max(2, int(-np.floor(np.log(np.abs(_gof) / _ndf) / np.log(10))) + 1)
             if _ndf is not None:
                 _preface_comment += "# ndf: %s\n" % _ndf
             if _gof is not None:
@@ -79,16 +71,9 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
                 )
 
             # If asymmetric parameters errors were not calculated, check the loaded result dict
-            _asymmetric_parameter_errors = (
-                self._kafe_object._fitter.asymmetric_fit_parameter_errors_if_calculated
-            )
-            if (
-                _asymmetric_parameter_errors is None
-                and self._kafe_object._loaded_result_dict is not None
-            ):
-                _asymmetric_parameter_errors = self._kafe_object._loaded_result_dict[
-                    "asymmetric_parameter_errors"
-                ]
+            _asymmetric_parameter_errors = self._kafe_object._fitter.asymmetric_fit_parameter_errors_if_calculated
+            if _asymmetric_parameter_errors is None and self._kafe_object._loaded_result_dict is not None:
+                _asymmetric_parameter_errors = self._kafe_object._loaded_result_dict["asymmetric_parameter_errors"]
 
             _preface_comment += get_compact_representation(
                 parameter_names=self._kafe_object.parameter_names,
@@ -112,14 +97,9 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
 
         if _type != "custom":
             _yaml_doc["dataset"] = DataContainerYamlWriter._make_representation(fit.data_container)
-            _yaml_doc["parametric_model"] = ParametricModelYamlWriter._make_representation(
-                fit._param_model
-            )
+            _yaml_doc["parametric_model"] = ParametricModelYamlWriter._make_representation(fit._param_model)
         else:
-            _par_formatter_dict = {
-                _par_formatter.arg_name: _par_formatter.name
-                for _par_formatter in fit._parameter_formatters
-            }
+            _par_formatter_dict = {_par_formatter.arg_name: _par_formatter.name for _par_formatter in fit._parameter_formatters}
             if _par_formatter_dict:
                 _yaml_doc["parameter_formatters"] = _par_formatter_dict
 
@@ -127,22 +107,16 @@ class FitYamlWriter(YamlWriterMixin, FitDReprBase):
         if _cost_function_identifier is not None:
             _yaml_doc["cost_function"] = _cost_function_identifier
         else:
-            _yaml_doc["cost_function"] = _process_function_code_for_dump(
-                inspect.getsource(fit._cost_function.func)
-            )
+            _yaml_doc["cost_function"] = _process_function_code_for_dump(inspect.getsource(fit._cost_function.func))
 
         _yaml_doc["minimizer"] = fit._minimizer
         _yaml_doc["minimizer_kwargs"] = fit._minimizer_kwargs
 
         _yaml_doc["parameter_constraints"] = [
-            ConstraintYamlWriter._make_representation(_parameter_constraint)
-            for _parameter_constraint in fit.parameter_constraints
+            ConstraintYamlWriter._make_representation(_parameter_constraint) for _parameter_constraint in fit.parameter_constraints
         ]
         _yaml_doc["fixed_parameters"] = fit._fitter.fixed_parameters
-        _yaml_doc["limited_parameters"] = {
-            _par_name: list(_par_limits)
-            for _par_name, _par_limits in fit._fitter.limited_parameters.items()
-        }
+        _yaml_doc["limited_parameters"] = {_par_name: list(_par_limits) for _par_name, _par_limits in fit._fitter.limited_parameters.items()}
 
         _yaml_doc["fit_results"] = to_python_types(fit.get_result_dict())
         return _yaml_doc
@@ -217,14 +191,10 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
         _class = cls._OBJECT_TYPE_NAME_TO_CLASS.get(_fit_type, None)
 
         if _fit_type != "custom":
-            _data = DataContainerYamlReader._make_object(
-                yaml_doc.pop("dataset"), default_type=_fit_type
-            )
+            _data = DataContainerYamlReader._make_object(yaml_doc.pop("dataset"), default_type=_fit_type)
         _parametric_model_entry = yaml_doc.pop("parametric_model", None)
         if _parametric_model_entry:
-            _read_parametric_model = ParametricModelYamlReader._make_object(
-                _parametric_model_entry, default_type=_fit_type, dataset=_data
-            )
+            _read_parametric_model = ParametricModelYamlReader._make_object(_parametric_model_entry, default_type=_fit_type, dataset=_data)
             _read_model_function = _read_parametric_model._model_function_object
         else:
             _read_parametric_model = None
@@ -254,8 +224,7 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
             _par_formatters = yaml_doc.pop("parameter_formatters", None)
             if _par_formatters is not None:
                 _fit_object._parameter_formatters = [
-                    ParameterFormatter(arg_name=_arg_name, name=_name)
-                    for (_arg_name, _name) in _par_formatters.items()
+                    ParameterFormatter(arg_name=_arg_name, name=_name) for (_arg_name, _name) in _par_formatters.items()
                 ]
             _fit_object._update_parameter_formatters()
 
@@ -264,10 +233,7 @@ class FitYamlReader(YamlReaderMixin, FitDReprBase):
 
         _constraint_yaml_list = yaml_doc.pop("parameter_constraints", None)
         if isinstance(_constraint_yaml_list, dict):
-            _constraint_yaml_list = [
-                dict(name=param, **_constraint_yaml)
-                for param, _constraint_yaml in _constraint_yaml_list.items()
-            ]
+            _constraint_yaml_list = [dict(name=param, **_constraint_yaml) for param, _constraint_yaml in _constraint_yaml_list.items()]
         if isinstance(_constraint_yaml_list, list):
             _fit_object._fit_param_constraints = [
                 ConstraintYamlReader._make_object(

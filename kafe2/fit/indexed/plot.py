@@ -22,9 +22,7 @@ class IndexedPlotAdapter(PlotAdapterBase):
             container.
         :type from_container: bool
         """
-        super(IndexedPlotAdapter, self).__init__(
-            fit_object=indexed_fit_object, from_container=from_container
-        )
+        super(IndexedPlotAdapter, self).__init__(fit_object=indexed_fit_object, from_container=from_container)
         self.x_range = (-0.5, self._fit.data_size - 0.5)
 
     @property
@@ -78,13 +76,8 @@ class IndexedPlotAdapter(PlotAdapterBase):
         :return: plot handle(s)
         """
         if self._fit.has_errors:
-            _yerr = np.sqrt(
-                self.data_yerr**2
-                + self._fit._cost_function.get_uncertainty_gaussian_approximation(self.data_y) ** 2
-            )
-            return target_axes.errorbar(
-                self.data_x, self.data_y, xerr=self.data_xerr, yerr=_yerr, **kwargs
-            )
+            _yerr = np.sqrt(self.data_yerr**2 + self._fit._cost_function.get_uncertainty_gaussian_approximation(self.data_y) ** 2)
+            return target_axes.errorbar(self.data_x, self.data_y, xerr=self.data_xerr, yerr=_yerr, **kwargs)
         _yerr = self._fit._cost_function.get_uncertainty_gaussian_approximation(self.data_y)
         if np.all(_yerr == 0):
             return target_axes.plot(self.data_x, self.data_y, **kwargs)

@@ -53,9 +53,7 @@ class AbstractTestFit(abc.ABC):
                         _attr_2 = _attr_2_arr.tolist()
                     elif isinstance(_attr_2, tuple):
                         _attr_2 = tuple(_attr_2_arr)
-                self._assert_values_equal(
-                    name=_attr, received_value=_attr_2, expected_value=_attr_1, rtol=rtol, atol=atol
-                )
+                self._assert_values_equal(name=_attr, received_value=_attr_2, expected_value=_attr_1, rtol=rtol, atol=atol)
 
     def _assert_fit_properties(self, fit, properties, rtol=1e-3, atol=1e-6):
         for _attr, _ref_val in properties.items():
@@ -92,22 +90,14 @@ class AbstractTestFit(abc.ABC):
                 )
             except ValueError:
                 # most likely array length mismatch
-                print(
-                    "\nCheck failed: attribute {!r} "
-                    "should be:\n\t{}\nand is:\n\t{}".format(name, expected_value, received_value)
-                )
+                print("\nCheck failed: attribute {!r} " "should be:\n\t{}\nand is:\n\t{}".format(name, expected_value, received_value))
                 raise
             except TypeError:
                 # types contained in array do not support 'allclose'
                 try:
                     self.assertEqual(received_value, expected_value)
                 except:  # noqa: E722 (bare except)
-                    print(
-                        "\nCheck failed: attribute {!r} "
-                        "should be exactly:\n\t{}\nand is:\n\t{}".format(
-                            name, expected_value, received_value
-                        )
-                    )
+                    print("\nCheck failed: attribute {!r} " "should be exactly:\n\t{}\nand is:\n\t{}".format(name, expected_value, received_value))
                     raise
             except:  # noqa: E722 (bare except)
                 _abs_diffs = np.abs(expected_value - received_value)

@@ -49,9 +49,7 @@ def expand_to_ndim(array, target_ndim, direction="right"):
     elif direction == "left":
         _append_pos = 0
     else:
-        raise ValueError(
-            "Unknown direction specification '{}': " "expected 'left' or 'right'!".format(direction)
-        )
+        raise ValueError("Unknown direction specification '{}': " "expected 'left' or 'right'!".format(direction))
     while _new_array.ndim < target_ndim:
         _new_array = np.expand_dims(_new_array, _append_pos)
     return _new_array
@@ -87,12 +85,7 @@ def broadcast_to_shape(array, shape, scheme="default"):
         #       result:  n x a x 1
         _new_array = array
         while True:
-            _can_bcast = all(
-                [
-                    _i == _j or _i == 1 or _j == 1
-                    for _i, _j in zip(reversed(_new_array.shape), reversed(shape))
-                ]
-            )
+            _can_bcast = all([_i == _j or _i == 1 or _j == 1 for _i, _j in zip(reversed(_new_array.shape), reversed(shape))])
             if _can_bcast:
                 break
             _new_array = np.expand_dims(_new_array, -1)
@@ -107,9 +100,7 @@ def broadcast_to_shape(array, shape, scheme="default"):
         #       result:  1 x b x n
         _new_array = array
         while True:
-            _can_bcast = all(
-                [_i == _j or _i == 1 or _j == 1 for _i, _j in zip(_new_array.shape, shape)]
-            )
+            _can_bcast = all([_i == _j or _i == 1 or _j == 1 for _i, _j in zip(_new_array.shape, shape)])
             if _can_bcast:
                 break
             _new_array = np.expand_dims(_new_array, 0)
@@ -168,9 +159,7 @@ class EnsembleVariable(object):
     forming a statistical ensemble.
     """
 
-    def __init__(
-        self, ensemble_array, dtype=float, distribution=None, distribution_parameters=None
-    ):
+    def __init__(self, ensemble_array, dtype=float, distribution=None, distribution_parameters=None):
         """
         Create an ensemble of realizations of random variables.
 
@@ -260,10 +249,7 @@ class EnsembleVariable(object):
         if self.ndim == 1:
             return np.cov(self._array.T)
 
-        raise EnsembleError(
-            "Cannot calculate covariance matrix: ensemble variable must "
-            "have dimension 1 (got {})".format(self.ndim)
-        )
+        raise EnsembleError("Cannot calculate covariance matrix: ensemble variable must " "have dimension 1 (got {})".format(self.ndim))
 
     @property
     def cor_mat(self):
@@ -274,10 +260,7 @@ class EnsembleVariable(object):
         if self.ndim == 1:
             return CovMat(self.cov_mat).cor_mat
 
-        raise EnsembleError(
-            "Cannot calculate correlation matrix: ensemble variable must "
-            "have dimension 1 (got {})".format(self.ndim)
-        )
+        raise EnsembleError("Cannot calculate correlation matrix: ensemble variable must " "have dimension 1 (got {})".format(self.ndim))
 
     @property
     def dist(self):
@@ -316,9 +299,7 @@ class EnsembleVariableProbabilityDistribution(object):
         self._dist_param_values_dict = {}
         for _dist_par_name, _dist_par_value in six.iteritems(parameters):
             # wrap lists and/or tuples in numpy.ndarray
-            if isinstance(_dist_par_value, collections.Sequence) and not isinstance(
-                _dist_par_value, six.string_types[0]
-            ):
+            if isinstance(_dist_par_value, collections.Sequence) and not isinstance(_dist_par_value, six.string_types[0]):
                 _dist_par_value = np.array(_dist_par_value)
 
             if isinstance(_dist_par_value, np.ndarray):
@@ -368,9 +349,7 @@ class EnsembleVariableProbabilityDistribution(object):
     def standardized_moment(self, n):
         """The n-th standardized moment of the distribution"""
         if self.ndim != 0:
-            raise NotImplementedError(
-                "Standardized moment calculation not available for non-scalar variables."
-            )
+            raise NotImplementedError("Standardized moment calculation not available for non-scalar variables.")
         return self._dist_func.expect(lambda x: ((x - self.mean) / self.std) ** n)
 
     def moment(self, n):
@@ -495,31 +474,22 @@ class EnsembleVariablePlotter(object):
 
         # check variable dimensionality (can only plot scalar, 1D and 2D)
         if self._var.ndim >= 3:
-            raise EnsembleError(
-                "Cannot create plotter for ensemble variable: "
-                "dimensionality too high ({}>2)!".format(self._var.ndim)
-            )
+            raise EnsembleError("Cannot create plotter for ensemble variable: " "dimensionality too high ({}>2)!".format(self._var.ndim))
 
         self._ensemble_label = ensemble_label or "{} pseudoexperiments".format(self._var.size)
 
         self._value_ranges = np.array(value_ranges)
         if self._value_ranges.shape[:-1] != self._var.shape:
             # prefix dimensions do not match -> expand array
-            self._value_ranges = broadcast_to_shape(
-                self._value_ranges, self._var.shape, scheme="expand_left"
-            )
+            self._value_ranges = broadcast_to_shape(self._value_ranges, self._var.shape, scheme="expand_left")
 
         # expand, if needed, to at least 3 axes (needed for nested for loop below)
         self._value_ranges = expand_to_ndim(self._value_ranges, target_ndim=3, direction="left")
 
         self._variable_labels = np.array(variable_labels)
         if self._variable_labels is not None:
-            self._variable_labels = broadcast_to_shape(
-                self._variable_labels, self._var.shape, scheme="expand_left"
-            )
-            self._variable_labels = expand_to_ndim(
-                self._variable_labels, target_ndim=2, direction="left"
-            )
+            self._variable_labels = broadcast_to_shape(self._variable_labels, self._var.shape, scheme="expand_left")
+            self._variable_labels = expand_to_ndim(self._variable_labels, target_ndim=2, direction="left")
 
     def plot_hist(self, axes_array, show_y_ticks=False):
         """
@@ -538,10 +508,7 @@ class EnsembleVariablePlotter(object):
         axes_array = np.asarray(axes_array)
 
         if axes_array.shape != self._var.shape:
-            raise EnsembleError(
-                "Shape of `axes_array` {} does not "
-                "match ensemble variable shape {}!".format(axes_array.shape, self._var.shape)
-            )
+            raise EnsembleError("Shape of `axes_array` {} does not " "match ensemble variable shape {}!".format(axes_array.shape, self._var.shape))
 
         _expected_means = None
         _expected_mean_errors = None
@@ -589,9 +556,7 @@ class EnsembleVariablePlotter(object):
                 _bin_contents, _bin_edges, _ = _ax.hist(
                     _data,
                     bins=_nbins,
-                    range=self._value_ranges[
-                        _index1, _index2
-                    ],  # TODO: what about underflow/overflow?
+                    range=self._value_ranges[_index1, _index2],  # TODO: what about underflow/overflow?
                     label=self._ensemble_label,
                 )
 
@@ -608,13 +573,8 @@ class EnsembleVariablePlotter(object):
                         verticalalignment="bottom",
                         arrowprops=dict(facecolor="k", shrink=0.0),
                     )
-                    if (
-                        _expected_mean_errors is not None
-                        and _expected_mean_errors[_index1, _index2]
-                    ):
-                        _mean_pull = (
-                            _observed_means[_index1, _index2] - _expected_means[_index1, _index2]
-                        ) / _expected_mean_errors[_index1, _index2]
+                    if _expected_mean_errors is not None and _expected_mean_errors[_index1, _index2]:
+                        _mean_pull = (_observed_means[_index1, _index2] - _expected_means[_index1, _index2]) / _expected_mean_errors[_index1, _index2]
                         _ax.annotate(
                             r"$({:+.2f}\sigma)$".format(round(_mean_pull, 2)),
                             xycoords="data",
@@ -649,19 +609,15 @@ class EnsembleVariablePlotter(object):
                     )
                     if _expected_mean_errors is not None:
                         _ax.axvspan(
-                            _expected_means[_index1, _index2]
-                            - _expected_mean_errors[_index1, _index2],
-                            _expected_means[_index1, _index2]
-                            + _expected_mean_errors[_index1, _index2],
+                            _expected_means[_index1, _index2] - _expected_mean_errors[_index1, _index2],
+                            _expected_means[_index1, _index2] + _expected_mean_errors[_index1, _index2],
                             label="standard error of the mean",
                             **self._DEFAULT_PLOT_ONE_SIGMA_BAND_MEAN_KWARGS,
                         )
 
                 # ensure density appears with the same scaling across all axes
                 if _pdf_eval_ymax is not None:
-                    _ax.set_ylim(
-                        (0, _pdf_eval_ymax[_index1, _index2] * _plot_prob_density_scale * 1.2)
-                    )
+                    _ax.set_ylim((0, _pdf_eval_ymax[_index1, _index2] * _plot_prob_density_scale * 1.2))
 
                 # set the x axis label
                 if self._variable_labels is not None:
@@ -709,8 +665,7 @@ class EnsembleVariablePlotter(object):
 
         if self._var.ndim != 1:
             raise EnsembleError(
-                "Cannot create scatter plots: ensemble variable "
-                "must be a 1D array, but got shape {} instead!".format(self._var.shape)
+                "Cannot create scatter plots: ensemble variable " "must be a 1D array, but got shape {} instead!".format(self._var.shape)
             )
 
         _ncols = self._var.shape[0]

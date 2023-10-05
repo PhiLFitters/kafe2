@@ -47,9 +47,7 @@ class CostFunction(FileIOMixin, object):
     _COV_MAT_CHOLESKY_NAME = "total_cov_mat_cholesky"
     _ERROR_NAME = "total_error"
 
-    def __init__(
-        self, cost_function, arg_names=None, add_constraint_cost=True, add_determinant_cost=False
-    ):
+    def __init__(self, cost_function, arg_names=None, add_constraint_cost=True, add_determinant_cost=False):
         """
         Construct :py:class:`CostFunction` object (a wrapper for a native Python function):
 
@@ -70,17 +68,12 @@ class CostFunction(FileIOMixin, object):
                 if _par.kind == _par.VAR_POSITIONAL:
                     raise ValueError(
                         "Cost function '{}' with variable number of positional arguments "
-                        "(*{}) needs explicit argument names.".format(
-                            self._cost_function_handle.__name__, _par.name
-                        )
+                        "(*{}) needs explicit argument names.".format(self._cost_function_handle.__name__, _par.name)
                     )
         else:
             self._arg_names = list(arg_names)
         if "cost" in self._arg_names:
-            raise ValueError(
-                "The alias 'cost' for the cost function value cannot be used as a name for one of"
-                "the cost function arguments!"
-            )
+            raise ValueError("The alias 'cost' for the cost function value cannot be used as a name for one of" "the cost function arguments!")
         for _par in _signature.parameters.values():
             if _par.kind == _par.VAR_KEYWORD:
                 raise ValueError(
@@ -93,9 +86,7 @@ class CostFunction(FileIOMixin, object):
         self._arg_count = len(self._arg_names)
         self._formatter = CostFunctionFormatter(
             name=self.name,
-            arg_formatters=[
-                ParameterFormatter(_arg_name, value=0, error=None) for _arg_name in self._arg_names
-            ],
+            arg_formatters=[ParameterFormatter(_arg_name, value=0, error=None) for _arg_name in self._arg_names],
         )
 
         self._add_constraint_cost = add_constraint_cost
@@ -297,10 +288,7 @@ class CostFunction_Chi2(CostFunction):
             self._fail_on_no_errors = not fallback_on_singular
             _cost_function_description += " (with pointwise errors)"
         else:
-            raise ValueError(
-                "Unknown value '%s' for 'errors_to_use': must be one of "
-                "('covariance', 'pointwise', None)"
-            )
+            raise ValueError("Unknown value '%s' for 'errors_to_use': must be one of " "('covariance', 'pointwise', None)")
 
         super(CostFunction_Chi2, self).__init__(
             cost_function=_chi2_func,
@@ -322,10 +310,7 @@ class CostFunction_Chi2(CostFunction):
         model = np.asarray(model)
 
         if model.shape != data.shape:
-            raise ValueError(
-                "'data' and 'model' must have the same shape! Got %r and %r..."
-                % (data.shape, model.shape)
-            )
+            raise ValueError("'data' and 'model' must have the same shape! Got %r and %r..." % (data.shape, model.shape))
 
         _res = data - model
 
@@ -494,14 +479,9 @@ class CostFunction_NegLogLikelihood(CostFunction):
             _cost_function_description += " (Poisson uncertainties)"
             _arg_names = [self._DATA_NAME, self._MODEL_NAME]
         else:
-            raise ValueError(
-                "Unknown value '%s' for 'data_point_distribution': "
-                "must be one of ('gaussian', 'poisson')!"
-            )
+            raise ValueError("Unknown value '%s' for 'data_point_distribution': " "must be one of ('gaussian', 'poisson')!")
 
-        super(CostFunction_NegLogLikelihood, self).__init__(
-            cost_function=_nll_func, arg_names=_arg_names, add_determinant_cost=False
-        )
+        super(CostFunction_NegLogLikelihood, self).__init__(cost_function=_nll_func, arg_names=_arg_names, add_determinant_cost=False)
 
         if ratio:
             self._formatter.latex_name = r"-2\ln\mathcal{L}_{\rm R}"
@@ -607,9 +587,7 @@ class CostFunction_NegLogLikelihood(CostFunction):
         return -2.0 * _log_likelihood_ratio
 
     def is_data_compatible(self, data):
-        if self._cost_function_handle in [self.nll_poisson, self.nllr_poisson] and (
-            np.count_nonzero(data % 1) > 0 or np.any(data < 0)
-        ):
+        if self._cost_function_handle in [self.nll_poisson, self.nllr_poisson] and (np.count_nonzero(data % 1) > 0 or np.any(data < 0)):
             return False, "poisson distribution can only have non-negative integers as y data."
         return True, None
 
@@ -620,9 +598,7 @@ class CostFunction_NegLogLikelihood(CostFunction):
 
 
 class CostFunction_GaussApproximation(CostFunction):
-    def __init__(
-        self, errors_to_use="covariance", add_constraint_cost=True, add_determinant_cost=True
-    ):
+    def __init__(self, errors_to_use="covariance", add_constraint_cost=True, add_determinant_cost=True):
         """
         Base class for built-in Gaussian approximation of the Poisson negative log-likelihood cost
         function.
@@ -647,10 +623,7 @@ class CostFunction_GaussApproximation(CostFunction):
             _arg_names = [self._DATA_NAME, self._MODEL_NAME, self._ERROR_NAME]
             _cost_function_description += " (with pointwise errors)"
         else:
-            raise ValueError(
-                "Unknown value '%s' for 'errors_to_use': must be one of "
-                "('covariance', 'pointwise')"
-            )
+            raise ValueError("Unknown value '%s' for 'errors_to_use': must be one of " "('covariance', 'pointwise')")
 
         super().__init__(
             cost_function=_cost_function,

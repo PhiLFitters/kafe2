@@ -57,9 +57,7 @@ def print_dict_recursive(
                 _content = "{}".format(v)
                 if "\n" in _content:
                     _content = "\n" + _content
-                    _content = _content.replace(
-                        "\n", "\n{}{}".format(_indent_prefix, indent_char * indent_width)
-                    )
+                    _content = _content.replace("\n", "\n{}{}".format(_indent_prefix, indent_char * indent_width))
                 output_stream.write(_indent_prefix + _key_format.format(k + ":") + _content + "\n")
                 output_stream.flush()
 
@@ -89,12 +87,8 @@ def print_dict_as_table(
     _n_rows = len(_column_arrays[0])
     _col_has_n_rows = [_n_rows == len(_arr) for _arr in _column_arrays]
     if False in _col_has_n_rows:
-        _wrong_size_columns = [
-            _ch for _i, _ch in enumerate(_column_heads) if not _col_has_n_rows[_i]
-        ]
-        raise ValueError(
-            "All column sizes must be equal. Offending columns: {}".format(_wrong_size_columns)
-        )
+        _wrong_size_columns = [_ch for _i, _ch in enumerate(_column_heads) if not _col_has_n_rows[_i]]
+        raise ValueError("All column sizes must be equal. Offending columns: {}".format(_wrong_size_columns))
 
     _column_formats = []
     _column_widths = []
@@ -119,9 +113,7 @@ def print_dict_as_table(
             _table[_irow].append(_cell)
 
     # print table header
-    for _ihead, (_column_head, _column_format, _column_show_head) in enumerate(
-        zip(_column_heads, _column_formats, _column_show_heads)
-    ):
+    for _ihead, (_column_head, _column_format, _column_show_head) in enumerate(zip(_column_heads, _column_formats, _column_show_heads)):
         _column_heads[_ihead] = _column_format.format(_column_head if _column_show_head else "")
 
     with numpy_print_options(
@@ -133,10 +125,7 @@ def print_dict_as_table(
         output_stream.write(_indent_prefix + sep.join(_column_heads) + "\n")
 
         # print head separator
-        _head_seps = [
-            "=" * _w if _column_show_heads[_icol] else " " * _w
-            for _icol, _w in enumerate(_column_widths)
-        ]
+        _head_seps = ["=" * _w if _column_show_heads[_icol] else " " * _w for _icol, _w in enumerate(_column_widths)]
         output_stream.write(_indent_prefix + sep.join(_head_seps) + "\n")
 
         # print table body
@@ -158,13 +147,7 @@ def get_compact_representation(
     line_prefix="# ",
     table_format="rst",
 ):
-    assert (
-        len(parameter_names)
-        == len(parameter_values)
-        == len(parameter_errors)
-        == parameter_cor_mat.shape[0]
-        == parameter_cor_mat.shape[1]
-    )
+    assert len(parameter_names) == len(parameter_values) == len(parameter_errors) == parameter_cor_mat.shape[0] == parameter_cor_mat.shape[1]
     try:
         import tabulate
 
@@ -181,12 +164,8 @@ def get_compact_representation(
             ]
         _data = []
 
-        _reduced_cor_mat = [
-            _cor_mat_row[:_i] for _i, _cor_mat_row in enumerate(parameter_cor_mat.tolist())
-        ]
-        _cor_mat_row_strs = tabulate.tabulate(
-            tabular_data=_reduced_cor_mat, tablefmt="plain", floatfmt=".2g"
-        ).split("\n")
+        _reduced_cor_mat = [_cor_mat_row[:_i] for _i, _cor_mat_row in enumerate(parameter_cor_mat.tolist())]
+        _cor_mat_row_strs = tabulate.tabulate(tabular_data=_reduced_cor_mat, tablefmt="plain", floatfmt=".2g").split("\n")
 
         for _i, (_par_name, _par_val, _par_err, _cor_mat_row_str) in enumerate(
             zip(parameter_names, parameter_values, parameter_errors, _cor_mat_row_strs)
@@ -210,14 +189,9 @@ def get_compact_representation(
             _row.append(_cor_mat_row_str)
             _data.append(_row)
 
-        _representation = tabulate.tabulate(
-            tabular_data=_data, headers=_headers, tablefmt=table_format
-        )
+        _representation = tabulate.tabulate(tabular_data=_data, headers=_headers, tablefmt=table_format)
         _representation = _representation.replace("\n", "\n" + line_prefix)
         _representation = line_prefix + _representation + "\n"
     except ImportError:
-        _representation = (
-            "# ERROR: Could not create human-readable table for model parameters because "
-            "tabulate is not installed.\n"
-        )
+        _representation = "# ERROR: Could not create human-readable table for model parameters because " "tabulate is not installed.\n"
     return _representation

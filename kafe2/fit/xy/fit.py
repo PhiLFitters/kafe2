@@ -125,10 +125,7 @@ class XYFit(FitBase):
         if isinstance(new_data, self.CONTAINER_TYPE):
             self._data_container = deepcopy(new_data)
         elif isinstance(new_data, DataContainerBase):
-            raise TypeError(
-                "Incompatible container type '%s' (expected '%s')"
-                % (type(new_data), self.CONTAINER_TYPE)
-            )
+            raise TypeError("Incompatible container type '%s' (expected '%s')" % (type(new_data), self.CONTAINER_TYPE))
         else:
             _x_data = new_data[0]
             _y_data = new_data[1]
@@ -140,9 +137,7 @@ class XYFit(FitBase):
         self._nexus.get("y_data").mark_for_update()
 
     def _set_new_parametric_model(self):
-        self._param_model = XYParametricModel(
-            self.x_model, self._model_function, self.parameter_values
-        )
+        self._param_model = XYParametricModel(self.x_model, self._model_function, self.parameter_values)
 
     def _report_data(self, output_stream, indent, indentation_level):
         output_stream.write(indent * indentation_level + "########\n")
@@ -154,9 +149,7 @@ class XYFit(FitBase):
             _data_table_dict["X Data Error"] = self.x_data_error
             _data_table_dict["X Data Correlation Matrix"] = self.x_data_cor_mat
 
-        print_dict_as_table(
-            _data_table_dict, output_stream=output_stream, indent_level=indentation_level + 1
-        )
+        print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=indentation_level + 1)
         output_stream.write("\n")
 
         _data_table_dict = OrderedDict()
@@ -165,9 +158,7 @@ class XYFit(FitBase):
             _data_table_dict["Y Data Error"] = self.y_data_error
             _data_table_dict["Y Data Correlation Matrix"] = self.y_data_cor_mat
 
-        print_dict_as_table(
-            _data_table_dict, output_stream=output_stream, indent_level=indentation_level + 1
-        )
+        print_dict_as_table(_data_table_dict, output_stream=output_stream, indent_level=indentation_level + 1)
         output_stream.write("\n")
 
     def _report_model(self, output_stream, indent, indentation_level):
@@ -179,9 +170,7 @@ class XYFit(FitBase):
             _model_table_dict["X Model Error"] = self.x_model_error
             _model_table_dict["X Model Correlation Matrix"] = self.x_model_cor_mat
 
-        print_dict_as_table(
-            _model_table_dict, output_stream=output_stream, indent_level=indentation_level + 1
-        )
+        print_dict_as_table(_model_table_dict, output_stream=output_stream, indent_level=indentation_level + 1)
         output_stream.write("\n")
 
         _model_table_dict = OrderedDict()
@@ -190,15 +179,11 @@ class XYFit(FitBase):
             _model_table_dict["Y Model Error"] = self.y_model_error
             _model_table_dict["Y Model Correlation Matrix"] = self.y_model_cor_mat
 
-        print_dict_as_table(
-            _model_table_dict, output_stream=output_stream, indent_level=indentation_level + 1
-        )
+        print_dict_as_table(_model_table_dict, output_stream=output_stream, indent_level=indentation_level + 1)
         output_stream.write("\n")
         if self._param_model.get_matching_errors({"relative": True, "axis": 1}):
             output_stream.write(indent * (indentation_level + 1))
-            output_stream.write(
-                "y model covariance matrix was calculated dynamically relative to y model values.\n"
-            )
+            output_stream.write("y model covariance matrix was calculated dynamically relative to y model values.\n")
             output_stream.write("\n")
 
     def _project_cov_mat(self, x_cov_mat, y_cov_mat, x_model, parameter_values):
@@ -208,9 +193,7 @@ class XYFit(FitBase):
         return y_cov_mat + x_cov_mat * np.outer(_derivatives, _derivatives)
 
     def _project_error(self, x_error, y_error, x_model, parameter_values):
-        _derivatives = self._param_model.eval_model_function_derivative_by_x(
-            x=x_model, dx=0.01 * x_error, model_parameters=parameter_values
-        )
+        _derivatives = self._param_model.eval_model_function_derivative_by_x(x=x_model, dx=0.01 * x_error, model_parameters=parameter_values)
         return np.sqrt(np.square(y_error) + np.square(x_error * _derivatives))
 
     def _set_data_as_model_ref(self):
@@ -223,21 +206,17 @@ class XYFit(FitBase):
 
     def _iterative_fits_needed(self):
         return (
-            bool(self._param_model.get_matching_errors({"relative": True, "axis": 1}))
-            or self.has_x_errors
+            bool(self._param_model.get_matching_errors({"relative": True, "axis": 1})) or self.has_x_errors
         ) and self._dynamic_error_algorithm == "iterative"
 
     def _second_fit_needed(self):
         return (
-            bool(self._param_model.get_matching_errors({"relative": True, "axis": 1}))
-            or self.has_x_errors
+            bool(self._param_model.get_matching_errors({"relative": True, "axis": 1})) or self.has_x_errors
         ) and self._dynamic_error_algorithm == "nonlinear"
 
     def _get_node_names_to_freeze(self, first_fit):
         if self._dynamic_error_algorithm == "iterative" or (first_fit and self.has_x_errors):
-            return self._PROJECTED_NODE_NAMES + super(XYFit, self)._get_node_names_to_freeze(
-                first_fit
-            )
+            return self._PROJECTED_NODE_NAMES + super(XYFit, self)._get_node_names_to_freeze(first_fit)
         else:
             return super(XYFit, self)._get_node_names_to_freeze(first_fit)
 
@@ -314,9 +293,7 @@ class XYFit(FitBase):
 
         :rtype: numpy.ndarray[float]
         """
-        return self._project_error(
-            self.x_data_error, self.y_data_error, self.x_model, self.parameter_values
-        )
+        return self._project_error(self.x_data_error, self.y_data_error, self.x_model, self.parameter_values)
 
     @property
     def x_data_cov_mat(self):
@@ -341,9 +318,7 @@ class XYFit(FitBase):
 
         :rtype: numpy.ndarray
         """
-        return self._project_cov_mat(
-            self.x_data_cov_mat, self.y_data_cov_mat, self.x_model, self.parameter_values
-        )
+        return self._project_cov_mat(self.x_data_cov_mat, self.y_data_cov_mat, self.x_model, self.parameter_values)
 
     @property
     def x_data_cov_mat_inverse(self):
@@ -433,9 +408,7 @@ class XYFit(FitBase):
 
         :rtype: numpy.ndarray[float]
         """
-        return self._project_error(
-            self.x_model_error, self.y_model_error, self.x_model, self.parameter_values
-        )
+        return self._project_error(self.x_model_error, self.y_model_error, self.x_model, self.parameter_values)
 
     @property
     def x_model_cov_mat(self):
@@ -464,9 +437,7 @@ class XYFit(FitBase):
 
         :rtype: numpy.ndarray
         """
-        return self._project_cov_mat(
-            self.x_model_cov_mat, self.y_model_cov_mat, self.x_model, self.parameter_values
-        )
+        return self._project_cov_mat(self.x_model_cov_mat, self.y_model_cov_mat, self.x_model, self.parameter_values)
 
     @property
     def x_model_cov_mat_inverse(self):
@@ -728,9 +699,7 @@ class XYFit(FitBase):
         self._param_model.x = self.x_model
         return self._param_model.eval_model_function(x=x, model_parameters=model_parameters)
 
-    def eval_model_function_derivative_by_parameters(
-        self, x=None, model_parameters=None, par_dx=None
-    ):
+    def eval_model_function_derivative_by_parameters(self, x=None, model_parameters=None, par_dx=None):
         """Evaluate the derivative of the model function with respect to the model parameters.
 
         :param x: 1D array containing the *x* values at which to evaluate the model function. If
@@ -751,9 +720,7 @@ class XYFit(FitBase):
         self._param_model.x = self.x_model
         if par_dx is None and self.did_fit:
             par_dx = 1e-2 * self.parameter_errors
-        return self._param_model.eval_model_function_derivative_by_parameters(
-            x=x, model_parameters=model_parameters, par_dx=par_dx
-        )
+        return self._param_model.eval_model_function_derivative_by_parameters(x=x, model_parameters=model_parameters, par_dx=par_dx)
 
     def error_band(self, x=None):
         """Calculate the symmetric model uncertainty at every given point *x*. This is only
@@ -780,9 +747,7 @@ class XYFit(FitBase):
         _band_y = np.zeros_like(x)
 
         # Cut out fixed parameters which have nan as derivative:
-        _not_pars_fixed = [
-            _par_name not in self._fitter.fixed_parameters for _par_name in self.parameter_names
-        ]
+        _not_pars_fixed = [_par_name not in self._fitter.fixed_parameters for _par_name in self.parameter_names]
         _cut_parameter_cov_mat = self.parameter_cov_mat[_not_pars_fixed][:, _not_pars_fixed]
         for _x_idx, _x_val in enumerate(x):
             _p_res = _f_deriv_by_params[_x_idx, _not_pars_fixed]

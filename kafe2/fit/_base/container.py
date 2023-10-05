@@ -52,23 +52,17 @@ class DataContainerBase(FileIOMixin):
         """create a new entry <name> under self._error_dicts,
         with keys err=<ErrorObject> and arbitrary additional keys"""
         if error_object.error.shape[0] != self.size:
-            raise ValueError(
-                f"Error must have size {self.size} but"
-                f"received error with size {error_object.error.shape[0]}"
-            )
+            raise ValueError(f"Error must have size {self.size} but" f"received error with size {error_object.error.shape[0]}")
         _name = name
         if _name is not None and _name in self._error_dicts:
             raise ValueError(
-                "Cannot create error source with name '{}': there is already an error "
-                "source registered under that name!".format(_name)
+                "Cannot create error source with name '{}': there is already an error " "source registered under that name!".format(_name)
             )
         # be paranoid about name collisions
         while _name is None or _name in self._error_dicts:
             _name = random_alphanumeric(size=8)
 
-        additional_error_dict_keys.setdefault(
-            "enabled", True
-        )  # enable error source, unless explicitly disabled
+        additional_error_dict_keys.setdefault("enabled", True)  # enable error source, unless explicitly disabled
 
         axis = additional_error_dict_keys.get("axis", None)
         if axis is not None:
@@ -225,16 +219,12 @@ class DataContainerBase(FileIOMixin):
         if err_val.ndim == 0:  # if dimensionless numpy array (i.e. float64), add a dimension
             err_val = np.ones(self.size) * err_val
 
-        _err = SimpleGaussianError(
-            err_val=err_val, corr_coeff=correlation, relative=relative, reference=reference
-        )
+        _err = SimpleGaussianError(err_val=err_val, corr_coeff=correlation, relative=relative, reference=reference)
 
         _name = self._add_error_object(name=name, error_object=_err)
         return _name
 
-    def add_matrix_error(
-        self, err_matrix, matrix_type, name=None, err_val=None, relative=False, reference=None
-    ):
+    def add_matrix_error(self, err_matrix, matrix_type, name=None, err_val=None, relative=False, reference=None):
         """Add a matrix uncertainty source to the data container.
 
         :param err_matrix: Covariance or correlation matrix.
@@ -322,9 +312,7 @@ class DataContainerBase(FileIOMixin):
         if matching_type == "regex":
             raise NotImplementedError("Matching type 'regex' not yet implemented!")
         if matching_type != "equal":
-            raise NotImplementedError(
-                "Unknown matching type: '{}'! " "Available: ['equals']".format(matching_type)
-            )
+            raise NotImplementedError("Unknown matching type: '{}'! " "Available: ['equals']".format(matching_type))
 
         for _crit_key, _crit_value in six.iteritems(matching_criteria):
             # go through all errors, removing those that don't match

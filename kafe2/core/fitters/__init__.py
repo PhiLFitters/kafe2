@@ -33,9 +33,7 @@ def get_fitter(fitter_spec):
         _fitter = AVAILABLE_FITTERS.get(fitter_spec, None)
 
     if _fitter is None:
-        raise ValueError(
-            "Unknown fitter '{}'! Available: {}".format(fitter_spec, AVAILABLE_FITTERS.keys())
-        )
+        raise ValueError("Unknown fitter '{}'! Available: {}".format(fitter_spec, AVAILABLE_FITTERS.keys()))
 
     return _fitter
 

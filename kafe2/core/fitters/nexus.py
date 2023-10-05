@@ -256,9 +256,7 @@ class NodeBase(object):
         :type node: NodeBase
         """
         if not isinstance(node, NodeBase):
-            raise TypeError(
-                "Cannot remove parent: expected " "node type, got {}".format(type(node))
-            )
+            raise TypeError("Cannot remove parent: expected " "node type, got {}".format(type(node)))
 
         if self in node.get_children():
             raise ValueError("Must remove child from parent, not the other way around!")
@@ -286,8 +284,7 @@ class NodeBase(object):
         # cleanup
         if _out_of_scope_refs:
             logging.debug(
-                "{} parent refs went out of scope since last "
-                "call to 'iter_parents' and will be removed.".format(len(_out_of_scope_refs))
+                "{} parent refs went out of scope since last " "call to 'iter_parents' and will be removed.".format(len(_out_of_scope_refs))
             )
         for _ref in _out_of_scope_refs:
             self._parents.remove(_ref)
@@ -384,10 +381,7 @@ class NodeBase(object):
             # wrap non-node values inside `Parameter`
             new_child = Parameter(new_child)
         if current_child not in self._children:
-            raise ValueError(
-                "Cannot replace child %s because it is not a child of %s."
-                % (current_child.name, self.name)
-            )
+            raise ValueError("Cannot replace child %s because it is not a child of %s." % (current_child.name, self.name))
         self._children = [_c if _c is not current_child else new_child for _c in self._children]
         new_child.add_parent(self)
         current_child.remove_parent(self)
@@ -733,9 +727,7 @@ class Fallback(ValueNode):
             except self._exception_type:
                 pass  # function failed; try next
 
-        raise RuntimeError(
-            "Error evaluating fallback node '{}': " "no alternative succeeded".format(self.name)
-        )
+        raise RuntimeError("Error evaluating fallback node '{}': " "no alternative succeeded".format(self.name))
 
     @property
     def try_nodes(self):
@@ -965,10 +957,7 @@ class NodeSubgraphGraphvizSourceProducer(object):
                     "<br />{0.name}>, {1}]\n".format(
                         _n,
                         ", ".join(
-                            [
-                                "{}={}".format(_k, _v)
-                                for _k, _v in self._NODE_STYLE.get(_n.__class__, {}).items()
-                            ]
+                            ["{}={}".format(_k, _v) for _k, _v in self._NODE_STYLE.get(_n.__class__, {}).items()]
                             + (["style=filled", "fillcolor=yellow"] if _n in _leaf_nodes else [])
                         ),
                     )
@@ -1017,9 +1006,7 @@ class NodeCycleChecker(object):
     def visit(self, node, seen):
         if node in seen:
             _cycle = seen[seen.index(node) :] + (node,)
-            raise ValueError(
-                "Dependent node cycle detected ({})".format(" -> ".join([_n.name for _n in _cycle]))
-            )
+            raise ValueError("Dependent node cycle detected ({})".format(" -> ".join([_n.name for _n in _cycle])))
 
     def run(self, node=None, seen=None):
         node = node if node is not None else self._root
@@ -1094,21 +1081,16 @@ class Nexus(object):
         # validate `existing_behavior`
         if existing_behavior not in self._VALID_ADD_EXISTING_BEHAVIORS:
             raise ValueError(
-                "Unknown value {!r} for `existing_behavior`: "
-                "expected one of {!r}".format(existing_behavior, self._VALID_ADD_EXISTING_BEHAVIORS)
+                "Unknown value {!r} for `existing_behavior`: " "expected one of {!r}".format(existing_behavior, self._VALID_ADD_EXISTING_BEHAVIORS)
             )
 
         # check if node has already been added
         if node.name in self._nodes:
             # resolve behavior if node is empty
             if existing_behavior == "replace_if_empty":
-                existing_behavior = (
-                    "replace" if isinstance(self._nodes[node.name], Empty) else "fail"
-                )
+                existing_behavior = "replace" if isinstance(self._nodes[node.name], Empty) else "fail"
             elif existing_behavior == "replace_if_alias":
-                existing_behavior = (
-                    "replace" if isinstance(self._nodes[node.name], Alias) else "fail"
-                )
+                existing_behavior = "replace" if isinstance(self._nodes[node.name], Alias) else "fail"
 
             # execute behavior
             if existing_behavior == "fail":
@@ -1150,9 +1132,7 @@ class Nexus(object):
 
         return node
 
-    def add_function(
-        self, func, func_name=None, par_names=None, add_children=True, existing_behavior="fail"
-    ):
+    def add_function(self, func, func_name=None, par_names=None, add_children=True, existing_behavior="fail"):
         """Construct a `Function` node from a Python function and
         add it to the nexus.
 
@@ -1211,10 +1191,7 @@ class Nexus(object):
         func_name = func_name or func.__name__
 
         if par_names is not None:
-            _par_nodes = [
-                self._nodes[_par_name] if _par_name in self._nodes else Empty(_par_name)
-                for _par_name in par_names
-            ]
+            _par_nodes = [self._nodes[_par_name] if _par_name in self._nodes else Empty(_par_name) for _par_name in par_names]
             return self.add(
                 Function(func, name=func_name, parameters=_par_nodes),
                 add_children=add_children,
@@ -1249,11 +1226,7 @@ class Nexus(object):
         for (_arg_name, _node_spec), _arg_default in zip(_args, _args_defaults):
             # fail on **kwargs
             if isinstance(_node_spec, dict):
-                raise ValueError(
-                    "Error adding function: signature "
-                    "cannot contain variable keyword arguments "
-                    "(**{})!".format(_arg_name)
-                )
+                raise ValueError("Error adding function: signature " "cannot contain variable keyword arguments " "(**{})!".format(_arg_name))
 
             # wrap str in a tuple (normal non-* case)
             if isinstance(_node_spec, str):
@@ -1297,9 +1270,7 @@ class Nexus(object):
                                 warnings.warn(
                                     "Ignoring default value {!r} for function parameter '{}': "
                                     "non-empty nexus node already exists and has conflicting "
-                                    "value {!r}.".format(
-                                        _arg_default, _node_name, _existing_node.value
-                                    ),
+                                    "value {!r}.".format(_arg_default, _node_name, _existing_node.value),
                                     UserWarning,
                                 )
 
@@ -1336,9 +1307,7 @@ class Nexus(object):
 
         _alias_for_node = self.get(alias_for)
         if _alias_for_node is None:
-            raise ValueError(
-                "Cannot add alias for node '{}': " "node does not exist in nexus!".format(alias_for)
-            )
+            raise ValueError("Cannot add alias for node '{}': " "node does not exist in nexus!".format(alias_for))
 
         return self.add(Alias(_alias_for_node, name=name), existing_behavior=existing_behavior)
 
@@ -1375,9 +1344,7 @@ class Nexus(object):
         _node = self.get(name)
 
         if _node is None:
-            raise ValueError(
-                "Cannot add dependency: dependent node '{}' does " "not exist!".format(name)
-            )
+            raise ValueError("Cannot add dependency: dependent node '{}' does " "not exist!".format(name))
 
         if not isinstance(depends_on, (tuple, list)):
             depends_on = (depends_on,)
@@ -1386,8 +1353,7 @@ class Nexus(object):
 
         if _not_found:
             raise ValueError(
-                "Cannot add dependency: the following nodes passed to "
-                "`depends_on` do not exist: {}".format(", ".join(map(repr, _not_found)))
+                "Cannot add dependency: the following nodes passed to " "`depends_on` do not exist: {}".format(", ".join(map(repr, _not_found)))
             )
 
         # add dependent node `name` as a parent of each node in `depends_on`
@@ -1433,8 +1399,7 @@ class Nexus(object):
         # validate `error_behavior`
         if error_behavior not in self._VALID_GET_DICT_ERROR_BEHAVIORS:
             raise ValueError(
-                "Unknown value {!r} for `error_behavior`: "
-                "expected one of {!r}".format(error_behavior, self._VALID_GET_DICT_ERROR_BEHAVIORS)
+                "Unknown value {!r} for `error_behavior`: " "expected one of {!r}".format(error_behavior, self._VALID_GET_DICT_ERROR_BEHAVIORS)
             )
 
         # construct result dict
@@ -1462,11 +1427,7 @@ class Nexus(object):
                     _result_dict.setdefault("__error__", []).append(_name)
                     continue
                 else:
-                    assert (
-                        False
-                    ), "Something went terribly wrong. " "Unknown error behaviour {}".format(
-                        error_behavior
-                    )
+                    assert False, "Something went terribly wrong. " "Unknown error behaviour {}".format(error_behavior)
             else:
                 _result_dict[_name] = _val
 

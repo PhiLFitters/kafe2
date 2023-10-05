@@ -25,9 +25,7 @@ class ConfigError(Exception):
 
 class ConfigLookupError(ConfigError):
     def __init__(self, key_path, problematic_key_index):
-        self.message = "Error getting config key for '{}': no node under that path!".format(
-            ", ".join(key_path)
-        )
+        self.message = "Error getting config key for '{}': no node under that path!".format(", ".join(key_path))
         self.message = "Error getting config key for '{}': " "cannot find config node '{}'!".format(
             ", ".join(key_path), key_path[problematic_key_index]
         )
@@ -35,11 +33,8 @@ class ConfigLookupError(ConfigError):
 
 class ConfigTypeError(ConfigError):
     def __init__(self, key_path, problematic_key_index):
-        self.message = (
-            "Error getting config key for '{}': "
-            "scalar node '{}' encountered inside path!".format(
-                ", ".join(key_path), key_path[problematic_key_index]
-            )
+        self.message = "Error getting config key for '{}': " "scalar node '{}' encountered inside path!".format(
+            ", ".join(key_path), key_path[problematic_key_index]
         )
 
 
@@ -97,11 +92,7 @@ try:
     if mpl.__version__.startswith("2"):
         kafe2_rc = mpl.rc_params_from_file(os.path.join(__path__[0], "kafe2.matplotlibrc.conf"))
         try:  # look for local config
-            kafe2_rc.update(
-                mpl.rc_params_from_file(
-                    os.path.join(os.getcwd(), "kafe2.matplotlibrc.conf"), use_default_template=False
-                )
-            )
+            kafe2_rc.update(mpl.rc_params_from_file(os.path.join(os.getcwd(), "kafe2.matplotlibrc.conf"), use_default_template=False))
         except IOError:
             pass
     elif mpl.__version__.startswith("3"):
@@ -114,11 +105,7 @@ try:
                 _temp_file.write("\n".encode())
         kafe2_rc = mpl.rc_params_from_file(_temp_file.name)
         try:  # look for local config, assume correct mpl3 handling
-            kafe2_rc.update(
-                mpl.rc_params_from_file(
-                    os.path.join(os.getcwd(), "kafe2.matplotlibrc.conf"), use_default_template=False
-                )
-            )
+            kafe2_rc.update(mpl.rc_params_from_file(os.path.join(os.getcwd(), "kafe2.matplotlibrc.conf"), use_default_template=False))
         except IOError:
             pass
         _temp_file.close()

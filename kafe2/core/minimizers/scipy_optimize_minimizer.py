@@ -236,9 +236,7 @@ class MinimizerScipyOptimize(MinimizerBase):
             raise ValueError("Unknown algorithm: {}".format(_algorithm))
 
         if minimizer_contour_kwargs:
-            raise ValueError(
-                "Unknown parameters for {}: {}".format(_algorithm, minimizer_contour_kwargs.keys())
-            )
+            raise ValueError("Unknown parameters for {}: {}".format(_algorithm, minimizer_contour_kwargs.keys()))
 
         if _algorithm == "beacon":
             return self._contour_beacon(parameter_name_1, parameter_name_2, sigma=sigma)
@@ -328,9 +326,7 @@ class MinimizerScipyOptimize(MinimizerBase):
                 else:
                     _current_y_0 = _y_0
                 for _y in range(_current_y_0, _target_points_per_axis, _y_step):
-                    _point_value = self._heuristic_point_evaluation(
-                        _contour_fun, _grid, _x, _y, _vector_1, _vector_2
-                    )
+                    _point_value = self._heuristic_point_evaluation(_contour_fun, _grid, _x, _y, _vector_1, _vector_2)
                     if _point_value == -1:
                         _local_constraints = [
                             {"type": "eq", "fun": lambda x: x[_ids[0]] - _x_values[_x]},
@@ -370,9 +366,7 @@ class MinimizerScipyOptimize(MinimizerBase):
                 ]
                 _current_fun = self._calc_fun_with_constraints(_local_constraints)
                 _grid_fun = _grid[_current_coords[0], _current_coords[1]]
-                if (_current_fun > _contour_fun and _grid_fun < _contour_fun) or (
-                    _current_fun < _contour_fun and _grid_fun > _contour_fun
-                ):
+                if (_current_fun > _contour_fun and _grid_fun < _contour_fun) or (_current_fun < _contour_fun and _grid_fun > _contour_fun):
                     if _iterations % 2 == 0:
                         _unsure_coords.add((_x - _x_step, _y))
                         _unsure_coords.add((_x, _y - _y_step))
@@ -433,9 +427,7 @@ class MinimizerScipyOptimize(MinimizerBase):
 
     @staticmethod
     def _heuristic_point_evaluation(contour_fun, grid, x, y, vector_1, vector_2):
-        _adjacent_points = MinimizerScipyOptimize._get_adjacent_grid_points(
-            grid, x, y, vector_1, vector_2
-        )
+        _adjacent_points = MinimizerScipyOptimize._get_adjacent_grid_points(grid, x, y, vector_1, vector_2)
         if np.max(_adjacent_points) < contour_fun:
             return np.mean(_adjacent_points)
         if np.min(_adjacent_points) > contour_fun:
@@ -478,21 +470,13 @@ class MinimizerScipyOptimize(MinimizerBase):
 
         CONTOUR_ELLIPSE_POINTS = 21
         CONTOUR_STRETCHING = 4.0
-        _unstretched_angles = np.linspace(
-            -np.pi / 2, np.pi / 2, CONTOUR_ELLIPSE_POINTS, endpoint=True
-        )
+        _unstretched_angles = np.linspace(-np.pi / 2, np.pi / 2, CONTOUR_ELLIPSE_POINTS, endpoint=True)
         _contour_search_ellipse = np.empty((2, CONTOUR_ELLIPSE_POINTS))
         _contour_search_ellipse[0] = sigma * beacon_size * np.sin(_unstretched_angles)
-        _contour_search_ellipse[1] = (
-            sigma * CONTOUR_STRETCHING * beacon_size * np.cos(_unstretched_angles)
-        )
-        _stretched_absolute_angles = np.abs(
-            np.arctan(np.tan(_unstretched_angles) / CONTOUR_STRETCHING)
-        )
+        _contour_search_ellipse[1] = sigma * CONTOUR_STRETCHING * beacon_size * np.cos(_unstretched_angles)
+        _stretched_absolute_angles = np.abs(np.arctan(np.tan(_unstretched_angles) / CONTOUR_STRETCHING))
         _curvature_adjustion_factors = 1 + 0.025 * (10 - _stretched_absolute_angles * 180 / np.pi)
-        _curvature_adjustion_factors = np.where(
-            _curvature_adjustion_factors >= 0.25, _curvature_adjustion_factors, 0.25
-        )
+        _curvature_adjustion_factors = np.where(_curvature_adjustion_factors >= 0.25, _curvature_adjustion_factors, 0.25)
 
         _termination_distance = (sigma * CONTOUR_STRETCHING * beacon_size) ** 2
 
@@ -519,9 +503,7 @@ class MinimizerScipyOptimize(MinimizerBase):
         _contour_coords = [_start_point]
 
         while True:
-            _transformed_search_ellipse = self._rotate_clockwise(
-                _contour_search_ellipse * _curvature_adjustion, _phi
-            )
+            _transformed_search_ellipse = self._rotate_clockwise(_contour_search_ellipse * _curvature_adjustion, _phi)
             _transformed_search_ellipse[0] += _coords[0]
             _transformed_search_ellipse[1] += _coords[1]
             _transformed_search_ellipse = _transformed_search_ellipse.T
@@ -560,9 +542,7 @@ class MinimizerScipyOptimize(MinimizerBase):
             else:
                 break
         self._func_wrapper_unpack_args(self._par_val)
-        return ContourFactory.create_xy_contour(
-            self._transform_contour(_minimum, _contour_coords, _err), sigma
-        )
+        return ContourFactory.create_xy_contour(self._transform_contour(_minimum, _contour_coords, _err), sigma)
 
     @staticmethod
     def _transform_coordinates(minimum, sigma_coordinates, errors):
@@ -572,9 +552,7 @@ class MinimizerScipyOptimize(MinimizerBase):
     def _transform_contour(minimum, sigma_contour, errors):
         _transformed_contour = []
         for _coords in sigma_contour:
-            _transformed_contour.append(
-                MinimizerScipyOptimize._transform_coordinates(minimum, _coords, errors)
-            )
+            _transformed_contour.append(MinimizerScipyOptimize._transform_coordinates(minimum, _coords, errors))
         return _transformed_contour
 
     @staticmethod
@@ -585,21 +563,17 @@ class MinimizerScipyOptimize(MinimizerBase):
         return _rotated_xy_values
 
     def _calculate_tangential_angle(self, coords, ids):
-        _meta_cost_function_gradient = (
-            lambda pars: self._calc_fun_with_constraints(  # noqa: E731 (do not assign labda)
-                [
-                    {
-                        "type": "eq",
-                        "fun": lambda x: x[ids[0]]
-                        - (self._par_val[ids[0]] + self._par_err[ids[0]] * pars[0]),
-                    },
-                    {
-                        "type": "eq",
-                        "fun": lambda x: x[ids[1]]
-                        - (self._par_val[ids[1]] + self._par_err[ids[1]] * pars[1]),
-                    },
-                ]
-            )
+        _meta_cost_function_gradient = lambda pars: self._calc_fun_with_constraints(  # noqa: E731 (do not assign labda)
+            [
+                {
+                    "type": "eq",
+                    "fun": lambda x: x[ids[0]] - (self._par_val[ids[0]] + self._par_err[ids[0]] * pars[0]),
+                },
+                {
+                    "type": "eq",
+                    "fun": lambda x: x[ids[1]] - (self._par_val[ids[1]] + self._par_err[ids[1]] * pars[1]),
+                },
+            ]
         )
         _grad = nd.Gradient(_meta_cost_function_gradient)(coords)
         return np.arctan2(_grad[0], _grad[1]) + np.pi / 2
@@ -641,18 +615,14 @@ class MinimizerScipyOptimize(MinimizerBase):
         self._save_state()
         _par_id = self._par_names.index(parameter_name)
         _y_offset = self.function_value if subtract_min else 0
-        _bound_low, _bound_high, _arrow_specs = self._get_profile_bound(
-            parameter_name, low, high, sigma, cl, arrows
-        )
+        _bound_low, _bound_high, _arrow_specs = self._get_profile_bound(parameter_name, low, high, sigma, cl, arrows)
         self._load_state()
         _par = np.linspace(start=_bound_low, stop=_bound_high, num=size, endpoint=True)
 
         _y = np.zeros(size)
         self._x0 = self._par_val
         for i in range(size):
-            _y[i] = self._calc_fun_with_constraints(
-                [{"type": "eq", "fun": lambda x: x[_par_id] - _par[i]}], continuous_x0=True
-            )
+            _y[i] = self._calc_fun_with_constraints([{"type": "eq", "fun": lambda x: x[_par_id] - _par[i]}], continuous_x0=True)
         self._load_state()
         return np.asarray([_par, _y - _y_offset]), _arrow_specs
 
@@ -664,9 +634,7 @@ class MinimizerScipyOptimize(MinimizerBase):
         # replace parameter values
         parameter_values = [
             _fixed_val if _is_fixed else _call_val
-            for _call_val, _fixed_val, _is_fixed in zip(
-                parameter_values, self.parameter_values, self._par_fixed
-            )
+            for _call_val, _fixed_val, _is_fixed in zip(parameter_values, self.parameter_values, self._par_fixed)
         ]
         _res = MinimizerBase._func_wrapper(self, *parameter_values)
         # some scipy methods handle 'nan' incorrectly -> return MAX_FLOAT instead

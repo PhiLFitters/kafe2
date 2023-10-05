@@ -22,9 +22,7 @@ def _heuristic_optimal_subplot_grid_size(n_subplots, aspect_ratio_priority=0.5):
     def f2(s, k):
         if n_subplots > s * (s + k):
             return 100000
-        return (s * (s + k) - n_subplots) ** 2 * (1.0 - aspect_ratio_priority) + (
-            float(k) / float(s)
-        ) ** 2 * (aspect_ratio_priority)
+        return (s * (s + k) - n_subplots) ** 2 * (1.0 - aspect_ratio_priority) + (float(k) / float(s)) ** 2 * (aspect_ratio_priority)
 
     _optimal_f = np.inf
     _optimal_sk = n_subplots, 0
@@ -140,9 +138,7 @@ class XYFitEnsemble(FitEnsembleBase):
             # validate list of results requested by user
             _unavailable_results = set(self._requested_results) - set(self.AVAILABLE_RESULTS.keys())
             if _unavailable_results:
-                raise ValueError(
-                    "Requested unavailable result variable(s): %r" % (_unavailable_results,)
-                )
+                raise ValueError("Requested unavailable result variable(s): %r" % (_unavailable_results,))
 
         # initialize `EnsembleVariable` objects to store ensembles
         self._initialize_ensemble_variables()
@@ -167,9 +163,7 @@ class XYFitEnsemble(FitEnsembleBase):
             _x_jitter = np.random.multivariate_normal(np.zeros_like(_x_data), self._ref_x_cov_mat)
             _x_data += _x_jitter
 
-        _y_data = self._toy_fit.eval_model_function(
-            x=_x_data, model_parameters=self._model_parameters
-        )
+        _y_data = self._toy_fit.eval_model_function(x=_x_data, model_parameters=self._model_parameters)
 
         # smear y data according to the total 'y' covariance matrix
         # TODO: only gaussian smearing is implemented -> more?
@@ -182,9 +176,7 @@ class XYFitEnsemble(FitEnsembleBase):
 
     def _gather_results_from_toy_fit(self, i_exp):
         for _var_name in self._requested_results:
-            self._ensemble_variables[_var_name].set_value(
-                index=i_exp, variable_value=self._get_var(_var_name)
-            )
+            self._ensemble_variables[_var_name].set_value(index=i_exp, variable_value=self._get_var(_var_name))
 
     def _do_toy_fit(self):
         """run fit with current pseudo-data"""
@@ -206,18 +198,14 @@ class XYFitEnsemble(FitEnsembleBase):
             self._ensemble_variable_plotters["y_pulls"] = EnsembleVariablePlotter(
                 ensemble_variable=self._ensemble_variables["y_pulls"],
                 value_ranges=(-3, 3),
-                variable_labels=[
-                    "Pull $y_{%d}$" % (_i,) for _i in six.moves.range(1, self.n_dat + 1)
-                ],
+                variable_labels=["Pull $y_{%d}$" % (_i,) for _i in six.moves.range(1, self.n_dat + 1)],
             )
 
         if "x_data" in self._requested_results:
             self._ensemble_variables["x_data"] = EnsembleVariable(
                 ensemble_array=np.zeros((self._n_exp, self.n_dat)),
                 distribution=scipy.stats.norm,
-                distribution_parameters=dict(
-                    loc=self._ref_x_data, scale=self._toy_fit.x_total_error
-                ),
+                distribution_parameters=dict(loc=self._ref_x_data, scale=self._toy_fit.x_total_error),
             )
             self._ensemble_variable_plotters["x_data"] = EnsembleVariablePlotter(
                 ensemble_variable=self._ensemble_variables["x_data"],
@@ -234,9 +222,7 @@ class XYFitEnsemble(FitEnsembleBase):
             self._ensemble_variables["y_data"] = EnsembleVariable(
                 ensemble_array=np.zeros((self._n_exp, self.n_dat)),
                 distribution=scipy.stats.norm,
-                distribution_parameters=dict(
-                    loc=self._ref_y_data, scale=self._ref_projected_xy_err
-                ),
+                distribution_parameters=dict(loc=self._ref_y_data, scale=self._ref_projected_xy_err),
             )
             self._ensemble_variable_plotters["y_data"] = EnsembleVariablePlotter(
                 ensemble_variable=self._ensemble_variables["y_data"],
@@ -253,9 +239,7 @@ class XYFitEnsemble(FitEnsembleBase):
             self._ensemble_variables["y_model"] = EnsembleVariable(
                 ensemble_array=np.zeros((self._n_exp, self.n_dat)),
                 distribution=scipy.stats.norm,
-                distribution_parameters=dict(
-                    loc=self._ref_y_data, scale=self._ref_projected_xy_err
-                ),
+                distribution_parameters=dict(loc=self._ref_y_data, scale=self._ref_projected_xy_err),
             )
             self._ensemble_variable_plotters["y_model"] = EnsembleVariablePlotter(
                 ensemble_variable=self._ensemble_variables["y_model"],
@@ -265,9 +249,7 @@ class XYFitEnsemble(FitEnsembleBase):
                         self._ref_y_data + 3 * self._ref_projected_xy_err,
                     ]
                 ).T,
-                variable_labels=[
-                    "$f(x_{%d})$" % (_i,) for _i in six.moves.range(1, self.n_dat + 1)
-                ],
+                variable_labels=["$f(x_{%d})$" % (_i,) for _i in six.moves.range(1, self.n_dat + 1)],
             )
 
         if "parameter_pulls" in self._requested_results:
@@ -280,8 +262,7 @@ class XYFitEnsemble(FitEnsembleBase):
                 ensemble_variable=self._ensemble_variables["parameter_pulls"],
                 value_ranges=(-3, 3),
                 variable_labels=[
-                    "Pull ${}$".format(_arg_formatter.latex_name)
-                    for _arg_formatter in self._toy_fit._model_function.formatter.arg_formatters
+                    "Pull ${}$".format(_arg_formatter.latex_name) for _arg_formatter in self._toy_fit._model_function.formatter.arg_formatters
                 ],
             )
 
@@ -297,9 +278,7 @@ class XYFitEnsemble(FitEnsembleBase):
                 variable_labels="${}$".format(self._toy_fit._cost_function.formatter.latex_name),
             )
 
-    def _make_figure_gs(
-        self, figsize=(8, 8), nrows=1, ncols=1, left=0.1, bottom=0.1, right=0.9, top=0.9
-    ):
+    def _make_figure_gs(self, figsize=(8, 8), nrows=1, ncols=1, left=0.1, bottom=0.1, right=0.9, top=0.9):
         """create a new matplotlib figure with a GridSpec controlling the subplot layout"""
         _fig = plt.figure(figsize=figsize)  # defaults from matplotlibrc
         _gs = gs.GridSpec(
@@ -316,9 +295,7 @@ class XYFitEnsemble(FitEnsembleBase):
         return _fig, _gs
 
     def _update_reference_quantities_from_toy_fit(self):
-        self._ref_y_data = self._toy_fit.eval_model_function(
-            x=self._ref_x_data, model_parameters=self._model_parameters
-        )
+        self._ref_y_data = self._toy_fit.eval_model_function(x=self._ref_x_data, model_parameters=self._model_parameters)
         self._ref_x_cov_mat = self._toy_fit.x_total_cov_mat
         self._ref_y_cov_mat = self._toy_fit.y_total_cov_mat
         self._ref_projected_xy_cov_mat = self._toy_fit.total_cov_mat
@@ -336,9 +313,7 @@ class XYFitEnsemble(FitEnsembleBase):
     @property
     def _parameter_pulls(self):
         """property for ensemble variable 'parameter_pulls'"""
-        return (
-            self._toy_fit.parameter_values - self._model_parameters
-        ) / self._toy_fit.parameter_errors
+        return (self._toy_fit.parameter_values - self._model_parameters) / self._toy_fit.parameter_errors
 
     @property
     def _y_data(self):
@@ -460,17 +435,13 @@ class XYFitEnsemble(FitEnsembleBase):
             # validate list of results requested by user
             _unavailable_results = set(self._requested_results) - set(self.AVAILABLE_RESULTS.keys())
             if _unavailable_results:
-                raise ValueError(
-                    "Requested unavailable result variable(s): %r" % (_unavailable_results,)
-                )
+                raise ValueError("Requested unavailable result variable(s): %r" % (_unavailable_results,))
 
         _dict_to_return = dict()
         for _result_name in results:
             _var = self._ensemble_variables.get(_result_name, None)
             if _var is None:
-                raise FitEnsembleException(
-                    "Cannot retrieve result '{}': " "variable not collected!".format(_result_name)
-                )
+                raise FitEnsembleException("Cannot retrieve result '{}': " "variable not collected!".format(_result_name))
             _dict_to_return[_result_name] = _var.values
 
         return _dict_to_return
@@ -497,10 +468,7 @@ class XYFitEnsemble(FitEnsembleBase):
             # _result_array = self._result_array_dicts.get(_result_name, None)
             _result_variable = self._ensemble_variables.get(_result_name, None)
             if _result_variable is None:
-                raise FitEnsembleException(
-                    "Cannot retrieve statistics for result "
-                    "variable '{}': variable not collected!".format(_result_name)
-                )
+                raise FitEnsembleException("Cannot retrieve statistics for result " "variable '{}': variable not collected!".format(_result_name))
 
             _current_result_dict = _dict_to_return[_result_name] = dict()
 
@@ -530,25 +498,18 @@ class XYFitEnsemble(FitEnsembleBase):
             # validate list of results requested by user
             _unavailable_results = set(self._requested_results) - set(self.AVAILABLE_RESULTS.keys())
             if _unavailable_results:
-                raise ValueError(
-                    "Requested unavailable result variable(s): %r" % (_unavailable_results,)
-                )
+                raise ValueError("Requested unavailable result variable(s): %r" % (_unavailable_results,))
 
         for _result_name in results:
             _result_variable = self._ensemble_variables.get(_result_name, None)
 
             if _result_variable is None:
-                raise FitEnsembleException(
-                    "Cannot plot result for variable '%s': "
-                    "variable not collected!" % (_result_name,)
-                )
+                raise FitEnsembleException("Cannot plot result for variable '%s': " "variable not collected!" % (_result_name,))
 
             _result_variable_plotter = self._ensemble_variable_plotters.get(_result_name, None)
 
             if _result_variable_plotter is None:
-                raise FitEnsembleException(
-                    "Cannot plot result for variable '%s': " "no plotter defined!" % (_result_name,)
-                )
+                raise FitEnsembleException("Cannot plot result for variable '%s': " "no plotter defined!" % (_result_name,))
 
             # -- decide how to lay out plots depending on the result variable dimensionality
             if _result_variable.ndim == 0:
@@ -564,18 +525,14 @@ class XYFitEnsemble(FitEnsembleBase):
                 # plot each entry into a separate `Axes` object and display
                 # them in a grid-like layout
                 _nplots = int(_result_variable.shape[0])
-                _nrows, _ncols = _heuristic_optimal_subplot_grid_size(
-                    _nplots, aspect_ratio_priority=0.8
-                )
+                _nrows, _ncols = _heuristic_optimal_subplot_grid_size(_nplots, aspect_ratio_priority=0.8)
                 _fig, _gs = self._make_figure_gs(figsize=(8, 8), nrows=_nrows, ncols=_ncols)
 
                 # create an array 'a' with a[i, j] = [i, j]
                 _axes_grid = np.dstack((np.meshgrid(np.arange(_nrows), np.arange(_ncols))))
                 # replace [i, j] by the `Axes` object for _gs[i, j] -> array of `Axes`
                 _axes_grid = np.apply_along_axis(
-                    lambda irow_icol: plt.subplot(_gs[irow_icol[0], irow_icol[1]])
-                    if irow_icol[0] * _ncols + irow_icol[1] < _nplots
-                    else None,
+                    lambda irow_icol: plt.subplot(_gs[irow_icol[0], irow_icol[1]]) if irow_icol[0] * _ncols + irow_icol[1] < _nplots else None,
                     -1,
                     _axes_grid,
                 )
@@ -597,9 +554,7 @@ class XYFitEnsemble(FitEnsembleBase):
                 # create an array 'a' with a[i, j] = [i, j]
                 _axes_grid = np.dstack(reversed(np.meshgrid(np.arange(_nrows), np.arange(_ncols))))
                 # replace [i, j] by the `Axes` object for _gs[i, j] -> array of `Axes`
-                _axes_grid = np.apply_along_axis(
-                    lambda irow_icol: plt.subplot(_gs[irow_icol[0], irow_icol[1]]), -1, _axes_grid
-                )
+                _axes_grid = np.apply_along_axis(lambda irow_icol: plt.subplot(_gs[irow_icol[0], irow_icol[1]]), -1, _axes_grid)
                 # do not reshape _axes_grid -> its shape already matches variable shape
 
                 # call the plotting routine on the axes grid
@@ -607,8 +562,7 @@ class XYFitEnsemble(FitEnsembleBase):
             else:
                 # cannot plot variables with 3 or more dimensions...
                 raise FitEnsembleException(
-                    "Cannot plot result for variable '%s': variable entry dimensionality "
-                    "too high (%d)!" % (_result_name, _result_variable.ndim)
+                    "Cannot plot result for variable '%s': variable entry dimensionality " "too high (%d)!" % (_result_name, _result_variable.ndim)
                 )
 
             if show_legend:
@@ -650,25 +604,18 @@ class XYFitEnsemble(FitEnsembleBase):
             # validate list of results requested by user
             _unavailable_results = set(self._requested_results) - set(self.AVAILABLE_RESULTS.keys())
             if _unavailable_results:
-                raise ValueError(
-                    "Requested unavailable result variable(s): %r" % (_unavailable_results,)
-                )
+                raise ValueError("Requested unavailable result variable(s): %r" % (_unavailable_results,))
 
         for _result_name in results:
             _result_variable = self._ensemble_variables.get(_result_name, None)
 
             if _result_variable is None:
-                raise FitEnsembleException(
-                    "Cannot plot result for variable '%s': "
-                    "variable not collected!" % (_result_name,)
-                )
+                raise FitEnsembleException("Cannot plot result for variable '%s': " "variable not collected!" % (_result_name,))
 
             _result_variable_plotter = self._ensemble_variable_plotters.get(_result_name, None)
 
             if _result_variable_plotter is None:
-                raise FitEnsembleException(
-                    "Cannot plot result for variable '%s': " "no plotter defined!" % (_result_name,)
-                )
+                raise FitEnsembleException("Cannot plot result for variable '%s': " "no plotter defined!" % (_result_name,))
 
             # -- decide how to lay out plots depending on the result variable dimensionality
             if _result_variable.ndim != 1:
@@ -680,8 +627,7 @@ class XYFitEnsemble(FitEnsembleBase):
             _nrows = _ncols = int(_result_variable.shape[0])
             if _nrows <= 1:
                 raise FitEnsembleException(
-                    "Cannot create scatter plot for result variable '%s': "
-                    "vector has less than two entries!" % (_result_name,)
+                    "Cannot create scatter plot for result variable '%s': " "vector has less than two entries!" % (_result_name,)
                 )
             _fig, _gs = self._make_figure_gs(figsize=(8, 8), nrows=_nrows - 1, ncols=_ncols - 1)
 
@@ -689,9 +635,7 @@ class XYFitEnsemble(FitEnsembleBase):
             _axes_grid = np.dstack((np.meshgrid(np.arange(_nrows), np.arange(_ncols))))
             # replace [i, j] by the `Axes` object for _gs[i, j] -> array of `Axes`
             _axes_grid = np.apply_along_axis(
-                lambda irow_icol: plt.subplot(_gs[irow_icol[0] - 1, irow_icol[1]])
-                if irow_icol[0] > irow_icol[1]
-                else None,
+                lambda irow_icol: plt.subplot(_gs[irow_icol[0] - 1, irow_icol[1]]) if irow_icol[0] > irow_icol[1] else None,
                 -1,
                 _axes_grid,
             )
