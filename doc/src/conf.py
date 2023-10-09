@@ -105,7 +105,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'kafe2'
-copyright = f'2019-{datetime.now().year}, J. Gäßler, C. Verstege, D. Savoiu and G. Quast'
+copyright = f'2019-{datetime.now().year}, J. Gäßler, C. Verstege, D. Savoiu, M. Hohenstein and G. Quast'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -310,7 +310,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class], toctree_only).
 latex_documents = [
   ('index', 'kafe2.tex', u'kafe2 Documentation',
-   u'J. Gäßler, C. Verstege, D. Savoiu, G. Quast', 'manual', False),
+   u'J. Gäßler, C. Verstege, D. Savoiu, M. Hohenstein, G. Quast', 'manual', False),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -340,7 +340,7 @@ latex_show_pagerefs = True
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('kafe2', 'kafe2', u'kafe2 Documentation',
-     [u'D. Savoiu, G. Quast'], 1)
+     [u'J. Gäßler, C. Verstege, D. Savoiu, M. Hohenstein, G. Quast'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -354,7 +354,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('kafe2', 'kafe2', u'kafe2 Documentation',
-   u'J. Gäßler, C. Verstege, D. Savoiu, G. Quast', 'kafe2', 'One line description of project.',
+   u'J. Gäßler, C. Verstege, D. Savoiu, M. Hohenstein, G. Quast', 'kafe2', 'One line description of project.',
    'Miscellaneous'),
 ]
 

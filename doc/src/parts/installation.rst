@@ -44,21 +44,15 @@ Installation notes (Linux)
 ==========================
 
 The easiest way to install *kafe2* is via `pip <https://pip.pypa.io/en/stable/>`_, which is
-already included for Python >= 2.7.9. Installing via *pip* will automatically install the minimal
-dependencies. Please note that commands below should be run as root.
-
-For Python 2:
-
-    .. code:: bash
-
-        pip2 install kafe2
-
+already included in Python. Installing via *pip* will automatically install the minimal
+dependencies. Please note that commands below could be run as root to install them system-wide
+or as the current user, optionally with the parameter "--user", to install *kafe2* only locally.
 
 For Python 3:
 
     .. code:: bash
 
-        pip3 install kafe2
+        pip install kafe2
 
 
 If you don't have *pip* installed, get it from the package manager.
@@ -67,14 +61,14 @@ In Ubuntu/Mint/Debian, do:
 
     .. code:: bash
 
-        apt-get install python-pip python3-pip
+        apt-get install python3-pip
 
 
 In Fedora/RHEL/CentOS, do:
 
     .. code:: bash
 
-        yum install python2-pip python3-pip
+        yum install python3-pip
 
 
 or use ``easy_install`` (included with `setuptools <https://pypi.python.org/pypi/setuptools>`_):
@@ -85,20 +79,6 @@ or use ``easy_install`` (included with `setuptools <https://pypi.python.org/pypi
 
 
 You will also need to install *Tkinter* if it didn't already come with your Python distribution.
-
-For Python 2, Ubuntu/Mint/Debian:
-
-    .. code:: bash
-
-        apt-get install python-tk
-
-
-For Python 2, Fedora/RHEL/CentOS:
-
-    .. code:: bash
-
-        yum install tkinter
-
 
 For Python 3, Ubuntu/Mint/Debian:
 
@@ -183,13 +163,13 @@ In Ubuntu/Mint/Debian, do:
 
     .. code:: bash
 
-        apt-get install libpython2-dev libpython3-dev
+        apt-get install libpython3-dev
 
 In Fedora/RHEL/CentOS, do:
 
     .. code:: bash
 
-        yum install python2-devel python3-devel
+        yum install python3-devel
 
 
 Installation notes (Windows)
@@ -234,7 +214,7 @@ directory into which you have downloaded *kafe2*:
 
 .. code:: bash
 
-    python setup.py install
+    python -m build
 
 
 Using *kafe* with ROOT under Windows

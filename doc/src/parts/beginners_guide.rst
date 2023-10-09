@@ -111,12 +111,8 @@ Python
 ------
 The same fit can also be performed by using a *Python* script.
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: python code
-
-    .. literalinclude:: ../../../examples/001_line_fit/line_fit.py
-        :lines: 14-
+.. literalinclude:: ../../../examples/001_line_fit/line_fit.py
+    :language: python
 
 
 If you're performing the fit via *Python* code there should be two plots.
@@ -187,21 +183,13 @@ The leftmost part of the string up to ``:`` is interpreted as the model function
 
 For more advanced fit functions, consider using *kafe2* inside a *Python* script.
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: exponential_fit.yml
+.. literalinclude:: ../../../examples/002_model_functions/exponential_fit.yml
+    :language: yaml
+    :emphasize-lines: 38-43
 
-    .. literalinclude:: ../../../examples/002_model_functions/exponential_fit.yml
-        :language: yaml
-        :emphasize-lines: 38-43
-
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: line_fit.yml
-
-    .. literalinclude:: ../../../examples/002_model_functions/line_fit.yml
-        :language: yaml
-        :emphasize-lines: 38-43
+.. literalinclude:: ../../../examples/002_model_functions/line_fit.yml
+    :language: yaml
+    :emphasize-lines: 38-43
 
 To use multiple input files with kafe2go, simply run
 
@@ -228,12 +216,9 @@ When using *Python* multiple model functions can be defined in the same file.
 They are plotted together by first calling ``kafe2.xy_fit`` multiple times and then calling
 ``kafe2.plot``.
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: python code
-
-    .. literalinclude:: ../../../examples/002_model_functions/model_functions.py
-        :lines: 13-
+.. literalinclude:: ../../../examples/002_model_functions/model_functions.py
+    :lines: 13-
+    :language: python
 
 
 .. _profiling:
@@ -289,12 +274,8 @@ contours can be shown by using the ``-c`` flag. In the *Python* example a ratio 
 and model function is shown below the plot. This can be done by appending the ``-r`` flag to
 *kafe2go*.
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: non_linear_fit.yml
-
-    .. literalinclude:: ../../../examples/003_profiling/01_non_linear_fit.yml
-        :language: yaml
+.. literalinclude:: ../../../examples/003_profiling/01_non_linear_fit.yml
+    :language: yaml
 
 Python
 ------
@@ -304,25 +285,19 @@ For a quick intorduction consider this code that is mostly equivalent to the ver
 a straight line with *xy* errors:
 
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: object_oriented_programming.py
-
-    .. literalinclude:: ../../../examples/003_profiling/00_object_oriented_programming.py
-        :lines: 16-
+.. literalinclude:: ../../../examples/003_profiling/00_object_oriented_programming.py
+    :lines: 16-
+    :language: python
 
 
 Now for the actual example.
 The relevant lines to display asymmetric uncertainties and to create the contour plot are
 highlighted in the code example below.
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: non_linear_fit.py
-
-    .. literalinclude:: ../../../examples/003_profiling/01_non_linear_fit.py
-        :lines: 33-
-        :emphasize-lines: 22, 26, 28-30
+.. literalinclude:: ../../../examples/003_profiling/01_non_linear_fit.py
+    :lines: 33-
+    :emphasize-lines: 22, 26, 28-30
+    :language: python
 
 
 3.2: Double Slit
@@ -354,12 +329,9 @@ reading them with the corresponding classes like :code:`XYContainer.from_file("m
 Python
 ------
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: 02_double_slit.py
-
-    .. literalinclude:: ../../../examples/003_profiling/02_double_slit.py
-        :lines: 13-
+.. literalinclude:: ../../../examples/003_profiling/02_double_slit.py
+    :lines: 13-
+    :language: python
 
 
 .. _x_errors:
@@ -399,12 +371,8 @@ In order do add a grid to the contours, run *kafe2go* with the ``--grid all`` fl
 So to plot with asymmetric errors, the profiles and contour as well as a grid run
 ``kafe2go x_errors.yml -a -c --grid all``
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: x_errors.yml
-
-    .. literalinclude:: ../../../examples/003_profiling/03_x_errors.yml
-        :language: yaml
+.. literalinclude:: ../../../examples/003_profiling/03_x_errors.yml
+    :language: yaml
 
 Python
 ------
@@ -412,12 +380,9 @@ Python
 The example to show that uncertainties on the x axis can cause a non-linear fit uses the *YAML*
 dataset given in the *kafe2go* section.
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: x_errors.py
-
-    .. literalinclude:: ../../../examples/003_profiling/03_x_errors.py
-        :lines: 19-
+.. literalinclude:: ../../../examples/003_profiling/03_x_errors.py
+    :lines: 19-
+    :language: python
 
 
 4: Constraints
@@ -458,26 +423,19 @@ followed by the required information as highlighted in the example.
 For more information on parameter constraints via a covariance matrix, please refer to
 :ref:`kafe2go_constraints`.
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: constraints.yml
-
-    .. literalinclude:: ../../../examples/004_constraints/constraints.yml
-        :language: yaml
-        :emphasize-lines: 58-
+.. literalinclude:: ../../../examples/004_constraints/constraints.yml
+    :language: yaml
+    :emphasize-lines: 58-
 
 Python
 ------
 Using *kafe2* inside a *Python* script, parameter constraints can be set with
 ``fit.add_parameter_constraint()``. The according section is highlighted in the code example below.
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: constraints.py
-
-    .. literalinclude:: ../../../examples/004_constraints/constraints.py
-        :lines: 30-
-        :emphasize-lines: 30-33
+.. literalinclude:: ../../../examples/004_constraints/constraints.py
+    :language: python
+    :lines: 30-
+    :emphasize-lines: 30-33
 
 
 5: Convenience
@@ -490,12 +448,9 @@ Plot Customization
 This example is a cheat sheet for plot/report customization.
 It briefly demonstrates methods that modify the optics of kafe2 output.
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: customize.py
-
-    .. literalinclude:: ../../../examples/005_convenience/customize.py
-        :lines: 9-
+.. literalinclude:: ../../../examples/005_convenience/customize.py
+    :language: python
+    :lines: 9-
 
 Accessing Fit Data via Properties
 ---------------------------------
@@ -503,24 +458,18 @@ In the previous kafe2 examples we retrieved kafe2 results in a human-readable fo
 reports and plots.
 This example demonstrates how these fit results can instead be retrieved as Python variables.
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: customize.py
-
-    .. literalinclude:: ../../../examples/005_convenience/properties.py
-        :lines: 10-
+.. literalinclude:: ../../../examples/005_convenience/properties.py
+    :language: python
+    :lines: 10-
 
 Saving Fits
 -----------
 Most kafe2 objects can be turned into the human-readable YAML format and written to a file.
 These files can then be used to load the objects into Python code or as input for kafe2go.
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: customize.py
-
-    .. literalinclude:: ../../../examples/005_convenience/to_file.py
-        :lines: 9-
+.. literalinclude:: ../../../examples/005_convenience/to_file.py
+    :language: python
+    :lines: 9-
 
 
 6.1: Covariance matrix
@@ -529,23 +478,16 @@ These files can then be used to load the objects into Python code or as input fo
 kafe2go
 -------
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: 01_covariance_matrix.yml
-
-    .. literalinclude:: ../../../examples/006_advanced_errors/01_covariance_matrix.yml
-        :language: yaml
+.. literalinclude:: ../../../examples/006_advanced_errors/01_covariance_matrix.yml
+    :language: yaml
 
 
 Python
 ------
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: 01_covariance_matrix.py
-
-    .. literalinclude:: ../../../examples/006_advanced_errors/01_covariance_matrix.py
-        :lines: 23-
+.. literalinclude:: ../../../examples/006_advanced_errors/01_covariance_matrix.py
+    :language: python
+    :lines: 23-
 
 
 6.2: Error components
@@ -571,12 +513,9 @@ section (:math:`\sigma`) as a function of the centre-of-mass energy (:math:`E`).
 Python
 ------
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: 02_error_components.py
-
-    .. literalinclude:: ../../../examples/006_advanced_errors/02_error_components.py
-        :lines: 18-
+.. literalinclude:: ../../../examples/006_advanced_errors/02_error_components.py
+    :language: python
+    :lines: 18-
 
 
 6.3: Relative uncertainties
@@ -607,13 +546,9 @@ inside the *YAML* file, as highlighted below.
 For comparison, one cane move the *y*-uncertainty out of the :code:`parametric_model` section.
 Then the uncertainty will be relative to the data.
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: relative_uncertainties.yml
-
-    .. literalinclude:: ../../../examples/006_advanced_errors/03_relative_model_uncertainties.yml
-        :language: yaml
-        :emphasize-lines: 11-15
+.. literalinclude:: ../../../examples/006_advanced_errors/03_relative_model_uncertainties.yml
+    :language: yaml
+    :emphasize-lines: 11-15
 
 
 Python
@@ -621,13 +556,10 @@ Python
 Referencing the model as source for relative uncertainties is done by setting the keyword
 :code:`reference='model'` in the :py:meth:`~.XYFit.add_error` method.
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: relative_uncertainties.py
-
-    .. literalinclude:: ../../../examples/006_advanced_errors/03_relative_uncertainties.py
-        :lines: 13-
-        :emphasize-lines: 11, 18
+.. literalinclude:: ../../../examples/006_advanced_errors/03_relative_uncertainties.py
+    :lines: 13-
+    :emphasize-lines: 11, 18
+    :language: python
 
 
 7: Poisson Cost Function
@@ -677,12 +609,9 @@ the ancient kings.
 Python
 ------
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: 01_poisson_cost_function.py
-
-    .. literalinclude:: ../../../examples/007_cost_functions/01_poisson_cost_function.py
-        :lines: 35-
+.. literalinclude:: ../../../examples/007_cost_functions/01_poisson_cost_function.py
+    :lines: 35-
+    :language: python
 
 
 8: Indexed Fit
@@ -710,13 +639,9 @@ kafe2go
 In order to tell *kafe2go* that a fit is a histogram fit ``type: histogram`` has to specified
 inside the *YAML* file.
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: histogram.yml
-
-    .. literalinclude:: ../../../examples/009_histogram_fit/histogram.yml
-        :language: yaml
-        :emphasize-lines: 1
+.. literalinclude:: ../../../examples/009_histogram_fit/histogram.yml
+    :language: yaml
+    :emphasize-lines: 1
 
 
 Python
@@ -728,12 +653,9 @@ The creation of a histogram requires the user to set the limits of the histogram
 bins.
 Alternatively the bin edges for each bin can be set manually.
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: histogram_fit.py
-
-    .. literalinclude:: ../../../examples/009_histogram_fit/01_histogram_fit.py
-        :lines: 16-
+.. literalinclude:: ../../../examples/009_histogram_fit/01_histogram_fit.py
+    :lines: 16-
+    :language: python
 
 
 10: Unbinned Fit
@@ -761,13 +683,9 @@ Similar to histogram fits, unbinned fits are defined by ``type: unbinned`` insid
 How to fix single parameters is highlighted in the example below, as well as limiting the
 background ``fbg`` to physically correct values.
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: unbinned.yml
-
-    .. literalinclude:: ../../../examples/010_unbinned_fit/01_unbinned.yml
-        :language: yaml
-        :emphasize-lines: 43-47
+.. literalinclude:: ../../../examples/010_unbinned_fit/01_unbinned.yml
+    :language: yaml
+    :emphasize-lines: 43-47
 
 
 Python
@@ -775,13 +693,10 @@ Python
 The fitting procedure is similar to the one of a histogram fit.
 How to fix single parameters is highlighted in the example below.
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: unbinned.py
-
-    .. literalinclude:: ../../../examples/010_unbinned_fit/01_unbinned.py
-        :lines: 19-
-        :emphasize-lines: 35-40
+.. literalinclude:: ../../../examples/010_unbinned_fit/01_unbinned.py
+    :lines: 19-
+    :emphasize-lines: 35-40
+    :language: python
 
 
 11: Multifit
@@ -848,12 +763,9 @@ to the values obtained in the previous :math:`T(U)` fit.
 In general, this approach yields different results than the one using
 a simultaneous multi-model fit, which is demonstrated in the next example.
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: 01_fit_with_parameter_constraints.py
-
-    .. literalinclude:: ../../../examples/011_multifit/01_fit_with_parameter_constraints.py
-        :lines: 71-
+.. literalinclude:: ../../../examples/011_multifit/01_fit_with_parameter_constraints.py
+    :lines: 71-
+    :language: python
 
 Approach 2: multi-model fit
 ---------------------------
@@ -867,9 +779,6 @@ In general, this approach yields different results than the one using
 parameter constraints, which is demonstrated in the example called
 ``fit_with_parameter_constraints``.
 
-.. bootstrap_collapsible::
-    :control_type: link
-    :control_text: 02_multifit.py
-
-    .. literalinclude:: ../../../examples/011_multifit/02_multifit.py
-        :lines: 65-
+.. literalinclude:: ../../../examples/011_multifit/02_multifit.py
+    :lines: 65-
+    :language: python
