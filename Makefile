@@ -40,7 +40,10 @@ devenv:
 
 docs:	devenv
 	echo "Generating Docs"
-	. venv/bin/activate; cd doc && $(MAKE) html
+	. venv/bin/activate; \
+		cd doc; \
+		$(MAKE) html; \
+		$(MAKE) latex;
 
 publish: build
 	echo "uploading build to PyPI"
