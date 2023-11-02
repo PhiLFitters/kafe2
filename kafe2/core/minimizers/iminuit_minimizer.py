@@ -102,7 +102,7 @@ class MinimizerIMinuit(MinimizerBase):
                     self.__iminuit.fixed[_i] = self._minimizer_param_dict["fix_" + _par_name_i]
                     self.__iminuit.limits[_i] = self._minimizer_param_dict["limit_" + _par_name_i]
                     _par_err_i = self._minimizer_param_dict.get("error_" + _par_name_i, None)
-                    if _par_err_i is not None:
+                    if _par_err_i is not None and _par_err_i > 0.0:
                         self.__iminuit.errors[_i] = _par_err_i
                 self.__iminuit.errordef = self.errordef
             # set logging level in iminuit arcording to the root logger
