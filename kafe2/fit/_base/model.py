@@ -262,7 +262,12 @@ class ModelFunctionBase(FileIOMixin, object):
     def defaults_dict(self):
         """The default values for model function parameters as a dict"""
         _defaults_dict = OrderedDict()
-        _x_name = self.x_name  # Actually a list of strings that are used as independent variables
+        _x_name = self.x_name
+
+        # _x_name can be a list for >1 independent variables.
+        # Always convert to list for simpler logic.
+        if type(_x_name) is str:
+            _x_name = [_x_name]
         for _par in self.signature.parameters.values():
             # skip independent variable parameter
             if _x_name is not None and _par.name in _x_name:
