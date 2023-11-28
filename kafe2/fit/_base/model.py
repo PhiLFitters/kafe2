@@ -215,12 +215,7 @@ class ModelFunctionBase(FileIOMixin, object):
     @property
     def x_name(self):
         """The name of the independent variable. ``None`` for 0 independent variables."""
-        # TODO: don't use case differentiation to maintain compatibility with current fit objects
-        if self._independent_argcount == 0:
-            return None
         _pars = list(self.signature.parameters.keys())
-        if self._independent_argcount == 1:
-            return _pars[0]
         return _pars[0 : self._independent_argcount]
 
     @property
@@ -262,12 +257,8 @@ class ModelFunctionBase(FileIOMixin, object):
     def defaults_dict(self):
         """The default values for model function parameters as a dict"""
         _defaults_dict = OrderedDict()
-        _x_name = self.x_name
+        _x_name = self.x_name  # list of strings
 
-        # _x_name can be a list for >1 independent variables.
-        # Always convert to list for simpler logic.
-        if type(_x_name) is str:
-            _x_name = [_x_name]
         for _par in self.signature.parameters.values():
             # skip independent variable parameter
             if _x_name is not None and _par.name in _x_name:

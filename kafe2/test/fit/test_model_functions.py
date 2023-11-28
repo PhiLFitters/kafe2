@@ -26,7 +26,7 @@ class TestSymPy(unittest.TestCase):
             parameter_names=["a", "b", "c"],
             argcount=4,
             parcount=3,
-            x_name="x",
+            x_name=["x"],
             defaults=[1.0, 1.0, 1.0],
             latex_name=r"{\tt model}",
             parameter_latex_names=["{a}", "{b}", "{c}"],
@@ -48,7 +48,7 @@ class TestSymPy(unittest.TestCase):
             parameter_names=["A_0", "tau_0"],
             argcount=3,
             parcount=2,
-            x_name="tau",
+            x_name=["tau"],
             defaults=[3.0, 1.0],
             latex_name=r"{\tt other\_model}",
             parameter_latex_names=["{A_0}", r"{\tau_0}"],
@@ -118,14 +118,16 @@ class TestSymPyIndexed(TestSymPy):
 
     def setUp(self):
         super().setUp()
-        self._ref_properties_1["parameter_names"].insert(0, self._ref_properties_1["x_name"])
+        self._ref_properties_1["parameter_names"] = \
+            self._ref_properties_1["x_name"] + self._ref_properties_1["parameter_names"]
         self._ref_properties_1["parcount"] += 1
-        self._ref_properties_1["x_name"] = None
+        self._ref_properties_1["x_name"] = []
         self._ref_properties_1["defaults"].insert(0, 1.0)
         self._ref_properties_1["parameter_latex_names"].insert(0, r"{x}")
 
-        self._ref_properties_2["parameter_names"].insert(0, self._ref_properties_2["x_name"])
+        self._ref_properties_2["parameter_names"] = \
+            self._ref_properties_2["x_name"] + self._ref_properties_2["parameter_names"]
         self._ref_properties_2["parcount"] += 1
-        self._ref_properties_2["x_name"] = None
+        self._ref_properties_2["x_name"] = []
         self._ref_properties_2["defaults"].insert(0, 1.0)
         self._ref_properties_2["parameter_latex_names"].insert(0, r"{\tau}")
