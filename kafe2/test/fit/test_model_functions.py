@@ -118,15 +118,13 @@ class TestSymPyIndexed(TestSymPy):
 
     def setUp(self):
         super().setUp()
-        self._ref_properties_1["parameter_names"] = \
-            self._ref_properties_1["x_name"] + self._ref_properties_1["parameter_names"]
+        self._ref_properties_1["parameter_names"] = self._ref_properties_1["x_name"] + self._ref_properties_1["parameter_names"]
         self._ref_properties_1["parcount"] += 1
         self._ref_properties_1["x_name"] = []
         self._ref_properties_1["defaults"].insert(0, 1.0)
         self._ref_properties_1["parameter_latex_names"].insert(0, r"{x}")
 
-        self._ref_properties_2["parameter_names"] = \
-            self._ref_properties_2["x_name"] + self._ref_properties_2["parameter_names"]
+        self._ref_properties_2["parameter_names"] = self._ref_properties_2["x_name"] + self._ref_properties_2["parameter_names"]
         self._ref_properties_2["parcount"] += 1
         self._ref_properties_2["x_name"] = []
         self._ref_properties_2["defaults"].insert(0, 1.0)
