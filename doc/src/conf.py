@@ -49,7 +49,10 @@ sys.modules['iminuit'].__version__ = "1.0.0"
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('../..'))
-sys.path.insert(0, os.path.abspath('ext'))
+
+# there were extensions used in the past which were installed into the 'ext' directory.
+# Currently no extension is in use but it might be activated again some time in the future
+# sys.path.insert(0, os.path.abspath('ext'))
 
 import kafe2
 
@@ -77,7 +80,6 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
     'sphinx.ext.inheritance_diagram',
-    'bootstrap_collapsible',
 ]
 
 todo_include_todos = True
