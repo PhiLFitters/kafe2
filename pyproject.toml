@@ -56,7 +56,7 @@ version = {attr = "kafe2.__version__"}
 dev = [
     "coverage",
     "sphinx",
-    "sphinx_bootstrap_theme",
+    "sphinx-rtd-theme",
     "mock",
     "pytest",
     "flake8",
