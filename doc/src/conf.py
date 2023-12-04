@@ -58,12 +58,16 @@ import kafe2
 
 print('kafe2 version:', kafe2.__version__)
 
-# -- General configuration ------------------------------------------------
+# import the information which is already in the pyproject.toml
+import tomllib
+with open("../../pyproject.toml", "rb") as f:
+    toml = tomllib.load(f)
 
-# style sheet customizations
-# TODO: This isn't used in the whole document. Maybe it can be removed?
-def setup(app):
-    app.add_css_file("style.css")
+pyproject = toml["project"]
+# extract list of authors from pyproject.toml and replace the first name by its first letter
+authors = ", ".join([i['name'].split(' ')[0][0] + ". " + i['name'].split(' ')[1] for i in pyproject['authors']])
+
+# -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
 needs_sphinx = '1.4'  # needed for imgmath extension
@@ -104,8 +108,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'kafe2'
-copyright = f'2019-{datetime.now().year}, J. Gäßler, C. Verstege, D. Savoiu, M. Hohenstein and G. Quast'
+project = pyproject['name']
+# generate name of authors from the pyproject.toml file
+copyright = f"2019-{datetime.now().year}, {authors}"
 
 # The version info for the project you're documenting, acts as replacement for
 # | version | and | release | , also used in various other places throughout the
@@ -208,7 +213,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class], toctree_only).
 latex_documents = [
   ('index', 'kafe2.tex', u'kafe2 Documentation',
-   u'J. Gäßler, C. Verstege, D. Savoiu, M. Hohenstein, G. Quast', 'manual', False),
+   f'{authors}', 'manual', False),
 ]
 
 # If true, show page references after internal links.
@@ -221,7 +226,7 @@ latex_show_pagerefs = True
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('kafe2', 'kafe2', u'kafe2 Documentation',
-     [u'J. Gäßler, C. Verstege, D. Savoiu, M. Hohenstein, G. Quast'], 1)
+     [f'{authors}'], 1)
 ]
 
 
@@ -232,7 +237,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('kafe2', 'kafe2', u'kafe2 Documentation',
-   u'J. Gäßler, C. Verstege, D. Savoiu, M. Hohenstein, G. Quast', 'kafe2', 'One line description of project.',
+   f'{authors}', 'kafe2', 'One line description of project.',
    'Miscellaneous'),
 ]
 
