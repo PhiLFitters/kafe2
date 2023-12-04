@@ -93,7 +93,9 @@ intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
                        'iminuit': ('https://iminuit.readthedocs.io/en/latest', None)}
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+# the '_templates' directory was existing in the past but the template in there wasn't used at all.
+# The template was removed but maybe this feature might be activated again some time in the future
+# templates_path = ['_templates']
 
 # The suffix of source filenames.
 source_suffix = '.rst'
