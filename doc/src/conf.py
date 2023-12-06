@@ -65,7 +65,7 @@ with open("../../pyproject.toml", "rb") as f:
 
 pyproject = toml["project"]
 # extract list of authors from pyproject.toml and replace the first name by its first letter
-authors = ", ".join([i['name'].split(' ')[0][0] + ". " + i['name'].split(' ')[1] for i in pyproject['authors']])
+authors = ", ".join([i['name'].split(' ')[0][0] + ". " + i['name'].split(' ')[-1] for i in pyproject['authors']])
 
 # -- General configuration ------------------------------------------------
 
