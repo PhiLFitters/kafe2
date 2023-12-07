@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "kafe2"
 description = "Karlsruhe Fit Environment 2: a package for fitting and elementary data analysis"
-# the list of authors is ordered alphabetically by the last name
+# the list of authors is ordered alphabetically by last name
 authors = [
 	{ name="Johannes Gäßler", email="johannes.gaessler@cern.ch" },
 	{ name="Michael Hohenstein", email="michael@hohenste.in" },
