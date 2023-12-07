@@ -5,12 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "kafe2"
 description = "Karlsruhe Fit Environment 2: a package for fitting and elementary data analysis"
+# the list of authors is ordered alphabetically by last name
 authors = [
-	{ name="Daniel Savoiu", email="daniel.savoiu@cern.ch" },
 	{ name="Johannes Gäßler", email="johannes.gaessler@cern.ch" },
-	{ name="Cedric Verstege", email="cedric.verstege@cern.ch" },
-	{ name="Günter Quast", email="G.Quast@kit.edu" },
 	{ name="Michael Hohenstein", email="michael@hohenste.in" },
+	{ name="Günter Quast", email="G.Quast@kit.edu" },
+	{ name="Daniel Savoiu", email="daniel.savoiu@cern.ch" },
+	{ name="Cedric Verstege", email="cedric.verstege@cern.ch" },
 ]
 readme = "README.rst"
 requires-python= ">=3.6"
@@ -56,7 +57,7 @@ version = {attr = "kafe2.__version__"}
 dev = [
     "coverage",
     "sphinx",
-    "sphinx_bootstrap_theme",
+    "sphinx-rtd-theme",
     "mock",
     "pytest",
     "flake8",
