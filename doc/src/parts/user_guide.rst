@@ -27,43 +27,27 @@ correlations.
     :alt: General workflow with kafe2.
 
 
-Datasets
-========
-When performing fits with *kafe2*, the data is stored in so-called data containers
-(:py:obj:`~.DataContainerBase`-derived objects).
-The difference between the container classes comes down to the type of data they store.
+Data handling
+=============
 
-There are two types of data supported by *kafe2*:
-One-dimensional data like the lifetimes of particles following a probability density
-function or two-dimensional data like a current-voltage characteristic.
-
-* The most basic example of data is a simple series of one-dimensional data points called indexed
-  data in *kafe2*
-  (:py:obj:`~.IndexedContainer`).
-* One-dimensional data can either be kept as-is or filled into a histogram ("*binning*").
-  In *kafe2* these types of data and their corresponding fits are referred to as unbinned and
-  histogram data/fits
-  (:py:obj:`~.UnbinnedContainer` and :py:obj:`~.HistContainer`).
-* Two-dimensional data and the corresponding fit is referred to as XY data/fit
-  (:py:obj:`~.XYContainer`).
-
-Setting the data
-----------------
-Data containers are created as regular Python objects from iterables (lists, arrays, etc.) of
-floats.
+Data Container
+--------------
+In *kafe2*, your data is organized using data containers, which come in different types
+to suit various data formats.
 
 XY Container
 ^^^^^^^^^^^^
 
+If your data consists of paired x and y values, use an :py:obj:`~.XYContainer`:
+
 .. code-block:: python
 
     from kafe2 import XYContainer
-    # Create an XYContainer object to hold the xy data for the fit.
-    xy_data = XYContainer(x_data=[1.0, 2.0, 3.0, 4.0],
-                          y_data=[2.3, 4.2, 7.5, 9.4])
+    xy_data = XYContainer(x_data=[1.0, 2.0, 3.0, 4.0], y_data=[2.3, 4.2, 7.5, 9.4])
 
 Unbinned and Indexed Container
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+For one-dimensional data, *kafe2* offers :py:obj:`~.IndexedContainer` and :py:obj:`~.UnbinnedContainer`:
 
 .. code-block:: python
 
@@ -73,23 +57,19 @@ Unbinned and Indexed Container
 
 Histogram Container
 ^^^^^^^^^^^^^^^^^^^
-When creating a :py:obj:`~.HistContainer` the binning of the histogram has to be determined.
-Equidistant bins can be created by using the ``n_bins`` and ``bin_range`` keywords.
+If you have histogram data, use a :py:obj:`~.HistContainer`.
+You can either specify bin edges or let kafe2 create equidistant bins for you:
 
 .. code-block:: python
 
     from kafe2 import HistContainer
+    # Creating a HistContainer with equidistant bins
     histogram = HistContainer(n_bins=10, bin_range=(-5, 5))
 
-Alternatively the ``bin_edges`` keyword can be used to directly specify bin edges with arbitrary
-distances between them:
+    # Creating a HistContainer with specified bin edges
+    histogram = HistContainer(bin_edges=[-5.0, -4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0])
 
-.. code-block:: python
-
-    from kafe2 import HistContainer
-    hist = HistContainer(bin_edges=[-5.0, -4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0])
-
-After setting the bin edges, the histogram can be filled with data points.
+After creating the histogram, it can be filled with data points.
 This can be done directly when creating the container with the ``fill_data`` keyword or
 afterwards with the :py:meth:`~.HistContainer.fill` method.
 Data points lying outside the bin range will be stored in an underflow or overflow bin and are
@@ -114,11 +94,13 @@ When doing so, rebinning and other options won't be available.
     histogram = HistContainer(n_bins=5, bin_range=(0, 5))
     histogram.set_bins([1, 3, 5, 2, 0], underflow=2, overflow=0)
 
+
 .. _container-labels:
 
-Data and axis labels
---------------------
+Data Labels
+-----------
 
+Label your data and specify axis labels to keep important metadata and make your finral plots invormative:
 The name of the dataset or its label is set with the :py:meth:`~.DataContainerBase.label` property.
 Axis labels can be set with the :py:meth:`~.DataContainerBase.x_label` and
 :py:meth:`~.DataContainerBase.y_label` properties or the
@@ -127,30 +109,29 @@ Axis labels can be set with the :py:meth:`~.DataContainerBase.x_label` and
 .. code-block:: python
 
     from kafe2 import XYContainer
+    # Creating an XYContainer object
     xy_data = XYContainer(x_data=[1.0, 2.0, 3.0, 4.0], y_data=[2.3, 4.2, 7.5, 9.4])
+    # Setting labels
     xy_data.label = 'My Data'
     xy_data.axis_labels = ['Time $\\tau$ (µs)', 'My $y$-label']
 
-Text in between dollar signs will be interpreted as latex code.
-The labels are displayed when plotting the fit results.
+Setting Labels is available for all container types.
 
 Uncertainties
 -------------
 
-To produce a meaningful fit result most cost functions require the user to specify uncertainties.
-Independent uncertainties and correlated uncertainties are added using the same methods.
+Specifying uncertainties is crucial for obtaining meaningful fit results.
+Uncertainties can be independent or correlated.
 
 Independent uncertainties
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-Independent uncertainties can be added to a dataset (:py:obj:`~.DataContainerBase`-derived objects)
-with the :py:meth:`~.DataContainerBase.add_error` method:
+^^^^^^^^^^^^^^^^^^^^^^^^^
+To add independent uncertainties to your data, use the :py:meth:`~.DataContainerBase.add_error` method:
 
 .. code-block:: python
 
     from kafe2 import XYContainer
-    x = [19.8, 3.0, 5.1, 16.1, 8.2,  11.7, 6.2, 10.1]
-    y = [23.2, 3.2, 4.5, 19.9, 7.1, 12.5, 4.5, 7.2]
-    data = XYContainer(x_data=x, y_data=y)
+    # Creating an XYContainer object
+    data = XYContainer(x_data=[1.0, 2.0, 3.0, 4.0], y_data=[2.3, 4.2, 7.5, 9.4])
     data.add_error(axis='x', err_val=0.3)  # +/-0.3 for all data points in x-direction
     data.add_error(axis='y', err_val=0.15, relative=True)  # +/-15% for all points in y-direction
 
@@ -163,8 +144,8 @@ each entry in ``err_val`` is applied to the data point with the same index.
 
 Correlated uncertainties
 ^^^^^^^^^^^^^^^^^^^^^^^^
-If the correlation between the uncertainties for all data points is the same, the
-:py:meth:`~.DataContainerBase.add_error` method can be used with the ``correlation`` keyword:
+For correlated uncertainties, use the ``correlation`` keyword with
+:py:meth:`~.DataContainerBase.add_error`.
 
 .. code-block:: python
 
@@ -414,42 +395,50 @@ A typical dictionary returned by the :py:meth:`~.FitBase.do_fit` method looks li
 Plotting
 ========
 
-For displaying the results of a Fit, *kafe2* provides a :py:obj:`~.Plot`-class. In the background
-a :py:obj:`matplotlib.pyplot.figure`-object is created. This means that all customization possible
-with *Matplotlib* can be done with *kafe2*-Plots as well.
+For visualizing the results of a fit, *kafe2* provides a :py:obj:`~.Plot` class, backed by
+:py:obj:`matplotlib.pyplot.figure` objects.
+This means that all customizations possible with *Matplotlib* can be applied to *kafe2* plots as well.
 
-The Plot class supports plotting multiple fits at once. By default they will all appear in the
-same figure.
-The keyword `separate_figures=True` changes this behaviour, so that each fit will be plotted to a
-separate figure.
+The Plot class supports the simultaneous plotting of multiple fits, which, by default, appear
+in the same figure.
+To plot each fit on a separate figure, set `separate_figures=True`:
 
 .. code-block:: python
 
     import matplotlib.pyplot as plt
     from kafe2 import Plot
+
+    # Plotting multiple fits on the same figure
     p = Plot([fit_1, fit_2])
-    # for separate figures use:
+
+    # For separate figures use:
     # p = Plot([fit_1, fit_2], separate_figures=True)
-    # insert customization here
+
+    # Customize the plot here
     p.plot()
     plt.show()
 
-Running the :py:meth:`~.Plot.plot` function will perform the the plot. Customization should be
-done before this. After plotting the fits, the according :py:mod:`matplotlib` objects can be
+Running the :py:meth:`~.Plot.plot` function performs the actual plot.
+Note that there are some customizations already possible by setting the corresponding
+keyword arguments for the :py:meth:`~.Plot.plot` function.
+
+After plotting, the according :py:mod:`matplotlib` objects can be
 accessed via the :py:attr:`~.Plot.figures` and :py:attr:`~.Plot.axes` properties.
 
-Customize the Plot
-------------------
+The :py:obj:`~.Plot` class also supports the use of data containers, for only plotting data points.
+
+Customization
+-------------
 
 .. note::
 
-    The :py:meth:`~.Plot.plot` method must be called after all customization is done. Otherwise
-    not all customizations will appear in the plot.
+    Ensure that the :py:meth:`~.Plot.plot` method is called after all customizations are done,
+    as some changes may not appear in the plot otherwise.
 
 Axis Range
 ^^^^^^^^^^
 
-The plot range can be set via the :py:attr:`~.Plot.x_range` and :py:attr:`~.Plot.y_range`
+Set the plot range using the :py:attr:`~.Plot.x_range` and :py:attr:`~.Plot.y_range`
 properties:
 
 .. code-block:: python
@@ -457,55 +446,55 @@ properties:
     # set the same range for all plots
     p.x_range = (0, 10)
     p.y_range = (-5, 25)
-    # set different ranges for each plot, the length must match the number of fits handled by the
-    # plot object.
+    
+    # set different ranges for each plot
     p.x_range = [(0, 10), (-5, 5)]
     p.y_range = [(-5, 25), (10, 100)]
+    
     p.plot()  # plot method must come after the customization
 
 Axis Scale
 ^^^^^^^^^^
 
-Additionally the axis scale can be changed to logarithmic. When changing between a linear and
-logarithmic x-axis scale, the supporting points for plotting the model function will be updated
-and evenly spaced on a linear or logarithmic scale.
+Change the axis scale to logarithmic using the :py:attr:`~.Plot.x_scale` and
+:py:attr:`~.Plot.y_scale` properties:
 
 .. code-block:: python
 
     # set the same scale for all fits in this plot object
     p.x_scale = "log"
     p.y_scale = "linear
-    # or change the scale for each fit individually
-    # only use this when `separate_figures=True` is set in the Plot constructor
+
+    # Change the scale for each fit individually
+    # Only use this when `separate_figures=True` is set in the Plot constructor
     p.x_scale = ["linear", "log"]
     p.y_scale = ["log", "log"]
+
     p.plot()  # plot method must come after the customization
 
 Axis Labels
 ^^^^^^^^^^^
 
-By default, the plot will use the labels specified for each dataset (see :ref:`container-labels`).
-If multiple fits are plotted to the same figure, the axis labels from the data containers are
-concatenated while skipping duplicates.
-
-Alternatively the axis labels can be overwritten for each fit. Again if multiple fits are plotted
-to the same figure, all labels will be concatenated while skipping duplicates.
+By default, uses labels specified for each dataset (see :ref:`container-labels`).
+Overwrite axis labels for each fit with:
 
 .. code-block:: python
 
-    # set the same axis labels for all fits in this plot object
+    # Set the same axis labels for all fits in this plot object
     p.x_label = "My $x$-label"
     p.y_label = "Voltage [mV]"
-    # set different labels for each fit, the length must match the number of fits
+
+    # Set different labels for each fit
     p.x_label = ["$x_1$", "My other label for $x_2$"]
     p.y_label = ["$Y_1$", "$y_2$"]
-    p.plot()  # plot method must come after the customization
+
+    p.plot()  # plot method must come after customization
 
 Plot Style
 ^^^^^^^^^^
 
-Each graphic element has it's own plotting method and can be customized individually. Available
-*plot_types* for XYFits are
+Customize each graphic element individually.
+Available *plot_types* for XYFits are
 :code:`'data', 'model_line', 'model_error_band', 'ratio', 'ratio_error_band'` and 'model' which
 is hidden by default.
 The *plot_types* may differ for different types of fits.
@@ -515,20 +504,20 @@ With :py:meth:`~.Plot.customize` new values can be added or existing values can
 be modified. Using :code:`'__del__'` will delete the keyword and :code:`'__default__'` will reset
 it.
 
-Hiding specific elements from the plot (e.g. the uncertainty band) is done like this:
+Hide specific elements from the plot (e.g. the uncertainty band):
 
 .. code-block:: python
 
-    # the array length must match the amount of fits handled by this plot object.
+    # The array length must match the number of fits handled by this plot
     p.customize('model_error_band', 'hide', [True])
 
-In order to change the name for the data set and suppress the second output, use the following call:
+Change the name for the data set and suppress the second output:
 
 .. code-block:: python
 
     p.customize('data', 'label', [(0, "test data"), (1, '__del__')])
 
-Marker type, size and color of the marker and error bars can also be customized:
+Customize marker type, size and color for the marker and error bars:
 
 .. code-block:: python
 
@@ -537,7 +526,7 @@ Marker type, size and color of the marker and error bars can also be customized:
     p.customize('data', 'color', [(0, 'blue'), (1,'blue')]) # note: although 2nd label is suppressed
     p.customize('data', 'ecolor', [(0, 'blue'), (1, 'blue')]) # note: although 2nd label is suppressed
 
-The corresponding values for the model function can also be customized:
+Customize the model function:
 
 .. code-block:: python
 
@@ -545,8 +534,7 @@ The corresponding values for the model function can also be customized:
     p.customize('model_error_band', 'label', [(0, r'$\pm 1 \sigma$'), (1, r'$\pm 1 \sigma$')])
     p.customize('model_error_band', 'color', [(0, 'orange'), (1, 'lightgreen')])
 
-Additionally it is possible to change parameters using matplotlib functions.
-Changing the size of the axis labels is done with the following calls:
+Additionally customization using matplotlib functions:
 
 .. code-block:: python
 
