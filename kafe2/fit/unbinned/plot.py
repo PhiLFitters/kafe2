@@ -24,6 +24,7 @@ class UnbinnedPlotAdapter(PlotAdapterBase):
     def __init__(self, unbinned_fit_object, from_container=False):
         """
         Construct an :py:obj:`UnbinnedPlotAdapter` for a :py:obj:`~kafe2.fit.unbinned.UnbinnedFit` object:
+
         :param unbinned_fit_object: an :py:obj:`~kafe2.fit.unbinned.UnbinnedFit` object
         :param from_container: Whether unbinned_fit_object was created ad-hoc from just a data
             container.
