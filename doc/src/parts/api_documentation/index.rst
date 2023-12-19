@@ -74,7 +74,17 @@ Tools for Fitting Histograms: :py:mod:`~kafe2.fit.histogram`
     :undoc-members:
     :imported-members:
     :show-inheritance:
-    
+
+
+Tools for Unbinned Fits: :py:mod:`~kafe2.fit.unbinned`
+------------------------------------------------------------
+
+.. automodule:: kafe2.fit.unbinned
+    :members:
+    :undoc-members:
+    :imported-members:
+    :show-inheritance:
+
 
 Abstract Base Classes: :py:mod:`~kafe2.fit._base`
 -------------------------------------------------
