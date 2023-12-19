@@ -64,7 +64,8 @@ dev = [
     "black",
     "isort",
     "build",
-    "twine", 
+    "twine",
+    "tomli",  # required for Py<3.11, otherwise tomllib is present
 ]
 
 [project.urls]

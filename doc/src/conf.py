@@ -59,7 +59,11 @@ import kafe2
 print('kafe2 version:', kafe2.__version__)
 
 # import the information which is already in the pyproject.toml
-import tomllib
+try:
+    import tomllib  # Only Py>=3.11
+except ModuleNotFoundError:
+    import tomli as tomllib
+
 with open("../../pyproject.toml", "rb") as f:
     toml = tomllib.load(f)
 
