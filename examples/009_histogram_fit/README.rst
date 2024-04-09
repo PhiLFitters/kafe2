@@ -1,5 +1,6 @@
 * **01_histogram_fit.py**: How to fit a probability density function to binned one-dimensional data.
 * **02_absolute.py**: Same as the first example but the data is not normalized and the model function has an additional parameter for the scale.
+* **03_SplusB.py**: signal shape on top of a background distribution.
 
 Other relevant examples:
 
