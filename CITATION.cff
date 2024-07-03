@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+title: kafe2
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Johannes
+    family-names: Gäßler
+  - given-names: Günter
+    family-names: Quast
+    orcid: 'https://orcid.org/0000-0002-4021-4260'
+  - given-names: Daniel
+    orcid: 'https://orcid.org/0000-0001-6794-7475'
+    family-names: Savoiu
+  - given-names: Cedric
+    family-names: Verstege
+    orcid: 'https://orcid.org/0000-0002-2816-7713'
+identifiers:
+  - type: doi
+    value: 10.48550/arXiv.2210.12768
+    description: >-
+      kafe2 -- a Modern Tool for Model Fitting in Physics
+      Lab Courses
+  - type: doi
+    value: 10.5281/zenodo.7086793
+    description: Zenodo
+repository-code: 'https://github.com/PhiLFitters/kafe2'
+url: 'https://kafe2.readthedocs.io'
+license: GPL-3.0
