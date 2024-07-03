@@ -88,7 +88,7 @@ class TestDatastoreHistogram(unittest.TestCase):
 
     def test_manual_bin_height(self):
         self.hist_cont_binedges_manual_equal.set_bins(self._ref_bin_heights_manual)
-        self.assertTrue(np.alltrue(self.hist_cont_binedges_manual_equal.data == self._ref_bin_heights_manual))
+        self.assertTrue(np.all(self.hist_cont_binedges_manual_equal.data == self._ref_bin_heights_manual))
         self.assertTrue(self.hist_cont_binedges_manual_equal._manual_heights)
 
     def test_construct_bin_edges_variablespacing_withedges(self):
