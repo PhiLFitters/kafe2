@@ -88,6 +88,6 @@ fit.report(asymmetric_parameter_errors=True)
 
 # Optional: plot the fit results.
 plot = Plot(fit)
-plot.plot(residual=True, asymmetric_parameter_errors=True)
+plot.plot(pull=True, asymmetric_parameter_errors=True)
 
 plot.show()
