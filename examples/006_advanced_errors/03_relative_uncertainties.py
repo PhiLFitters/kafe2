@@ -42,7 +42,7 @@ plot.customize('data', 'ecolor', ('red', 'grey'))
 plot.customize('model_line', 'color', ('orange', 'mistyrose'))
 plot.customize('model_error_band', 'label', (r'$\pm 1 \sigma$', r'$\pm 1 \sigma$'))
 plot.customize('model_error_band', 'color', ('orange', 'mistyrose'))
-plot.plot(ratio=True)
+plot.plot(pull=True)
 
 cpf1 = ContoursProfiler(linear_fit1)
 cpf1.plot_profiles_contours_matrix(show_grid_for='contours')

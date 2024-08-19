@@ -650,7 +650,7 @@ class PlotAdapterBase:
         _yerr = self._get_total_error(error_contributions)
 
         # TODO: how to handle case when x and y error/model differ?
-        return target_axes.errorbar(self.data_x, (self.model_y - self.data_y) / _yerr, xerr=0, yerr=0, **kwargs)
+        return target_axes.errorbar(self.data_x, (self.data_y - self.model_y) / _yerr, xerr=0, yerr=0, **kwargs)
 
     # Overridden by multi plot adapters
     def get_formatted_model_function(self, **kwargs):
@@ -1402,15 +1402,15 @@ class Plot:
                     _axis.set_ylabel(_pull_label)
                     if pull_range is None:
                         _plot_adapters = self._get_plot_adapters()[i : i + 1] if self._separate_figs else self._get_plot_adapters()
-                        _max_abs_deviation = 0
+                        _max_abs_deviation = 2 # Ensure 1 sigma/2 sigma bands are visible
                         for _plot_adapter in _plot_adapters:
                             _max_abs_deviation = max(
                                 _max_abs_deviation,
                                 np.max(np.abs((_plot_adapter.data_y - _plot_adapter.model_y) / _plot_adapter.data_yerr)),
                             )
                         # Small gap between highest error bar and plot border:
-                        _low = -_max_abs_deviation * 1.05
-                        _high = _max_abs_deviation * 1.05
+                        _low = -_max_abs_deviation * 1.2
+                        _high = _max_abs_deviation * 1.2
                         _axis.set_ylim((_low, _high))
                     else:
                         _axis.set_ylim(pull_range)
