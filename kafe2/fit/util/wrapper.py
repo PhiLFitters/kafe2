@@ -477,6 +477,7 @@ def plot(
     legend=True,
     fit_info=True,
     error_band=True,
+    extra=None,
     profile=None,
     plot_profile=None,
     show=True,
@@ -527,6 +528,8 @@ def plot(
     :type fit_info: bool
     :param error_band: whether the model error band should be shown.
     :type error_band: bool
+    :param extra: additional, supplementary plots to show below the main plot.
+    :type error_band: "ratio", "residual", or "pull".
     :param profile: whether the profile likelihood method should be used for asymmetric parameter
         errors and profile/contour plots.
     :type profile: bool
@@ -648,12 +651,17 @@ def plot(
     if y_ticks is not None:
         _plot.y_ticks = y_ticks
 
+    if extra not in ["ratio", "residual", "pull"]:
+        raise ValueError(f"Unknown extra plot: '{extra}'. Available: 'ratio', 'residual', 'pull'.")
     if len(fits) > 0:  # Do not plot if only CustomFit.
         _plot.plot(
             legend=legend,
             fit_info=fit_info,
             asymmetric_parameter_errors=profile,
             font_scale=font_scale,
+            ratio=extra == "ratio",
+            residual=extra == "residual",
+            pull=extra == "pull",
         )
 
         if save:

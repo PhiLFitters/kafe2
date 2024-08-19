@@ -40,13 +40,15 @@ def exponential_model(x, A_0=1., x_0=5.):
 
 x_data = [0.38, 0.83, 1.96, 2.82, 4.28, 4.69, 5.97, 7.60, 7.62, 8.81, 9.87, 10.91]
 y_data = [1.60, 1.66, 2.12, 3.05, 3.57, 4.65, 6.21, 7.57, 8.27, 10.79, 14.27, 18.48]
-x_error = 0.3
-y_error_rel = 0.05
+x_error = 0.2  # 0.2 in absolute units of x
+y_error = 0.5  # 0.5 in absolute units of y
+y_error_rel = 0.03  # 3% of the y model value
 
 # kafe2.xy_fit needs to be called twice to do two fits:
-kafe2.xy_fit(linear_model, x_data, y_data, x_error=x_error, y_error_rel=y_error_rel)
+kafe2.xy_fit(linear_model, x_data, y_data,
+             x_error=x_error, y_error=y_error, y_error_rel=y_error_rel)
 kafe2.xy_fit(exponential_model, x_data, y_data,
-             x_error=x_error, y_error_rel=y_error_rel, profile=True)
+             x_error=x_error, y_error=y_error, y_error_rel=y_error_rel)
 # Make sure to specify profile=True whenever you use a nonlinear model function.
 # A model function is linear if it is a linear function of each of its parameters.
 # The model function does not need to be a linear function of the independent variable x.
@@ -62,7 +64,11 @@ kafe2.plot(
 
     # When Python functions are used as custom model functions kafe2 does not know
     # how to express them as LaTeX. The LaTeX can be manually defined like this:
-    model_expression=["{a}{x} + {b}", "{A_0} e^{{{x}/{x_0}}}"]
+    model_expression=["{a}{x} + {b}", "{A_0} e^{{{x}/{x_0}}}"],
     # Parameter names have to be put between {}. To get {} for LaTex double them like {{ or }}.
     # When using SymPy to define model function the LaTeX expression can be derived automatically.
+
+    # Add a so-called pull plot in order to compare the influence of individual data points on the models.
+    extra="pull"
+    # Alternative extra plots: "residual" or "ratio".
 )
