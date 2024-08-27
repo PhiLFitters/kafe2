@@ -151,7 +151,6 @@ one or more plots accordingly using `matplotlib`.
 .. moduleauthor:: Daniel Savoiu <daniel.savoiu@cern.ch>
 """
 
-
 # public interface of submodule 'kafe2.fit'
 
 # WARNING: Changing the order of these imports might break the kafe2 interface

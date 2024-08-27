@@ -200,17 +200,17 @@ class TestIndexedModelFunctionFormatterYamlRepresenter(unittest.TestCase):
         self._assert_model_function_formatters_equal(_read_model_function_formatter, self._model_function_formatter)
 
 
-TEST_MODEL_PARAMETER_FORMATTER = """
+TEST_MODEL_PARAMETER_FORMATTER = r"""
 id: phi
 name: ph
 latex_name: \phi
 """
 
-TEST_MODEL_PARAMETER_FORMATTER_MISSING_KEYWORD = """
+TEST_MODEL_PARAMETER_FORMATTER_MISSING_KEYWORD = r"""
 latex_name: \phi
 """
 
-TEST_MODEL_PARAMETER_FORMATTER_EXTRA_KEYWORD = """
+TEST_MODEL_PARAMETER_FORMATTER_EXTRA_KEYWORD = r"""
 name: phi
 latex_name: \phi
 extra_keyword: 3.14

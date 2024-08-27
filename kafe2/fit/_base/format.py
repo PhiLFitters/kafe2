@@ -67,17 +67,17 @@ def latexify_ascii(ascii_string):
         return r"{%s}" % ascii_string
     if ascii_string.startswith("{") and ascii_string.endswith("}"):
         return ascii_string
-    elif re.compile("^[\d\w]_[\d\w]$").match(ascii_string):
+    elif re.compile(r"^[\d\w]_[\d\w]$").match(ascii_string):
         return r"{%s}" % ascii_string
     _greek_letter_string = None
     for _greek_letter in LATEX_GREEK_LETTERS:
         if ascii_string == _greek_letter:
             _greek_letter_string = r"{\%s}" % _greek_letter
             break
-        if re.compile("^%s_[\d\w]$" % _greek_letter).match(ascii_string):
+        if re.compile(r"^%s_[\d\w]$" % _greek_letter).match(ascii_string):
             _greek_letter_string = r"{\%s}" % ascii_string
             break
-        if re.compile("^[\d\w]_%s$" % _greek_letter).match(ascii_string):
+        if re.compile(r"^[\d\w]_%s$" % _greek_letter).match(ascii_string):
             _greek_letter_string = r"{%s_\%s}" % (ascii_string[:1], _greek_letter)
             break
         if ascii_string.startswith(_greek_letter):
