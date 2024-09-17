@@ -2,7 +2,7 @@ colors:
   - &kafe_color1 '#200000'         # red-black
 #  - &kafe_color1 '#403018'        # dunkle Kaffeebohne
   - &kafe_light_color1 '#E09060'   # Latte Macchiato
-  - &kafe_color2 'navy'
+  - &kafe_color2 'royalblue'
   - &kafe_light_color2 'skyblue'
   - &kafe_color3 'darkgreen'
   - &kafe_light_color3 'yellowgreen'

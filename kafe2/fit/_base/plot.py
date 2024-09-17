@@ -643,14 +643,20 @@ class PlotAdapterBase:
         """
 
         _xmin, _xmax = self.x_range
-        target_axes.fill_between([_xmin, _xmax], -2, 2, color=[0.0, 0.0, 0.0, 0.1])
-        target_axes.fill_between([_xmin, _xmax], -1, 1, color=[0.0, 0.0, 0.0, 0.1])
+        _ymin, _ymax = target_axes.get_ylim()
+        _pull = (self.data_y - self.model_y) / self._get_total_error(error_contributions)
+
+        _xerr = 0.0125 * (_xmax - _xmin)
+        # fmt: off
+        _yerr = np.array([
+            np.where(_pull < 0, 0, np.abs(_pull)),
+            np.where(_pull > 0, 0, np.abs(_pull))
+        ])
+        # fmt: on
+
         target_axes.hlines(y=0, xmin=_xmin, xmax=_xmax, colors="black", linestyles=":")
-
-        _yerr = self._get_total_error(error_contributions)
-        _pull = (self.data_y - self.model_y) / _yerr
-
-        return target_axes.errorbar(self.data_x, _pull, xerr=0, yerr=0, **kwargs)
+        kwargs["marker"] = None
+        return target_axes.errorbar(self.data_x, _pull, xerr=_xerr, yerr=_yerr, **kwargs)
 
     # Overridden by multi plot adapters
     def get_formatted_model_function(self, **kwargs):
@@ -1402,7 +1408,7 @@ class Plot:
                     _axis.set_ylabel(_pull_label)
                     if pull_range is None:
                         _plot_adapters = self._get_plot_adapters()[i : i + 1] if self._separate_figs else self._get_plot_adapters()
-                        _max_abs_deviation = 2  # Ensure 1 sigma/2 sigma bands are visible
+                        _max_abs_deviation = 0
                         for _plot_adapter in _plot_adapters:
                             _max_abs_deviation = max(
                                 _max_abs_deviation,
