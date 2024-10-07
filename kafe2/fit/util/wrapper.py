@@ -651,8 +651,8 @@ def plot(
     if y_ticks is not None:
         _plot.y_ticks = y_ticks
 
-    if extra not in ["ratio", "residual", "pull"]:
-        raise ValueError(f"Unknown extra plot: '{extra}'. Available: 'ratio', 'residual', 'pull'.")
+    if extra not in [None, "ratio", "residual", "pull"]:
+        raise ValueError(f"Unknown extra plot: '{extra}'. Available: None, 'ratio', 'residual', 'pull'.")
     if len(fits) > 0:  # Do not plot if only CustomFit.
         _plot.plot(
             legend=legend,
