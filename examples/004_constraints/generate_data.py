@@ -15,7 +15,7 @@ c, delta_c = 0.01, np.random.randn() * 0.0005
 x = np.linspace(start=0.0, stop=60.0, num=num_datapoints, endpoint=True)
 delta_x = np.random.randn(num_datapoints) * err_val_x
 
-print("T: %s" % (2.0 * np.pi * np.sqrt(l / g)))
+print("T: %s" % (2.0 * np.pi * np.sqrt(l / g_e)))
 print("M: %s" % (4/3 * np.pi * r ** 3 * 7874))
 
 
