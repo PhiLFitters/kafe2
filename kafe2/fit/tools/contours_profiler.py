@@ -277,7 +277,8 @@ class ContoursProfiler(object):
         else:
             raise ValueError(f"Unknown side: {side}")
         target_axes.add_patch(mpl.patches.FancyArrowPatch((x, y), (_x_target, y), **_kwargs_horizontal))
-        target_axes.text(_x_text, _y_text, rf"${100*cl:.2f}\%$", horizontalalignment=_alignment)
+        format_str = _float_template if 100 * cl < 0.1 else ".2f"
+        target_axes.text(_x_text, _y_text, rf"${100*cl:{format_str}}\%$", horizontalalignment=_alignment)
 
     @staticmethod
     def _plot_parabolic_cost(target_axes, x, quad_coeff, x_offset, y_offset, label):
