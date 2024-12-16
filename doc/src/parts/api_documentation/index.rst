@@ -77,7 +77,7 @@ Tools for Fitting Histograms: :py:mod:`~kafe2.fit.histogram`
 
 
 Tools for Unbinned Fits: :py:mod:`~kafe2.fit.unbinned`
-------------------------------------------------------------
+------------------------------------------------------
 
 .. automodule:: kafe2.fit.unbinned
     :members:
@@ -94,14 +94,23 @@ Abstract Base Classes: :py:mod:`~kafe2.fit._base`
     :undoc-members:
     :imported-members:
     :show-inheritance:
-    
 
 
-.. Core functionality: :py:mod:`~kafe2.core`
-.. =========================================
-.. 
-.. .. automodule:: kafe2.core
-..     :members:
-..     :undoc-members:
-..     :show-inheritance:
-..     
+
+Additional functionality: :py:mod:`~kafe2.fit.tools`
+====================================================
+
+.. automodule:: kafe2.fit.tools
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Likelihood Scans and Contours: :py:mod:`~kafe2.fit.tools.contours_profiler`
+---------------------------------------------------------------------------
+
+.. automodule:: kafe2.fit.tools.contours_profiler
+    :members:
+    :undoc-members:
+    :imported-members:
+    :show-inheritance:

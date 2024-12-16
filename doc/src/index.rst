@@ -5,9 +5,9 @@
    :robots: index, follow
 
 
-#######################
-**kafe2** documentation
-#######################
+###################
+kafe2 documentation
+###################
 
 .. image:: _static/img/badge_kafe2.svg.png
    :width: 128px
