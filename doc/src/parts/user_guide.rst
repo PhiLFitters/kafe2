@@ -547,6 +547,58 @@ Additionally customization using matplotlib functions:
 Contours Profiler
 =================
 
+The class `ContoursProfiler` provides methods for profiling the cost function
+in one or two parameters. These are used to extract confidence intervals
+for the fit parameters or two-dimensional confidence contours for pairs of
+parameters.
+
+First, a ContoursProfiler object must be created from a Fit object:
+
+.. code-block:: python
+		
+    from kafe2 import ContoursProfiler
+    cpf = ContoursProfiler(fit)
+		
+In most cases a graphical representation is desired. Call the method 
+`plot_profiles_contours_matrix()`
+to show profile likelihood and confidence curves for all parameters in a
+matrix arrangement:
+
+.. code-block:: python
+		
+    cpf.plot_profiles_contours_matrix()  # plot the contour profile matrix for all parameters
+
+
+It is also possible to show the profile likelihood of a single parameter:
+
+.. code-block:: python
+
+    cpf.plot_profile('<paramer name>')
+ 
+or to display only selected confidence contours:
+
+.. code-block:: python
+		
+    plot_contours('<name1>', '<name2>')
+
+Consult the api documentation on details how to restrict the displayed ranges
+or for special plot options.
+
+For cases where further investigations are needed, functions exist to return the
+results as numpy arrays:
+
+.. code-block:: python
+
+    xp, cost_function = cpf. get_profile('<paramer name>', low=lower_bound, high=upper_bound)
+ 
+or to show selected confidence contours:
+
+.. code-block:: python
+		
+    vals1, vals2 = get_contours('<name1>', 'n<ame2>')
+
+
+		
 .. todo::
 
-    Add this section, examples already use the contours profiler.
+    Add more detail, examples already use the contours profiler.
