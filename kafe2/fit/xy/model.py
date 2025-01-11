@@ -2,9 +2,9 @@ try:
     import typing  # help IDEs with type-hinting inside docstrings  # noqa: F401 (unused import)
 except ImportError:
     pass
+import numdifftools as nd
 import numpy  # help IDEs with type-hinting inside docstrings
 import numpy as np
-import numdifftools as nd
 
 from .._base import ParametricModelBaseMixin
 from ..util import function_library

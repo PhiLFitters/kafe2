@@ -1,5 +1,5 @@
-import numpy as np
 import numdifftools as nd
+import numpy as np
 
 from .._base import ModelFunctionBase, ParametricModelBaseMixin
 from .container import IndexedContainer
