@@ -4,7 +4,7 @@ except ImportError:
     pass
 import numpy  # help IDEs with type-hinting inside docstrings
 import numpy as np
-from scipy.misc import derivative
+import numdifftools as nd
 
 from .._base import ParametricModelBaseMixin
 from ..util import function_library
@@ -137,8 +137,8 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
                 _chipped_pars[_par_idx] = par
                 return self._model_function_object(_x, *_chipped_pars)
 
-            _der_val = np.array(derivative(_chipped_func, _par_val, dx=_par_dx))
-            _ret[_par_idx] = _der_val
+            _first_derivative = nd.Derivative(_chipped_func, step=_par_dx, order=4, n=1)
+            _ret[_par_idx] = _first_derivative(_par_val)
         return _ret
 
     def eval_model_function_derivative_by_x(self, x=None, model_parameters=None, dx=None):

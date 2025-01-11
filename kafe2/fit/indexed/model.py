@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.misc import derivative
+import numdifftools as nd
 
 from .._base import ModelFunctionBase, ParametricModelBaseMixin
 from .container import IndexedContainer
@@ -108,6 +108,6 @@ class IndexedParametricModel(ParametricModelBaseMixin, IndexedContainer):
                 _chipped_pars[_par_idx] = par
                 return self._model_function_object(*_chipped_pars)
 
-            _der_val = derivative(_chipped_func, _par_val, dx=_par_dx)
-            _ret.append(_der_val)
+            _first_derivative = nd.Derivative(_chipped_func, step=_par_dx, order=4, n=1)
+            _ret.append(_first_derivative(_par_val))
         return np.array(_ret)
