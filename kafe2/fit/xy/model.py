@@ -131,6 +131,9 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
 
         _ret = np.zeros((len(_pars), len(_x)))
         for _par_idx, (_par_val, _par_dx) in enumerate(zip(_pars, _par_dxs)):
+            if _par_dx == 0.0:  # fixed parameter
+                _ret[_par_idx] = 0.0
+                continue
 
             def _chipped_func(par):
                 _chipped_pars = _pars.copy()
