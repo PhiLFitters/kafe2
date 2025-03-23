@@ -6,7 +6,12 @@ from scipy.linalg import solve_triangular
 from scipy.stats import chi2, norm, poisson
 
 from ..io.file import FileIOMixin
-from ..util import cholesky_decomposition, log_determinant
+from ..util import (
+    cholesky_decomposition,
+    log_determinant_cholesky,
+    log_determinant_qr,
+    qr_decomposition,
+)
 from .format import CostFunctionFormatter, ParameterFormatter
 
 if six.PY2:
@@ -45,9 +50,10 @@ class CostFunction(FileIOMixin, object):
     _DATA_NAME = "data"
     _MODEL_NAME = "model"
     _COV_MAT_CHOLESKY_NAME = "total_cov_mat_cholesky"
+    _COV_MAT_QR_NAME = "total_cov_mat_qr"
     _ERROR_NAME = "total_error"
 
-    def __init__(self, cost_function, arg_names=None, add_constraint_cost=True, add_determinant_cost=False):
+    def __init__(self, cost_function, arg_names=None, add_constraint_cost=True, add_determinant_cost=False, fast_math=False):
         """
         Construct :py:class:`CostFunction` object (a wrapper for a native Python function):
 
@@ -59,6 +65,7 @@ class CostFunction(FileIOMixin, object):
         :param bool add_determinant_cost: If :py:obj:`True`, automatically increase the cost
             function value by the logarithm of the determinant of the covariance matrix to reduce
             bias.
+        :param bool fast_math: If :py:obj:`True`, prefer speed over numerical stability.
         """
         self._cost_function_handle = cost_function
         _signature = signature(self._cost_function_handle)
@@ -100,6 +107,7 @@ class CostFunction(FileIOMixin, object):
             else:
                 self._arg_names += ["total_cov_mat_log_determinant"]
             self._arg_count += 1
+        self._fast_math = fast_math
 
         self._errors_valid = True
         self._needs_errors = True
@@ -196,6 +204,11 @@ class CostFunction(FileIOMixin, object):
     def errors_valid(self):
         return self._errors_valid
 
+    @property
+    def fast_math(self):
+        """Prefer speed over numerical stability."""
+        return self._fast_math
+
     def goodness_of_fit(self, *args):
         """How well the model agrees with the data."""
         try:
@@ -253,6 +266,7 @@ class CostFunction_Chi2(CostFunction):
         fallback_on_singular=True,
         add_constraint_cost=True,
         add_determinant_cost=True,
+        fast_math=False,
     ):
         """Base class for built-in least-squares cost function.
 
@@ -266,6 +280,7 @@ class CostFunction_Chi2(CostFunction):
         :param bool add_determinant_cost: If :py:obj:`True`, automatically increase the cost
             function value by the logarithm of the determinant of the covariance matrix to reduce
             bias.
+        :param bool fast_math: If :py:obj:`True`, prefer speed over numerical stability.
         """
 
         _cost_function_description = "chi-square"
@@ -276,8 +291,8 @@ class CostFunction_Chi2(CostFunction):
             self._fail_on_no_errors = False
             _cost_function_description += " (no uncertainties)"
         elif errors_to_use.lower() == "covariance":
-            _chi2_func = self.chi2_covariance
-            _arg_names = [self._DATA_NAME, self._MODEL_NAME, self._COV_MAT_CHOLESKY_NAME]
+            _chi2_func = self.chi2_covariance_fast if fast_math else self.chi2_covariance
+            _arg_names = [self._DATA_NAME, self._MODEL_NAME, self._COV_MAT_CHOLESKY_NAME if fast_math else self._COV_MAT_QR_NAME]
             self._fail_on_no_matrix = not fallback_on_singular
             self._fail_on_no_errors = True
             _cost_function_description += " (with covariance matrix)"
@@ -295,6 +310,7 @@ class CostFunction_Chi2(CostFunction):
             arg_names=_arg_names,
             add_constraint_cost=add_constraint_cost,
             add_determinant_cost=add_determinant_cost,
+            fast_math=fast_math,
         )
 
         self._formatter.latex_name = "\\chi^2"
@@ -305,7 +321,7 @@ class CostFunction_Chi2(CostFunction):
         self._saturated = True
         self._kafe2go_identifier = self.name
 
-    def _chi2(self, data, model, cov_mat_cholesky=None, err=None):
+    def _chi2(self, data, model, cov_mat_qr=None, cov_mat_cholesky=None, err=None):
         data = np.asarray(data)
         model = np.asarray(model)
 
@@ -314,7 +330,13 @@ class CostFunction_Chi2(CostFunction):
 
         _res = data - model
 
-        # if a covariance matrix inverse is given, use it
+        # if a covariance matrix decomposition is given, use it
+        if cov_mat_qr is not None:
+            try:
+                _x = solve_triangular(cov_mat_qr[1], _res, lower=False, trans="T")
+            except ValueError:
+                return np.inf
+            return _res.dot(cov_mat_qr[0]).dot(_x)
         if cov_mat_cholesky is not None:
             try:
                 _x = solve_triangular(cov_mat_cholesky, _res, lower=True)
@@ -363,7 +385,7 @@ class CostFunction_Chi2(CostFunction):
         """
         return self._chi2(data=data, model=model)
 
-    def chi2_covariance(self, data, model, total_cov_mat_cholesky):
+    def chi2_covariance(self, data, model, total_cov_mat_qr):
         r"""A least-squares cost function calculated from (`y`) data and model values,
         considering the covariance matrix of the (`y`) measurements.
         The cost function value can be calculated as follows:
@@ -383,6 +405,18 @@ class CostFunction_Chi2(CostFunction):
         parameters,
         and :math:`C_{\rm det}({\bf V}) = \ln \det({\bf V})` is the additional cost to compensate
         for a non-constant covariance matrix.
+
+        :param data: measurement data :math:`{\bf d}`
+        :param model: model predictions :math:`{\bf m}`
+        :param total_cov_mat_qr: QR decomposition of the total covariance matrix
+            :math:`{\bf QR} = {\bf V}`
+
+        :return: cost function value
+        """
+        return self._chi2(data=data, model=model, cov_mat_qr=total_cov_mat_qr)
+
+    def chi2_covariance_fast(self, data, model, total_cov_mat_cholesky):
+        r"""Same as :py:meth:`chi2_covariance` but faster at the cost of numerical stability.
 
         :param data: measurement data :math:`{\bf d}`
         :param model: model predictions :math:`{\bf m}`
@@ -598,7 +632,7 @@ class CostFunction_NegLogLikelihood(CostFunction):
 
 
 class CostFunction_GaussApproximation(CostFunction):
-    def __init__(self, errors_to_use="covariance", add_constraint_cost=True, add_determinant_cost=True):
+    def __init__(self, errors_to_use="covariance", add_constraint_cost=True, add_determinant_cost=True, fast_math=False):
         """
         Base class for built-in Gaussian approximation of the Poisson negative log-likelihood cost
         function.
@@ -611,12 +645,13 @@ class CostFunction_GaussApproximation(CostFunction):
         :param bool add_determinant_cost: If :py:obj:`True`, automatically increase the cost
             function value by the logarithm of the determinant of the covariance matrix to reduce
             bias.
+        :param bool fast_math: If :py:obj:`True`, prefer speed over numerical stability.
         """
 
         _cost_function_description = "Gaussian approximation of Poisson NLL"
         if errors_to_use.lower() == "covariance":
             _cost_function = self.gaussian_approximation_covariance
-            _arg_names = [self._DATA_NAME, self._MODEL_NAME, self._COV_MAT_CHOLESKY_NAME]
+            _arg_names = [self._DATA_NAME, self._MODEL_NAME, self._COV_MAT_CHOLESKY_NAME if fast_math else self._COV_MAT_QR_NAME]
             _cost_function_description += " (with covariance matrix)"
         elif errors_to_use.lower() == "pointwise":
             _cost_function = self.gaussian_approximation_pointwise_errors
@@ -630,6 +665,7 @@ class CostFunction_GaussApproximation(CostFunction):
             arg_names=_arg_names,
             add_constraint_cost=add_constraint_cost,
             add_determinant_cost=False,
+            fast_math=fast_math,
         )
         self._add_determinant_cost_ga = add_determinant_cost
 
@@ -669,15 +705,25 @@ class CostFunction_GaussApproximation(CostFunction):
 
         :return: cost function value
         """
-        _cholesky = cholesky_decomposition(total_cov_mat + np.diag(model))
         _residuals = model - data
-        try:
-            _x = solve_triangular(_cholesky, _residuals, lower=True)
-        except ValueError:
-            return np.inf
-        _cost = np.sum(np.square(_x))
-        if self._add_determinant_cost_ga:
-            _cost += log_determinant(_cholesky)
+        if self._fast_math:
+            _cholesky = cholesky_decomposition(total_cov_mat + np.diag(model))
+            try:
+                _x = solve_triangular(_cholesky, _residuals, lower=True)
+            except ValueError:
+                return np.inf
+            _cost = np.sum(np.square(_x))
+            if self._add_determinant_cost_ga:
+                _cost += log_determinant_cholesky(_cholesky)
+        else:
+            _QR = qr_decomposition(total_cov_mat + np.diag(model))
+            try:
+                _x = solve_triangular(_QR[1], _residuals, lower=False, trans="T")
+            except ValueError:
+                return np.inf
+            _cost = _residuals.dot(_QR[0]).dot(_x)
+            if self._add_determinant_cost_ga:
+                _cost += log_determinant_qr(_QR)
         return _cost
 
     def gaussian_approximation_pointwise_errors(self, data, model, total_error):
@@ -744,13 +790,18 @@ class CostFunction_GaussApproximation(CostFunction):
 
 STRING_TO_COST_FUNCTION = {
     "chi2": (CostFunction_Chi2, {}),
+    "chi2_fast": (CostFunction_Chi2, {"fast_math": True}),
     "chi_2": (CostFunction_Chi2, {}),
+    "chi_2_fast": (CostFunction_Chi2, {"fast_math": True}),
     "chisquared": (CostFunction_Chi2, {}),
+    "chisquared_fast": (CostFunction_Chi2, {"fast_math": True}),
     "chi_squared": (CostFunction_Chi2, {}),
+    "chi_squared_fast": (CostFunction_Chi2, {"fast_math": True}),
     "chi2_no_errors": (CostFunction_Chi2, {"errors_to_use": None, "add_determinant_cost": False}),
     "chi2_pointwise": (CostFunction_Chi2, {"errors_to_use": "pointwise"}),
     "chi2_pointwise_errors": (CostFunction_Chi2, {"errors_to_use": "pointwise"}),
     "chi2_covariance": (CostFunction_Chi2, {"errors_to_use": "covariance"}),
+    "chi2_covariance_fast": (CostFunction_Chi2, {"errors_to_use": "covariance", "fast_math": True}),
     "nll": (CostFunction_NegLogLikelihood, {"ratio": False}),
     "poisson": (
         CostFunction_NegLogLikelihood,
@@ -814,6 +865,10 @@ STRING_TO_COST_FUNCTION = {
     "gauss_approximation_covariance": (
         CostFunction_GaussApproximation,
         {"errors_to_use": "covariance"},
+    ),
+    "gauss_approximation_covariance_fast": (
+        CostFunction_GaussApproximation,
+        {"errors_to_use": "covariance", "fast_math": True},
     ),
     "gauss_approximation_pointwise": (
         CostFunction_GaussApproximation,

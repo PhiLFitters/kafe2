@@ -11,7 +11,13 @@ from ...core.fitters import NexusFitter
 from ...core.fitters.nexus import Alias, Array, Function, Parameter
 from ...tools import random_alphanumeric
 from .._base import FitBase
-from ..util import cholesky_decomposition, invert_matrix, log_determinant
+from ..util import (
+    cholesky_decomposition,
+    invert_matrix,
+    log_determinant_cholesky,
+    log_determinant_qr,
+    qr_decomposition,
+)
 from .cost import MultiCostFunction, SharedCostFunction
 
 __all__ = ["MultiFit"]
@@ -311,13 +317,34 @@ class MultiFit(FitBase):
                 _cov_mat = y_cov_mat
             return cholesky_decomposition(_cov_mat)
 
+        def total_cov_mat_qr(x_cov_mat, derivatives, y_cov_mat):
+            if self._min_x_error is not None:
+                _cov_mat = y_cov_mat + x_cov_mat * np.outer(derivatives, derivatives)
+            else:
+                _cov_mat = y_cov_mat
+            return qr_decomposition(_cov_mat)
+
         self._nexus.add_function(total_cov_mat_cholesky)
-        self._nexus.add_function(
-            log_determinant,
-            func_name="total_cov_mat_log_determinant",
-            par_names=["total_cov_mat_cholesky"],
-            existing_behavior="replace",
-        )
+        self._nexus.add_function(total_cov_mat_qr)
+
+        any_fast_math = False
+        for fit in self.fits:
+            if fit._cost_function._fast_math:
+                any_fast_math = True
+        if any_fast_math:
+            self._nexus.add_function(
+                log_determinant_cholesky,
+                func_name="total_cov_mat_log_determinant",
+                par_names=["total_cov_mat_cholesky"],
+                existing_behavior="replace",
+            )
+        else:
+            self._nexus.add_function(
+                log_determinant_qr,
+                func_name="total_cov_mat_log_determinant",
+                par_names=["total_cov_mat_qr"],
+                existing_behavior="replace",
+            )
 
         self._shared_cost_function = SharedCostFunction()
         self._nexus.add_function(

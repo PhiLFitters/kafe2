@@ -19,6 +19,7 @@ class XYCostFunction_Chi2(CostFunction_Chi2):
         axes_to_use="xy",
         add_constraint_cost=True,
         add_determinant_cost=True,
+        fast_math=False,
     ):
         """Built-in least-squares cost function for *xy* data.
 
@@ -37,9 +38,11 @@ class XYCostFunction_Chi2(CostFunction_Chi2):
         self._MODEL_NAME = "y_model"
         if axes_to_use.lower() == "y":
             self._COV_MAT_CHOLESKY_NAME = "y_total_cov_mat_cholesky"
+            self._COV_MAT_QR_NAME = "y_total_cov_mat_qr"
             self._ERROR_NAME = "y_total_error"
         elif axes_to_use.lower() == "xy":
             self._COV_MAT_CHOLESKY_NAME = "total_cov_mat_cholesky"
+            self._COV_MAT_QR_NAME = "total_cov_mat_qr"
             self._ERROR_NAME = "total_error"
         else:
             raise ValueError("Unknown value '%s' for 'axes_to_use': must be one of ('xy', 'y')")
@@ -48,6 +51,7 @@ class XYCostFunction_Chi2(CostFunction_Chi2):
             fallback_on_singular=fallback_on_singular,
             add_constraint_cost=add_constraint_cost,
             add_determinant_cost=add_determinant_cost,
+            fast_math=fast_math,
         )
 
 

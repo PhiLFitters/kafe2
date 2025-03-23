@@ -49,7 +49,8 @@ def invert_matrix(mat):
     try:
         return np.linalg.inv(mat)
     except np.linalg.LinAlgError:
-        warnings.warn("Singular covariance matrix. Are the errors for some data points equal to zero?")
+        if mat is not None and np.all(np.isfinite(mat)):
+            warnings.warn("Singular covariance matrix. Are the errors for some data points equal to zero?")
         return None
 
 
@@ -61,12 +62,24 @@ def cholesky_decomposition(mat):
     try:
         return np.linalg.cholesky(mat)
     except np.linalg.LinAlgError:
-        if np.all(np.isfinite(mat)):
+        if mat is not None and np.all(np.isfinite(mat)):
             warnings.warn("Singular covariance matrix. Are the errors for some data points equal to zero?")
         return None
 
 
-def log_determinant(cholesky_mat):
+def qr_decomposition(mat):
+    """
+    Perform QR decomposition of a matrix.
+    """
+    try:
+        return np.linalg.qr(mat)
+    except np.linalg.LinAlgError:
+        if mat is not None and np.all(np.isfinite(mat)):
+            warnings.warn("Singular covariance matrix. Are the errors for some data points equal to zero?")
+        return None
+
+
+def log_determinant_cholesky(cholesky_mat):
     """
     Calculate the logarithm of the determinant of a matrix from its Cholesky decomposition.
     """
@@ -74,6 +87,19 @@ def log_determinant(cholesky_mat):
         return 0.0  # Easier to handle for multifits than returning None
     else:
         return 2.0 * np.sum(np.log(np.diag(cholesky_mat)))
+
+
+def log_determinant_qr(qr):
+    """
+    Calculate the logarithm of the determinant of a matrix from its QR decomposition.
+    """
+    if qr is None:
+        return 0.0  # Easier to handle for multifits than returning None
+    else:
+        # det(R) can be negative.
+        # det(Q) can be +1 or -1.
+        # det(Q @ R) must be positive, so abs(det(R)) == det(Q @ R).
+        return np.sum(np.log(np.abs(np.diag(qr[1]))))
 
 
 def log_determinant_pointwise(pointwise_error):

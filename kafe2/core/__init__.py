@@ -1,2 +1,1 @@
-"""Core API: core components for fitting with kafe2
-"""
+"""Core API: core components for fitting with kafe2"""

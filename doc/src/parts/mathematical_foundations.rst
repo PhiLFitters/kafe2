@@ -1176,38 +1176,53 @@ Numerical Considerations
 The mathematical description of :math:`\chi^2` shown so far makes use of the inverse of the
 covariance matrix :math:`\bm{V}^{-1}`.
 However, *kafe2* does *not* actually calculate :math:`\bm{V}^{-1}`.
-Instead the `Cholesky decomposition <https://en.wikipedia.org/wiki/Cholesky_decomposition>`_
-:math:`\bm{L} \bm{L}^T = \bm{V}` of the covariance matrix is being used where :math:`\bm{L}` is a
-lower triangular matrix.
-Calculating :math:`\bm{L}` is much faster than calculating :math:`\bm{V}^{-1}` and it also reduces
+Instead the so-called *QR decomposition* :math:`\bm{V} = \bm{QR}` of the covariance matrix is being
+used where :math:`\bm{Q}` is an orthogonal matrix and :math:`\bm{R}` is an upper triangular matrix.
+Calculating :math:`\bm{QR}` is faster than calculating :math:`\bm{V}^{-1}` and it also reduces
 the rounding error from floating point operations.
 
-We can always calculate a Cholesky decomposition for a matrix that is symmetrical
-and positive-definite.
-Obviously a covariance matrix is symmetrical by definition.
-And because all eigenvalues of a covariance matrix are (typically) positive a covariance matrix
-is (typically) also positive definite.
-
-.. note::
-   The eigenvalues of a covariance matrix represent the equivalent variances in a coordinate system
-   where said variances are uncorrelated (see
-   `principal component analysis <https://en.wikipedia.org/wiki/Principal_component_analysis>`_).
-   The eigenvalues are therefore all positive unless the uncertainties of two or more data points
-   are fully correlated.
-   In this case some of the eigenvalues are 0.
-   However, as a consequence the covariance matrix would also no longer have full rank
-   so we wouldn't be able to invert it either.
-
-Because :math:`\bm{L}` is a triangular matrix
+Because :math:`\bm{R}` is a triangular matrix
 `solving <https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.solve_triangular.html>`_
 the corresponding system of linear equations for the residual vector
 :math:`\bm{r} = \bm{d} - \bm{m}` (difference between data and model) can be done very quickly:
 
 .. math::
 
+  \bm{x}^T \bm{R} = \bm{r}^T .
+
+With :math:`\bm{x}^T = \bm{r}^T \bm{R}^{-1}` and :math:`\bm{Q}^{-1} = \bm{Q}^T` we now find:
+
+.. math::
+
+  \chi^2
+  = (\chi^2)^T
+  = \left( \bm{r}^T (\bm{Q} \bm{R})^{-1} \bm{r} \right)^T
+  = \left( \bm{r}^T \bm{R}^{-1} \bm{Q}^{-1} \bm{r} \right)^T
+  = \left( \bm{x}^T \bm{Q}^T \bm{r} \right)^T
+  = \bm{r}^T \bm{Q} \bm{x}.
+
+At the same time, because :math:`\bm{Q}` is an orthogonal matrix its determinant is either :math:`1` or :math:`-1`.
+:math:`\bm{R}` is a triangular matrix and its determinant is simply the product of its diagonal values.
+Valid covariance matrices have a positive determinant, so :math:`C_\mathrm{det}` can be efficiently calculated as:
+
+.. math::
+
+  C_\mathrm{det}
+  = \log \det (\bm{V})
+  = \log \left( \left| \det (\bm{R}) \right| \right)
+  = \log \left| \prod_i^N R_{i} \right|
+  = \sum_i^N \log \left| R_{i} \right|.
+
+Instead of a QR decomposition *kafe2* can alternatively use a so-called *Cholesky decomposition*
+with :math:`\bm{V} = \bm{L} \bm{L}^T` where :math:`\bm{L}` is a lower triangular matrix.
+The tradeoff is that a Cholesky decomposition is faster but less numerically stable than a QR decomposition.
+Like with a QR decomposition the corresponding system of linear equations can be solved quickly:
+
+.. math::
+
   \bm{L} \bm{x} = \bm{r} .
 
-With :math:`\bm{x} = \bm{L}^{-1} \bm{r}` we now find:
+:math:`\chi^2` and :math:`C_\mathrm{det}` can be calculated as:
 
 .. math::
 
@@ -1215,10 +1230,7 @@ With :math:`\bm{x} = \bm{L}^{-1} \bm{r}` we now find:
   = \bm{r}^T \bm{V}^{-1} \bm{r}
   = \bm{r}^T (\bm{L} \bm{L}^T)^{-1} \bm{r}
   = \bm{r}^T \bm{L}^{-T} \bm{L}^{-1} \bm{r}
-  = \bm{x}^T \bm{x}.
-
-Because :math:`\bm{L}` is a triangular matrix it can also be used to efficiently calculate
-:math:`\log \det(\bm{V})`:
+  = \bm{x}^T \bm{x},
 
 .. math::
 

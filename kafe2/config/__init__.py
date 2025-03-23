@@ -1,5 +1,4 @@
-"""Handle global kafe2 configuration.
-"""
+"""Handle global kafe2 configuration."""
 
 import logging
 import os

@@ -29,6 +29,7 @@ class TestCostBuiltin(unittest.TestCase):
         self._model_poisson = np.array([5.7, 8.4, 2.3])
         self._res = self._data_chi2 - self._model_chi2
         self._cov_mat = np.array([[1.0, 0.1, 0.2], [0.1, 2.0, 0.3], [0.2, 0.3, 3.0]])
+        self._cov_mat_qr = np.linalg.qr(self._cov_mat)
         self._cov_mat_cholesky = np.linalg.cholesky(self._cov_mat)
         self._cov_mat_inv = np.linalg.inv(self._cov_mat)
         self._pointwise_errors = np.sqrt(np.diag(self._cov_mat))
@@ -95,10 +96,34 @@ class TestCostBuiltin(unittest.TestCase):
             ),
         )
 
-    def test_chi2_cov_mat(self):
+    def test_chi2_cov_mat_qr(self):
         self.assertAlmostEqual(
             self._cost_chi2_cov_mat,
-            self.CHI2_COST_FUNCTION(errors_to_use="covariance")(
+            self.CHI2_COST_FUNCTION(errors_to_use="covariance", fast_math=False)(
+                self._data_chi2,
+                self._model_chi2,
+                self._cov_mat_qr,
+                None,
+                None,
+                self._cov_mat_log_det,
+            ),
+        )
+        self.assertAlmostEqual(
+            self._cost_chi2_cov_mat + self._par_cost,
+            self.CHI2_COST_FUNCTION(errors_to_use="covariance", fast_math=False)(
+                self._data_chi2,
+                self._model_chi2,
+                self._cov_mat_qr,
+                self._par_vals,
+                self._par_constraints,
+                self._cov_mat_log_det,
+            ),
+        )
+
+    def test_chi2_cov_mat_cholesky(self):
+        self.assertAlmostEqual(
+            self._cost_chi2_cov_mat,
+            self.CHI2_COST_FUNCTION(errors_to_use="covariance", fast_math=True)(
                 self._data_chi2,
                 self._model_chi2,
                 self._cov_mat_cholesky,
@@ -109,7 +134,7 @@ class TestCostBuiltin(unittest.TestCase):
         )
         self.assertAlmostEqual(
             self._cost_chi2_cov_mat + self._par_cost,
-            self.CHI2_COST_FUNCTION(errors_to_use="covariance")(
+            self.CHI2_COST_FUNCTION(errors_to_use="covariance", fast_math=True)(
                 self._data_chi2,
                 self._model_chi2,
                 self._cov_mat_cholesky,
@@ -204,7 +229,7 @@ class TestCostBuiltin(unittest.TestCase):
             self.CHI2_COST_FUNCTION(errors_to_use="covariance")(
                 self._data_chi2,
                 np.zeros_like(self._model_chi2),
-                self._cov_mat_cholesky,
+                self._cov_mat_qr,
                 None,
                 None,
                 self._cov_mat_log_det,
@@ -234,7 +259,7 @@ class TestCostBuiltin(unittest.TestCase):
             self.CHI2_COST_FUNCTION(errors_to_use="covariance")(
                 self._data_chi2,
                 np.ones(10),
-                self._cov_mat_cholesky,
+                self._cov_mat_qr,
                 None,
                 None,
                 self._cov_mat_log_det,
@@ -263,7 +288,7 @@ class TestCostBuiltin(unittest.TestCase):
             self.CHI2_COST_FUNCTION(errors_to_use="covariance")(
                 self._data_chi2,
                 np.nan * np.ones_like(self._model_chi2),
-                self._cov_mat_cholesky,
+                self._cov_mat_qr,
                 None,
                 None,
                 self._cov_mat_log_det,

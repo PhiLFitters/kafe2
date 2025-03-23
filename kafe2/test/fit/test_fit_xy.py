@@ -611,13 +611,13 @@ class TestXYFitWithMatrixErrors(AbstractTestFit, unittest.TestCase):
     def setUp(self):
         six.get_unbound_function(TestXYFitBasicInterface.setUp)(self)
 
-    def _get_fit(self, errors=None):
+    def _get_fit(self, errors=None, fast_math=False):
         """convenience"""
 
         _fit = XYFit(
             xy_data=self._ref_xy_data,
             model_function=simple_xy_model,
-            cost_function=XYCostFunction_Chi2(axes_to_use="xy", errors_to_use="covariance"),
+            cost_function=XYCostFunction_Chi2(axes_to_use="xy", errors_to_use="covariance", fast_math=fast_math),
             minimizer=self.MINIMIZER,
         )
 
@@ -641,6 +641,13 @@ class TestXYFitWithMatrixErrors(AbstractTestFit, unittest.TestCase):
                     dict(axis="y", err_matrix=np.eye(self._n_points) / 2, matrix_type="cov"),
                     dict(axis="y", err_matrix=np.eye(self._n_points) / 2, matrix_type="cov"),
                 ]
+            ),
+            "two_matrix_errors_fast": self._get_fit(
+                errors=[
+                    dict(axis="y", err_matrix=np.eye(self._n_points) / 2, matrix_type="cov"),
+                    dict(axis="y", err_matrix=np.eye(self._n_points) / 2, matrix_type="cov"),
+                ],
+                fast_math=True,
             ),
             "one_matrix_one_simple_error": self._get_fit(
                 errors=[
@@ -835,7 +842,7 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
         self._ref_initial_cost = self._default_cost_function(
             self._ref_y_data,
             self._ref_initial_y_model,
-            np.linalg.cholesky(self._ref_projected_xy_matrix),
+            np.linalg.qr(self._ref_projected_xy_matrix),
             self._ref_initial_pars,
             [],
             self._ref_projected_xy_log_determinant,
@@ -854,7 +861,7 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
         self._nominal_fit_result_cost = self._default_cost_function(
             self._ref_y_data,
             self._nominal_fit_result_y_model,
-            np.linalg.cholesky(self._nominal_fit_result_projected_xy_matrix),
+            np.linalg.qr(self._nominal_fit_result_projected_xy_matrix),
             self._nominal_fit_result_pars,
             [],
             self._nominal_fit_result_projected_xy_log_determinant,

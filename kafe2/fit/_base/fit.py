@@ -25,8 +25,10 @@ from ..util import (
     cholesky_decomposition,
     invert_matrix,
     is_diagonal,
-    log_determinant,
+    log_determinant_cholesky,
     log_determinant_pointwise,
+    log_determinant_qr,
+    qr_decomposition,
     to_numpy_arrays,
     to_python_types,
 )
@@ -199,11 +201,7 @@ class FitBase(FileIOMixin, object):
                     self._nexus.add_dependency(_mat_name, depends_on="parameter_values")
                 self._add_property_to_nexus(_mat_name + "_inverse", depends_on=_mat_name)
                 self._nexus.add_function(cholesky_decomposition, func_name=_mat_name + "_cholesky", par_names=[_mat_name])
-                self._nexus.add_function(
-                    log_determinant,
-                    func_name=_mat_name + "_log_determinant",
-                    par_names=[_mat_name + "_cholesky"],
-                )
+                self._nexus.add_function(qr_decomposition, func_name=_mat_name + "_qr", par_names=[_mat_name])
                 self._nexus.add_function(
                     log_determinant_pointwise,
                     func_name=_error_name + "_squared_log_sum",
@@ -230,6 +228,25 @@ class FitBase(FileIOMixin, object):
 
             if self._cost_function.name != "cost":
                 _cost_alias = self._nexus.add_alias("cost", alias_for=self._cost_function.name, existing_behavior=existing_behavior)
+
+            for _axis in self._AXES:
+                for _type in ("model", "data", "total"):
+                    _mat_name = "_".join((_axis, _type, "cov_mat")) if _axis is not None else "_".join((_type, "cov_mat"))
+                    # for fast math, calculate the cov mat log determinants from cholesky instead of qr
+                    if self._cost_function.fast_math:
+                        self._nexus.add_function(
+                            log_determinant_cholesky,
+                            func_name=_mat_name + "_log_determinant",
+                            par_names=[_mat_name + "_cholesky"],
+                            existing_behavior="replace",
+                        )
+                    else:
+                        self._nexus.add_function(
+                            log_determinant_qr,
+                            func_name=_mat_name + "_log_determinant",
+                            par_names=[_mat_name + "_qr"],
+                            existing_behavior="replace",
+                        )
         if self._cost_function_pointwise is not None:
             self._nexus.add_function(
                 self._cost_function_pointwise,
