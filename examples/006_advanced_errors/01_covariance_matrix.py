@@ -61,7 +61,7 @@ data.axis_labels = [None, 'Measured value (a.o.)']
 
 
 # The very simple "model":
-def average(a):
+def average(a=5.0):
     return a
 
 

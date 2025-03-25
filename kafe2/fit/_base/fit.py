@@ -80,6 +80,7 @@ class FitBase(FileIOMixin, object):
         self._nexus = None
         self._fitter = None
         self._fit_param_names = []  # names of all fit parameters
+        self._fit_param_names_bad_default = set()  # names of parameters without good default values
         self._fit_param_constraints = []
         self._loaded_result_dict = None  # contains potential fit results from a file or multifit
 
@@ -170,6 +171,7 @@ class FitBase(FileIOMixin, object):
                 _parameter_nodes.append(self._nexus.add(Parameter(_par_value, name=_par_name)))
 
                 self._fit_param_names.append(_par_name)
+            self._fit_param_names_bad_default = set(self._fit_param_names).difference(self._model_function.parameters_with_good_defaults)
 
         self._nexus.add(Array(_parameter_nodes, name="parameter_values"))
         self._nexus.add_function(lambda: self.parameter_constraints, func_name="parameter_constraints", par_names=[])
@@ -616,6 +618,7 @@ class FitBase(FileIOMixin, object):
     @parameter_errors.setter
     def parameter_errors(self, new_errors):
         self._fitter.fit_parameter_errors = new_errors
+        self._fit_param_names_bad_default.clear()
 
     @property
     def parameter_cov_mat(self):
@@ -778,6 +781,9 @@ class FitBase(FileIOMixin, object):
         _return_value = self._fitter.set_fit_parameter_values(**param_name_value_dict)
         if self._param_model is not None:
             self._param_model.parameters = self.parameter_values
+        for _par_name, _par_val in param_name_value_dict.items():
+            if _par_val != 0:
+                self._fit_param_names_bad_default.discard(_par_name)
         return _return_value
 
     def set_all_parameter_values(self, param_value_list):
@@ -787,6 +793,9 @@ class FitBase(FileIOMixin, object):
         """
         if self._param_model is not None:
             self._param_model.parameters = param_value_list
+        for _par_name, _par_val in zip(self.parameter_names, param_value_list):
+            if _par_val != 0:
+                self._fit_param_names_bad_default.discard(_par_name)
         return self._fitter.set_all_fit_parameter_values(param_value_list)
 
     def fix_parameter(self, name, value=None):
@@ -799,6 +808,7 @@ class FitBase(FileIOMixin, object):
         self._fitter.fix_parameter(name=name, value=value)
         _par_index = self.parameter_names.index(name)
         self._get_model_function_parameter_formatters()[_par_index].fixed = True
+        self._fit_param_names_bad_default.discard(name)
 
     def release_parameter(self, name):
         """Release a fixed parameter so that its value once again changes when calling :py:meth:`~do_fit()`.
@@ -831,6 +841,7 @@ class FitBase(FileIOMixin, object):
                 )
 
         self._fitter.limit_parameter(name=name, limits=(lower, upper))
+        self._fit_param_names_bad_default.discard(name)
 
     def unlimit_parameter(self, name):
         """Unlimit a parameter.
@@ -882,6 +893,7 @@ class FitBase(FileIOMixin, object):
                 relative=relative,
             )
         )
+        self._fit_param_names_bad_default = self._fit_param_names_bad_default.difference(names)
 
     def add_parameter_constraint(self, name, value, uncertainty, relative=False):
         """Apply a simple gaussian constraint to a single fit parameter.
@@ -896,6 +908,7 @@ class FitBase(FileIOMixin, object):
         except ValueError as _e:
             raise ValueError("Unknown parameter name: %s" % name) from _e
         self._fit_param_constraints.append(GaussianSimpleParameterConstraint(index=_index, value=value, uncertainty=uncertainty, relative=relative))
+        self._fit_param_names_bad_default.discard(name)
 
     def get_matching_errors(self, matching_criteria=None, matching_type="equal"):
         """Return a list of uncertainty objects fulfilling the specified matching criteria.
@@ -1068,6 +1081,13 @@ class FitBase(FileIOMixin, object):
             warnings.warn("Cost function expects errors but no errors were specified.")
         if self._implicit_no_errors:
             warnings.warn("No data/model errors were specified. Parameter errors cannot be calculated.")
+        if self._fit_param_names_bad_default:
+            _bad_default_list = [_pn for _pn in self.parameter_names if _pn in self._fit_param_names_bad_default]
+            warnings.warn(
+                f"Intial values and step sizes for one or more fit parameters are not well-defined: {_bad_default_list}. "
+                "For better convergence set initial values != 0, set initial step sizes via parameter_errors, "
+                "or limit, fix, or constrain the parameters."
+            )
 
         if self._cost_function_pointwise is not None:
             if is_diagonal(self.total_cov_mat):
@@ -1103,6 +1123,7 @@ class FitBase(FileIOMixin, object):
 
         self._loaded_result_dict = None
         self._update_parameter_formatters()
+        self._fit_param_names_bad_default.clear()
         return self.get_result_dict(asymmetric_parameter_errors=asymmetric_parameter_errors)
 
     def assign_model_function_name(self, name):

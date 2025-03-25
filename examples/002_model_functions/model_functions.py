@@ -20,17 +20,17 @@ import kafe2
 #     the x axis of our fit.
 
 # Our first model is a simple linear function:
-def linear_model(x, a, b):
+def linear_model(x, a=1.0, b=1.0):
     return a * x + b
 
 
 # If SymPy is installed you can also define the model like this:
-# linear_model = "linear_model: x a b -> a * x + b"
+# linear_model = "linear_model: x a=1.0 b=1.0 -> a * x + b"
 
 
 # Our second model is a simple exponential function.
 # The kwargs in the function header specify parameter defaults.
-def exponential_model(x, A_0=1., x_0=5.):
+def exponential_model(x, A_0=1.0, x_0=5.0):
     return A_0 * np.exp(x/x_0)
 
 

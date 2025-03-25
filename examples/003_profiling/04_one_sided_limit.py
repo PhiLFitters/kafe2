@@ -39,7 +39,7 @@ data_histogram = np.histogram(data_combined, bins=x_span, range=(X_MIN, X_MAX))
 
 # N_b=number of background events, N_s=number of signal events,
 # mu_s=mean of the signal peak, sigma_s=standard deviation of the signal peak
-def signal_plus_background_model(x, N_b, N_s, mu_s=x_center, sigma_s=0.05*x_span):
+def signal_plus_background_model(x, N_b=3000, N_s=30, mu_s=x_center, sigma_s=0.05*x_span):
     return N_b / (X_MAX - X_MIN) + N_s * norm.pdf(x, mu_s, sigma_s)
 
 

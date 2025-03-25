@@ -276,6 +276,10 @@ class ModelFunctionBase(FileIOMixin, object):
             return inspect.getsource(self.func)
         return self._source_code
 
+    @property
+    def parameters_with_good_defaults(self):
+        return set(_par.name for _par in self.signature.parameters.values() if _par.default != _par.empty and _par.default != 0)
+
 
 class ParametricModelBaseMixin(object):
     """

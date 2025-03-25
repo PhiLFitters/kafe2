@@ -22,7 +22,7 @@ from kafe2.fit.tools import ContoursProfiler
 import numpy as np
 
 
-def pdf(t, tau=2.2, fbg=0.1, a=1., b=9.75):
+def pdf(t, tau=2.2, fbg=0.1, a=1.0, b=9.75):
     """
     Probability density function for the decay time of a muon using the Kamiokanne-Experiment.
     The PDF is normed for the interval (a, b).

@@ -17,7 +17,7 @@ import numpy as np
 import kafe2
 
 
-def normal_distribution(x, mu, sigma):
+def normal_distribution(x, mu=0.01, sigma=1.0):
     return np.exp(-0.5 * ((x - mu) / sigma) ** 2) / np.sqrt(2.0 * np.pi * sigma ** 2)
 
 

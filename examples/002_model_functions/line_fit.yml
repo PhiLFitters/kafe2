@@ -36,7 +36,7 @@ y_errors:
   type: simple
 
 model_function: |
-  def linear_model(x, a, b):
+  def linear_model(x, a=1.0, b=1.0):
       return a * x + b
 
 # If SymPy is installed the model function can also be defined like this:

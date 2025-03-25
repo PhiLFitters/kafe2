@@ -63,10 +63,10 @@ BW_data.axis_labels = ('CM Energy (GeV)', r'$\sigma_h$ (nb)')
 # Note: Because kafe2 containers are copied when a Fit object is created from them assigning labels
 # to the original XYContainer after the fit has already been created would NOT work.
 
-BW_fit = Fit(
-    BW_data,
-    "BreitWigner: x s0 M_Z G_Z -> s0 * x^2 * G_Z^2 / ((x^2 - M_Z^2)^2 + x^4 * G_Z^2 / M_Z^2)"
-)
+model_function = "BreitWigner: x s0=41.0 M_Z=91.2 G_Z=2.5 -> s0 * x^2 * G_Z^2 / ((x^2 - M_Z^2)^2 + x^4 * G_Z^2 / M_Z^2)"
+# model_function = BreitWigner  # Uncomment to define the model function in Python code, loses automatic LaTeX.
+
+BW_fit = Fit(BW_data, model_function)
 
 # Uncomment the following two lines to assign data labels after the fit has already been created:
 # BW_fit.data_container.label = 'QED-corrected hadronic cross-sections'

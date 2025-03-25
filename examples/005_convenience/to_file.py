@@ -20,7 +20,7 @@ xy_data.to_file("data_container.yml")
 #     will fit a linear model a * x + b .
 
 
-def quadratic_model(x, a, b, c):
+def quadratic_model(x, a=1.0, b=1.0, c=1.0):
     return a * x ** 2 + b * x + c
 
 

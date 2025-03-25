@@ -41,7 +41,7 @@ def generate_data(N, min, max, pos, width, s):
 # the fit functions, one for each version of the distribution with
 #  different resolution and signal fraction
 #
-def SplusBmodel1(x, mu=5., width=0.3, res1=0.3, sf1=0.5):
+def SplusBmodel1(x, mu=5.0, width=0.3, res1=0.3, sf1=0.5):
     """pdf of a Gaussian signal at position mu, with natural width width,
     resolution res1 and signal fraction sf1 on a flat background
     """
@@ -51,7 +51,7 @@ def SplusBmodel1(x, mu=5., width=0.3, res1=0.3, sf1=0.5):
     return sf1 * normal + (1 - sf1) * flat
 
 
-def SplusBmodel2(x, mu=5., width=0.3, res2=0.3, sf2=0.5):
+def SplusBmodel2(x, mu=5.0, width=0.3, res2=0.3, sf2=0.5):
     """pdf of a Gaussian signal at position mu, with natural width width,
     resolution res2 and signal fraction sf2 on a flat background
     """

@@ -74,13 +74,13 @@ from kafe2 import XYFit, Plot
 
 
 # empirical model for T(U): a parabola
-def empirical_T_U_model(U, p_2=1.0, p_1=1.0, p_0=0.0):
+def empirical_T_U_model(U, p_2=1.0, p_1=1.0, p_0=1.0):
     # use quadratic model as empirical temperature dependence T(U)
     return p_2 * U**2 + p_1 * U + p_0
 
 
 # model of current-voltage dependence I(U) for a heating resistor
-def I_U_model(U, R_0=1., alpha=0.004, p_2=1.0, p_1=1.0, p_0=0.0):
+def I_U_model(U, R_0=1., alpha=0.004, p_2=1.0, p_1=1.0, p_0=1.0):
     # use quadratic model as empirical temperature dependence T(U)
     _temperature = empirical_T_U_model(U, p_2, p_1, p_0)
     # plug the temperature into the model
