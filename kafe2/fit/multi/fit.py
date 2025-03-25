@@ -487,9 +487,9 @@ class MultiFit(FitBase):
         for _fit in self._fits:
             _fit._pre_fit_iteration(first_fit)
 
-    def _post_fit_iteration(self, first_fit=False):
+    def _post_fit_iteration(self, runtime, first_fit=False):
         for _fit in self._fits:
-            _fit._post_fit_iteration(first_fit)
+            _fit._post_fit_iteration(runtime, first_fit)
 
     # -- public properties
 

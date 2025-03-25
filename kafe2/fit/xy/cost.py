@@ -110,13 +110,18 @@ class XYCostFunction_GaussApproximation(CostFunction_GaussApproximation):
 
 STRING_TO_COST_FUNCTION = {
     "chi2": (XYCostFunction_Chi2, {}),
+    "chi2_fast": (XYCostFunction_Chi2, {"fast_math": True}),
     "chi_2": (XYCostFunction_Chi2, {}),
+    "chi_2_fast": (XYCostFunction_Chi2, {"fast_math": True}),
     "chisquared": (XYCostFunction_Chi2, {}),
+    "chisquared_fast": (XYCostFunction_Chi2, {"fast_math": True}),
     "chi_squared": (XYCostFunction_Chi2, {}),
+    "chi_squared_fast": (XYCostFunction_Chi2, {"fast_math": True}),
     "chi2_no_errors": (XYCostFunction_Chi2, {"errors_to_use": None, "add_determinant_cost": False}),
     "chi2_pointwise": (XYCostFunction_Chi2, {"errors_to_use": "pointwise"}),
     "chi2_pointwise_errors": (XYCostFunction_Chi2, {"errors_to_use": "pointwise"}),
     "chi2_covariance": (XYCostFunction_Chi2, {"errors_to_use": "covariance"}),
+    "chi2_covariance_fast": (XYCostFunction_Chi2, {"errors_to_use": "covariance", "fast_math": True}),
     "nll": (XYCostFunction_NegLogLikelihood, {"ratio": False}),
     "poisson": (
         XYCostFunction_NegLogLikelihood,

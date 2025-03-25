@@ -90,6 +90,8 @@ class FitBase(FileIOMixin, object):
         self.dynamic_error_algorithm = dynamic_error_algorithm
         self._dynamic_error_warning_printed = False
 
+        self._slow_chi2_warning_printed = False
+
         # set/construct the model function object
         if self.MODEL_FUNCTION_TYPE is None:
             if model_function is not None:
@@ -117,7 +119,7 @@ class FitBase(FileIOMixin, object):
             try:
                 _cost_function_class, _kwargs = self._STRING_TO_COST_FUNCTION[cost_function]
             except KeyError:
-                raise ValueError("Unknown cost function: %s" % cost_function)
+                raise ValueError("Unknown cost function: %s. Available: %s" % (cost_function, list(self._STRING_TO_COST_FUNCTION.keys())))
             self._cost_function = _cost_function_class(**_kwargs)
         elif cost_function is not None:
             self._cost_function = CostFunction(cost_function)
@@ -444,7 +446,10 @@ class FitBase(FileIOMixin, object):
             _node.update()
             _node.freeze()
 
-    def _post_fit_iteration(self, first_fit=False):
+    def _post_fit_iteration(self, runtime, first_fit=False):
+        if not self._slow_chi2_warning_printed and self._cost_function.is_chi2 and not self._cost_function.fast_math and runtime > 10:
+            warnings.warn("The fit is slow with cost function chi2. Consider using chi2_fast instead (faster but worse numerical stability).")
+            self._slow_chi2_warning_printed = True
         for _model_err_name in self._get_node_names_to_freeze(first_fit):
             _node = self._nexus.get(_model_err_name)
             _node.unfreeze()
@@ -1076,8 +1081,8 @@ class FitBase(FileIOMixin, object):
 
         # Initial fit:
         self._pre_fit_iteration(first_fit=True)
-        self._fitter.do_fit()  # TODO specify other node to minimize
-        self._post_fit_iteration(first_fit=True)
+        runtime = self._fitter.do_fit()  # TODO specify other node to minimize
+        self._post_fit_iteration(runtime, first_fit=True)
 
         if self._iterative_fits_needed():
             _convergence_limit = float(kc("fit", "iterative_do_fit", "convergence_limit"))
@@ -1085,16 +1090,16 @@ class FitBase(FileIOMixin, object):
             for i in range(kc("fit", "iterative_do_fit", "max_iterations")):
                 self._pre_fit_iteration()
                 self._fitter.reset_minimizer()  # flush iminuit cache
-                self._fitter.do_fit()
-                self._post_fit_iteration()
+                runtime = self._fitter.do_fit()
+                self._post_fit_iteration(runtime)
                 if abs(self.cost_function_value - _previous_cost) < _convergence_limit:
                     break
                 _previous_cost = self.cost_function_value
         elif self._second_fit_needed():
             self._pre_fit_iteration()
             self._fitter.reset_minimizer()  # flush iminuit cache
-            self._fitter.do_fit()
-            self._post_fit_iteration()
+            runtime = self._fitter.do_fit()
+            self._post_fit_iteration(runtime)
 
         self._loaded_result_dict = None
         self._update_parameter_formatters()

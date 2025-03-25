@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from time import time
 
 import numpy as np
 
@@ -163,7 +164,9 @@ class NexusFitter(object):
     # -- public methods
 
     def do_fit(self):
+        t0 = time()
         self._minimize()
+        return time() - t0
 
     def fix_parameter(self, name, value=None):
         if value is not None:
