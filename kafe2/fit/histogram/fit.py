@@ -3,6 +3,7 @@ from copy import deepcopy
 from .._base import DataContainerBase, FitBase
 from .._base.cost import CostFunction_NegLogLikelihood
 from ..util import (  # noqa: F401 (collect imported but not used)
+    check_numerical_range,
     collect,
     function_library,
 )
@@ -111,6 +112,7 @@ class HistFit(FitBase):
         self._data_container._on_error_change_callback = self._on_error_change
 
         self._nexus.get("data").mark_for_update()
+        check_numerical_range(self.data, "data")
 
     def _set_new_parametric_model(self):
         # create the child ParametricModel object

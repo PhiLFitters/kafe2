@@ -145,3 +145,30 @@ def to_numpy_arrays(yaml_dict: Optional[dict]):
             _value = np.array(_value)
         _new_dict[_key] = _value
     return _new_dict
+
+
+def check_numerical_range(vals, name):
+    if vals is None:
+        return
+    try:
+        _vals = np.asarray(vals)
+    except ValueError:
+        for _val in vals:
+            check_numerical_range(_val, name)
+        return
+    if _vals.ndim == 0:
+        _median_abs = np.abs(_vals)
+        if _median_abs == 0:
+            return
+        _warning_start = "The value of"
+    else:
+        _filter = np.logical_and(_vals != 0, _vals != None)
+        if not np.any(_filter):
+            return
+        _median_abs = np.median(np.abs(_vals[_filter]))
+        _warning_start = "The median absolute non-zero value found in"
+    _warning_template = "{start} {name} is very {adjective} with {median_abs:.3e}. Consider whether it's possible to re-scale the fit to avoid any excessively small or large absolute values."
+    if _median_abs > 1e9:
+        warnings.warn(_warning_template.format(start=_warning_start, name=name, adjective="large", median_abs=_median_abs))
+    if _median_abs < 1e-9:
+        warnings.warn(_warning_template.format(start=_warning_start, name=name, adjective="small", median_abs=_median_abs))

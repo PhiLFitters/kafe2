@@ -7,7 +7,7 @@ import numpy as np
 from ...tools import print_dict_as_table
 from .._base import DataContainerBase, FitBase
 from .._base.cost import CostFunction_Chi2
-from ..util import collect
+from ..util import check_numerical_range, collect
 from .container import IndexedContainer
 from .model import IndexedModelFunction, IndexedParametricModel
 from .plot import IndexedPlotAdapter
@@ -124,6 +124,7 @@ class IndexedFit(FitBase):
         self._data_container._on_error_change_callback = self._on_error_change
 
         self._nexus.get("data").mark_for_update()
+        check_numerical_range(self.data, "data")
 
     def _set_new_parametric_model(self):
         self._param_model = IndexedParametricModel(self._model_function, self.parameter_values, shape_like=self.data)

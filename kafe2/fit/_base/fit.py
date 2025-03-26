@@ -22,6 +22,7 @@ from ...tools import print_dict_as_table
 from .._base.cost import STRING_TO_COST_FUNCTION, CostFunction
 from ..io.file import FileIOMixin
 from ..util import (
+    check_numerical_range,
     cholesky_decomposition,
     invert_matrix,
     is_diagonal,
@@ -171,6 +172,7 @@ class FitBase(FileIOMixin, object):
                 _parameter_nodes.append(self._nexus.add(Parameter(_par_value, name=_par_name)))
 
                 self._fit_param_names.append(_par_name)
+                check_numerical_range(_par_value, f"{_par_name} (default value)")
             self._fit_param_names_bad_default = set(self._fit_param_names).difference(self._model_function.parameters_with_good_defaults)
 
         self._nexus.add(Array(_parameter_nodes, name="parameter_values"))
@@ -619,6 +621,7 @@ class FitBase(FileIOMixin, object):
     def parameter_errors(self, new_errors):
         self._fitter.fit_parameter_errors = new_errors
         self._fit_param_names_bad_default.clear()
+        check_numerical_range(new_errors, "user-defined parameter errors")
 
     @property
     def parameter_cov_mat(self):
@@ -784,6 +787,7 @@ class FitBase(FileIOMixin, object):
         for _par_name, _par_val in param_name_value_dict.items():
             if _par_val != 0:
                 self._fit_param_names_bad_default.discard(_par_name)
+            check_numerical_range(_par_val, f"{_par_name} (set by user)")
         return _return_value
 
     def set_all_parameter_values(self, param_value_list):
@@ -796,6 +800,7 @@ class FitBase(FileIOMixin, object):
         for _par_name, _par_val in zip(self.parameter_names, param_value_list):
             if _par_val != 0:
                 self._fit_param_names_bad_default.discard(_par_name)
+            check_numerical_range(_par_val, f"{_par_name} (set by user)")
         return self._fitter.set_all_fit_parameter_values(param_value_list)
 
     def fix_parameter(self, name, value=None):
@@ -1088,6 +1093,10 @@ class FitBase(FileIOMixin, object):
                 "For better convergence set initial values != 0, set initial step sizes via parameter_errors, "
                 "or limit, fix, or constrain the parameters."
             )
+        try:
+            check_numerical_range(self.y_model, "y_model values (pre-fit)")  # For XYFit we want to check only y_model.
+        except AttributeError:
+            check_numerical_range(self.model, "model values (pre-fit)")
 
         if self._cost_function_pointwise is not None:
             if is_diagonal(self.total_cov_mat):

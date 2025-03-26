@@ -2,7 +2,7 @@ import sys
 from copy import deepcopy
 
 from .._base import DataContainerBase, FitBase, ModelFunctionBase
-from ..util import collect  # noqa: F401 (unused import)
+from ..util import check_numerical_range, collect  # noqa: F401 (unused import)
 from .container import UnbinnedContainer
 from .cost import STRING_TO_COST_FUNCTION, UnbinnedCostFunction_NegLogLikelihood
 from .model import UnbinnedParametricModel
@@ -72,6 +72,7 @@ class UnbinnedFit(FitBase):
         self._nexus.get("x").mark_for_update()
         # TODO: make 'Alias' nodes pass on 'mark_for_update'
         self._nexus.get("data").mark_for_update()
+        check_numerical_range(self.data, "data")
 
     def _set_new_parametric_model(self):
         self._param_model = UnbinnedParametricModel(

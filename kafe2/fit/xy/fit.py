@@ -12,7 +12,12 @@ import numpy as np
 from ...core.error import CovMat
 from ...tools import print_dict_as_table
 from .._base import DataContainerBase, FitBase, ModelFunctionBase
-from ..util import add_in_quadrature, function_library, invert_matrix
+from ..util import (
+    add_in_quadrature,
+    check_numerical_range,
+    function_library,
+    invert_matrix,
+)
 from .container import XYContainer
 from .cost import STRING_TO_COST_FUNCTION, XYCostFunction_Chi2
 from .model import XYParametricModel
@@ -135,6 +140,8 @@ class XYFit(FitBase):
         # update nexus data nodes
         self._nexus.get("x_data").mark_for_update()
         self._nexus.get("y_data").mark_for_update()
+        check_numerical_range(self.x_data, "x_data")
+        check_numerical_range(self.y_data, "y_data")
 
     def _set_new_parametric_model(self):
         self._param_model = XYParametricModel(self.x_model, self._model_function, self.parameter_values)
