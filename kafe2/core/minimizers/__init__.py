@@ -74,7 +74,6 @@ def get_minimizer(minimizer_spec=None):
     :type minimizer_spec: str or None
     :return: MinimizerBase-derived kafe2 minimizer object
     """
-    global AVAILABLE_MINIMIZERS
     # for 'None', return the default minimizer
     if minimizer_spec is None:
         # go through the default minimizers in the order specified in config

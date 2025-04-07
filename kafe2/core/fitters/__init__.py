@@ -23,8 +23,6 @@ AVAILABLE_FITTERS = {"nexus_fitter": NexusFitter}
 
 
 def get_fitter(fitter_spec):
-    global AVAILABLE_FITTERS
-
     # for 'None', return the default fitter
     if fitter_spec is None:
         _fitter = AVAILABLE_FITTERS.get(kc["core"]["fitters"]["default_fitter"], None)
