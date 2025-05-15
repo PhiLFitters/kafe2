@@ -17,7 +17,7 @@ readme = "README.rst"
 requires-python= ">=3.6"
 keywords = ["kafe2", "kit", "karlsruhe", "data", "analysis", "lab", "laboratory", "practical courses", "education", "university", "students", "physics", "fitting", "minimization", "minimisation", "regression", "parametric", "parameter", "estimation", "optimization", "optimisation"]
 
-license = {text = "GPL3"}
+license = "GPL-3.0-or-later"
 classifiers = [
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Education",
@@ -27,7 +27,6 @@ classifiers = [
         "Topic :: Scientific/Engineering :: Physics",
         "Topic :: Scientific/Engineering :: Information Analysis",
         "Topic :: Scientific/Engineering :: Visualization",
-        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
