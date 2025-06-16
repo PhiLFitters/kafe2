@@ -201,17 +201,13 @@ class TestDatastoreXYParametricModel(unittest.TestCase):
     def _ref_model_func(x, slope, intercept):
         return slope * x + intercept
 
+    @staticmethod
     def _ref_model_func_deriv_by_x(x, slope, intercept):
         return slope
 
-    _ref_model_func_deriv_by_x = np.vectorize(_ref_model_func_deriv_by_x)
-    _ref_model_func_deriv_by_x = staticmethod(_ref_model_func_deriv_by_x)
-
+    @staticmethod
     def _ref_model_func_deriv_by_pars(x, slope, intercept):
         return [x, 1]
-
-    _ref_model_func_deriv_by_pars = np.vectorize(_ref_model_func_deriv_by_pars)
-    _ref_model_func_deriv_by_pars = staticmethod(_ref_model_func_deriv_by_pars)
 
     def setUp(self):
         self._ref_x = np.linspace(-5, 5, 11)
@@ -238,7 +234,7 @@ class TestDatastoreXYParametricModel(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 self.xy_param_model.eval_model_function_derivative_by_x(),
-                self._ref_model_func_deriv_by_x(self._ref_data, *self._ref_params),
+                [self._ref_model_func_deriv_by_x(x, *self._ref_params) for x in self._ref_data],
             )
         )
 
