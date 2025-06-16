@@ -67,7 +67,7 @@ xy_fit = XYFit(
 )
 
 # The half life of carbon-14 is only known with a precision of +-40 years
-xy_fit.add_parameter_constraint(name='T_12_C14', value=5730, uncertainty=40)
+xy_fit.add_gaussian_parameter_constraint(name='T_12_C14', value=5730, uncertainty=40)
 
 # Perform the fit
 # Note that since for a Poisson distribution the data error is directly linked to the mean.

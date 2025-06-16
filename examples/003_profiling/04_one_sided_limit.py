@@ -49,8 +49,8 @@ fit = HistFit(data_histogram, signal_plus_background_model, density=False)
 # fit.limit_parameter("sigma_s", lower=0, upper=0.1*x_span)
 
 # Constraints are needed to avoid convergence problems for N_s->0:
-fit.add_parameter_constraint("mu_s", value=x_center, uncertainty=0.1*x_center)
-fit.add_parameter_constraint("sigma_s", value=0.05*x_span, uncertainty=0.005*x_span)
+fit.add_gaussian_parameter_constraint("mu_s", value=x_center, uncertainty=0.1*x_center)
+fit.add_gaussian_parameter_constraint("sigma_s", value=0.05*x_span, uncertainty=0.005*x_span)
 # In real life such constraints may not be available. Parameter limits can also work but with weird
 # behavior close to the unphysical region of N_s < 0.
 

@@ -52,7 +52,7 @@ def _fit_wrapper_generic(fit, p0, dp0, limits, fixed, constraints, report, profi
         if not isinstance(constraints[0], (list, tuple)):
             constraints = (constraints,)
         for _constraint in constraints:
-            fit.add_parameter_constraint(*_constraint)
+            fit.add_gaussian_parameter_constraint(*_constraint)
 
     _fit_results = fit.do_fit(asymmetric_parameter_errors=profile)
     _fit_results["fit"] = fit

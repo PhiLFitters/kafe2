@@ -57,9 +57,9 @@ data = XYContainer.from_file(filename='data.yml')
 fit = Fit(data=data, model_function=damped_harmonic_oscillator)
 
 # Constrain model parameters to measurements:
-fit.add_parameter_constraint(name='l',   value=l,   uncertainty=delta_l)
-fit.add_parameter_constraint(name='r',   value=r,   uncertainty=delta_r)
-fit.add_parameter_constraint(name='y_0', value=y_0, uncertainty=delta_y_0, relative=True)
+fit.add_gaussian_parameter_constraint(name='l',   value=l,   uncertainty=delta_l)
+fit.add_gaussian_parameter_constraint(name='r',   value=r,   uncertainty=delta_r)
+fit.add_gaussian_parameter_constraint(name='y_0', value=y_0, uncertainty=delta_y_0, relative=True)
 
 # Lengths between two points are by definition positive, this can be expressed with one-sided limit.
 # Note: for technical reasons these limits are inclusive.

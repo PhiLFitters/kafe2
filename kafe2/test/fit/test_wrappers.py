@@ -77,7 +77,7 @@ class TestWrapperCallableXY(unittest.TestCase):
         if constraints is not None:
             _constraints_manual = [constraints] if isinstance(constraints[0], str) else constraints
             for _constraint in _constraints_manual:
-                _fit.add_parameter_constraint(*_constraint)
+                _fit.add_gaussian_parameter_constraint(*_constraint)
         _profile_manual = profile is None or profile
         _result_1 = _fit.do_fit(asymmetric_parameter_errors=_profile_manual)
 

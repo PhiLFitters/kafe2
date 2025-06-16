@@ -55,7 +55,7 @@ xy_fit_gaussian_sparse = XYFit(
 xy_fit_gaussian_sparse.add_error(axis='y', err_val=np.sqrt(measured_c14_activity_sparse))
 
 # The half life of carbon-14 is only known with a precision of +-40 years
-xy_fit_gaussian_sparse.add_parameter_constraint(name='T_12_C14', value=5730, uncertainty=40)
+xy_fit_gaussian_sparse.add_gaussian_parameter_constraint(name='T_12_C14', value=5730, uncertainty=40)
 
 # Perform the fit
 xy_fit_gaussian_sparse.do_fit()
@@ -66,7 +66,7 @@ xy_fit_poisson_sparse = XYFit(
     model_function=expected_activity_per_two_min,
     cost_function=XYCostFunction_NegLogLikelihood(data_point_distribution='poisson')
 )
-xy_fit_poisson_sparse.add_parameter_constraint(name='T_12_C14', value=5730, uncertainty=40)
+xy_fit_poisson_sparse.add_gaussian_parameter_constraint(name='T_12_C14', value=5730, uncertainty=40)
 xy_fit_poisson_sparse.do_fit()
 
 # We calculate and print out the relative error on our estimate of Delta_T from using a Gaussian approximation.
@@ -90,7 +90,7 @@ xy_fit_gaussian_full = XYFit(
     model_function=expected_activity_per_day
 )
 xy_fit_gaussian_full.add_error(axis='y', err_val=np.sqrt(measured_c14_activity_full))
-xy_fit_gaussian_full.add_parameter_constraint(name='T_12_C14', value=5730, uncertainty=40)
+xy_fit_gaussian_full.add_gaussian_parameter_constraint(name='T_12_C14', value=5730, uncertainty=40)
 xy_fit_gaussian_full.do_fit()
 
 xy_fit_poisson_full = XYFit(
@@ -98,7 +98,7 @@ xy_fit_poisson_full = XYFit(
     model_function=expected_activity_per_day,
     cost_function=XYCostFunction_NegLogLikelihood(data_point_distribution='poisson')
 )
-xy_fit_poisson_full.add_parameter_constraint(name='T_12_C14', value=5730, uncertainty=40)
+xy_fit_poisson_full.add_gaussian_parameter_constraint(name='T_12_C14', value=5730, uncertainty=40)
 xy_fit_poisson_full.do_fit()
 
 Delta_T_poisson_full = xy_fit_poisson_full.parameter_values[0]

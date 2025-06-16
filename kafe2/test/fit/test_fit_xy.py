@@ -241,10 +241,10 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
             ),
         )
 
-    def test_add_parameter_constraint(self):
+    def test_add_gaussian_parameter_constraint(self):
         _fit = self._get_fit()
 
-        _fit.add_parameter_constraint("c", 1.0, 1.0)
+        _fit.add_gaussian_parameter_constraint("c", 1.0, 1.0)
         _constraint_cost = (self._ref_initial_pars[2] - 1.0) ** 2
 
         self._assert_fit_properties(_fit, dict(cost_function_value=np.float64(self._ref_initial_cost + _constraint_cost)))
@@ -908,7 +908,7 @@ class TestXYFitWithXYErrors(AbstractTestFit, unittest.TestCase):
         for _err in errors:
             _fit.add_error(**_err)
         for _constraint in constraints:
-            _fit.add_parameter_constraint(**_constraint)
+            _fit.add_gaussian_parameter_constraint(**_constraint)
 
         _fit.set_all_parameter_values(self._ref_initial_pars)
 

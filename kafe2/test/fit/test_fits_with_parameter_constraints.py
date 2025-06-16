@@ -90,7 +90,7 @@ class TestParameterConstraintInHistFit(unittest.TestCase):
             bin_evaluation=self._model_function_antiderivative,
         )
         with self.assertRaises(ValueError):
-            _fit_with_constraint.add_parameter_constraint("c", 1.0, 1.0)
+            _fit_with_constraint.add_gaussian_parameter_constraint("c", 1.0, 1.0)
         with self.assertRaises(ValueError):
             _fit_with_constraint.add_matrix_parameter_constraint(["a", "c"], [1.0, 2.0], [[0.2, 0.0], [0.0, 0.1]])
         with self.assertRaises(ValueError):
@@ -109,8 +109,8 @@ class TestParameterConstraintInHistFit(unittest.TestCase):
             model_function=self._model_function,
             bin_evaluation=self._model_function_antiderivative,
         )
-        _fit_with_constraint_alt.add_parameter_constraint("a", self._means[0], np.sqrt(self._vars[0]))
-        _fit_with_constraint_alt.add_parameter_constraint("b", self._means[1], np.sqrt(self._vars[1]))
+        _fit_with_constraint_alt.add_gaussian_parameter_constraint("a", self._means[0], np.sqrt(self._vars[0]))
+        _fit_with_constraint_alt.add_gaussian_parameter_constraint("b", self._means[1], np.sqrt(self._vars[1]))
         self._test_consistency(_fit_with_constraint_alt, self._cov_mat_uncor_inv)
 
     def test_fit_profile_cov_mat_correlated(self):
@@ -128,7 +128,7 @@ class TestParameterConstraintInHistFit(unittest.TestCase):
             model_function=self._model_function,
             bin_evaluation=self._model_function_antiderivative,
         )
-        _fit_with_constraint.add_parameter_constraint("a", self._means[0], np.sqrt(self._vars[0]))
+        _fit_with_constraint.add_gaussian_parameter_constraint("a", self._means[0], np.sqrt(self._vars[0]))
         self._test_consistency(_fit_with_constraint, self._cov_mat_simple_a_inv)
 
     def test_fit_profile_simple_b(self):
@@ -137,7 +137,7 @@ class TestParameterConstraintInHistFit(unittest.TestCase):
             model_function=self._model_function,
             bin_evaluation=self._model_function_antiderivative,
         )
-        _fit_with_constraint.add_parameter_constraint("b", self._means[1], np.sqrt(self._vars[1]))
+        _fit_with_constraint.add_gaussian_parameter_constraint("b", self._means[1], np.sqrt(self._vars[1]))
         self._test_consistency(_fit_with_constraint, self._cov_mat_simple_b_inv)
 
 
@@ -196,7 +196,7 @@ class TestParameterConstraintInIndexedFit(unittest.TestCase):
     def test_bad_input_exception(self):
         _fit_with_constraint = IndexedFit(self._data_container, model_function=self._model)
         with self.assertRaises(ValueError):
-            _fit_with_constraint.add_parameter_constraint("c", 1.0, 1.0)
+            _fit_with_constraint.add_gaussian_parameter_constraint("c", 1.0, 1.0)
         with self.assertRaises(ValueError):
             _fit_with_constraint.add_matrix_parameter_constraint(["a", "c"], [1.0, 2.0], [[0.2, 0.0], [0.0, 0.1]])
         with self.assertRaises(ValueError):
@@ -207,8 +207,8 @@ class TestParameterConstraintInIndexedFit(unittest.TestCase):
         _fit_with_constraint.add_matrix_parameter_constraint(["a", "b"], self._means, self._cov_mat_uncor)
         self._test_consistency(_fit_with_constraint, self._cov_mat_uncor_inv)
         _fit_with_constraint_alt = IndexedFit(self._data_container, model_function=self._model)
-        _fit_with_constraint_alt.add_parameter_constraint("a", self._means[0], np.sqrt(self._vars[0]))
-        _fit_with_constraint_alt.add_parameter_constraint("b", self._means[1], np.sqrt(self._vars[1]))
+        _fit_with_constraint_alt.add_gaussian_parameter_constraint("a", self._means[0], np.sqrt(self._vars[0]))
+        _fit_with_constraint_alt.add_gaussian_parameter_constraint("b", self._means[1], np.sqrt(self._vars[1]))
         self._test_consistency(_fit_with_constraint_alt, self._cov_mat_uncor_inv)
 
     def test_fit_profile_cov_mat_correlated(self):
@@ -218,12 +218,12 @@ class TestParameterConstraintInIndexedFit(unittest.TestCase):
 
     def test_fit_profile_simple_a(self):
         _fit_with_constraint = IndexedFit(self._data_container, model_function=self._model)
-        _fit_with_constraint.add_parameter_constraint("a", self._means[0], np.sqrt(self._vars[0]))
+        _fit_with_constraint.add_gaussian_parameter_constraint("a", self._means[0], np.sqrt(self._vars[0]))
         self._test_consistency(_fit_with_constraint, self._cov_mat_simple_a_inv)
 
     def test_fit_profile_simple_b(self):
         _fit_with_constraint = IndexedFit(self._data_container, model_function=self._model)
-        _fit_with_constraint.add_parameter_constraint("b", self._means[1], np.sqrt(self._vars[1]))
+        _fit_with_constraint.add_gaussian_parameter_constraint("b", self._means[1], np.sqrt(self._vars[1]))
         self._test_consistency(_fit_with_constraint, self._cov_mat_simple_b_inv)
 
 
@@ -279,7 +279,7 @@ class TestParameterConstraintInXYFit(unittest.TestCase):
     def test_bad_input_exception(self):
         _fit_with_constraint = XYFit(self._data_container)
         with self.assertRaises(ValueError):
-            _fit_with_constraint.add_parameter_constraint("c", 1.0, 1.0)
+            _fit_with_constraint.add_gaussian_parameter_constraint("c", 1.0, 1.0)
         with self.assertRaises(ValueError):
             _fit_with_constraint.add_matrix_parameter_constraint(["a", "c"], [1.0, 2.0], [[0.2, 0.0], [0.0, 0.1]])
         with self.assertRaises(ValueError):
@@ -290,8 +290,8 @@ class TestParameterConstraintInXYFit(unittest.TestCase):
         _fit_with_constraint.add_matrix_parameter_constraint(["a", "b"], self._means, self._cov_mat_uncor)
         self._test_consistency(_fit_with_constraint, self._cov_mat_uncor_inv)
         _fit_with_constraint_alt = XYFit(self._data_container)
-        _fit_with_constraint_alt.add_parameter_constraint("a", self._means[0], np.sqrt(self._vars[0]))
-        _fit_with_constraint_alt.add_parameter_constraint("b", self._means[1], np.sqrt(self._vars[1]))
+        _fit_with_constraint_alt.add_gaussian_parameter_constraint("a", self._means[0], np.sqrt(self._vars[0]))
+        _fit_with_constraint_alt.add_gaussian_parameter_constraint("b", self._means[1], np.sqrt(self._vars[1]))
         self._test_consistency(_fit_with_constraint_alt, self._cov_mat_uncor_inv)
 
     def test_fit_profile_cov_mat_correlated(self):
@@ -301,10 +301,10 @@ class TestParameterConstraintInXYFit(unittest.TestCase):
 
     def test_fit_profile_simple_a(self):
         _fit_with_constraint = XYFit(self._data_container)
-        _fit_with_constraint.add_parameter_constraint("a", self._means[0], np.sqrt(self._vars[0]))
+        _fit_with_constraint.add_gaussian_parameter_constraint("a", self._means[0], np.sqrt(self._vars[0]))
         self._test_consistency(_fit_with_constraint, self._cov_mat_simple_a_inv)
 
     def test_fit_profile_simple_b(self):
         _fit_with_constraint = XYFit(self._data_container)
-        _fit_with_constraint.add_parameter_constraint("b", self._means[1], np.sqrt(self._vars[1]))
+        _fit_with_constraint.add_gaussian_parameter_constraint("b", self._means[1], np.sqrt(self._vars[1]))
         self._test_consistency(_fit_with_constraint, self._cov_mat_simple_b_inv)

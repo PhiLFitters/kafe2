@@ -77,8 +77,8 @@ xyFit2 = Fit(xy_d2, model2)
 xyFit1.model_label = 'linear model'
 xyFit2.model_label = 'linear model'
 # add the parameter constraints
-xyFit1.add_parameter_constraint(name='g1', value = c1 , uncertainty = ec1)
-xyFit2.add_parameter_constraint(name='g2', value = c2 , uncertainty = ec2)
+xyFit1.add_gaussian_parameter_constraint(name='g1', value = c1 , uncertainty = ec1)
+xyFit2.add_gaussian_parameter_constraint(name='g2', value = c2 , uncertainty = ec2)
 
 # combine the two fit objects to form a MultiFit
 multiFit = MultiFit( fit_list=[xyFit1, xyFit2] )

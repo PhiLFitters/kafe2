@@ -59,7 +59,7 @@ class FitWarningsBadDefaultsTest(unittest.TestCase):
         self.assertFalse(w)
 
     def test_bad_defaults_warning_constrain_par_simple(self):
-        self._fit.add_parameter_constraint("par_a", 1.0, 0.1)
+        self._fit.add_gaussian_parameter_constraint("par_a", 1.0, 0.1)
         with warnings.catch_warnings(record=True) as w:
             self._fit.do_fit()
         self.assertFalse(w)

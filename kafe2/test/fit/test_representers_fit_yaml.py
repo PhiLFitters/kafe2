@@ -161,8 +161,8 @@ class TestCustomFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter
 
         self._fit = CustomFit(TestCustomFitWithSimpleYErrors.chi2)
         self._fit.assign_parameter_names(a="alpha", b="beta")
-        self._fit.add_parameter_constraint(name="a", value=2.0, uncertainty=1.0)
-        self._fit.add_parameter_constraint(name="b", value=-1.0, uncertainty=0.5)
+        self._fit.add_gaussian_parameter_constraint(name="a", value=2.0, uncertainty=1.0)
+        self._fit.add_gaussian_parameter_constraint(name="b", value=-1.0, uncertainty=0.5)
         self._fit.add_matrix_parameter_constraint(names=["a", "b"], values=[2.05, -0.95], matrix=[[1.1, 0.1], [0.1, 2.4]])
         self.setup_streams()
 
@@ -340,8 +340,8 @@ class TestHistFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
         _data = HistContainer(n_bins=self._test_n_bins, bin_range=self._test_bin_range, fill_data=self._test_raw_data)
         self._fit = HistFit(data=_data, model_function=TestHistFitYamlRepresenter.hist_model_density)
         self._fit.add_error(err_val=0.1)
-        self._fit.add_parameter_constraint("mu", 0.1, 1.0)
-        self._fit.add_parameter_constraint("sigma", 1.0, 0.5)
+        self._fit.add_gaussian_parameter_constraint("mu", 0.1, 1.0)
+        self._fit.add_gaussian_parameter_constraint("sigma", 1.0, 0.5)
         self._fit.add_matrix_parameter_constraint(["sigma", "mu"], [1.3, 2.5], [[1.1, 0.1], [0.1, 2.4]])
 
         self.setup_streams()
@@ -518,8 +518,8 @@ class TestIndexedFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresente
         self._fit = IndexedFit(data=self._test_y, model_function=TestIndexedFitYamlRepresenter.linear_model)
         self._fit.set_all_parameter_values(self._test_parameters_default)
         self._fit.add_error(err_val=0.1)
-        self._fit.add_parameter_constraint(name="a", value=2.0, uncertainty=1.0)
-        self._fit.add_parameter_constraint(name="b", value=-1.0, uncertainty=0.5)
+        self._fit.add_gaussian_parameter_constraint(name="a", value=2.0, uncertainty=1.0)
+        self._fit.add_gaussian_parameter_constraint(name="b", value=-1.0, uncertainty=0.5)
         self._fit.add_matrix_parameter_constraint(names=["a", "b"], values=[2.05, -0.95], matrix=[[1.1, 0.1], [0.1, 2.4]])
 
         self.setup_streams()
@@ -718,8 +718,8 @@ class TestXYFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
             model_function=TestXYFitYamlRepresenter.linear_model,
         )
         self._fit.add_error(axis="y", err_val=0.1)
-        self._fit.add_parameter_constraint(name="a", value=2.0, uncertainty=1.0)
-        self._fit.add_parameter_constraint(name="b", value=-1.0, uncertainty=0.5)
+        self._fit.add_gaussian_parameter_constraint(name="a", value=2.0, uncertainty=1.0)
+        self._fit.add_gaussian_parameter_constraint(name="b", value=-1.0, uncertainty=0.5)
         self._fit.add_matrix_parameter_constraint(names=["a", "b"], values=[2.05, -0.95], matrix=[[1.1, 0.1], [0.1, 2.4]])
 
         self.setup_streams()

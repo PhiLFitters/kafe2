@@ -430,7 +430,7 @@ For more information on parameter constraints via a covariance matrix, please re
 Python
 ------
 Using *kafe2* inside a *Python* script, parameter constraints can be set with
-``fit.add_parameter_constraint()``. The according section is highlighted in the code example below.
+``fit.add_gaussian_parameter_constraint()``. The according section is highlighted in the code example below.
 
 .. literalinclude:: ../../../examples/004_constraints/constraints.py
     :language: python

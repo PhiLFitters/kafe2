@@ -262,14 +262,14 @@ Those results and uncertainties can then be used to constrain the given paramete
 This eliminates the need to manually propagate the uncertainties on the final fit results, as
 it's now done numerically.
 
-Simple parameter constraints are set with the :py:meth:`~.FitBase.add_parameter_constraint` method:
+Simple parameter constraints are set with the :py:meth:`~.FitBase.add_gaussian_parameter_constraint` method:
 
 .. code-block:: python
 
     # Constrain model parameters to measurements
-    fit.add_parameter_constraint(name='l',   value=l,   uncertainty=delta_l)
-    fit.add_parameter_constraint(name='r',   value=r,   uncertainty=delta_r)
-    fit.add_parameter_constraint(name='y_0', value=y_0, uncertainty=delta_y_0, relative=True)
+    fit.add_gaussian_parameter_constraint(name='l',   value=l,   uncertainty=delta_l)
+    fit.add_gaussian_parameter_constraint(name='r',   value=r,   uncertainty=delta_r)
+    fit.add_gaussian_parameter_constraint(name='y_0', value=y_0, uncertainty=delta_y_0, relative=True)
 
 .. note::
     The names have to be identical to the argument names in the model function. The parameter

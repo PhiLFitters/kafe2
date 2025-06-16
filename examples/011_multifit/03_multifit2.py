@@ -92,8 +92,8 @@ hist_fit1 = Fit(data=SplusB_histogram1, model_function=SplusBmodel1)
 hist_fit2 = Fit(data=SplusB_histogram2, model_function=SplusBmodel2)
 # to make the fit unambiguous,
 #  external knowledge on the resolutions must be applied
-hist_fit1.add_parameter_constraint(name='res1', value=r1, uncertainty=r1 / 4.)
-hist_fit2.add_parameter_constraint(name='res2', value=r2, uncertainty=r2 / 2.)
+hist_fit1.add_gaussian_parameter_constraint(name='res1', value=r1, uncertainty=r1 / 4.)
+hist_fit2.add_gaussian_parameter_constraint(name='res2', value=r2, uncertainty=r2 / 2.)
 
 # -- test: perform individual fits
 print('\n*==* Result of fit to first histogram')

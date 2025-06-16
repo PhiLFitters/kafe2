@@ -88,8 +88,8 @@ fit.set_parameter_values(I_0=1., b=20e-6, g=50e-6)
 # The fit parameters have no preference in terms of values.
 # Their profiles are highly distorted, indicating a very non-linear fit.
 # You can try constraining them via external measurements to make the fit more linear:
-# f.add_parameter_constraint('b', value=13.5e-6, uncertainty=1e-6)
-# f.add_parameter_constraint('g', value=50e-6, uncertainty=1e-6)
+# f.add_gaussian_parameter_constraint('b', value=13.5e-6, uncertainty=1e-6)
+# f.add_gaussian_parameter_constraint('g', value=50e-6, uncertainty=1e-6)
 
 # Fix the laser wavelength to 647.1 nm (krypton laser) since its uncertainty is negligible:
 fit.fix_parameter('varlambda', value=647.1e-9)

@@ -900,7 +900,7 @@ class FitBase(FileIOMixin, object):
         )
         self._fit_param_names_bad_default = self._fit_param_names_bad_default.difference(names)
 
-    def add_parameter_constraint(self, name, value, uncertainty, relative=False):
+    def add_gaussian_parameter_constraint(self, name, value, uncertainty, relative=False):
         """Apply a simple gaussian constraint to a single fit parameter.
 
         :param str name: The name of the parameter to be constrained.
