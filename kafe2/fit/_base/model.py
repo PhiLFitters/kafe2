@@ -15,10 +15,7 @@ from ..io.file import FileIOMixin
 from ..util import function_library
 from .format import ModelFunctionFormatter, ParameterFormatter, latexify_ascii
 
-if six.PY2:
-    from funcsigs import Parameter, Signature, signature
-else:
-    from inspect import Parameter, Signature, signature
+from inspect import Parameter, Signature, signature
 
 
 __all__ = ["ParametricModelBaseMixin", "ModelFunctionBase"]
@@ -111,7 +108,7 @@ class ModelFunctionBase(FileIOMixin, object):
 
         assert int(independent_argcount) >= 0, "The number of independent parameters must be greater than 0"
         self._independent_argcount = int(independent_argcount)
-        self._assign_model_function_signature_and_argcount(_custom_defaults)
+        self._assign_model_function_signature(_custom_defaults)
         self._validate_model_function_raise()
         self._assign_function_formatter()
         self._source_code = None
@@ -129,11 +126,8 @@ class ModelFunctionBase(FileIOMixin, object):
     def _get_default(cls):
         return function_library.linear_model
 
-    def _assign_model_function_signature_and_argcount(self, custom_defaults={}):
+    def _assign_model_function_signature(self, custom_defaults={}):
         self._model_function_signature = signature(self._model_function_handle)
-        self._model_function_argcount = self._model_function_handle.__code__.co_argcount
-        # remove the amount of independent variables from the parameter count
-        self._model_function_parcount = self._model_function_argcount - self._independent_argcount
         if custom_defaults:
             self.defaults = [custom_defaults.get(_p_name, _p_val) for _p_name, _p_val in self.defaults_dict.items()]
 
@@ -157,7 +151,7 @@ class ModelFunctionBase(FileIOMixin, object):
                     )
                 )
         # require at least one parameter to fit
-        if self._model_function_parcount < 1:
+        if self.parcount < 1:
             raise ValueError(
                 "Model function {0!r} needs at least one parameter besides the "  # noqa: F523 (unused argument in format string)
                 "first {0!s} independent variable(s)!".format(self._model_function_handle, self._independent_argcount)
@@ -205,12 +199,12 @@ class ModelFunctionBase(FileIOMixin, object):
     def argcount(self):
         """The number of arguments the model function accepts.
         (including any independent variables which are not parameters)"""
-        return self._model_function_argcount
+        return len(self._model_function_signature.parameters)
 
     @property
     def parcount(self):
         """The number of fitting parameters in the model function."""
-        return self._model_function_parcount
+        return self.argcount - self._independent_argcount
 
     @property
     def x_name(self):
