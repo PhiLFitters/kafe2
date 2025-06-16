@@ -10,13 +10,12 @@ try:
 except ModuleNotFoundError:
     sp = None
 
+from inspect import Parameter, Signature, signature
+
 from ...config import kc
 from ..io.file import FileIOMixin
 from ..util import function_library
 from .format import ModelFunctionFormatter, ParameterFormatter, latexify_ascii
-
-from inspect import Parameter, Signature, signature
-
 
 __all__ = ["ParametricModelBaseMixin", "ModelFunctionBase"]
 
