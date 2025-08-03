@@ -942,15 +942,16 @@ class MultiFit(FitBase):
         _indent = " " * 4
 
         for _i, _fit in enumerate(self._fits):
-            _header_string = "#########\n"
-            if _i > 9:
-                _header_string = "#" + _header_string
-            if _i > 99:
-                _header_string = "#" + _header_string
-            output_stream.write(_header_string)
-            output_stream.write("# Fit %s #\n" % _i)
-            output_stream.write(_header_string)
-            output_stream.write("\n")
+            if show_data or show_model:
+                _header_string = "#########\n"
+                if _i > 9:
+                    _header_string = "#" + _header_string
+                if _i > 99:
+                    _header_string = "#" + _header_string
+                output_stream.write(_header_string)
+                output_stream.write("# Fit %s #\n" % _i)
+                output_stream.write(_header_string)
+                output_stream.write("\n")
 
             if show_data:
                 _fit._report_data(output_stream=output_stream, indent=_indent, indentation_level=1)
