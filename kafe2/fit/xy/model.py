@@ -124,10 +124,18 @@ class XYParametricModel(ParametricModelBaseMixin, XYContainer):
             derivatives with respect to the parameters.
         :rtype: numpy.ndarray[numpy.ndarray[float]]
         """
+        if x is not None and not np.all(np.isfinite(x)):
+            raise ValueError(f"Provided x contains non-finite values: {x}")
+        if par_dx is not None and not np.all(np.isfinite(par_dx)):
+            raise ValueError(f"Provided par_dx contains non-finite values: {par_dx}")
         _x = x if x is not None else self.x
         _pars = model_parameters if model_parameters is not None else self._model_parameters
         _pars = np.asarray(_pars)
         _par_dxs = par_dx if par_dx is not None else 1e-2 * (np.abs(_pars) + 1.0 / (1.0 + np.abs(_pars)))
+
+        # Assert that values being passed to Numdifftools are finite to avoid cryptic error messages:
+        assert np.all(np.isfinite(_pars)), "non-finite parameter values"
+        assert np.all(np.isfinite(_par_dxs)), "non-finite parameter steps"
 
         _ret = np.zeros((len(_pars), len(_x)))
         for _par_idx, (_par_val, _par_dx) in enumerate(zip(_pars, _par_dxs)):

@@ -1,5 +1,6 @@
 import copy
 import re
+from math import isfinite
 
 import numpy as np
 
@@ -118,6 +119,8 @@ class ScalarFormatter(object):
         :param float x: The value to format.
         :rtype: str
         """
+        if not isfinite(x):
+            return "nan"
         # needed e.g. when rounding values like 9.999999 -> 10.0 (shift in decimal place)
         _rounded_x = abs(np.around(x, self._sig))
         # fallback to rounding to 10^(-1) if value is zero

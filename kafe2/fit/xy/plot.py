@@ -165,11 +165,13 @@ class XYPlotAdapter(PlotAdapterBase):
         :param dict kwargs: Keyword arguments accepted by :py:obj:`matplotlib.pyplot.fill_between`.
         :return: plot handle(s)
         """
-        if self._fit.errors_valid:
-            _band_y = self.y_error_band
-            _y = self.model_line_y
-            return target_axes.fill_between(self.model_line_x, _y - _band_y, _y + _band_y, **kwargs)
-        return None  # don't plot error band if fitter input data has no errors...
+        if not self._fit.errors_valid:
+            return None  # don't plot error band if fitter input data has no errors...
+        _band_y = self.y_error_band
+        if _band_y is None:
+            return None  # error band calculation has failed
+        _y = self.model_line_y
+        return target_axes.fill_between(self.model_line_x, _y - _band_y, _y + _band_y, **kwargs)
 
     def plot_ratio_error_band(self, target_axes, **kwargs):
         """Plot model error band around the data/model ratio to specified

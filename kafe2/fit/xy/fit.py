@@ -725,7 +725,7 @@ class XYFit(FitBase):
         """
         self._param_model.parameters = self.parameter_values  # this is lazy, so just do it
         self._param_model.x = self.x_model
-        if par_dx is None and self.did_fit:
+        if par_dx is None and self.did_fit and np.all(np.isfinite(self.parameter_errors)):
             par_dx = 1e-2 * self.parameter_errors
         return self._param_model.eval_model_function_derivative_by_parameters(x=x, model_parameters=model_parameters, par_dx=par_dx)
 
@@ -744,6 +744,8 @@ class XYFit(FitBase):
             x = self.x_model
         if self.parameter_cov_mat is None:
             return np.zeros_like(x)
+        if not np.all(np.isfinite(self.parameter_values)):
+            return None
 
         _f_deriv_by_params = self.eval_model_function_derivative_by_parameters(x=x)
         # here: df/dp[par_idx]|x=x[x_idx] = _f_deriv_by_params[par_idx][x_idx]
