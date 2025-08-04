@@ -4,14 +4,18 @@ colors:
   - &kafe_light_color1 '#E09060'   # Latte Macchiato
   - &kafe_color2 'royalblue'
   - &kafe_light_color2 'skyblue'
-  - &kafe_color3 'darkgreen'
+  - &kafe_color3 'limegreen'
   - &kafe_light_color3 'yellowgreen'
   - &kafe_color4 'gray'
   - &kafe_light_color4 'silver'
-  - &kafe_color5 'maroon'
-  - &kafe_light_color5 'darkgoldenrod'
-  - &kafe_color6 'firebrick'
-  - &kafe_light_color6 'orangered'
+  - &kafe_color5 'darkorchid'
+  - &kafe_light_color5 'orchid'
+  - &kafe_color6 'mediumturquoise'
+  - &kafe_light_color6 'turquoise'
+  - &kafe_color7 'magenta'
+  - &kafe_light_color7 'hotpink'
+  - &kafe_color8 'firebrick'
+  - &kafe_light_color8 'coral'
 
 default:
   axis_labels:
@@ -32,6 +36,8 @@ default:
         - *kafe_color4
         - *kafe_color5
         - *kafe_color6
+        - *kafe_color7
+        - *kafe_color8
       - marker:
         - 'o'
         - '^'
@@ -51,6 +57,8 @@ default:
         - *kafe_light_color4
         - *kafe_light_color5
         - *kafe_light_color6
+        - *kafe_light_color7
+        - *kafe_light_color8
       - marker:
         - 'o'
         - '^'
@@ -79,12 +87,14 @@ histogram:
         - *kafe_light_color4
         - *kafe_light_color5
         - *kafe_light_color6
+        - *kafe_light_color7
+        - *kafe_light_color8
   model_density:
     plot_kwargs:
       linestyle: '-'
       marker: ''
       label: '%(model_label)s density'
-      linewidth: 2
+      linewidth: 2.5
       zorder: 0
       hide: False
     property_cycler:
@@ -95,6 +105,8 @@ histogram:
         - *kafe_light_color4
         - *kafe_light_color5
         - *kafe_light_color6
+        - *kafe_light_color7
+        - *kafe_light_color8
       - linestyle:
         - '-'
         - '--'
@@ -110,7 +122,7 @@ indexed:
       linestyle: '-'
       marker: ''
       label: 'model %(subplot_id)s'
-      linewidth: 2
+      linewidth: 2.5
       zorder: -100
       hide: False
     property_cycler:
@@ -121,6 +133,8 @@ indexed:
         - *kafe_light_color4
         - *kafe_light_color5
         - *kafe_light_color6
+        - *kafe_light_color7
+        - *kafe_light_color8
       - linestyle:
         - '-'
         - '--'
@@ -146,6 +160,8 @@ unbinned:
         - *kafe_color4
         - *kafe_color5
         - *kafe_color6
+        - *kafe_color7
+        - *kafe_color8
   model:
     plot_kwargs:
       hide: True
@@ -154,7 +170,7 @@ unbinned:
       linestyle: '-'
       marker: ''
       label: 'model %(subplot_id)s'
-      linewidth: 2
+      linewidth: 2.5
       zorder: -100
       hide: False
     property_cycler:
@@ -165,6 +181,8 @@ unbinned:
           - *kafe_light_color4
           - *kafe_light_color5
           - *kafe_light_color6
+          - *kafe_light_color7
+          - *kafe_light_color8
       - linestyle:
           - '-'
           - '--'
@@ -183,7 +201,7 @@ xy:
       linestyle: '-'
       marker: ''
       label: 'model %(subplot_id)s'
-      linewidth: 2
+      linewidth: 2.5
       zorder: -100
       hide: False
     property_cycler:
@@ -194,6 +212,8 @@ xy:
         - *kafe_light_color4
         - *kafe_light_color5
         - *kafe_light_color6
+        - *kafe_light_color7
+        - *kafe_light_color8
       - linestyle:
         - '--'
         - '-.'
@@ -204,7 +224,7 @@ xy:
       linestyle: '-'
       label: 'model %(subplot_id)s $\pm 1\sigma$'
       edgecolor: 'none'
-      linewidth: 2
+      linewidth: 2.5
       zorder: -101
       hide: False
     property_cycler:
@@ -215,3 +235,5 @@ xy:
         - *kafe_light_color4
         - *kafe_light_color5
         - *kafe_light_color6
+        - *kafe_light_color7
+        - *kafe_light_color8
