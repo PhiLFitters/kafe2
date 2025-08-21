@@ -65,6 +65,7 @@ def intensity(theta, I_0, b, g, varlambda):
 # Read in the measurement data from the file generated above:
 data = XYContainer.from_file("02_double_slit_data.yml")
 
+
 # Create fit from data container:
 fit = Fit(data=data, model_function=intensity, minimizer="iminuit")
 
@@ -103,7 +104,7 @@ fit.to_file('02_double_slit.yml')
 
 fit.do_fit()
 
-cpf = ContoursProfiler(fit)
+cpf = ContoursProfiler(fit, contour_cl_values=(0.9, 0.95))
 cpf.plot_profiles_contours_matrix(parameters=['I_0', 'b', 'g'],
                                   show_grid_for='all',
                                   show_fit_minimum_for='all',
@@ -111,8 +112,9 @@ cpf.plot_profiles_contours_matrix(parameters=['I_0', 'b', 'g'],
                                   show_legend=True,
                                   show_parabolic_profiles=True,
                                   show_ticks_for='all',
-                                  contour_naming_convention='sigma',
-                                  label_ticks_in_sigma=True)
+                                  contour_naming_convention='cl',
+                                  label_ticks_in_sigma = False,
+                                  sigma_steps = 1.0)
 
 # To see the fit results, plot using Plot:
 p = Plot(fit_objects=fit)

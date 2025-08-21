@@ -5,7 +5,7 @@ import unittest
 import matplotlib.pyplot as plt
 import numpy as np
 
-from kafe2 import Plot, XYFit
+from kafe2 import ContoursProfiler, Plot, XYFit
 
 
 class TestXYPlot(unittest.TestCase):
@@ -278,3 +278,36 @@ class TestMultiPlot(unittest.TestCase):
             self.plot_sep.save(fname=1)
         with self.assertRaises(ValueError):
             self.plot_sep.save(fname=["fit_0.png", "fit_1.png", "fit_2.png"])
+
+
+class TestContoursProfiler(unittest.TestCase):
+    def setUp(self):
+        self._ref_data = [[1, 2, 3], [0.9, 2.1, 3.0]]
+        self._ref_dataset_label = "My Dataset"
+        self._ref_x_label = "$U$ [V]"
+        self._ref_y_label = "$I$ [A]"
+        self._ref_model_label = "My Model"
+        self._ref_error_label = self._ref_model_label + r" $\pm 1\sigma$"
+
+        self.fit = XYFit(xy_data=self._ref_data)
+        self.fit.add_error("y", 0.1)
+        self.fit.do_fit()
+
+    def tearDown(self):
+        return super().tearDown()
+
+    def test_sigma_contours(self):
+        self._cpf = ContoursProfiler(self.fit)
+        self._cpf.plot_profiles_contours_matrix(parameters=["a", "b"])
+
+    def test_cl_contours(self):
+        self._cpf = ContoursProfiler(self.fit, contour_cl_values=[0.1, 0.8])
+        self._cpf.plot_profiles_contours_matrix(parameters=["a", "b"], contour_naming_convention="cl")
+
+    def test_set_steps(self):
+        self._cpf = ContoursProfiler(self.fit)
+        self._cpf.plot_profiles_contours_matrix(parameters=["a", "b"], sigma_steps=0.5)
+
+    def test_tick_labels(self):
+        self._cpf = ContoursProfiler(self.fit)
+        self._cpf.plot_profiles_contours_matrix(parameters=["a", "b"], label_ticks_in_sigma=False)

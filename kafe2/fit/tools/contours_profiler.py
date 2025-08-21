@@ -56,9 +56,10 @@ class SigmaLocator(plticker.Locator):
     The offsets are integer multiples of a fixed value ('sigma')
     """
 
-    def __init__(self, central_value, sigma):
+    def __init__(self, central_value, sigma, sigma_steps=1.0):
         self._cval = central_value
         self._sigma = sigma
+        self.sigma_steps = sigma_steps
 
     def __call__(self):
         """Return the locations of the ticks"""
@@ -68,7 +69,7 @@ class SigmaLocator(plticker.Locator):
     def tick_values(self, vmin, vmax):
         _n_sigma_dn = int((vmin - self._cval) / self._sigma)
         _n_sigma_up = int((vmax - self._cval) / self._sigma)
-        return self.raise_if_exceeds(np.arange(_n_sigma_dn, _n_sigma_up + 1, 1) * self._sigma + self._cval)
+        return self.raise_if_exceeds(np.arange(_n_sigma_dn, _n_sigma_up + 1, self.sigma_steps) * self._sigma + self._cval)
 
 
 class SigmaFormatter(plticker.Formatter):
@@ -163,7 +164,8 @@ class ContoursProfiler(object):
         profile_subtract_min=True,
         profile_bound=2.45,
         contour_points=100,
-        contour_sigma_values=(1.0, 2.0),
+        contour_sigma_values=None,
+        contour_cl_values=None,
         contour_smoothing_sigma=0.0,
         contour_method_kwargs=None,
     ):
@@ -181,16 +183,34 @@ class ContoursProfiler(object):
         :type profile_bound: float
         :param contour_points: number of points at which to sample each contour
         :type contour_points: int
-        :param contour_sigma_values: evaluate and show contours for these confidences (in sigma)
+        :param contour_sigma_values: evaluate and show contours for these confidence levels (specified as sigma)
         :type contour_sigma_values: iterable of float
+        :param contour_cl_values: evaluate and show contours for these confidence levels (specified as probability)
+        :type contour_cl_values: iterable or float
         :param contour_smoothing_sigma: apply a smoothing Gaussian filter with this sigma parameter to each contour
                                         (default is ``0.0``, meaning no smoothing)
         :type contour_smoothing_sigma: float
         """
         if not isinstance(fit_object, FitBase):
             raise TypeError("Object %r is not a fit object!" % (fit_object,))
-
-        _contour_confidence_levels = [ConfidenceLevel(n_dimensions=2, sigma=_sigma) for _sigma in contour_sigma_values]
+        if contour_cl_values is None and contour_sigma_values is None:
+            _contour_confidence_levels = [ConfidenceLevel(n_dimensions=2, sigma=_sigma) for _sigma in (1, 2)]
+            self.contour_sigma_values = (1, 2)
+        elif contour_sigma_values is None:
+            if not isinstance(contour_cl_values, Iterable):
+                contour_cl_values = [contour_cl_values]
+            _contour_confidence_levels = [ConfidenceLevel(n_dimensions=2, cl=_cl) for _cl in contour_cl_values]
+            self.contour_sigma_values = [_cl.sigma for _cl in _contour_confidence_levels]
+        elif contour_cl_values is None:
+            if not isinstance(contour_sigma_values, Iterable):
+                contour_sigma_values = [contour_sigma_values]
+            _contour_confidence_levels = [ConfidenceLevel(n_dimensions=2, sigma=_sigma) for _sigma in contour_sigma_values]
+            self.contour_sigma_values = contour_sigma_values
+        else:
+            raise ValueError(
+                f"Only one of 'contour_cl_values' and 'contour_sigma_values' may be provided."
+                f" Got contour_cl_values = {contour_cl_values!r} and contour_sigma_values = {contour_sigma_values!r}."
+            )
 
         self._fit = fit_object
         self._profile_kwargs = dict(points=profile_points, subtract_min=profile_subtract_min, bound=profile_bound)
@@ -437,6 +457,7 @@ class ContoursProfiler(object):
         label_ticks_in_sigma=True,
         label_fit_minimum=True,
         font_scale=1.0,
+        sigma_steps=1.0,
     ):
         """
         Plot the profile cost function for a parameter.
@@ -469,13 +490,15 @@ class ContoursProfiler(object):
         :type show_error_span: bool
         :param show_ticks: if ``True``, *x* and *y* ticks are displayed
         :type show_ticks: bool
-        :param label_ticks_in_sigma: if ``True``, label ticks are in units of 1 sigma
+         :param label_ticks_in_sigma: if ``True``, label ticks are in units of 1 sigma
         :type label_ticks_in_sigma: bool
         :param label_fit_minimum: if ``True``, the parameter value and the 1 sigma error
             will be shown as an annotation
         :type label_fit_minimum: bool
         :param font_scale: multiply font size by this amount.
         :type font_scale: float
+        :param sigma_steps: Stepsize of the ticks in profile and contour plots in units of sigma.
+        :type sigma_steps: float
 
         :return: figure containing the plot result
         :rtype: `matplotlib.figure.Figure`
@@ -571,7 +594,7 @@ class ContoursProfiler(object):
                 _axes.grid("on")
 
             if show_ticks:
-                _loc_x = SigmaLocator(central_value=_par_val, sigma=_par_err)
+                _loc_x = SigmaLocator(central_value=_par_val, sigma=_par_err, sigma_steps=sigma_steps)
                 _axes.xaxis.set_major_locator(_loc_x)
                 if label_ticks_in_sigma:
                     _form_x = SigmaFormatter(central_value=_par_val, sigma=_par_err)
@@ -604,6 +627,7 @@ class ContoursProfiler(object):
         label_ticks_in_sigma=True,
         naming_convention="sigma",
         font_scale=1.0,
+        sigma_steps=1.0,
     ):
         """
         Plot the contour for a parameter pair.
@@ -629,6 +653,8 @@ class ContoursProfiler(object):
         :type naming_convention: str
         :param font_scale: multiply font size by this amount.
         :type font_scale: float
+        :param sigma_steps: Stepsize of the ticks in profile and contour plots in units of sigma.
+        :type sigma_steps: float
 
         :return: figure containing the plot result
         :rtype: `matplotlib.figure.Figure`
@@ -690,10 +716,11 @@ class ContoursProfiler(object):
                 _axes.grid("on")
 
             if show_ticks:
-                _loc_x = SigmaLocator(central_value=_par_1_val, sigma=_par_1_err)
-                _loc_y = SigmaLocator(central_value=_par_2_val, sigma=_par_2_err)
+                _loc_x = SigmaLocator(central_value=_par_1_val, sigma=_par_1_err, sigma_steps=sigma_steps)
+                _loc_y = SigmaLocator(central_value=_par_2_val, sigma=_par_2_err, sigma_steps=sigma_steps)
                 _axes.xaxis.set_major_locator(_loc_x)
                 _axes.yaxis.set_major_locator(_loc_y)
+
                 if label_ticks_in_sigma:
                     _form_x = SigmaFormatter(central_value=_par_1_val, sigma=_par_1_err)
                     _form_y = SigmaFormatter(central_value=_par_2_val, sigma=_par_2_err)
@@ -727,6 +754,7 @@ class ContoursProfiler(object):
         label_ticks_in_sigma=True,
         contour_naming_convention="sigma",
         font_scale=1.0,
+        sigma_steps=1.0,
     ):
         """
         Plot all profiles and contours to subplots arranges in a matrix-like fashion.
@@ -756,6 +784,8 @@ class ContoursProfiler(object):
         :type contour_naming_convention: str
         :param font_scale: multiply font size by this amount.
         :type font_scale: float
+        :param sigma_steps: Stepsize of the ticks in profile and contour plots in units of sigma.
+        :type sigma_steps: float
 
         :return: figure containing the plot result
         :rtype: `matplotlib.figure.Figure`
@@ -807,8 +837,10 @@ class ContoursProfiler(object):
             _subplots = np.empty((_npar, _npar), dtype=Axes)  # store subplot system in numpy array
             for row in six.moves.range(_npar):
                 _axes = _subplots[row, row] = _fig.add_subplot(_gs[row, row])
+                _sigma = self.contour_sigma_values[-1]
                 self.plot_profile(
                     _par_names[row],
+                    sigma=max(_sigma, 2.5),
                     target_axes=_axes,
                     show_parabolic=show_parabolic_profiles,
                     show_grid=_show_grid_profiles,
@@ -818,6 +850,7 @@ class ContoursProfiler(object):
                     label_ticks_in_sigma=label_ticks_in_sigma,
                     show_ticks=_show_ticks_profiles,
                     font_scale=font_scale,
+                    sigma_steps=sigma_steps,
                 )
 
                 if show_legend:
@@ -840,6 +873,7 @@ class ContoursProfiler(object):
                         label_ticks_in_sigma=label_ticks_in_sigma,
                         naming_convention=contour_naming_convention,
                         font_scale=font_scale,
+                        sigma_steps=sigma_steps,
                     )
 
                     if show_legend:
@@ -859,23 +893,56 @@ class ContoursProfiler(object):
                             show_ticks=_show_ticks_contours,
                             label_ticks_in_sigma=label_ticks_in_sigma,
                             naming_convention=contour_naming_convention,
+                            sigma_steps=sigma_steps,
                         )
 
+            _masters = [None] * len(_subplots)
             for row, _row_plots in enumerate(_subplots):
                 for col, _plot in enumerate(_row_plots):
+                    # share the x axis over all plots in a column
+                    if row == col:
+                        _masters[col] = _plot
+                    elif _plot is not None:
+                        _plot.sharex(_masters[col])
+
                     # skip empty plots
                     if not _plot:
                         continue
 
-                    _plot.set_xlim(_linear_range_transform(_plot.get_xlim(), factor=1.01))
-                    _plot.set_ylim(_linear_range_transform(_plot.get_ylim(), factor=1.01))
+                    if col == row:
+                        _plot.set_xlim(_linear_range_transform(_plot.get_xlim(), factor=1.01))
+                        _plot.set_ylim(_linear_range_transform(_plot.get_ylim(), factor=1.01))
 
-                    # adjust y plot range to match x (in sigma)
                     if col != row:
+                        _sigma_max = np.max(self.contour_sigma_values)
+                        _contour = self._fit._fitter.contour(_par_names[col], _par_names[row], sigma=_sigma_max)
+                        _xs, _ys = _contour.xy_points
+                        _x_low, _x_high = np.min(_xs), np.max(_xs)
+                        _y_low, _y_high = np.min(_ys), np.max(_ys)
+                        _x_err, _y_err = self._fit.parameter_errors[col], self._fit.parameter_errors[row]
+                        _x_min, _y_min = self._fit.parameter_values[col], self._fit.parameter_values[row]
+                        _x_low_ratio = (_x_min - _x_low) / _x_err
+                        _y_low_ratio = (_y_min - _y_low) / _y_err
+                        _x_high_ratio = -(_x_min - _x_high) / _x_err
+                        _y_high_ratio = -(_y_min - _y_high) / _y_err
+
+                        if _x_low_ratio < _y_low_ratio:
+                            _x_low = _x_min - _y_low_ratio * _x_err
+                        if _x_high_ratio < _y_high_ratio:
+                            _x_high = _x_min - _y_high_ratio * _x_err
+
+                        # Use minimal limit of 2.5 sigma in each direction
+                        _x_low_ratio = (_x_min - _x_low) / _x_err
+                        _x_high_ratio = -(_x_min - _x_high) / _x_err
+                        if _x_low_ratio < 2.5:
+                            _x_low = _x_min - 2.5 * _x_err
+                        if _x_high_ratio < 2.5:
+                            _x_high = _x_min + 2.5 * _x_err
+
+                        _plot.set_xlim(_x_low - 0.1 * _x_err, _x_high + 0.1 * _x_err)
+
                         _x_lim = _plot.get_xlim()
-                        _x_min = self._fit.parameter_values[col]
-                        _y_min = self._fit.parameter_values[row]
-                        _y_over_x_err_ratio = self._fit.parameter_errors[row] / self._fit.parameter_errors[col]
+                        _y_over_x_err_ratio = _y_err / _x_err
                         _plot.set_ylim(
                             (
                                 _y_min + (_x_lim[0] - _x_min) * _y_over_x_err_ratio,
@@ -896,9 +963,8 @@ class ContoursProfiler(object):
                             _label.set_visible(False)
 
                     # rotate long x tick labels to avoid overlap
-                    if not label_ticks_in_sigma:
-                        for _label in _plot.get_xticklabels():
-                            _label.set_rotation(90)
+                    for _label in _plot.get_xticklabels():
+                        _label.set_rotation(90)
 
             # align x and y axis labels
             try:
