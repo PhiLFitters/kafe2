@@ -56,9 +56,10 @@ class SigmaLocator(plticker.Locator):
     The offsets are integer multiples of a fixed value ('sigma')
     """
 
-    def __init__(self, central_value, sigma):
+    def __init__(self, central_value, sigma, use_fractions=False):
         self._cval = central_value
         self._sigma = sigma
+        self.use_fractions = use_fractions
 
     def __call__(self):
         """Return the locations of the ticks"""
@@ -68,6 +69,9 @@ class SigmaLocator(plticker.Locator):
     def tick_values(self, vmin, vmax):
         _n_sigma_dn = int((vmin - self._cval) / self._sigma)
         _n_sigma_up = int((vmax - self._cval) / self._sigma)
+        if _n_sigma_up - _n_sigma_dn < 3 and self.use_fractions:
+            return self.raise_if_exceeds(np.arange(_n_sigma_dn, _n_sigma_up + 1, 0.5) * self._sigma + self._cval)
+
         return self.raise_if_exceeds(np.arange(_n_sigma_dn, _n_sigma_up + 1, 1) * self._sigma + self._cval)
 
 
@@ -92,6 +96,33 @@ class SigmaFormatter(plticker.Formatter):
     def format_data_short(self, value):
         """Short version of format string for tick"""
         return "{:g}".format(value)
+
+
+class CLFormatter(plticker.Formatter):
+    """
+    Set the tick labels to indicate the distance to the
+    central value, in intervals
+    """
+
+    def __init__(self, central_value, sigma):
+        """set the tick labels to correspond to sigma"""
+        self._cval = central_value
+        self._sigma = sigma
+
+    def __call__(self, x, pos=None):
+        """Return the format for tick val *x* at position *pos*"""
+        # _vmin, _vmax = self.axis.get_data_interval()
+
+        _number_of_sigma = (x - self._cval) / self._sigma
+        _sign = np.sign(_number_of_sigma)
+        if _sign != 0:
+            _cl = ConfidenceLevel(n_dimensions=1, sigma=_sign*_number_of_sigma)
+            _cl_label = _cl.cl*_sign * 50
+        else:
+            _cl_label = 0
+
+        _str_label = r"%.3g%%" % (_cl_label,)
+        return _str_label
 
 
 class ScalarFormatter(plticker.Formatter):
@@ -166,6 +197,7 @@ class ContoursProfiler(object):
         contour_sigma_values=(1.0, 2.0),
         contour_smoothing_sigma=0.0,
         contour_method_kwargs=None,
+        use_as_cl_values=None,
     ):
         """
         Construct a :py:obj:`~kafe2.fit._base.profile.ContoursProfiler` object:
@@ -186,12 +218,17 @@ class ContoursProfiler(object):
         :param contour_smoothing_sigma: apply a smoothing Gaussian filter with this sigma parameter to each contour
                                         (default is ``0.0``, meaning no smoothing)
         :type contour_smoothing_sigma: float
+        :param use_as_cl_values: If ``True``, the values from contour_sigma_values are interpreted as confidence level
+        :type use_as_cl_values: bool
         """
         if not isinstance(fit_object, FitBase):
             raise TypeError("Object %r is not a fit object!" % (fit_object,))
-
-        _contour_confidence_levels = [ConfidenceLevel(n_dimensions=2, sigma=_sigma) for _sigma in contour_sigma_values]
-
+        if use_as_cl_values:
+            _contour_confidence_levels = [ConfidenceLevel(n_dimensions=2, cl=_cl) for _cl in contour_sigma_values]
+        else:
+            _contour_confidence_levels = [ConfidenceLevel(n_dimensions=2, sigma=_sigma) for _sigma in contour_sigma_values]
+        self._use_cl_values = use_as_cl_values
+        self.contour_sigma_values = contour_sigma_values
         self._fit = fit_object
         self._profile_kwargs = dict(points=profile_points, subtract_min=profile_subtract_min, bound=profile_bound)
         self._contour_kwargs = dict(
@@ -434,9 +471,10 @@ class ContoursProfiler(object):
         show_fit_minimum=True,
         show_error_span=True,
         show_ticks=True,
-        label_ticks_in_sigma=True,
+        label_ticks="sigma",
         label_fit_minimum=True,
         font_scale=1.0,
+        use_fractions=False,
     ):
         """
         Plot the profile cost function for a parameter.
@@ -476,6 +514,9 @@ class ContoursProfiler(object):
         :type label_fit_minimum: bool
         :param font_scale: multiply font size by this amount.
         :type font_scale: float
+        :param use_fractions: if ``True``, label ticks will be shown in fractions of sigma in case the plot only spans
+                            less than 3 sigma
+        :type use_fractions: bool
 
         :return: figure containing the plot result
         :rtype: `matplotlib.figure.Figure`
@@ -571,14 +612,19 @@ class ContoursProfiler(object):
                 _axes.grid("on")
 
             if show_ticks:
-                _loc_x = SigmaLocator(central_value=_par_val, sigma=_par_err)
+                _loc_x = SigmaLocator(central_value=_par_val, sigma=_par_err, use_fractions=use_fractions)
                 _axes.xaxis.set_major_locator(_loc_x)
-                if label_ticks_in_sigma:
+                if label_ticks == "cl":
+                    _form_x = CLFormatter(central_value=_par_val, sigma=_par_err)
+                    _axes.xaxis.set_major_formatter(_form_x)
+                elif label_ticks == "sigma":
                     _form_x = SigmaFormatter(central_value=_par_val, sigma=_par_err)
                     _axes.xaxis.set_major_formatter(_form_x)
-                else:
+                elif label_ticks == "value":
                     _form_x = ScalarFormatter(sigma=_par_err, n_significant_digits=2)
                     _axes.xaxis.set_major_formatter(_form_x)
+                else:
+                    raise ValueError("Unknown label tick naming convention '%s'! " "Must be one of: ('cl', 'sigma', 'value')" % (label_ticks,))
 
                 _loc_y = plticker.MaxNLocator(5)
                 _axes.yaxis.set_major_locator(_loc_y)
@@ -601,9 +647,10 @@ class ContoursProfiler(object):
         show_legend=True,
         show_fit_minimum=True,
         show_ticks=True,
-        label_ticks_in_sigma=True,
+        label_ticks="sigma",
         naming_convention="sigma",
         font_scale=1.0,
+        use_fractions=False,
     ):
         """
         Plot the contour for a parameter pair.
@@ -622,14 +669,20 @@ class ContoursProfiler(object):
         :type show_fit_minimum: bool
         :param show_ticks: if ``True``, *x* and *y* ticks are displayed
         :type show_ticks: bool
-        :param label_ticks_in_sigma: if ``True``, label ticks are in units of 1 sigma
-        :type label_ticks_in_sigma: bool
+        :param label_ticks: if ``'sigma'`` the label ticks are in units of 1 sigma, if ``'cl'`` the label ticks
+                            are in % of the confidence level, if ``'value'`` the label ticks are in units of the
+                            parameter value
+        :type label_ticks: str
         :param naming_convention: if ``'sigma'`` the contour is labelled in sigma, if ``'cl'`` the contour is labelled
                                   in confidence level
         :type naming_convention: str
         :param font_scale: multiply font size by this amount.
         :type font_scale: float
-
+        :param label_ticks_in_cl: if ``True``, the label ticks are in units of the confidence level in percent
+        :type label_ticks_in_cl: bool
+        :param use_fractions: if ``True``, label ticks will be shown in fractions of sigma in case the plot only spans
+                            less than 3 sigma
+        :type use_fractions: bool
         :return: figure containing the plot result
         :rtype: `matplotlib.figure.Figure`
         """
@@ -690,20 +743,29 @@ class ContoursProfiler(object):
                 _axes.grid("on")
 
             if show_ticks:
-                _loc_x = SigmaLocator(central_value=_par_1_val, sigma=_par_1_err)
-                _loc_y = SigmaLocator(central_value=_par_2_val, sigma=_par_2_err)
+                _loc_x = SigmaLocator(central_value=_par_1_val, sigma=_par_1_err, use_fractions=use_fractions)
+                _loc_y = SigmaLocator(central_value=_par_2_val, sigma=_par_2_err, use_fractions=use_fractions)
                 _axes.xaxis.set_major_locator(_loc_x)
                 _axes.yaxis.set_major_locator(_loc_y)
-                if label_ticks_in_sigma:
+
+                if label_ticks == "cl":
+                    _form_x = CLFormatter(central_value=_par_1_val, sigma=_par_1_err)
+                    _form_y = CLFormatter(central_value=_par_2_val, sigma=_par_2_err)
+                    _axes.xaxis.set_major_formatter(_form_x)
+                    _axes.yaxis.set_major_formatter(_form_y)
+                elif label_ticks == "sigma":
                     _form_x = SigmaFormatter(central_value=_par_1_val, sigma=_par_1_err)
                     _form_y = SigmaFormatter(central_value=_par_2_val, sigma=_par_2_err)
                     _axes.xaxis.set_major_formatter(_form_x)
                     _axes.yaxis.set_major_formatter(_form_y)
-                else:
+                elif label_ticks == "value":
                     _form_x = ScalarFormatter(sigma=_par_1_err, n_significant_digits=2)
                     _form_y = ScalarFormatter(sigma=_par_2_err, n_significant_digits=2)
                     _axes.xaxis.set_major_formatter(_form_x)
                     _axes.yaxis.set_major_formatter(_form_y)
+                else:
+                    raise ValueError("Unknown label tick naming convention '%s'! " "Must be one of: ('cl', 'sigma', 'value')" % (label_ticks,))
+
             else:
                 _axes.set_xticks([])
                 _axes.set_yticks([])
@@ -724,9 +786,10 @@ class ContoursProfiler(object):
         show_parabolic_profiles=True,
         show_error_span_profiles=False,
         full_matrix=False,
-        label_ticks_in_sigma=True,
+        label_ticks="sigma",
         contour_naming_convention="sigma",
         font_scale=1.0,
+        use_fractions=False,
     ):
         """
         Plot all profiles and contours to subplots arranges in a matrix-like fashion.
@@ -749,13 +812,18 @@ class ContoursProfiler(object):
         :type show_error_span_profiles: bool
         :param full_matrix: if ``True``, contour subplots are also shown above the main diagonal
         :type full_matrix: bool
-        :param label_ticks_in_sigma: if ``True``, label ticks are in units of 1 sigma
-        :type label_ticks_in_sigma: bool
+        :param label_ticks: if ``'sigma'`` the label ticks are in units of 1 sigma, if ``'cl'`` the label ticks
+                            are in % of the confidence level, if ``'value'`` the label ticks are in units of the
+                            parameter value
+        :type label_ticks: str
         :param contour_naming_convention: if ``'sigma'`` the contour is labelled in sigma, if ``'cl'`` the contour is
                                           labelled in confidence level
         :type contour_naming_convention: str
         :param font_scale: multiply font size by this amount.
         :type font_scale: float
+        :param use_fractions: if ``True``, label ticks will be shown in fractions of sigma in case the plot only spans
+                            less than 3 sigma
+        :type use_fractions: bool
 
         :return: figure containing the plot result
         :rtype: `matplotlib.figure.Figure`
@@ -807,17 +875,23 @@ class ContoursProfiler(object):
             _subplots = np.empty((_npar, _npar), dtype=Axes)  # store subplot system in numpy array
             for row in six.moves.range(_npar):
                 _axes = _subplots[row, row] = _fig.add_subplot(_gs[row, row])
+                if self._use_cl_values:
+                    _sigma = ConfidenceLevel(n_dimensions=2, cl=self.contour_sigma_values[-1]).sigma
+                else:
+                    _sigma = self.contour_sigma_values[-1]
                 self.plot_profile(
                     _par_names[row],
+                    sigma=_sigma,
                     target_axes=_axes,
                     show_parabolic=show_parabolic_profiles,
                     show_grid=_show_grid_profiles,
                     show_legend=False,
                     show_fit_minimum=_show_minimum_profiles,
                     show_error_span=show_error_span_profiles,
-                    label_ticks_in_sigma=label_ticks_in_sigma,
+                    label_ticks=label_ticks,
                     show_ticks=_show_ticks_profiles,
                     font_scale=font_scale,
+                    use_fractions=use_fractions,
                 )
 
                 if show_legend:
@@ -837,9 +911,10 @@ class ContoursProfiler(object):
                         show_legend=False,
                         show_fit_minimum=_show_minimum_contours,
                         show_ticks=_show_ticks_contours,
-                        label_ticks_in_sigma=label_ticks_in_sigma,
+                        label_ticks=label_ticks,
                         naming_convention=contour_naming_convention,
                         font_scale=font_scale,
+                        use_fractions=use_fractions,
                     )
 
                     if show_legend:
@@ -857,12 +932,20 @@ class ContoursProfiler(object):
                             show_legend=False,
                             show_fit_minimum=_show_minimum_contours,
                             show_ticks=_show_ticks_contours,
-                            label_ticks_in_sigma=label_ticks_in_sigma,
+                            label_ticks=label_ticks,
                             naming_convention=contour_naming_convention,
-                        )
+                            use_fractions=use_fractions,
+                            )
 
+            _masters = [None] * len(_subplots)
             for row, _row_plots in enumerate(_subplots):
                 for col, _plot in enumerate(_row_plots):
+                    # share the x axis over all plots in a column
+                    if row == col:
+                        _masters[col] = _plot
+                    elif _plot is not None:
+                        _plot.sharex(_masters[col])
+
                     # skip empty plots
                     if not _plot:
                         continue
@@ -896,7 +979,7 @@ class ContoursProfiler(object):
                             _label.set_visible(False)
 
                     # rotate long x tick labels to avoid overlap
-                    if not label_ticks_in_sigma:
+                    if label_ticks != "sigma":
                         for _label in _plot.get_xticklabels():
                             _label.set_rotation(90)
 
