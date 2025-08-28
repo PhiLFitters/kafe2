@@ -279,6 +279,7 @@ class TestMultiPlot(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.plot_sep.save(fname=["fit_0.png", "fit_1.png", "fit_2.png"])
 
+
 class TestContoursProfiler(unittest.TestCase):
     def setUp(self):
         self._ref_data = [[1, 2, 3], [0.9, 2.1, 3.0]]
@@ -294,16 +295,16 @@ class TestContoursProfiler(unittest.TestCase):
 
     def tearDown(self):
         return super().tearDown()
-    
+
     def test_sigma_contours(self):
         self._cpf = ContoursProfiler(self.fit)
-        self._cpf.plot_profiles_contours_matrix(parameters=['a','b'])
-    
+        self._cpf.plot_profiles_contours_matrix(parameters=['a', 'b'])
+
     def test_cl_contours(self):
-        self._cpf = ContoursProfiler(self.fit, contour_sigma_values = [0.1,0.8], use_as_cl_values=True)
-        self._cpf.plot_profiles_contours_matrix(parameters=['a','b'], label_ticks = 'cl',contour_naming_convention='cl')
-    
+        self._cpf = ContoursProfiler(self.fit, contour_sigma_values=[0.1, 0.8], use_as_cl_values=True)
+        self._cpf.plot_profiles_contours_matrix(parameters=['a', 'b'], label_ticks='cl', contour_naming_convention='cl')
+
     def test_set_steps(self):
         self._cpf = ContoursProfiler(self.fit)
-        self._cpf.plot_profiles_contours_matrix(parameters=['a','b'],sigma_steps=0.5)
-
+        self._cpf.plot_profiles_contours_matrix(parameters=['a', 'b'], sigma_steps=0.5)
+        

@@ -114,7 +114,7 @@ class CLFormatter(plticker.Formatter):
         _sign = np.sign(_number_of_sigma)
         if _sign != 0:
             _cl = ConfidenceLevel(n_dimensions=1, sigma=_sign*_number_of_sigma)
-            _cl_label = _cl.cl*_sign * 50 +50
+            _cl_label = _cl.cl*_sign * 50 + 50
         else:
             _cl_label = 50
 
