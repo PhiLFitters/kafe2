@@ -112,8 +112,9 @@ cpf.plot_profiles_contours_matrix(parameters=['I_0', 'b', 'g'],
                                   show_legend=True,
                                   show_parabolic_profiles=True,
                                   show_ticks_for='all',
-                                  contour_naming_convention='sigma',
-                                  label_ticks = 'cl')
+                                  contour_naming_convention='cl',
+                                  label_ticks = 'cl',
+                                  sigma_steps = 1.0)
 
 # To see the fit results, plot using Plot:
 p = Plot(fit_objects=fit)
