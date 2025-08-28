@@ -559,6 +559,22 @@ First, a ContoursProfiler object must be created from a Fit object:
     from kafe2 import ContoursProfiler
     cpf = ContoursProfiler(fit)
 		
+By default, the one and two :math:`\sigma` contours are created. In case other values are desired,
+they can be specified in the creation of the ContoursProfiler object:
+
+.. code-block:: python
+
+    from kafe2 import ContoursProfiler
+    cpf = ContoursProfiler(fit, contour_sigma_values = (1,2,3))
+
+Often confidence levels are not reported in units of :math:`\sigma`, but in percentages
+(e.g. 95%). To specify e.g. the 90% and 95% confidence level contours:
+
+.. code-block:: python
+
+    from kafe2 import ContoursProfiler
+    cpf = ContoursProfiler(fit, contour_sigma_values = (0.9, 0.95), use_as_cl_values = True)
+
 In most cases a graphical representation is desired. Call the method 
 `plot_profiles_contours_matrix()`
 to show profile likelihood and confidence curves for all parameters in a
@@ -584,6 +600,9 @@ or to display only selected confidence contours:
 Consult the api documentation on details how to restrict the displayed ranges
 or for special plot options.
 
+The plot option ``label_ticks_in_sigma`` that accepted bool values has been changed to ``label_ticks``,
+now accepting one out of ``'sigma', 'cl', 'value'``, indicating whether the axis ticks should be in 
+units of :math:`\sigma`, in percentages or as the raw parameter values. 
 For cases where further investigations are needed, functions exist to return the
 results as numpy arrays:
 
