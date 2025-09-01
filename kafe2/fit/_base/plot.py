@@ -641,22 +641,16 @@ class PlotAdapterBase:
         :param dict kwargs: Keyword arguments accepted by :py:obj:`matplotlib.pyplot.errorbar`.
         :return: plot handle(s)
         """
-
-        _xmin, _xmax = self.x_range
-        _ymin, _ymax = target_axes.get_ylim()
         _pull = (self.data_y - self.model_y) / self._get_total_error(error_contributions)
 
-        _xerr = 0.0125 * (_xmax - _xmin)
-        # fmt: off
-        _yerr = np.array([
-            np.where(_pull < 0, 0, np.abs(_pull)),
-            np.where(_pull > 0, 0, np.abs(_pull))
-        ])
-        # fmt: on
+        target_axes.fill_between(
+            self.x_range, -2, 2, color=kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, "model", "property_cycler")[0]["color"][-1]
+        )
+        target_axes.fill_between(
+            self.x_range, -1, 1, color=kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, "data", "property_cycler")[0]["color"][-1]
+        )
 
-        target_axes.hlines(y=0, xmin=_xmin, xmax=_xmax, colors="black", linestyles=":")
-        kwargs["marker"] = None
-        return target_axes.errorbar(self.data_x, _pull, xerr=_xerr, yerr=_yerr, **kwargs)
+        return target_axes.errorbar(self.data_x, _pull, **kwargs)
 
     # Overridden by multi plot adapters
     def get_formatted_model_function(self, **kwargs):
