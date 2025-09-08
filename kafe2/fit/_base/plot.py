@@ -631,7 +631,7 @@ class PlotAdapterBase:
             **kwargs,
         )
 
-    def plot_pull(self, target_axes, error_contributions=('model',), **kwargs):
+    def plot_pull(self, target_axes, error_contributions=('data',), **kwargs):
         """Plot the pull of the data values on the model to a specified :py:obj:`matplotlib.axes.Axes` object.
 
         :param matplotlib.axes.Axes target_axes: The :py:obj:`matplotlib` axes used for plotting.
@@ -641,20 +641,13 @@ class PlotAdapterBase:
         :param dict kwargs: Keyword arguments accepted by :py:obj:`matplotlib.pyplot.errorbar`.
         :return: plot handle(s)
         """
-
-        if self._get_total_error(error_contributions) is None:
-            error_contributions = ('data',)
-
-        _xmin, _xmax = self.x_range
-        _ymin, _ymax = target_axes.get_ylim()
         _pull = (self.data_y - self.model_y) / self._get_total_error(error_contributions)
 
-        target_axes.hlines(y=0, xmin=_xmin, xmax=_xmax, colors="black", linestyles=":")
-        target_axes.fill_between(np.arange(_xmin,_xmax+1), -2,2, color ="lightsteelblue")
-        target_axes.fill_between(np.arange(_xmin,_xmax+1), -1,1, color ="steelblue")
+        target_axes.fill_between(self.x_range, -2, 2, color=kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, "model", "property_cycler")[0]["color"][-1])
+        target_axes.fill_between(self.x_range, -1, 1, color=kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, "data", "property_cycler")[0]["color"][-1])
 
         return target_axes.errorbar(self.data_x, _pull, **kwargs)
-    
+
     # Overridden by multi plot adapters
     def get_formatted_model_function(self, **kwargs):
         """return model function string"""
