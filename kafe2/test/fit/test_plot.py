@@ -301,10 +301,14 @@ class TestContoursProfiler(unittest.TestCase):
         self._cpf.plot_profiles_contours_matrix(parameters=['a', 'b'])
 
     def test_cl_contours(self):
-        self._cpf = ContoursProfiler(self.fit, contour_sigma_values=[0.1, 0.8], use_as_cl_values=True)
-        self._cpf.plot_profiles_contours_matrix(parameters=['a', 'b'], label_ticks='cl', contour_naming_convention='cl')
+        self._cpf = ContoursProfiler(self.fit, contour_cl_values=[0.1, 0.8])
+        self._cpf.plot_profiles_contours_matrix(parameters=['a', 'b'], contour_naming_convention='cl')
 
     def test_set_steps(self):
         self._cpf = ContoursProfiler(self.fit)
         self._cpf.plot_profiles_contours_matrix(parameters=['a', 'b'], sigma_steps=0.5)
-        
+
+    def test_tick_labels(self):
+        self._cpf = ContoursProfiler(self.fit)
+        self._cpf.plot_profiles_contours_matrix(parameters=['a', 'b'], label_ticks_in_sigma=False)
+

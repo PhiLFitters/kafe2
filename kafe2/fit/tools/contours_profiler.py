@@ -93,35 +93,7 @@ class SigmaFormatter(plticker.Formatter):
     def format_data_short(self, value):
         """Short version of format string for tick"""
         return "{:g}".format(value)
-
-
-class CLFormatter(plticker.Formatter):
-    """
-    Set the tick labels to indicate the distance to the
-    central value, in intervals
-    """
-
-    def __init__(self, central_value, sigma):
-        """set the tick labels to correspond to sigma"""
-        self._cval = central_value
-        self._sigma = sigma
-
-    def __call__(self, x, pos=None):
-        """Return the format for tick val *x* at position *pos*"""
-        # _vmin, _vmax = self.axis.get_data_interval()
-
-        _number_of_sigma = (x - self._cval) / self._sigma
-        _sign = np.sign(_number_of_sigma)
-        if _sign != 0:
-            _cl = ConfidenceLevel(n_dimensions=1, sigma=_sign*_number_of_sigma)
-            _cl_label = _cl.cl*_sign * 50 + 50
-        else:
-            _cl_label = 50
-
-        _str_label = r"%.3g%%" % (_cl_label,)
-        return _str_label
-
-
+    
 class ScalarFormatter(plticker.Formatter):
     """Format the tick labels to a specified precision."""
 
@@ -191,10 +163,10 @@ class ContoursProfiler(object):
         profile_subtract_min=True,
         profile_bound=2.45,
         contour_points=100,
-        contour_sigma_values=(1.0, 2.0),
+        contour_sigma_values=None,
         contour_smoothing_sigma=0.0,
         contour_method_kwargs=None,
-        use_as_cl_values=None,
+        contour_cl_values=None,
     ):
         """
         Construct a :py:obj:`~kafe2.fit._base.profile.ContoursProfiler` object:
@@ -220,12 +192,22 @@ class ContoursProfiler(object):
         """
         if not isinstance(fit_object, FitBase):
             raise TypeError("Object %r is not a fit object!" % (fit_object,))
-        if use_as_cl_values:
-            _contour_confidence_levels = [ConfidenceLevel(n_dimensions=2, cl=_cl) for _cl in contour_sigma_values]
-        else:
+        if contour_cl_values is None and contour_sigma_values is None:
+            _contour_confidence_levels = [ConfidenceLevel(n_dimensions=2, sigma=_sigma) for _sigma in (1, 2)]
+            self._use_cl_values = False
+            self.contour_sigma_values = (1, 2)
+        elif contour_sigma_values is None:
+            _contour_confidence_levels = [ConfidenceLevel(n_dimensions=2, cl=_cl) for _cl in contour_cl_values]
+            self._use_cl_values = True
+            self.contour_cl_values = contour_cl_values
+        elif contour_cl_values is None:
             _contour_confidence_levels = [ConfidenceLevel(n_dimensions=2, sigma=_sigma) for _sigma in contour_sigma_values]
-        self._use_cl_values = use_as_cl_values
-        self.contour_sigma_values = contour_sigma_values
+            self._use_cl_values = False
+            self.contour_sigma_values = contour_sigma_values
+        else:
+            raise ValueError(f"Only one of 'contour_cl_values' and 'contour_sigma_values' may be provided."
+                             f" Got contour_cl_values = {contour_cl_values!r} and contour_sigma_values = {contour_sigma_values!r}.")
+
         self._fit = fit_object
         self._profile_kwargs = dict(points=profile_points, subtract_min=profile_subtract_min, bound=profile_bound)
         self._contour_kwargs = dict(
@@ -468,7 +450,7 @@ class ContoursProfiler(object):
         show_fit_minimum=True,
         show_error_span=True,
         show_ticks=True,
-        label_ticks="sigma",
+        label_ticks_in_sigma=True,
         label_fit_minimum=True,
         font_scale=1.0,
         sigma_steps=1.0,
@@ -504,7 +486,7 @@ class ContoursProfiler(object):
         :type show_error_span: bool
         :param show_ticks: if ``True``, *x* and *y* ticks are displayed
         :type show_ticks: bool
-        :param label_ticks_in_sigma: if ``True``, label ticks are in units of 1 sigma
+         :param label_ticks_in_sigma: if ``True``, label ticks are in units of 1 sigma
         :type label_ticks_in_sigma: bool
         :param label_fit_minimum: if ``True``, the parameter value and the 1 sigma error
             will be shown as an annotation
@@ -610,18 +592,12 @@ class ContoursProfiler(object):
             if show_ticks:
                 _loc_x = SigmaLocator(central_value=_par_val, sigma=_par_err, sigma_steps=sigma_steps)
                 _axes.xaxis.set_major_locator(_loc_x)
-                if label_ticks == "cl":
-                    _form_x = CLFormatter(central_value=_par_val, sigma=_par_err)
-                    _axes.xaxis.set_major_formatter(_form_x)
-                elif label_ticks == "sigma":
+                if label_ticks_in_sigma:
                     _form_x = SigmaFormatter(central_value=_par_val, sigma=_par_err)
                     _axes.xaxis.set_major_formatter(_form_x)
-                elif label_ticks == "value":
+                else:
                     _form_x = ScalarFormatter(sigma=_par_err, n_significant_digits=2)
                     _axes.xaxis.set_major_formatter(_form_x)
-                else:
-                    raise ValueError(f"Unknown label tick naming convention '{label_ticks}'! "
-                                     "Must be one of: ('cl', 'sigma', 'value')")
 
                 _loc_y = plticker.MaxNLocator(5)
                 _axes.yaxis.set_major_locator(_loc_y)
@@ -644,7 +620,7 @@ class ContoursProfiler(object):
         show_legend=True,
         show_fit_minimum=True,
         show_ticks=True,
-        label_ticks="sigma",
+        label_ticks_in_sigma=True,
         naming_convention="sigma",
         font_scale=1.0,
         sigma_steps=1.0,
@@ -666,10 +642,8 @@ class ContoursProfiler(object):
         :type show_fit_minimum: bool
         :param show_ticks: if ``True``, *x* and *y* ticks are displayed
         :type show_ticks: bool
-        :param label_ticks: if ``'sigma'`` the label ticks are in units of 1 sigma, if ``'cl'`` the label ticks
-                            are in % of the confidence level, if ``'value'`` the label ticks are in units of the
-                            parameter value
-        :type label_ticks: str
+        :param label_ticks_in_sigma: if ``True``, label ticks are in units of 1 sigma
+        :type label_ticks_in_sigma: bool
         :param naming_convention: if ``'sigma'`` the contour is labelled in sigma, if ``'cl'`` the contour is labelled
                                   in confidence level
         :type naming_convention: str
@@ -743,24 +717,16 @@ class ContoursProfiler(object):
                 _axes.xaxis.set_major_locator(_loc_x)
                 _axes.yaxis.set_major_locator(_loc_y)
 
-                if label_ticks == "cl":
-                    _form_x = CLFormatter(central_value=_par_1_val, sigma=_par_1_err)
-                    _form_y = CLFormatter(central_value=_par_2_val, sigma=_par_2_err)
-                    _axes.xaxis.set_major_formatter(_form_x)
-                    _axes.yaxis.set_major_formatter(_form_y)
-                elif label_ticks == "sigma":
+                if label_ticks_in_sigma:
                     _form_x = SigmaFormatter(central_value=_par_1_val, sigma=_par_1_err)
                     _form_y = SigmaFormatter(central_value=_par_2_val, sigma=_par_2_err)
                     _axes.xaxis.set_major_formatter(_form_x)
                     _axes.yaxis.set_major_formatter(_form_y)
-                elif label_ticks == "value":
+                else:
                     _form_x = ScalarFormatter(sigma=_par_1_err, n_significant_digits=2)
                     _form_y = ScalarFormatter(sigma=_par_2_err, n_significant_digits=2)
                     _axes.xaxis.set_major_formatter(_form_x)
                     _axes.yaxis.set_major_formatter(_form_y)
-                else:
-                    raise ValueError("Unknown label tick naming convention '%s'! " "Must be one of: ('cl', 'sigma', 'value')" % (label_ticks,))
-
             else:
                 _axes.set_xticks([])
                 _axes.set_yticks([])
@@ -781,7 +747,7 @@ class ContoursProfiler(object):
         show_parabolic_profiles=True,
         show_error_span_profiles=False,
         full_matrix=False,
-        label_ticks="sigma",
+        label_ticks_in_sigma=True,
         contour_naming_convention="sigma",
         font_scale=1.0,
         sigma_steps=1.0,
@@ -807,10 +773,8 @@ class ContoursProfiler(object):
         :type show_error_span_profiles: bool
         :param full_matrix: if ``True``, contour subplots are also shown above the main diagonal
         :type full_matrix: bool
-        :param label_ticks: if ``'sigma'`` the label ticks are in units of 1 sigma, if ``'cl'`` the label ticks
-                            are in % of the confidence level, if ``'value'`` the label ticks are in units of the
-                            parameter value
-        :type label_ticks: str
+        :param label_ticks_in_sigma: if ``True``, label ticks are in units of 1 sigma
+        :type label_ticks_in_sigma: bool
         :param contour_naming_convention: if ``'sigma'`` the contour is labelled in sigma, if ``'cl'`` the contour is
                                           labelled in confidence level
         :type contour_naming_convention: str
@@ -870,7 +834,7 @@ class ContoursProfiler(object):
             for row in six.moves.range(_npar):
                 _axes = _subplots[row, row] = _fig.add_subplot(_gs[row, row])
                 if self._use_cl_values:
-                    _sigma = ConfidenceLevel(n_dimensions=2, cl=self.contour_sigma_values[-1]).sigma
+                    _sigma = ConfidenceLevel(n_dimensions=2, cl=self.contour_cl_values[-1]).sigma
                 else:
                     _sigma = self.contour_sigma_values[-1]
                 self.plot_profile(
@@ -882,7 +846,7 @@ class ContoursProfiler(object):
                     show_legend=False,
                     show_fit_minimum=_show_minimum_profiles,
                     show_error_span=show_error_span_profiles,
-                    label_ticks=label_ticks,
+                    label_ticks_in_sigma=label_ticks_in_sigma,
                     show_ticks=_show_ticks_profiles,
                     font_scale=font_scale,
                     sigma_steps=sigma_steps,
@@ -905,7 +869,7 @@ class ContoursProfiler(object):
                         show_legend=False,
                         show_fit_minimum=_show_minimum_contours,
                         show_ticks=_show_ticks_contours,
-                        label_ticks=label_ticks,
+                        label_ticks_in_sigma=label_ticks_in_sigma,
                         naming_convention=contour_naming_convention,
                         font_scale=font_scale,
                         sigma_steps=sigma_steps,
@@ -926,7 +890,7 @@ class ContoursProfiler(object):
                             show_legend=False,
                             show_fit_minimum=_show_minimum_contours,
                             show_ticks=_show_ticks_contours,
-                            label_ticks=label_ticks,
+                            label_ticks_in_sigma=label_ticks_in_sigma,
                             naming_convention=contour_naming_convention,
                             sigma_steps=sigma_steps,
                             )
@@ -973,7 +937,7 @@ class ContoursProfiler(object):
                             _label.set_visible(False)
 
                     # rotate long x tick labels to avoid overlap
-                    if label_ticks != "sigma":
+                    if not label_ticks_in_sigma:
                         for _label in _plot.get_xticklabels():
                             _label.set_rotation(90)
 
