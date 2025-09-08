@@ -93,7 +93,8 @@ class SigmaFormatter(plticker.Formatter):
     def format_data_short(self, value):
         """Short version of format string for tick"""
         return "{:g}".format(value)
-    
+
+
 class ScalarFormatter(plticker.Formatter):
     """Format the tick labels to a specified precision."""
 

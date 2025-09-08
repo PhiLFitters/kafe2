@@ -311,4 +311,3 @@ class TestContoursProfiler(unittest.TestCase):
     def test_tick_labels(self):
         self._cpf = ContoursProfiler(self.fit)
         self._cpf.plot_profiles_contours_matrix(parameters=['a', 'b'], label_ticks_in_sigma=False)
-
