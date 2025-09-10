@@ -631,7 +631,7 @@ class PlotAdapterBase:
             **kwargs,
         )
 
-    def plot_pull(self, target_axes, error_contributions=('data',), **kwargs):
+    def plot_pull(self, target_axes, error_contributions=("data",), **kwargs):
         """Plot the pull of the data values on the model to a specified :py:obj:`matplotlib.axes.Axes` object.
 
         :param matplotlib.axes.Axes target_axes: The :py:obj:`matplotlib` axes used for plotting.
@@ -643,8 +643,12 @@ class PlotAdapterBase:
         """
         _pull = (self.data_y - self.model_y) / self._get_total_error(error_contributions)
 
-        target_axes.fill_between(self.x_range, -2, 2, color=kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, "model", "property_cycler")[0]["color"][-1])
-        target_axes.fill_between(self.x_range, -1, 1, color=kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, "data", "property_cycler")[0]["color"][-1])
+        target_axes.fill_between(
+            self.x_range, -2, 2, color=kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, "model", "property_cycler")[0]["color"][-1]
+        )
+        target_axes.fill_between(
+            self.x_range, -1, 1, color=kc_plot_style(self.PLOT_STYLE_CONFIG_DATA_TYPE, "data", "property_cycler")[0]["color"][-1]
+        )
 
         return target_axes.errorbar(self.data_x, _pull, **kwargs)
 
