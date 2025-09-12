@@ -195,19 +195,22 @@ class ContoursProfiler(object):
             raise TypeError("Object %r is not a fit object!" % (fit_object,))
         if contour_cl_values is None and contour_sigma_values is None:
             _contour_confidence_levels = [ConfidenceLevel(n_dimensions=2, sigma=_sigma) for _sigma in (1, 2)]
-            self._use_cl_values = False
             self.contour_sigma_values = (1, 2)
         elif contour_sigma_values is None:
+            if not isinstance(contour_cl_values, Iterable):
+                contour_cl_values = [contour_cl_values]
             _contour_confidence_levels = [ConfidenceLevel(n_dimensions=2, cl=_cl) for _cl in contour_cl_values]
-            self._use_cl_values = True
-            self.contour_cl_values = contour_cl_values
+            self.contour_sigma_values = [_cl.sigma for _cl in _contour_confidence_levels]
         elif contour_cl_values is None:
+            if not isinstance(contour_sigma_values, Iterable):
+                contour_sigma_values = [contour_sigma_values]
             _contour_confidence_levels = [ConfidenceLevel(n_dimensions=2, sigma=_sigma) for _sigma in contour_sigma_values]
-            self._use_cl_values = False
             self.contour_sigma_values = contour_sigma_values
         else:
-            raise ValueError(f"Only one of 'contour_cl_values' and 'contour_sigma_values' may be provided."
-                             f" Got contour_cl_values = {contour_cl_values!r} and contour_sigma_values = {contour_sigma_values!r}.")
+            raise ValueError(
+                f"Only one of 'contour_cl_values' and 'contour_sigma_values' may be provided."
+                f" Got contour_cl_values = {contour_cl_values!r} and contour_sigma_values = {contour_sigma_values!r}."
+            )
 
         self._fit = fit_object
         self._profile_kwargs = dict(points=profile_points, subtract_min=profile_subtract_min, bound=profile_bound)
@@ -834,13 +837,10 @@ class ContoursProfiler(object):
             _subplots = np.empty((_npar, _npar), dtype=Axes)  # store subplot system in numpy array
             for row in six.moves.range(_npar):
                 _axes = _subplots[row, row] = _fig.add_subplot(_gs[row, row])
-                if self._use_cl_values:
-                    _sigma = ConfidenceLevel(n_dimensions=2, cl=self.contour_cl_values[-1]).sigma
-                else:
-                    _sigma = self.contour_sigma_values[-1]
+                _sigma = self.contour_sigma_values[-1]
                 self.plot_profile(
                     _par_names[row],
-                    sigma=_sigma,
+                    sigma=max(_sigma, 3.5),
                     target_axes=_axes,
                     show_parabolic=show_parabolic_profiles,
                     show_grid=_show_grid_profiles,
@@ -894,7 +894,7 @@ class ContoursProfiler(object):
                             label_ticks_in_sigma=label_ticks_in_sigma,
                             naming_convention=contour_naming_convention,
                             sigma_steps=sigma_steps,
-                            )
+                        )
 
             _masters = [None] * len(_subplots)
             for row, _row_plots in enumerate(_subplots):
@@ -909,15 +909,40 @@ class ContoursProfiler(object):
                     if not _plot:
                         continue
 
-                    _plot.set_xlim(_linear_range_transform(_plot.get_xlim(), factor=1.01))
-                    _plot.set_ylim(_linear_range_transform(_plot.get_ylim(), factor=1.01))
+                    if col == row:
+                        _plot.set_xlim(_linear_range_transform(_plot.get_xlim(), factor=1.01))
+                        _plot.set_ylim(_linear_range_transform(_plot.get_ylim(), factor=1.01))
 
-                    # adjust y plot range to match x (in sigma)
                     if col != row:
+                        _sigma_max = np.max(self.contour_sigma_values)
+                        _contour = self._fit._fitter.contour(_par_names[col], _par_names[row], sigma=_sigma_max)
+                        _xs, _ys = _contour.xy_points
+                        _x_low, _x_high = np.min(_xs), np.max(_xs)
+                        _y_low, _y_high = np.min(_ys), np.max(_ys)
+                        _x_err, _y_err = self._fit.parameter_errors[col], self._fit.parameter_errors[row]
+                        _x_min, _y_min = self._fit.parameter_values[col], self._fit.parameter_values[row]
+                        _x_low_ratio = (_x_min - _x_low) / _x_err
+                        _y_low_ratio = (_y_min - _y_low) / _y_err
+                        _x_high_ratio = -(_x_min - _x_high) / _x_err
+                        _y_high_ratio = -(_y_min - _y_high) / _y_err
+
+                        if _x_low_ratio < _y_low_ratio:
+                            _x_low = _x_min - _y_low_ratio * _x_err
+                        if _x_high_ratio < _y_high_ratio:
+                            _x_high = _x_min - _y_high_ratio * _x_err
+
+                        # Use minimal limit of 3.5 sigma in each direction
+                        _x_low_ratio = (_x_min - _x_low) / _x_err
+                        _x_high_ratio = -(_x_min - _x_high) / _x_err
+                        if _x_low_ratio < 3.5:
+                            _x_low = _x_min - 3.5 * _x_err
+                        if _x_high_ratio < 3.5:
+                            _x_high = _x_min + 3.5 * _x_err
+
+                        _plot.set_xlim(_x_low - 0.1 * _x_err, _x_high + 0.1 * _x_err)
+
                         _x_lim = _plot.get_xlim()
-                        _x_min = self._fit.parameter_values[col]
-                        _y_min = self._fit.parameter_values[row]
-                        _y_over_x_err_ratio = self._fit.parameter_errors[row] / self._fit.parameter_errors[col]
+                        _y_over_x_err_ratio = _y_err / _x_err
                         _plot.set_ylim(
                             (
                                 _y_min + (_x_lim[0] - _x_min) * _y_over_x_err_ratio,
@@ -938,9 +963,8 @@ class ContoursProfiler(object):
                             _label.set_visible(False)
 
                     # rotate long x tick labels to avoid overlap
-                    if not label_ticks_in_sigma:
-                        for _label in _plot.get_xticklabels():
-                            _label.set_rotation(90)
+                    for _label in _plot.get_xticklabels():
+                        _label.set_rotation(90)
 
             # align x and y axis labels
             try:
