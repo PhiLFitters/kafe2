@@ -840,7 +840,7 @@ class ContoursProfiler(object):
                 _sigma = self.contour_sigma_values[-1]
                 self.plot_profile(
                     _par_names[row],
-                    sigma=max(_sigma, 3.5),
+                    sigma=max(_sigma, 2.5),
                     target_axes=_axes,
                     show_parabolic=show_parabolic_profiles,
                     show_grid=_show_grid_profiles,
@@ -931,13 +931,13 @@ class ContoursProfiler(object):
                         if _x_high_ratio < _y_high_ratio:
                             _x_high = _x_min - _y_high_ratio * _x_err
 
-                        # Use minimal limit of 3.5 sigma in each direction
+                        # Use minimal limit of 2.5 sigma in each direction
                         _x_low_ratio = (_x_min - _x_low) / _x_err
                         _x_high_ratio = -(_x_min - _x_high) / _x_err
-                        if _x_low_ratio < 3.5:
-                            _x_low = _x_min - 3.5 * _x_err
-                        if _x_high_ratio < 3.5:
-                            _x_high = _x_min + 3.5 * _x_err
+                        if _x_low_ratio < 2.5:
+                            _x_low = _x_min - 2.5 * _x_err
+                        if _x_high_ratio < 2.5:
+                            _x_high = _x_min + 2.5 * _x_err
 
                         _plot.set_xlim(_x_low - 0.1 * _x_err, _x_high + 0.1 * _x_err)
 

@@ -5,7 +5,7 @@ import unittest
 import matplotlib.pyplot as plt
 import numpy as np
 
-from kafe2 import Plot, XYFit, ContoursProfiler
+from kafe2 import ContoursProfiler, Plot, XYFit
 
 
 class TestXYPlot(unittest.TestCase):
