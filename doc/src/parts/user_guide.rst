@@ -401,6 +401,7 @@ function and a poisson likelihood as cost function. Both can be changed using th
 `cost_function` keywords.
 
 .. code-block:: python
+
     from kafe2 import Fit, HistContainer
 
     histogram = HistContainer(n_bins=10, bin_range=(-5, 5),
