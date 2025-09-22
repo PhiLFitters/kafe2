@@ -104,7 +104,7 @@ fit.to_file('02_double_slit.yml')
 
 fit.do_fit()
 
-cpf = ContoursProfiler(fit,contour_sigma_values = None, contour_cl_values = (0.5,0.6))
+cpf = ContoursProfiler(fit,contour_sigma_values = None, contour_cl_values = (0.9, 0.95))
 cpf.plot_profiles_contours_matrix(parameters=['I_0', 'b', 'g'],
                                   show_grid_for='all',
                                   show_fit_minimum_for='all',

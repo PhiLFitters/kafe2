@@ -165,9 +165,9 @@ class ContoursProfiler(object):
         profile_bound=2.45,
         contour_points=100,
         contour_sigma_values=None,
+        contour_cl_values=None,
         contour_smoothing_sigma=0.0,
         contour_method_kwargs=None,
-        contour_cl_values=None,
     ):
         """
         Construct a :py:obj:`~kafe2.fit._base.profile.ContoursProfiler` object:
@@ -185,11 +185,11 @@ class ContoursProfiler(object):
         :type contour_points: int
         :param contour_sigma_values: evaluate and show contours for these confidences (in sigma)
         :type contour_sigma_values: iterable of float
+        :param contour_cl_values: evaluate and show contours for these confidences (as probability)
+        :type contour_cl_values: iterable or float
         :param contour_smoothing_sigma: apply a smoothing Gaussian filter with this sigma parameter to each contour
                                         (default is ``0.0``, meaning no smoothing)
         :type contour_smoothing_sigma: float
-        :param use_as_cl_values: If ``True``, the values from contour_sigma_values are interpreted as confidence level instead
-        :type use_as_cl_values: bool
         """
         if not isinstance(fit_object, FitBase):
             raise TypeError("Object %r is not a fit object!" % (fit_object,))
