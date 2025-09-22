@@ -4,17 +4,18 @@
 kafe2 example: Histogram Fit (Pitfalls)
 =======================================
 
-This example demonstrates why it is more convenient to use the HistFit class
-instead of XYFit when dealing with histogrammed data.
+This example demonstrates a scenario in which it is more convenient to use the
+HistFit class rather than the XYFit class.
 
 While it is in principle possible to perform such fits correctly using XYFit,
-it requires much more care. This example shows common mistakes that can occur
-when that necessary care is not taken and how this makes the fit results worse.
+more care must be taken to avoid unusable or biased results.
+This example shows common problems that can occur when using XYFit and how to fix them.
+HistFit handles these problems automatically.
 
 We will especially look at two scenarios that can arise from having only small amounts of data.
 This is, for example, a problem in the search for new rare processes in high-energy physics.
 Assume we are looking for a Gaussian signal peak, free from background for simplicity
-(the treatment of a signal over background is explained in example 03_SpluBfit.py).
+(the treatment of a signal over background is explained in example 03_SplusBfit.py).
 
 The first problem arises if zero events are present in a bin. Since we assume Poisson uncertainties
 on the data points, an empty bin will be assumed to have an uncertainty of zero when using a Gaussian approximation.
@@ -29,18 +30,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 from kafe2 import XYContainer, Fit, HistContainer, Plot
 
-def normal_distribution(x, mu = 0, sigma = 1):
-    return np.exp(-0.5 * ((x - mu) / sigma) ** 2) / np.sqrt(2.0 * np.pi * sigma ** 2)
 
-#Manually specify already binned data, to provoke empty bins (generated uniformly with mu = 0, sigma = 1)
+def normal_distribution(x, mu=0, sigma=1):
+    return np.exp(-0.5 * ((x - mu) / sigma) ** 2) / np.sqrt(2.0 * np.pi * sigma**2)
+
+
+# Manually specify already binned data, to provoke empty bins (generated uniformly with mu = 0, sigma = 1)
 bincounts = np.array([1, 0, 3, 9, 7, 8, 1, 1])
 binedges = np.array([-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2])
 
-#Now naively perform a default XYFit
-x_data = binmids = np.mean([binedges[:-1], binedges[1:]], axis=0) #use binmids as x values
-y_data = bincounts/(np.sum(bincounts)*np.diff(binedges))
-print(y_data) #use normalized histogram as y data
-x_error = 0.25 #use half binwidht as x_error
+# Now naively perform a default XYFit
+x_data = bincenters = np.mean([binedges[:-1], binedges[1:]], axis=0)  # use bincenters as x values
+y_data = bincounts / (np.sum(bincounts) * np.diff(binedges))
+print(y_data)  # use normalized histogram as y data
+x_error = 0.25  # use half binwidth as x_error
 y_error = np.sqrt(y_data)
 
 xy_data = XYContainer(x_data=x_data, y_data=y_data)
@@ -49,29 +52,28 @@ xy_data.add_error(err_val=y_error, axis="y")
 
 XYFit_1 = Fit(xy_data, normal_distribution)
 XYFit_1.do_fit()
-#create a plot
+# create a plot
 Plot1 = Plot(XYFit_1)
 Plot1.plot()
 plt.show()
 
 
-
 """
-This first fit should give you warnings about the cost function being evaluated as infinite, which comes from the empty bin.
-Also, the result of the fit should not return any good values. This is the result of the empty bin.
+This first fit raises warnings about the cost function being evaluated as infinite, which originates from the empty bin.
+Also, the result of the fit does not return any good values. This is the result of the empty bin.
 
-It can be seen in the following that even if we combine bins in order to get rid of the empty bin,
+It can be seen in the following that even if the bins are combined in order to get rid of the empty bin,
 the fit will converge and not throw errors, but still not yield perfect results.
 """
 
 
-bincounts = np.array([1, 3, 9, 7, 8, 2]) 
+bincounts = np.array([1, 3, 9, 7, 8, 2])
 binedges = np.array([-2, -1, -0.5, 0, 0.5, 1, 2])
 
-#Now again perform a default XYFit
-x_data = binmids = np.mean([binedges[:-1], binedges[1:]], axis=0) #use binmids as x values
-y_data = bincounts/(np.sum(bincounts)*np.diff(binedges)) #use normalized histogram as y data
-x_error = np.diff(binedges)/2 #use half binwidht as x_error
+# Now again perform a default XYFit
+x_data = bincenters = np.mean([binedges[:-1], binedges[1:]], axis=0)  # use bincenters as x values
+y_data = bincounts / (np.sum(bincounts) * np.diff(binedges))  # use normalized histogram as y data
+x_error = np.diff(binedges) / 2  # use half binwidth as x_error
 y_error = np.sqrt(y_data)
 
 xy_data = XYContainer(x_data=x_data, y_data=y_data)
@@ -80,11 +82,10 @@ xy_data.add_error(err_val=y_error, axis="y")
 
 XYFit_2 = Fit(xy_data, normal_distribution)
 XYFit_2.do_fit()
-#create a plot
+# create a plot
 Plot2 = Plot(XYFit_2)
 Plot2.plot()
 plt.show()
-
 
 
 """
@@ -100,18 +101,20 @@ to our true distribution. Then uncertainties are obtained from the expected numb
 by the prefit. 
 """
 
-bincounts = np.array([1, 3, 9, 7, 8, 2]) 
+bincounts = np.array([1, 3, 9, 7, 8, 2])
 binedges = np.array([-2, -1, -0.5, 0, 0.5, 1, 2])
 
-#Now again perform a default XYFit
-x_data = binmids = np.mean([binedges[:-1], binedges[1:]], axis=0) #use binmids as x values
-y_data = bincounts/(np.sum(bincounts)*np.diff(binedges)) #use normalized histogram as y data
-x_error = np.diff(binedges)/2 #use half binwidht as x_error
+# Now again perform a default XYFit
+x_data = bincenters = np.mean([binedges[:-1], binedges[1:]], axis=0)  # use bincenters as x values
+y_data = bincounts / (np.sum(bincounts) * np.diff(binedges))  # use normalized histogram as y data
+x_error = np.diff(binedges) / 2  # use half binwidth as x_error
 
 prefit_result = XYFit_2.parameter_values
-y_error_model = np.sqrt(normal_distribution(binmids, *prefit_result))#Now instead of the measured data, use the prefit to give us the expected bincounts
+y_error_model = np.sqrt(
+    normal_distribution(bincenters, *prefit_result)
+)  # Now instead of the measured data, use the prefit to give us the expected bincounts
 
-#print both y_errors, from the prefit and from this fit for comparison
+# print both y_errors, from the prefit and from this fit for comparison
 print("The y errors used in the prefit, relative to the datapoints are: " + str(y_error))
 print("The y errors used now, relative to the model with parameters from the prefit: " + str(y_error_model))
 
@@ -122,13 +125,13 @@ xy_data.add_error(err_val=y_error_model, axis="y")
 
 XYFit_3 = Fit(xy_data, normal_distribution)
 XYFit_3.do_fit()
-#create a plot
+# create a plot
 Plot3 = Plot(XYFit_3)
 Plot3.plot()
 plt.show()
 
 """
-The uncertainties on the result were already reduced slightly in comparison to the prefit. And by looking at the printed
+The uncertainties on the result were already reduced slightly in comparison to the prefit. And by looking at the
 y-errors for the prefit and the final fit, differences up to 20% can be observed.
 Still the uncertainties are larger than they should be. This is also due to one final problem that
 is discussed in this example script.
@@ -146,21 +149,17 @@ This will yield the best results without any further effort, even without elimin
 Furthermore, the Plot shows nicely the model function prediction for the histogram.
 """
 
-#We will use our initial bincounts and binning
+# We will use our initial bincounts and binning
 bincounts = np.array([1, 0, 3, 9, 7, 8, 1, 1])
 binedges = np.array([-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2])
 
 hist_data = HistContainer(bin_edges=binedges)
 hist_data.set_bins(bincounts)
 
-#This is everything we have to prepare befor performing the fit
+# This is everything we have to prepare befor performing the fit
 Histfit = Fit(hist_data, model_function=normal_distribution)
 Histfit.do_fit()
 
 Plot4 = Plot(Histfit)
 Plot4.plot()
 plt.show()
-
-
-
-

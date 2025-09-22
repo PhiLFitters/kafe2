@@ -392,9 +392,10 @@ A typical dictionary returned by the :py:meth:`~.FitBase.do_fit` method looks li
 Histogram Fits
 ---------------
 
-A very common fit type is the histogram fit. *kafe2* provides a dedicated fitting class for histogram fits,
-intendet to be used when datapoints are obtained from a random distribution. Especially when large 
-numbers of datapoints are present it is more efficient to treat the data as a histogram. To perform 
+A very common fit type is the histogram fit. In physics experiments data is frequently histogrammed
+in order to reduce the data to a manageable number of bins. *kafe2* provides a dedicated fitting class
+for histogram fits, intendet to be used when datapoints are obtained from a random distribution. Especially
+when large numbers of datapoints are present it is more efficient to treat the data as a histogram. To perform 
 a histogram fit, the datapoints have to be filled into a :py:obj:`HistContainer`. Then the procedure
 is similar to the above. By default, the :py:obj:`HistFit` class will use a normal distribution as model
 function and a poisson likelihood as cost function. Both can be changed using the `model_function` and 
@@ -409,9 +410,9 @@ function and a poisson likelihood as cost function. Both can be changed using th
     hist_fit = Fit(histogram)
     hist_fit.do_fit()
     
-Depending on whether the modelfunction is already normalised, or has a normalisation constant,
-that is also supposed to be estimated in the fit the `density` keyword can be used, during creation
-of the `HistFit` object.
+By default it is assumed that the model function for a `HistFit` object is a probability density function normalised to 1.
+As a consequence the bin contents are also being normalized to 1.
+To disable this behavior, set `density=False` in the `HistFit` constructor.
 
 .. _plotting:
 
