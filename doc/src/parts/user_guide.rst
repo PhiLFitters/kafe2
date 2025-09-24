@@ -392,12 +392,11 @@ A typical dictionary returned by the :py:meth:`~.FitBase.do_fit` method looks li
 Histogram Fits
 ---------------
 
-A very common fit type is the histogram fit. In physics experiments data is frequently histogrammed
-in order to reduce the data to a manageable number of bins. *kafe2* provides a dedicated fitting class
-for histogram fits, intendet to be used when datapoints are obtained from a random distribution. Especially
-when large numbers of datapoints are present it is more efficient to treat the data as a histogram. To perform 
-a histogram fit, the datapoints have to be filled into a :py:obj:`HistContainer`. Then the procedure
-is similar to the above. By default, the :py:obj:`HistFit` class will use a normal distribution as model
+In physics experiments data is frequently histogrammed in order to reduce the data to a manageable number of bins.
+*kafe2* provides a dedicated fitting class for histogram fits, intendet to be used when datapoints are obtained
+from a random distribution. Especiallywhen large numbers of datapoints are present it is more efficient to treat
+the data as a histogram. To perform a histogram fit, the datapoints have to be filled into a :py:obj:`HistContainer`.
+Then the procedure is similar to the above. By default, the :py:obj:`HistFit` class will use a normal distribution as model
 function and a poisson likelihood as cost function. Both can be changed using the `model_function` and 
 `cost_function` keywords.
 
