@@ -183,9 +183,9 @@ class ContoursProfiler(object):
         :type profile_bound: float
         :param contour_points: number of points at which to sample each contour
         :type contour_points: int
-        :param contour_sigma_values: evaluate and show contours for these confidences (in sigma)
+        :param contour_sigma_values: evaluate and show contours for these confidence levels (specified as sigma)
         :type contour_sigma_values: iterable of float
-        :param contour_cl_values: evaluate and show contours for these confidences (as probability)
+        :param contour_cl_values: evaluate and show contours for these confidence levels (specified as probability)
         :type contour_cl_values: iterable or float
         :param contour_smoothing_sigma: apply a smoothing Gaussian filter with this sigma parameter to each contour
                                         (default is ``0.0``, meaning no smoothing)
