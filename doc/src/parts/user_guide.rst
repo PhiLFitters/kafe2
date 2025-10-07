@@ -393,9 +393,9 @@ Histogram Fits
 ---------------
 
 In physics experiments data is frequently histogrammed in order to reduce the data to a manageable number of bins.
-*kafe2* provides a dedicated fitting class for histogram fits, intendet to be used when datapoints are obtained
-from a random distribution. Especiallywhen large numbers of datapoints are present it is more efficient to treat
-the data as a histogram. To perform a histogram fit, the datapoints have to be filled into a :py:obj:`HistContainer`.
+*kafe2* provides a dedicated fitting class for histogram fits, intended to be used when datapoints are obtained
+from a random distribution. Especially when large numbers of datapoints are present it is more efficient to treat
+the data as a histogram. To perform a histogram fit using raw data, the datapoints have to be filled into a :py:obj:`HistContainer`.
 Then the procedure is similar to the above. By default, the :py:obj:`HistFit` class will use a normal distribution as model
 function and a poisson likelihood as cost function. Both can be changed using the `model_function` and 
 `cost_function` keywords.
@@ -409,7 +409,7 @@ function and a poisson likelihood as cost function. Both can be changed using th
     hist_fit = Fit(histogram)
     hist_fit.do_fit()
     
-By default it is assumed that the model function for a `HistFit` object is a probability density function normalised to 1.
+By default it is assumed that the model function for a `HistFit` object is a probability density function normalized to 1.
 As a consequence the bin contents are also being normalized to 1.
 To disable this behavior, set `density=False` in the `HistFit` constructor.
 
