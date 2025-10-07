@@ -8,18 +8,20 @@ This example demonstrates a scenario in which it is more convenient to use the
 HistFit class rather than the XYFit class.
 
 While it is in principle possible to perform such fits correctly using XYFit,
-more care must be taken to avoid unusable or biased results.
+more care must be taken to avoid unusable or biased fit results.
 This example shows common problems that can occur when using XYFit and how to fix them.
 HistFit handles these problems automatically.
 
-We will try to build the kafe2 HistFit by hand using an XYFit. In general Histogram Fits are useful,
-when large amounts of data are obtained, since the binning of a histogram reduces the
-amount of computation.
+We will try to build the equivalent of the kafe2 HistFit by hand using an XYFit.
+In general histogram Fits are useful when handling large amounts of data.
+The computational complexity of e.g. the chi2 cost function scales with the number of inputs cubed
+(when considering correlations). So reducing the raw data to a comparatively
+small number of bins is crucial to make the fit computationally feasible.
 
 The default XYFit has some problems that have to be addressed, when histogrammed data is
-processed. First of all, when using an XYFit, the data is passed to the Fit object in a
-XYContainer. This container does not automatically fill the datapoints in bins. So this first step
-has to be done manually. In the following, 30 datapoints, sampled from a normal distribution, are used.
+processed. The XYFit does not have any built-in functionality to transform raw data into
+histogrammed data. This means if we want to use histogrammed data, this has to be done manually.
+In the following, 30 datapoints, sampled from a normal distribution, are used.
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -66,13 +68,13 @@ data = np.array(
     ]
 )
 
-binedges = np.array([-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2])
-bincounts, binedges = np.histogram(data, bins=binedges, density=True)
+bin_edges = np.array([-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2])
+bin_counts, bin_edges = np.histogram(data, bins=bin_edges, density=True)
 
 # Now naively perform a default XYFit
-x_data = bincenters = np.mean([binedges[:-1], binedges[1:]], axis=0)  # use bincenters as x values
-y_data = bincounts  # use normalized histogram as y data
-y_error = np.sqrt(bincounts) / (np.sum(bincounts) * np.diff(binedges))  # assume Poisson errors on our bincounts
+x_data = bincenters = np.mean([bin_edges[:-1], bin_edges[1:]], axis=0)  # use bincenters as x values
+y_data = bin_counts  # use normalized histogram as y data
+y_error = np.sqrt(bin_counts) / (np.sum(bin_counts) * np.diff(bin_edges))  # assume Poisson errors on our bin_counts
 
 xy_data = XYContainer(x_data=x_data, y_data=y_data)
 xy_data.add_error(err_val=y_error, axis="y")
@@ -98,13 +100,13 @@ cost function of the fit is changed to a Poisson negative log-likelhoood (NLL).
 
 # rescale normal distribution by bin counts and bin width
 def normal_distribution_scaled(x, mu=0, sigma=1):
-    return np.exp(-0.5 * ((x - mu) / sigma) ** 2) / np.sqrt(2.0 * np.pi * sigma**2) * np.sum(bincounts) * 0.5
+    return np.exp(-0.5 * ((x - mu) / sigma) ** 2) / np.sqrt(2.0 * np.pi * sigma**2) * np.sum(bin_counts) * 0.5
 
 
-bincounts, binedges = np.histogram(data, bins=binedges)
+bin_counts, bin_edges = np.histogram(data, bins=bin_edges)
 
-x_data = bincenters = np.mean([binedges[:-1], binedges[1:]], axis=0)  # use bincenters as x values
-y_data = bincounts  # use bincounts as y data (not normalized now)
+x_data = bincenters = np.mean([bin_edges[:-1], bin_edges[1:]], axis=0)  # use bincenters as x values
+y_data = bin_counts  # use bin_counts as y data (not normalized now)
 
 xy_data = XYContainer(x_data=x_data, y_data=y_data)
 
@@ -122,24 +124,24 @@ This handles empty bins correctly and also prevents getting biased uncertainties
 
 Another subtlety is the definition of the y_data: So far, simply the midpoint of each bin was used. This is only
 a linear approximation of the behaviour of the model function between the bin edges. The HistFit class of kafe2
-on the other hand uses "Simpsons rule", a method to approximate the behaviour quadratically for more accuracy.
+on the other hand uses "Simpson's rule", a method to approximate the behaviour quadratically for more accuracy.
 The most accurate albeit computationally expensive method would be to integrate the model function over each bin.
 
-The implementation of Simpsons rule in our procedure using a XYFit will not be done here,
+The implementation of Simpson's rule in our procedure using a XYFit will not be done here,
 since the influence is rather small in this case. Instead, it is shown how it is much easier to just use the HistFit
 class of kafe2. The binning is automatically done by the HistContainer, the Poisson NLL is the default cost function
 and the Simpson rule is already implemented. 
 """
 # We will use our initial data and binning
-hist_data = HistContainer(bin_edges=binedges, fill_data=data)
+hist_data = HistContainer(bin_edges=bin_edges, fill_data=data)
 
 
 # This is everything we have to prepare befor performing the fit
 Histfit = Fit(hist_data, model_function=normal_distribution, density=True)
 Histfit.do_fit()
 
-Plot5 = Plot(Histfit)
-Plot5.plot()
+Plot3 = Plot(Histfit)
+Plot3.plot()
 plt.show()
 
 """
@@ -147,16 +149,18 @@ Now consider the case, where systematical errors next to the statistical ones ar
 Gaussian uncertainty of 1. Now there are two different types of uncertainties in the Fit, that can't be simply added.
 However, due to the central limit theorem, for sufficiently large event counts the Poisson distribution approaches
 a normal distrbution. Therefore, by switching the cost function from a Poisson NLL to the Gaussian approximation,
-the fit can be performed correctly again.
+the fit can be performed correctly again. Note that this gaussian approximation is different to the one that was falsly used
+in the beginning of the example. Here statistical uncertainties are calculated from the model function, while above,
+they were calculated from the measured data.
 """
 # We will use our initial data and binning
-hist_data = HistContainer(bin_edges=binedges, fill_data=data)
+hist_data = HistContainer(bin_edges=bin_edges, fill_data=data)
 hist_data.add_error(err_val=1)
 
 # This is everything we have to prepare befor performing the fit
 Histfit = Fit(hist_data, model_function=normal_distribution, density=True, cost_function="gauss-approximation")
 Histfit.do_fit()
 
-Plot5 = Plot(Histfit)
-Plot5.plot()
+Plot4 = Plot(Histfit)
+Plot4.plot()
 plt.show()
