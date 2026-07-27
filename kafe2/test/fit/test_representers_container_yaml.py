@@ -81,12 +81,9 @@ errors:
   type: matrix
 """
 
-TEST_DATASET_INDEXED_EXTRA_KEYWORD = (
-    TEST_DATASET_INDEXED
-    + """
+TEST_DATASET_INDEXED_EXTRA_KEYWORD = TEST_DATASET_INDEXED + """
 extra_keyword: 3.14
 """
-)
 
 
 class TestIndexedContainerYamlRepresentation(unittest.TestCase):
@@ -252,12 +249,9 @@ x_errors:
   type: matrix
 """
 
-TEST_DATASET_XY_EXTRA_KEYWORD = (
-    TEST_DATASET_XY
-    + """
+TEST_DATASET_XY_EXTRA_KEYWORD = TEST_DATASET_XY + """
 extra_keyword: 3.14
 """
-)
 
 
 class TestXYContainerYamlRepresentation(unittest.TestCase):
@@ -421,12 +415,9 @@ errors:
 type: histogram
 """
 
-TEST_DATASET_HIST_EXTRA_KEYWORD = (
-    TEST_DATASET_HIST
-    + """
+TEST_DATASET_HIST_EXTRA_KEYWORD = TEST_DATASET_HIST + """
 extra_keyword: 3.14
 """
-)
 
 TEST_DATASET_HIST_MANUAL_HEIGHTS = """
 bin_edges:

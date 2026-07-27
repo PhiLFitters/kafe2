@@ -34,16 +34,11 @@ bin_range: [0, 5]
 model_parameters: [0.0, 0.08]
 """
 
-TEST_PARAMETRIC_MODEL_HIST_EXTRA_KEYWORD = (
-    TEST_PARAMETRIC_MODEL_HIST
-    + """
+TEST_PARAMETRIC_MODEL_HIST_EXTRA_KEYWORD = TEST_PARAMETRIC_MODEL_HIST + """
 extra_keyword: 3.14
 """
-)
 
-TEST_PARAMETRIC_MODEL_HIST_WITH_ERRORS = (
-    TEST_PARAMETRIC_MODEL_HIST
-    + """
+TEST_PARAMETRIC_MODEL_HIST_WITH_ERRORS = TEST_PARAMETRIC_MODEL_HIST + """
 errors:
   - correlation_coefficient: 0.0
     error_value: 0.1
@@ -51,33 +46,23 @@ errors:
     relative: false
     type: simple
 """
-)
 
-TEST_PARAMETRIC_MODEL_HIST_LEGACY = (
-    TEST_PARAMETRIC_MODEL_HIST
-    + """
+TEST_PARAMETRIC_MODEL_HIST_LEGACY = TEST_PARAMETRIC_MODEL_HIST + """
 model_density_func_antiderivative: null
 """
-)
 
-TEST_PARAMETRIC_MODEL_HIST_ANTIDERIVATIVE = (
-    TEST_PARAMETRIC_MODEL_HIST
-    + """
+TEST_PARAMETRIC_MODEL_HIST_ANTIDERIVATIVE = TEST_PARAMETRIC_MODEL_HIST + """
 bin_evaluation: |
     def linear_model_antiderivative(x, a, b):
         return 0.5 * a * x ** 2 + b * x
 """
-)
 
-TEST_PARAMETRIC_MODEL_HIST_NUMPY_VECTORIZE = (
-    TEST_PARAMETRIC_MODEL_HIST
-    + """
+TEST_PARAMETRIC_MODEL_HIST_NUMPY_VECTORIZE = TEST_PARAMETRIC_MODEL_HIST + """
 bin_evaluation: |
     @np.vectorize
     def linear_model_antiderivative(x, a, b):
         return 0.5 * a * x ** 2 + b * x
 """
-)
 
 
 class TestHistParametricModelYamlRepresenter(unittest.TestCase):
@@ -230,16 +215,11 @@ type: indexed
 model_parameters: [1.1, -1.5]
 """
 
-TEST_PARAMETRIC_MODEL_INDEXED_EXTRA_KEYWORD = (
-    TEST_PARAMETRIC_MODEL_INDEXED
-    + """
+TEST_PARAMETRIC_MODEL_INDEXED_EXTRA_KEYWORD = TEST_PARAMETRIC_MODEL_INDEXED + """
 extra_keyword: 3.14
 """
-)
 
-TEST_PARAMETRIC_MODEL_INDEXED_WITH_ERRORS = (
-    TEST_PARAMETRIC_MODEL_INDEXED
-    + """
+TEST_PARAMETRIC_MODEL_INDEXED_WITH_ERRORS = TEST_PARAMETRIC_MODEL_INDEXED + """
 errors:
   - correlation_coefficient: 0.0
     error_value: 0.1
@@ -247,7 +227,6 @@ errors:
     relative: false
     type: simple
 """
-)
 
 
 class TestIndexedParametricModelYamlRepresenter(unittest.TestCase):
@@ -389,16 +368,11 @@ model_function:
 model_parameters: [1.1, -1.5]
 """
 
-TEST_PARAMETRIC_MODEL_XY_EXTRA_KEYWORD = (
-    TEST_PARAMETRIC_MODEL_XY
-    + """
+TEST_PARAMETRIC_MODEL_XY_EXTRA_KEYWORD = TEST_PARAMETRIC_MODEL_XY + """
 extra_keyword: 3.14
 """
-)
 
-TEST_PARAMETRIC_MODEL_XY_WITH_ERRORS = (
-    TEST_PARAMETRIC_MODEL_XY
-    + """
+TEST_PARAMETRIC_MODEL_XY_WITH_ERRORS = TEST_PARAMETRIC_MODEL_XY + """
 x_errors:
   - correlation_coefficient: 0.0
     error_value: 0.1
@@ -406,7 +380,6 @@ x_errors:
     relative: false
     type: simple
 """
-)
 
 
 class TestXYParametricModelYamlRepresenter(unittest.TestCase):

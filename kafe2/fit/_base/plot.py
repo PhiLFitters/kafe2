@@ -675,29 +675,23 @@ class Plot:
     subplot and legend management.
     """
 
-    FIT_INFO_STRING_FORMAT_CHI2 = textwrap.dedent(
-        """\
+    FIT_INFO_STRING_FORMAT_CHI2 = textwrap.dedent("""\
         {model_function}
         {parameters}
             $\\hookrightarrow${fit_quality}
             $\\hookrightarrow \\chi^2 \\, \\mathrm{{probability =}}${chi2_probability}
-    """
-    )
-    FIT_INFO_STRING_FORMAT_SATURATED = textwrap.dedent(
-        """\
+    """)
+    FIT_INFO_STRING_FORMAT_SATURATED = textwrap.dedent("""\
         {model_function}
         {parameters}
             $\\hookrightarrow${fit_quality}
-    """
-    )
-    FIT_INFO_STRING_FORMAT_NOT_SATURATED = textwrap.dedent(
-        """\
+    """)
+    FIT_INFO_STRING_FORMAT_NOT_SATURATED = textwrap.dedent("""\
         {model_function}
         {parameters}
             $\\hookrightarrow${cost}
             $\\hookrightarrow${fit_quality}
-    """
-    )
+    """)
 
     def __init__(self, fit_objects, separate_figures=False):
         """
