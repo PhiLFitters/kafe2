@@ -126,12 +126,9 @@ TEST_FIT_CUSTOM_MISSING_KEYWORD = """
 type: custom
 """
 
-TEST_FIT_CUSTOM_EXTRA_KEYWORD = (
-    TEST_FIT_CUSTOM
-    + """
+TEST_FIT_CUSTOM_EXTRA_KEYWORD = TEST_FIT_CUSTOM + """
 extra_keyword: 3.14
 """
-)
 
 
 class TestCustomFitYamlRepresenter(unittest.TestCase, AbstractTestFitRepresenter):
@@ -257,12 +254,9 @@ parametric_model:
     model_parameters: [0.1, 1.0]
 """
 
-TEST_FIT_HIST_EXTRA_KEYWORD = (
-    TEST_FIT_HIST
-    + """
+TEST_FIT_HIST_EXTRA_KEYWORD = TEST_FIT_HIST + """
 extra_keyword: 3.14
 """
-)
 
 TEST_FIT_HIST_SIMPLE = """
 type: histogram
@@ -440,12 +434,9 @@ parametric_model:
     model_parameters: [1.5, -0.5]
 """
 
-TEST_FIT_INDEXED_EXTRA_KEYWORD = (
-    TEST_FIT_INDEXED
-    + """
+TEST_FIT_INDEXED_EXTRA_KEYWORD = TEST_FIT_INDEXED + """
 extra_keyword: 3.14
 """
-)
 
 TEST_FIT_INDEXED_SIMPLE = """
 type: indexed
@@ -608,12 +599,9 @@ parametric_model:
     model_parameters: [1.5, -0.5]
 """
 
-TEST_FIT_XY_EXTRA_KEYWORD = (
-    TEST_FIT_XY
-    + """
+TEST_FIT_XY_EXTRA_KEYWORD = TEST_FIT_XY + """
 extra_keyword: 3.14
 """
-)
 
 TEST_FIT_XY_SIMPLE = """
 x_data: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
@@ -832,12 +820,9 @@ parametric_model:
 type: unbinned
 """
 
-TEST_FIT_UNBINNED_EXTRA_KEYWORD = (
-    TEST_FIT_UNBINNED
-    + """
+TEST_FIT_UNBINNED_EXTRA_KEYWORD = TEST_FIT_UNBINNED + """
 extra_keyword: 3.14
 """
-)
 
 TEST_FIT_UNBINNED_SIMPLE = """
 type: unbinned

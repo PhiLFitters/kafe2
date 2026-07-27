@@ -31,12 +31,9 @@ index: 3
 uncertainty: 1.2
 """
 
-TEST_SIMPLE_GAUSSIAN_CONSTRAINT_EXTRA_KEYWORD = (
-    TEST_SIMPLE_GAUSSIAN_CONSTRAINT_ABS
-    + """
+TEST_SIMPLE_GAUSSIAN_CONSTRAINT_EXTRA_KEYWORD = TEST_SIMPLE_GAUSSIAN_CONSTRAINT_ABS + """
 extra_keyword: 3.14
 """
-)
 
 
 class TestSimpleGaussianConstraintRepresenter(unittest.TestCase):
@@ -133,12 +130,9 @@ values: [1.0, 10.0, 100.0]
 matrix: [[0.1, 0.1, 2.0], [0.1, 10.0, 30.0], [2.0, 30.0, 1000.0]]
 """
 
-TEST_MATRIX_GAUSSIAN_CONSTRAINT_EXTRA_KEYWORD = (
-    TEST_MATRIX_GAUSSIAN_CONSTRAINT_COV_ABS
-    + """
+TEST_MATRIX_GAUSSIAN_CONSTRAINT_EXTRA_KEYWORD = TEST_MATRIX_GAUSSIAN_CONSTRAINT_COV_ABS + """
 extra_keyword: 3.14
 """
-)
 
 
 class TestMatrixGaussianConstraintRepresenter(unittest.TestCase):

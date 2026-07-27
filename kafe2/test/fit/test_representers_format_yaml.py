@@ -129,12 +129,9 @@ expression_string: '{0} * {x} ** 2 + {1} * {x} + {2}'
 latex_expression_string: '{0}{x}^2 + {1}{x} + {2}'
 """
 
-TEST_MODEL_FUNCTION_FORMATTER_INDEXED_EXTRA_KEYWORD = (
-    TEST_MODEL_FUNCTION_FORMATTER_INDEXED
-    + """
+TEST_MODEL_FUNCTION_FORMATTER_INDEXED_EXTRA_KEYWORD = TEST_MODEL_FUNCTION_FORMATTER_INDEXED + """
 extra_keyword: 3.14
 """
-)
 
 
 class TestIndexedModelFunctionFormatterYamlRepresenter(unittest.TestCase):

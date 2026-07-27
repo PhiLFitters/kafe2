@@ -675,29 +675,23 @@ class Plot:
     subplot and legend management.
     """
 
-    FIT_INFO_STRING_FORMAT_CHI2 = textwrap.dedent(
-        """\
+    FIT_INFO_STRING_FORMAT_CHI2 = textwrap.dedent("""\
         {model_function}
         {parameters}
             $\\hookrightarrow${fit_quality}
             $\\hookrightarrow \\chi^2 \\, \\mathrm{{probability =}}${chi2_probability}
-    """
-    )
-    FIT_INFO_STRING_FORMAT_SATURATED = textwrap.dedent(
-        """\
+    """)
+    FIT_INFO_STRING_FORMAT_SATURATED = textwrap.dedent("""\
         {model_function}
         {parameters}
             $\\hookrightarrow${fit_quality}
-    """
-    )
-    FIT_INFO_STRING_FORMAT_NOT_SATURATED = textwrap.dedent(
-        """\
+    """)
+    FIT_INFO_STRING_FORMAT_NOT_SATURATED = textwrap.dedent("""\
         {model_function}
         {parameters}
             $\\hookrightarrow${cost}
             $\\hookrightarrow${fit_quality}
-    """
-    )
+    """)
 
     def __init__(self, fit_objects, separate_figures=False):
         """
@@ -725,9 +719,24 @@ class Plot:
             else:
                 fit_objects = [_f["fit"] for _f in _fit_history[fit_objects:]]
         try:
-            iter(fit_objects)
+            fit_objects = list(fit_objects)
         except TypeError:
-            fit_objects = (fit_objects,)
+            fit_objects = [fit_objects]
+
+        if self._multifit is None:
+            # A MultiFit is not iterable, so passing one via e.g. a list (as the plot() wrapper
+            # function does) ends up here rather than being caught by the isinstance check above.
+            _multifits_in_seq = [_fo for _fo in fit_objects if isinstance(_fo, MultiFit)]
+            if _multifits_in_seq:
+                if len(fit_objects) != 1:
+                    raise NotImplementedError(
+                        "Plotting a MultiFit together with other fits in the same Plot is not supported. "
+                        "Pass the MultiFit object on its own instead, e.g. Plot(multi_fit) instead of "
+                        "Plot([multi_fit, other_fit])."
+                    )
+                self._multifit = _multifits_in_seq[0]
+                fit_objects = self._multifit.fits
+
         self._from_container = tuple(isinstance(_fo, DataContainerBase) for _fo in fit_objects)
         self._fits = tuple(Fit(_fo) if _fc else _fo for _fc, _fo in zip(self._from_container, fit_objects))
 

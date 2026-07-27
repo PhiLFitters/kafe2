@@ -18,16 +18,11 @@ TEST_MODEL_FUNCTION_HIST_MISSING_KEYWORD = """
 type: histogram
 """
 
-TEST_MODEL_FUNCTION_HIST_EXTRA_KEYWORD = (
-    TEST_MODEL_FUNCTION_HIST
-    + """
+TEST_MODEL_FUNCTION_HIST_EXTRA_KEYWORD = TEST_MODEL_FUNCTION_HIST + """
 extra_keyword: 3.14
 """
-)
 
-TEST_MODEL_FUNCTION_HIST_WITH_FORMATTER = (
-    TEST_MODEL_FUNCTION_HIST
-    + r"""
+TEST_MODEL_FUNCTION_HIST_WITH_FORMATTER = TEST_MODEL_FUNCTION_HIST + r"""
 model_function_formatter:
     name: linear_model
     latex_name: linear model
@@ -42,7 +37,6 @@ model_function_formatter:
     expression_string: '{0} * {x} + {1}'
     latex_expression_string: '{0}{x} + {1}'
 """
-)
 
 
 class TestHistModelFunctionYamlRepresenter(unittest.TestCase):
@@ -145,16 +139,11 @@ TEST_MODEL_FUNCTION_INDEXED_MISSING_KEYWORD = """
 type: indexed
 """
 
-TEST_MODEL_FUNCTION_INDEXED_EXTRA_KEYWORD = (
-    TEST_MODEL_FUNCTION_INDEXED
-    + """
+TEST_MODEL_FUNCTION_INDEXED_EXTRA_KEYWORD = TEST_MODEL_FUNCTION_INDEXED + """
 extra_keyword: 3.14
 """
-)
 
-TEST_MODEL_FUNCTION_INDEXED_WITH_FORMATTER = (
-    TEST_MODEL_FUNCTION_INDEXED
-    + r"""
+TEST_MODEL_FUNCTION_INDEXED_WITH_FORMATTER = TEST_MODEL_FUNCTION_INDEXED + r"""
 model_function_formatter:
     name: linear_model
     latex_name: linear model
@@ -170,7 +159,6 @@ model_function_formatter:
     expression_string: '{0} * {r} + {1}'
     latex_expression_string: '{0}{r} + {1}'
 """
-)
 
 
 class TestIndexedModelFunctionYamlRepresenter(unittest.TestCase):
@@ -273,16 +261,11 @@ TEST_MODEL_FUNCTION_BASE_MISSING_KEYWORD = """
 type: base
 """
 
-TEST_MODEL_FUNCTION_XY_EXTRA_KEYWORD = (
-    TEST_MODEL_FUNCTION_BASE
-    + """
+TEST_MODEL_FUNCTION_XY_EXTRA_KEYWORD = TEST_MODEL_FUNCTION_BASE + """
 extra_keyword: 3.14
 """
-)
 
-TEST_MODEL_FUNCTION_XY_WITH_FORMATTER = (
-    TEST_MODEL_FUNCTION_BASE
-    + r"""
+TEST_MODEL_FUNCTION_XY_WITH_FORMATTER = TEST_MODEL_FUNCTION_BASE + r"""
 model_function_formatter:
     name: linear_model
     latex_name: linear model
@@ -297,7 +280,6 @@ model_function_formatter:
     expression_string: '{0} * {x} + {1}'
     latex_expression_string: '{0}{x} + {1}'
 """
-)
 
 
 class TestModelFunctionBaseYamlRepresenter(unittest.TestCase):

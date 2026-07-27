@@ -5,7 +5,8 @@ import unittest
 import matplotlib.pyplot as plt
 import numpy as np
 
-from kafe2 import ContoursProfiler, Plot, XYFit
+from kafe2 import ContoursProfiler, MultiFit, Plot, XYFit
+from kafe2.fit.util.wrapper import plot as wrapper_plot
 
 
 class TestXYPlot(unittest.TestCase):
@@ -278,6 +279,36 @@ class TestMultiPlot(unittest.TestCase):
             self.plot_sep.save(fname=1)
         with self.assertRaises(ValueError):
             self.plot_sep.save(fname=["fit_0.png", "fit_1.png", "fit_2.png"])
+
+
+class TestMultiFitPlot(unittest.TestCase):
+    # Regression tests for https://github.com/PhiLFitters/kafe2/issues/246
+    def setUp(self):
+        self.fit1 = XYFit(xy_data=[[0, 1, 2], [0.2, 1.1, 1.2]])
+        self.fit1.add_error("y", 0.1)
+        self.fit2 = XYFit(xy_data=[[0, 1, 2], [0.3, 0.9, 1.1]])
+        self.fit2.add_error("y", 0.1)
+        self.multi_fit = MultiFit([self.fit1, self.fit2])
+        self.multi_fit.do_fit()
+
+    def tearDown(self):
+        plt.close("all")
+
+    def test_plot_multifit_directly(self):
+        Plot(self.multi_fit).plot()
+
+    def test_plot_multifit_in_list(self):
+        Plot([self.multi_fit]).plot()
+
+    def test_plot_wrapper_with_multifit(self):
+        wrapper_plot(self.multi_fit, show=False, save=False)
+
+    def test_plot_multifit_mixed_with_other_fit_raises(self):
+        _fit3 = XYFit(xy_data=[[0, 1, 2], [0.3, 0.9, 1.1]])
+        _fit3.add_error("y", 0.1)
+        _fit3.do_fit()
+        with self.assertRaises(NotImplementedError):
+            Plot([self.multi_fit, _fit3])
 
 
 class TestContoursProfiler(unittest.TestCase):
