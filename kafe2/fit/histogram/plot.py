@@ -73,6 +73,11 @@ class HistPlotAdapter(PlotAdapterBase):
         return self._fit.total_error
 
     @property
+    def background_estimation(self):
+        "The input background estimation in case a skellam distribution is used"
+        return self._fit._background_array
+
+    @property
     def model_x(self):
         """model prediction x values"""
         return self.data_x
@@ -126,7 +131,9 @@ class HistPlotAdapter(PlotAdapterBase):
         :param kwargs: keyword arguments accepted by the ``matplotlib`` method ``errorbar``
         :return: plot handle(s)
         """
-        _yerr = np.sqrt(self.data_yerr**2 + self._fit._cost_function.get_uncertainty_gaussian_approximation(self.data_y) ** 2)
+        _yerr = np.sqrt(
+            self.data_yerr**2 + self._fit._cost_function.get_uncertainty_gaussian_approximation(self.data_y, self.background_estimation) ** 2
+        )
         return target_axes.errorbar(self.data_x, self.data_y, xerr=self.data_xerr, yerr=_yerr, **kwargs)
 
     def plot_model(self, target_axes, **kwargs):
@@ -166,3 +173,4 @@ class HistPlotAdapter(PlotAdapterBase):
         """
         # TODO: how to handle/display "error" on the model density?
         return target_axes.plot(self.model_density_x, self.model_density_y, **kwargs)
+
