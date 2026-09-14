@@ -20,6 +20,9 @@ html:
 latex:
 	$(MAKE) -C $(SPHINXSRCDIR) latex && $(MAKE) -C $(SPHINXSRCDIR) latexpdf && rm -rf latex && cp -R "$(SPHINXSRCDIR)/_build/latex" .
 
+markdown:
+	$(MAKE) -C $(SPHINXSRCDIR) markdown && rm -rf markdwon && cp -R "$(SPHINXSRCDIR)/_build/markdown" .
+
 clean:
 	$(MAKE) -C $(SPHINXSRCDIR) clean && rm -rf html latex
 

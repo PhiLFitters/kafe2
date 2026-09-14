@@ -42,6 +42,7 @@ help:
 	@echo "  gettext    to make PO message catalogs"
 	@echo "  changes    to make an overview of all changed/added/deprecated items"
 	@echo "  xml        to make Docutils-native XML files"
+	@echo "  markdown   to make markdown files"
 	@echo "  pseudoxml  to make pseudoxml-XML files for display purposes"
 	@echo "  linkcheck  to check all external links for integrity"
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
@@ -63,6 +64,11 @@ singlehtml:
 	$(SPHINXBUILD) -b singlehtml $(ALLSPHINXOPTS) $(BUILDDIR)/singlehtml
 	@echo
 	@echo "Build finished. The HTML page is in $(BUILDDIR)/singlehtml."
+
+markdown:
+	$(SPHINXBUILD) -b markdown $(ALLSPHINXOPTS) $(BUILDDIR)/markdown
+	@echo
+	@echo "Build finished. The HTML pages are in $(BUILDDIR)/markdown."
 
 pickle:
 	$(SPHINXBUILD) -b pickle $(ALLSPHINXOPTS) $(BUILDDIR)/pickle
