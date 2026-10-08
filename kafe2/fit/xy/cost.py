@@ -1,3 +1,5 @@
+import numpy as np
+
 from .._base import (
     CostFunction_Chi2,
     CostFunction_GaussApproximation,
@@ -66,6 +68,11 @@ class XYCostFunction_NegLogLikelihood(CostFunction_NegLogLikelihood):
         else:
             raise ValueError("Unknown value '%s' for 'axes_to_use': must be one of ('xy', 'y')")
         super(XYCostFunction_NegLogLikelihood, self).__init__(data_point_distribution=data_point_distribution, ratio=ratio)
+
+    def is_data_compatible(self, data):
+        if self._cost_function_handle in [self.nll_poisson, self.nllr_poisson] and (np.count_nonzero(data[1] % 1) > 0 or np.any(data[1] < 0)):
+            return False, "poisson distribution can only have non-negative integers as y data."
+        return True, None
 
 
 class XYCostFunction_GaussApproximation(CostFunction_GaussApproximation):

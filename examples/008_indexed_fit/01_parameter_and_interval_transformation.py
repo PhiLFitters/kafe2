@@ -3,12 +3,12 @@
 Example of indexed fit: Transformation of Parameters and Confidence Intervals
 
 The "Data" is a set of parameters to be transformed to some other set
-Using a fit, even without any degrees of freedom, allows to transform
+using a fit, even without any degrees of freedom, allows to transform
 confidence contours of the original parameters  to the new parameter 
 space.
 
 The example chosen here is very minimalistic:  
-A measurement of a space point in 2s space in polar coordinates, 
+A measurement of a space point in 2d space in polar coordinates, 
 $r$ and $phi$, is transformed to Cartesian coordinates. The original
 Gaussian covariance region in r-phi space transforms to the banana-
 shaped region shown in the output. This shape cannot be obtained by

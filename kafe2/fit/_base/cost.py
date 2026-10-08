@@ -354,7 +354,7 @@ class CostFunction_Chi2(CostFunction):
                     raise ValueError("'err' must not contain any zero values!")
                 if self.needs_errors:
                     # There are other warnings that notify the user about singular cov mat, etc.
-                    warnings.warn("Setting all data errors to 1 as a fallback.")
+                    warnings.warn("'err' contains zero values. Setting all data errors to 1 as a fallback.")
             else:
                 _res = _res / err
 
