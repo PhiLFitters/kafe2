@@ -3,6 +3,7 @@ import warnings
 import numpy as np
 import six
 from scipy.linalg import solve_triangular
+from scipy.special import iv
 from scipy.stats import chi2, norm, poisson
 
 from ..io.file import FileIOMixin
@@ -27,6 +28,8 @@ __all__ = [
     "CostFunction_GaussApproximation",
 ]
 
+def skellam_logpmf(k, mu_1, mu_2):
+    return np.log(((mu_1 + mu_2) / mu_2) ** (k / 2) * iv(k, 2 * np.sqrt((mu_1 + mu_2) * mu_2))) - ((mu_1 + mu_2) + mu_2)
 
 class CostFunction(FileIOMixin, object):
     """
@@ -52,6 +55,7 @@ class CostFunction(FileIOMixin, object):
     _COV_MAT_CHOLESKY_NAME = "total_cov_mat_cholesky"
     _COV_MAT_QR_NAME = "total_cov_mat_qr"
     _ERROR_NAME = "total_error"
+    _BACKGROUND_NAME = "background_estimation"
 
     def __init__(self, cost_function, arg_names=None, add_constraint_cost=True, add_determinant_cost=False, fast_math=False):
         """
@@ -512,6 +516,10 @@ class CostFunction_NegLogLikelihood(CostFunction):
                 _nll_func = self.nll_poisson
             _cost_function_description += " (Poisson uncertainties)"
             _arg_names = [self._DATA_NAME, self._MODEL_NAME]
+        elif data_point_distribution.lower() == "skellam":
+            _nll_func = self.nll_skellam
+            _cost_function_description += " (skellam distribution)"
+            _arg_names = [self._DATA_NAME, self._MODEL_NAME, self._BACKGROUND_NAME]
         else:
             raise ValueError("Unknown value '%s' for 'data_point_distribution': " "must be one of ('gaussian', 'poisson')!")
 
@@ -601,6 +609,13 @@ class CostFunction_NegLogLikelihood(CostFunction):
         return -2.0 * _total_log_likelihood
 
     @staticmethod
+    def nll_skellam(data, model, background_estimation):
+        _total_log_likelihood = np.sum(skellam_logpmf(data, model, background_estimation))
+        if np.isnan(_total_log_likelihood):
+            return np.inf
+        return -2.0 * _total_log_likelihood
+
+    @staticmethod
     def nllr_gaussian(data, model, total_error):
         _total_log_likelihood = np.sum(norm.logpdf(data, loc=model, scale=total_error))
         _saturated_log_likelihood = np.sum(norm.logpdf(x=data, loc=data, scale=total_error))
@@ -625,9 +640,11 @@ class CostFunction_NegLogLikelihood(CostFunction):
             return False, "poisson distribution can only have non-negative integers as y data."
         return True, None
 
-    def get_uncertainty_gaussian_approximation(self, data):
+    def get_uncertainty_gaussian_approximation(self, data, backgrounds_estimation=None):
         if self._cost_function_handle in [self.nll_poisson, self.nllr_poisson]:
             return np.sqrt(data)
+        if self._cost_function_handle == self.nll_skellam:
+            return np.sqrt(data + 2 * backgrounds_estimation)  # factor 2 because 'data' is already the background subtracted data
         return 0
 
 
@@ -803,6 +820,10 @@ STRING_TO_COST_FUNCTION = {
     "chi2_covariance": (CostFunction_Chi2, {"errors_to_use": "covariance"}),
     "chi2_covariance_fast": (CostFunction_Chi2, {"errors_to_use": "covariance", "fast_math": True}),
     "nll": (CostFunction_NegLogLikelihood, {"ratio": False}),
+    "skellam": (
+        CostFunction_NegLogLikelihood,
+        {"data_point_distribution": "skellam", "ratio": False},
+    ),
     "poisson": (
         CostFunction_NegLogLikelihood,
         {"data_point_distribution": "poisson", "ratio": False},
