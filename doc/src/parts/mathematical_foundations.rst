@@ -801,6 +801,8 @@ The benefit of using this approximation of the Poisson distribution instead of t
 Poisson distribution itself is that it is capable of
 handling additional Gaussian uncertainties on our data.
 
+.. _hypothesis_testing:
+
 Hypothesis Testing
 ==================
 
