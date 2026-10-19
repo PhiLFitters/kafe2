@@ -241,7 +241,7 @@ and the model error band. Besides the color, the shape of markers or the label o
 
 The axis labels of a plot can be manually set using the :py:attr:`~.Plot.x_label` and :py:attr:`~.Plot.y_label` properties.
 Furthermore, it is also possible to rescale an axis (e.g., as a logarithmic scale) and to change the plot range using the :py:attr:`~.Plot.x_scale`,
-:py:attr:`~.Plot.y_scale`,  :py:attr:`~.Plot.x_range` adn :py:attr:`~.Plot.y_range` properties. Examples can be found in the :ref:`plotting section <plotting>`of the User Guide.
+:py:attr:`~.Plot.y_scale`,  :py:attr:`~.Plot.x_range` adn :py:attr:`~.Plot.y_range` properties. Examples can be found in the :ref:`plotting section <plotting>` of the User Guide.
 
 .. _faq_interpretation:
 
