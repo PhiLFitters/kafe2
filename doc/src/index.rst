@@ -40,7 +40,7 @@ The :ref:`next chapter <mathematical_foundations>` explains the mathematical fou
 While strictly speaking not required to use *kafe2*, reading the theory chapter is strongly
 recommended to understand which features to use in a state-of-the-art data analysis
 (regardless of whether *kafe2* or another data analysis tool is used).
-Answers to frequently asked questions can be found in teh :ref:`FAQ <faq>`.
+Answers to frequently asked questions can be found in the :ref:`FAQ <faq>`.
 The :ref:`Developer Guide <developer_guide>` covers topics that are only relevant
 if you want to work on *kafe2* as a developer (still very much WIP).
 Finally, the :ref:`API Documentation <api_documentation>` provides a full description

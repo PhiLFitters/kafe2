@@ -31,6 +31,11 @@ If no uncertainties are specified, *kafe2* falls back to a plain least-squares f
 best-fit parameter values. However, neither the parameter uncertainties nor the goodness of fit can be
 calculated meaningfully in this case, which is why *kafe2* warns you.
 
+In case you forgot to set any uncertainties, *kafe2* outputs the following warning:
+
+.. warning::
+    UserWarning: No data/model errors were specified. Parameter errors cannot be calculated.
+
 **Why can I not just set the errors/uncertainties to zero?**
 
 **Why does kafe2 give an infinite cost function warning?**
@@ -75,6 +80,17 @@ of your measuring device, or from the scatter of repeated measurements.
 Fit does not converge
 =====================
 
+**Common convergence issues**
+
+When a fit does not converge, it can have a lot of different reasons. Here we provide a list of different reasons, that
+can be used as a checklist. For some of the issues, a more detailed explanation is given below.
+
+1. Does every data point have a nonzero uncertainty?
+2. Are x and y values on a similar numerical scale?
+3. Does every parameter have a nonzero starting value?
+4. Are any paramters much larger or smaller than 1?
+5. Does the model function contain many local minima or maxima (e.g. periodic models, or models with several peaks)? In this case the starting values have to be chosen more carfully (eyeball them from a plot).
+
 .. _faq_wrong_fit_result:
 
 **I use a correct model, but the best-fit values are always off from the values I would expect. What could cause this?**
@@ -85,7 +101,7 @@ Fit does not converge
 
 One reason for this could be unspecified or poorly chosen starting values. The fitting algorithm minimizes the
 cost function numerically, which requires a starting value for each parameter.
-Ideally, this starting value is already close to the true value of a parameter. 
+Ideally, this starting value is already close to the true value of a parameter.
 If the starting value is too far off, the minimizer searches in the wrong region and may only find a local minimum,
 while we are, of course, searching for the global one.
 The starting values can be defined by specifying default values in the model function, or by using the method :py:meth:`~.FitBase.set_all_parameter_values`.
@@ -149,7 +165,7 @@ This can, e.g., occur when fitting Planck's constant :math:`h`.
 Here, the frequency is measured in Hertz (order of :math:`10^{15}`) and the electron energy is measured in Joules (order of :math:`10^{-18}`).
 A step on the frequency axis requires very large changes to affect the output significantly, while tiny steps on the
 energy axis can already lead to large changes in the output. This imbalance makes it hard for the minimizer to navigate
-the parameter space due to numerical instability. 
+the parameter space due to numerical instability.
 An easy solution is to rescale the data such that the :math:`x` and :math:`y` values are in a more similar regime. In the case of Planck's constant,
 it can already be enough to specify the energy in eV, reducing the difference in orders of magnitude by 19.
 
@@ -185,7 +201,7 @@ In histogram fits, the statistical uncertainty is directly calculated from the m
 In contrast, the :py:obj:`~.XYFit` assumes Gaussian uncertainties by default and handles uncertainties point by point.
 
 This of course comes with a tradeoff. Binned data loses some spatial resolution, depending on the size of the bins. So in practice
-it has to be decided depending on teh case how much resolution can be given up for better handleable data.
+it has to be decided depending on the case how much resolution can be given up for better handleable data.
 
 
 **Do I have to specify errors/uncertainties for my histogram fit?**
@@ -202,7 +218,8 @@ cost function of the fit then has to be changed to the gaussian approximation of
 does this automatically if uncertaintes are given. This makes it possible to
 (approximately) combine Poisson and Gaussian uncertainties.
 
-In principle, both types of cost functions can be used for both types of Fits, the :py:obj:`~.XYFit` and the :py:obj:`~.HistFit`. Just the defaults differ.
+In principle, both types of cost functions can be used for both types of Fits, the :py:obj:`~.XYFit` and the :py:obj:`~.HistFit`.
+Per default :py:obj:`~.XYFit` uses Gaussian uncertaintes, while :py:obj:`~.HistFit` uses Poisson uncertainties for the number of bin entries only.
 
 
 **What do I have to watch out for when I use a large number of data points?**
@@ -212,7 +229,7 @@ In principle, both types of cost functions can be used for both types of Fits, t
 **How does the dataset size influence statistical and systematic uncertainties?**
 
 The larger the amount of data, the smaller the statistical uncertainties are (relatively).
-So when handling large amounts of data, you may come into a regime where systematic uncertaintes—even though 
+So when handling large amounts of data, you may come into a regime where systematic uncertaintes—even though
 they are small—can play a significant role and influence the outcome of your fit. It can be useful to estimate the
 statistical uncertainties for a few bins and compare them to possible systematics.
 
