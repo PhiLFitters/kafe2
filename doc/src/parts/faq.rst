@@ -82,13 +82,13 @@ Fit does not converge
 
 **Common convergence issues**
 
-When a fit does not converge, it can have a lot of different reasons. Here we provide a list of different reasons, that
-can be used as a checklist. For some of the issues, a more detailed explanation is given below.
+When a fit does not converge, it can have a lot of different reasons. Here we provide a list of possible problems that could lead to non convergence.
+It can be used as a checklist. For some of the issues, a more detailed explanation is given below.
 
 1. Does every data point have a nonzero uncertainty?
 2. Are x and y values on a similar numerical scale?
 3. Does every parameter have a nonzero starting value?
-4. Are any paramters much larger or smaller than 1?
+4. Are any paramters expected to be much larger or smaller than 1?
 5. Does the model function contain many local minima or maxima (e.g. periodic models, or models with several peaks)? In this case the starting values have to be chosen more carfully (eyeball them from a plot).
 
 .. _faq_wrong_fit_result:
