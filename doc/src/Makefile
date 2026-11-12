@@ -68,7 +68,7 @@ singlehtml:
 markdown:
 	$(SPHINXBUILD) -b markdown $(ALLSPHINXOPTS) $(BUILDDIR)/markdown
 	@echo
-	@echo "Build finished. The HTML pages are in $(BUILDDIR)/markdown."
+	@echo "Build finished. The makrdown pages are in $(BUILDDIR)/markdown."
 
 pickle:
 	$(SPHINXBUILD) -b pickle $(ALLSPHINXOPTS) $(BUILDDIR)/pickle
