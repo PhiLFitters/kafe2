@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-import collections
+import collections.abc
 
 import matplotlib as mpl
 import numpy as np
@@ -299,7 +299,7 @@ class EnsembleVariableProbabilityDistribution(object):
         self._dist_param_values_dict = {}
         for _dist_par_name, _dist_par_value in six.iteritems(parameters):
             # wrap lists and/or tuples in numpy.ndarray
-            if isinstance(_dist_par_value, collections.Sequence) and not isinstance(_dist_par_value, six.string_types[0]):
+            if isinstance(_dist_par_value, collections.abc.Sequence) and not isinstance(_dist_par_value, six.string_types[0]):
                 _dist_par_value = np.array(_dist_par_value)
 
             if isinstance(_dist_par_value, np.ndarray):
