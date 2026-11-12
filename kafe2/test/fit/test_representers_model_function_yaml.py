@@ -1,7 +1,7 @@
 import unittest
+from io import StringIO
 
 import numpy as np
-from six import StringIO
 
 from kafe2.fit._base import ModelFunctionBase, ModelFunctionFormatter
 from kafe2.fit.histogram import HistModelFunction

@@ -1,7 +1,7 @@
 import warnings
+from inspect import signature
 
 import numpy as np
-import six
 from scipy.linalg import solve_triangular
 from scipy.stats import chi2, norm, poisson
 
@@ -13,12 +13,6 @@ from ..util import (
     qr_decomposition,
 )
 from .format import CostFunctionFormatter, ParameterFormatter
-
-if six.PY2:
-    from funcsigs import signature
-else:
-    from inspect import signature
-
 
 __all__ = [
     "CostFunction",

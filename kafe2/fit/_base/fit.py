@@ -7,7 +7,6 @@ from functools import partial
 from typing import Optional
 
 import numpy as np
-import six
 import yaml
 
 from ...config import kc
@@ -38,8 +37,7 @@ from .container import DataContainerBase
 __all__ = ["FitBase"]
 
 
-@six.add_metaclass(abc.ABCMeta)
-class FitBase(FileIOMixin, object):
+class FitBase(FileIOMixin, object, metaclass=abc.ABCMeta):
     """
     This is a purely abstract class implementing the minimal interface required by all
     types of fitters.
@@ -167,7 +165,7 @@ class FitBase(FileIOMixin, object):
         _parameter_nodes = []
         # get names and default values of all parameters if the fit has a model function
         if self._model_function is not None:
-            for _par_name, _par_value in six.iteritems(self._model_function.defaults_dict):
+            for _par_name, _par_value in self._model_function.defaults_dict.items():
                 # create nexus node for function parameter
                 _parameter_nodes.append(self._nexus.add(Parameter(_par_value, name=_par_name)))
 
@@ -840,10 +838,7 @@ class FitBase(FileIOMixin, object):
             try:
                 assert _lim is None or float(_lim) == _lim
             except (TypeError, ValueError, AssertionError):
-                six.raise_from(
-                    TypeError("Expecting `None` or numeric value for parameter limit, got {}: {}".format(type(_lim), repr(_lim))),
-                    None,
-                )
+                raise TypeError("Expecting `None` or numeric value for parameter limit, got {}: {}".format(type(_lim), repr(_lim))) from None
 
         self._fitter.limit_parameter(name=name, limits=(lower, upper))
         self._fit_param_names_bad_default.discard(name)

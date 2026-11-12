@@ -1,7 +1,5 @@
 import abc
 
-import six
-
 # import data container classes
 from ...histogram import HistContainer
 from ...indexed import IndexedContainer
@@ -12,8 +10,7 @@ from .._base import GenericDReprBase
 __all__ = ["DataContainerDReprBase"]
 
 
-@six.add_metaclass(abc.ABCMeta)
-class DataContainerDReprBase(GenericDReprBase):
+class DataContainerDReprBase(GenericDReprBase, metaclass=abc.ABCMeta):
     BASE_OBJECT_TYPE_NAME = "container"
 
     _CLASS_TO_OBJECT_TYPE_NAME = {

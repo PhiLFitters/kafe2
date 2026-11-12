@@ -1,7 +1,5 @@
 import abc
 
-import six
-
 __all__ = ["FitEnsembleBase", "FitEnsembleException"]
 
 
@@ -9,8 +7,7 @@ class FitEnsembleException(Exception):
     pass
 
 
-@six.add_metaclass(abc.ABCMeta)
-class FitEnsembleBase(object):
+class FitEnsembleBase(metaclass=abc.ABCMeta):
     """
     Object for generating ensembles of fits to pseudo-data generated according to the
     specified uncertainty model.

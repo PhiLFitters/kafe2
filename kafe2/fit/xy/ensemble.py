@@ -6,7 +6,6 @@ except ImportError:
 import matplotlib as mpl
 import numpy as np
 import scipy.stats
-import six
 from matplotlib import gridspec as gs
 from matplotlib import pyplot as plt
 
@@ -26,8 +25,8 @@ def _heuristic_optimal_subplot_grid_size(n_subplots, aspect_ratio_priority=0.5):
 
     _optimal_f = np.inf
     _optimal_sk = n_subplots, 0
-    for s in six.moves.range(1, n_subplots):
-        for k in six.moves.range(0, n_subplots):
+    for s in range(1, n_subplots):
+        for k in range(0, n_subplots):
             _f = f2(s, k)
             if _f < _optimal_f:
                 _optimal_f = _f
@@ -198,7 +197,7 @@ class XYFitEnsemble(FitEnsembleBase):
             self._ensemble_variable_plotters["y_pulls"] = EnsembleVariablePlotter(
                 ensemble_variable=self._ensemble_variables["y_pulls"],
                 value_ranges=(-3, 3),
-                variable_labels=["Pull $y_{%d}$" % (_i,) for _i in six.moves.range(1, self.n_dat + 1)],
+                variable_labels=["Pull $y_{%d}$" % (_i,) for _i in range(1, self.n_dat + 1)],
             )
 
         if "x_data" in self._requested_results:
@@ -215,7 +214,7 @@ class XYFitEnsemble(FitEnsembleBase):
                         self._ref_x_data + 3 * self._toy_fit.x_total_error,
                     ]
                 ).T,
-                variable_labels=["$x_{%d}$" % (_i,) for _i in six.moves.range(1, self.n_dat + 1)],
+                variable_labels=["$x_{%d}$" % (_i,) for _i in range(1, self.n_dat + 1)],
             )
 
         if "y_data" in self._requested_results:
@@ -232,7 +231,7 @@ class XYFitEnsemble(FitEnsembleBase):
                         self._ref_y_data + 3 * self._ref_projected_xy_err,
                     ]
                 ).T,
-                variable_labels=["$y_{%d}$" % (_i,) for _i in six.moves.range(1, self.n_dat + 1)],
+                variable_labels=["$y_{%d}$" % (_i,) for _i in range(1, self.n_dat + 1)],
             )
 
         if "y_model" in self._requested_results:
@@ -249,7 +248,7 @@ class XYFitEnsemble(FitEnsembleBase):
                         self._ref_y_data + 3 * self._ref_projected_xy_err,
                     ]
                 ).T,
-                variable_labels=["$f(x_{%d})$" % (_i,) for _i in six.moves.range(1, self.n_dat + 1)],
+                variable_labels=["$f(x_{%d})$" % (_i,) for _i in range(1, self.n_dat + 1)],
             )
 
         if "parameter_pulls" in self._requested_results:
@@ -416,7 +415,7 @@ class XYFitEnsemble(FitEnsembleBase):
         self._set_toy_fit_parameters_to_reference()
         self._update_reference_quantities_from_toy_fit()
         self._initialize_ensemble_variables()
-        for _i_exp in six.moves.range(self.n_exp):
+        for _i_exp in range(self.n_exp):
             self._generate_pseudodata()
             self._do_toy_fit()
             self._gather_results_from_toy_fit(_i_exp)

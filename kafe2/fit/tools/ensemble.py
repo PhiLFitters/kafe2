@@ -1,11 +1,8 @@
-from __future__ import print_function
-
 import collections.abc
 
 import matplotlib as mpl
 import numpy as np
 import scipy.stats
-import six
 
 from ...core.error import CovMat
 
@@ -297,9 +294,9 @@ class EnsembleVariableProbabilityDistribution(object):
         self._shape = variable_shape
 
         self._dist_param_values_dict = {}
-        for _dist_par_name, _dist_par_value in six.iteritems(parameters):
+        for _dist_par_name, _dist_par_value in parameters.items():
             # wrap lists and/or tuples in numpy.ndarray
-            if isinstance(_dist_par_value, collections.abc.Sequence) and not isinstance(_dist_par_value, six.string_types[0]):
+            if isinstance(_dist_par_value, collections.abc.Sequence) and not isinstance(_dist_par_value, str):
                 _dist_par_value = np.array(_dist_par_value)
 
             if isinstance(_dist_par_value, np.ndarray):

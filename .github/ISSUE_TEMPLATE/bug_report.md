@@ -22,7 +22,7 @@ Please attach the traceback found in the terminal when you encounter the bug. Th
 
 **System:**
  - OS: [e.g. Windows10 or Ubuntu 18.04]
- - Python Version: [eg. 2.7.17 or 3.8.1]
+ - Python Version: [eg. 3.12.3]
 
 **Additional context**
 Add any other context about the problem here.

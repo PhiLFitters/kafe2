@@ -1,4 +1,3 @@
-import sys
 import warnings
 
 from ...config import kc
@@ -8,11 +7,6 @@ __all__ = ["get_minimizer"]
 AVAILABLE_MINIMIZERS = dict()
 
 _MINIMIZER_NAME_ALIASES = dict()
-
-_catch_error_class = ImportError
-if sys.version_info >= (3, 6):
-    # python version 3.6+ throws a different exception type on import fail...
-    _catch_error_class = ModuleNotFoundError
 
 try:
     from .scipy_optimize_minimizer import MinimizerScipyOptimize
@@ -24,7 +18,7 @@ try:
         }
     )
     _MINIMIZER_NAME_ALIASES["scipy.optimize"] = "scipy"
-except _catch_error_class:
+except ModuleNotFoundError:
     pass
 
 try:
@@ -36,10 +30,8 @@ try:
             "iminuit": MinimizerIMinuit,
         }
     )
-except _catch_error_class:
+except ModuleNotFoundError:
     warnings.warn("iminuit is not installed. While not strictly needed its use is " "heavily recommended for better performance and convergence.")
-except SyntaxError:  # Newer versions of iminuit do not support Python 2.
-    pass
 
 try:
     from .root_tminuit_minimizer import MinimizerROOTTMinuit
@@ -52,10 +44,7 @@ try:
     )
     _MINIMIZER_NAME_ALIASES["minuit"] = "root.tminuit"
     _MINIMIZER_NAME_ALIASES["root"] = "root.tminuit"
-except (
-    _catch_error_class,
-    ImportError,
-):  # Python 2.7 ROOT bindings cause ImportError in Python 3.6
+except ImportError:
     pass
 
 # raise if no minimizers can be imported

@@ -1,11 +1,8 @@
-from __future__ import print_function
-
 import contextlib
 import sys
 from string import ascii_letters
 
 import numpy as np
-import six
 
 
 @contextlib.contextmanager
@@ -41,7 +38,7 @@ def print_dict_recursive(
 
     _indent_prefix = indent_char * indent_width * indent_level
 
-    for k, v in six.iteritems(dct):
+    for k, v in dct.items():
         if isinstance(v, dict):
             output_stream.write(_indent_prefix + _key_format.format(k + ":") + "\n")
             output_stream.flush()
@@ -105,7 +102,7 @@ def print_dict_as_table(
 
     # transpose table into row-first order
     _table = []
-    for _irow in six.moves.range(_n_rows):
+    for _irow in range(_n_rows):
         _table.append([])
     for _icol, _col in enumerate(_column_arrays):
         for _irow, _cell in enumerate(_col):
