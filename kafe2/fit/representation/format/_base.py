@@ -1,7 +1,5 @@
 import abc
 
-import six
-
 # import formatter classes
 from ..._base.format import ModelFunctionFormatter
 from ...indexed import IndexedModelFunctionFormatter
@@ -10,8 +8,7 @@ from .._base import GenericDReprBase
 __all__ = ["ModelFunctionFormatterDReprBase", "ParameterFormatterDReprBase"]
 
 
-@six.add_metaclass(abc.ABCMeta)
-class ModelFunctionFormatterDReprBase(GenericDReprBase):
+class ModelFunctionFormatterDReprBase(GenericDReprBase, metaclass=abc.ABCMeta):
     BASE_OBJECT_TYPE_NAME = "model_function_formatter"
 
     _CLASS_TO_OBJECT_TYPE_NAME = {
@@ -31,8 +28,7 @@ class ModelFunctionFormatterDReprBase(GenericDReprBase):
         super(ModelFunctionFormatterDReprBase, self).__init__()
 
 
-@six.add_metaclass(abc.ABCMeta)
-class ParameterFormatterDReprBase(GenericDReprBase):
+class ParameterFormatterDReprBase(GenericDReprBase, metaclass=abc.ABCMeta):
     BASE_OBJECT_TYPE_NAME = "parameter_formatter"
 
     def __init__(self, model_parameter_formatter=None):

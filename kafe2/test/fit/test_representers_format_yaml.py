@@ -1,6 +1,5 @@
 import unittest
-
-from six import StringIO
+from io import StringIO
 
 from kafe2.fit._base import ModelFunctionFormatter, ParameterFormatter
 from kafe2.fit.indexed import IndexedModelFunctionFormatter

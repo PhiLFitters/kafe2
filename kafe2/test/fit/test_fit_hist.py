@@ -1,9 +1,9 @@
 # flake8: noqa F401 (imported but unused)
 import abc
+import io
 import unittest
 
 import numpy as np
-import six
 from scipy import stats
 
 from kafe2.config import kc
@@ -355,14 +355,14 @@ class TestHistFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
     def test_report_before_fit(self):
         # TODO: check report content
-        _buffer = six.StringIO()
+        _buffer = io.StringIO()
         _fit = self._get_fit(bin_evaluation=hist_model_density_antideriv)
         _fit.report(output_stream=_buffer)
         self.assertNotEqual(_buffer.getvalue(), "")
 
     def test_report_after_fit(self):
         # TODO: check report content
-        _buffer = six.StringIO()
+        _buffer = io.StringIO()
         _fit = self._get_fit(bin_evaluation=hist_model_density_antideriv)
         _fit.do_fit()
         _fit.report(output_stream=_buffer)

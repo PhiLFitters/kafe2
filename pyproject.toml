@@ -45,8 +45,6 @@ dependencies = [
         "tabulate",
         "matplotlib>=3.4",
         "PyYaml",
-        "six",
-        "funcsigs",
         "SymPy",
 ]
 dynamic = ["version"]

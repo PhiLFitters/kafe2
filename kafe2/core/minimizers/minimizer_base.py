@@ -4,7 +4,6 @@ from typing import Sequence, Union
 
 import numdifftools as nd
 import numpy as np
-import six
 from scipy.optimize import root_scalar
 
 from kafe2.core.confidence import ConfidenceLevel
@@ -12,8 +11,7 @@ from kafe2.core.confidence import ConfidenceLevel
 from ..error import CovMat
 
 
-@six.add_metaclass(ABCMeta)
-class MinimizerBase(object):
+class MinimizerBase(metaclass=ABCMeta):
     ERRORDEF_CHI2 = 1.0
     ERRORDEF_NLL = 0.5
 

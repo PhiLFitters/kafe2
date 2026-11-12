@@ -1,8 +1,4 @@
-from __future__ import print_function
-
 import ctypes
-
-import six
 
 from ..contour import ContourFactory
 from .minimizer_base import MinimizerBase
@@ -346,7 +342,7 @@ class MinimizerROOTTMinuit(MinimizerBase):
         self._par_val = np.zeros(self.num_pars)
         self._par_err = np.zeros(self.num_pars)
         _pv, _pe = ctypes.c_double(0), ctypes.c_double(0)
-        for _par_id in six.moves.range(0, self.num_pars):
+        for _par_id in range(0, self.num_pars):
             self.__gMinuit.GetParameter(_par_id, _pv, _pe)  # retrieve fit result
             self._par_val[_par_id] = _pv.value
             self._par_err[_par_id] = _pe.value

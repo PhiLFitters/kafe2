@@ -3,7 +3,6 @@ import inspect
 from collections import OrderedDict
 
 import numpy as np
-import six
 
 try:
     import sympy as sp
@@ -20,8 +19,7 @@ from .format import ModelFunctionFormatter, ParameterFormatter, latexify_ascii
 __all__ = ["ParametricModelBaseMixin", "ModelFunctionBase"]
 
 
-@six.add_metaclass(abc.ABCMeta)
-class ModelFunctionBase(FileIOMixin, object):
+class ModelFunctionBase(FileIOMixin, object, metaclass=abc.ABCMeta):
     """
     This is a purely abstract class implementing the minimal interface required by all
     model functions.

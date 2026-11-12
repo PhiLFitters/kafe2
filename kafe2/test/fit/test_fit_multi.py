@@ -2,7 +2,6 @@ import unittest
 from abc import ABCMeta
 
 import numpy as np
-import six
 from scipy.stats import norm
 
 from kafe2 import CustomFit, HistContainer, HistFit, IndexedFit, MultiFit, XYFit
@@ -148,8 +147,7 @@ class TestSharedErrorLogic(AbstractTestFit, unittest.TestCase):
         self._assert_fit_results_equal(_multifit_default, _multifit)
 
 
-@six.add_metaclass(ABCMeta)
-class TestMultiFit(AbstractTestFit, unittest.TestCase):
+class TestMultiFit(AbstractTestFit, unittest.TestCase, metaclass=ABCMeta):
     @staticmethod
     def _split_data(data, axis=0):
         _random = np.random.rand(data.shape[axis])

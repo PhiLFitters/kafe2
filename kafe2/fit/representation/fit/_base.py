@@ -1,7 +1,5 @@
 import abc
 
-import six
-
 # import fit classes
 from ...custom import CustomFit
 from ...histogram import HistFit
@@ -13,8 +11,7 @@ from .._base import GenericDReprBase
 __all__ = ["FitDReprBase"]
 
 
-@six.add_metaclass(abc.ABCMeta)
-class FitDReprBase(GenericDReprBase):
+class FitDReprBase(GenericDReprBase, metaclass=abc.ABCMeta):
     BASE_OBJECT_TYPE_NAME = "fit"
 
     _CLASS_TO_OBJECT_TYPE_NAME = {
