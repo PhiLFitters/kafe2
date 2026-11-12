@@ -28,7 +28,7 @@ Requirements
 The following software should be installed on your machine:
 
 * `git <https://git-scm.com/>`_
-* `Python <https://www.python.org/>`_, both Python 2 *and* Python 3
+* `Python <https://www.python.org/>`_ 3
 * `ROOT <https://root.cern.ch/>`_
 
 In Addition to that a virtual environment for the development purpose can be created by calling::

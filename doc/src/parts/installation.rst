@@ -9,10 +9,10 @@
 Installing *kafe2*
 ******************
 
-.. warning::
+.. note::
 
-    *kafe2* versions 2.3.x are the latest versions which support Python 2.
-    Python 2 support will be dropped for all future releases.
+    *kafe2* versions 2.3.x are the last versions which support Python 2.
+    Newer versions require Python 3.
 
 Requirements
 ============
@@ -153,9 +153,6 @@ To install the legacy version of *iminuit*, do:
 
         pip install iminuit==1.5.4
 
-Note: the last version of *iminuit* that was usable in combination with *Python* 2.7
-was *iminuit* 1.3.10.
-The use of *Python* 2.7 in combination with *iminuit* is therefore not officially supported.
 You might also need to install the Python headers for *iminuit* to
 compile properly.
 
