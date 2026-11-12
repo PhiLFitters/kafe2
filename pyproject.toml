@@ -14,7 +14,7 @@ authors = [
 	{ name="Cedric Verstege", email="cedric.verstege@cern.ch" },
 ]
 readme = "README.rst"
-requires-python= ">=3.6"
+requires-python= ">=3.9"
 keywords = ["kafe2", "kit", "karlsruhe", "data", "analysis", "lab", "laboratory", "practical courses", "education", "university", "students", "physics", "fitting", "minimization", "minimisation", "regression", "parametric", "parameter", "estimation", "optimization", "optimisation"]
 
 license = "GPL-3.0-or-later"
@@ -28,11 +28,13 @@ classifiers = [
         "Topic :: Scientific/Engineering :: Information Analysis",
         "Topic :: Scientific/Engineering :: Visualization",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
+        "Programming Language :: Python :: 3.15",
 ]
 #TODO dependency versions
 dependencies = [
