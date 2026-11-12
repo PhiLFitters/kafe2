@@ -1,10 +1,8 @@
 import os
-import sys
 from collections.abc import Iterable
 
 import matplotlib as mpl
 import numpy as np
-import six
 from matplotlib import gridspec as gs
 from matplotlib import pyplot as plt
 from matplotlib import rc_context, rcParams
@@ -18,8 +16,7 @@ from .._base.format import ScalarFormatter as ScalarBaseFormatter
 
 __all__ = ["ContoursProfiler"]
 
-_python_version = sys.version_info[0]
-_float_template = ".2g" if _python_version == 2 else "#.2g"
+_float_template = "#.2g"
 
 
 def _linear_range_transform(range_, factor, asymmetry=0.0):
@@ -835,7 +832,7 @@ class ContoursProfiler(object):
 
             # draw profiles to subplots on the diagonal
             _subplots = np.empty((_npar, _npar), dtype=Axes)  # store subplot system in numpy array
-            for row in six.moves.range(_npar):
+            for row in range(_npar):
                 _axes = _subplots[row, row] = _fig.add_subplot(_gs[row, row])
                 _sigma = self.contour_sigma_values[-1]
                 self.plot_profile(
@@ -859,8 +856,8 @@ class ContoursProfiler(object):
                     _all_legend_labels += tuple(_ls)
 
             # draw contours to subplots in the lower (and possibly upper) triangle
-            for row in six.moves.range(_npar):
-                for col in six.moves.range(row):
+            for row in range(_npar):
+                for col in range(row):
                     _axes = _subplots[row, col] = _fig.add_subplot(_gs[row, col])
                     self.plot_contours(
                         _par_names[col],

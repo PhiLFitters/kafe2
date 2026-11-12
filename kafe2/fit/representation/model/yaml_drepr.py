@@ -1,9 +1,9 @@
 # flake8: noqa F401 (imported but unused)
+import io
 import textwrap
 import tokenize
 
 import numpy as np
-import six
 
 from ....fit import (
     HistModelFunction,
@@ -38,7 +38,7 @@ KNOWN_PARAMETRIC_MODELS = (
 
 def _parse_function(input_string):
     """converts a string of python code into a python function object"""
-    _tokens = tokenize.generate_tokens(six.StringIO(input_string).readline)
+    _tokens = tokenize.generate_tokens(io.StringIO(input_string).readline)
     for _toknum, _tokval, _spos, _epos, _line_string in _tokens:
         if _tokval in ModelFunctionYamlReader.FORBIDDEN_TOKENS:
             raise ValueError("Encountered forbidden token '%s' in user-entered code on line '%s'." % (_tokval, _line_string))

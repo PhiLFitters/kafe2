@@ -9,7 +9,6 @@ from collections.abc import Iterable
 import matplotlib as mpl
 import numpy  # help IDEs with type-hinting inside docstrings
 import numpy as np
-import six
 from matplotlib import gridspec as gs
 from matplotlib import pyplot as plt
 from matplotlib import rc_context, rcParams
@@ -50,7 +49,7 @@ class Cycler(object):
         for _i, _content in enumerate(args):
             _prop_size_i = None
             _prop_dict_i = dict()
-            for _prop_name, _prop_vals in six.iteritems(_content):
+            for _prop_name, _prop_vals in _content.items():
                 # for the time being: 'refuse' any mismatching property value lengths
                 if _prop_size_i is None:
                     _prop_size_i = len(_prop_vals)
@@ -81,10 +80,10 @@ class Cycler(object):
     # public methods
 
     def get(self, cycle_position):
-        _prop_positions = [(cycle_position // self._counter_divisors[i]) % self._prop_val_sizes[i] for i in six.moves.range(self._dim)]
+        _prop_positions = [(cycle_position // self._counter_divisors[i]) % self._prop_val_sizes[i] for i in range(self._dim)]
         _ps = {}
         for _i, _content in enumerate(self._props):
-            for _name, _values in six.iteritems(_content):
+            for _name, _values in _content.items():
                 _ps[_name] = _values[_prop_positions[_i]]
         return _ps
 
@@ -108,7 +107,7 @@ class Cycler(object):
         _args = []
         for _i, _content in enumerate(self._props):
             _tmp_dict = {}
-            for _name, _values in six.iteritems(_content):
+            for _name, _values in _content.items():
                 if _name in properties:
                     _tmp_dict[_name] = _values
             _args.append(_tmp_dict)
@@ -122,8 +121,7 @@ class DummyLegendHandler(HandlerBase):
         return None
 
 
-@six.add_metaclass(abc.ABCMeta)
-class PlotAdapterBase:
+class PlotAdapterBase(metaclass=abc.ABCMeta):
     """This is a purely abstract class implementing the minimal interface required by all
     types of plot adapters.
 
@@ -219,7 +217,7 @@ class PlotAdapterBase:
         if not self._subplots:
             # create subplot dict
             self._subplots = OrderedDict()
-            for _pt, _pt_spec in six.iteritems(self.PLOT_SUBPLOT_TYPES):
+            for _pt, _pt_spec in self.PLOT_SUBPLOT_TYPES.items():
                 try:
                     # replace plot adapter method string with real method
                     self._subplots[_pt] = dict(
@@ -290,7 +288,7 @@ class PlotAdapterBase:
         _kwargs.update(**_explicit_kwargs)
 
         # remove keywords set to the special value '__del__'
-        _kwargs = {_k: _v for _k, _v in six.iteritems(_kwargs) if _v != "__del__"}
+        _kwargs = {_k: _v for _k, _v in _kwargs.items() if _v != "__del__"}
 
         # apply interpolation to legend labels
         _label = _kwargs.pop("label", None)
@@ -386,7 +384,7 @@ class PlotAdapterBase:
         # remove keys set to '__default__': the defaults will be substituted in
         # then _get_subplot_kwargs() is called. The '__del__' special value is
         # handled by _get_subplot_kwargs()
-        _keys_to_delete = [_k for _k, _v in six.iteritems(plot_kwargs) if _v == "__default__"]
+        _keys_to_delete = [_k for _k, _v in plot_kwargs.items() if _v == "__default__"]
 
         _config_dict = _subplots[plot_type].setdefault("plot_method_keywords", {})
         _config_dict.update(plot_kwargs)
@@ -816,7 +814,7 @@ class Plot:
             if not _pdc.PLOT_SUBPLOT_TYPES:
                 continue
 
-            for _i_pt, (_pt, _pt_spec) in enumerate(six.iteritems(_pdc.PLOT_SUBPLOT_TYPES)):
+            for _i_pt, (_pt, _pt_spec) in enumerate(_pdc.PLOT_SUBPLOT_TYPES.items()):
                 _axes_key = _pt_spec["target_axes"]
 
                 # skip plot elements meant for an inexistent axes
@@ -1052,7 +1050,7 @@ class Plot:
 
     def _adjust_plot_ranges(self, plot_results):
         """set the x and y ranges (all axes) to the total data range reported by the plot adapters"""
-        for _axes_name, _axes_dict in six.iteritems(plot_results):
+        for _axes_name, _axes_dict in plot_results.items():
             _ax = self._get_axes(_axes_name)
 
             _xlim = _axes_dict.get("x_range", None)
@@ -1065,7 +1063,7 @@ class Plot:
 
     def _set_axis_labels(self, plot_results, axes_keys):
         """Set the x and y axis labels from given plot adapter labels"""
-        for _axes_name, _axes_dict in six.iteritems(plot_results):
+        for _axes_name, _axes_dict in plot_results.items():
             _ax = self._get_axes(_axes_name)
 
             # collect different sets of axis labels

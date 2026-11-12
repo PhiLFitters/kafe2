@@ -1,7 +1,5 @@
 import abc
 
-import six
-
 from ....core.constraint import (
     GaussianMatrixParameterConstraint,
     GaussianSimpleParameterConstraint,
@@ -11,8 +9,7 @@ from .._base import GenericDReprBase
 __all__ = ["ConstraintDReprBase"]
 
 
-@six.add_metaclass(abc.ABCMeta)
-class ConstraintDReprBase(GenericDReprBase):
+class ConstraintDReprBase(GenericDReprBase, metaclass=abc.ABCMeta):
     BASE_OBJECT_TYPE_NAME = "constraint"
 
     _CLASS_TO_OBJECT_TYPE_NAME = {

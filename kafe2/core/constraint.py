@@ -1,7 +1,6 @@
 import abc
 
 import numpy as np
-import six
 
 from ..fit.io.file import FileIOMixin
 
@@ -12,8 +11,7 @@ __all__ = [
 ]
 
 
-@six.add_metaclass(abc.ABCMeta)
-class ParameterConstraint(FileIOMixin, object):
+class ParameterConstraint(FileIOMixin, object, metaclass=abc.ABCMeta):
     """
     Abstract base class for parameter constraints.
     Subclasses must implement the ``cost`` method.

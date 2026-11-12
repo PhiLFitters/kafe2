@@ -7,7 +7,6 @@ import logging
 import warnings
 
 import numpy as np
-import six
 
 logger = logging.getLogger(__name__)
 logging.basicConfig()
@@ -170,8 +169,7 @@ class CovMat(object):
 
 
 # Data structures for Gaussian Errors
-@six.add_metaclass(abc.ABCMeta)
-class GaussianErrorBase(object):
+class GaussianErrorBase(metaclass=abc.ABCMeta):
     """
     Purely abstract class. Defines the minimal interface required by all specializations.
     """

@@ -1,7 +1,7 @@
 import unittest
+from io import StringIO
 
 import numpy as np
-from six import StringIO
 
 from kafe2.core.constraint import (
     GaussianMatrixParameterConstraint,

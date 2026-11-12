@@ -1,11 +1,10 @@
 import abc
 import os
 import unittest
+from io import StringIO
 
 import numpy as np
-import six
 from scipy.stats import norm
-from six import StringIO
 
 from kafe2.fit.custom import CustomFit
 from kafe2.fit.histogram import HistFit
@@ -19,8 +18,7 @@ from kafe2.fit.xy import XYFit
 from .test_fit_custom import TestCustomFitWithSimpleYErrors
 
 
-@six.add_metaclass(abc.ABCMeta)
-class AbstractTestFitRepresenter(object):
+class AbstractTestFitRepresenter(metaclass=abc.ABCMeta):
     FIT_CLASS = None
     TEST_FIT = None
     TEST_FIT_SIMPLE = None

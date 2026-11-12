@@ -1,10 +1,7 @@
-from __future__ import print_function
-
 import abc
 from copy import copy
 
 import numpy as np
-import six
 
 from ...core.error import MatrixGaussianError, SimpleGaussianError
 from ...tools import (
@@ -15,8 +12,7 @@ from ..io.file import FileIOMixin
 __all__ = ["DataContainerBase"]
 
 
-@six.add_metaclass(abc.ABCMeta)
-class DataContainerBase(FileIOMixin):
+class DataContainerBase(FileIOMixin, metaclass=abc.ABCMeta):
     """This is a purely abstract class implementing the minimal interface required by all types of data containers.
 
     It stores measurement data and uncertainties.
@@ -314,7 +310,7 @@ class DataContainerBase(FileIOMixin):
         if matching_type != "equal":
             raise NotImplementedError("Unknown matching type: '{}'! " "Available: ['equals']".format(matching_type))
 
-        for _crit_key, _crit_value in six.iteritems(matching_criteria):
+        for _crit_key, _crit_value in matching_criteria.items():
             # go through all errors, removing those that don't match
             for _error_name, _error_dict in list(_result.items()):  # do not use an iterator!
                 if _crit_key == "name" and _error_name == _crit_value:
@@ -354,7 +350,7 @@ class DataContainerBase(FileIOMixin):
             if not _result:
                 break
 
-        return {_name: _entry["err"] for _name, _entry in six.iteritems(_result)}
+        return {_name: _entry["err"] for _name, _entry in _result.items()}
 
     def get_error(self, error_name):
         """Return the uncertainty object holding the uncertainty.

@@ -1,7 +1,5 @@
 import sys
 
-import six
-
 from ...core.fitters.nexus import Array, Parameter
 from .._base import CostFunction, FitBase, ModelFunctionBase
 
@@ -23,7 +21,7 @@ class CustomFit(FitBase):
         )
         _dummy_model_function = ModelFunctionBase(cost_function.func, independent_argcount=0)
         _parameter_nodes = []
-        for _par_name, _par_value in six.iteritems(_dummy_model_function.defaults_dict):
+        for _par_name, _par_value in _dummy_model_function.defaults_dict.items():
             _parameter_nodes.append(self._nexus.add(Parameter(_par_value, name=_par_name), existing_behavior="replace"))
             self._fit_param_names.append(_par_name)
         self._nexus.add(Array(_parameter_nodes, name="parameter_values"), existing_behavior="replace")

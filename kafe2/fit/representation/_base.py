@@ -2,11 +2,8 @@ import abc
 import datetime
 import getpass
 
-import six
 
-
-@six.add_metaclass(abc.ABCMeta)
-class GenericDReprBase(object):
+class GenericDReprBase(metaclass=abc.ABCMeta):
     BASE_OBJECT_TYPE_NAME = None
     DREPR_FLAVOR_NAME = None
     DREPR_ROLE_NAME = None

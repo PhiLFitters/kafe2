@@ -1,4 +1,5 @@
 import abc
+import io
 import logging
 import operator
 import sys
@@ -6,34 +7,14 @@ import uuid
 import warnings
 import weakref
 from ast import parse
+from inspect import Parameter as SigParameter
+from inspect import signature
 
 import numpy as np
-import six
-
-if six.PY2:
-    from funcsigs import Parameter as SigParameter
-    from funcsigs import signature
-else:
-    from inspect import Parameter as SigParameter
-    from inspect import signature
 
 __all__ = ["Nexus", "Alias", "Array", "Fallback", "Function", "Parameter", "Tuple"]
 
 # -- helpers
-
-_OPERATORS = {
-    # arithmetic
-    "add": operator.add,
-    "sub": operator.sub,
-    "mul": operator.mul,
-    "truediv": operator.truediv,
-    "floordiv": operator.floordiv,
-    "mod": operator.mod,
-}
-
-# 'div' operator only available in Python 2
-if six.PY2:
-    _OPERATORS["div"] = operator.div
 
 _OPERATORS = {
     # arithmetic
@@ -68,15 +49,8 @@ _UNARY_OPERATORS = {
     "neg": operator.neg,
     "pos": operator.pos,
     "len": len,
+    "abs": operator._abs,
 }
-
-# 'div' operator only available in Python 2
-if six.PY2:
-    _OPERATORS["div"] = (operator.div, True)
-
-# '_abs' operator only available in Python 3
-if six.PY3:
-    _UNARY_OPERATORS["abs"] = operator._abs
 
 
 def _add_common_operators(cls):
@@ -95,8 +69,7 @@ def _add_common_operators(cls):
 # -- Nodes -------------------------------------
 
 
-@six.add_metaclass(abc.ABCMeta)
-class NodeBase(object):
+class NodeBase(metaclass=abc.ABCMeta):
     """
     Abstract class for a computation graph node.
     Defines the minimal interface required by all specializations.
@@ -987,7 +960,7 @@ class NodeSubgraphGraphvizViewer(NodeSubgraphGraphvizSourceProducer):
 
         from graphviz import Source
 
-        out = six.StringIO()
+        out = io.StringIO()
         NodeSubgraphGraphvizSourceProducer.run(self, node, node_chain, out_stream=out)
 
         out.seek(0)

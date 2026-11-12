@@ -2,7 +2,6 @@
 import unittest
 
 import numpy as np
-import six
 
 from kafe2.core.fitters.nexus import Function, Nexus, Parameter
 from kafe2.core.fitters.nexus_fitter import NexusFitter

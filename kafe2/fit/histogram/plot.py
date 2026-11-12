@@ -2,7 +2,6 @@
 
 import matplotlib as mpl
 import numpy as np
-import six
 
 from .._base import PlotAdapterBase
 from .._base.plot import kc_plot_style

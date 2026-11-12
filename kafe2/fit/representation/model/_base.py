@@ -1,7 +1,5 @@
 import abc
 
-import six
-
 # import ModelFunction classes
 from ..._base import ModelFunctionBase
 from ...histogram import HistModelFunction, HistParametricModel
@@ -13,8 +11,7 @@ from .._base import GenericDReprBase
 __all__ = ["ModelFunctionDReprBase", "ParametricModelDReprBase"]
 
 
-@six.add_metaclass(abc.ABCMeta)
-class ModelFunctionDReprBase(GenericDReprBase):
+class ModelFunctionDReprBase(GenericDReprBase, metaclass=abc.ABCMeta):
     BASE_OBJECT_TYPE_NAME = "model_function"
 
     _CLASS_TO_OBJECT_TYPE_NAME = {
@@ -35,8 +32,7 @@ class ModelFunctionDReprBase(GenericDReprBase):
         super(ModelFunctionDReprBase, self).__init__()
 
 
-@six.add_metaclass(abc.ABCMeta)
-class ParametricModelDReprBase(GenericDReprBase):
+class ParametricModelDReprBase(GenericDReprBase, metaclass=abc.ABCMeta):
     BASE_OBJECT_TYPE_NAME = "model"
 
     _CLASS_TO_OBJECT_TYPE_NAME = {

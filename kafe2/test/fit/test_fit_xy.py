@@ -1,9 +1,9 @@
 # flake8: noqa F401 (imported but unuse)
 import abc
+import io
 import unittest
 
 import numpy as np
-import six
 
 from kafe2.config import kc
 from kafe2.core.minimizers import AVAILABLE_MINIMIZERS
@@ -389,14 +389,14 @@ class TestXYFitBasicInterface(AbstractTestFit, unittest.TestCase):
 
     def test_report_before_fit(self):
         # TODO: check report content
-        _buffer = six.StringIO()
+        _buffer = io.StringIO()
         _fit = self._get_fit()
         _fit.report(output_stream=_buffer)
         self.assertNotEqual(_buffer.getvalue(), "")
 
     def test_report_after_fit(self):
         # TODO: check report content
-        _buffer = six.StringIO()
+        _buffer = io.StringIO()
         _fit = self._get_fit()
         _fit.do_fit()
         _fit.report(output_stream=_buffer)
@@ -467,7 +467,7 @@ class TestXYFitWithSimpleYErrors(AbstractTestFit, unittest.TestCase):
     MINIMIZER = "scipy"
 
     def setUp(self):
-        six.get_unbound_function(TestXYFitBasicInterface.setUp)(self)
+        TestXYFitBasicInterface.setUp(self)
 
     def _get_fit(self, errors=None):
         """convenience"""
@@ -609,7 +609,7 @@ class TestXYFitWithMatrixErrors(AbstractTestFit, unittest.TestCase):
     MINIMIZER = "scipy"
 
     def setUp(self):
-        six.get_unbound_function(TestXYFitBasicInterface.setUp)(self)
+        TestXYFitBasicInterface.setUp(self)
 
     def _get_fit(self, errors=None, fast_math=False):
         """convenience"""

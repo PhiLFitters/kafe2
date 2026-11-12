@@ -1,18 +1,11 @@
-from inspect import getsource
+from inspect import getsource, signature
 
 import numpy as np
-import six
 from scipy import integrate
 
 from .._base import ModelFunctionBase, ParametricModelBaseMixin
 from ..util import function_library
 from .container import HistContainer
-
-if six.PY2:
-    from funcsigs import signature
-else:
-    from inspect import signature
-
 
 __all__ = ["HistParametricModel", "HistModelFunction"]
 
