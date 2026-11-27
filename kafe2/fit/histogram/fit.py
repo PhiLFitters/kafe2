@@ -1,5 +1,6 @@
 from copy import deepcopy
 
+from ...core.fitters.nexus import Array
 from .._base import DataContainerBase, FitBase
 from .._base.cost import CostFunction_NegLogLikelihood
 from ..util import (  # noqa: F401 (collect imported but not used)
@@ -46,6 +47,7 @@ class HistFit(FitBase):
         minimizer=None,
         minimizer_kwargs=None,
         dynamic_error_algorithm="nonlinear",
+        background_array=None,
     ):
         """
         Construct a fit of a model to a histogram. If bin_evaluation is a Python function or
@@ -75,6 +77,11 @@ class HistFit(FitBase):
         """
         self._bin_evaluation = bin_evaluation
         self._density = density
+        if cost_function =='skellam':
+            assert background_array is not None
+            self._background_array = background_array
+        else:
+            self._background_array = None
         super(HistFit, self).__init__(
             data=data,
             model_function=model_function,
@@ -90,6 +97,8 @@ class HistFit(FitBase):
         super(HistFit, self)._init_nexus()
 
         self._nexus.add_dependency("model", depends_on=("parameter_values"))
+        if self._background_array is not None:
+            self._nexus.add(Array(self._background_array, name="background_estimation"), existing_behavior="replace_if_empty")
 
     def _set_new_data(self, new_data):
         try:
