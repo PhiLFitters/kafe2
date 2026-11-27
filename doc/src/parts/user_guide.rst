@@ -389,6 +389,78 @@ A typical dictionary returned by the :py:meth:`~.FitBase.do_fit` method looks li
     called with the corresponding keyword :code:`fit.do_fit(asymmetric_parameter_errors=True)`.
     Otherwise they will be :py:obj:`None`.
 
+Histogram Fits
+---------------
+
+In physics experiments data is frequently histogrammed in order to reduce it to a manageable number of bins.
+*kafe2* provides a dedicated fitting class for histogram fits, intended to be used when data points are obtained
+from a random distribution. Especially when large numbers of data points are present it is more efficient to treat
+the data as a histogram. To perform a histogram fit using raw data, the data points have to be filled into a :py:obj:`HistContainer`.
+Then, the procedure is similar to the above. By default, the :py:obj:`HistFit` class will use a normal distribution as model
+function and a poisson likelihood as cost function. Both can be changed using the `model_function` and 
+`cost_function` keywords.
+
+.. code-block:: python
+
+    from kafe2 import Fit, HistContainer
+
+    histogram = HistContainer(n_bins=10, bin_range=(-5, 5),
+                          fill_data=[-7.5, 1.23, 5.74, 1.9, -0.2, 3.1, -2.75, ...])
+    hist_fit = Fit(histogram)
+    hist_fit.do_fit()
+    
+By defaul,t it is assumed that the model function for a `HistFit` object is a probability density function normalized to 1.
+As a consequence the bin contents are also being normalized to 1.
+To disable this behavior, set `density=False` in the `HistFit` constructor.
+
+
+The Gaussian approximation
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In some cases the bin counts of a histogram do not follow a Poisson distribution, for example
+for background-subtracted histograms or when systematic uncertainties are present.
+The Poisson cost function can then no longer be used and a Gaussian approximation of the cost
+function is necessary. In this case, care has to be taken when adding the uncertainties to the fit:
+a fit with a Poisson cost function does not allow any further uncertainties, since here uncertainties follow
+directly from the model prediction, whereas for the Gaussian approximation we have to add some uncertainties explicitly.
+
+The statistical uncertainties of each bin are still handled automatically (they are calculated as :math:`\sqrt N_{model}`),
+but we may have to add systematic uncertainties or statistical uncertainties of a subtracted background.
+This can  be done just like for an :py:obj:`XYFit`, using
+:py:meth:`~.DataContainerBase.add_error` (without having to specify an axis). 
+.. code-block:: python
+
+    from kafe2 import Fit, HistContainer
+
+    histogram = HistContainer(n_bins=10, bin_range=(-5, 5),
+                              fill_data=[-7.5, 1.23, 5.74, 1.9, -0.2, 3.1, -2.75, ...])
+    histogram.add_error(err_val=1)
+    hist_fit = Fit(histogram, cost_function='gauss_approximation')
+    hist_fit.do_fit()
+
+
+
+For background-subtracted histograms, the variance of each bin is
+
+.. math::
+
+    \sigma_i^2 = N_i + 2 B_i ,
+
+where :math:`N_i` is the model prediction for the signal in bin :math:`i` and :math:`B_i` is the estimated background
+in bin :math:`i`. If the subtracted background was rescaled by a factor :math:`\alpha`
+(e.g. from a sideband of different size), this becomes
+
+.. math::
+
+    \sigma_i^2 = N_i + (1 + \alpha) B_i ,
+
+with :math:`B_i` being the rescaled background that was actually subtracted. The first term is
+handled automatically, the second (background) term has to be calculated from the data. The background term is then added as an ordinary Gaussian
+error whose value is the square root of that term, e.g. for :math:`\alpha = 2`:
+
+.. code-block:: python
+
+    hist_fit.add_error(np.sqrt(3 * background_counts), name="background")
 
 .. _plotting:
 
